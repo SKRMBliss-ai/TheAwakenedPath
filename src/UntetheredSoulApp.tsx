@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Heart, Award, Flame, BookOpen, Sparkles, Target, Clock, Eye, Wind, Star, Lock, ChevronRight, Zap, Sun, Moon, Play, Pause, RotateCcw } from 'lucide-react';
+import { Heart, Award, Flame, BookOpen, Sparkles, Target, Clock, Eye, Wind, Star, Lock, ChevronRight, Zap, Sun, Moon, Play, Pause, RotateCcw, Home, User } from 'lucide-react';
 
 export default function UntetheredApp() {
-  const [activeTab, setActiveTab] = useState('journey');
+  const [activeTab, setActiveTab] = useState('home');
   const [darkMode, setDarkMode] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [activePractice, setActivePractice] = useState<any>(null);
@@ -13,8 +13,8 @@ export default function UntetheredApp() {
   const [breathPhase, setBreathPhase] = useState('inhale');
   const [breathCount, setBreathCount] = useState(0);
   const [selectedBook, setSelectedBook] = useState<'soul' | 'now' | 'zen'>('soul');
-  const [showReward, setShowReward] = useState(null);
-  const [thoughts, setThoughts] = useState([]);
+  const [showReward, setShowReward] = useState<{ xp: number; title: string; icon: string } | null>(null);
+  const [thoughts, setThoughts] = useState<{ id: number; text: string; x: number; y: number }[]>([]);
 
   const user = {
     level: 5,
@@ -26,12 +26,13 @@ export default function UntetheredApp() {
     presencePoints: 128,
     zenPoints: 87,
     nowMoments: 42,
-    breathSessions: 18
+    breathSessions: 18,
+    totalTime: "24h 15m"
   };
 
   // Timer effect
   useEffect(() => {
-    let interval;
+    let interval: NodeJS.Timeout;
     if (isTimerRunning && timer > 0) {
       interval = setInterval(() => {
         setTimer(prev => {
@@ -555,7 +556,7 @@ export default function UntetheredApp() {
     ]
   };
 
-  const handleComplete = (practice) => {
+  const handleComplete = (practice: any) => {
     setShowReward({ xp: practice.xp, title: practice.title, icon: practice.icon });
     setTimeout(() => {
       setShowReward(null);
@@ -584,7 +585,7 @@ export default function UntetheredApp() {
     }
   };
 
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -599,7 +600,7 @@ export default function UntetheredApp() {
       rest: { from: '#6b7280', to: '#4b5563', text: 'Rest' }
     };
 
-    const current = colors[breathPhase];
+    const current = colors[breathPhase as keyof typeof colors];
 
     return (
       <div className="flex flex-col items-center justify-center py-8">
@@ -894,7 +895,9 @@ export default function UntetheredApp() {
   const cardStyle = {
     background: darkMode ? 'rgba(30,30,35,0.65)' : 'rgba(255,255,255,0.55)',
     border: '1px solid ' + (darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.6)'),
-    boxShadow: '0 0 30px rgba(171, 206, 201, 0.25)'
+    boxShadow: '0 0 30px rgba(171, 206, 201, 0.25)',
+    transform: 'translateZ(0)',
+    willChange: 'box-shadow, transform'
   };
 
   if (showReward) {
@@ -931,6 +934,23 @@ export default function UntetheredApp() {
           0%, 100% { box-shadow: 0 0 30px rgba(171, 206, 201, 0.25); }
           50% { box-shadow: 0 0 50px rgba(171, 206, 201, 0.45); }
         }
+        @keyframes slow-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes reverse-spin {
+          from { transform: rotate(360deg); }
+          to { transform: rotate(0deg); }
+        }
+        @keyframes nebula-pulse {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(1.1); }
+        }
+        @keyframes text-shimmer {
+          0% { opacity: 0.8; }
+          50% { opacity: 1; text-shadow: 0 0 15px #ABCEC9; }
+          100% { opacity: 0.8; }
+        }
         .card-glow { animation: heartbeat 4s ease-in-out infinite; }
         .card-glow:hover { 
           box-shadow: 0 0 60px rgba(171, 206, 201, 0.75) !important; 
@@ -957,61 +977,60 @@ export default function UntetheredApp() {
         <div className="px-4 -mt-4">
           <div className="card-glow rounded-2xl p-6" style={cardStyle}>
 
+            {activeTab === 'home' && (
+              <div className="space-y-10 text-center py-6">
+                <div className="space-y-2">
+                  <h2 className="text-4xl font-thin tracking-widest" style={{ color: darkMode ? '#f8fafc' : '#1e293b', fontFamily: 'serif' }}>
+                    HERE & NOW
+                  </h2>
+                  <p className="text-xs uppercase tracking-[0.3em] opacity-60">The only place life exists</p>
+                </div>
+
+                <div
+                  onClick={() => setActivePractice(quickPractices[2])}
+                  className="relative w-64 h-64 mx-auto flex items-center justify-center cursor-pointer group"
+                >
+                  {/* Outer Orbit (Mint) */}
+                  <div className="absolute inset-0 rounded-full border border-[#ABCEC9] opacity-20" style={{ animation: 'slow-spin 20s linear infinite' }}></div>
+
+                  {/* Inner Orbit (Lavender) */}
+                  <div className="absolute inset-6 rounded-full border border-[#C3B8D5] opacity-20" style={{ animation: 'reverse-spin 15s linear infinite' }}></div>
+
+                  {/* Nebula Glows */}
+                  <div className="absolute inset-0 bg-[#ABCEC9] blur-[60px] rounded-full" style={{ animation: 'nebula-pulse 6s ease-in-out infinite' }}></div>
+                  <div className="absolute inset-10 bg-[#C3B8D5] blur-[40px] rounded-full opacity-30"></div>
+
+                  {/* The Core Orb (Glass) */}
+                  <div className="relative z-10 w-32 h-32 rounded-full flex flex-col items-center justify-center transition-all duration-700 group-hover:scale-105"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      backdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      boxShadow: '0 0 40px rgba(171, 206, 201, 0.3), inset 0 0 20px rgba(255,255,255,0.1)'
+                    }}
+                  >
+                    <div className="text-2xl mb-1 group-hover:scale-110 transition-transform duration-500">✨</div>
+                    <div className="text-sm font-bold tracking-[0.2em] group-hover:text-white transition-colors" style={{ color: '#ABCEC9', animation: 'text-shimmer 3s ease-in-out infinite' }}>
+                      CENTER
+                    </div>
+                  </div>
+
+                  {/* Hover Surge Effect */}
+                  <div className="absolute inset-0 rounded-full bg-[#ABCEC9] opacity-0 group-hover:opacity-10 blur-[80px] transition-opacity duration-700"></div>
+                </div>
+
+                <div className="p-6 rounded-xl space-y-3 relative overflow-hidden" style={{ background: darkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}>
+                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#ABCEC9] to-[#C3B8D5] opacity-50"></div>
+                  <p className="text-lg italic font-light leading-relaxed" style={{ color: darkMode ? '#e2e8f0' : '#334155' }}>
+                    "You are not the voice in your head. You are the one who hears it."
+                  </p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-right" style={{ color: '#ABCEC9' }}>— Michael Singer</p>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'journey' && (
               <div className="space-y-4">
-                <div className="rounded-2xl p-6 text-white" style={{ background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)' }}>
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h2 className="text-2xl font-bold text-black">Level {user.level}</h2>
-                      <p className="text-black text-opacity-70 text-sm">Awakener</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-2 justify-end">
-                        <Flame className="w-5 h-5 text-orange-500" />
-                        <span className="text-2xl font-bold text-black">{user.streak}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-black bg-opacity-20 rounded-full h-4 overflow-hidden">
-                    <div className="h-full transition-all" style={{ width: (user.xp / user.xpToNext * 100) + '%', background: 'linear-gradient(90deg, #FFD700, #FFA500)' }} />
-                  </div>
-                  <p className="text-sm text-black text-opacity-80 mt-2">{user.xp} / {user.xpToNext} XP</p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="card-glow rounded-xl p-3 cursor-pointer" style={cardStyle}>
-                    <Clock className="w-5 h-5 mb-2" style={{ color: '#ABCEC9' }} />
-                    <div className="text-3xl font-bold" style={{ color: '#ABCEC9' }}>{user.nowMoments}</div>
-                    <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Now</p>
-                  </div>
-                  <div className="card-glow rounded-xl p-3 cursor-pointer" style={cardStyle}>
-                    <Eye className="w-5 h-5 mb-2" style={{ color: '#C3B8D5' }} />
-                    <div className="text-3xl font-bold" style={{ color: '#C3B8D5' }}>{user.witnessPoints}</div>
-                    <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Witness</p>
-                  </div>
-                  <div className="card-glow rounded-xl p-3 cursor-pointer" style={cardStyle}>
-                    <Wind className="w-5 h-5 mb-2" style={{ color: '#ABCEC9' }} />
-                    <div className="text-3xl font-bold" style={{ color: '#ABCEC9' }}>{user.zenPoints}</div>
-                    <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Zen</p>
-                  </div>
-                </div>
-
-                <div className="card-glow rounded-xl p-4 cursor-pointer" style={cardStyle}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center animate-pulse" style={{ background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)' }}>
-                      <Heart className="w-7 h-7 text-black" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold">Energy Level</h3>
-                      <p className="text-sm" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Heart • Mind • Body</p>
-                    </div>
-                  </div>
-                  <div className="rounded-full h-4 overflow-hidden" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
-                    <div className="h-full transition-all" style={{ width: user.energy + '%', background: 'linear-gradient(90deg, #ABCEC9, #C3B8D5)' }} />
-                  </div>
-                  <p className="text-sm mt-2" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>{user.energy}% Aligned</p>
-                </div>
-
                 <div>
                   <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
                     <Zap className="w-5 h-5" style={{ color: '#ABCEC9' }} />
@@ -1139,41 +1158,69 @@ export default function UntetheredApp() {
 
             {activeTab === 'profile' && (
               <div className="space-y-4">
-                <div className="rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)' }}>
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center animate-pulse" style={{ background: 'rgba(0,0,0,0.2)' }}>
-                    <Sparkles className="w-12 h-12 text-black" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-black">Awakened Master</h2>
-                  <p className="text-black text-opacity-70">Level {user.level}</p>
-                  <div className="grid grid-cols-3 gap-3 mt-6">
+                <div className="rounded-2xl p-6 text-white" style={{ background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)' }}>
+                  <div className="flex items-center justify-between mb-4">
                     <div>
-                      <div className="text-2xl font-bold text-black">{user.witnessPoints}</div>
-                      <div className="text-xs text-black text-opacity-70">Witness</div>
+                      <h2 className="text-2xl font-bold text-black">Level {user.level}</h2>
+                      <p className="text-black text-opacity-70 text-sm">Awakener</p>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-black">{user.presencePoints}</div>
-                      <div className="text-xs text-black text-opacity-70">Presence</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-black">{user.zenPoints}</div>
-                      <div className="text-xs text-black text-opacity-70">Zen</div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-2 justify-end">
+                        <Flame className="w-5 h-5 text-orange-500" />
+                        <span className="text-2xl font-bold text-black">{user.streak}</span>
+                      </div>
+                      <span className="text-black text-opacity-60 text-xs">Day Streak</span>
                     </div>
                   </div>
+                  <div className="bg-black bg-opacity-20 rounded-full h-4 overflow-hidden">
+                    <div className="h-full transition-all" style={{ width: (user.xp / user.xpToNext * 100) + '%', background: 'linear-gradient(90deg, #FFD700, #FFA500)' }} />
+                  </div>
+                  <p className="text-sm text-black text-opacity-80 mt-2">{user.xp} / {user.xpToNext} XP</p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="card-glow rounded-xl p-3 text-center" style={cardStyle}>
+                    <Clock className="w-5 h-5 mx-auto mb-2" style={{ color: '#ABCEC9' }} />
+                    <div className="text-2xl font-bold" style={{ color: '#ABCEC9' }}>{user.nowMoments}</div>
+                    <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Now</p>
+                  </div>
+                  <div className="card-glow rounded-xl p-3 text-center" style={cardStyle}>
+                    <Eye className="w-5 h-5 mx-auto mb-2" style={{ color: '#C3B8D5' }} />
+                    <div className="text-2xl font-bold" style={{ color: '#C3B8D5' }}>{user.witnessPoints}</div>
+                    <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Witness</p>
+                  </div>
+                  <div className="card-glow rounded-xl p-3 text-center" style={cardStyle}>
+                    <Wind className="w-5 h-5 mx-auto mb-2" style={{ color: '#ABCEC9' }} />
+                    <div className="text-2xl font-bold" style={{ color: '#ABCEC9' }}>{user.zenPoints}</div>
+                    <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Zen</p>
+                  </div>
+                </div>
+
+                <div className="card-glow rounded-xl p-4" style={cardStyle}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center animate-pulse" style={{ background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)' }}>
+                      <Heart className="w-7 h-7 text-black" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold">Energy Level</h3>
+                      <p className="text-sm" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Heart • Mind • Body</p>
+                    </div>
+                  </div>
+                  <div className="rounded-full h-4 overflow-hidden" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                    <div className="h-full transition-all" style={{ width: user.energy + '%', background: 'linear-gradient(90deg, #ABCEC9, #C3B8D5)' }} />
+                  </div>
+                  <p className="text-sm mt-2" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>{user.energy}% Aligned</p>
                 </div>
 
                 <div className="card-glow rounded-xl p-4" style={cardStyle}>
                   <h3 className="font-bold mb-3 flex items-center gap-2">
                     <BookOpen className="w-5 h-5" style={{ color: '#ABCEC9' }} />
-                    Journey Stats
+                    Total Progress
                   </h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Total presence time</span>
-                      <span className="font-semibold">24h 15m</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Now moments</span>
-                      <span className="font-semibold">{user.nowMoments}</span>
+                      <span className="font-semibold">{user.totalTime}</span>
                     </div>
                     <div className="flex justify-between">
                       <span style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Breath sessions</span>
@@ -1197,6 +1244,10 @@ export default function UntetheredApp() {
           backdropFilter: 'blur(10px)'
         }}>
           <div className="flex justify-around items-center">
+            <button onClick={() => setActiveTab('home')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'home' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
+              <Home className="w-6 h-6" />
+              <span className="text-xs font-medium">Home</span>
+            </button>
             <button onClick={() => setActiveTab('journey')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'journey' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
               <Target className="w-6 h-6" />
               <span className="text-xs font-medium">Journey</span>
@@ -1206,7 +1257,7 @@ export default function UntetheredApp() {
               <span className="text-xs font-medium">Chapters</span>
             </button>
             <button onClick={() => setActiveTab('profile')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'profile' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
-              <Award className="w-6 h-6" />
+              <User className="w-6 h-6" />
               <span className="text-xs font-medium">Profile</span>
             </button>
           </div>
