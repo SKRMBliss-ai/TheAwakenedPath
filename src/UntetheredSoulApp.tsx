@@ -395,7 +395,7 @@ export default function UntetheredApp() {
     soul: [
       {
         id: 1,
-        title: "The Voice Inside Your Head",
+        title: "The Voice Inside",
         done: 5,
         total: 5,
         xp: 100,
@@ -403,154 +403,238 @@ export default function UntetheredApp() {
         completed: true,
         lessons: [
           "Who is talking? Who is listening?",
-          "The constant mental narrator",
-          "You are not your thoughts",
-          "The freedom of awareness",
-          "Living behind the voice"
+          "Catching the narrator in 5 seconds",
+          "Saying 'Hello' to the voice",
+          "Realizing 'I am not that'",
+          "The silence behind the noise"
         ]
       },
       {
         id: 2,
-        title: "Your Inner Roommate",
+        title: "The Inner Roommate",
         done: 6,
         total: 6,
         xp: 150,
         unlocked: true,
         completed: true,
         lessons: [
-          "Would you live with this roommate?",
-          "The neurotic inner dialogue",
-          "Stepping back from the mind",
-          "Finding the quiet space",
-          "Becoming the observer",
-          "Liberation from mental tyranny"
+          "Personifying the voice",
+          "Would you live with this person?",
+          "Noticing neurotic loops",
+          "Stepping back from the drama",
+          "Firing the roommate (momentarily)"
         ]
       },
       {
         id: 3,
-        title: "Who Are You?",
+        title: "Infinite Energy",
         done: 3,
-        total: 7,
+        total: 5,
         xp: 200,
         unlocked: true,
         completed: false,
         lessons: [
-          "The seat of consciousness",
-          "Pure awareness exercise",
-          "Beyond body and mind",
-          "The unchanging witness",
-          "Your true nature",
-          "Living from the Self",
-          "Freedom from identity"
+          "Feeling the energy flow (Shakti)",
+          "Detecting the 'closing' mechanism",
+          "The choice to remain open",
+          "Relaxing through the tightness",
+          "Living as energy, not blockage"
+        ]
+      },
+      {
+        id: 4,
+        title: "Removing the Thorn",
+        done: 0,
+        total: 5,
+        xp: 250,
+        unlocked: false,
+        completed: false,
+        lessons: [
+          "Identifying the 'Thorn' (Trigger)",
+          "Leaning away from the noise",
+          "Relaxing behind the disturbance",
+          "Watching the release of pain",
+          "Freedom on the other side"
+        ]
+      },
+      {
+        id: 5,
+        title: "The Vow of Happiness",
+        done: 0,
+        total: 5,
+        xp: 300,
+        unlocked: false,
+        completed: false,
+        lessons: [
+          "The choice to be happy",
+          "Surrendering preference",
+          "Happiness vs. External Events",
+          "Living on the brink of death",
+          "The final liberation"
         ]
       }
     ],
     now: [
       {
-        id: 4,
-        title: "You Are Not Your Mind",
-        done: 6,
-        total: 6,
-        xp: 120,
+        id: 1,
+        title: "Watching the Thinker",
+        done: 5,
+        total: 5,
+        xp: 100,
         unlocked: true,
         completed: true,
         lessons: [
-          "The thinking mind is a tool",
-          "Compulsive thinking identification",
-          "Liberation from mind",
-          "Watching the thinker",
-          "Gaps between thoughts",
-          "The power of presence"
+          "You are the sky, thoughts are clouds",
+          "Watching the thinker like a cat",
+          "Noticing the gaps (No-Mind)",
+          "Smiling at the ego",
+          "Dis-identifying from the script"
         ]
       },
       {
-        id: 5,
-        title: "Consciousness: The Way Out",
-        done: 4,
-        total: 7,
+        id: 2,
+        title: "The Inner Body",
+        done: 3,
+        total: 5,
         xp: 150,
         unlocked: true,
         completed: false,
         lessons: [
-          "Breaking mind identification",
-          "Dis-identification practice",
-          "Present moment awareness",
-          "The witnessing presence",
-          "Freedom from thought",
-          "Consciousness transformation",
-          "Being vs. thinking"
+          "Feeling the hands from within",
+          "Flooding body with awareness",
+          "The 'Unseen' energy field",
+          "Anchoring during stress",
+          "Immune boosting via presence"
         ]
       },
       {
-        id: 6,
-        title: "Moving Deeply Into the Now",
-        done: 2,
-        total: 8,
-        xp: 180,
-        unlocked: true,
+        id: 3,
+        title: "Dissolving Pain-Body",
+        done: 0,
+        total: 5,
+        xp: 200,
+        unlocked: false,
         completed: false,
         lessons: [
-          "Inner body awareness portal",
-          "Feeling the energy field",
-          "Rooting in the present",
-          "The power of now practice",
-          "Dissolving time",
-          "Pure presence exercise",
-          "Being-realization",
-          "Living enlightenment"
+          "What is the Pain-Body?",
+          "Catching the 'feed' urge",
+          "Shining the light of presence",
+          "Non-reaction as superpower",
+          "Transmuting suffering into peace"
+        ]
+      },
+      {
+        id: 4,
+        title: "Portals to Now",
+        done: 0,
+        total: 5,
+        xp: 250,
+        unlocked: false,
+        completed: false,
+        lessons: [
+          "Silence: Hearing the background",
+          "Space: Noticing the emptiness",
+          "Nature: Looking without labeling",
+          "Sound: Listening to the gaps",
+          "Acceptance: The 'Is-ness' of now"
+        ]
+      },
+      {
+        id: 5,
+        title: "Surrender",
+        done: 0,
+        total: 5,
+        xp: 300,
+        unlocked: false,
+        completed: false,
+        lessons: [
+          "Acceptance vs. Resignation",
+          "Dropping inner resistance",
+          "Yielding to the flow",
+          "Turning problems into situations",
+          "Action through non-action"
         ]
       }
     ],
     zen: [
       {
-        id: 7,
-        title: "Foundation of Breath",
+        id: 1,
+        title: "Breath Foundations",
         done: 5,
         total: 5,
-        xp: 140,
+        xp: 100,
         unlocked: true,
         completed: true,
         lessons: [
-          "Diaphragmatic breathing mastery",
-          "3-step rhythmic pattern",
-          "Breath as life force (Prana)",
-          "Nervous system regulation",
-          "Daily breath practice"
+          "Chest vs. Belly breathing check",
+          "The 3-Part breath wave",
+          "Nose breathing science",
+          "Extending the exhale",
+          "Breath as nervous system remote"
         ]
       },
       {
-        id: 8,
-        title: "Breath-Body Unity",
-        done: 3,
-        total: 7,
-        xp: 160,
+        id: 2,
+        title: "Beginner's Mind",
+        done: 2,
+        total: 5,
+        xp: 150,
         unlocked: true,
         completed: false,
         lessons: [
-          "Movement-breath coordination",
-          "Sun salutation with breath",
-          "Warrior poses flow",
-          "Breath in stillness",
-          "Energy channel awareness",
-          "Mindful movement",
-          "Integration practice"
+          "Dropping all concepts",
+          "Seeing the familiar as new",
+          "The 'Don't Know' mind",
+          "Mindful eating/drinking",
+          "Walking without a destination"
         ]
       },
       {
-        id: 9,
-        title: "Advanced Pranayama",
-        done: 1,
-        total: 6,
-        xp: 180,
+        id: 3,
+        title: "Breath-Body Unity",
+        done: 0,
+        total: 5,
+        xp: 200,
         unlocked: false,
         completed: false,
         lessons: [
-          "Alternate nostril breathing",
-          "Ujjayi (victorious breath)",
-          "Kapalabhati (skull shining)",
-          "Breath retention mastery",
-          "Energy lock techniques",
-          "Full pranayama sequence"
+          "Coordinating breath with motion",
+          "The pause between breaths",
+          "Spinal energy waves",
+          "Grounding into the earth",
+          "Moving from the center (Hara)"
+        ]
+      },
+      {
+        id: 4,
+        title: "Zazen (Sitting)",
+        done: 0,
+        total: 5,
+        xp: 250,
+        unlocked: false,
+        completed: false,
+        lessons: [
+          "Posture: The stable mountain",
+          "Hands: The cosmic mudra",
+          "Eyes: The soft gaze",
+          "Counting the breath (1 to 10)",
+          "Returning without judgment"
+        ]
+      },
+      {
+        id: 5,
+        title: "Advanced Energy",
+        done: 0,
+        total: 5,
+        xp: 300,
+        unlocked: false,
+        completed: false,
+        lessons: [
+          "Box Breathing (4-4-4-4)",
+          "Breath Retention (Kumbhaka)",
+          "Energy Locks (Bandhas)",
+          "Channel cleaning (Nadi Shodhana)",
+          "The rise of inner heat (Tapas)"
         ]
       }
     ]
