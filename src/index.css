@@ -1,1 +1,113 @@
 @import "tailwindcss";
+
+/* Padmasana Theme (Reference Image) */
+:root {
+    /* 1. Core Brand Identity */
+    --brand-primary: #C65F9D;
+    /* Muted Rose */
+    --brand-secondary: #F4E3DA;
+    /* Creamy Beige */
+    --text-on-brand: #ffffff;
+
+    /* 2. Dark Mode (Default) - Deep Plum Base */
+    --bg-color: #59445C;
+    --bg-body: linear-gradient(135deg, #59445C 0%, #3a2a3c 100%);
+    --text-main: #F4E3DA;
+    /* Cream for main text */
+    --text-muted: #dcc5d6;
+    /* Muted lavender-grey */
+
+    /* Glass Styles */
+    --glass-surface: rgba(89, 68, 92, 0.6);
+    /* Deep plum glass */
+    --glass-border: rgba(244, 227, 218, 0.15);
+    /* Cream border */
+
+    /* 4. Glow System (Rose/Pink) */
+    --card-glow-base: rgba(198, 95, 157, 0.25);
+    --card-glow-pulse: rgba(198, 95, 157, 0.45);
+    --card-glow-surge: rgba(198, 95, 157, 0.75);
+}
+
+/* 3. Light Mode Overrides */
+.light-mode {
+    --bg-color: #F4E3DA;
+    --bg-body: linear-gradient(135deg, #F4E3DA 0%, #ebede0 100%);
+    /* Cream to Soft Sage */
+    --text-main: #59445C;
+    --text-muted: #8b6b8f;
+    --glass-surface: rgba(255, 255, 255, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.8);
+    --text-on-brand: #ffffff;
+}
+
+body {
+    background: var(--bg-body);
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    transition: background 0.5s ease, color 0.5s ease;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+}
+
+/* Headers - Playfair Display alternative (using serif fallback) */
+h1,
+h2,
+h3 {
+    font-family: 'Playfair Display', serif;
+}
+
+/* 2. CRITICAL VISUAL RULE: Heartbeat & Surge System */
+@keyframes heartbeat {
+
+    0%,
+    100% {
+        box-shadow: 0 0 30px var(--card-glow-base);
+    }
+
+    50% {
+        box-shadow: 0 0 50px var(--card-glow-pulse);
+    }
+}
+
+.card-glow {
+    /* Hardware Acceleration */
+    transform: translateZ(0);
+    will-change: box-shadow, transform;
+
+    /* Glass Styles */
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 20px;
+    /* Default for consistency, can be overridden */
+
+    /* Always On Animation */
+    animation: heartbeat 4s ease-in-out infinite;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* B. High Energy Surge (Hover) */
+.card-glow:hover {
+    animation: none;
+    /* Stop heartbeat */
+    box-shadow: 0 0 60px var(--card-glow-surge) !important;
+    transform: translateY(-6px) scale(1.01) !important;
+    border-color: var(--brand-primary);
+}
+
+/* Utilities */
+.text-brand {
+    color: var(--brand-primary);
+}
+
+.bg-brand {
+    background: var(--brand-primary);
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}

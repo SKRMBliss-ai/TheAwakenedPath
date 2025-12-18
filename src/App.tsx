@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Heart, Award, Flame, Book, Target, Clock, Eye, Wind, Sun, Moon, Play, Pause, ChevronRight, Zap, User } from 'lucide-react';
+import { Heart, Flame, Book, Target, Clock, Eye, Wind, Sun, Moon, Play, Zap, User, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { BreathingVisual } from './components/BreathingVisual';
+import { ReframingVisual } from './components/domain/ReframingVisual';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
 }
 
 // --- Types ---
-type PracticeType = 'breath' | 'witness' | 'presence' | 'energy';
+type PracticeType = 'breath' | 'witness' | 'presence' | 'energy' | 'reframing';
 type Step = {
   title: string;
   instruction: string;
@@ -21,7 +22,7 @@ type Step = {
 type Practice = {
   id: number;
   title: string;
-  icon: string;
+  icon: React.ReactNode;
   xp: number;
   duration: number;
   type: PracticeType;
@@ -39,7 +40,7 @@ export default function UntetheredApp() {
   const [currentStep, setCurrentStep] = useState(0);
   const [timer, setTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [showReward, setShowReward] = useState<{ xp: number; title: string; icon: string } | null>(null);
+  const [showReward, setShowReward] = useState<{ xp: number; title: string; icon: React.ReactNode } | null>(null);
   const [thoughts, setThoughts] = useState<{ id: number; text: string; x: number; y: number }[]>([]);
 
   // --- Mock User Stats ---
@@ -60,7 +61,7 @@ export default function UntetheredApp() {
 
   // Timer Logic
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: any;
     if (isTimerRunning && timer > 0) {
       interval = setInterval(() => {
         setTimer((prev) => {
@@ -97,26 +98,34 @@ export default function UntetheredApp() {
 
   const practices: Practice[] = [
     {
-      id: 1, title: "3-Step Rhythmic Breathing", icon: "🌬️", xp: 35, duration: 300, type: "breath", level: "beginner", breathPattern: [3, 3, 3, 3],
+      id: 1, title: "3-Step Rhythmic Breathing", icon: <Wind className="w-12 h-12" />, xp: 35, duration: 300, type: "breath", level: "beginner", breathPattern: [3, 3, 3, 3],
       steps: [
         { title: "Understanding", instruction: "Breathe in 3-3-3-3 pattern", guidance: "Calms nervous system", visual: "info" },
         { title: "Begin Breathing", instruction: "Follow the visual guide", guidance: "Complete 10 cycles", duration: 180, visual: "breath" }
       ]
     },
     {
-      id: 2, title: "Witness Consciousness", icon: "👁️", xp: 40, duration: 420, type: "witness", level: "intermediate",
+      id: 2, title: "Witness Consciousness", icon: <Eye className="w-12 h-12" />, xp: 40, duration: 420, type: "witness", level: "intermediate",
       steps: [
         { title: "The Core Teaching", instruction: "You are not the voice in your head", guidance: "You are the one who hears it", visual: "info" },
         { title: "Step Back", instruction: "Watch thoughts like clouds", guidance: "Practice detachment", duration: 300, visual: "witness" }
+      ]
+    }, // End of Witness
+    {
+      id: 3, title: "Positive Reframing", icon: <Brain className="w-12 h-12" />, xp: 50, duration: 300, type: "reframing", level: "advanced",
+      steps: [
+        { title: "Spot the Negative", instruction: "Notice when a negative thought arises", guidance: "Don't judge it, just see it", duration: 60, visual: "reframing" },
+        { title: "Question It", instruction: "Ask: Is this absolutely true?", guidance: "Look for evidence against it", duration: 120, visual: "reframing" },
+        { title: "Replace It", instruction: "Create a balanced, kinder thought", guidance: "How would you speak to a friend?", duration: 120, visual: "reframing" }
       ]
     }
   ];
 
   const quickPractices: Practice[] = [
-    { id: 11, title: "3-Breath Reset", icon: "🌬️", xp: 10, duration: 30, type: "breath", breathPattern: [4, 4, 4, 4], steps: [{ title: "Quick Reset", instruction: "Take 3 deep belly breaths", guidance: "Calms instantly", duration: 30, visual: "breath" }] },
-    { id: 12, title: "Witness Check", icon: "👁️", xp: 15, duration: 60, type: "witness", steps: [{ title: "Quick Witness", instruction: "Who is aware?", guidance: "That's your true self", duration: 60, visual: "witness" }] },
-    { id: 13, title: "Now Moment", icon: "⚡", xp: 12, duration: 45, type: "presence", steps: [{ title: "Present Moment", instruction: "Name 5 things you see", guidance: "Senses are in the now", duration: 45, visual: "presence" }] },
-    { id: 14, title: "Heart Opening", icon: "💚", xp: 15, duration: 60, type: "energy", steps: [{ title: "Open Heart", instruction: "Hand on heart", guidance: "Feel the warmth", duration: 60, visual: "energy" }] }
+    { id: 11, title: "3-Breath Reset", icon: <Wind className="w-8 h-8" />, xp: 10, duration: 30, type: "breath", breathPattern: [4, 4, 4, 4], steps: [{ title: "Quick Reset", instruction: "Take 3 deep belly breaths", guidance: "Calms instantly", duration: 30, visual: "breath" }] },
+    { id: 12, title: "Witness Check", icon: <Eye className="w-8 h-8" />, xp: 15, duration: 60, type: "witness", steps: [{ title: "Quick Witness", instruction: "Who is aware?", guidance: "That's your true self", duration: 60, visual: "witness" }] },
+    { id: 13, title: "Now Moment", icon: <Zap className="w-8 h-8" />, xp: 12, duration: 45, type: "presence", steps: [{ title: "Present Moment", instruction: "Name 5 things you see", guidance: "Senses are in the now", duration: 45, visual: "presence" }] },
+    { id: 14, title: "Heart Opening", icon: <Heart className="w-8 h-8" />, xp: 15, duration: 60, type: "energy", steps: [{ title: "Open Heart", instruction: "Hand on heart", guidance: "Feel the warmth", duration: 60, visual: "energy" }] }
   ];
 
   // --- Handlers ---
@@ -222,6 +231,7 @@ export default function UntetheredApp() {
                   {activePractice.type === 'witness' && <WitnessVisual />}
                   {activePractice.type === 'presence' && <div className="w-32 h-32 rounded-full bg-amber-500 animate-pulse flex items-center justify-center"><Clock className="w-12 h-12 text-white" /></div>}
                   {activePractice.type === 'energy' && <div className="w-32 h-32 rounded-full bg-rose-500 animate-pulse flex items-center justify-center"><Heart className="w-12 h-12 text-white" /></div>}
+                  {activePractice.type === 'reframing' && <ReframingVisual />}
                 </div>
                 {timer === 0 && (
                   <button onClick={nextStep} className="w-full py-4 rounded-xl font-bold bg-emerald-500 text-white">

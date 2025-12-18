@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Heart, Award, Flame, BookOpen, Sparkles, Target, Clock, Eye, Wind, Star, Lock, ChevronRight, Zap, Sun, Moon, Play, Pause, RotateCcw, Home, User } from 'lucide-react';
+import { Heart, Award, Flame, BookOpen, Sparkles, Target, Clock, Eye, Wind, Star, Lock, ChevronRight, Zap, Sun, Moon, Play, Pause, RotateCcw, Home, User, Power } from 'lucide-react';
 
 export default function UntetheredApp() {
   const [activeTab, setActiveTab] = useState('home');
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(true); // Default to dark for the warm theme
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [activePractice, setActivePractice] = useState<any>(null);
   const [practiceState, setPracticeState] = useState('intro');
@@ -18,6 +18,12 @@ export default function UntetheredApp() {
   // ... existing state
   const [activeLesson, setActiveLesson] = useState<any>(null);
   const [lessonSlide, setLessonSlide] = useState(0);
+
+  // Reframe practice state
+  const [reframeThought, setReframeThought] = useState('');
+  const [reframePattern, setReframePattern] = useState('');
+  const [reframeQuestionIndex, setReframeQuestionIndex] = useState(0);
+  const [refinedThought, setRefinedThought] = useState('');
 
   const user = {
     level: 5,
@@ -35,7 +41,7 @@ export default function UntetheredApp() {
 
   // Timer effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: any;
     if (isTimerRunning && timer > 0) {
       interval = setInterval(() => {
         setTimer(prev => {
@@ -309,6 +315,42 @@ export default function UntetheredApp() {
           guidance: "When it closes (and it will), consciously reopen it. This is the practice of unconditional love.",
           duration: 210,
           visual: "maintain"
+        }
+      ]
+    },
+    {
+      id: 7,
+      title: "Thought Reframe",
+      icon: "🧠",
+      xp: 45,
+      duration: 240,
+      type: "reframe",
+      book: "soul",
+      level: "intermediate",
+      steps: [
+        {
+          title: "Capture Thought",
+          instruction: "What thought is bothering you right now?",
+          guidance: "Write it down exactly as it sounds in your head. No judgment.",
+          visual: "reframe"
+        },
+        {
+          title: "Name the Pattern",
+          instruction: "Look at the thought. Which of these patterns does it follow?",
+          guidance: "Naming the pattern weakens its hold on you. It's just a habit of the mind.",
+          visual: "reframe"
+        },
+        {
+          title: "Question the Thought",
+          instruction: "Let's investigate the truth of this thought.",
+          guidance: "Witness the thought from a distance. Is it as solid as it seems?",
+          visual: "reframe"
+        },
+        {
+          title: "Replace + Integrate",
+          instruction: "What is a more gentle or truthful thought?",
+          guidance: "Find a perspective that feels aligned with your heart. Notice the softening in your body.",
+          visual: "reframe"
         }
       ]
     }
@@ -805,6 +847,45 @@ export default function UntetheredApp() {
     </div>
   );
 
+  const renderReframeVisual = () => (
+    <div className="relative h-64 flex items-center justify-center rounded-2xl overflow-hidden" style={{
+      background: darkMode ? 'rgba(30,30,35,0.65)' : 'rgba(255,255,255,0.55)',
+      border: '1px solid ' + (darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.6)')
+    }}>
+      <div style={{
+        width: 100, height: 100, borderRadius: '50%',
+        background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)',
+        boxShadow: '0 0 60px rgba(171, 206, 201, 0.6)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 2,
+        animation: 'pulse 3s ease-in-out infinite'
+      }}>
+        <Sparkles className="w-10 h-10 text-black" />
+      </div>
+
+      {reframeThought && practiceState === 'active' && currentStep > 0 && (
+        <div
+          className="absolute text-center px-6 py-3 rounded-2xl backdrop-blur-md transition-all duration-[2000ms]"
+          style={{
+            background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+            border: '1px solid ' + (darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
+            color: darkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
+            maxWidth: '80%',
+            opacity: currentStep === 3 ? 0.2 : 0.6,
+            transform: `scale(${currentStep === 3 ? 0.8 : 1}) translateY(${currentStep === 3 ? -20 : 0}px)`,
+            filter: currentStep === 3 ? 'blur(4px)' : 'none'
+          }}
+        >
+          {reframeThought}
+        </div>
+      )}
+
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-[#ABCEC9] to-transparent" style={{ transform: 'rotate(45deg)', backgroundSize: '200% 200%' }} />
+      </div>
+    </div>
+  );
+
   const renderPracticeModal = () => {
     if (!activePractice) return null;
 
@@ -938,6 +1019,133 @@ export default function UntetheredApp() {
                 )}
 
                 <div>
+                  {activePractice.type === 'reframe' && renderReframeVisual()}
+                  {activePractice.type === 'reframe' && (
+                    <div className="mt-8 space-y-6">
+                      {currentStep === 0 && (
+                        <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
+                          <textarea
+                            value={reframeThought}
+                            onChange={(e) => setReframeThought(e.target.value)}
+                            placeholder="Type the thought here..."
+                            className="w-full p-4 rounded-xl bg-transparent border-2 focus:border-[#ABCEC9] outline-none transition-all min-h-[100px]"
+                            style={{
+                              borderColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                              color: darkMode ? '#f8fafc' : '#1e293b'
+                            }}
+                          />
+                          {reframeThought.length > 3 && (
+                            <button
+                              onClick={nextStep}
+                              className="w-full py-3 rounded-xl font-bold bg-[#ABCEC9] text-black hover:scale-[1.02] transition-all"
+                            >
+                              Continue
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {currentStep === 1 && (
+                        <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
+                          <div className="grid grid-cols-2 gap-3">
+                            {['Fear', 'Self-doubt', 'Control', 'Judgment', 'Future worry'].map(pattern => (
+                              <button
+                                key={pattern}
+                                onClick={() => setReframePattern(pattern)}
+                                className="p-3 rounded-xl border-2 transition-all text-sm font-medium"
+                                style={{
+                                  background: reframePattern === pattern ? 'rgba(171, 206, 201, 0.2)' : 'transparent',
+                                  borderColor: reframePattern === pattern ? '#ABCEC9' : (darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
+                                  color: reframePattern === pattern ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b')
+                                }}
+                              >
+                                {pattern}
+                              </button>
+                            ))}
+                          </div>
+                          {reframePattern && (
+                            <button
+                              onClick={nextStep}
+                              className="w-full py-3 rounded-xl font-bold bg-[#ABCEC9] text-black hover:scale-[1.02] transition-all"
+                            >
+                              Confirm Pattern
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {currentStep === 2 && (
+                        <div className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
+                          {(() => {
+                            const questions = [
+                              "Is this thought absolutely true?",
+                              "Is this thought helping you right now?",
+                              "Who would you be without this thought?"
+                            ];
+                            return (
+                              <div className="text-center space-y-6">
+                                <p className="text-xl font-medium italic" style={{ color: darkMode ? '#f8fafc' : '#1e293b' }}>
+                                  "{questions[reframeQuestionIndex]}"
+                                </p>
+                                <button
+                                  onClick={() => {
+                                    if (reframeQuestionIndex < questions.length - 1) {
+                                      setReframeQuestionIndex(prev => prev + 1);
+                                    } else {
+                                      nextStep();
+                                    }
+                                  }}
+                                  className="px-8 py-3 rounded-full border-2 border-[#ABCEC9] text-[#ABCEC9] font-bold hover:bg-[#ABCEC9] hover:text-black transition-all"
+                                >
+                                  {reframeQuestionIndex < questions.length - 1 ? 'Deepen Enquiry' : 'I am Ready'}
+                                </button>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+
+                      {currentStep === 3 && (
+                        <div className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
+                          <div className="space-y-3">
+                            <label className="text-xs uppercase tracking-widest opacity-60">Your New Perspective</label>
+                            <textarea
+                              value={refinedThought}
+                              onChange={(e) => setRefinedThought(e.target.value)}
+                              placeholder="Write a more gentle truth..."
+                              className="w-full p-4 rounded-xl bg-transparent border-2 focus:border-[#ABCEC9] outline-none transition-all min-h-[100px]"
+                              style={{
+                                borderColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                color: darkMode ? '#f8fafc' : '#1e293b'
+                              }}
+                            />
+                          </div>
+                          <div className="p-4 rounded-xl bg-[#ABCEC9]/10 border border-[#ABCEC9]/20">
+                            <p className="text-sm font-medium italic text-center" style={{ color: '#ABCEC9' }}>
+                              "Notice how your body feels when you let this thought soften."
+                            </p>
+                          </div>
+                          {refinedThought.length > 3 && (
+                            <button
+                              onClick={() => {
+                                nextStep();
+                                // Reset state for next time
+                                setTimeout(() => {
+                                  setReframeThought('');
+                                  setReframePattern('');
+                                  setReframeQuestionIndex(0);
+                                  setRefinedThought('');
+                                }, 1000);
+                              }}
+                              className="w-full py-4 rounded-xl font-bold bg-[#ABCEC9] text-black shadow-lg shadow-[#ABCEC9]/30"
+                            >
+                              Complete Integration
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {activePractice.type === 'breath' && renderBreathVisual()}
                   {activePractice.type === 'witness' && renderWitnessVisual()}
                   {activePractice.type === 'presence' && renderPresenceVisual()}
@@ -999,9 +1207,14 @@ export default function UntetheredApp() {
   };
 
   const cardStyle = {
-    background: darkMode ? 'rgba(30,30,35,0.65)' : 'rgba(255,255,255,0.55)',
-    border: '1px solid ' + (darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.6)'),
-    boxShadow: '0 0 30px rgba(171, 206, 201, 0.25)',
+    // Kept for legacy ref if needed, but mostly using .card-glow now
+    background: 'rgba(255, 255, 255, 0.05)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '32px',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+    color: '#ffffff',
     transform: 'translateZ(0)',
     willChange: 'box-shadow, transform'
   };
@@ -1072,322 +1285,435 @@ export default function UntetheredApp() {
       {renderPracticeModal()}
       {renderLessonOverlay()}
 
-      <div className="max-w-md mx-auto">
-        <div className="p-6 pb-8 relative" style={{ background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)' }}>
-          <button onClick={() => setDarkMode(!darkMode)} className="absolute top-6 right-6 w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-all" style={{ background: 'rgba(0,0,0,0.2)' }}>
-            {darkMode ? <Sun className="w-5 h-5 text-yellow-300" /> : <Moon className="w-5 h-5 text-indigo-900" />}
-          </button>
-          <h1 className="text-2xl font-bold text-black">Awakened Path</h1>
-          <p className="text-black text-opacity-80 text-sm">Soul • Now • Zen</p>
-        </div>
+      <div className={`max-w-md mx-auto min-h-screen relative overflow-hidden transition-all duration-500`}>
+        {/* Ambient Glows - purely decorative, muted in light mode */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[40%] bg-brand opacity-20 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[10%] right-[-10%] w-[50%] h-[40%] bg-purple-500 opacity-10 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="px-4 -mt-4">
-          <div className="card-glow rounded-2xl p-6" style={cardStyle}>
+        <div className="p-6 pb-28 relative z-10">
 
-            {activeTab === 'home' && (
-              <div className="space-y-10 text-center py-6">
-                <div className="space-y-2">
-                  <h2 className="text-4xl font-thin tracking-widest" style={{ color: darkMode ? '#f8fafc' : '#1e293b', fontFamily: 'serif' }}>
-                    HERE & NOW
-                  </h2>
-                  <p className="text-xs uppercase tracking-[0.3em] opacity-60">The only place life exists</p>
+          {activeTab === 'home' && (
+            <div className="space-y-6 pt-2">
+
+              {/* 1. Greeting Header */}
+              <div className="flex justify-between items-center px-2">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight mb-1" style={{ color: 'var(--text-main)' }}>Hi, Soul</h1>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Welcome home.</p>
                 </div>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      const newMode = !darkMode;
+                      setDarkMode(newMode);
+                      if (!newMode) {
+                        document.body.classList.add('light-mode');
+                      } else {
+                        document.body.classList.remove('light-mode');
+                      }
+                    }}
+                    className="p-3 rounded-full card-glow transition-all hover:scale-110 active:scale-95"
+                  >
+                    {darkMode ? <Sun className="w-5 h-5 text-yellow-300" /> : <Moon className="w-5 h-5 text-indigo-600" />}
+                  </button>
+                  <button className="w-12 h-12 rounded-full bg-gradient-to-br from-brand to-purple-400 overflow-hidden border-2 border-white/20">
+                    <img src="https://api.dicebear.com/7.x/micah/svg?seed=soul" alt="User" />
+                  </button>
+                </div>
+              </div>
 
-                <div
-                  onClick={() => setActivePractice(quickPractices[2])}
-                  className="relative w-64 h-64 mx-auto flex items-center justify-center cursor-pointer group"
-                >
-                  {/* Outer Orbit (Mint) */}
-                  <div className="absolute inset-0 rounded-full border border-[#ABCEC9] opacity-20" style={{ animation: 'slow-spin 20s linear infinite' }}></div>
-
-                  {/* Inner Orbit (Lavender) */}
-                  <div className="absolute inset-6 rounded-full border border-[#C3B8D5] opacity-20" style={{ animation: 'reverse-spin 15s linear infinite' }}></div>
-
-                  {/* Nebula Glows */}
-                  <div className="absolute inset-0 bg-[#ABCEC9] blur-[60px] rounded-full" style={{ animation: 'nebula-pulse 6s ease-in-out infinite' }}></div>
-                  <div className="absolute inset-10 bg-[#C3B8D5] blur-[40px] rounded-full opacity-30"></div>
-
-                  {/* The Core Orb (Glass) */}
-                  <div className="relative z-10 w-32 h-32 rounded-full flex flex-col items-center justify-center transition-all duration-700 group-hover:scale-105"
+              {/* 2. Room/Section Filter Pills */}
+              <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar px-1">
+                {['Meditation', 'Focus', 'Sleep', 'Sounds'].map((pill, i) => (
+                  <button
+                    key={pill}
+                    className={`px-6 py-3 rounded-full text-sm font-medium transition-all whitespace-nowrap card-glow
+                        ${i === 0
+                        ? 'border-brand text-brand'
+                        : 'text-muted hover:border-white/20'}`}
                     style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      backdropFilter: 'blur(12px)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      boxShadow: '0 0 40px rgba(171, 206, 201, 0.3), inset 0 0 20px rgba(255,255,255,0.1)'
+                      borderColor: i === 0 ? 'var(--brand-primary)' : 'var(--glass-border)',
+                      color: i === 0 ? 'var(--brand-primary)' : 'var(--text-muted)'
                     }}
                   >
-                    <div className="text-2xl mb-1 group-hover:scale-110 transition-transform duration-500">✨</div>
-                    <div className="text-sm font-bold tracking-[0.2em] group-hover:text-white transition-colors" style={{ color: '#ABCEC9', animation: 'text-shimmer 3s ease-in-out infinite' }}>
-                      CENTER
+                    {pill}
+                  </button>
+                ))}
+              </div>
+
+              {/* 3. Main Feature Card (Inner Light / Smart Lamp style) */}
+              <div className="p-6 relative overflow-hidden group transition-all duration-500 card-glow h-[320px] flex flex-col justify-between"
+                style={{ borderRadius: '32px' }}>
+
+                <div className="flex justify-between items-start relative z-10">
+                  <div>
+                    <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-main)' }}>Inner Light</h2>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Practice • Bedroom</p>
+                  </div>
+                  <button className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors backdrop-blur-md border border-white/10">
+                    <Power className="w-5 h-5" style={{ color: 'var(--text-main)' }} />
+                  </button>
+                </div>
+
+                {/* The Visual (Brand specific glow) */}
+                <div className="flex justify-center items-center flex-1 relative z-10">
+                  <div className="relative w-40 h-40 cursor-pointer group-hover:scale-105 transition-transform duration-700"
+                    onClick={() => setActivePractice(practices[0])}
+                  >
+                    {/* Light bulb/Sun Glow */}
+                    <div className="absolute inset-0 rounded-full blur-[60px] opacity-40 animate-pulse" style={{ background: 'var(--brand-primary)' }} />
+                    <div className="absolute inset-8 rounded-full blur-[40px] opacity-60" style={{ background: 'var(--brand-secondary)' }} />
+
+                    {/* Physical Object */}
+                    <div className="absolute inset-0 rounded-full border border-white/20 shadow-[0_0_30px_inset_rgba(255,255,255,0.1)] backdrop-blur-sm flex items-center justify-center"
+                      style={{ background: 'var(--glass-surface)' }}>
+                      <Sun className="w-14 h-14 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" style={{ color: 'var(--brand-primary)' }} />
                     </div>
                   </div>
-
-                  {/* Hover Surge Effect */}
-                  <div className="absolute inset-0 rounded-full bg-[#ABCEC9] opacity-0 group-hover:opacity-10 blur-[80px] transition-opacity duration-700"></div>
                 </div>
 
-                <div className="p-6 rounded-xl space-y-3 relative overflow-hidden" style={{ background: darkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}>
-                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#ABCEC9] to-[#C3B8D5] opacity-50"></div>
-                  <p className="text-lg italic font-light leading-relaxed" style={{ color: darkMode ? '#e2e8f0' : '#334155' }}>
-                    "You are not the voice in your head. You are the one who hears it."
-                  </p>
-                  <p className="text-xs font-bold uppercase tracking-widest text-right" style={{ color: '#ABCEC9' }}>— Michael Singer</p>
+                {/* Slider Element (Visual only for now) */}
+                <div className="bg-black/20 rounded-2xl p-4 flex items-center gap-4 relative z-10">
+                  <Sun className="w-5 h-5" style={{ color: 'var(--brand-primary)' }} />
+                  <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full w-[75%] rounded-full shadow-[0_0_10px_rgba(171,206,201,0.5)]" style={{ background: 'var(--brand-primary)' }} />
+                  </div>
+                  <span className="text-sm font-bold" style={{ color: 'var(--brand-primary)' }}>75%</span>
                 </div>
               </div>
-            )}
 
-            {activeTab === 'journey' && (
+              {/* 4. Grid of Smart Toggles */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Card 1: Quick Focus */}
+                <button
+                  onClick={() => setActivePractice(quickPractices[2])}
+                  className="p-5 text-left transition-all hover:translate-y-[-2px] card-glow h-40 flex flex-col justify-between group"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="p-3 rounded-full bg-white/5 border border-white/5 group-hover:scale-110 transition-transform">
+                      <Zap className="w-6 h-6" style={{ color: 'var(--brand-primary)' }} />
+                    </div>
+                    <div className="w-8 h-5 rounded-full border border-brand/30 flex items-center px-1" style={{ background: 'var(--card-glow-base)' }}>
+                      <div className="w-3 h-3 rounded-full shadow-[0_0_5px_white]" style={{ background: 'var(--brand-primary)' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg" style={{ color: 'var(--text-main)' }}>Quick Focus</h3>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>2 Devices • 5 min</p>
+                  </div>
+                </button>
+
+                {/* Card 2: Deep Rest */}
+                <button
+                  onClick={() => setActivePractice(practices[3])}
+                  className="p-5 text-left transition-all hover:translate-y-[-2px] card-glow h-40 flex flex-col justify-between group"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="p-3 rounded-full bg-white/5 border border-white/5 group-hover:scale-110 transition-transform">
+                      <Moon className="w-6 h-6" style={{ color: '#818cf8' }} />
+                    </div>
+                    {/* Toggle Off state */}
+                    <div className="w-8 h-5 rounded-full bg-white/5 border border-white/10 flex items-center px-1">
+                      <div className="w-3 h-3 rounded-full bg-white/20" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg" style={{ color: 'var(--text-main)' }}>Deep Rest</h3>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Bedroom • 20 min</p>
+                  </div>
+                </button>
+
+                {/* Card 3: Witness */}
+                <button
+                  onClick={() => setActivePractice(practices[1])}
+                  className="p-5 text-left transition-all hover:translate-y-[-2px] card-glow h-40 flex flex-col justify-between group"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="p-3 rounded-full bg-white/5 border border-white/5 group-hover:scale-110 transition-transform">
+                      <Eye className="w-6 h-6" style={{ color: 'var(--brand-secondary)' }} />
+                    </div>
+                    <div className="w-8 h-5 rounded-full bg-white/5 border border-white/10 flex items-center px-1">
+                      <div className="w-3 h-3 rounded-full bg-white/20" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg" style={{ color: 'var(--text-main)' }}>Witness</h3>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Living Room</p>
+                  </div>
+                </button>
+
+                {/* Card 4: Breath */}
+                <button
+                  onClick={() => setActivePractice(practices[0])}
+                  className="p-5 text-left transition-all hover:translate-y-[-2px] card-glow h-40 flex flex-col justify-between group"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="p-3 rounded-full bg-white/5 border border-white/5 group-hover:scale-110 transition-transform">
+                      <Wind className="w-6 h-6" style={{ color: 'var(--brand-primary)' }} />
+                    </div>
+                    <div className="w-8 h-5 rounded-full border border-brand/30 flex items-center px-1" style={{ background: 'var(--card-glow-base)' }}>
+                      <div className="w-3 h-3 rounded-full shadow-[0_0_5px_white]" style={{ background: 'var(--brand-primary)' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg" style={{ color: 'var(--text-main)' }}>Breath</h3>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Everywhere</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'journey' && (
+            <div className="space-y-8 animate-[fadeIn_0.5s_ease-out]">
+              <div className="px-2">
+                <h2 className="text-3xl font-bold tracking-tight mb-2" style={{ color: 'var(--text-main)' }}>Your Journey</h2>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Explore the path of awareness through these practices.</p>
+              </div>
+
               <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                    <Zap className="w-5 h-5" style={{ color: '#ABCEC9' }} />
-                    Quick Practices (30s-1m)
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {quickPractices.map(p => (
-                      <div key={p.id} onClick={() => setActivePractice(p)} className="card-glow rounded-xl p-4 cursor-pointer" style={cardStyle}>
-                        <div className="text-3xl mb-2">{p.icon}</div>
-                        <h4 className="font-bold text-sm mb-1">{p.title}</h4>
-                        <p className="text-xs mb-2" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>{p.steps[0].instruction}</p>
-                        <span className="text-xs font-bold" style={{ color: '#ABCEC9' }}>+{p.xp} XP</span>
+                {practices.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setActivePractice(p)}
+                    className="w-full p-5 text-left transition-all hover:translate-y-[-2px] card-glow flex items-center gap-6 group"
+                  >
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5 group-hover:scale-110 transition-transform text-4xl shadow-lg">
+                      {p.icon}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold tracking-widest uppercase opacity-60" style={{ color: '#ABCEC9' }}>
+                          {p.book === 'soul' ? 'Untethered' : p.book === 'now' ? 'Now' : 'Zen'}
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 opacity-70">
+                          {p.level}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                    <Target className="w-5 h-5" style={{ color: '#ABCEC9' }} />
-                    Deep Practices
-                  </h3>
-                  <div className="space-y-2">
-                    {practices.map(p => (
-                      <div key={p.id} onClick={() => setActivePractice(p)} className="card-glow rounded-xl p-4 cursor-pointer" style={cardStyle}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3 flex-1">
-                            <div className="text-4xl">{p.icon}</div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-semibold">{p.title}</h4>
-                                <span className="text-xs px-2 py-0.5 rounded-full" style={{
-                                  background: p.level === 'beginner' ? 'rgba(34, 197, 94, 0.2)' : p.level === 'intermediate' ? 'rgba(251, 146, 60, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                                  color: p.level === 'beginner' ? '#22c55e' : p.level === 'intermediate' ? '#fb923c' : '#ef4444'
-                                }}>
-                                  {p.level}
-                                </span>
-                              </div>
-                              <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>
-                                {p.steps.length} steps • {formatTime(p.duration)}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-bold" style={{ color: '#ABCEC9' }}>+{p.xp}</div>
-                            <div className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>XP</div>
-                          </div>
-                        </div>
-                        <div className="text-xs mt-2 p-2 rounded" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', color: darkMode ? '#94a3b8' : '#64748b' }}>
-                          📖 {p.steps[0].instruction}
-                        </div>
+                      <h3 className="font-bold text-lg" style={{ color: 'var(--text-main)' }}>{p.title}</h3>
+                      <div className="flex items-center gap-4 mt-2 text-xs opacity-60">
+                        <div className="flex items-center gap-1"><Clock className="w-3 h-3" /> {Math.floor(p.duration / 60)}m</div>
+                        <div className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-400" /> +{p.xp} XP</div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 opacity-30 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                ))}
               </div>
-            )}
 
-            {activeTab === 'chapters' && (
-              <div className="space-y-6">
-                {/* Book Selector (Keep existing) */}
-                <div className="flex gap-2 p-1 rounded-xl bg-black/20 backdrop-blur-md">
-                  {/* ... (Same as before) ... */}
-                  {((['soul', 'now', 'zen'] as const)).map(book => (
-                    <button key={book} onClick={() => setSelectedBook(book)} className="flex-1 py-3 rounded-lg font-bold text-sm transition-all relative overflow-hidden" style={{
-                      color: selectedBook === book ? '#000000' : (darkMode ? '#94a3b8' : '#64748b')
-                    }}>
-                      {selectedBook === book && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#ABCEC9] to-[#C3B8D5] opacity-100" />
-                      )}
-                      <span className="relative z-10 flex items-center justify-center gap-2">
-                        {book === 'soul' ? '📖 Soul' : book === 'now' ? '⚡ Now' : '🧘 Zen'}
-                      </span>
+              {/* Quick Shifts Section */}
+              <div className="pt-4">
+                <h3 className="px-2 text-lg font-bold mb-4 opacity-80 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-yellow-400" /> Quick Shifts
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {quickPractices.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => setActivePractice(p)}
+                      className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all text-left group"
+                    >
+                      <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">{p.icon}</div>
+                      <h4 className="font-bold text-sm mb-1">{p.title}</h4>
+                      <p className="text-[10px] opacity-60">+{p.xp} XP • {p.duration}s</p>
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
 
-                <div className="space-y-4">
-                  {chapters[selectedBook].map((ch, idx) => (
-                    <div key={ch.id} className="group relative overflow-hidden rounded-2xl border border-white/5 transition-all duration-500 hover:border-[#ABCEC9]/40" style={{
-                      background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
-                    }}>
-                      {/* Glow Bar */}
-                      {ch.unlocked && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#ABCEC9] to-[#C3B8D5] shadow-[0_0_15px_#ABCEC9]" />
-                      )}
+          {activeTab === 'chapters' && (
+            <div className="space-y-6">
+              {/* Book Selector (Keep existing) */}
+              <div className="flex gap-2 p-1 rounded-xl bg-black/20 backdrop-blur-md">
+                {/* ... (Same as before) ... */}
+                {((['soul', 'now', 'zen'] as const)).map(book => (
+                  <button key={book} onClick={() => setSelectedBook(book)} className="flex-1 py-3 rounded-lg font-bold text-sm transition-all relative overflow-hidden" style={{
+                    color: selectedBook === book ? '#000000' : (darkMode ? '#94a3b8' : '#64748b')
+                  }}>
+                    {selectedBook === book && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#ABCEC9] to-[#C3B8D5] opacity-100" />
+                    )}
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {book === 'soul' ? '📖 Soul' : book === 'now' ? '⚡ Now' : '🧘 Zen'}
+                    </span>
+                  </button>
+                ))}
+              </div>
 
-                      <div className="p-6 pl-8">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <div className="flex items-center gap-2 mb-2 text-xs font-bold tracking-widest text-[#ABCEC9]/80 uppercase">
-                              Chapter 0{ch.id}
-                              {ch.completed && <Sparkles className="w-3 h-3 text-yellow-400" />}
-                            </div>
-                            <h3 className={`text-2xl font-bold mb-1 ${!ch.unlocked && 'opacity-50'}`}>{ch.title}</h3>
+              <div className="space-y-4">
+                {chapters[selectedBook].map((ch, idx) => (
+                  <div key={ch.id} className="group relative overflow-hidden rounded-2xl border border-white/5 transition-all duration-500 hover:border-[#ABCEC9]/40" style={{
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
+                  }}>
+                    {/* Glow Bar */}
+                    {ch.unlocked && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#ABCEC9] to-[#C3B8D5] shadow-[0_0_15px_#ABCEC9]" />
+                    )}
+
+                    <div className="p-6 pl-8">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2 text-xs font-bold tracking-widest text-[#ABCEC9]/80 uppercase">
+                            Chapter 0{ch.id}
+                            {ch.completed && <Sparkles className="w-3 h-3 text-yellow-400" />}
                           </div>
-                          {/* Locked/Unlocked Icon */}
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${ch.unlocked ? 'bg-[#ABCEC9]/10 text-[#ABCEC9]' : 'bg-white/5 text-white/30'}`}>
-                            {ch.unlocked ? <ChevronRight className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                          <h3 className={`text-2xl font-bold mb-1 ${!ch.unlocked && 'opacity-50'}`}>{ch.title}</h3>
+                        </div>
+                        {/* Locked/Unlocked Icon */}
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${ch.unlocked ? 'bg-[#ABCEC9]/10 text-[#ABCEC9]' : 'bg-white/5 text-white/30'}`}>
+                          {ch.unlocked ? <ChevronRight className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                        </div>
+                      </div>
+
+                      {ch.unlocked ? (
+                        <div className="space-y-4">
+                          {/* Progress Bar */}
+                          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-[#ABCEC9] to-[#C3B8D5] transition-all duration-1000" style={{ width: `${(ch.done / ch.total) * 100}%` }} />
+                          </div>
+
+                          {/* NEW: Clickable Micro-Lessons */}
+                          <div className="mt-4 grid gap-2">
+                            {ch.lessons && ch.lessons.map((lesson, i) => (
+                              <button
+                                key={i}
+                                onClick={() => {
+                                  // Open the Lesson Overlay
+                                  setActiveLesson(lesson);
+                                  setLessonSlide(0);
+                                }}
+                                className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-left group/lesson"
+                              >
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold 
+                                          ${i < ch.done ? 'bg-[#ABCEC9] text-black' : 'bg-white/10 text-white/40'}`}>
+                                  {i + 1}
+                                </div>
+                                <div className="flex-1">
+                                  <div className={`text-sm font-medium ${i < ch.done ? 'text-white' : 'text-white/60'}`}>
+                                    {typeof lesson === 'string' ? lesson : lesson.title}
+                                  </div>
+                                </div>
+                                <Play className="w-3 h-3 opacity-0 group-hover/lesson:opacity-100 transition-opacity text-[#ABCEC9]" />
+                              </button>
+                            ))}
                           </div>
                         </div>
-
-                        {ch.unlocked ? (
-                          <div className="space-y-4">
-                            {/* Progress Bar */}
-                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                              <div className="h-full bg-gradient-to-r from-[#ABCEC9] to-[#C3B8D5] transition-all duration-1000" style={{ width: `${(ch.done / ch.total) * 100}%` }} />
-                            </div>
-
-                            {/* NEW: Clickable Micro-Lessons */}
-                            <div className="mt-4 grid gap-2">
-                              {ch.lessons && ch.lessons.map((lesson, i) => (
-                                <button
-                                  key={i}
-                                  onClick={() => {
-                                    // Open the Lesson Overlay
-                                    setActiveLesson(lesson);
-                                    setLessonSlide(0);
-                                  }}
-                                  className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-left group/lesson"
-                                >
-                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold 
-                                          ${i < ch.done ? 'bg-[#ABCEC9] text-black' : 'bg-white/10 text-white/40'}`}>
-                                    {i + 1}
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className={`text-sm font-medium ${i < ch.done ? 'text-white' : 'text-white/60'}`}>
-                                      {typeof lesson === 'string' ? lesson : lesson.title}
-                                    </div>
-                                  </div>
-                                  <Play className="w-3 h-3 opacity-0 group-hover/lesson:opacity-100 transition-opacity text-[#ABCEC9]" />
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-sm opacity-40 italic">Unlock previous chapter to continue path.</div>
-                        )}
-                      </div>
+                      ) : (
+                        <div className="text-sm opacity-40 italic">Unlock previous chapter to continue path.</div>
+                      )}
                     </div>
-                  ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'profile' && (
+            <div className="space-y-4">
+              <div className="rounded-2xl p-6 text-white" style={{ background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)' }}>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-black">Level {user.level}</h2>
+                    <p className="text-black text-opacity-70 text-sm">Awakener</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-2 justify-end">
+                      <Flame className="w-5 h-5 text-orange-500" />
+                      <span className="text-2xl font-bold text-black">{user.streak}</span>
+                    </div>
+                    <span className="text-black text-opacity-60 text-xs">Day Streak</span>
+                  </div>
+                </div>
+                <div className="bg-black bg-opacity-20 rounded-full h-4 overflow-hidden">
+                  <div className="h-full transition-all" style={{ width: (user.xp / user.xpToNext * 100) + '%', background: 'linear-gradient(90deg, #FFD700, #FFA500)' }} />
+                </div>
+                <p className="text-sm text-black text-opacity-80 mt-2">{user.xp} / {user.xpToNext} XP</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="card-glow rounded-xl p-3 text-center" style={cardStyle}>
+                  <Clock className="w-5 h-5 mx-auto mb-2" style={{ color: '#ABCEC9' }} />
+                  <div className="text-2xl font-bold" style={{ color: '#ABCEC9' }}>{user.nowMoments}</div>
+                  <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Now</p>
+                </div>
+                <div className="card-glow rounded-xl p-3 text-center" style={cardStyle}>
+                  <Eye className="w-5 h-5 mx-auto mb-2" style={{ color: '#C3B8D5' }} />
+                  <div className="text-2xl font-bold" style={{ color: '#C3B8D5' }}>{user.witnessPoints}</div>
+                  <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Witness</p>
+                </div>
+                <div className="card-glow rounded-xl p-3 text-center" style={cardStyle}>
+                  <Wind className="w-5 h-5 mx-auto mb-2" style={{ color: '#ABCEC9' }} />
+                  <div className="text-2xl font-bold" style={{ color: '#ABCEC9' }}>{user.zenPoints}</div>
+                  <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Zen</p>
                 </div>
               </div>
-            )}
 
-            {activeTab === 'profile' && (
-              <div className="space-y-4">
-                <div className="rounded-2xl p-6 text-white" style={{ background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)' }}>
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h2 className="text-2xl font-bold text-black">Level {user.level}</h2>
-                      <p className="text-black text-opacity-70 text-sm">Awakener</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-2 justify-end">
-                        <Flame className="w-5 h-5 text-orange-500" />
-                        <span className="text-2xl font-bold text-black">{user.streak}</span>
-                      </div>
-                      <span className="text-black text-opacity-60 text-xs">Day Streak</span>
-                    </div>
+              <div className="card-glow rounded-xl p-4" style={cardStyle}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center animate-pulse" style={{ background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)' }}>
+                    <Heart className="w-7 h-7 text-black" />
                   </div>
-                  <div className="bg-black bg-opacity-20 rounded-full h-4 overflow-hidden">
-                    <div className="h-full transition-all" style={{ width: (user.xp / user.xpToNext * 100) + '%', background: 'linear-gradient(90deg, #FFD700, #FFA500)' }} />
-                  </div>
-                  <p className="text-sm text-black text-opacity-80 mt-2">{user.xp} / {user.xpToNext} XP</p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="card-glow rounded-xl p-3 text-center" style={cardStyle}>
-                    <Clock className="w-5 h-5 mx-auto mb-2" style={{ color: '#ABCEC9' }} />
-                    <div className="text-2xl font-bold" style={{ color: '#ABCEC9' }}>{user.nowMoments}</div>
-                    <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Now</p>
-                  </div>
-                  <div className="card-glow rounded-xl p-3 text-center" style={cardStyle}>
-                    <Eye className="w-5 h-5 mx-auto mb-2" style={{ color: '#C3B8D5' }} />
-                    <div className="text-2xl font-bold" style={{ color: '#C3B8D5' }}>{user.witnessPoints}</div>
-                    <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Witness</p>
-                  </div>
-                  <div className="card-glow rounded-xl p-3 text-center" style={cardStyle}>
-                    <Wind className="w-5 h-5 mx-auto mb-2" style={{ color: '#ABCEC9' }} />
-                    <div className="text-2xl font-bold" style={{ color: '#ABCEC9' }}>{user.zenPoints}</div>
-                    <p className="text-xs" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Zen</p>
+                  <div>
+                    <h3 className="font-bold">Energy Level</h3>
+                    <p className="text-sm" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Heart • Mind • Body</p>
                   </div>
                 </div>
-
-                <div className="card-glow rounded-xl p-4" style={cardStyle}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center animate-pulse" style={{ background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)' }}>
-                      <Heart className="w-7 h-7 text-black" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold">Energy Level</h3>
-                      <p className="text-sm" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Heart • Mind • Body</p>
-                    </div>
-                  </div>
-                  <div className="rounded-full h-4 overflow-hidden" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
-                    <div className="h-full transition-all" style={{ width: user.energy + '%', background: 'linear-gradient(90deg, #ABCEC9, #C3B8D5)' }} />
-                  </div>
-                  <p className="text-sm mt-2" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>{user.energy}% Aligned</p>
+                <div className="rounded-full h-4 overflow-hidden" style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                  <div className="h-full transition-all" style={{ width: user.energy + '%', background: 'linear-gradient(90deg, #ABCEC9, #C3B8D5)' }} />
                 </div>
+                <p className="text-sm mt-2" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>{user.energy}% Aligned</p>
+              </div>
 
-                <div className="card-glow rounded-xl p-4" style={cardStyle}>
-                  <h3 className="font-bold mb-3 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" style={{ color: '#ABCEC9' }} />
-                    Total Progress
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Total presence time</span>
-                      <span className="font-semibold">{user.totalTime}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Breath sessions</span>
-                      <span className="font-semibold">{user.breathSessions}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Practices completed</span>
-                      <span className="font-semibold">127</span>
-                    </div>
+              <div className="card-glow rounded-xl p-4" style={cardStyle}>
+                <h3 className="font-bold mb-3 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" style={{ color: '#ABCEC9' }} />
+                  Total Progress
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Total presence time</span>
+                    <span className="font-semibold">{user.totalTime}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Breath sessions</span>
+                    <span className="font-semibold">{user.breathSessions}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>Practices completed</span>
+                    <span className="font-semibold">127</span>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-          </div>
         </div>
+      </div>
 
-        <div className="fixed bottom-0 left-0 right-0 px-4 py-3 max-w-md mx-auto" style={{
-          background: darkMode ? 'rgba(30,30,35,0.95)' : 'rgba(255,255,255,0.95)',
-          borderTop: '1px solid ' + (darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.6)'),
-          backdropFilter: 'blur(10px)'
-        }}>
-          <div className="flex justify-around items-center">
-            <button onClick={() => setActiveTab('home')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'home' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
-              <Home className="w-6 h-6" />
-              <span className="text-xs font-medium">Home</span>
-            </button>
-            <button onClick={() => setActiveTab('journey')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'journey' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
-              <Target className="w-6 h-6" />
-              <span className="text-xs font-medium">Journey</span>
-            </button>
-            <button onClick={() => setActiveTab('chapters')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'chapters' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
-              <BookOpen className="w-6 h-6" />
-              <span className="text-xs font-medium">Chapters</span>
-            </button>
-            <button onClick={() => setActiveTab('profile')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'profile' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
-              <User className="w-6 h-6" />
-              <span className="text-xs font-medium">Profile</span>
-            </button>
-          </div>
+      <div className="fixed bottom-0 left-0 right-0 px-4 py-3 max-w-md mx-auto" style={{
+        background: darkMode ? 'rgba(30,30,35,0.95)' : 'rgba(255,255,255,0.95)',
+        borderTop: '1px solid ' + (darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.6)'),
+        backdropFilter: 'blur(10px)'
+      }}>
+        <div className="flex justify-around items-center">
+          <button onClick={() => setActiveTab('home')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'home' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
+            <Home className="w-6 h-6" />
+            <span className="text-xs font-medium">Home</span>
+          </button>
+          <button onClick={() => setActiveTab('journey')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'journey' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
+            <Target className="w-6 h-6" />
+            <span className="text-xs font-medium">Journey</span>
+          </button>
+          <button onClick={() => setActiveTab('chapters')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'chapters' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
+            <BookOpen className="w-6 h-6" />
+            <span className="text-xs font-medium">Chapters</span>
+          </button>
+          <button onClick={() => setActiveTab('profile')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'profile' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
+            <User className="w-6 h-6" />
+            <span className="text-xs font-medium">Profile</span>
+          </button>
         </div>
       </div>
     </div>
