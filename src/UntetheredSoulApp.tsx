@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Heart, Award, Flame, BookOpen, Sparkles, Target, Clock, Eye, Wind, Star, Lock, ChevronRight, Zap, Sun, Moon, Play, Pause, RotateCcw, Home, User, Power } from 'lucide-react';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export default function UntetheredApp() {
   const [activeTab, setActiveTab] = useState('home');
@@ -25,6 +31,13 @@ export default function UntetheredApp() {
   const [reframeQuestionIndex, setReframeQuestionIndex] = useState(0);
   const [refinedThought, setRefinedThought] = useState('');
 
+  const resetReframeState = () => {
+    setReframeThought('');
+    setReframePattern('');
+    setReframeQuestionIndex(0);
+    setRefinedThought('');
+  };
+
   const user = {
     level: 5,
     xp: 920,
@@ -38,6 +51,24 @@ export default function UntetheredApp() {
     breathSessions: 18,
     totalTime: "24h 15m"
   };
+  // Reset practice state when starting any new practice
+  useEffect(() => {
+    if (activePractice) {
+      setCurrentStep(0);
+      setPracticeState('intro');
+      setIsTimerRunning(false);
+      setBreathCount(0);
+      setBreathPhase('inhale');
+      resetReframeState();
+
+      const firstStep = activePractice.steps?.[0];
+      if (firstStep?.duration) {
+        setTimer(firstStep.duration);
+      } else {
+        setTimer(0);
+      }
+    }
+  }, [activePractice]);
 
   // Timer effect
   useEffect(() => {
@@ -523,6 +554,7 @@ export default function UntetheredApp() {
       setActivePractice(null);
       setPracticeState('intro');
       setCurrentStep(0);
+      resetReframeState();
     }, 3000);
   };
 
@@ -656,100 +688,7 @@ export default function UntetheredApp() {
     };
 
     const current = colors[breathPhase as keyof typeof colors];
-    const renderLessonOverlay = () => {
-      if (!activeLesson) return null;
 
-      const currentSlide = activeLesson.slides[lessonSlide];
-      const isLastSlide = lessonSlide === activeLesson.slides.length - 1;
-
-      return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-[fadeIn_0.3s_ease-out]">
-          {/* Dynamic Background based on Book */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className={`absolute top-[-50%] left-[-50%] w-[200%] h-[200%] opacity-20 animate-[slow-spin_60s_linear_infinite] 
-            ${selectedBook === 'soul' ? 'bg-[conic-gradient(from_0deg,#ABCEC9,#000,#ABCEC9)]' :
-                selectedBook === 'now' ? 'bg-[conic-gradient(from_0deg,#fb923c,#000,#fb923c)]' :
-                  'bg-[conic-gradient(from_0deg,#818cf8,#000,#818cf8)]'}`}
-            />
-            <div className="absolute inset-0 bg-black/80" />
-          </div>
-
-          <div className="relative z-10 w-full max-w-lg">
-            {/* Progress Bar */}
-            <div className="flex gap-2 mb-8">
-              {activeLesson.slides.map((_, i) => (
-                <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-500 
-                ${i <= lessonSlide ? 'bg-white shadow-[0_0_10px_white]' : 'bg-white/10'}`}
-                />
-              ))}
-            </div>
-
-            {/* Card Content */}
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md shadow-2xl relative overflow-hidden group">
-              {/* Slide Visual Accent */}
-              <div className="absolute top-0 right-0 p-3 opacity-20">
-                <div className="text-9xl font-serif select-none">{lessonSlide + 1}</div>
-              </div>
-
-              <div className="min-h-[300px] flex flex-col justify-center animate-[slideUp_0.5s_ease-out]">
-                <div className="mb-6 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 w-fit">
-                  <Sparkles className="w-3 h-3 text-[#ABCEC9]" />
-                  <span className="text-xs font-bold tracking-widest uppercase text-[#ABCEC9]">{currentSlide.type}</span>
-                </div>
-
-                <h2 className="text-3xl font-bold mb-6 leading-tight text-white/90">
-                  {currentSlide.title}
-                </h2>
-
-                <p className="text-lg leading-relaxed text-white/70 font-light">
-                  {currentSlide.text}
-                </p>
-
-                {currentSlide.action && (
-                  <div className="mt-8 p-4 rounded-xl bg-[#ABCEC9]/10 border border-[#ABCEC9]/20 flex items-start gap-4">
-                    <Eye className="w-6 h-6 text-[#ABCEC9] mt-1 shrink-0" />
-                    <div>
-                      <div className="text-xs font-bold text-[#ABCEC9] uppercase tracking-wider mb-1">Try This Now</div>
-                      <div className="text-sm text-white/80 italic">"{currentSlide.action}"</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="mt-8 flex justify-center">
-              <button
-                onClick={() => {
-                  if (isLastSlide) {
-                    // Complete Lesson
-                    const xpGain = 20;
-                    setShowReward({ xp: xpGain, title: "Lesson Mastered", icon: "🧠" });
-                    setActiveLesson(null);
-                    setLessonSlide(0);
-                    // Here you would typically update user state/db
-                    setTimeout(() => setShowReward(null), 3000);
-                  } else {
-                    setLessonSlide(prev => prev + 1);
-                  }
-                }}
-                className="w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(171,206,201,0.3)]"
-                style={{
-                  background: 'linear-gradient(135deg, #ABCEC9, #C3B8D5)',
-                  color: '#000000',
-                }}
-              >
-                {isLastSlide ? (
-                  <>Complete Lesson <Award className="w-5 h-5" /></>
-                ) : (
-                  <>Continue <ChevronRight className="w-5 h-5" /></>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    };
     return (
       <div className="flex flex-col items-center justify-center py-8">
         <div className="relative">
@@ -917,6 +856,7 @@ export default function UntetheredApp() {
                 setPracticeState('intro');
                 setCurrentStep(0);
                 setIsTimerRunning(false);
+                resetReframeState();
               }}
               className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center hover:bg-white hover:bg-opacity-20 transition-all"
               style={{ background: 'rgba(0,0,0,0.3)' }}
@@ -1034,6 +974,22 @@ export default function UntetheredApp() {
                               color: darkMode ? '#f8fafc' : '#1e293b'
                             }}
                           />
+                          {(() => {
+                            const highRiskPhrases = ["I want to die", "kill myself", "I hate myself", "can't go on"];
+                            const isRiskDetected = highRiskPhrases.some(phrase =>
+                              reframeThought.toLowerCase().includes(phrase.toLowerCase())
+                            );
+                            if (isRiskDetected) {
+                              return (
+                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 animate-[fadeIn_0.5s_ease-out]">
+                                  <p className="text-sm italic" style={{ color: '#ABCEC9' }}>
+                                    "Strong emotions noticed. You are not alone. Consider reaching out to someone you trust."
+                                  </p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                           {reframeThought.length > 3 && (
                             <button
                               onClick={nextStep}
@@ -1077,19 +1033,21 @@ export default function UntetheredApp() {
                       {currentStep === 2 && (
                         <div className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
                           {(() => {
-                            const questions = [
+                            const prompts = [
                               "Is this thought absolutely true?",
                               "Is this thought helping you right now?",
-                              "Who would you be without this thought?"
+                              "Who would you be without this thought?",
+                              "Pause. Feel your breath. Notice the space in which this thought appears."
                             ];
+                            const isGrounding = reframeQuestionIndex === 3;
                             return (
                               <div className="text-center space-y-6">
-                                <p className="text-xl font-medium italic" style={{ color: darkMode ? '#f8fafc' : '#1e293b' }}>
-                                  "{questions[reframeQuestionIndex]}"
+                                <p className={cn("text-xl font-medium italic", isGrounding ? "text-[#ABCEC9]" : "")} style={{ color: isGrounding ? '#ABCEC9' : (darkMode ? '#f8fafc' : '#1e293b') }}>
+                                  {isGrounding ? prompts[reframeQuestionIndex] : `"${prompts[reframeQuestionIndex]}"`}
                                 </p>
                                 <button
                                   onClick={() => {
-                                    if (reframeQuestionIndex < questions.length - 1) {
+                                    if (reframeQuestionIndex < prompts.length - 1) {
                                       setReframeQuestionIndex(prev => prev + 1);
                                     } else {
                                       nextStep();
@@ -1097,7 +1055,7 @@ export default function UntetheredApp() {
                                   }}
                                   className="px-8 py-3 rounded-full border-2 border-[#ABCEC9] text-[#ABCEC9] font-bold hover:bg-[#ABCEC9] hover:text-black transition-all"
                                 >
-                                  {reframeQuestionIndex < questions.length - 1 ? 'Deepen Enquiry' : 'I am Ready'}
+                                  {reframeQuestionIndex < prompts.length - 1 ? 'Deepen Enquiry' : 'I am Ready'}
                                 </button>
                               </div>
                             );
@@ -1127,16 +1085,7 @@ export default function UntetheredApp() {
                           </div>
                           {refinedThought.length > 3 && (
                             <button
-                              onClick={() => {
-                                nextStep();
-                                // Reset state for next time
-                                setTimeout(() => {
-                                  setReframeThought('');
-                                  setReframePattern('');
-                                  setReframeQuestionIndex(0);
-                                  setRefinedThought('');
-                                }, 1000);
-                              }}
+                              onClick={() => nextStep()}
                               className="w-full py-4 rounded-xl font-bold bg-[#ABCEC9] text-black shadow-lg shadow-[#ABCEC9]/30"
                             >
                               Complete Integration
@@ -1698,19 +1647,19 @@ export default function UntetheredApp() {
         backdropFilter: 'blur(10px)'
       }}>
         <div className="flex justify-around items-center">
-          <button onClick={() => setActiveTab('home')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'home' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
+          <button onClick={() => { setActiveTab('home'); setActivePractice(null); resetReframeState(); }} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'home' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
             <Home className="w-6 h-6" />
             <span className="text-xs font-medium">Home</span>
           </button>
-          <button onClick={() => setActiveTab('journey')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'journey' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
+          <button onClick={() => { setActiveTab('journey'); setActivePractice(null); resetReframeState(); }} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'journey' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
             <Target className="w-6 h-6" />
             <span className="text-xs font-medium">Journey</span>
           </button>
-          <button onClick={() => setActiveTab('chapters')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'chapters' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
+          <button onClick={() => { setActiveTab('chapters'); setActivePractice(null); resetReframeState(); }} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'chapters' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
             <BookOpen className="w-6 h-6" />
             <span className="text-xs font-medium">Chapters</span>
           </button>
-          <button onClick={() => setActiveTab('profile')} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'profile' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
+          <button onClick={() => { setActiveTab('profile'); setActivePractice(null); resetReframeState(); }} className="flex flex-col items-center gap-1 transition-all hover:scale-110" style={{ color: activeTab === 'profile' ? '#ABCEC9' : (darkMode ? '#94a3b8' : '#64748b') }}>
             <User className="w-6 h-6" />
             <span className="text-xs font-medium">Profile</span>
           </button>
