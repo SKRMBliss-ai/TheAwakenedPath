@@ -1,20 +1,23 @@
 import React from 'react';
-import { Home, Target, BookOpen, User } from 'lucide-react';
-import { cn } from '../../UntetheredSoulApp';
+import { Home, Target, BookOpen, User, Sparkles, AlertCircle } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 interface FloatingIslandProps {
     activeTab: string;
     setActiveTab: (tab: any) => void;
     onNavigate?: () => void;
+    isAdmin?: boolean;
 }
 
-const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, setActiveTab, onNavigate }) => {
+const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, setActiveTab, onNavigate, isAdmin }) => {
     const tabs = [
         { id: 'home', icon: Home, label: 'Home' },
-        { id: 'journey', icon: Target, label: 'Journey' },
-        { id: 'chapters', icon: BookOpen, label: 'Chapters' },
+        { id: 'intelligence', icon: Sparkles, label: 'Power of Now' },
+        { id: 'chapters', icon: BookOpen, label: 'Journal' },
+        { id: 'journey', icon: Target, label: 'Breath' },
+        { id: 'panic', icon: AlertCircle, label: 'Panic' },
         { id: 'profile', icon: User, label: 'Profile' },
-    ];
+    ].filter(tab => isAdmin || tab.id === 'chapters');
 
     const activeIndex = tabs.findIndex(tab => tab.id === activeTab);
 
@@ -25,7 +28,7 @@ const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, setActiveTab
                 className="nav-indicator"
                 style={{
                     width: `calc(100% / ${tabs.length} - 8px)`,
-                    transform: `translateX(calc(${activeIndex} * 100% + ${activeIndex === 0 ? '4px' : '4px'}))`
+                    left: `calc((${activeIndex} * 100% / ${tabs.length}) + 4px)`
                 }}
             />
 
@@ -41,14 +44,14 @@ const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, setActiveTab
                             onNavigate?.();
                         }}
                         className={cn(
-                            "relative flex flex-col items-center justify-center py-2 px-4 transition-all duration-500",
-                            isActive ? "text-black scale-110" : "text-white/60 hover:text-white"
+                            "relative flex flex-col items-center justify-center p-2 transition-all duration-500 outline-none",
+                            isActive ? "text-[#3a2a3c] scale-110" : "text-white/70 hover:text-white/90"
                         )}
                         style={{ width: `calc(100% / ${tabs.length})` }}
                     >
-                        <Icon className={cn("w-6 h-6", isActive ? "drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]" : "")} />
-                        <span className={cn("text-[10px] font-bold mt-1 uppercase tracking-tighter transition-all duration-500",
-                            isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2")}>
+                        <Icon className={cn("w-5 h-5", isActive ? "drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]" : "")} />
+                        <span className={cn("text-[8px] font-bold mt-1 uppercase tracking-tighter transition-all duration-500",
+                            isActive ? "opacity-100" : "opacity-60")}>
                             {tab.label}
                         </span>
 
