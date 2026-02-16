@@ -237,8 +237,10 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter }) => {
 
                                             {/* Chapter Content Router */}
                                             {chapter.id === 'observer' && (
-                                                <div className="card-glow p-8 md:p-10 flex flex-col items-center text-center rounded-[40px] border-white/10 shadow-inner">
+                                                <div className="card-glow p-8 md:p-10 flex flex-col items-center text-center rounded-[40px] border-white/10 shadow-inner overflow-visible">
                                                     <div className="w-20 h-20 rounded-full bg-[#ABCEC9]/5 border border-[#ABCEC9]/20 flex items-center justify-center mb-6 relative">
+                                                        {/* Subtle Ambient Glow behind Mic */}
+                                                        <div className="absolute inset-0 -m-8 bg-[radial-gradient(circle_at_center,var(--glow-cyan),var(--glow-gold),transparent_70%)] opacity-30 blur-[40px] pointer-events-none" />
                                                         <AnimatePresence>
                                                             {isListening && (
                                                                 <motion.div

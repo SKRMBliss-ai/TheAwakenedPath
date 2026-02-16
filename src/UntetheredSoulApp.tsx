@@ -230,6 +230,8 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin }: any) => {
 
         <div className="relative z-10 flex flex-col items-center text-center space-y-16">
           <div className="relative group">
+            {/* Ambient Background Glow behind the circle */}
+            <div className="absolute inset-0 -m-20 bg-[radial-gradient(circle_at_center,var(--glow-cyan),var(--glow-gold),transparent_70%)] opacity-20 blur-[80px] group-hover:opacity-40 transition-opacity duration-1000" />
             <SacredCircle
               text="AWAKEN"
               isAnimating={true}

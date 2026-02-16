@@ -48,7 +48,11 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
     return (
         <div className="fixed inset-0 z-[150] bg-[#1a151b] flex flex-col items-center justify-between p-8 md:p-12 overflow-hidden text-white">
             {/* Background Sacred Ambient */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#2d1f2e_0%,#1a151b_100%)] opacity-80" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(58,54,61,1)_0%,#1a151b_100%)]" />
+
+            {/* Ambient Corner Glows */}
+            <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-[radial-gradient(circle_at_top_right,var(--glow-cyan),transparent_70%)] opacity-20 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[60%] h-[60%] bg-[radial-gradient(circle_at_bottom_left,var(--glow-gold),transparent_70%)] opacity-25 pointer-events-none" />
 
             {/* Top Navigation / Stats */}
             <header className="relative z-10 w-full flex justify-between items-start pt-4">
@@ -69,7 +73,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
             {/* Central Portal & Title */}
             <div className="relative flex-1 w-full flex flex-col items-center justify-center">
                 {/* Large Title - High Position (Secondary info in this style) */}
-                <div className="mb-12 text-center h-12 flex items-center opacity-30">
+                <div className="mb-8 text-center h-8 flex items-center opacity-30">
                     <AnimatePresence mode="wait">
                         <motion.span
                             key={title}
@@ -82,18 +86,42 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                     </AnimatePresence>
                 </div>
 
+                {/* Step Text moved ABOVE the circle for serenity */}
+                <div className="mb-12 h-32 flex flex-col items-center justify-center">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentStepTitle}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 1 }}
+                            className="text-center space-y-4 max-w-xl"
+                        >
+                            {currentStepTitle && (
+                                <h3 className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#ABCEC9] opacity-80">
+                                    {currentStepTitle}
+                                </h3>
+                            )}
+                            {currentStepInstruction && (
+                                <h2 className="text-3xl md:text-5xl font-serif font-bold text-white leading-tight">
+                                    {currentStepInstruction}
+                                </h2>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+
                 {/* The Main Sacred Circle */}
-                <div className="relative">
+                <div className="relative h-96 w-96 flex items-center justify-center">
                     {children ? children : (
                         <SacredCircle
-                            text={currentStepTitle}
                             isAnimating={isPlaying}
-                            size="lg"
+                            size="xl"
                         />
                     )}
 
                     {/* Progress Ring (Subtle Overlay) */}
-                    <svg className="absolute -inset-6 w-[calc(100%+48px)] h-[calc(100%+48px)] -rotate-90 opacity-20 pointer-events-none">
+                    <svg className="absolute inset-[-24px] w-[calc(100%+48px)] h-[calc(100%+48px)] -rotate-90 opacity-20 pointer-events-none">
                         <circle
                             cx="50%"
                             cy="50%"
@@ -115,22 +143,6 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                             transition={{ duration: 1 }}
                         />
                     </svg>
-                </div>
-
-                {/* Instruction Text - Below Portal */}
-                <div className="mt-12 text-center max-w-lg h-24">
-                    <AnimatePresence mode="wait">
-                        <motion.p
-                            key={currentStepInstruction}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 1 }}
-                            className="text-lg md:text-xl text-white/40 font-serif italic leading-relaxed"
-                        >
-                            {currentStepInstruction}
-                        </motion.p>
-                    </AnimatePresence>
                 </div>
             </div>
 

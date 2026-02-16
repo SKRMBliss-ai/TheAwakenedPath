@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { Zap, Moon, Sparkles } from 'lucide-react';
 
 interface Practice {
@@ -31,7 +31,7 @@ export const BreathPractice: React.FC<BreathPracticeProps> = ({ practices, setAc
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {practices.map((p, index) => {
+                {practices.map((p) => {
                     // Use custom premium designs for specific practices if they match by title or index
                     const isFocus = p.title.toLowerCase().includes('focus');
                     const isRest = p.title.toLowerCase().includes('rest');

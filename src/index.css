@@ -30,6 +30,8 @@
 
     --ease-fluid: cubic-bezier(0.23, 1, 0.32, 1);
     --teal-glow: #ABCEC9;
+    --glow-cyan: rgba(0, 240, 255, 0.4);
+    --glow-gold: rgba(255, 215, 0, 0.35);
 }
 
 body {

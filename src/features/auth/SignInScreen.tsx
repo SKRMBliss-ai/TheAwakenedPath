@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from './AuthContext';
-import { BookOpen, Sparkles, ArrowRight, Eye, EyeOff, LayoutGrid } from 'lucide-react';
+import { Sparkles, ArrowRight, Eye, EyeOff, LayoutGrid } from 'lucide-react';
 
 export const SignInScreen = () => {
     const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
