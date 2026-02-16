@@ -4,9 +4,7 @@
  * This ensures the Gemini API Key remains secret in Google Cloud Secret Manager.
  */
 
-const API_BASE_URL = import.meta.env.PROD
-    ? "" // Relative path works in production due to Firebase Hosting rewrites
-    : "http://localhost:5001/awakened-path-2026/us-central1"; // Local emulator path
+const API_BASE_URL = "https://awakened-path-2026.web.app";
 
 export async function getWitnessingReflection(userInput: string) {
     try {

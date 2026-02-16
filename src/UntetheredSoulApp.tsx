@@ -95,7 +95,6 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin }
         <section className="relative flex flex-col items-center justify-center space-y-8 z-10">
           <div className="transform scale-90 sm:scale-100">
             <SacredCircle
-              text="PRESENCE"
               isAnimating={true}
               size="md"
             />
@@ -233,7 +232,6 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin }: any) => {
             {/* Ambient Background Glow behind the circle */}
             <div className="absolute inset-0 -m-20 bg-[radial-gradient(circle_at_center,var(--glow-cyan),var(--glow-gold),transparent_70%)] opacity-20 blur-[80px] group-hover:opacity-40 transition-opacity duration-1000" />
             <SacredCircle
-              text="AWAKEN"
               isAnimating={true}
               size="lg"
             />

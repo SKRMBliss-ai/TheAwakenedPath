@@ -31,6 +31,7 @@ import {
     addDoc,
     serverTimestamp
 } from 'firebase/firestore';
+import { VoiceService } from '../../services/voiceService';
 
 interface Situation {
     id: string;
@@ -569,25 +570,11 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
             setTimeout(() => onEnd?.(), duration);
             return;
         }
-
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.85;
-        utterance.pitch = 1;
-
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = ['Google UK English Female', 'Microsoft Zira', 'Samantha'];
-        let selected = voices.find(v => preferred.some(p => v.name.includes(p)));
-        if (selected) utterance.voice = selected;
-
-        utterance.onstart = () => { };
-        utterance.onend = () => {
-        };
-        window.speechSynthesis.speak(utterance);
+        VoiceService.speak(text, { onEnd });
     }, [isMuted]);
 
     const handleReset = useCallback(() => {
-        window.speechSynthesis.cancel();
+        VoiceService.stop();
         setCurrentStep(0);
     }, []);
 
@@ -605,7 +592,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
         if (isPracticing && selectedSituation) {
             speak(selectedSituation.steps[currentStep].audioScript, handleNextStep);
         } else {
-            window.speechSynthesis.cancel();
+            VoiceService.stop();
         }
     }, [currentStep, isPracticing, selectedSituation, speak, handleNextStep]);
 

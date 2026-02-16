@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../../auth/AuthContext';
 import { MeditationPortal } from '../../../components/ui/MeditationPortal.tsx';
 import { db } from '../../../firebase';
+import { VoiceService } from '../../../services/voiceService';
 import {
     collection,
     addDoc,
@@ -110,27 +111,15 @@ const Journal: React.FC = () => {
             }, duration);
             return;
         }
-
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.8;
-        utterance.pitch = 0.95;
-
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = ['Google UK English Female', 'Microsoft Zira', 'Samantha', 'Google US English'];
-        let selected = voices.find(v => preferred.some(p => v.name.includes(p)));
-        if (selected) utterance.voice = selected;
-
-        utterance.onend = () => {
-            if (onEnd) {
-                setTimeout(onEnd, 1500);
+        VoiceService.speak(text, {
+            onEnd: () => {
+                if (onEnd) setTimeout(onEnd, 1500);
             }
-        };
-        window.speechSynthesis.speak(utterance);
+        });
     }, [isMuted]);
 
     const handleReset = useCallback(() => {
-        window.speechSynthesis.cancel();
+        VoiceService.stop();
         setPracticeStep(0);
     }, []);
 
@@ -159,7 +148,7 @@ const Journal: React.FC = () => {
         if (isPracticing) {
             speak(practiceSteps[practiceStep].audioScript, handleNextStep);
         } else {
-            window.speechSynthesis.cancel();
+            VoiceService.stop();
         }
     }, [practiceStep, isPracticing, speak, handleNextStep]);
 

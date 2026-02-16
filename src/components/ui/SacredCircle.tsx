@@ -15,10 +15,10 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
     accentColor = '#ABCEC9'
 }) => {
     const sizeClasses = {
-        sm: 'w-48 h-48',
-        md: 'w-64 h-64',
-        lg: 'w-80 h-80 md:w-[480px] md:h-[480px]',
-        xl: 'w-96 h-96 md:w-[600px] md:h-[600px]'
+        sm: 'w-32 h-32',
+        md: 'w-48 h-48',
+        lg: 'w-64 h-64 md:w-[350px] md:h-[350px]',
+        xl: 'w-72 h-72 md:w-[400px] md:h-[400px]'
     };
 
     const textSizeClasses = {

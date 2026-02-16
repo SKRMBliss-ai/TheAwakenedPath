@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { getWitnessingReflection } from '../services/geminiService';
+import { VoiceService } from '../../../services/voiceService';
 
 /**
  * HOOK: useWitnessingVoice
@@ -22,56 +23,11 @@ export function useWitnessingVoice() {
     }, []);
 
     const speak = useCallback((text: string) => {
-        // Cancel any ongoing speech
-        window.speechSynthesis.cancel();
-        setActiveCharIndex(-1);
-
-        const utternance = new SpeechSynthesisUtterance(text);
-        utternance.rate = 0.9; // Slightly slower
-        utternance.pitch = 1.0;
-
-        utternance.onboundary = (event) => {
-            if (event.name === 'word') {
-                setActiveCharIndex(event.charIndex);
+        VoiceService.speak(text, {
+            onEnd: () => {
+                setActiveCharIndex(-1);
             }
-        };
-
-        utternance.onend = () => {
-            setActiveCharIndex(-1);
-        };
-
-        // Choose a calming voice if available
-        const voices = window.speechSynthesis.getVoices();
-
-        // Priority list for more natural voices
-        const preferredVoices = [
-            'Google UK English Female',
-            'Microsoft Zira',
-            'Google US English',
-            'Samantha'
-        ];
-
-        let selectedVoice = null;
-
-        // Try to match preferred voices first
-        for (const name of preferredVoices) {
-            selectedVoice = voices.find(v => v.name.includes(name));
-            if (selectedVoice) break;
-        }
-
-        // Fallback to any Google or Microsoft voice
-        if (!selectedVoice) {
-            selectedVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Microsoft'));
-        }
-
-        if (selectedVoice) {
-            utternance.voice = selectedVoice;
-            console.log("Selected voice:", selectedVoice.name);
-        } else {
-            console.log(" using default voice");
-        }
-
-        window.speechSynthesis.speak(utternance);
+        });
     }, []);
 
     const startListening = useCallback(() => {
@@ -125,7 +81,7 @@ export function useWitnessingVoice() {
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.hidden) {
-                window.speechSynthesis.cancel();
+                VoiceService.stop();
                 setActiveCharIndex(-1);
             }
         };
@@ -133,7 +89,7 @@ export function useWitnessingVoice() {
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
-            window.speechSynthesis.cancel();
+            VoiceService.stop();
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, []);
