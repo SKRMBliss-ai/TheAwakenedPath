@@ -56,10 +56,10 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
             <div className="absolute -inset-10 bg-[radial-gradient(circle_at_center,var(--glow-cyan),transparent_70%)] opacity-20 blur-[120px] pointer-events-none animate-pulse" />
             <div className="absolute -inset-20 bg-[radial-gradient(circle_at_center,var(--glow-gold),transparent_70%)] opacity-10 blur-[160px] pointer-events-none" />
 
-            <div className="relative min-h-[90vh] w-full rounded-[48px] bg-[var(--bg-color)] flex flex-col items-center justify-between p-8 md:p-12 overflow-hidden text-white shadow-2xl border border-white/5">
+            <div className="relative h-full max-h-[900px] min-h-[600px] w-full max-w-5xl rounded-[48px] bg-[var(--bg-color)] flex flex-col items-center justify-between p-6 md:p-10 overflow-hidden text-white shadow-2xl border border-white/5">
                 {/* Background Sacred Ambient - Using Dashboard Plum Palette */}
                 <div className="absolute inset-0 bg-[var(--bg-body)] opacity-100" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(89,68,92,0.6)_0%,transparent_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(89,68,92,0.4)_0%,transparent_100%)]" />
 
                 {/* Ambient Corner Glows */}
                 <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-[radial-gradient(circle_at_top_right,var(--glow-cyan),transparent_70%)] opacity-20 pointer-events-none" />
@@ -97,8 +97,8 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                         </AnimatePresence>
                     </div>
 
-                    {/* Step Text moved ABOVE the circle for serenity - Removed fixed h-32 to prevent overlap */}
-                    <div className="mb-12 min-h-[200px] flex flex-col items-center justify-center px-6">
+                    {/* Step Text - Reduced min-h and margins to prevent pushing the circle out of view */}
+                    <div className="mb-4 flex-1 flex flex-col items-center justify-center px-6 overflow-hidden">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentStepTitle}
@@ -114,7 +114,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                                     </h3>
                                 )}
                                 {currentStepInstruction && (
-                                    <h2 className="text-2xl md:text-4xl font-serif font-bold text-white leading-tight">
+                                    <h2 className="text-xl md:text-3xl font-serif font-bold text-white leading-tight">
                                         {currentStepInstruction}
                                     </h2>
                                 )}
@@ -122,8 +122,8 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                         </AnimatePresence>
                     </div>
 
-                    {/* The Main Sacred Circle - Forced square and no-shrink to protect the visual anchor */}
-                    <div className="relative flex-shrink-0 aspect-square flex items-center justify-center">
+                    {/* The Main Sacred Circle Wrapper - Strictly controlled to prevent distortion */}
+                    <div className="relative flex-none h-[300px] w-[300px] md:h-[400px] md:w-[400px] aspect-square flex items-center justify-center mb-6">
                         {/* Sage Speaking Presence - A subtle expanded aura when voice is active */}
                         <AnimatePresence>
                             {isVoiceActive && (

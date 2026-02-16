@@ -50,7 +50,7 @@ const Journal: React.FC = () => {
     // Practice State
     const [practiceStep, setPracticeStep] = useState(0);
     const [isPracticing, setIsPracticing] = useState(false);
-    const [isMuted, setIsMuted] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
     const [showLogForm, setShowLogForm] = useState(false);
 
     const practiceSteps = [
@@ -104,19 +104,13 @@ const Journal: React.FC = () => {
 
     // Audio Logic
     const speak = useCallback((text: string, onEnd?: () => void) => {
-        if (isMuted) {
-            const duration = text.split(" ").length * 500;
-            setTimeout(() => {
-                if (onEnd) onEnd();
-            }, duration);
-            return;
-        }
+        if (isPaused) return;
         VoiceService.speak(text, {
             onEnd: () => {
                 if (onEnd) setTimeout(onEnd, 1500);
             }
         });
-    }, [isMuted]);
+    }, [isPaused]);
 
     const handleReset = useCallback(() => {
         VoiceService.stop();
@@ -145,12 +139,12 @@ const Journal: React.FC = () => {
     }, [entries, editingId]);
 
     useEffect(() => {
-        if (isPracticing) {
+        if (isPracticing && !isPaused) {
             speak(practiceSteps[practiceStep].audioScript, handleNextStep);
         } else {
             VoiceService.stop();
         }
-    }, [practiceStep, isPracticing, speak, handleNextStep]);
+    }, [practiceStep, isPracticing, speak, handleNextStep, isPaused]);
 
     useEffect(() => {
         if (!user) return;
@@ -214,8 +208,8 @@ const Journal: React.FC = () => {
                 currentStepInstruction={practiceSteps[practiceStep].instructions.join('. ')}
                 onNext={handleNextStep}
                 onReset={handleReset}
-                onTogglePlay={() => setIsMuted(!isMuted)}
-                isPlaying={!isMuted}
+                onTogglePlay={() => setIsPaused(!isPaused)}
+                isPlaying={!isPaused}
                 progress={(practiceStep + 1) / practiceSteps.length}
             />
         );

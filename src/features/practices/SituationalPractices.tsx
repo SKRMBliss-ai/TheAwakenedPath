@@ -559,19 +559,15 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
     const [selectedSituation, setSelectedSituation] = useState<Situation | null>(null);
     const [currentStep, setCurrentStep] = useState(0);
     const [isPracticing, setIsPracticing] = useState(false);
-    const [isMuted, setIsMuted] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
     const [showLogEntry, setShowLogEntry] = useState(false);
     const [journalData, setJournalData] = useState<Record<string, string>>({});
     const [showGuidance, setShowGuidance] = useState(false);
 
     const speak = useCallback((text: string, onEnd?: () => void) => {
-        if (isMuted) {
-            const duration = text.split(" ").length * 500;
-            setTimeout(() => onEnd?.(), duration);
-            return;
-        }
+        if (isPaused) return; // Do nothing if paused
         VoiceService.speak(text, { onEnd });
-    }, [isMuted]);
+    }, [isPaused]);
 
     const handleReset = useCallback(() => {
         VoiceService.stop();
@@ -589,12 +585,12 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
     }, [currentStep, selectedSituation]);
 
     useEffect(() => {
-        if (isPracticing && selectedSituation) {
+        if (isPracticing && selectedSituation && !isPaused) {
             speak(selectedSituation.steps[currentStep].audioScript, handleNextStep);
         } else {
             VoiceService.stop();
         }
-    }, [currentStep, isPracticing, selectedSituation, speak, handleNextStep]);
+    }, [currentStep, isPracticing, selectedSituation, speak, handleNextStep, isPaused]);
 
     const handleSaveJournal = async () => {
         if (!user || !selectedSituation) return;
@@ -621,8 +617,8 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                 currentStepInstruction={selectedSituation.steps[currentStep].instruction}
                 onNext={handleNextStep}
                 onReset={handleReset}
-                onTogglePlay={() => setIsMuted(!isMuted)}
-                isPlaying={!isMuted}
+                onTogglePlay={() => setIsPaused(!isPaused)}
+                isPlaying={!isPaused}
                 progress={(currentStep + 1) / selectedSituation.steps.length}
             />
         );
