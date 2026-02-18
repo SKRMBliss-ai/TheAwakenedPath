@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Flame, Sparkles, Sun, Search, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock } from 'lucide-react';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { PowerOfNow } from './features/soul-intelligence/components/PowerOfNow';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { cn } from './lib/utils';
 import Journal from './features/journal/components/Journal';
 import { BreathPractice } from './features/breath/components/BreathPractice';
@@ -10,9 +10,10 @@ import StatsDashboard from './features/stats/StatsDashboard';
 import { SituationalPractices } from './features/practices/SituationalPractices';
 import { useAuth } from './features/auth/AuthContext';
 import { MeditationPortal } from './components/ui/MeditationPortal';
-import { SacredCircle } from './components/ui/SacredCircle';
+import { AwakenStage } from './components/ui/SacredCircle';
 import { GlassShape } from './components/ui/GlassShape';
 import { SignInScreen } from './features/auth/SignInScreen';
+import { AnchorButton, NoiseOverlay, tokens, ProgressFilament } from './components/ui/SacredUI';
 
 interface PracticeStep {
   title: string;
@@ -49,7 +50,7 @@ const themeColors: any = {
 
 // --- Sub-components moved outside for stability ---
 
-const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin }: any) => {
+const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin, rotateX, rotateY }: any) => {
   const handleLogout = async () => {
     if (window.confirm('Are you sure you want to sign out?')) {
       await signOut();
@@ -63,54 +64,54 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin }
       exit={{ opacity: 0 }}
       className="space-y-10"
     >
-      {/* Hero Card Container - Dep Plum Shape */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#59445C] to-[#2d2430] rounded-[48px] p-6 pb-12 shadow-2xl border border-white/5 mx-2 mt-2">
+      {/* Hero Container — Floating, no card box */}
+      <div className="relative pt-6 pb-12 mx-2 mt-2">
+        {/* Decorative background glow — subtle, no box edge */}
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(198,95,157,0.08),transparent_60%)] pointer-events-none" />
 
-        {/* Decorative background glow inside the card */}
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(198,95,157,0.15),transparent_60%)] pointer-events-none" />
-
-        {/* Header inside the card */}
-        <header className="relative flex justify-between items-center z-10 mb-8">
+        {/* Header — minimal, floating */}
+        <header className="relative flex justify-between items-center z-10 mb-8 px-4">
           <button
             onClick={onOpenSidebar}
-            className="w-12 h-12 rounded-full bg-white/10 border border-white/10 flex items-center justify-center active:scale-90 transition-all shadow-lg backdrop-blur-md"
+            className="w-12 h-12 rounded-full bg-white/5 border border-white/5 flex items-center justify-center active:scale-90 transition-all backdrop-blur-md"
           >
-            <Menu className="w-5 h-5 text-white/90" />
+            <Menu className="w-5 h-5 text-white/70" />
           </button>
 
           <div className="flex flex-col items-center">
-            <h1 className="text-[12px] font-serif font-bold uppercase tracking-[0.25em] text-white Drop-shadow-md">The Awakened Path</h1>
-            <span className="text-[8px] font-bold text-white/50 tracking-widest uppercase mt-1">The Presence Study</span>
+            <h1 className="text-[12px] font-serif font-bold uppercase tracking-[0.25em] text-white/90">The Awakened Path</h1>
+            <span className="text-[8px] font-bold text-white/30 tracking-widest uppercase mt-1">The Presence Study</span>
           </div>
 
           <button
             onClick={handleLogout}
-            className="w-12 h-12 rounded-full bg-[#D4A574]/20 border border-[#D4A574]/30 flex items-center justify-center text-[#D4A574] text-[12px] font-bold shadow-lg hover:bg-[#D4A574]/30 transition-colors backdrop-blur-md"
+            className="w-12 h-12 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-white/90 text-[12px] font-bold transition-colors backdrop-blur-md"
           >
             {user.displayName ? user.displayName.substring(0, 2).toUpperCase() : 'AB'}
           </button>
         </header>
 
-        {/* Hero Content Area inside the card */}
+        {/* Hero Content Area — pure transparency */}
         <section className="relative flex flex-col items-center justify-center space-y-8 z-10">
           <div className="transform scale-90 sm:scale-100">
-            <SacredCircle
+            <AwakenStage
               isAnimating={true}
               size="md"
+              mouseX={rotateX}
+              mouseY={rotateY}
             />
           </div>
 
           <div className="text-center space-y-6">
-            {/* Pill Style Metrics */}
-            <div className="inline-flex items-center gap-6 px-6 py-3 rounded-full bg-black/20 border border-white/5 backdrop-blur-md shadow-xl">
-              <div className="flex items-center gap-2.5">
-                <Heart className="w-3.5 h-3.5 text-rose-300 opacity-80" />
-                <span className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-none">Gratitude</span>
+            {/* Minimal Metrics Row — no pill container needed if we want full float */}
+            <div className="flex items-center gap-8 justify-center opacity-60">
+              <div className="flex flex-col items-center gap-1.5">
+                <Heart className="w-3 h-3 text-rose-300" />
+                <span className="text-[8px] font-bold text-white/50 uppercase tracking-[0.2em]">Gratitude</span>
               </div>
-              <div className="w-px h-4 bg-white/10" />
-              <div className="flex items-center gap-2.5">
-                <Flame className="w-3.5 h-3.5 text-orange-300 opacity-80" />
-                <span className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] leading-none">{user.streak} Day Streak</span>
+              <div className="flex flex-col items-center gap-1.5">
+                <Flame className="w-3 h-3 text-orange-300" />
+                <span className="text-[8px] font-bold text-white/50 uppercase tracking-[0.2em]">{user.streak} Days</span>
               </div>
             </div>
           </div>
@@ -118,7 +119,18 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin }
       </div>
 
       {/* Primary Action Card - Situational Practice */}
-      <section>
+      <section className="relative px-2">
+        {/* Backlit Magenta Glow - Matching Soul Stats */}
+        {isAdmin && (
+          <motion.div
+            animate={{
+              scale: [1, 1.02, 1],
+              opacity: [0.3, 0.5, 0.3]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-[-15px] rounded-[40px] blur-[35px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
+          />
+        )}
         <button
           onClick={() => isAdmin ? setActiveTab('situations') : null}
           className={cn(
@@ -154,35 +166,47 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin }
           ].map((item: any) => {
             const isLocked = !isAdmin && item.id !== 'chapters';
             return (
-              <button
-                key={item.id}
-                onClick={() => !isLocked && setActiveTab(item.id)}
-                disabled={isLocked}
-                className={cn(
-                  "group relative overflow-hidden aspect-square bg-white/[0.03] border border-white/5 rounded-[32px] p-4 flex flex-col items-center justify-center gap-4 transition-all",
-                  !isLocked ? "hover:border-white/20 hover:bg-white/[0.05] active:scale-95" : "opacity-40 cursor-not-allowed"
+              <div key={item.id} className="relative group/card">
+                {/* Backlit Magenta Glow - Matching Soul Stats */}
+                {!isLocked && (
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      opacity: [0.3, 0.5, 0.3]
+                    }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute inset-[-10px] rounded-[32px] blur-[30px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
+                  />
                 )}
-              >
-                {!isLocked && <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,var(--item-color),transparent_70%)]" style={{ '--item-color': `${item.color}15` } as any} />}
-
-                <div className="relative w-24 h-24 flex items-center justify-center -mt-2">
-                  {isLocked ? (
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Lock className="w-8 h-8 text-white/30" />
-                      <div className="w-full h-full absolute inset-0 bg-black/20 backdrop-blur-[2px] rounded-full" />
-                    </div>
-                  ) : (
-                    <GlassShape icon={item.icon} color={item.color} variant={item.variant} className="w-full h-full" />
+                <button
+                  onClick={() => !isLocked && setActiveTab(item.id)}
+                  disabled={isLocked}
+                  className={cn(
+                    "w-full relative overflow-hidden aspect-square bg-white/[0.03] border border-white/5 rounded-[32px] p-4 flex flex-col items-center justify-center gap-4 transition-all",
+                    !isLocked ? "hover:border-white/20 hover:bg-white/[0.05] active:scale-95 shadow-2xl" : "opacity-40 cursor-not-allowed"
                   )}
-                </div>
+                >
+                  {!isLocked && <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,var(--item-color),transparent_70%)]" style={{ '--item-color': `${item.color}15` } as any} />}
 
-                <div className="text-center relative z-10">
-                  <div className="text-lg font-serif font-bold text-white mb-0.5">{item.label}</div>
-                  <div className="text-[8px] font-bold text-white/30 tracking-[0.2em]">
-                    {isLocked ? 'COMING SOON' : item.sub}
+                  <div className="relative w-24 h-24 flex items-center justify-center -mt-2">
+                    {isLocked ? (
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Lock className="w-8 h-8 text-white/30" />
+                        <div className="w-full h-full absolute inset-0 bg-black/20 backdrop-blur-[2px] rounded-full" />
+                      </div>
+                    ) : (
+                      <GlassShape icon={item.icon} color={item.color} variant={item.variant} className="w-full h-full" />
+                    )}
                   </div>
-                </div>
-              </button>
+
+                  <div className="text-center relative z-10">
+                    <div className="text-lg font-serif font-bold text-white mb-0.5">{item.label}</div>
+                    <div className="text-[8px] font-bold text-white/30 tracking-[0.2em]">
+                      {isLocked ? 'COMING SOON' : item.sub}
+                    </div>
+                  </div>
+                </button>
+              </div>
             )
           })}
         </div>
@@ -191,22 +215,22 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin }
   );
 };
 
-const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin }: any) => {
+const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY }: any) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-12 max-w-5xl mx-auto"
     >
-      {/* Desktop Optimized Header */}
-      <header className="flex justify-between items-center bg-white/[0.02] border border-white/5 p-6 rounded-[32px] backdrop-blur-xl">
+      {/* Desktop Optimized Header — Floating */}
+      <header className="flex justify-between items-center p-6 border-b border-white/5">
         <div className="flex items-center gap-6">
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+          <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
             <Search className="w-5 h-5 text-white/40" />
           </div>
           <div>
-            <h1 className="text-xl font-serif font-bold text-white tracking-tight">The Awakened Path</h1>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-white/30 font-bold">The Presence Study</p>
+            <h1 className="text-xl font-serif font-light text-white tracking-tight">The Awakened Path</h1>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-white/20 font-bold">The Presence Study</p>
           </div>
         </div>
         <button
@@ -217,7 +241,7 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin }: any) => {
             <div className="text-sm font-bold text-white/90">Soul Guide</div>
             <div className="text-[10px] text-[#ABCEC9] font-bold tracking-widest uppercase">Level {user.level}</div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-[#C65F9D]/20 border border-[#C65F9D]/40 flex items-center justify-center text-[#C65F9D] text-sm font-bold shadow-lg shadow-[#C65F9D]/10">
+          <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/80 text-sm font-bold">
             {user.displayName ? user.displayName.substring(0, 2).toUpperCase() : 'AB'}
           </div>
         </button>
@@ -225,15 +249,13 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin }: any) => {
 
       {/* Hero Guided Area - Minimalist Desktop */}
       <section className="relative py-16 flex flex-col items-center justify-center min-h-[500px]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(171,206,201,0.03)_0%,transparent_70%)]" />
-
         <div className="relative z-10 flex flex-col items-center text-center space-y-16">
           <div className="relative group">
-            {/* Ambient Background Glow behind the circle */}
-            <div className="absolute inset-0 -m-20 bg-[radial-gradient(circle_at_center,var(--glow-cyan),var(--glow-gold),transparent_70%)] opacity-20 blur-[80px] group-hover:opacity-40 transition-opacity duration-1000" />
-            <SacredCircle
+            <AwakenStage
               isAnimating={true}
               size="lg"
+              mouseX={rotateX}
+              mouseY={rotateY}
             />
           </div>
 
@@ -251,8 +273,18 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin }: any) => {
       </section>
 
       {/* Main Action Call - Situational Practice */}
-      {/* Main Action Call - Situational Practice */}
-      <section>
+      <section className="relative">
+        {/* Backlit Magenta Glow - Matching Soul Stats */}
+        {isAdmin && (
+          <motion.div
+            animate={{
+              scale: [1, 1.02, 1],
+              opacity: [0.3, 0.5, 0.3]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-[-20px] rounded-[40px] blur-[50px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
+          />
+        )}
         <button
           onClick={() => isAdmin ? setActiveTab('situations') : null}
           className={cn(
@@ -290,38 +322,51 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin }: any) => {
           ].map((item: any) => {
             const isLocked = !isAdmin && item.id !== 'chapters';
             return (
-              <motion.button
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: item.delay }}
-                onClick={() => !isLocked && setActiveTab(item.id)}
-                disabled={isLocked}
-                className={cn(
-                  "group relative overflow-hidden bg-white/[0.03] border border-white/5 rounded-[40px] p-8 flex flex-col items-center justify-center gap-6 transition-all",
-                  !isLocked ? "hover:border-white/20 hover:bg-white/[0.05] active:scale-95" : "opacity-40 cursor-not-allowed"
+              <div key={item.id} className="relative group/card">
+                {/* Backlit Magenta Glow - Matching Soul Stats */}
+                {!isLocked && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{
+                      opacity: [0.2, 0.4, 0.2],
+                      scale: [1, 1.05, 1]
+                    }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: item.delay }}
+                    className="absolute inset-[-15px] rounded-[40px] blur-[40px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
+                  />
                 )}
-              >
-                {!isLocked && <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,var(--item-color),transparent_70%)]" style={{ '--item-color': `${item.color}15` } as any} />}
-
-                <div className="relative w-32 h-32 flex items-center justify-center">
-                  {isLocked ? (
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Lock className="w-12 h-12 text-white/30" />
-                      <div className="w-full h-full absolute inset-0 bg-black/20 backdrop-blur-[2px] rounded-full" />
-                    </div>
-                  ) : (
-                    <GlassShape icon={item.icon} color={item.color} variant={item.variant} className="w-full h-full" />
+                <motion.button
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: item.delay }}
+                  onClick={() => !isLocked && setActiveTab(item.id)}
+                  disabled={isLocked}
+                  className={cn(
+                    "w-full h-full group relative overflow-hidden bg-white/[0.03] border border-white/5 rounded-[40px] p-8 flex flex-col items-center justify-center gap-6 transition-all",
+                    !isLocked ? "hover:border-white/20 hover:bg-white/[0.05] active:scale-95 shadow-2xl" : "opacity-40 cursor-not-allowed"
                   )}
-                </div>
+                >
+                  {!isLocked && <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,var(--item-color),transparent_70%)]" style={{ '--item-color': `${item.color}15` } as any} />}
 
-                <div className="text-center relative z-10">
-                  <div className="text-2xl font-serif font-bold text-white mb-1">{item.label}</div>
-                  <div className="text-[9px] font-bold text-white/30 tracking-[0.3em] uppercase">
-                    {isLocked ? 'COMING SOON' : item.sub}
+                  <div className="relative w-32 h-32 flex items-center justify-center">
+                    {isLocked ? (
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Lock className="w-12 h-12 text-white/30" />
+                        <div className="w-full h-full absolute inset-0 bg-black/20 backdrop-blur-[2px] rounded-full" />
+                      </div>
+                    ) : (
+                      <GlassShape icon={item.icon} color={item.color} variant={item.variant} className="w-full h-full" />
+                    )}
                   </div>
-                </div>
-              </motion.button>
+
+                  <div className="text-center relative z-10">
+                    <div className="text-2xl font-serif font-bold text-white mb-1">{item.label}</div>
+                    <div className="text-[9px] font-bold text-white/30 tracking-[0.3em] uppercase">
+                      {isLocked ? 'COMING SOON' : item.sub}
+                    </div>
+                  </div>
+                </motion.button>
+              </div>
             )
           })}
         </div>
@@ -335,7 +380,6 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin }: any) => {
 export default function UntetheredApp() {
   const { user: currentUser, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
-  const [darkMode] = useState(true);
   const [activePractice, setActivePractice] = useState<Practice | null>(null);
   const [practiceState, setPracticeState] = useState('active');
   const [currentStep, setCurrentStep] = useState(0);
@@ -345,6 +389,19 @@ export default function UntetheredApp() {
   const [, setBreathCount] = useState(0);
   const [showReward, setShowReward] = useState<Reward | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Magnetic orb tilt for the entire app (dashboard)
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const rotateX = useSpring(useTransform(my, [-400, 400], [8, -8]), { stiffness: 25, damping: 20 });
+  const rotateY = useSpring(useTransform(mx, [-400, 400], [-8, 8]), { stiffness: 25, damping: 20 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (activeTab === 'home') {
+      mx.set(e.clientX - window.innerWidth / 2);
+      my.set(e.clientY - window.innerHeight / 2);
+    }
+  };
 
   const admins = ['shrutikhungar@gmail.com', 'smriti.duggal@gmail.com'];
   const isAdmin = !!(currentUser?.email && admins.includes(currentUser.email));
@@ -511,8 +568,20 @@ export default function UntetheredApp() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden transition-all duration-700 font-sans" style={{ background: darkMode ? 'var(--bg-body)' : 'white' }}>
+    <div
+      onMouseMove={handleMouseMove}
+      className="min-h-screen relative overflow-hidden transition-all duration-700 font-sans"
+      style={{ background: tokens.plum }}
+    >
       <LivingBlobs />
+      <NoiseOverlay />
+      <div
+        style={{
+          position: "fixed", inset: 0,
+          background: `radial-gradient(ellipse 80% 50% at 50% -20%, #2D104060, transparent), radial-gradient(ellipse 60% 40% at 80% 80%, #D16BA508, transparent)`,
+          pointerEvents: "none"
+        }}
+      />
       {renderPracticeModal()}
 
       {/* MOBILE SIDEBAR OVERLAY */}
@@ -552,7 +621,7 @@ export default function UntetheredApp() {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-2">
+        <nav className="flex-1 space-y-3">
           {[
             { id: 'home', icon: Sun, label: 'Dashboard' },
             { id: 'intelligence', icon: Sparkles, label: 'Now', fullLabel: 'Power of Now' },
@@ -563,25 +632,46 @@ export default function UntetheredApp() {
             { id: 'profile', icon: User, label: 'Profile' },
           ].map((item: any) => {
             const isActive = activeTab === item.id;
+            const Icon = item.icon;
             return (
               <button
                 key={item.id}
                 onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }}
-                className={cn(
-                  "w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 group",
-                  isActive ? "bg-white/10 text-white shadow" : "text-white/40 hover:text-white/70"
-                )}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 16px', borderRadius: 0, background: 'none', border: 'none',
+                  cursor: 'pointer', position: 'relative',
+                  borderLeft: `2px solid ${isActive ? '#ABCEC9' : 'transparent'}`,
+                  paddingLeft: isActive ? 14 : 16,
+                  transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+                }}
               >
-                <item.icon className={cn("w-5 h-5", isActive ? "text-[#ABCEC9]" : "group-hover:text-white/60")} />
-                <span className="text-sm font-bold uppercase tracking-widest leading-none">
-                  {item.fullLabel ? (
-                    <>
-                      <span className="group-hover:hidden">{item.label}</span>
-                      <span className="hidden group-hover:inline">{item.fullLabel}</span>
-                    </>
-                  ) : item.label}
+                <Icon
+                  size={15} strokeWidth={isActive ? 1.5 : 1}
+                  style={{
+                    color: isActive ? '#ABCEC9' : 'rgba(255,255,255,0.25)',
+                    transition: 'all 0.4s',
+                  }}
+                />
+                <span style={{
+                  fontSize: 9, letterSpacing: '0.4em', textTransform: 'uppercase',
+                  fontFamily: 'system-ui, sans-serif', fontWeight: 700,
+                  color: isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.25)',
+                  transition: 'color 0.4s',
+                }}>
+                  {item.label}
                 </span>
-                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#ABCEC9]" />}
+                {/* Active dot — slides smoothly */}
+                {isActive && (
+                  <motion.div
+                    layoutId="nav-active-dot"
+                    style={{
+                      marginLeft: 'auto', width: 4, height: 4, borderRadius: '50%',
+                      background: '#ABCEC9',
+                      boxShadow: `0 0 8px #ABCEC9`,
+                    }}
+                  />
+                )}
               </button>
             );
           })}
@@ -613,10 +703,25 @@ export default function UntetheredApp() {
             {activeTab === 'home' && (
               <>
                 <div className="lg:hidden">
-                  <MobileDashboard user={user} setActiveTab={setActiveTab} onOpenSidebar={() => setIsSidebarOpen(true)} signOut={signOut} isAdmin={isAdmin} />
+                  <MobileDashboard
+                    user={user}
+                    setActiveTab={setActiveTab}
+                    onOpenSidebar={() => setIsSidebarOpen(true)}
+                    signOut={signOut}
+                    isAdmin={isAdmin}
+                    rotateX={rotateX}
+                    rotateY={rotateY}
+                  />
                 </div>
                 <div className="hidden lg:block">
-                  <BreadthDesktop user={user} setActiveTab={setActiveTab} signOut={signOut} isAdmin={isAdmin} />
+                  <BreadthDesktop
+                    user={user}
+                    setActiveTab={setActiveTab}
+                    signOut={signOut}
+                    isAdmin={isAdmin}
+                    rotateX={rotateX}
+                    rotateY={rotateY}
+                  />
                 </div>
               </>
             )}
@@ -651,29 +756,68 @@ export default function UntetheredApp() {
               </motion.div>
             )}
 
-            {activeTab === 'profile' && (
-              <motion.div key="profile" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-12">
-                <header className="p-12 rounded-[48px] bg-gradient-to-br from-[#ABCEC9]/80 to-[#C65F9D]/80 backdrop-blur-3xl text-white shadow-2xl relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-12 opacity-10"><User className="w-48 h-48" /></div>
-                  <div className="relative z-10">
-                    <h2 className="text-6xl font-serif font-bold mb-4">Level {user.level}</h2>
-                    <p className="opacity-80 uppercase tracking-[0.3em] text-xs font-bold">Awareness Score: {user.xp}</p>
+            {activeTab === 'profile' && user && (
+              <motion.div
+                key="profile"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="space-y-16 max-w-4xl mx-auto"
+              >
+                {/* Sacred Profile Header */}
+                <header className="relative p-16 rounded-[60px] border border-white/5 bg-white/[0.02] overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#D16BA5]/10 to-transparent pointer-events-none" />
+                  <div className="absolute top-[-20%] right-[-10%] w-80 h-80 bg-[#D16BA5]/5 blur-[100px] rounded-full" />
+
+                  <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-12 text-center md:text-left">
+                    <div className="space-y-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.8em] text-white/30">Level {user.level} · Presence Anchor</p>
+                      <h2 className="text-7xl font-serif font-light text-white tracking-tight">The Witness</h2>
+                      <div className="pt-4 flex items-center gap-4 justify-center md:justify-start">
+                        <div className="px-5 py-1.5 rounded-full border border-[#ABCEC9]/20 bg-[#ABCEC9]/5 text-[10px] uppercase font-bold tracking-[0.3em] text-[#ABCEC9]">
+                          {user.xp} Total XP
+                        </div>
+                      </div>
+                    </div>
+
+                    <AnchorButton variant="ghost" onClick={signOut} className="!w-auto !px-12 text-white/40 hover:text-white">
+                      ✦ Unseal Session
+                    </AnchorButton>
                   </div>
                 </header>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-1">
-                  <div className="card-glow p-10 flex flex-col justify-between rounded-[40px]">
-                    <Clock className="w-7 h-7 text-[#ABCEC9] mb-4" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Moments of Now */}
+                  <div className="p-12 rounded-[48px] border border-white/5 bg-white/[0.02] flex flex-col justify-between h-72 group hover:bg-white/[0.04] transition-all duration-700">
+                    <div className="w-12 h-12 rounded-2xl bg-[#ABCEC9]/5 border border-[#ABCEC9]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
+                      <Clock className="w-6 h-6 text-[#ABCEC9]" />
+                    </div>
                     <div>
-                      <div className="text-5xl font-serif font-bold text-white mb-2">{user.nowMoments}</div>
-                      <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/30">NOW MOMENTS</span>
+                      <div className="text-6xl font-serif font-light text-white mb-3 tracking-tight">{user.nowMoments}</div>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/20">NOW MOMENTS</span>
                     </div>
                   </div>
-                  <div className="card-glow p-10 flex flex-col justify-between rounded-[40px]">
-                    <Flame className="w-7 h-7 text-orange-400 mb-4" />
-                    <div>
-                      <div className="text-5xl font-serif font-bold text-white mb-2">{user.streak}</div>
-                      <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/30">DAY STREAK</span>
+
+                  {/* Day Streak */}
+                  <div className="p-12 rounded-[48px] border border-white/5 bg-white/[0.02] flex flex-col justify-between h-72 group hover:bg-white/[0.04] transition-all duration-700">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-400/5 border border-orange-400/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
+                      <Flame className="w-6 h-6 text-orange-400/50" />
                     </div>
+                    <div>
+                      <div className="text-6xl font-serif font-light text-white mb-3 tracking-tight">{user.streak}</div>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/20">DAY STREAK</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Evolution Progress */}
+                <div className="p-16 rounded-[60px] border border-white/5 bg-white/[0.02] space-y-12">
+                  <div className="flex justify-between items-baseline">
+                    <h3 className="text-2xl font-serif font-light text-white/60">Consciousness Expansion</h3>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#D16BA5]">Next Level: {user.level + 1}</span>
+                  </div>
+                  <div className="relative h-20 w-full flex items-center">
+                    <ProgressFilament progress={0.65} />
                   </div>
                 </div>
               </motion.div>

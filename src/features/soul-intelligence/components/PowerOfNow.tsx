@@ -1,488 +1,840 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, AlertCircle, Bell, Activity, ChevronLeft, Sparkles } from 'lucide-react';
+import { Mic, AlertCircle, Bell, Activity, Sparkles } from 'lucide-react';
 import { useWitnessingVoice } from '../hooks/useWitnessingVoice';
 import { getNoMindGrounding } from '../services/geminiService';
 import { BodyTruthTest } from './BodyTruthTest';
 import { usePresenceScheduler } from '../hooks/usePresenceScheduler';
-import { cn } from '../../../lib/utils';
 
-/**
- * COMPONENT: PowerOfNow
- * The core curriculum based on Power of Now.
- */
+// ─── DESIGN TOKENS (matches Journal.tsx) ────────────────────────────────────
+const T = {
+    magenta: '#D16BA5',
+    teal: '#ABCEC9',
+    rose: '#F08C8C',
+    plum: '#0D0014',
+    border: 'rgba(255,255,255,0.06)',
+};
 
-interface Chapter {
-    id: string;
-    title: string;
-    subtitle: string;
-    description: string;
-    icon: any;
-    color: string;
-}
+// ─── GRAIN OVERLAY ───────────────────────────────────────────────────────────
+const GrainOverlay = () => (
+    <svg style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', opacity: 0.025, pointerEvents: 'none', zIndex: 100 }}>
+        <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" /></filter>
+        <rect width="100%" height="100%" filter="url(#grain)" />
+    </svg>
+);
 
-interface PowerOfNowProps {
-    initialChapter?: string;
-}
+// ─── NAV PILL (matches Journal) ──────────────────────────────────────────────
+const NavPill: React.FC<{ onClick?: () => void; children: React.ReactNode }> = ({ onClick, children }) => {
+    const [hov, setHov] = useState(false);
+    return (
+        <motion.button onHoverStart={() => setHov(true)} onHoverEnd={() => setHov(false)}
+            whileTap={{ scale: 0.97 }} onClick={onClick}
+            style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 18px 8px 12px', borderRadius: 100, cursor: 'pointer',
+                background: hov ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${hov ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)'}`,
+                color: hov ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.25)',
+                fontFamily: 'system-ui,sans-serif', fontWeight: 700,
+                fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase',
+                transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+            }}>
+            <motion.span animate={{ x: hov ? -2 : 0 }} transition={{ duration: 0.3 }}>
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                    <path d="M8 1L3 6L8 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            </motion.span>
+            {children}
+        </motion.button>
+    );
+};
 
-export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter }) => {
+// ─── GHOST BUTTON ────────────────────────────────────────────────────────────
+const GhostButton: React.FC<{ onClick?: () => void; children: React.ReactNode; disabled?: boolean; accentColor?: string; fullWidth?: boolean; onMouseDown?: () => void; onMouseUp?: () => void }> =
+    ({ onClick, children, disabled, accentColor = T.magenta, fullWidth, onMouseDown, onMouseUp }) => {
+        const [hov, setHov] = useState(false);
+        return (
+            <motion.button
+                onHoverStart={() => setHov(true)} onHoverEnd={() => setHov(false)}
+                whileHover={{ scale: 1.005 }} whileTap={{ scale: 0.995 }}
+                onClick={onClick} onMouseDown={onMouseDown} onMouseUp={onMouseUp} disabled={disabled}
+                style={{
+                    position: 'relative', overflow: 'hidden',
+                    width: fullWidth ? '100%' : 'auto',
+                    padding: '18px 40px', borderRadius: 32, cursor: disabled ? 'not-allowed' : 'pointer',
+                    background: hov ? 'rgba(255,255,255,0.025)' : 'transparent',
+                    border: `1px solid ${hov ? `${accentColor}50` : 'rgba(255,255,255,0.07)'}`,
+                    color: disabled ? 'rgba(255,255,255,0.2)' : hov ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.38)',
+                    fontFamily: 'system-ui,sans-serif', fontWeight: 700,
+                    fontSize: 9, letterSpacing: '0.5em', textTransform: 'uppercase',
+                    boxShadow: hov ? `0 0 40px ${accentColor}18` : 'none',
+                    transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                }}>
+                {/* Corner dots */}
+                <AnimatePresence>
+                    {hov && !disabled && ([[0, 0], [100, 0], [0, 100], [100, 100]] as [number, number][]).map(([x, y], i) => (
+                        <motion.div key={i} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0 }} transition={{ duration: 0.25, delay: i * 0.04 }}
+                            style={{
+                                position: 'absolute', width: 3, height: 3, borderRadius: '50%',
+                                left: `${x}%`, top: `${y}%`, transform: 'translate(-50%,-50%)',
+                                background: accentColor, boxShadow: `0 0 6px ${accentColor}`, pointerEvents: 'none'
+                            }}
+                        />
+                    ))}
+                </AnimatePresence>
+                {children}
+            </motion.button>
+        );
+    };
+
+// ─── SOLID BUTTON ────────────────────────────────────────────────────────────
+const SolidButton: React.FC<{ onClick?: () => void; children: React.ReactNode; color?: string }> = ({ onClick, children, color = T.teal }) => {
+    const [hov, setHov] = useState(false);
+    return (
+        <motion.button onHoverStart={() => setHov(true)} onHoverEnd={() => setHov(false)}
+            whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.985 }} onClick={onClick}
+            style={{
+                position: 'relative', overflow: 'hidden', padding: '18px 48px', borderRadius: 100,
+                cursor: 'pointer', border: 'none',
+                background: hov ? `linear-gradient(135deg,${color},${color}90)` : `linear-gradient(135deg,${color}E0,${color}90)`,
+                color: '#0D1F1E', fontFamily: 'system-ui,sans-serif', fontWeight: 700,
+                fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase',
+                boxShadow: hov ? `0 20px 60px ${color}40` : `0 8px 32px ${color}20`,
+                transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1)',
+            }}>
+            <motion.div animate={{ opacity: hov ? 1 : 0 }}
+                style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg,rgba(255,255,255,0.18),transparent)' }} />
+            {children}
+        </motion.button>
+    );
+};
+
+// ─── PROGRESS FILAMENT ───────────────────────────────────────────────────────
+const ProgressFilament: React.FC<{ progress: number; label?: string }> = ({ progress, label }) => (
+    <div style={{ width: '100%' }}>
+        {label && (
+            <div style={{
+                display: 'flex', justifyContent: 'space-between', marginBottom: 12,
+                fontSize: 8, letterSpacing: '0.5em', textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.15)',
+                fontFamily: 'system-ui, sans-serif', fontWeight: 700,
+            }}>
+                <span>{label}</span>
+                <span style={{ color: T.teal }}>{Math.round(progress * 100)}%</span>
+            </div>
+        )}
+
+        {/* Track — give it a visible ambient glow so it reads on dark bg */}
+        <div style={{
+            height: 1, position: 'relative', borderRadius: 1,
+            background: 'rgba(255,255,255,0.06)',
+            boxShadow: '0 0 8px rgba(255,255,255,0.02)',  // ← track glows faintly
+        }}>
+            <motion.div
+                initial={{ scaleX: 0 }} animate={{ scaleX: progress }}
+                transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] as any }}
+                style={{
+                    position: 'absolute', left: 0, top: 0, bottom: 0,
+                    background: `linear-gradient(90deg, ${T.magenta}70, ${T.teal})`,
+                    borderRadius: 1, transformOrigin: 'left',
+                    boxShadow: `0 0 12px ${T.teal}80, 0 0 4px ${T.teal}`,  // ← double shadow
+                }}
+            />
+            {/* Head dot — bigger, brighter */}
+            <motion.div
+                animate={{ left: `${progress * 100}%` }}
+                transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] as any }}
+                style={{
+                    position: 'absolute', top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 6, height: 6,
+                    borderRadius: '50%',
+                    background: T.teal,
+                    boxShadow: `0 0 12px ${T.teal}, 0 0 24px ${T.teal}70, 0 0 40px ${T.teal}30`,
+                }}
+            />
+        </div>
+    </div>
+);
+
+// ─── CHAPTER ICON ORB ────────────────────────────────────────────────────────
+const ChapterOrb: React.FC<{ icon: React.ElementType; color: string; active: boolean; pulsing?: boolean }> = ({ icon: Icon, color, active, pulsing }) => (
+    <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
+        {(active || pulsing) && (
+            <motion.div animate={{ scale: [1, 1.9, 1], opacity: [0.35, 0, 0.35] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                style={{
+                    position: 'absolute', inset: -6, borderRadius: '50%',
+                    border: `1px solid ${color}`, pointerEvents: 'none'
+                }}
+            />
+        )}
+        <motion.div animate={{
+            background: active ? `radial-gradient(circle,${color}30,${color}08)` : 'radial-gradient(circle,rgba(255,255,255,0.05),rgba(255,255,255,0.01))',
+            boxShadow: active ? `0 0 24px ${color}50, inset 0 0 12px ${color}15` : 'none',
+            borderColor: active ? `${color}50` : 'rgba(255,255,255,0.07)',
+        }}
+            transition={{ duration: 0.6 }}
+            style={{
+                width: '100%', height: '100%', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.07)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+            <Icon size={20} style={{ color: active ? color : 'rgba(255,255,255,0.2)', strokeWidth: 1.5, transition: 'color 0.5s' }} />
+        </motion.div>
+    </div>
+);
+
+// ─── CHAPTER DATA ─────────────────────────────────────────────────────────────
+const CHAPTERS = [
+    { id: 'observer', num: 'I', subtitle: 'You Are Not Your Mind', desc: 'Witness the voice in your head and discover the gap of awareness behind it.', icon: Mic, color: T.teal },
+    { id: 'inner-body', num: 'II', subtitle: 'The Inner Body', desc: 'Move consciousness from the mind into the somatic field of the body.', icon: Activity, color: T.magenta },
+    { id: 'gaps', num: 'III', subtitle: 'Mindful Gaps', desc: 'Insert spaces of no-mind into the flow of your daily routine.', icon: Bell, color: T.teal },
+    { id: 'panic', num: 'IV', subtitle: 'Beyond the Storm', desc: 'Immediate grounding tools for when the mind-storm is too loud.', icon: AlertCircle, color: T.rose },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ══════════════════════════════════════════════════════════════════════════════
+interface PowerOfNowProps { initialChapter?: string; onReturn?: () => void; }
+
+export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn }) => {
     const { isListening, transcript, reflection, isProcessing, startListening, stopListening } = useWitnessingVoice();
     const { lastReminder, requestPermission } = usePresenceScheduler();
     const [panicMode, setPanicMode] = useState(false);
     const [presenceValue, setPresenceValue] = useState(45);
     const [groundingText, setGroundingText] = useState('');
-    const [expandedChapter, setExpandedChapter] = useState<string | null>(initialChapter || 'observer');
-
-    React.useEffect(() => {
-        if (initialChapter) {
-            setExpandedChapter(initialChapter);
-        }
-    }, [initialChapter]);
+    const [expanded, setExpanded] = useState<string | null>(initialChapter || 'observer');
     const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted');
 
-    const chapters: Chapter[] = [
-        {
-            id: 'observer',
-            title: 'Chapter 1',
-            subtitle: 'You Are Not Your Mind',
-            description: 'Witness the voice in your head and discover the gap of awareness.',
-            icon: Mic,
-            color: '#ABCEC9'
-        },
-        {
-            id: 'inner-body',
-            title: 'Chapter 2',
-            subtitle: 'The Inner Body',
-            description: 'Move consciousness from the mind into the somatic field of the body.',
-            icon: Activity,
-            color: '#C65F9D'
-        },
-        {
-            id: 'gaps',
-            title: 'Chapter 3',
-            subtitle: 'Mindful Gaps',
-            description: 'Insert spaces of no-mind into the flow of your daily routine.',
-            icon: Bell,
-            color: '#F4E3DA'
-        },
-        {
-            id: 'panic',
-            title: 'Chapter 4',
-            subtitle: 'Beyond the Storm',
-            description: 'Immediate grounding tools for when the mind-storm is too loud.',
-            icon: AlertCircle,
-            color: '#F08C8C'
-        }
-    ];
+    useEffect(() => { if (initialChapter) setExpanded(initialChapter); }, [initialChapter]);
 
-    const handleEnableNotifications = () => {
-        requestPermission();
-        setNotificationsEnabled(true);
-    };
-
-    const togglePanic = () => setPanicMode(!panicMode);
-
+    const handleEnableNotifications = () => { requestPermission(); setNotificationsEnabled(true); };
+    const togglePanic = () => setPanicMode(p => !p);
     const runGrounding = async (input: string) => {
         const exercise = await getNoMindGrounding(input);
         setGroundingText(exercise);
-        setPresenceValue(prev => Math.min(100, prev + 10));
+        setPresenceValue(p => Math.min(100, p + 10));
     };
 
-    // Dedicated Panic Mode View
-    if (initialChapter === 'panic') {
-        return (
-            <div className="w-full min-h-[60vh] flex flex-col items-center justify-center relative py-12">
-                {/* Background Ambient Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-500/10 rounded-full blur-[120px] pointer-events-none" />
-
-                <div className="relative z-10 flex flex-col items-center max-w-2xl text-center space-y-8">
-                    <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20 shadow-[0_0_40px_rgba(244,63,94,0.1)] mb-4">
-                        <AlertCircle className="w-10 h-10 text-rose-400" />
-                    </div>
-
-                    {!groundingText ? (
-                        <>
-                            <div className="space-y-4 mb-8">
-                                <h2 className="text-5xl md:text-6xl font-serif font-bold text-white tracking-tight">Stay Here</h2>
-                                <p className="text-xl text-white/50 font-light leading-relaxed max-w-lg mx-auto">
-                                    The storm is just a thought. You are the sky. Choose an anchor to return to safety.
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4 w-full max-w-md">
-                                <button
-                                    onClick={() => runGrounding("Anxiety / Overwhelm")}
-                                    className="group w-full py-6 px-8 rounded-2xl bg-white/5 border border-white/10 text-white font-serif text-xl hover:bg-white/10 hover:border-white/20 transition-all shadow-lg flex items-center justify-between"
-                                >
-                                    <span>I am lost in worry</span>
-                                    <ChevronLeft className="w-5 h-5 rotate-180 opacity-40 group-hover:translate-x-1 transition-transform" />
-                                </button>
-                                <button
-                                    onClick={() => runGrounding("Negative Self-Talk")}
-                                    className="group w-full py-6 px-8 rounded-2xl bg-white/5 border border-white/10 text-white font-serif text-xl hover:bg-white/10 hover:border-white/20 transition-all shadow-lg flex items-center justify-between"
-                                >
-                                    <span>The voice is shouting</span>
-                                    <ChevronLeft className="w-5 h-5 rotate-180 opacity-40 group-hover:translate-x-1 transition-transform" />
-                                </button>
-                                <button
-                                    onClick={() => runGrounding("Body Panic")}
-                                    className="group w-full py-6 px-8 rounded-2xl bg-white/5 border border-white/10 text-white font-serif text-xl hover:bg-white/10 hover:border-white/20 transition-all shadow-lg flex items-center justify-between"
-                                >
-                                    <span>My body is panicking</span>
-                                    <ChevronLeft className="w-5 h-5 rotate-180 opacity-40 group-hover:translate-x-1 transition-transform" />
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="space-y-12"
-                        >
-                            <div className="p-8 md:p-12 rounded-3xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-sm">
-                                <p className="text-2xl md:text-3xl text-[#ABCEC9] font-serif leading-relaxed italic">
-                                    "{groundingText}"
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => setGroundingText('')}
-                                className="px-12 py-5 rounded-xl bg-white text-black font-bold uppercase tracking-[0.3em] text-xs shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-105 transition-all"
-                            >
-                                Select Another Anchor
-                            </button>
-                        </motion.div>
-                    )}
-                </div>
-            </div>
-        );
-    }
+    // ── HEADER PAGE-IN ─────────────────────────────────────────────────────────
+    const pageIn = {
+        hidden: { opacity: 0, y: 16, filter: 'blur(12px)' },
+        visible: {
+            opacity: 1, y: 0, filter: 'blur(0px)',
+            transition: { duration: 1.1, ease: [0.16, 1, 0.3, 1] as any, staggerChildren: 0.1 }
+        },
+    };
+    const childIn = {
+        hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
+        visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as any } },
+    };
 
     return (
-        <div className="space-y-6 w-full pb-10">
-            {/* Header / Gauge */}
-            <div className="card-glow p-8 rounded-[38px] border border-white/5">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2 opacity-40">
-                            <Sparkles className="w-4 h-4 text-[#ABCEC9]" />
-                            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em]">Consciousness Stream</h3>
-                        </div>
-                        <h2 className="text-4xl font-serif font-bold text-white tracking-tight">The Power of Now</h2>
-                    </div>
-                    <div className="text-left md:text-right">
-                        <span className="text-5xl font-serif text-[#C65F9D] drop-shadow-[0_0_15px_rgba(198,95,157,0.3)]">{presenceValue}%</span>
-                        <p className="text-[10px] uppercase tracking-[0.4em] opacity-40 font-bold mt-1">Presence Frequency</p>
-                    </div>
-                </div>
-                <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 p-[2px] shadow-inner">
+        <div style={{ width: '100%', maxWidth: 860, margin: '0 auto', padding: '48px 24px 160px', boxSizing: 'border-box', position: 'relative' }}>
+            <GrainOverlay />
+
+            {/* ── PERSISTENT AMBIENT GLOW (lives outside AnimatePresence) ── */}
+            <motion.div
+                animate={{ opacity: [0.07, 0.15, 0.07], scale: [1, 1.08, 1] }}
+                transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+                style={{
+                    position: 'fixed', top: '35%', left: '50%', transform: 'translateX(-50%)',
+                    width: 700, height: 500, borderRadius: '50%',
+                    background: `radial-gradient(ellipse,${T.magenta}40,transparent)`,
+                    filter: 'blur(130px)', pointerEvents: 'none', zIndex: 0,
+                }}
+            />
+
+            {/* ── TOP NAV ─────────────────────────────────────────────────────── */}
+            <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 72, position: 'relative', zIndex: 1 }}>
+                <NavPill onClick={onReturn}>Return Home</NavPill>
+            </nav>
+
+            <motion.div variants={pageIn} initial="hidden" animate="visible" style={{ position: 'relative', zIndex: 1 }}>
+
+                {/* ════════════════════════════════════════════════════════════════
+            HEADER — floating, no card box
+        ════════════════════════════════════════════════════════════════ */}
+                <motion.header variants={childIn} style={{ marginBottom: 80, position: 'relative' }}>
+                    {/* Glow IS the container */}
                     <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${presenceValue}%` }}
-                        className="h-full bg-gradient-to-r from-[#C65F9D] via-[#ABCEC9] to-[#F4E3DA] rounded-full shadow-[0_0_20px_#ABCEC955]"
-                        transition={{ type: "spring", stiffness: 40, damping: 15 }}
+                        animate={{ opacity: [0.1, 0.2, 0.1] }}
+                        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+                        style={{
+                            position: 'absolute', inset: '-40px -60px', borderRadius: '50%',
+                            background: `radial-gradient(ellipse,${T.magenta}20,transparent)`,
+                            filter: 'blur(80px)', pointerEvents: 'none'
+                        }}
                     />
-                </div>
-            </div>
 
-            <div className="space-y-4">
-                {chapters.map((chapter) => {
-                    const isExpanded = expandedChapter === chapter.id;
-                    return (
-                        <div key={chapter.id} className={cn(
-                            "group transition-all duration-700 rounded-[32px] overflow-hidden border transition-shadow",
-                            isExpanded ? "bg-white/[0.03] border-white/10 shadow-2xl scale-[1.01]" : "bg-transparent border-white/5 hover:border-white/10"
-                        )}>
-                            <button
-                                onClick={() => setExpandedChapter(isExpanded ? null : chapter.id)}
-                                className="w-full text-left p-6 md:p-8 flex items-center gap-6 md:gap-8"
-                            >
-                                <div className={cn(
-                                    "w-14 h-14 rounded-2xl flex items-center justify-center border border-white/10 transition-all duration-700 shadow-lg",
-                                    isExpanded ? "scale-110 rotate-[5deg] shadow-[0_10px_30px_rgba(0,0,0,0.3)]" : "group-hover:scale-110"
-                                )} style={{ backgroundColor: `${chapter.color}15`, color: chapter.color }}>
-                                    <chapter.icon className="w-7 h-7" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-30">{chapter.title}</span>
-                                        <ChevronLeft className={cn("w-5 h-5 opacity-20 transition-transform duration-700 ease-fluid", isExpanded ? "rotate-[-90deg]" : "rotate-180")} />
-                                    </div>
-                                    <h4 className="text-2xl font-serif font-bold text-white group-hover:text-white/90 transition-colors tracking-tight">{chapter.subtitle}</h4>
-                                    {!isExpanded && (
-                                        <motion.p
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="text-xs text-white/40 leading-relaxed mt-2 line-clamp-1 font-light"
-                                        >
-                                            {chapter.description}
-                                        </motion.p>
+                    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 32 }}>
+                        {/* Label row */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <Sparkles size={12} style={{ color: T.teal, opacity: 0.55, strokeWidth: 1.5 }} />
+                            <span style={{
+                                fontSize: 9, letterSpacing: '0.6em', textTransform: 'uppercase',
+                                color: 'rgba(255,255,255,0.2)', fontFamily: 'system-ui,sans-serif', fontWeight: 700
+                            }}>
+                                Consciousness Stream
+                            </span>
+                        </div>
+
+                        {/* Title + Presence side by side */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 24 }}>
+                            <div>
+                                <h1 style={{
+                                    fontSize: 'clamp(40px, 5vw, 64px)',
+                                    fontWeight: 300, letterSpacing: '-0.015em', margin: 0,
+                                    lineHeight: 0.95,
+                                    fontFamily: 'Georgia, serif',
+                                    color: 'rgba(255,255,255,0.92)',
+                                }}>
+                                    The Power<br />of Now
+                                </h1>
+                                <p style={{
+                                    fontSize: 9, letterSpacing: '0.65em', textTransform: 'uppercase',
+                                    color: `${T.teal}40`, fontFamily: 'system-ui, sans-serif',
+                                    fontWeight: 700, marginTop: 16,
+                                }}>
+                                    Eckhart Tolle · Living Study
+                                </p>
+                            </div>
+
+                            {/* Presence frequency — a sacred number, not a badge */}
+                            <div style={{ textAlign: 'right', paddingTop: 8 }}>
+                                <p style={{
+                                    fontSize: 8, letterSpacing: '0.5em', textTransform: 'uppercase',
+                                    color: 'rgba(255,255,255,0.15)', fontFamily: 'system-ui, sans-serif',
+                                    fontWeight: 700, margin: '0 0 6px',
+                                }}>
+                                    Presence
+                                </p>
+                                <motion.span
+                                    key={presenceValue}
+                                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as any }}
+                                    style={{
+                                        fontSize: 44,
+                                        fontWeight: 300,
+                                        fontFamily: 'Georgia, serif',
+                                        color: T.magenta,
+                                        lineHeight: 1,
+                                        display: 'block',
+                                        textShadow: `0 0 30px ${T.magenta}40`,
+                                    }}>
+                                    {presenceValue}
+                                    <span style={{ fontSize: 14, opacity: 0.5, marginLeft: 2 }}>%</span>
+                                </motion.span>
+                            </div>
+                        </div>
+
+                        {/* Progress filament */}
+                        <div style={{ paddingTop: 8 }}>
+                            <ProgressFilament progress={presenceValue / 100} label="Spiritual Resonance" />
+                        </div>
+                    </div>
+                </motion.header>
+
+                {/* ════════════════════════════════════════════════════════════════
+            CURRICULUM — Chapter Accordion
+        ════════════════════════════════════════════════════════════════ */}
+                <motion.div variants={childIn} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {CHAPTERS.map((chapter, idx) => {
+                        const isOpen = expanded === chapter.id;
+                        return (
+                            <motion.div key={chapter.id} layout style={{ position: 'relative' }}>
+                                {/* Chapter glow — only when open */}
+                                <AnimatePresence>
+                                    {isOpen && (
+                                        <>
+                                            {/* Wide ambient — very dim */}
+                                            <motion.div
+                                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                                transition={{ duration: 1.2 }}
+                                                style={{
+                                                    position: 'absolute', inset: '-20px -40px', borderRadius: 48,
+                                                    background: chapter.color,
+                                                    filter: 'blur(80px)',
+                                                    opacity: 0.06,
+                                                    pointerEvents: 'none',
+                                                }}
+                                            />
+                                            {/* Tight edge accent — top-left origin only */}
+                                            <motion.div
+                                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                                transition={{ duration: 0.8 }}
+                                                style={{
+                                                    position: 'absolute', top: -4, left: -4, width: 80, height: 80,
+                                                    background: chapter.color,
+                                                    filter: 'blur(24px)',
+                                                    opacity: 0.15,
+                                                    borderRadius: '50%',
+                                                    pointerEvents: 'none',
+                                                }}
+                                            />
+                                        </>
                                     )}
-                                </div>
-                            </button>
+                                </AnimatePresence>
 
-                            <AnimatePresence initial={false}>
-                                {isExpanded && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+                                <motion.div
+                                    layout
+                                    animate={{
+                                        // Collapsed: subtle glass pill
+                                        // Expanded: borderless, background dissolves to near-zero
+                                        background: isOpen
+                                            ? 'rgba(255,255,255,0.01)'
+                                            : 'rgba(255,255,255,0.015)',
+                                        borderColor: isOpen
+                                            ? 'rgba(255,255,255,0.04)'
+                                            : 'rgba(255,255,255,0.05)',
+                                    }}
+                                    transition={{ duration: 0.6 }}
+                                    style={{
+                                        borderRadius: 32, border: '1px solid rgba(255,255,255,0.05)',
+                                        overflow: 'hidden', position: 'relative', zIndex: 1
+                                    }}
+                                >
+                                    {/* ── CHAPTER TRIGGER ── */}
+                                    <button
+                                        onClick={() => setExpanded(isOpen ? null : chapter.id)}
+                                        style={{
+                                            width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                                            padding: '20px 28px', display: 'flex', alignItems: 'center', gap: 20,
+                                            textAlign: 'left',
+                                        }}
                                     >
-                                        <div className="px-6 md:px-12 pb-6 pt-2 lg:pt-4">
-                                            <p className="text-sm text-white/40 mb-6 border-l-[3px] border-white/10 pl-6 italic font-light leading-relaxed max-w-2xl">
-                                                {chapter.description}
-                                            </p>
+                                        <ChapterOrb icon={chapter.icon} color={chapter.color} active={isOpen} />
 
-                                            <div className="w-full h-px bg-white/5 mb-6" />
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                                                <span style={{
+                                                    fontSize: 8, letterSpacing: '0.55em', textTransform: 'uppercase',
+                                                    color: 'rgba(255,255,255,0.14)', fontFamily: 'system-ui,sans-serif', fontWeight: 700
+                                                }}>
+                                                    Chapter {chapter.num}
+                                                </span>
+                                                <motion.div
+                                                    animate={{ rotate: isOpen ? 90 : 0, opacity: isOpen ? 0.6 : 0.2 }}
+                                                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as any }}
+                                                    style={{ color: 'white' }}
+                                                >
+                                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                                        <path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                </motion.div>
+                                            </div>
+                                            <h4 style={{
+                                                fontSize: 28, fontWeight: 300, fontFamily: 'Georgia,serif',
+                                                color: isOpen ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.55)',
+                                                margin: 0, letterSpacing: '-0.01em', transition: 'color 0.4s'
+                                            }}>
+                                                {chapter.subtitle}
+                                            </h4>
+                                            {/* Description fades in only when closed on hover — handled via AnimatePresence */}
+                                            <AnimatePresence>
+                                                {!isOpen && (
+                                                    <motion.p
+                                                        initial={{ opacity: 0, height: 0 }} animate={{ opacity: 0.35, height: 'auto' }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                        style={{
+                                                            fontSize: 12, fontFamily: 'Georgia,serif', fontStyle: 'italic',
+                                                            color: 'rgba(255,255,255,0.3)', marginTop: 6, lineHeight: 1.6,
+                                                            overflow: 'hidden', fontWeight: 300
+                                                        }}>
+                                                        {chapter.desc}
+                                                    </motion.p>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </button>
 
-                                            {/* Chapter Content Router */}
-                                            {chapter.id === 'observer' && (
-                                                <div className="card-glow p-8 md:p-10 flex flex-col items-center text-center rounded-[40px] border-white/10 shadow-inner overflow-visible">
-                                                    <div className="w-20 h-20 rounded-full bg-[#ABCEC9]/5 border border-[#ABCEC9]/20 flex items-center justify-center mb-6 relative">
-                                                        {/* Subtle Ambient Glow behind Mic */}
-                                                        <div className="absolute inset-0 -m-8 bg-[radial-gradient(circle_at_center,var(--glow-cyan),var(--glow-gold),transparent_70%)] opacity-30 blur-[40px] pointer-events-none" />
+                                    {/* ── CHAPTER CONTENT ── */}
+                                    <AnimatePresence>
+                                        {isOpen && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1, transition: { height: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as any }, opacity: { duration: 0.5, delay: 0.2 } } }}
+                                                exit={{ height: 0, opacity: 0, transition: { height: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as any }, opacity: { duration: 0.2 } } }}
+                                                style={{ overflow: 'hidden' }}
+                                            >
+                                                {/* Chapter lead text */}
+                                                <div style={{ padding: '0 28px 16px 100px', borderLeft: 'none' }}>
+                                                    <p style={{
+                                                        fontSize: 13, fontFamily: 'Georgia,serif', fontStyle: 'italic',
+                                                        color: 'rgba(255,255,255,0.35)', lineHeight: 1.75, fontWeight: 300,
+                                                        paddingLeft: 16, borderLeft: '1px solid rgba(255,255,255,0.07)', maxWidth: 520
+                                                    }}>
+                                                        {chapter.desc}
+                                                    </p>
+                                                </div>
+
+                                                {/* ── CHAPTER I: WITNESS THE VOICE ── */}
+                                                {chapter.id === 'observer' && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] as any }}
+                                                        style={{ padding: '20px 28px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32, textAlign: 'center' }}
+                                                    >
+                                                        {/* Mic orb */}
+                                                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            {/* Three-layer atmospheric glow on the mic */}
+                                                            <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.08, 0.18, 0.08] }}
+                                                                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                                                                style={{
+                                                                    position: 'absolute', width: 160, height: 160, borderRadius: '50%',
+                                                                    background: T.teal, filter: 'blur(40px)', pointerEvents: 'none'
+                                                                }} />
+                                                            <AnimatePresence>
+                                                                {isListening && (
+                                                                    <motion.div
+                                                                        initial={{ scale: 1, opacity: 0.5 }} animate={{ scale: 2.5, opacity: 0 }}
+                                                                        transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
+                                                                        style={{ position: 'absolute', width: 88, height: 88, borderRadius: '50%', background: T.teal }}
+                                                                    />
+                                                                )}
+                                                            </AnimatePresence>
+                                                            <motion.div
+                                                                animate={{
+                                                                    background: isListening
+                                                                        ? `radial-gradient(circle,${T.teal}40,${T.teal}10)`
+                                                                        : 'radial-gradient(circle,rgba(255,255,255,0.06),rgba(255,255,255,0.02))',
+                                                                    boxShadow: isListening ? `0 0 40px ${T.teal}60` : 'none',
+                                                                    borderColor: isListening ? `${T.teal}60` : 'rgba(255,255,255,0.08)',
+                                                                }}
+                                                                transition={{ duration: 0.6 }}
+                                                                style={{
+                                                                    width: 88, height: 88, borderRadius: '50%',
+                                                                    border: '1px solid rgba(255,255,255,0.08)',
+                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'
+                                                                }}
+                                                            >
+                                                                <Mic size={28} strokeWidth={1.5}
+                                                                    style={{ color: isListening ? T.teal : 'rgba(255,255,255,0.25)', transition: 'color 0.5s' }} />
+                                                            </motion.div>
+                                                        </div>
+
+                                                        <div>
+                                                            <h3 style={{
+                                                                fontSize: 36, fontWeight: 300, fontFamily: 'Georgia,serif',
+                                                                color: 'rgba(255,255,255,0.88)', margin: '0 0 12px', letterSpacing: '-0.01em'
+                                                            }}>
+                                                                Witness the Voice
+                                                            </h3>
+                                                            <p style={{
+                                                                fontSize: 13, color: 'rgba(255,255,255,0.28)', maxWidth: 380, lineHeight: 1.75,
+                                                                fontFamily: 'Georgia,serif', fontStyle: 'italic', fontWeight: 300, margin: '0 auto'
+                                                            }}>
+                                                                Share a thought that has been circling. Let the Observer's light shine on it.
+                                                            </p>
+                                                        </div>
+
+                                                        <GhostButton onMouseDown={startListening} onMouseUp={stopListening} accentColor={T.teal}>
+                                                            {isListening ? 'Listening with Deep Presence…' : 'Anchor Consciousness'}
+                                                        </GhostButton>
+
+                                                        {/* Transcript + Reflection */}
                                                         <AnimatePresence>
-                                                            {isListening && (
+                                                            {(transcript || reflection || isProcessing) && (
                                                                 <motion.div
-                                                                    initial={{ scale: 1, opacity: 0.4 }}
-                                                                    animate={{ scale: 2.5, opacity: 0 }}
+                                                                    initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
+                                                                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                                                                     exit={{ opacity: 0 }}
-                                                                    transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-                                                                    className="absolute inset-0 bg-[#ABCEC9] rounded-full"
-                                                                />
+                                                                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as any }}
+                                                                    style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, textAlign: 'left' }}
+                                                                >
+                                                                    {/* Mind's form */}
+                                                                    <div>
+                                                                        <p style={{
+                                                                            fontSize: 8, letterSpacing: '0.5em', textTransform: 'uppercase',
+                                                                            color: 'rgba(255,255,255,0.18)', fontFamily: 'system-ui,sans-serif',
+                                                                            fontWeight: 700, marginBottom: 14
+                                                                        }}>Mind's Form</p>
+                                                                        <div style={{
+                                                                            padding: '24px 28px', borderRadius: 24,
+                                                                            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)'
+                                                                        }}>
+                                                                            <p style={{
+                                                                                fontSize: 20, fontFamily: 'Georgia,serif', fontStyle: 'italic',
+                                                                                color: 'rgba(255,255,255,0.4)', lineHeight: 1.65, margin: 0, fontWeight: 300
+                                                                            }}>
+                                                                                "{transcript || 'Listening to the thought…'}"
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    {/* Presence's light */}
+                                                                    <div>
+                                                                        <p style={{
+                                                                            fontSize: 8, letterSpacing: '0.5em', textTransform: 'uppercase',
+                                                                            color: `${T.teal}60`, fontFamily: 'system-ui,sans-serif',
+                                                                            fontWeight: 700, marginBottom: 14
+                                                                        }}>Presence's Light</p>
+                                                                        <div style={{
+                                                                            padding: '24px 28px', borderRadius: 24,
+                                                                            background: `${T.teal}08`, border: `1px solid ${T.teal}15`
+                                                                        }}>
+                                                                            <p style={{
+                                                                                fontSize: 20, fontFamily: 'Georgia,serif',
+                                                                                color: T.teal, lineHeight: 1.65, margin: 0, fontWeight: 300
+                                                                            }}>
+                                                                                {isProcessing ? 'Seeing beyond the veil…' : (reflection || 'Silent witnessing…')}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </motion.div>
                                                             )}
                                                         </AnimatePresence>
-                                                        <Mic className={cn("w-8 h-8 transition-all duration-700", isListening ? "text-[#ABCEC9] scale-110" : "text-[#F4E3DA]/20")} />
-                                                    </div>
+                                                    </motion.div>
+                                                )}
 
-                                                    <h2 className="text-2xl font-serif font-bold text-[#F4E3DA] mb-2">Witness the Voice</h2>
-                                                    <p className="text-sm text-[#F4E3DA]/50 mb-8 max-w-md font-light leading-relaxed">
-                                                        The mind is a tool, not who you are. Share a thought that has been circling, and let the Observer's light shine on it.
-                                                    </p>
+                                                {/* ── CHAPTER II: INNER BODY ── */}
+                                                {chapter.id === 'inner-body' && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ duration: 0.8, delay: 0.15 }}
+                                                        style={{ padding: '16px 28px 40px' }}>
+                                                        <BodyTruthTest />
+                                                    </motion.div>
+                                                )}
 
-                                                    <button
-                                                        onMouseDown={startListening}
-                                                        onMouseUp={stopListening}
-                                                        onTouchStart={startListening}
-                                                        onTouchEnd={stopListening}
-                                                        className={cn(
-                                                            "w-full max-w-xs py-4 rounded-2xl font-bold uppercase tracking-[0.3em] transition-all duration-700 text-[10px]",
-                                                            isListening
-                                                                ? "bg-[#C65F9D] text-white shadow-[0_0_50px_rgba(198,95,157,0.4)] scale-105"
-                                                                : "bg-white/5 text-[#F4E3DA]/80 border border-white/10 hover:bg-white/10 hover:scale-105 shadow-xl"
-                                                        )}
+                                                {/* ── CHAPTER III: MINDFUL GAPS ── */}
+                                                {chapter.id === 'gaps' && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ duration: 0.8, delay: 0.15 }}
+                                                        style={{ padding: '16px 28px 48px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, textAlign: 'center' }}
                                                     >
-                                                        {isListening ? "Listening with Deep Presence..." : "Hold to Share Thought"}
-                                                    </button>
-
-                                                    <AnimatePresence>
-                                                        {(transcript || reflection || isProcessing) && (
-                                                            <motion.div
-                                                                initial={{ opacity: 0, y: 20 }}
-                                                                animate={{ opacity: 1, y: 0 }}
-                                                                className="mt-8 pt-8 border-t border-white/5 w-full max-w-6xl"
-                                                            >
-                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-                                                                    {/* User Thought Card */}
-                                                                    <div className="space-y-4">
-                                                                        <div className="flex items-center gap-3 px-2">
-                                                                            <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
-                                                                            <p className="text-[9px] uppercase font-bold tracking-[0.5em] text-white/30">Mind's Form</p>
-                                                                        </div>
-                                                                        {/* Progress Header */}
-                                                                        <div className="w-full">
-                                                                            <div className="relative p-8 md:p-12 rounded-[48px] bg-gradient-to-r from-[#C65F9D]/10 to-[#ABCEC9]/10 border border-white/5 shadow-2xl overflow-hidden w-full group">
-                                                                                <div className="absolute top-4 left-4 text-white/5 font-serif text-6xl select-none leading-none">"</div>
-                                                                                <p className="text-2xl italic text-white/50 leading-relaxed font-light font-serif relative z-10">
-                                                                                    {transcript || 'The mist is clearing...'}
-                                                                                </p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* AI Reflection Card */}
-                                                                    <div className="space-y-4">
-                                                                        <div className="flex items-center gap-3 px-2">
-                                                                            <div className="w-1.5 h-1.5 rounded-full bg-[#ABCEC9] shadow-[0_0_8px_#ABCEC9]" />
-                                                                            <p className="text-[9px] uppercase font-bold tracking-[0.5em] text-[#ABCEC9]/60">Presence's Light</p>
-                                                                        </div>
-                                                                        <div className="p-8 md:p-12 bg-[#ABCEC9]/5 rounded-[40px] border border-[#ABCEC9]/15 shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative overflow-hidden backdrop-blur-sm">
-                                                                            {/* Subtle background glow */}
-                                                                            <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-[#ABCEC9]/5 blur-[80px] rounded-full pointer-events-none" />
-
-                                                                            <div className="text-xl md:text-2xl text-[#ABCEC9] leading-relaxed font-serif relative z-10 whitespace-pre-line">
-                                                                                {isProcessing ? (
-                                                                                    <motion.span
-                                                                                        animate={{ opacity: [0.4, 1, 0.4] }}
-                                                                                        transition={{ duration: 2, repeat: Infinity }}
-                                                                                    >
-                                                                                        Seeing beyond the veil...
-                                                                                    </motion.span>
-                                                                                ) : (
-                                                                                    reflection || "The Witness is silent and watchful."
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
-                                                </div>
-                                            )}
-
-                                            {chapter.id === 'inner-body' && (
-                                                <div className="space-y-0 p-1">
-                                                    <BodyTruthTest />
-                                                </div>
-                                            )}
-
-                                            {chapter.id === 'gaps' && (
-                                                <div className="card-glow p-12 md:p-20 flex flex-col items-center text-center space-y-12 rounded-[40px] border-white/10">
-                                                    <div className="w-24 h-24 rounded-[40px] bg-[#F4E3DA]/5 border border-[#F4E3DA]/20 flex items-center justify-center rotate-[-5deg] shadow-2xl">
-                                                        <Bell className="w-10 h-10 text-[#F4E3DA]" />
-                                                    </div>
-                                                    <div className="space-y-4 max-w-md">
-                                                        <h3 className="text-3xl font-serif font-bold text-white tracking-tight">The Routine as Ritual</h3>
-                                                        <p className="text-base text-white/40 leading-relaxed font-light">
-                                                            Every wait, every chores, every simple breath is an invitation to leave the mind and arrive in the Now.
-                                                        </p>
-                                                    </div>
-                                                    <button
-                                                        onClick={handleEnableNotifications}
-                                                        className={cn(
-                                                            "w-full max-w-xs py-6 rounded-2xl font-bold uppercase tracking-[0.4em] transition-all duration-700 text-[10px]",
-                                                            notificationsEnabled
-                                                                ? "bg-white/5 text-white/20 cursor-default border border-white/5"
-                                                                : "bg-[#ABCEC9] text-[#1a151b] hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(171,206,201,0.2)]"
-                                                        )}
-                                                    >
-                                                        {notificationsEnabled ? "Presence Reminders Active" : "Awaken Reminders"}
-                                                    </button>
-                                                    <AnimatePresence>
-                                                        {lastReminder && (
-                                                            <motion.div
-                                                                initial={{ opacity: 0, y: 20 }}
-                                                                animate={{ opacity: 1, y: 0 }}
-                                                                className="pt-16 border-t border-white/5 w-full flex flex-col items-center"
-                                                            >
-                                                                <p className="text-[10px] uppercase tracking-[0.5em] text-white/20 mb-6 font-bold">Latest Gate to Presence</p>
-                                                                <div className="p-8 bg-white/[0.02] rounded-3xl border border-white/5 max-w-md shadow-inner">
-                                                                    <p className="text-2xl text-[#ABCEC9] italic font-serif leading-relaxed">"{lastReminder}"</p>
-                                                                </div>
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
-                                                </div>
-                                            )}
-
-                                            {chapter.id === 'panic' && (
-                                                <div className="space-y-8">
-                                                    <div className="card-glow p-12 md:p-20 space-y-12 rounded-[40px] border-white/10 shadow-2xl">
-                                                        <div className="flex flex-col items-center text-center space-y-10">
-                                                            <div className="w-24 h-24 rounded-full bg-rose-500/5 flex items-center justify-center border border-rose-500/10 shadow-[inset_0_0_40px_rgba(244,63,94,0.05)]">
-                                                                <AlertCircle className="w-12 h-12 text-rose-400" />
+                                                        {/* Bell orb */}
+                                                        <div style={{ position: 'relative' }}>
+                                                            <motion.div animate={{ opacity: [0.06, 0.14, 0.06] }}
+                                                                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                                                                style={{
+                                                                    position: 'absolute', width: 120, height: 120, borderRadius: '50%',
+                                                                    background: T.teal, filter: 'blur(40px)', top: '50%', left: '50%',
+                                                                    transform: 'translate(-50%,-50%)', pointerEvents: 'none'
+                                                                }} />
+                                                            <div style={{
+                                                                width: 72, height: 72, borderRadius: '50%',
+                                                                background: `${T.teal}10`, border: `1px solid ${T.teal}20`,
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                            }}>
+                                                                <Bell size={26} strokeWidth={1.5} style={{ color: T.teal }} />
                                                             </div>
-                                                            <div className="space-y-4 max-w-md">
-                                                                <h3 className="text-3xl font-serif font-bold text-white tracking-tight">Emergency Awareness</h3>
-                                                                <p className="text-base text-white/40 leading-relaxed font-light">
-                                                                    When the mind forms a storm of noise, return to the Anchor. Find the one who is witnessing the storm.
-                                                                </p>
-                                                            </div>
-                                                            <button
-                                                                onClick={togglePanic}
-                                                                className="w-full max-w-xs py-6 rounded-2xl bg-rose-500/10 text-rose-300 border border-rose-500/20 font-bold uppercase tracking-[0.4em] text-[10px] hover:bg-rose-500/20 transition-all shadow-lg"
-                                                            >
-                                                                Activate Rescue Anchor
-                                                            </button>
                                                         </div>
-                                                    </div>
 
-                                                    <AnimatePresence>
-                                                        {panicMode && (
-                                                            <motion.div
-                                                                initial={{ opacity: 0 }}
-                                                                animate={{ opacity: 1 }}
-                                                                exit={{ opacity: 0 }}
-                                                                className="fixed inset-0 z-[200] bg-[#0d0a0e]/98 backdrop-blur-3xl p-8 md:p-12 flex flex-col items-center justify-center text-center"
-                                                            >
+                                                        <div>
+                                                            <h3 style={{
+                                                                fontSize: 34, fontWeight: 300, fontFamily: 'Georgia,serif',
+                                                                color: 'rgba(255,255,255,0.88)', margin: '0 0 12px'
+                                                            }}>
+                                                                The Routine as Ritual
+                                                            </h3>
+                                                            <p style={{
+                                                                fontSize: 13, fontStyle: 'italic', fontFamily: 'Georgia,serif',
+                                                                color: 'rgba(255,255,255,0.28)', maxWidth: 360, lineHeight: 1.75,
+                                                                fontWeight: 300, margin: '0 auto'
+                                                            }}>
+                                                                Every transition is an invitation to leave the mind and arrive in the Now.
+                                                            </p>
+                                                        </div>
+
+                                                        {notificationsEnabled
+                                                            ? <GhostButton disabled accentColor={T.teal}>Reminders Active</GhostButton>
+                                                            : <SolidButton onClick={handleEnableNotifications} color={T.teal}>Awaken Reminders</SolidButton>
+                                                        }
+
+                                                        <AnimatePresence>
+                                                            {lastReminder && (
                                                                 <motion.div
-                                                                    animate={{
-                                                                        scale: [1, 1.2, 1],
-                                                                        opacity: [0.1, 0.3, 0.1]
+                                                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                                                                    style={{
+                                                                        width: '100%', paddingTop: 28,
+                                                                        borderTop: '1px solid rgba(255,255,255,0.05)',
+                                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16
                                                                     }}
-                                                                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                                                                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
                                                                 >
-                                                                    <div className="w-[600px] h-[600px] bg-rose-500/20 rounded-full blur-[120px]" />
-                                                                </motion.div>
-
-                                                                <motion.div
-                                                                    initial={{ scale: 0.9, y: 20 }}
-                                                                    animate={{ scale: 1, y: 0 }}
-                                                                    className="relative z-10 flex flex-col items-center max-w-2xl"
-                                                                >
-                                                                    <AlertCircle className="w-20 h-20 text-rose-400/40 mb-10" />
-
-                                                                    <h2 className="text-5xl md:text-7xl font-serif font-bold text-white mb-8 tracking-tight">Stay Here</h2>
-                                                                    <p className="text-rose-100/40 mb-20 text-xl font-light leading-relaxed font-serif max-w-lg">
-                                                                        The thoughts are noise. Your breath is the silence. Feel the life force within your hands right now.
+                                                                    <p style={{
+                                                                        fontSize: 8, letterSpacing: '0.5em', textTransform: 'uppercase',
+                                                                        color: 'rgba(255,255,255,0.18)', fontFamily: 'system-ui,sans-serif', fontWeight: 700
+                                                                    }}>
+                                                                        Latest Gate to Presence
                                                                     </p>
-
-                                                                    {!groundingText ? (
-                                                                        <div className="grid grid-cols-1 gap-6 w-full max-w-lg">
-                                                                            <button
-                                                                                onClick={() => runGrounding("Anxiety / Overwhelm")}
-                                                                                className="group w-full py-8 rounded-3xl bg-white/5 border border-white/10 text-white font-serif text-2xl hover:bg-white/10 hover:border-white/20 transition-all shadow-2xl flex items-center justify-center gap-4"
-                                                                            >
-                                                                                <span>I am lost in worry</span>
-                                                                                <ChevronLeft className="w-5 h-5 rotate-180 opacity-0 group-hover:opacity-40 transition-all translate-x-[-10px] group-hover:translate-x-0" />
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => runGrounding("Negative Self-Talk")}
-                                                                                className="group w-full py-8 rounded-3xl bg-white/5 border border-white/10 text-white font-serif text-2xl hover:bg-white/10 hover:border-white/20 transition-all shadow-2xl flex items-center justify-center gap-4"
-                                                                            >
-                                                                                <span>The voice is shouting</span>
-                                                                                <ChevronLeft className="w-5 h-5 rotate-180 opacity-0 group-hover:opacity-40 transition-all translate-x-[-10px] group-hover:translate-x-0" />
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={togglePanic}
-                                                                                className="mt-16 text-white/20 uppercase text-[11px] font-bold tracking-[0.6em] hover:text-[#ABCEC9] hover:tracking-[0.8em] transition-all"
-                                                                            >
-                                                                                No, I am Awake
-                                                                            </button>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <motion.div
-                                                                            initial={{ opacity: 0, scale: 0.95 }}
-                                                                            animate={{ opacity: 1, scale: 1 }}
-                                                                            className="space-y-16"
-                                                                        >
-                                                                            <p className="text-3xl md:text-4xl text-white font-serif leading-relaxed italic border-x border-white/10 px-12 py-4">
-                                                                                "{groundingText}"
-                                                                            </p>
-                                                                            <button
-                                                                                onClick={() => { setPanicMode(false); setGroundingText(''); }}
-                                                                                className="px-16 py-6 rounded-2xl bg-[#ABCEC9] text-[#0d0a0e] font-bold uppercase tracking-[0.4em] text-[12px] shadow-[0_30px_60px_rgba(0,0,0,0.4)] hover:scale-105 transition-all"
-                                                                            >
-                                                                                I have Returned
-                                                                            </button>
-                                                                        </motion.div>
-                                                                    )}
+                                                                    <div style={{
+                                                                        padding: '20px 28px', background: 'rgba(255,255,255,0.02)',
+                                                                        borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)', maxWidth: 400
+                                                                    }}>
+                                                                        <p style={{
+                                                                            fontSize: 20, color: T.teal, fontStyle: 'italic',
+                                                                            fontFamily: 'Georgia,serif', lineHeight: 1.65, margin: 0, fontWeight: 300
+                                                                        }}>
+                                                                            "{lastReminder}"
+                                                                        </p>
+                                                                    </div>
                                                                 </motion.div>
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    );
-                })}
-            </div>
+                                                            )}
+                                                        </AnimatePresence>
+                                                    </motion.div>
+                                                )}
+
+                                                {/* ── CHAPTER IV: BEYOND THE STORM ── */}
+                                                {chapter.id === 'panic' && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ duration: 0.8, delay: 0.15 }}
+                                                        style={{ padding: '16px 28px 48px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, textAlign: 'center' }}
+                                                    >
+                                                        <div style={{ position: 'relative' }}>
+                                                            <motion.div animate={{ opacity: [0.06, 0.16, 0.06] }}
+                                                                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                                                                style={{
+                                                                    position: 'absolute', width: 130, height: 130, borderRadius: '50%',
+                                                                    background: T.rose, filter: 'blur(40px)', top: '50%', left: '50%',
+                                                                    transform: 'translate(-50%,-50%)', pointerEvents: 'none'
+                                                                }} />
+                                                            <div style={{
+                                                                width: 72, height: 72, borderRadius: '50%',
+                                                                background: `${T.rose}10`, border: `1px solid ${T.rose}20`,
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                            }}>
+                                                                <AlertCircle size={26} strokeWidth={1.5} style={{ color: T.rose }} />
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <h3 style={{
+                                                                fontSize: 34, fontWeight: 300, fontFamily: 'Georgia,serif',
+                                                                color: 'rgba(255,255,255,0.88)', margin: '0 0 12px'
+                                                            }}>
+                                                                Emergency Awareness
+                                                            </h3>
+                                                            <p style={{
+                                                                fontSize: 13, fontStyle: 'italic', fontFamily: 'Georgia,serif',
+                                                                color: 'rgba(255,255,255,0.28)', maxWidth: 360, lineHeight: 1.75,
+                                                                fontWeight: 300, margin: '0 auto'
+                                                            }}>
+                                                                When the storm of noise is too loud, return to the inner body anchor immediately.
+                                                            </p>
+                                                        </div>
+
+                                                        <GhostButton onClick={togglePanic} accentColor={T.rose}>
+                                                            Activate Rescue Anchor
+                                                        </GhostButton>
+                                                    </motion.div>
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            </motion.div>
+                        );
+                    })}
+                </motion.div>
+            </motion.div>
+
+            {/* ════════════════════════════════════════════════════════════════
+          PANIC OVERLAY
+      ════════════════════════════════════════════════════════════════ */}
+            <AnimatePresence>
+                {panicMode && (
+                    <motion.div
+                        initial={{ opacity: 0, filter: 'blur(20px)' }}
+                        animate={{ opacity: 1, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, filter: 'blur(20px)' }}
+                        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] as any }}
+                        style={{
+                            position: 'fixed', inset: 0, zIndex: 1000,
+                            background: 'rgba(13,0,20,0.98)', backdropFilter: 'blur(40px)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32,
+                        }}
+                    >
+                        {/* Rose atmospheric glow */}
+                        <motion.div
+                            animate={{ opacity: [0.08, 0.18, 0.08], scale: [1, 1.1, 1] }}
+                            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                            style={{
+                                position: 'absolute', width: 600, height: 600, borderRadius: '50%',
+                                background: `radial-gradient(circle,${T.rose}40,transparent)`,
+                                filter: 'blur(120px)', pointerEvents: 'none'
+                            }}
+                        />
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 32 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] as any }}
+                            style={{ maxWidth: 560, width: '100%', textAlign: 'center', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}
+                        >
+                            {/* Rose orb */}
+                            <div style={{ position: 'relative', width: 80, height: 80 }}>
+                                <motion.div animate={{ scale: [1, 1.6, 1], opacity: [0.3, 0, 0.3] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                                    style={{
+                                        position: 'absolute', inset: -8, borderRadius: '50%',
+                                        border: `1px solid ${T.rose}60`
+                                    }} />
+                                <div style={{
+                                    width: '100%', height: '100%', borderRadius: '50%',
+                                    background: `${T.rose}12`, border: `1px solid ${T.rose}30`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <AlertCircle size={28} strokeWidth={1.5} style={{ color: T.rose }} />
+                                </div>
+                            </div>
+
+                            <div>
+                                <h2 style={{
+                                    fontSize: 72, fontWeight: 300, fontFamily: 'Georgia,serif',
+                                    color: 'rgba(255,255,255,0.92)', margin: '0 0 16px', letterSpacing: '-0.02em', lineHeight: 1
+                                }}>
+                                    Stay Here
+                                </h2>
+                                <p style={{
+                                    fontSize: 18, fontFamily: 'Georgia,serif', fontStyle: 'italic',
+                                    color: 'rgba(255,255,255,0.35)', lineHeight: 1.75, fontWeight: 300, margin: 0
+                                }}>
+                                    {groundingText || 'The thoughts are noise. Your breath is the silence.\nFeel the life within your hands right now.'}
+                                </p>
+                            </div>
+
+                            {/* Bottom divider */}
+                            <div style={{ width: 60, height: 1, background: `linear-gradient(90deg,transparent,${T.rose}40,transparent)` }} />
+
+                            {!groundingText ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 360 }}>
+                                    <motion.button
+                                        whileHover={{ background: 'rgba(255,255,255,0.06)' }} whileTap={{ scale: 0.97 }}
+                                        onClick={() => runGrounding('Panic')}
+                                        style={{
+                                            padding: '20px 32px', borderRadius: 24, background: 'rgba(255,255,255,0.03)',
+                                            border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.65)',
+                                            fontFamily: 'Georgia,serif', fontSize: 20, fontWeight: 300, fontStyle: 'italic',
+                                            cursor: 'pointer', transition: 'background 0.3s'
+                                        }}>
+                                        I am lost in worry
+                                    </motion.button>
+                                    <button onClick={togglePanic}
+                                        style={{
+                                            background: 'none', border: 'none', cursor: 'pointer', fontSize: 8,
+                                            letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)',
+                                            fontFamily: 'system-ui,sans-serif', fontWeight: 700, padding: '12px',
+                                            transition: 'color 0.3s'
+                                        }}
+                                        onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+                                        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.2)')}>
+                                        No, I have returned
+                                    </button>
+                                </div>
+                            ) : (
+                                <SolidButton onClick={() => setGroundingText('')} color={T.teal}>
+                                    I have Returned
+                                </SolidButton>
+                            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Shrink, Expand, Info, HelpCircle } from 'lucide-react';
+import { Shield, Shrink, Expand, Info, HelpCircle, ChevronRight } from 'lucide-react';
+import { WhisperInput, AnchorButton } from '../../../components/ui/SacredUI';
 
 /**
  * COMPONENT: BodyTruthTest
@@ -30,7 +31,8 @@ export const BodyTruthTest: React.FC = () => {
     };
 
     return (
-        <div className="card-glow p-8 space-y-6 relative overflow-hidden">
+        <div className="p-12 space-y-10 relative overflow-hidden rounded-[48px] border border-white/5 bg-white/[0.01]">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#ABCEC9]/5 to-transparent pointer-events-none" />
             {/* Background Ambiance for Numbness State */}
             {testState === 'numbness_guidance' && (
                 <div className="absolute inset-0 bg-[#1a151b]/80 backdrop-blur-md z-10 flex items-center justify-center p-8 text-center animate-in fade-in duration-500">
@@ -65,29 +67,23 @@ export const BodyTruthTest: React.FC = () => {
             </div>
 
             {testState === 'idle' && (
-                <div className="space-y-4">
-                    <p className="text-sm text-[#F4E3DA]/70 leading-relaxed">
-                        The mind can lie, but the body cannot. Enter a stressful thought below, then we will guide you to feel its truth.
+                <div className="space-y-8">
+                    <p className="text-base text-white/40 leading-relaxed font-light max-w-md">
+                        The mind can lie, but the body cannot. Enter a thought that causes friction, and we will guide you into the somatic response.
                     </p>
-                    <div className="relative group">
-                        <input
-                            type="text"
-                            value={thought}
-                            onChange={(e) => setThought(e.target.value)}
-                            placeholder="e.g. 'I am not enough' or 'They don't like me'"
-                            className="w-full bg-black/20 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/20 outline-none focus:border-[#ABCEC9]/50 transition-all"
-                        />
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none">
-                            <Info className="w-4 h-4" />
-                        </div>
-                    </div>
-                    <button
+                    <WhisperInput
+                        value={thought}
+                        onChange={setThought}
+                        placeholder="e.g. 'I am not enough' or 'They don't like me'"
+                    />
+                    <AnchorButton
+                        variant="solid"
                         onClick={startTest}
                         disabled={!thought}
-                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#ABCEC9]/20 to-[#ABCEC9]/10 hover:from-[#ABCEC9]/30 hover:to-[#ABCEC9]/20 text-[#ABCEC9] font-bold uppercase tracking-widest text-[11px] border border-[#ABCEC9]/20 disabled:opacity-30 transition-all"
+                        className="!w-64"
                     >
-                        Test This Thought
-                    </button>
+                        Begin Somatic Test
+                    </AnchorButton>
                 </div>
             )}
 
@@ -112,38 +108,40 @@ export const BodyTruthTest: React.FC = () => {
             )}
 
             {testState === 'result' && (
-                <div className="space-y-6">
-                    <div className="text-center space-y-2">
-                        <p className="text-sm text-white/60 uppercase tracking-widest">What is the body saying?</p>
+                <div className="space-y-8">
+                    <div className="text-center">
+                        <p className="text-[10px] text-white/20 uppercase tracking-[0.6em] font-bold">What is the body saying?</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <button
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <AnchorButton
+                            variant="ghost"
                             onClick={() => { setResult('expansion'); resetTest(); }}
-                            className="col-span-1 p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-300 flex flex-col items-center gap-3 transition-colors group"
+                            className="!flex !flex-col !h-48 !p-8 !items-center !justify-center !gap-4 !border-emerald-500/20 group"
                         >
-                            <div className="p-2 rounded-full bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
-                                <Expand className="w-5 h-5" />
+                            <div className="p-3 rounded-full bg-emerald-500/5 border border-emerald-500/10 group-hover:scale-110 transition-transform">
+                                <Expand className="w-6 h-6 text-emerald-400" />
                             </div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider">Expansion</span>
-                        </button>
+                            <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-emerald-400/60">Expansion / Truth</span>
+                        </AnchorButton>
 
-                        <button
+                        <AnchorButton
+                            variant="ghost"
                             onClick={() => { setResult('contraction'); resetTest(); }}
-                            className="col-span-1 p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-300 flex flex-col items-center gap-3 transition-colors group"
+                            className="!flex !flex-col !h-48 !p-8 !items-center !justify-center !gap-4 !border-rose-500/20 group"
                         >
-                            <div className="p-2 rounded-full bg-rose-500/10 group-hover:bg-rose-500/20 transition-colors">
-                                <Shrink className="w-5 h-5" />
+                            <div className="p-3 rounded-full bg-rose-500/5 border border-rose-500/10 group-hover:scale-110 transition-transform">
+                                <Shrink className="w-6 h-6 text-rose-400" />
                             </div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider">Contraction</span>
-                        </button>
+                            <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-rose-400/60">Contraction / Ego</span>
+                        </AnchorButton>
 
                         <button
                             onClick={() => setTestState('numbness_guidance')}
-                            className="col-span-2 p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] text-white/40 hover:text-white/60 flex items-center justify-center gap-2 transition-colors"
+                            className="col-span-1 md:col-span-2 py-4 text-white/20 hover:text-white/40 text-[10px] uppercase tracking-[0.5em] transition-all flex items-center justify-center gap-2"
                         >
-                            <HelpCircle className="w-4 h-4" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">I Feel Nothing / Unsure</span>
+                            I Feel Nothing / Resistance
+                            <ChevronRight className="w-3 h-3" />
                         </button>
                     </div>
                 </div>

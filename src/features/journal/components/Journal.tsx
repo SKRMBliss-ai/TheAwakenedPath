@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
-import {
-    BookOpen,
-    PenTool,
-    Save,
-    Sparkles,
-    LogIn,
-    Edit2
-} from 'lucide-react';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { Sparkles, LogIn } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { MeditationPortal } from '../../../components/ui/MeditationPortal.tsx';
 import { db } from '../../../firebase';
@@ -22,6 +15,48 @@ import {
     doc,
     updateDoc
 } from 'firebase/firestore';
+import { AwakenStage } from '../../../components/ui/SacredCircle.tsx';
+import {
+    WhisperInput,
+    AnchorButton,
+    EpochCard,
+    EpochDivider,
+    NoiseOverlay,
+    tokens,
+    SacredToast,
+    NavPill
+} from '../../../components/ui/SacredUI.tsx';
+
+// ─── CINEMATIC ANIMATION VARIANTS ─────────────────────────────────────────────
+
+const pageVariants: any = {
+    hidden: { opacity: 0, y: 16, filter: 'blur(12px)' },
+    visible: {
+        opacity: 1, y: 0, filter: 'blur(0px)',
+        transition: { duration: 1.1, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.1 }
+    },
+    exit: {
+        opacity: 0, y: -8, filter: 'blur(8px)',
+        transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
+    },
+};
+
+const childVariant: any = {
+    hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
+    visible: {
+        opacity: 1, y: 0, filter: 'blur(0px)',
+        transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] }
+    },
+};
+
+const orbExitVariant: any = {
+    exit: {
+        scale: 3.5, opacity: 0, filter: 'blur(60px)',
+        transition: { duration: 1.4, ease: [0.16, 1, 0.3, 1] }
+    },
+};
+
+// ─── TYPES ───────────────────────────────────────────────────────────────────
 
 interface JournalEntry {
     id: string;
@@ -35,11 +70,47 @@ interface JournalEntry {
     createdAt?: any;
 }
 
-const Journal: React.FC = () => {
+type Bucket = 'today' | 'thisWeek' | 'thisMonth' | 'archive';
+
+// ─── TEMPORAL BUCKET LOGIC ──────────────────────────────────────────────────
+
+function getBucket(entry: any): Bucket {
+    const d = entry.createdAt?.toDate?.() ?? new Date(entry.date);
+    const diff = (Date.now() - d.getTime()) / 86_400_000;
+    if (diff < 1) return 'today';
+    if (diff < 7) return 'thisWeek';
+    if (diff < 30) return 'thisMonth';
+    return 'archive';
+}
+
+const bucketMeta: Record<Bucket, { label: string; columns: number }> = {
+    today: { label: 'This Moment', columns: 1 },
+    thisWeek: { label: 'This Week', columns: 1 },
+    thisMonth: { label: 'This Month', columns: 2 },
+    archive: { label: 'The Archive', columns: 3 },
+};
+
+// ─── AWARENESS CARD WRAPPER ──────────────────────────────────────────────────
+const AwarenessCard = ({ entry, bucket, onEdit }: { entry: JournalEntry; bucket: Bucket; onEdit: (entry: JournalEntry) => void }) => {
+    const entryDate = entry.createdAt?.toDate?.() ?? new Date(entry.date);
+    const dateStr = entryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` · ${entryDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+
+    return (
+        <EpochCard
+            date={dateStr}
+            preview={entry.reflections || entry.bodySensations || "Presence observed."}
+            bucket={bucket}
+            emotions={entry.emotions ? entry.emotions.split(',') : []}
+            onClick={() => onEdit(entry)}
+        />
+    );
+};
+
+// ─── MAIN JOURNAL COMPONENT ──────────────────────────────────────────────────
+const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
     const { user, signInWithGoogle } = useAuth();
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [showOlderLogs, setShowOlderLogs] = useState(false);
     const [currentEntry, setCurrentEntry] = useState<Partial<JournalEntry>>({
         bodySensations: '',
         emotions: '',
@@ -47,22 +118,35 @@ const Journal: React.FC = () => {
         duration: ''
     });
 
-    // Practice State
-    const [practiceStep, setPracticeStep] = useState(0);
+    // Workflow State
     const [isPracticing, setIsPracticing] = useState(false);
+    const [isTransitioning, setIsTransitioning] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [showLogForm, setShowLogForm] = useState(false);
-
-    const [dynamicSteps, setDynamicSteps] = useState<any[]>([]);
     const [isLoadingScript, setIsLoadingScript] = useState(false);
+    const [toastVisible, setToastVisible] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [dynamicSteps, setDynamicSteps] = useState<any[]>([]);
+    const [practiceStep, setPracticeStep] = useState(0);
     const [journeyTitle, setJourneyTitle] = useState("Daily Presence");
     const lastSpokenRef = useRef<string | null>(null);
+
+    // Magnetic orb tilt
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+    const rotateX = useSpring(useTransform(mouseY, [-300, 300], [6, -6]), { stiffness: 30, damping: 20 });
+    const rotateY = useSpring(useTransform(mouseX, [-300, 300], [-6, 6]), { stiffness: 30, damping: 20 });
+
+    const fireToast = (msg: string) => {
+        setToastMessage(msg);
+        setToastVisible(true);
+        setTimeout(() => setToastVisible(false), 2800);
+    };
 
     // Audio Logic
     const speak = useCallback((text: string, onEnd?: () => void, isAudioUrl: boolean = false) => {
         if (isPaused) return;
         if (isAudioUrl) {
-            console.log("Journal: Playing local meditation audio:", text);
             VoiceService.playAudioURL(text, onEnd);
         } else {
             VoiceService.speak(text, {
@@ -73,18 +157,20 @@ const Journal: React.FC = () => {
         }
     }, [isPaused]);
 
-    const handleReset = useCallback(() => {
-        VoiceService.stop();
-        setPracticeStep(0);
-    }, []);
+    useEffect(() => {
+        if (!user) return;
+        const q = query(collection(db, 'users', user.uid, 'journal'), orderBy('createdAt', 'desc'));
+        return onSnapshot(q, (snap) => {
+            setEntries(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as JournalEntry[]);
+        });
+    }, [user]);
 
     const fetchDailyScript = async () => {
-        const today = new Date().getDay(); // 0-6
-        // Map day to MP3 (1=Mon, ..., 0=Sun)
+        const today = new Date().getDay();
         const audioMap: Record<number, string> = {
             1: '/mp3/JournalDay1.mp3',
             2: '/mp3/JournalDay2.mp3',
-            3: '/mp3/JournalDay3.mp3', // Today is Wednesday (3)
+            3: '/mp3/JournalDay3.mp3',
             4: '/mp3/JournalDay4.mp3',
             5: '/mp3/JournalDay5.mp3',
             6: '/mp3/JournalDay6.mp3',
@@ -92,9 +178,7 @@ const Journal: React.FC = () => {
         };
 
         const localAudio = audioMap[today];
-
         if (localAudio) {
-            console.log("Journal: Local match found for day", today, "Path:", localAudio);
             setDynamicSteps([{
                 title: "Guided Meditation",
                 instructions: ["Close your eyes and follow the guidance.", "Stay present in the body."],
@@ -107,11 +191,8 @@ const Journal: React.FC = () => {
         }
 
         setIsLoadingScript(true);
-        console.log("Journal: Requesting Master AI Script for Day", entries.length + 1);
         try {
-            // Direct Trigger URL to bypass Hosting/Rewrite layer
             const API_URL = 'https://getdailymeditation-us-central1-awakened-path-2026.cloudfunctions.net/getDailyMeditation';
-
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -119,16 +200,11 @@ const Journal: React.FC = () => {
             });
 
             if (!response.ok) throw new Error(`Backend Error: ${response.status}`);
-
             const data = await response.json();
-            console.log("Master AI Success:", data);
-
             setDynamicSteps(data.steps);
             setJourneyTitle(data.title);
             setIsPracticing(true);
         } catch (error) {
-            console.error("Master AI Failed (Fallback Mode):", error);
-            // Fallback to simple steps if AI fails
             setDynamicSteps([{
                 title: "Stillness",
                 instructions: ["Sit quietly.", "Focus on your breath."],
@@ -140,26 +216,22 @@ const Journal: React.FC = () => {
         }
     };
 
+    const handleCompleteMeditation = useCallback(async () => {
+        setIsTransitioning(true);
+        await new Promise(r => setTimeout(r, 1400));
+        setIsPracticing(false);
+        setIsTransitioning(false);
+        setShowLogForm(true);
+        setPracticeStep(0);
+    }, []);
+
     const handleNextStep = useCallback(() => {
         if (practiceStep < dynamicSteps.length - 1) {
             setPracticeStep(prev => prev + 1);
         } else {
             handleCompleteMeditation();
         }
-    }, [practiceStep, dynamicSteps.length]);
-
-    const handleCompleteMeditation = useCallback(() => {
-        setIsPracticing(false);
-        setShowLogForm(true);
-        setPracticeStep(0);
-
-        const todayDate = new Date().toLocaleDateString();
-        const existingToday = entries.find(e => e.date === todayDate);
-        if (existingToday && !editingId) {
-            setEditingId(existingToday.id);
-            setCurrentEntry(existingToday);
-        }
-    }, [entries, editingId]);
+    }, [practiceStep, dynamicSteps.length, handleCompleteMeditation]);
 
     useEffect(() => {
         if (isPracticing && !isPaused && dynamicSteps.length > 0) {
@@ -174,15 +246,6 @@ const Journal: React.FC = () => {
         }
     }, [practiceStep, isPracticing, speak, handleNextStep, isPaused, dynamicSteps]);
 
-    useEffect(() => {
-        if (!user) return;
-        const q = query(collection(db, 'users', user.uid, 'journal'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as JournalEntry[]);
-        });
-        return () => unsubscribe();
-    }, [user]);
-
     const handleSaveEntry = async () => {
         if (!user) return;
         try {
@@ -191,23 +254,22 @@ const Journal: React.FC = () => {
                 emotions: currentEntry.emotions || '',
                 reflections: currentEntry.reflections || '',
                 duration: currentEntry.duration || '2 mins',
-                type: 'daily',
                 updatedAt: serverTimestamp()
             };
             if (editingId) {
                 await updateDoc(doc(db, 'users', user.uid, 'journal', editingId), entryData);
                 setEditingId(null);
+                fireToast('Reflection Anchored');
             } else {
-                const dayNumber = entries.length + 1;
                 await addDoc(collection(db, 'users', user.uid, 'journal'), {
                     ...entryData,
-                    dayNumber,
                     date: new Date().toLocaleDateString(),
-                    time: new Date().toLocaleTimeString(),
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     createdAt: serverTimestamp()
                 });
+                fireToast('Reflection Sealed');
             }
-            setCurrentEntry({ bodySensations: '', emotions: '', reflections: '', duration: '' });
+            setCurrentEntry({ bodySensations: '', emotions: '', reflections: '' });
             setShowLogForm(false);
         } catch (error) {
             console.error("Error saving: ", error);
@@ -216,247 +278,206 @@ const Journal: React.FC = () => {
 
     if (!user) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 space-y-6 text-center h-[60vh]">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#ABCEC9] to-[#C65F9D] flex items-center justify-center mb-4">
-                    <BookOpen className="w-10 h-10 text-white" />
-                </div>
-                <h1 className="text-4xl font-serif font-bold text-white">Your Sacred Journal</h1>
-                <button onClick={signInWithGoogle} className="flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-bold uppercase tracking-widest">
-                    <LogIn className="w-5 h-5" /> Sign In
-                </button>
+            <div className="flex flex-col items-center justify-center p-12 space-y-12 text-center h-[80vh] relative">
+                <NoiseOverlay />
+                <motion.div
+                    animate={{ opacity: [0.08, 0.18, 0.08], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute w-[400px] h-[400px] rounded-full blur-[80px] pointer-events-none"
+                    style={{ background: `radial-gradient(circle, ${tokens.magenta}30, transparent)` }}
+                />
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex flex-col items-center gap-8">
+                    <p className="text-[9px] uppercase tracking-[0.6em] text-white/20 font-bold">The Awakened Path</p>
+                    <h1 className="text-6xl font-serif font-light text-white leading-tight">Sacred Access</h1>
+                    <p className="text-sm text-white/25 italic max-w-xs font-serif leading-relaxed">Sign in to begin your journey inward.</p>
+                    <AnchorButton variant="solid" onClick={signInWithGoogle}>Authenticate Presence</AnchorButton>
+                </motion.div>
             </div>
         );
     }
 
     if (isPracticing && dynamicSteps.length > 0) {
         return (
-            <MeditationPortal
-                title={journeyTitle.toUpperCase()}
-                currentStepTitle={dynamicSteps[practiceStep].title}
-                currentStepInstruction={dynamicSteps[practiceStep].instructions.join('. ')}
-                onNext={handleNextStep}
-                onReset={handleReset}
-                onTogglePlay={() => setIsPaused(!isPaused)}
-                isPlaying={!isPaused}
-                progress={(practiceStep + 1) / dynamicSteps.length}
-            />
+            <AnimatePresence mode="wait">
+                {isTransitioning ? (
+                    <motion.div
+                        key="orb-exit"
+                        variants={orbExitVariant}
+                        exit="exit"
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0D0014]"
+                        onMouseMove={e => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            mouseX.set(e.clientX - rect.left - rect.width / 2);
+                            mouseY.set(e.clientY - rect.top - rect.height / 2);
+                        }}
+                    >
+                        <motion.div
+                            animate={{ scale: [1, 1.15, 1], opacity: [0.12, 0.22, 0.12] }}
+                            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+                            style={{ position: 'absolute', inset: -160, borderRadius: '50%', background: '#7B2D8B', filter: 'blur(160px)' }}
+                        />
+                        <motion.div>
+                            <AwakenStage
+                                isAnimating
+                                size="xl"
+                                mouseX={rotateX}
+                                mouseY={rotateY}
+                            />
+                        </motion.div>
+                    </motion.div>
+                ) : (
+                    <MeditationPortal
+                        key="portal"
+                        title={journeyTitle.toUpperCase()}
+                        currentStepTitle={dynamicSteps[practiceStep].title}
+                        currentStepInstruction={dynamicSteps[practiceStep].instructions.join('. ')}
+                        onNext={handleNextStep}
+                        onReset={() => setIsPracticing(false)}
+                        onTogglePlay={() => setIsPaused(!isPaused)}
+                        isPlaying={!isPaused}
+                        progress={(practiceStep + 1) / dynamicSteps.length}
+                    />
+                )}
+            </AnimatePresence>
         );
     }
 
     return (
-        <div className="w-full max-w-4xl mx-auto space-y-8 pb-32">
-            <header className="text-center space-y-4 mb-12">
-                <div className="mx-auto w-16 h-16 rounded-2xl bg-[#ABCEC9]/10 flex items-center justify-center mb-6 border border-[#ABCEC9]/20 shadow-glow">
-                    <BookOpen className="w-8 h-8 text-[#ABCEC9]" />
+        <div className="w-full max-w-4xl mx-auto px-6 pt-12 pb-40 relative">
+            <NoiseOverlay />
+
+            {/* Ambient continuous glow */}
+            <motion.div
+                animate={{ opacity: [0.06, 0.14, 0.06], scale: [1, 1.08, 1] }}
+                transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+                className="fixed top-[30%] left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-[120px] pointer-events-none -z-10"
+                style={{ background: `radial-gradient(ellipse, ${tokens.magenta}50, transparent)` }}
+            />
+
+            <nav className="flex justify-between items-start mb-20 relative z-10">
+                <NavPill onClick={onReturn}>Return Home</NavPill>
+                <div className="text-center">
+                    <h1 className="text-6xl font-serif font-light text-white tracking-tight leading-none [text-shadow:0_0_60px_rgba(209,107,165,0.25)]">Daily Log</h1>
+                    <p className="text-[10px] uppercase tracking-[0.6em] text-[#ABCEC9]/45 font-bold mt-4">The Presence Study</p>
                 </div>
-                <h1 className="text-5xl font-serif font-bold text-white tracking-tight">Daily Log</h1>
-                <p className="text-white/40 uppercase tracking-[0.3em] text-[10px] font-bold">Your Journey to Awareness</p>
-            </header>
+                <div className="text-right min-w-[120px]">
+                    <p className="text-[9px] uppercase tracking-[0.6em] text-white/15 font-bold">{entries.length} moments</p>
+                    <div className="mt-4 h-[1px] bg-gradient-to-r from-transparent via-[#D16BA5]/40 to-transparent" />
+                </div>
+            </nav>
 
-            {!showLogForm && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
-                    <div className="card-glow p-12 text-center space-y-8">
-                        {entries.some(e => e.date === new Date().toLocaleDateString()) ? (
-                            <>
-                                <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#ABCEC9]/10 border border-[#ABCEC9]/20 text-[#ABCEC9] text-[10px] uppercase font-bold tracking-widest">
-                                    <Sparkles className="w-3 h-3" /> Awareness Anchored
+            <AnimatePresence mode="wait">
+                {!showLogForm ? (
+                    <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-24">
+
+                        {/* practice trigger — pure floating float */}
+                        <motion.section variants={childVariant} className="text-center py-16 relative">
+                            {/* Glow is now inside SacredCircle, no need for a container glow here */}
+
+                            <div className="flex flex-col items-center gap-8 relative z-10">
+                                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10">
+                                    <Sparkles size={10} className="text-[#ABCEC9]" />
+                                    <span className="text-[8px] uppercase tracking-[0.4em] text-white/30 font-bold">Practice First</span>
                                 </div>
-                                <h2 className="text-3xl font-serif text-white">Your stillness is recorded for today.</h2>
-                                <p className="text-white/60 max-w-md mx-auto leading-relaxed">
-                                    You've already captured your presence today. Would you like to refine your reflections or sit in stillness again?
+
+                                <h2 className="text-5xl font-serif font-light text-white leading-tight max-w-lg mx-auto">
+                                    Ready to settle<br />into the Now?
+                                </h2>
+
+                                <p className="text-sm text-white/30 italic max-w-sm font-serif leading-relaxed">
+                                    Take 2 minutes to reconnect with your inner body before logging.
                                 </p>
-                                <div className="flex flex-col md:flex-row gap-4 justify-center">
-                                    <button
-                                        onClick={() => {
-                                            const today = entries.find(e => e.date === new Date().toLocaleDateString());
-                                            if (today) {
-                                                setEditingId(today.id);
-                                                setCurrentEntry(today);
-                                                setShowLogForm(true);
-                                            }
-                                        }}
-                                        className="px-12 py-5 bg-white/10 text-white rounded-2xl font-bold uppercase tracking-[0.2em] text-xs border border-white/10 hover:bg-white/20 transition-all"
-                                    >
-                                        Refine Today's Log
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const today = entries.find(e => e.date === new Date().toLocaleDateString());
-                                            if (today) {
-                                                setEditingId(today.id);
-                                                setCurrentEntry(today);
-                                            }
-                                            setIsPracticing(true);
-                                        }}
-                                        className="px-12 py-5 bg-[#ABCEC9]/20 text-[#ABCEC9] rounded-2xl font-bold uppercase tracking-[0.2em] text-xs border border-[#ABCEC9]/20 hover:bg-[#ABCEC9]/30 transition-all"
-                                    >
-                                        Meditate Again
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#ABCEC9]/10 border border-[#ABCEC9]/20 text-[#ABCEC9] text-[10px] uppercase font-bold tracking-widest">
-                                    <Sparkles className="w-3 h-3" /> Practice First
-                                </div>
-                                <h2 className="text-3xl font-serif text-white">Ready to settle into the Now?</h2>
-                                <p className="text-white/60 max-w-md mx-auto leading-relaxed">
-                                    Before logging your journey, take 2 minutes to reconnect with your inner body.
-                                </p>
+
+                                <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript}>
+                                    Meditate Again
+                                </AnchorButton>
+
                                 <button
-                                    onClick={fetchDailyScript}
-                                    disabled={isLoadingScript}
-                                    className="px-12 py-5 bg-[#ABCEC9] text-black rounded-2xl font-bold uppercase tracking-[0.2em] text-xs shadow-[0_0_30px_rgba(171,206,201,0.3)] hover:scale-105 transition-all disabled:opacity-50"
+                                    onClick={() => setShowLogForm(true)}
+                                    className="text-[8px] uppercase tracking-[0.5em] text-white/15 hover:text-white/40 font-bold transition-colors"
                                 >
-                                    {isLoadingScript ? "Deepening..." : "Begin Daily Meditation"}
+                                    Skip to log →
                                 </button>
-                            </>
-                        )}
-                    </div>
-
-                    <div className="space-y-4">
-                        <h3 className="text-[10px] uppercase tracking-[0.4em] text-white/30 font-bold ml-4">Past Awareness</h3>
-                        {entries.length === 0 ? (
-                            <div className="p-12 border border-white/5 rounded-[32px] text-center text-white/20 italic">
-                                Your journey begins with your first entry.
                             </div>
-                        ) : (
-                            <div className="grid gap-4">
-                                {entries.filter(entry => {
-                                    if (!entry.createdAt?.toDate) return true;
-                                    const date = entry.createdAt.toDate();
-                                    const thirtyDaysAgo = new Date();
-                                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                                    return date >= thirtyDaysAgo;
-                                }).map(entry => (
-                                    <div key={entry.id} className="card-glow p-8 flex justify-between items-start group">
-                                        <div className="space-y-3">
-                                            <div className="text-[10px] text-white/30 uppercase tracking-widest">{entry.date} • {entry.time}</div>
-                                            <p className="text-xl font-serif text-white/90 leading-relaxed whitespace-pre-wrap">"{entry.bodySensations}"</p>
-                                            {entry.emotions && <span className="inline-block px-3 py-1 rounded-lg bg-white/5 text-[#ABCEC9] text-[10px] font-bold uppercase">{entry.emotions}</span>}
+                        </motion.section>
+
+                        {/* Temporal Spiral History */}
+                        {entries.length > 0 && (
+                            <motion.section variants={childVariant} className="space-y-16">
+                                {(['today', 'thisWeek', 'thisMonth', 'archive'] as Bucket[]).map(bucket => {
+                                    const bucketEntries = entries.filter(e => getBucket(e) === bucket);
+                                    if (bucketEntries.length === 0) return null;
+                                    const meta = bucketMeta[bucket];
+                                    return (
+                                        <div key={bucket} className="space-y-8">
+                                            <EpochDivider label={meta.label} />
+                                            <div className={`grid gap-6 ${meta.columns === 1 ? 'grid-cols-1' :
+                                                meta.columns === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                                                    'grid-cols-2 md:grid-cols-3'
+                                                }`}>
+                                                {bucketEntries.map(entry => (
+                                                    <AwarenessCard
+                                                        key={entry.id}
+                                                        entry={entry}
+                                                        bucket={bucket}
+                                                        onEdit={(e) => {
+                                                            setEditingId(e.id);
+                                                            setCurrentEntry(e);
+                                                            setShowLogForm(true);
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
                                         </div>
-                                        <button
-                                            onClick={() => { setEditingId(entry.id); setCurrentEntry(entry); setShowLogForm(true); }}
-                                            className="p-3 rounded-xl bg-white/5 opacity-0 group-hover:opacity-100 transition-all text-white/40 hover:text-white"
-                                        >
-                                            <Edit2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
+                                    );
+                                })}
+                            </motion.section>
                         )}
+                    </motion.div>
+                ) : (
+                    <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto space-y-20">
+                        <header className="flex justify-between items-end pb-8 border-b border-white/5">
+                            <div className="flex flex-col gap-3">
+                                <span className="text-[9px] uppercase tracking-[0.6em] text-[#ABCEC9]/70 font-bold">Sacred Reflection</span>
+                                <h2 className="text-6xl font-serif font-light text-white/90 leading-none">Day {entries.length + 1}</h2>
+                            </div>
+                            <button onClick={() => setShowLogForm(false)} className="p-3 rounded-full text-white/20 hover:text-white/60 transition-colors">
+                                <LogIn size={20} className="rotate-180" />
+                            </button>
+                        </header>
 
-                        {entries.some(entry => {
-                            if (!entry.createdAt?.toDate) return false;
-                            const date = entry.createdAt.toDate();
-                            const thirtyDaysAgo = new Date();
-                            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                            return date < thirtyDaysAgo;
-                        }) && (
-                                <div className="pt-8">
-                                    <button
-                                        onClick={() => setShowOlderLogs(!showOlderLogs)}
-                                        className="w-full py-4 border border-dashed border-white/20 rounded-2xl text-[10px] uppercase tracking-[0.2em] text-white/40 hover:text-white hover:border-white/40 transition-all"
-                                    >
-                                        {showOlderLogs ? "Hide Older Entries" : "View Previous History"}
-                                    </button>
-
-                                    {showOlderLogs && (
-                                        <div className="grid gap-4 mt-8 animate-in fade-in slide-in-from-top-4">
-                                            {entries.filter(entry => {
-                                                if (!entry.createdAt?.toDate) return false;
-                                                const date = entry.createdAt.toDate();
-                                                const thirtyDaysAgo = new Date();
-                                                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                                                return date < thirtyDaysAgo;
-                                            }).map(entry => (
-                                                <div key={entry.id} className="p-8 rounded-[32px] bg-white/[0.02] border border-white/5 flex justify-between items-start group hover:bg-white/[0.04] transition-all">
-                                                    <div className="space-y-3">
-                                                        <div className="text-[10px] text-white/30 uppercase tracking-widest">{entry.date} • {entry.time}</div>
-                                                        <p className="text-lg font-serif text-white/60 leading-relaxed whitespace-pre-wrap">"{entry.bodySensations}"</p>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => { setEditingId(entry.id); setCurrentEntry(entry); setShowLogForm(true); }}
-                                                        className="p-3 rounded-xl bg-white/5 opacity-0 group-hover:opacity-100 transition-all text-white/40 hover:text-white"
-                                                    >
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                    </div>
-                </motion.div>
-            )}
-
-            {showLogForm && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-glow p-12 space-y-8">
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                            <PenTool className="w-6 h-6 text-[#ABCEC9]" />
-                            <h2 className="text-3xl font-serif text-white">
-                                Day {currentEntry.dayNumber || entries.length + 1} Practice
-                            </h2>
-                        </div>
-                        <button
-                            onClick={() => {
-                                setShowLogForm(false);
-                                setEditingId(null);
-                                setCurrentEntry({ bodySensations: '', emotions: '', reflections: '' });
-                            }}
-                            className="text-white/20 hover:text-white"
-                        >
-                            ✕
-                        </button>
-                    </div>
-
-                    <div className="grid gap-8">
-
-                        <div className="space-y-3">
-                            <label className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold">What I noticed in my body</label>
-                            <textarea
+                        <div className="space-y-16">
+                            <WhisperInput
+                                label="What arose in your inner body?"
+                                placeholder="Warmth in the chest, a settling in the hips…"
                                 value={currentEntry.bodySensations}
-                                onChange={e => setCurrentEntry({ ...currentEntry, bodySensations: e.target.value })}
-                                placeholder="Describe the physical sensations..."
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-xl font-serif text-white focus:border-[#ABCEC9]/50 transition-all outline-none min-h-[300px] resize-y"
+                                onChange={(v: string) => setCurrentEntry({ ...currentEntry, bodySensations: v })}
+                                multiline
                             />
-                        </div>
-
-                        <div className="space-y-3">
-                            <label className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold">Any emotions that arose</label>
-                            <input
+                            <WhisperInput
+                                label="The current of emotion?"
+                                placeholder="A quiet current of gratitude, a trace of unease…"
                                 value={currentEntry.emotions}
-                                onChange={e => setCurrentEntry({ ...currentEntry, emotions: e.target.value })}
-                                placeholder="Identify feelings during practice..."
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-white focus:border-[#ABCEC9]/50 transition-all outline-none"
+                                onChange={(v: string) => setCurrentEntry({ ...currentEntry, emotions: v })}
                             />
-                        </div>
-
-                        <div className="space-y-3">
-                            <label className="text-[10px] uppercase tracking-[0.3em] text-[#ABCEC9] font-bold">
-                                {(currentEntry.dayNumber || entries.length + 1) === 7 ? 'Weekly reflection - What changed?' : 'Reflections'}
-                            </label>
-                            <textarea
+                            <WhisperInput
+                                label="Deepened Awareness"
+                                placeholder="I noticed a space between thoughts, wider than before…"
                                 value={currentEntry.reflections}
-                                onChange={e => setCurrentEntry({ ...currentEntry, reflections: e.target.value })}
-                                placeholder="Write your insights here..."
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-white focus:border-[#ABCEC9]/50 transition-all outline-none min-h-[300px] resize-y"
+                                onChange={(v: string) => setCurrentEntry({ ...currentEntry, reflections: v })}
+                                multiline
                             />
                         </div>
-                    </div>
 
-                    <button
-                        onClick={handleSaveEntry}
-                        className="w-full py-6 bg-[#ABCEC9] text-black rounded-2xl font-bold uppercase tracking-[0.2em] text-xs shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-3"
-                    >
-                        <Save className="w-4 h-4" /> {editingId ? 'Update Log' : 'Seal Entry'}
-                    </button>
-                </motion.div>
-            )
-            }
-        </div >
+                        <AnchorButton variant="ghost" onClick={handleSaveEntry} disabled={!currentEntry.bodySensations && !currentEntry.emotions && !currentEntry.reflections}>
+                            ✦ {editingId ? 'Anchor Reflection' : 'Seal Entry'}
+                        </AnchorButton>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <SacredToast visible={toastVisible} message={toastMessage} />
+        </div>
     );
 };
 
