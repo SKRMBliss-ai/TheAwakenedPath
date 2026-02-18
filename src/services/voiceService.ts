@@ -3,14 +3,14 @@ import { useState, useEffect } from 'react';
 /**
  * SERVICE: VoiceService
  * Refactored to use High-Fidelity Google Cloud Neural TTS via Backend Proxy.
- * This bypasses robotic browser voices and keeps keys secure in Vault.
+ * Includes direct MP3 support and stability guards for React lifecycle.
  */
 
-// LIVE PRODUCTION URL (with Hosting Rewrites)
-const API_BASE_URL = "https://awakened-path-2026.web.app";
+const API_BASE_URL = "https://texttospeech-us-central1-awakened-path-2026.cloudfunctions.net/textToSpeech";
 
 export class VoiceService {
     private static currentAudio: HTMLAudioElement | null = null;
+    private static currentUrl: string | null = null;
     private static listeners: ((isSpeaking: boolean) => void)[] = [];
     private static _isSpeaking: boolean = false;
 
@@ -32,17 +32,15 @@ export class VoiceService {
 
     /**
      * Pulls high-fidelity audio from the backend and plays it.
-     * Cascades to Browser TTS if backend limits are reached.
      */
     static async speak(text: string, options: {
         gender?: 'MALE' | 'FEMALE';
         onEnd?: () => void;
     } = {}): Promise<void> {
-        // Stop any currently playing audio (both backend and browser)
         this.stop();
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/voice`, {
+            const response = await fetch(API_BASE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -51,7 +49,6 @@ export class VoiceService {
                 })
             });
 
-            // If backend is exhausted (429/500), throw to trigger browser fallback
             if (!response.ok) throw new Error("Backend Budget Exhausted");
 
             const audioBlob = await response.blob();
@@ -59,6 +56,7 @@ export class VoiceService {
 
             const audio = new Audio(audioUrl);
             this.currentAudio = audio;
+            this.currentUrl = "tts_blob";
             this.setSpeaking(true);
 
             audio.onended = () => {
@@ -66,26 +64,75 @@ export class VoiceService {
                 this.setSpeaking(false);
                 options.onEnd?.();
                 this.currentAudio = null;
+                this.currentUrl = null;
             };
 
             await audio.play();
         } catch (error) {
-            console.warn("Cascading to Browser Speech Synthesis (Free Tier Fallback). Error:", error);
+            console.warn("Cascading to Browser Speech Synthesis.", error);
             this.speakFallbackBrowser(text, options);
         }
     }
 
     /**
-     * The final "Free Forever" safety net.
+     * Plays a direct audio URL (e.g., local MP3) instead of generating TTS.
      */
+    static async playAudioURL(url: string, onEnd?: () => void): Promise<void> {
+        // Guard: Already playing this exact URL?
+        if (this.currentUrl === url && this.currentAudio && !this.currentAudio.paused) {
+            console.log("VoiceService: Already playing URL.");
+            return;
+        }
+
+        console.log("VoiceService: Triggering playback for:", url);
+        this.stop();
+
+        try {
+            // Use constructor directly for better browser compatibility
+            const audio = new Audio(url);
+            audio.preload = "auto";
+
+            this.currentAudio = audio;
+            this.currentUrl = url;
+            this.setSpeaking(true);
+
+            audio.onended = () => {
+                this.setSpeaking(false);
+                onEnd?.();
+                this.currentAudio = null;
+                this.currentUrl = null;
+            };
+
+            audio.onerror = (e: any) => {
+                const mediaError = (e.target as HTMLAudioElement).error;
+                console.error("VoiceService Error:", {
+                    url,
+                    code: mediaError?.code,
+                    message: mediaError?.message
+                });
+                this.setSpeaking(false);
+            };
+
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                await playPromise;
+            }
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                console.warn("VoiceService: Playback interrupted.");
+                return;
+            }
+            console.error("VoiceService: Playback failed:", error);
+            this.setSpeaking(false);
+        }
+    }
+
     private static speakFallbackBrowser(text: string, options: { onEnd?: () => void } = {}) {
         if (!window.speechSynthesis) return;
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 0.95;
         utterance.pitch = 0.9;
-
-        // Find a natural-ish voice if available
         const voices = window.speechSynthesis.getVoices();
         utterance.voice = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en')) || voices[0];
 
@@ -98,37 +145,27 @@ export class VoiceService {
         window.speechSynthesis.speak(utterance);
     }
 
-    /**
-     * Stops everything.
-     */
     static stop() {
         this.setSpeaking(false);
-        // Stop high-fidelity backend audio
         if (this.currentAudio) {
             this.currentAudio.pause();
-            this.currentAudio.src = "";
+            // Avoid setting src="" which can cause "Empty src" errors in some browsers
+            // Just clearing it is enough
+            this.currentAudio.removeAttribute('src');
             this.currentAudio.load();
             this.currentAudio = null;
         }
-        // Stop browser legacy audio
+        this.currentUrl = null;
         if (typeof window !== 'undefined' && window.speechSynthesis) {
             window.speechSynthesis.cancel();
         }
     }
 
-    /**
-     * Inits global lifecycle listeners to ensure silence when leaving the app.
-     */
     static init(): Promise<void> {
         if (typeof window !== 'undefined') {
-            // Stop voice if tab is hidden, minimized, or screen locked
             document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    this.stop();
-                }
+                if (document.hidden) this.stop();
             });
-
-            // Stop voice on refresh/close
             window.addEventListener('pagehide', () => this.stop());
             window.addEventListener('beforeunload', () => this.stop());
         }
@@ -136,16 +173,10 @@ export class VoiceService {
     }
 }
 
-/**
- * HOOK: useVoiceActive
- * Reactive hook to see if the Sage is currently speaking.
- */
 export function useVoiceActive() {
     const [isSpeaking, setIsSpeaking] = useState(VoiceService.isSpeaking);
-
     useEffect(() => {
         return VoiceService.subscribe((val: boolean) => setIsSpeaking(val));
     }, []);
-
     return isSpeaking;
 }

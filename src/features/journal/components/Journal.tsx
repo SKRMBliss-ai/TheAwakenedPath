@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
     BookOpen,
@@ -53,63 +53,24 @@ const Journal: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
     const [showLogForm, setShowLogForm] = useState(false);
 
-    const practiceSteps = [
-        {
-            title: "Step 1: Find a Quiet Moment",
-            instructions: [
-                "Sit comfortably or lie down",
-                "Close your eyes (or soften your gaze)",
-                "Take three slow, deep breaths"
-            ],
-            audioScript: "Welcome. Let's begin our journey inward. Find a quiet moment. Sit comfortably or lie down. Soften your gaze or gently close your eyes. Take three slow, deep breaths. Inhale peace, exhale tension. Let the outer world fade away."
-        },
-        {
-            title: "Step 2: Bring Attention to Your Hands",
-            instructions: [
-                "Focus attention on your hands (without moving them)",
-                "FEEL them from the inside - don't visualize",
-                "Notice if they feel warm, cool, tingly, heavy, or light",
-                "Can you feel a subtle aliveness or energy in them?"
-            ],
-            audioScript: "Now, without moving them, bring your entire attention to your hands. Don't visualize them in your mind—FEEL them from the inside. Notice the sensations... do they feel warm? Tingly? Heavy or light? Feel the subtle pulse of life, the energy running through your palms and fingers. Just be with your hands for a few moments."
-        },
-        {
-            title: "Step 3: Expand to Your Arms",
-            instructions: [
-                "Include your arms in your awareness",
-                "Feel the energy running through them",
-                "Notice any sensations without judging or analyzing"
-            ],
-            audioScript: "Let that awareness expand now to include your arms. Feel the life force flowing from your shoulders down to your fingertips. Notice any tingling, warmth, or heaviness. There is nothing to judge, nothing to analyze. Just pure sensation. Pure aliveness."
-        },
-        {
-            title: "Step 4: Expand to Your Whole Body",
-            instructions: [
-                "Gradually include feet, legs, torso, chest, neck, and head",
-                "Feel your entire body as a field of aliveness",
-                "Notice where there's energy, tension, or ease"
-            ],
-            audioScript: "Slowly, let this field of awareness grow. Include your feet, your legs, your torso... feel your chest rise and fall. Move your attention up your neck and into your head. Feel your entire body now as a single field of aliveness. Some areas may feel vibrant, others quiet. Notice tension, notice ease. You are the space in which all these sensations exist."
-        },
-        {
-            title: "Step 5: Notice What Arises",
-            instructions: [
-                "Notice any emotions showing themselves in the body",
-                "Don't push them away - just notice (sadness, joy, anxiety, fear)",
-                "You're not making anything happen, just paying attention"
-            ],
-            audioScript: "As you rest in this body awareness, notice if any emotions arise. You might feel a wave of peace, or perhaps a flicker of anxiety or sadness. Don't push anything away. These emotions are simply showing themselves through sensations in your body. You aren't trying to make anything happen. You are simply the silent witness, paying attention to what is already here. Now you are ready to log your entry for the day."
-        }
-    ];
+    const [dynamicSteps, setDynamicSteps] = useState<any[]>([]);
+    const [isLoadingScript, setIsLoadingScript] = useState(false);
+    const [journeyTitle, setJourneyTitle] = useState("Daily Presence");
+    const lastSpokenRef = useRef<string | null>(null);
 
     // Audio Logic
-    const speak = useCallback((text: string, onEnd?: () => void) => {
+    const speak = useCallback((text: string, onEnd?: () => void, isAudioUrl: boolean = false) => {
         if (isPaused) return;
-        VoiceService.speak(text, {
-            onEnd: () => {
-                if (onEnd) setTimeout(onEnd, 1500);
-            }
-        });
+        if (isAudioUrl) {
+            console.log("Journal: Playing local meditation audio:", text);
+            VoiceService.playAudioURL(text, onEnd);
+        } else {
+            VoiceService.speak(text, {
+                onEnd: () => {
+                    if (onEnd) setTimeout(onEnd, 1500);
+                }
+            });
+        }
     }, [isPaused]);
 
     const handleReset = useCallback(() => {
@@ -117,13 +78,75 @@ const Journal: React.FC = () => {
         setPracticeStep(0);
     }, []);
 
+    const fetchDailyScript = async () => {
+        const today = new Date().getDay(); // 0-6
+        // Map day to MP3 (1=Mon, ..., 0=Sun)
+        const audioMap: Record<number, string> = {
+            1: '/mp3/JournalDay1.mp3',
+            2: '/mp3/JournalDay2.mp3',
+            3: '/mp3/JournalDay3.mp3', // Today is Wednesday (3)
+            4: '/mp3/JournalDay4.mp3',
+            5: '/mp3/JournalDay5.mp3',
+            6: '/mp3/JournalDay6.mp3',
+            0: '/mp3/JournalDay7.mp3'
+        };
+
+        const localAudio = audioMap[today];
+
+        if (localAudio) {
+            console.log("Journal: Local match found for day", today, "Path:", localAudio);
+            setDynamicSteps([{
+                title: "Guided Meditation",
+                instructions: ["Close your eyes and follow the guidance.", "Stay present in the body."],
+                audioScript: localAudio,
+                isFullAudio: true
+            }]);
+            setJourneyTitle("Somatic Presence");
+            setIsPracticing(true);
+            return;
+        }
+
+        setIsLoadingScript(true);
+        console.log("Journal: Requesting Master AI Script for Day", entries.length + 1);
+        try {
+            // Direct Trigger URL to bypass Hosting/Rewrite layer
+            const API_URL = 'https://getdailymeditation-us-central1-awakened-path-2026.cloudfunctions.net/getDailyMeditation';
+
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dayNumber: entries.length + 1 })
+            });
+
+            if (!response.ok) throw new Error(`Backend Error: ${response.status}`);
+
+            const data = await response.json();
+            console.log("Master AI Success:", data);
+
+            setDynamicSteps(data.steps);
+            setJourneyTitle(data.title);
+            setIsPracticing(true);
+        } catch (error) {
+            console.error("Master AI Failed (Fallback Mode):", error);
+            // Fallback to simple steps if AI fails
+            setDynamicSteps([{
+                title: "Stillness",
+                instructions: ["Sit quietly.", "Focus on your breath."],
+                audioScript: "Return to the silence of the Now."
+            }]);
+            setIsPracticing(true);
+        } finally {
+            setIsLoadingScript(false);
+        }
+    };
+
     const handleNextStep = useCallback(() => {
-        if (practiceStep < practiceSteps.length - 1) {
+        if (practiceStep < dynamicSteps.length - 1) {
             setPracticeStep(prev => prev + 1);
         } else {
             handleCompleteMeditation();
         }
-    }, [practiceStep, practiceSteps.length]);
+    }, [practiceStep, dynamicSteps.length]);
 
     const handleCompleteMeditation = useCallback(() => {
         setIsPracticing(false);
@@ -139,12 +162,17 @@ const Journal: React.FC = () => {
     }, [entries, editingId]);
 
     useEffect(() => {
-        if (isPracticing && !isPaused) {
-            speak(practiceSteps[practiceStep].audioScript, handleNextStep);
+        if (isPracticing && !isPaused && dynamicSteps.length > 0) {
+            const step = dynamicSteps[practiceStep];
+            if (lastSpokenRef.current !== step.audioScript) {
+                speak(step.audioScript, handleNextStep, step.isFullAudio);
+                lastSpokenRef.current = step.audioScript;
+            }
         } else {
             VoiceService.stop();
+            lastSpokenRef.current = null;
         }
-    }, [practiceStep, isPracticing, speak, handleNextStep, isPaused]);
+    }, [practiceStep, isPracticing, speak, handleNextStep, isPaused, dynamicSteps]);
 
     useEffect(() => {
         if (!user) return;
@@ -200,17 +228,17 @@ const Journal: React.FC = () => {
         );
     }
 
-    if (isPracticing) {
+    if (isPracticing && dynamicSteps.length > 0) {
         return (
             <MeditationPortal
-                title="DAILY PRACTICE"
-                currentStepTitle={practiceSteps[practiceStep].title}
-                currentStepInstruction={practiceSteps[practiceStep].instructions.join('. ')}
+                title={journeyTitle.toUpperCase()}
+                currentStepTitle={dynamicSteps[practiceStep].title}
+                currentStepInstruction={dynamicSteps[practiceStep].instructions.join('. ')}
                 onNext={handleNextStep}
                 onReset={handleReset}
                 onTogglePlay={() => setIsPaused(!isPaused)}
                 isPlaying={!isPaused}
-                progress={(practiceStep + 1) / practiceSteps.length}
+                progress={(practiceStep + 1) / dynamicSteps.length}
             />
         );
     }
@@ -276,10 +304,11 @@ const Journal: React.FC = () => {
                                     Before logging your journey, take 2 minutes to reconnect with your inner body.
                                 </p>
                                 <button
-                                    onClick={() => setIsPracticing(true)}
-                                    className="px-12 py-5 bg-[#ABCEC9] text-black rounded-2xl font-bold uppercase tracking-[0.2em] text-xs shadow-[0_0_30px_rgba(171,206,201,0.3)] hover:scale-105 transition-all"
+                                    onClick={fetchDailyScript}
+                                    disabled={isLoadingScript}
+                                    className="px-12 py-5 bg-[#ABCEC9] text-black rounded-2xl font-bold uppercase tracking-[0.2em] text-xs shadow-[0_0_30px_rgba(171,206,201,0.3)] hover:scale-105 transition-all disabled:opacity-50"
                                 >
-                                    Begin Meditation
+                                    {isLoadingScript ? "Deepening..." : "Begin Daily Meditation"}
                                 </button>
                             </>
                         )}

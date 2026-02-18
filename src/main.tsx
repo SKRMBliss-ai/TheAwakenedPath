@@ -1,4 +1,3 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import UntetheredApp from './UntetheredSoulApp.tsx'
@@ -9,9 +8,7 @@ import { VoiceService } from './services/voiceService'
 VoiceService.init();
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AuthProvider>
-      <UntetheredApp />
-    </AuthProvider>
-  </StrictMode>,
+  <AuthProvider>
+    <UntetheredApp />
+  </AuthProvider>,
 )

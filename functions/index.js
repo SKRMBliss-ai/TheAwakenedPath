@@ -9,6 +9,43 @@ const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
 // Text-to-Speech Client
 const ttsClient = new textToSpeech.TextToSpeechClient();
 
+/**
+ * VOICE ENGINE: Tier 0 (Gemini Multimodal TTS)
+ * Highly expressive, human-like, detects tone instructions.
+ */
+async function synthesizeGemini(text, gender, apiKey) {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const voiceName = gender === 'MALE' ? 'Charon' : 'Aoede';
+
+    // Director instructions for the Multimodal engine
+    const prompt = `
+        (Voice: ${voiceName})
+        Read this meditation script with a slow, spiritual, and very human pace. 
+        Add subtle pauses (1-2s) where appropriate. 
+        Focus on warmth and presence.
+        
+        Script: "${text}"
+    `;
+
+    const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+                voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } }
+            }
+        }
+    });
+
+    const response = await result.response;
+    const part = response.candidates[0].content.parts.find(p => p.inlineData);
+    if (!part) throw new Error("GEMINI_AUDIO_PART_NOT_FOUND");
+
+    return Buffer.from(part.inlineData.data, 'base64');
+}
+
 exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
     const { text, gender = 'FEMALE' } = req.body;
 
@@ -22,11 +59,10 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
 
     // Function to add meditative pauses and rhythmic breaks
     function meditationify(rawText) {
-        // Add 1.5s break after sentences (Reduced from 2.5s to prevent confusion)
-        let ssml = rawText.replace(/([.?!])\s+/g, '$1 <break time="1500ms"/> ');
-        // Add 0.8s break after commas/semicolons (Reduced from 1.2s)
-        ssml = ssml.replace(/([,;])\s+/g, '$1 <break time="800ms"/> ');
-        // Wrap in speak tag
+        // Add 2s break after sentences for deep absorption
+        let ssml = rawText.replace(/([.?!])\s+/g, '$1 <break time="2000ms"/> ');
+        // Add 1s break after commas/semicolons
+        ssml = ssml.replace(/([,;])\s+/g, '$1 <break time="1000ms"/> ');
         return `<speak>${ssml}</speak>`;
     }
 
@@ -48,22 +84,29 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
     }
 
     try {
-        console.log(`Attempting Tier 1 Meditative Voice: ${TIER_1_VOICE}`);
-        const audio = await synthesize(TIER_1_VOICE);
+        console.log("Attempting Tier 0: Gemini Multimodal TTS");
+        const audio = await synthesizeGemini(text, gender, geminiKey.value());
         res.set('Content-Type', 'audio/mpeg');
         return res.send(audio);
-    } catch (tier1Error) {
-        console.warn("Tier 1 (Vertex) Limit reached or error. Falling back to Tier 2 (Neural2).", tier1Error.message);
-
+    } catch (geminiError) {
+        console.warn("Tier 0 (Gemini TTS) Error. Falling back to Tier 1.", geminiError.message);
         try {
-            console.log(`Attempting Tier 2 Voice: ${TIER_2_VOICE}`);
-            const audio = await synthesize(TIER_2_VOICE);
+            console.log(`Attempting Tier 1 Meditative Voice: ${TIER_1_VOICE}`);
+            const audio = await synthesize(TIER_1_VOICE);
             res.set('Content-Type', 'audio/mpeg');
             return res.send(audio);
-        } catch (tier2Error) {
-            console.error("All backend voice tiers exhausted.", tier2Error.message);
-            // Return 429 or 503 to signal "Quota Exhausted" to frontend
-            res.status(429).send("Sage is resting. All neural pathways full.");
+        } catch (tier1Error) {
+            console.warn("Tier 1 (Vertex) Limit reached or error. Falling back to Tier 2.", tier1Error.message);
+
+            try {
+                console.log(`Attempting Tier 2 Voice: ${TIER_2_VOICE}`);
+                const audio = await synthesize(TIER_2_VOICE);
+                res.set('Content-Type', 'audio/mpeg');
+                return res.send(audio);
+            } catch (tier2Error) {
+                console.error("All backend voice tiers exhausted.", tier2Error.message);
+                res.status(429).send("Sage is resting. All neural pathways full.");
+            }
         }
     }
 });
@@ -120,3 +163,40 @@ exports.getGrounding = onRequest({ secrets: [geminiKey], cors: true }, async (re
         res.status(500).send("Feel your breath now.");
     }
 });
+exports.getDailyMeditation = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
+    const { dayNumber = 1 } = req.body;
+
+    try {
+        const genAI = new GoogleGenerativeAI(geminiKey.value());
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash",
+            systemInstruction: `
+                You are a Presence Master. Generate a fresh, experiential meditation script for Day ${dayNumber}.
+                Focus: A specific anchor to the 'Now' (senses, breath, inner body, or space).
+                Guidelines:
+                - Use a poetic, minimalist, and non-duplicate tone.
+                - Structure as 5 short steps.
+                - Total duration approx 2-3 minutes.
+                - Include "human" elements: use ellipses (...) for pauses, exclamation (!) for subtle emphasis.
+                - Return JSON format: { "title": "...", "steps": [ { "title": "Step 1", "instructions": ["point 1", "point 2"], "audioScript": "..." }, ... ] }
+            `
+        });
+
+        const prompt = `Generate Day ${dayNumber} Meditation. Focus on a fresh gateway to Presence that feels lived, not read.`;
+
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+        });
+        const response = await result.response;
+        const text = response.text();
+
+        // Clean up any potential markdown code blocks if the AI includes them
+        const cleanedJson = text.replace(/```json|```/gi, '').trim();
+        res.json(JSON.parse(cleanedJson));
+    } catch (error) {
+        console.error("Daily Script Error:", error);
+        res.status(500).send("Return to silence.");
+    }
+});
+exports.pingDaily = onRequest((req, res) => res.send("Zen Ping Successful"));
