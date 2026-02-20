@@ -121,7 +121,7 @@ export const SignInScreen = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors"
                                 >
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
@@ -148,7 +148,7 @@ export const SignInScreen = () => {
                         <div className="mt-6">
                             <button
                                 onClick={handleGoogleSignIn}
-                                className="flex items-center gap-2 text-white/40 hover:text-white transition-colors text-xs font-bold tracking-wide group"
+                                className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-xs font-bold tracking-wide group"
                             >
                                 <LayoutGrid className="w-4 h-4 group-hover:text-[#C65F9D] transition-colors" />
                                 <span>Sign in with Google</span>
@@ -159,7 +159,7 @@ export const SignInScreen = () => {
                         <div className="mt-6">
                             <button
                                 onClick={() => setIsLogin(!isLogin)}
-                                className="text-white/20 text-[10px] font-bold uppercase tracking-widest hover:text-white/60 transition-colors"
+                                className="text-white/70 text-[10px] font-bold uppercase tracking-widest hover:text-white/60 transition-colors"
                             >
                                 {isLogin ? "Join the Path" : "Log In"}
                             </button>

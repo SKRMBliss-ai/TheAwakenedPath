@@ -6,12 +6,30 @@ import { getNoMindGrounding } from '../services/geminiService';
 import { BodyTruthTest } from './BodyTruthTest';
 import { usePresenceScheduler } from '../hooks/usePresenceScheduler';
 
-// ─── DESIGN TOKENS (matches Journal.tsx) ────────────────────────────────────
+// ─── SACRED UI TOKENS v3 — Unified Warm Palette ──────────────────
 const T = {
+    // Primary accent — warm magenta, unchanged
     magenta: '#D16BA5',
-    teal: '#ABCEC9',
-    rose: '#F08C8C',
+    magentaDim: 'rgba(209, 107, 165, 0.5)',
+
+    // Secondary accent — was cyan, now warm lavender
+    // Sits in the red-violet family, harmonizes with plum background
+    lavender: '#B8A5D4',
+    lavenderDim: 'rgba(184, 165, 212, 0.4)',
+
+    // Tertiary — dusty mauve for third-state elements
+    mauve: '#C4A8C8',
+
+    // Functional — warm terracotta for alert/panic states
+    rose: '#D4857A',
+
+    // Background — unchanged
     plum: '#0D0014',
+    deep: '#160020',
+
+    // Monospace UI only (timer, code) — desaturated teal, not full cyan
+    // Use sparingly, never as a glow color
+    tealMuted: '#8AAFA8',
     border: 'rgba(255,255,255,0.06)',
 };
 
@@ -123,7 +141,7 @@ const ProgressFilament: React.FC<{ progress: number; label?: string }> = ({ prog
                 fontFamily: 'system-ui, sans-serif', fontWeight: 700,
             }}>
                 <span>{label}</span>
-                <span style={{ color: T.teal }}>{Math.round(progress * 100)}%</span>
+                <span style={{ color: T.lavender }}>{Math.round(progress * 100)}%</span>
             </div>
         )}
 
@@ -138,9 +156,9 @@ const ProgressFilament: React.FC<{ progress: number; label?: string }> = ({ prog
                 transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] as any }}
                 style={{
                     position: 'absolute', left: 0, top: 0, bottom: 0,
-                    background: `linear-gradient(90deg, ${T.magenta}70, ${T.teal})`,
+                    background: `linear-gradient(90deg, ${T.magenta}70, ${T.lavender})`,
                     borderRadius: 1, transformOrigin: 'left',
-                    boxShadow: `0 0 12px ${T.teal}80, 0 0 4px ${T.teal}`,  // ← double shadow
+                    boxShadow: `0 0 12px ${T.lavender}80, 0 0 4px ${T.lavender}`,  // ← double shadow
                 }}
             />
             {/* Head dot — bigger, brighter */}
@@ -152,8 +170,8 @@ const ProgressFilament: React.FC<{ progress: number; label?: string }> = ({ prog
                     transform: 'translate(-50%, -50%)',
                     width: 6, height: 6,
                     borderRadius: '50%',
-                    background: T.teal,
-                    boxShadow: `0 0 12px ${T.teal}, 0 0 24px ${T.teal}70, 0 0 40px ${T.teal}30`,
+                    background: T.lavender,
+                    boxShadow: `0 0 12px ${T.lavender}, 0 0 24px ${T.lavender}70, 0 0 40px ${T.lavender}30`,
                 }}
             />
         </div>
@@ -189,10 +207,10 @@ const ChapterOrb: React.FC<{ icon: React.ElementType; color: string; active: boo
 
 // ─── CHAPTER DATA ─────────────────────────────────────────────────────────────
 const CHAPTERS = [
-    { id: 'observer', num: 'I', subtitle: 'You Are Not Your Mind', desc: 'Witness the voice in your head and discover the gap of awareness behind it.', icon: Mic, color: T.teal },
-    { id: 'inner-body', num: 'II', subtitle: 'The Inner Body', desc: 'Move consciousness from the mind into the somatic field of the body.', icon: Activity, color: T.magenta },
-    { id: 'gaps', num: 'III', subtitle: 'Mindful Gaps', desc: 'Insert spaces of no-mind into the flow of your daily routine.', icon: Bell, color: T.teal },
-    { id: 'panic', num: 'IV', subtitle: 'Beyond the Storm', desc: 'Immediate grounding tools for when the mind-storm is too loud.', icon: AlertCircle, color: T.rose },
+    { id: 'observer', num: 'I', subtitle: 'You Are Not Your Mind', desc: 'Witness the voice in your head and discover the gap of awareness behind it.', icon: Mic, color: '#B8A5D4' },
+    { id: 'inner-body', num: 'II', subtitle: 'The Inner Body', desc: 'Move consciousness from the mind into the somatic field of the body.', icon: Activity, color: '#D16BA5' },
+    { id: 'gaps', num: 'III', subtitle: 'Mindful Gaps', desc: 'Insert spaces of no-mind into the flow of your daily routine.', icon: Bell, color: '#C4A8C8' },
+    { id: 'panic', num: 'IV', subtitle: 'Beyond the Storm', desc: 'Immediate grounding tools for when the mind-storm is too loud.', icon: AlertCircle, color: '#D4857A' },
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -326,7 +344,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                         textShadow: `0 0 30px ${T.magenta}40`,
                                     }}>
                                     {presenceValue}
-                                    <span style={{ fontSize: 14, opacity: 0.5, marginLeft: 2 }}>%</span>
+                                    <span style={{ fontSize: 14, opacity: 0.5, marginLeft: 2, color: 'rgba(184, 165, 212, 0.6)' }}>%</span>
                                 </motion.span>
                             </div>
                         </div>
@@ -358,7 +376,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                     position: 'absolute', inset: '-20px -40px', borderRadius: 48,
                                                     background: chapter.color,
                                                     filter: 'blur(80px)',
-                                                    opacity: 0.06,
+                                                    opacity: 0.04,
                                                     pointerEvents: 'none',
                                                 }}
                                             />
@@ -370,7 +388,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                     position: 'absolute', top: -4, left: -4, width: 80, height: 80,
                                                     background: chapter.color,
                                                     filter: 'blur(24px)',
-                                                    opacity: 0.15,
+                                                    opacity: 0.08,
                                                     borderRadius: '50%',
                                                     pointerEvents: 'none',
                                                 }}
@@ -485,24 +503,24 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
                                                                 style={{
                                                                     position: 'absolute', width: 160, height: 160, borderRadius: '50%',
-                                                                    background: T.teal, filter: 'blur(40px)', pointerEvents: 'none'
+                                                                    background: '#B8A5D4', filter: 'blur(40px)', pointerEvents: 'none'
                                                                 }} />
                                                             <AnimatePresence>
                                                                 {isListening && (
                                                                     <motion.div
                                                                         initial={{ scale: 1, opacity: 0.5 }} animate={{ scale: 2.5, opacity: 0 }}
                                                                         transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
-                                                                        style={{ position: 'absolute', width: 88, height: 88, borderRadius: '50%', background: T.teal }}
+                                                                        style={{ position: 'absolute', width: 88, height: 88, borderRadius: '50%', background: '#B8A5D4' }}
                                                                     />
                                                                 )}
                                                             </AnimatePresence>
                                                             <motion.div
                                                                 animate={{
                                                                     background: isListening
-                                                                        ? `radial-gradient(circle,${T.teal}40,${T.teal}10)`
+                                                                        ? `radial-gradient(circle, #B8A5D440, #B8A5D410)`
                                                                         : 'radial-gradient(circle,rgba(255,255,255,0.06),rgba(255,255,255,0.02))',
-                                                                    boxShadow: isListening ? `0 0 40px ${T.teal}60` : 'none',
-                                                                    borderColor: isListening ? `${T.teal}60` : 'rgba(255,255,255,0.08)',
+                                                                    boxShadow: isListening ? `0 0 40px #B8A5D460` : 'none',
+                                                                    borderColor: isListening ? '#B8A5D460' : 'rgba(255,255,255,0.08)',
                                                                 }}
                                                                 transition={{ duration: 0.6 }}
                                                                 style={{
@@ -512,7 +530,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                                 }}
                                                             >
                                                                 <Mic size={28} strokeWidth={1.5}
-                                                                    style={{ color: isListening ? T.teal : 'rgba(255,255,255,0.25)', transition: 'color 0.5s' }} />
+                                                                    style={{ color: isListening ? '#B8A5D4' : 'rgba(255,255,255,0.25)', transition: 'color 0.5s' }} />
                                                             </motion.div>
                                                         </div>
 
@@ -612,15 +630,15 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                                 transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
                                                                 style={{
                                                                     position: 'absolute', width: 120, height: 120, borderRadius: '50%',
-                                                                    background: T.teal, filter: 'blur(40px)', top: '50%', left: '50%',
+                                                                    background: '#C4A8C8', filter: 'blur(40px)', top: '50%', left: '50%',
                                                                     transform: 'translate(-50%,-50%)', pointerEvents: 'none'
                                                                 }} />
                                                             <div style={{
                                                                 width: 72, height: 72, borderRadius: '50%',
-                                                                background: `${T.teal}10`, border: `1px solid ${T.teal}20`,
+                                                                background: `#C4A8C810`, border: `1px solid #C4A8C820`,
                                                                 display: 'flex', alignItems: 'center', justifyContent: 'center'
                                                             }}>
-                                                                <Bell size={26} strokeWidth={1.5} style={{ color: T.teal }} />
+                                                                <Bell size={26} strokeWidth={1.5} style={{ color: '#C4A8C8' }} />
                                                             </div>
                                                         </div>
 

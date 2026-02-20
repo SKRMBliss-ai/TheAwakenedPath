@@ -287,7 +287,7 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                     style={{ background: `radial-gradient(circle, ${tokens.magenta}30, transparent)` }}
                 />
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex flex-col items-center gap-8">
-                    <p className="text-[9px] uppercase tracking-[0.6em] text-white/20 font-bold">The Awakened Path</p>
+                    <p className="text-[9px] uppercase tracking-[0.6em] text-white/70 font-bold">The Awakened Path</p>
                     <h1 className="text-6xl font-serif font-light text-white leading-tight">Sacred Access</h1>
                     <p className="text-sm text-white/25 italic max-w-xs font-serif leading-relaxed">Sign in to begin your journey inward.</p>
                     <AnchorButton variant="solid" onClick={signInWithGoogle}>Authenticate Presence</AnchorButton>
@@ -377,14 +377,14 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                             <div className="flex flex-col items-center gap-8 relative z-10">
                                 <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10">
                                     <Sparkles size={10} className="text-[#ABCEC9]" />
-                                    <span className="text-[8px] uppercase tracking-[0.4em] text-white/30 font-bold">Practice First</span>
+                                    <span className="text-[8px] uppercase tracking-[0.4em] text-white/70 font-bold">Practice First</span>
                                 </div>
 
                                 <h2 className="text-5xl font-serif font-light text-white leading-tight max-w-lg mx-auto">
                                     Ready to settle<br />into the Now?
                                 </h2>
 
-                                <p className="text-sm text-white/30 italic max-w-sm font-serif leading-relaxed">
+                                <p className="text-sm text-white/70 italic max-w-sm font-serif leading-relaxed">
                                     Take 2 minutes to reconnect with your inner body before logging.
                                 </p>
 
@@ -394,7 +394,7 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
 
                                 <button
                                     onClick={() => setShowLogForm(true)}
-                                    className="text-[8px] uppercase tracking-[0.5em] text-white/15 hover:text-white/40 font-bold transition-colors"
+                                    className="text-[8px] uppercase tracking-[0.5em] text-white/15 hover:text-white/70 font-bold transition-colors"
                                 >
                                     Skip to log →
                                 </button>
@@ -441,7 +441,7 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                                 <span className="text-[9px] uppercase tracking-[0.6em] text-[#ABCEC9]/70 font-bold">Sacred Reflection</span>
                                 <h2 className="text-6xl font-serif font-light text-white/90 leading-none">Day {entries.length + 1}</h2>
                             </div>
-                            <button onClick={() => setShowLogForm(false)} className="p-3 rounded-full text-white/20 hover:text-white/60 transition-colors">
+                            <button onClick={() => setShowLogForm(false)} className="p-3 rounded-full text-white/70 hover:text-white/60 transition-colors">
                                 <LogIn size={20} className="rotate-180" />
                             </button>
                         </header>

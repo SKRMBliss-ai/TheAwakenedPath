@@ -80,7 +80,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin, 
 
           <div className="flex flex-col items-center">
             <h1 className="text-[12px] font-serif font-bold uppercase tracking-[0.25em] text-white/90">The Awakened Path</h1>
-            <span className="text-[8px] font-bold text-white/30 tracking-widest uppercase mt-1">The Presence Study</span>
+            <span className="text-[8px] font-bold text-white/70 tracking-widest uppercase mt-1">The Presence Study</span>
           </div>
 
           <button
@@ -95,7 +95,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin, 
         <section className="relative flex flex-col items-center justify-center space-y-8 z-10">
           <div className="transform scale-90 sm:scale-100">
             <AwakenStage
-              isAnimating={true}
+              isAnimating={false}
               size="md"
               mouseX={rotateX}
               mouseY={rotateY}
@@ -107,11 +107,11 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin, 
             <div className="flex items-center gap-8 justify-center opacity-60">
               <div className="flex flex-col items-center gap-1.5">
                 <Heart className="w-3 h-3 text-rose-300" />
-                <span className="text-[8px] font-bold text-white/50 uppercase tracking-[0.2em]">Gratitude</span>
+                <span className="text-[8px] font-bold text-white/70 uppercase tracking-[0.2em]">Gratitude</span>
               </div>
               <div className="flex flex-col items-center gap-1.5">
                 <Flame className="w-3 h-3 text-orange-300" />
-                <span className="text-[8px] font-bold text-white/50 uppercase tracking-[0.2em]">{user.streak} Days</span>
+                <span className="text-[8px] font-bold text-white/70 uppercase tracking-[0.2em]">{user.streak} Days</span>
               </div>
             </div>
           </div>
@@ -156,7 +156,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin, 
 
       {/* Main Practices Grid */}
       <section className="space-y-6 pb-20">
-        <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/20 pl-4">Sacred Sessions</h4>
+        <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/70 pl-4">Sacred Sessions</h4>
         <div className="grid grid-cols-2 gap-4">
           {[
             { id: 'intelligence', label: 'Presence', sub: 'EXPLORE', icon: Sparkles, color: '#ABCEC9', variant: 'orb' },
@@ -191,7 +191,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin, 
                   <div className="relative w-24 h-24 flex items-center justify-center -mt-2">
                     {isLocked ? (
                       <div className="flex flex-col items-center justify-center gap-2">
-                        <Lock className="w-8 h-8 text-white/30" />
+                        <Lock className="w-8 h-8 text-white/70" />
                         <div className="w-full h-full absolute inset-0 bg-black/20 backdrop-blur-[2px] rounded-full" />
                       </div>
                     ) : (
@@ -201,7 +201,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin, 
 
                   <div className="text-center relative z-10">
                     <div className="text-lg font-serif font-bold text-white mb-0.5">{item.label}</div>
-                    <div className="text-[8px] font-bold text-white/30 tracking-[0.2em]">
+                    <div className="text-[8px] font-bold text-white/70 tracking-[0.2em]">
                       {isLocked ? 'COMING SOON' : item.sub}
                     </div>
                   </div>
@@ -226,11 +226,11 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY
       <header className="flex justify-between items-center p-6 border-b border-white/5">
         <div className="flex items-center gap-6">
           <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
-            <Search className="w-5 h-5 text-white/40" />
+            <Search className="w-5 h-5 text-white/70" />
           </div>
           <div>
             <h1 className="text-xl font-serif font-light text-white tracking-tight">The Awakened Path</h1>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-white/20 font-bold">The Presence Study</p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 font-bold">The Presence Study</p>
           </div>
         </div>
         <button
@@ -252,7 +252,7 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY
         <div className="relative z-10 flex flex-col items-center text-center space-y-16">
           <div className="relative group">
             <AwakenStage
-              isAnimating={true}
+              isAnimating={false}
               size="lg"
               mouseX={rotateX}
               mouseY={rotateY}
@@ -261,11 +261,11 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY
 
           <div className="flex gap-20">
             <div className="flex flex-col items-center gap-3">
-              <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.5em]">GRATITUDE FLOW</span>
+              <span className="text-[10px] font-bold text-white/70 uppercase tracking-[0.5em]">GRATITUDE FLOW</span>
               <div className="w-1.5 h-1.5 rounded-full bg-rose-400 opacity-50 shadow-[0_0_10px_#fb7185]" />
             </div>
             <div className="flex flex-col items-center gap-3">
-              <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.5em]">{user.streak} DAY STREAK</span>
+              <span className="text-[10px] font-bold text-white/70 uppercase tracking-[0.5em]">{user.streak} DAY STREAK</span>
               <div className="w-1.5 h-1.5 rounded-full bg-[#ABCEC9] opacity-50 shadow-[0_0_10px_#ABCEC9]" />
             </div>
           </div>
@@ -294,7 +294,7 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY
         >
           <div className="flex items-center gap-10">
             <div className="w-20 h-20 rounded-[28px] bg-[#1a151b] flex items-center justify-center shadow-xl transition-transform duration-500">
-              {isAdmin ? <Flame className="w-10 h-10 text-[#C65F9D]" /> : <Lock className="w-10 h-10 text-white/50" />}
+              {isAdmin ? <Flame className="w-10 h-10 text-[#C65F9D]" /> : <Lock className="w-10 h-10 text-white/70" />}
             </div>
             <div className="text-left">
               <h3 className="text-3xl font-serif font-bold text-[#1a151b]">Transform a Situation</h3>
@@ -310,7 +310,7 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY
       {/* Practices Grid - Desktop Balanced */}
       <section className="space-y-8">
         <div className="flex items-center justify-between px-4">
-          <h4 className="text-[12px] font-bold uppercase tracking-[0.5em] text-white/20">Sacred Practices</h4>
+          <h4 className="text-[12px] font-bold uppercase tracking-[0.5em] text-white/70">Sacred Practices</h4>
           <div className="h-px flex-1 bg-white/5 mx-8" />
         </div>
         <div className="grid grid-cols-4 gap-6">
@@ -351,7 +351,7 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY
                   <div className="relative w-32 h-32 flex items-center justify-center">
                     {isLocked ? (
                       <div className="flex flex-col items-center justify-center gap-2">
-                        <Lock className="w-12 h-12 text-white/30" />
+                        <Lock className="w-12 h-12 text-white/70" />
                         <div className="w-full h-full absolute inset-0 bg-black/20 backdrop-blur-[2px] rounded-full" />
                       </div>
                     ) : (
@@ -361,7 +361,7 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY
 
                   <div className="text-center relative z-10">
                     <div className="text-2xl font-serif font-bold text-white mb-1">{item.label}</div>
-                    <div className="text-[9px] font-bold text-white/30 tracking-[0.3em] uppercase">
+                    <div className="text-[9px] font-bold text-white/70 tracking-[0.3em] uppercase">
                       {isLocked ? 'COMING SOON' : item.sub}
                     </div>
                   </div>
@@ -613,10 +613,10 @@ export default function UntetheredApp() {
             </div>
             <div className="flex flex-col">
               <h1 className="text-lg font-serif font-bold text-white tracking-wide group-hover:text-[#ABCEC9] transition-colors">The Awakened Path</h1>
-              <span className="text-[9px] text-white/30 font-bold uppercase tracking-widest">The Presence Study</span>
+              <span className="text-[9px] text-white/70 font-bold uppercase tracking-widest">The Presence Study</span>
             </div>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-white/40">
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-white/70">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -690,7 +690,7 @@ export default function UntetheredApp() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
-              className="fixed top-8 left-8 lg:left-80 z-[60] p-4 rounded-2xl bg-white/5 backdrop-blur-3xl border border-white/10 text-white/40 hover:text-white transition-all group flex items-center gap-3"
+              className="fixed top-8 left-8 lg:left-80 z-[60] p-4 rounded-2xl bg-white/5 backdrop-blur-3xl border border-white/10 text-white/70 hover:text-white transition-all group flex items-center gap-3"
             >
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] pr-2">Return Home</span>
@@ -771,7 +771,7 @@ export default function UntetheredApp() {
 
                   <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-12 text-center md:text-left">
                     <div className="space-y-4">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.8em] text-white/30">Level {user.level} · Presence Anchor</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.8em] text-white/70">Level {user.level} · Presence Anchor</p>
                       <h2 className="text-7xl font-serif font-light text-white tracking-tight">The Witness</h2>
                       <div className="pt-4 flex items-center gap-4 justify-center md:justify-start">
                         <div className="px-5 py-1.5 rounded-full border border-[#ABCEC9]/20 bg-[#ABCEC9]/5 text-[10px] uppercase font-bold tracking-[0.3em] text-[#ABCEC9]">
@@ -780,7 +780,7 @@ export default function UntetheredApp() {
                       </div>
                     </div>
 
-                    <AnchorButton variant="ghost" onClick={signOut} className="!w-auto !px-12 text-white/40 hover:text-white">
+                    <AnchorButton variant="ghost" onClick={signOut} className="!w-auto !px-12 text-white/70 hover:text-white">
                       ✦ Unseal Session
                     </AnchorButton>
                   </div>
@@ -794,7 +794,7 @@ export default function UntetheredApp() {
                     </div>
                     <div>
                       <div className="text-6xl font-serif font-light text-white mb-3 tracking-tight">{user.nowMoments}</div>
-                      <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/20">NOW MOMENTS</span>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/70">NOW MOMENTS</span>
                     </div>
                   </div>
 
@@ -805,7 +805,7 @@ export default function UntetheredApp() {
                     </div>
                     <div>
                       <div className="text-6xl font-serif font-light text-white mb-3 tracking-tight">{user.streak}</div>
-                      <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/20">DAY STREAK</span>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/70">DAY STREAK</span>
                     </div>
                   </div>
                 </div>

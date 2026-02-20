@@ -24,7 +24,7 @@ export const BreathPractice: React.FC<BreathPracticeProps> = ({ practices, setAc
         <div className="space-y-16">
             <div className="flex justify-between items-end border-b border-white/5 pb-12">
                 <div className="space-y-4">
-                    <p className="text-[10px] uppercase tracking-[0.6em] text-white/20 font-bold">The Somatic Field</p>
+                    <p className="text-[10px] uppercase tracking-[0.6em] text-white/70 font-bold">The Somatic Field</p>
                     <h2 className="text-6xl font-serif font-light text-white tracking-tight">Guidance</h2>
                 </div>
                 <div className="text-right">

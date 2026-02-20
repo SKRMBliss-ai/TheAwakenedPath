@@ -627,7 +627,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
     if (showLogEntry && selectedSituation) {
         return (
             <div className="max-w-3xl mx-auto space-y-12 pb-32">
-                <button onClick={() => setShowLogEntry(false)} className="flex items-center gap-2 text-white/40 hover:text-white transition-all group">
+                <button onClick={() => setShowLogEntry(false)} className="flex items-center gap-2 text-white/70 hover:text-white transition-all group">
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">Back to situation</span>
                 </button>
@@ -643,7 +643,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                 <div className="space-y-8">
                     {selectedSituation.journalPrompts.map((prompt, i) => (
                         <div key={i} className="space-y-4">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-white/40">{prompt.label}</label>
+                            <label className="text-[11px] font-bold uppercase tracking-widest text-white/70">{prompt.label}</label>
                             <textarea
                                 value={journalData[prompt.label] || ''}
                                 onChange={(e) => setJournalData({ ...journalData, [prompt.label]: e.target.value })}
@@ -678,7 +678,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
 
             <header className="space-y-4">
                 <h1 className="text-5xl font-serif font-bold text-white">Prepare for a Situation</h1>
-                <p className="text-white/40 font-serif text-xl italic max-w-xl leading-relaxed">
+                <p className="text-white/70 font-serif text-xl italic max-w-xl leading-relaxed">
                     Guided practices for specific moments, helping you transform daily challenges into presence.
                 </p>
             </header>
@@ -696,11 +696,11 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                             </div>
                             <div className="space-y-2">
                                 <h3 className="text-2xl font-serif font-bold text-white group-hover:text-[#ABCEC9] transition-colors">{sit.title}</h3>
-                                <div className="flex items-center gap-2 text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-white/70 uppercase tracking-widest">
                                     <Clock className="w-3 h-3" /> {sit.duration}
                                 </div>
                             </div>
-                            <p className="text-sm text-white/40 leading-relaxed font-serif line-clamp-3">
+                            <p className="text-sm text-white/70 leading-relaxed font-serif line-clamp-3">
                                 {sit.description}
                             </p>
                         </div>
@@ -718,7 +718,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                     </div>
                     <div>
                         <h2 className="text-3xl font-serif font-bold text-white">Progressive Challenges</h2>
-                        <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">For When You're Ready</p>
+                        <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-1">For When You're Ready</p>
                     </div>
                 </div>
 
@@ -735,23 +735,23 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                                     }`}
                             >
                                 <div className="flex justify-between items-start mb-4">
-                                    <div className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${isUnlocked ? 'bg-[#C65F9D]/20 text-[#C65F9D]' : 'bg-white/5 text-white/30'
+                                    <div className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${isUnlocked ? 'bg-[#C65F9D]/20 text-[#C65F9D]' : 'bg-white/5 text-white/70'
                                         }`}>
                                         Week {challenge.week}
                                     </div>
                                     {!isUnlocked && (
-                                        <div className="flex items-center gap-1 text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                                        <div className="flex items-center gap-1 text-[10px] font-bold text-white/70 uppercase tracking-widest">
                                             <Target className="w-3 h-3" />
                                             {challenge.xpRequired} XP
                                         </div>
                                     )}
                                 </div>
 
-                                <h3 className={`text-xl font-serif font-bold mb-3 ${isUnlocked ? 'text-white' : 'text-white/40'}`}>
+                                <h3 className={`text-xl font-serif font-bold mb-3 ${isUnlocked ? 'text-white' : 'text-white/70'}`}>
                                     {challenge.title}
                                 </h3>
 
-                                <p className={`text-sm leading-relaxed ${isUnlocked ? 'text-white/60' : 'text-white/20 blur-[1px]'}`}>
+                                <p className={`text-sm leading-relaxed ${isUnlocked ? 'text-white/60' : 'text-white/70 blur-[1px]'}`}>
                                     {isUnlocked ? challenge.description : "Keep practicing to unlock this challenge."}
                                 </p>
                             </div>
@@ -771,7 +771,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                             <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ backgroundColor: `${selectedSituation.color}15` }}>
                                 <selectedSituation.icon className="w-10 h-10" style={{ color: selectedSituation.color }} />
                             </div>
-                            <button onClick={() => setSelectedSituation(null)} className="text-white/20 hover:text-white">✕</button>
+                            <button onClick={() => setSelectedSituation(null)} className="text-white/70 hover:text-white">✕</button>
                         </div>
 
                         <div className="space-y-6">
@@ -781,14 +781,14 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                                 <p className="text-white/60 font-serif leading-relaxed italic">{selectedSituation.whenToUse}</p>
                             </div>
                             <div className="space-y-2">
-                                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">The Practice</div>
+                                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">The Practice</div>
                                 <p className="text-lg text-white/80 leading-relaxed">{selectedSituation.description}</p>
                             </div>
                             <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-3">
-                                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30 flex items-center gap-2">
+                                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70 flex items-center gap-2">
                                     <Sparkles className="w-3 h-3" /> Real-life example
                                 </div>
-                                <p className="text-sm text-white/40 leading-relaxed italic">
+                                <p className="text-sm text-white/70 leading-relaxed italic">
                                     {selectedSituation.realLifeExample}
                                 </p>
                             </div>
@@ -821,7 +821,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                                 </div>
                                 <div>
                                     <h2 className="text-xl md:text-2xl font-serif font-bold text-white">Common Experiences</h2>
-                                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest hidden md:block">Guidance for your journey</p>
+                                    <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest hidden md:block">Guidance for your journey</p>
                                 </div>
                             </div>
                             <button

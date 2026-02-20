@@ -1,12 +1,33 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { EtherealOrb } from './EtherealOrb';
 
-// ─── TOKENS ──────────────────────────────────────────────────────────────────
+// ─── SACRED UI TOKENS v3 — Unified Warm Palette ──────────────────
 const T = {
+    // Primary accent — warm magenta, unchanged
     magenta: '#D16BA5',
+    magentaDim: 'rgba(209, 107, 165, 0.5)',
     magentaRgb: '209, 107, 165',
-    teal: '#ABCEC9',
-    tealRgb: '171, 206, 201',
+
+    // Secondary accent — was cyan, now warm lavender
+    // Sits in the red-violet family, harmonizes with plum background
+    lavender: '#B8A5D4',
+    lavenderDim: 'rgba(184, 165, 212, 0.4)',
+
+    // Tertiary — dusty mauve for third-state elements
+    mauve: '#C4A8C8',
+
+    // Functional — warm terracotta for alert/panic states
+    rose: '#D4857A',
+
+    // Background — unchanged
+    plum: '#0D0014',
+    deep: '#160020',
+
+    // Monospace UI only (timer, code) — desaturated teal, not full cyan
+    // Use sparingly, never as a glow color
+    tealMuted: '#8AAFA8',
+    border: 'rgba(255,255,255,0.06)',
 };
 
 // ─── SIZE MAP ─────────────────────────────────────────────────────────────────
@@ -286,7 +307,7 @@ export const AwakenStage: React.FC<AwakenStageProps> = ({
                     overflow: 'visible', // Ensure no clipping here either
                 }}
             >
-                <SacredCircle isAnimating={isAnimating} size={size} />
+                <EtherealOrb isAnimating={isAnimating} size={size} />
             </motion.div>
         </div>
     );

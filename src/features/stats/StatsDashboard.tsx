@@ -87,7 +87,7 @@ const StatsDashboard: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/5 pb-10">
                 <div className="space-y-4">
-                    <p className="text-[10px] uppercase tracking-[0.6em] text-white/20 font-bold">Activity Continuum</p>
+                    <p className="text-[10px] uppercase tracking-[0.6em] text-white/70 font-bold">Activity Continuum</p>
                     <h2 className="text-6xl font-serif font-light text-white tracking-tight">Vibrational Metrics</h2>
                 </div>
                 <div className="text-right">
@@ -136,18 +136,18 @@ const StatsDashboard: React.FC = () => {
                         </div>
                         <div>
                             <div className="text-5xl font-serif font-light text-white mb-2 tracking-tight">High</div>
-                            <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/20">VIBRATIONAL FLOW</span>
+                            <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/70">VIBRATIONAL FLOW</span>
                         </div>
                     </div>
 
                     <div className="p-12 rounded-[48px] border border-white/5 bg-white/[0.01] flex flex-col justify-between h-56 group hover:bg-white/[0.03] transition-all duration-700 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-[60px] rounded-full pointer-events-none" />
                         <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
-                            <Users className="w-6 h-6 text-white/30" />
+                            <Users className="w-6 h-6 text-white/70" />
                         </div>
                         <div>
                             <div className="text-5xl font-serif font-light text-white mb-2 tracking-tight">Active</div>
-                            <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/20">SACRED CONNECTION</span>
+                            <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/70">SACRED CONNECTION</span>
                         </div>
                     </div>
                 </div>
@@ -157,7 +157,7 @@ const StatsDashboard: React.FC = () => {
                 <div className="space-y-10 pt-16 border-t border-white/5">
                     <div className="flex items-center gap-4">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#D16BA5] shadow-[0_0_10px_#D16BA5]" />
-                        <h3 className="text-[11px] font-bold uppercase tracking-[0.8em] text-white/30">Ancestral Echoes (Admin Log)</h3>
+                        <h3 className="text-[11px] font-bold uppercase tracking-[0.8em] text-white/70">Ancestral Echoes (Admin Log)</h3>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4">
@@ -165,7 +165,7 @@ const StatsDashboard: React.FC = () => {
                             <div key={log.id} className="p-8 rounded-[32px] border border-white/5 bg-white/[0.01] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group hover:bg-white/[0.02] transition-all">
                                 <div className="space-y-2">
                                     <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-[#ABCEC9]/40">{log.userEmail}</p>
-                                    <h5 className="text-xl font-serif font-light text-white/70">{log.activityType}: <span className="text-white/40">{log.details}</span></h5>
+                                    <h5 className="text-xl font-serif font-light text-white/70">{log.activityType}: <span className="text-white/70">{log.details}</span></h5>
                                 </div>
                                 <span className="text-[10px] font-bold text-white/10">{log.timestamp?.toDate ? log.timestamp.toDate().toLocaleDateString() : 'Present Moment'}</span>
                             </div>

@@ -4,11 +4,28 @@ import { Play, Pause, RotateCcw, ChevronRight } from 'lucide-react';
 import { AwakenStage } from './SacredCircle';
 import { VoiceService, useVoiceActive } from '../../services/voiceService';
 
-// ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
+// ─── SACRED UI TOKENS v3 — Unified Warm Palette ──────────────────
 const T = {
+    // Primary accent — warm magenta, unchanged
     magenta: '#D16BA5',
-    teal: '#ABCEC9',
+    magentaDim: 'rgba(209, 107, 165, 0.5)',
+
+    // Secondary accent — was cyan, now warm lavender
+    lavender: '#B8A5D4',
+    lavenderDim: 'rgba(184, 165, 212, 0.4)',
+
+    // Tertiary — dusty mauve
+    mauve: '#C4A8C8',
+
+    // Functional — warm terracotta 
+    rose: '#D4857A',
+
+    // Background
     plum: '#0D0014',
+    deep: '#160020',
+
+    // Monospace UI only
+    tealMuted: '#8AAFA8',
 };
 
 // ─── GRAIN OVERLAY ────────────────────────────────────────────────────────────
@@ -138,7 +155,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                 style={{
                     position: 'absolute', top: '30%', left: '50%', transform: 'translateX(-50%)',
                     width: 280, height: 280, borderRadius: '50%',
-                    background: `radial-gradient(circle, ${T.teal}80, transparent)`,
+                    background: `radial-gradient(circle, ${T.lavender}80, transparent)`,
                     filter: 'blur(60px)', pointerEvents: 'none',
                 }}
             />
@@ -161,7 +178,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                     }}
                 >
                     <span style={{
-                        fontSize: 12, letterSpacing: '0.2em', color: `${T.teal}90`,
+                        fontSize: 12, letterSpacing: '0.2em', color: `${T.lavender}90`,
                         fontFamily: 'ui-monospace, monospace', fontWeight: 400,
                     }}>
                         {fmt(timer)}
@@ -181,13 +198,13 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                             transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                             style={{
                                 position: 'absolute', inset: 0, borderRadius: '50%',
-                                background: T.teal,
+                                background: T.lavender,
                             }}
                         />
                         <div style={{
                             position: 'absolute', inset: 1, borderRadius: '50%',
-                            background: T.teal,
-                            boxShadow: `0 0 10px ${T.teal}`,
+                            background: T.lavender,
+                            boxShadow: `0 0 10px ${T.lavender}`,
                         }} />
                     </div>
                     <span style={{
@@ -233,18 +250,18 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                             animate={{ strokeDashoffset: 2 * Math.PI * 178 * (1 - progress) }}
                             transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] as any }}
                             transform="rotate(-90 190 190)"
-                            style={{ filter: `drop-shadow(0 0 6px ${T.teal}80)` }}
+                            style={{ filter: `drop-shadow(0 0 6px ${T.lavender}80)` }}
                         />
                         <defs>
                             <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" stopColor={T.magenta} stopOpacity="0.6" />
-                                <stop offset="100%" stopColor={T.teal} stopOpacity="0.9" />
+                                <stop offset="100%" stopColor={T.lavender} stopOpacity="0.9" />
                             </linearGradient>
                         </defs>
                         {/* Progress head dot */}
                         <motion.circle
-                            cx={190} cy={190 - 178} r={3} fill={T.teal}
-                            style={{ filter: `drop-shadow(0 0 6px ${T.teal})`, transformOrigin: "190px 190px" }}
+                            cx={190} cy={190 - 178} r={3} fill={T.lavender}
+                            style={{ filter: `drop-shadow(0 0 6px ${T.lavender})`, transformOrigin: "190px 190px" }}
                             animate={{ rotate: 360 * progress }}
                         />
                     </svg>
@@ -281,36 +298,22 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                             {/* Step label */}
                             <span style={{
                                 fontSize: 9, letterSpacing: '0.7em', textTransform: 'uppercase',
-                                color: `${T.teal}50`,
+                                color: `${T.lavender}50`,
                                 fontFamily: 'system-ui, sans-serif', fontWeight: 700,
                             }}>
                                 {currentStepTitle}
                             </span>
 
                             {/* Instruction */}
-                            <h2 style={{
-                                fontSize: 'clamp(28px, 4.5vw, 58px)',
-                                fontWeight: 300,
-                                fontFamily: 'Georgia, "Times New Roman", serif',
-                                color: 'rgba(255,255,255,0.88)',
-                                lineHeight: 1.2,
-                                letterSpacing: '-0.01em',
-                                margin: 0,
-                                textShadow: `0 0 80px ${T.magenta}20`,
-                            }}>
+                            <h2 style={{ fontSize: 'clamp(34px, 5vw, 68px)', fontWeight: 300, fontFamily: 'Georgia, serif', color: 'white', lineHeight: 1.1, margin: 0, textShadow: `0 0 40px ${T.magenta}20` }}>
                                 {currentStepInstruction}
                             </h2>
 
                             {/* Ambient quote */}
                             <motion.p
-                                animate={{ opacity: [0.12, 0.26, 0.12] }}
-                                transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
                                 style={{
-                                    fontSize: 16, fontWeight: 300, fontStyle: 'italic',
-                                    fontFamily: 'Georgia, serif',
-                                    color: 'rgba(255,255,255,0.5)',
-                                    lineHeight: 1.75, letterSpacing: '0.03em',
-                                    margin: '16px 0 0',
+                                    fontSize: 16, color: 'rgba(255,255,255,0.4)',
+                                    fontStyle: 'italic', maxWidth: 360, lineHeight: 1.5,
                                 }}
                             >
                                 {quote}
@@ -336,7 +339,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                         fontFamily: 'system-ui, sans-serif', fontWeight: 700,
                     }}
                 >
-                    {Math.round(progress * 100)}% complete
+                    {Math.round(progress * 100)} % complete
                 </motion.span>
 
                 {/* Control row */}

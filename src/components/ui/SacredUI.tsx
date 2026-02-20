@@ -391,7 +391,7 @@ export const PracticeCard = ({ title, type, level, xp, icon: Icon, accent = toke
                         {title}
                     </h3>
                     <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">
                             {type} · {level}
                         </span>
                         <div className="w-1 h-1 rounded-full bg-white/10" />
@@ -402,7 +402,7 @@ export const PracticeCard = ({ title, type, level, xp, icon: Icon, accent = toke
                 </div>
 
                 <div className="flex justify-between items-center pt-8 border-t border-white/5 group-hover:border-white/10 transition-all">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/20 group-hover:text-white/40 transition-colors">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/70 group-hover:text-white/70 transition-colors">
                         Begin Journey
                     </span>
                     <div

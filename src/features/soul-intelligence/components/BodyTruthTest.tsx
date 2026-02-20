@@ -62,13 +62,13 @@ export const BodyTruthTest: React.FC = () => {
                 </div>
                 <div>
                     <h3 className="text-lg font-serif font-bold text-[#F4E3DA]">The Body's Truth Test</h3>
-                    <p className="text-[10px] uppercase tracking-widest text-white/30">Somatic Resonance</p>
+                    <p className="text-[10px] uppercase tracking-widest text-white/70">Somatic Resonance</p>
                 </div>
             </div>
 
             {testState === 'idle' && (
                 <div className="space-y-8">
-                    <p className="text-base text-white/40 leading-relaxed font-light max-w-md">
+                    <p className="text-base text-white/70 leading-relaxed font-light max-w-md">
                         The mind can lie, but the body cannot. Enter a thought that causes friction, and we will guide you into the somatic response.
                     </p>
                     <WhisperInput
@@ -101,7 +101,7 @@ export const BodyTruthTest: React.FC = () => {
                         Hold the thought: <br />
                         <span className="italic text-[#ABCEC9]">"{thought}"</span>
                     </p>
-                    <p className="text-xs uppercase tracking-widest text-white/40 mt-8 animate-pulse">
+                    <p className="text-xs uppercase tracking-widest text-white/70 mt-8 animate-pulse">
                         Feel your chest...
                     </p>
                 </div>
@@ -110,7 +110,7 @@ export const BodyTruthTest: React.FC = () => {
             {testState === 'result' && (
                 <div className="space-y-8">
                     <div className="text-center">
-                        <p className="text-[10px] text-white/20 uppercase tracking-[0.6em] font-bold">What is the body saying?</p>
+                        <p className="text-[10px] text-white/70 uppercase tracking-[0.6em] font-bold">What is the body saying?</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -138,7 +138,7 @@ export const BodyTruthTest: React.FC = () => {
 
                         <button
                             onClick={() => setTestState('numbness_guidance')}
-                            className="col-span-1 md:col-span-2 py-4 text-white/20 hover:text-white/40 text-[10px] uppercase tracking-[0.5em] transition-all flex items-center justify-center gap-2"
+                            className="col-span-1 md:col-span-2 py-4 text-white/70 hover:text-white/70 text-[10px] uppercase tracking-[0.5em] transition-all flex items-center justify-center gap-2"
                         >
                             I Feel Nothing / Resistance
                             <ChevronRight className="w-3 h-3" />
