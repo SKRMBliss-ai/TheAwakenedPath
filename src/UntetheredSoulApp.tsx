@@ -14,6 +14,7 @@ import { AwakenStage } from './components/ui/SacredCircle';
 import { GlassShape } from './components/ui/GlassShape';
 import { SignInScreen } from './features/auth/SignInScreen';
 import { AnchorButton, NoiseOverlay, tokens, ProgressFilament } from './components/ui/SacredUI';
+import { GlobalSparkles } from './components/ui/GlobalSparkles';
 
 interface PracticeStep {
   title: string;
@@ -574,6 +575,7 @@ export default function UntetheredApp() {
       style={{ background: tokens.plum }}
     >
       <LivingBlobs />
+      <GlobalSparkles />
       <NoiseOverlay />
       <div
         style={{
