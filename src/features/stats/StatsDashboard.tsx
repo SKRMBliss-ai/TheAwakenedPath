@@ -4,8 +4,6 @@ import { BarChart2, Activity, Users } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { db } from '../../firebase';
 import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
-import { cn } from '../../lib/utils';
-import { tokens } from '../../components/ui/SacredUI';
 
 interface ActivityLog {
     id: string;

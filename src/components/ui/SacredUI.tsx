@@ -124,16 +124,9 @@ export const WhisperInput = ({ label, placeholder, multiline, value, onChange }:
 // ══════════════════════════════════════════════════════════════════
 export const AnchorButton = ({ children, variant = "ghost", onClick, loading, className, disabled }: any) => {
     const [hovered, setHovered] = useState(false);
-    const [ripples, setRipples] = useState<any[]>([]);
 
-    const handleClick = (e: any) => {
+    const handleClick = () => {
         if (disabled || loading) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-        const id = Date.now();
-        setRipples(r => [...r, { id, x, y }]);
-        setTimeout(() => setRipples(r => r.filter(rp => rp.id !== id)), 1200);
         onClick?.();
     };
 

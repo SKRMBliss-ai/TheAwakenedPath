@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 // Generates procedural binaural beats + atmospheric drone
 export const useGenerativeAudio = () => {
