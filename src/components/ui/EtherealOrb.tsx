@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Sparkles } from '@react-three/drei';
@@ -157,6 +157,26 @@ void main() {
 const OrbBlob = ({ isAnimating }: { isAnimating: boolean }) => {
     const meshRef = useRef<THREE.Mesh>(null);
 
+    // Emotion-driven targets
+    const emotionSpeedRef = useRef<number | null>(null);
+    const emotionDistortRef = useRef<number | null>(null);
+    const emotionColorRef = useRef<THREE.Color | null>(null);
+
+    useEffect(() => {
+        const handleEmotion = (e: any) => {
+            const { physics } = e.detail;
+            emotionSpeedRef.current = physics.speed;
+            emotionDistortRef.current = physics.distort;
+            // Get color from CSS variable set in useEmotionSync
+            const colorHex = getComputedStyle(document.documentElement).getPropertyValue('--app-emotion-color').trim();
+            if (colorHex) {
+                emotionColorRef.current = new THREE.Color(colorHex);
+            }
+        };
+        document.addEventListener('emotional_resonance', handleEmotion);
+        return () => document.removeEventListener('emotional_resonance', handleEmotion);
+    }, []);
+
     const uniforms = useMemo(
         () => ({
             uTime: { value: 0 },
@@ -182,11 +202,17 @@ const OrbBlob = ({ isAnimating }: { isAnimating: boolean }) => {
 
         // Smoothly transition speed and distortion based on animation state
         // Resting speed boosted slightly for a more fluid feel
-        const targetSpeed = isAnimating ? 2.5 : 0.4;
-        const targetDistort = isAnimating ? 0.45 : 0.12;
+        const targetSpeed = emotionSpeedRef.current !== null ? emotionSpeedRef.current : (isAnimating ? 2.5 : 0.4);
+        const targetDistort = emotionDistortRef.current !== null ? emotionDistortRef.current : (isAnimating ? 0.45 : 0.12);
 
         mat.uniforms.uSpeed.value = THREE.MathUtils.lerp(mat.uniforms.uSpeed.value, targetSpeed, 0.05);
         mat.uniforms.uDistort.value = THREE.MathUtils.lerp(mat.uniforms.uDistort.value, targetDistort, 0.05);
+
+        if (emotionColorRef.current) {
+            mat.uniforms.uColorA.value.lerp(emotionColorRef.current, 0.02);
+        } else {
+            mat.uniforms.uColorA.value.lerp(new THREE.Color(T.magenta), 0.02);
+        }
     });
 
     return (

@@ -199,4 +199,24 @@ exports.getDailyMeditation = onRequest({ secrets: [geminiKey], cors: true }, asy
         res.status(500).send("Return to silence.");
     }
 });
+
+exports.analyzeEmotion = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
+    const { text } = req.body;
+    if (!text) return res.json({ emotion: "NEUTRAL" });
+
+    try {
+        const genAI = new GoogleGenerativeAI(geminiKey.value());
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const prompt = `Analyze the emotional resonance of this text: "${text}". 
+        Return exactly ONE word from this list that best matches the overarching feeling: CALM, JOY, FOCUS, PANIC, ANGER, SAD, NEUTRAL.
+        Do not add any markup or markdown. Just the single word.`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        res.json({ emotion: response.text().trim().toUpperCase() });
+    } catch (error) {
+        res.status(500).json({ emotion: "NEUTRAL" });
+    }
+});
+
 exports.pingDaily = onRequest((req, res) => res.send("Zen Ping Successful"));

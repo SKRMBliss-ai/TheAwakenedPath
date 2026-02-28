@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Flame, Sparkles, Sun, Search, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock } from 'lucide-react';
+import { Flame, Sparkles, Sun, Search, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones } from 'lucide-react';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { PowerOfNow } from './features/soul-intelligence/components/PowerOfNow';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -15,6 +15,7 @@ import { GlassShape } from './components/ui/GlassShape';
 import { SignInScreen } from './features/auth/SignInScreen';
 import { AnchorButton, NoiseOverlay, tokens, ProgressFilament } from './components/ui/SacredUI';
 import { GlobalSparkles } from './components/ui/GlobalSparkles';
+import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
 
 interface PracticeStep {
   title: string;
@@ -391,6 +392,21 @@ export default function UntetheredApp() {
   const [showReward, setShowReward] = useState<Reward | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
+
+  // Map active tab to binaural frequencies
+  useEffect(() => {
+    if (activeTab === 'home' || activeTab === 'chapters') {
+      setVibrationalState('calm'); // 432Hz + 4Hz
+    } else if (activeTab === 'intelligence') {
+      setVibrationalState('focus'); // 528Hz + 14Hz
+    } else if (activeTab === 'panic' || activeTab === 'situations') {
+      setVibrationalState('energy'); // 639Hz + 40Hz
+    } else {
+      setVibrationalState('calm');
+    }
+  }, [activeTab, setVibrationalState]);
+
   // Magnetic orb tilt for the entire app (dashboard)
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -699,6 +715,26 @@ export default function UntetheredApp() {
             </motion.button>
           )}
         </AnimatePresence>
+
+        {/* SPATIAL AUDIO TOGGLE */}
+        <button
+          onClick={toggleAudio}
+          className={cn(
+            "fixed top-8 right-8 z-[60] p-4 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center group overflow-hidden shadow-2xl",
+            isAudioEnabled
+              ? "bg-[#D16BA5]/10 border-[#D16BA5]/30 text-[#D16BA5] shadow-[0_0_20px_rgba(209,107,165,0.2)]"
+              : "bg-white/5 border-white/10 text-white/40 hover:text-white"
+          )}
+        >
+          {isAudioEnabled && (
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 bg-[#D16BA5]/20 blur-xl"
+            />
+          )}
+          <Headphones className={cn("w-5 h-5 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
+        </button>
 
         <div className="max-w-7xl mx-auto p-6 md:p-12 space-y-12">
           <AnimatePresence mode="wait">

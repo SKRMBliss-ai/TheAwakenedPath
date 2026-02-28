@@ -54,6 +54,13 @@
         }
       },
       {
+        "source": "/api/emotion",
+        "function": {
+          "functionId": "analyzeEmotion",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

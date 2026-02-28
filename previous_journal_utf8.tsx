@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Sparkles, LogIn, ChevronRight, ChevronLeft, X, Heart } from 'lucide-react';
+import { Sparkles, LogIn } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { MeditationPortal } from '../../../components/ui/MeditationPortal.tsx';
 import { db } from '../../../firebase';
@@ -26,10 +26,8 @@ import {
     SacredToast,
     NavPill
 } from '../../../components/ui/SacredUI.tsx';
-import { useEmotionSync, EMOTION_COLORS } from '../../soul-intelligence/hooks/useEmotionSync';
-import { GentleJournalForm } from './GentleJournalForm';
 
-// ─── CINEMATIC ANIMATION VARIANTS ─────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ CINEMATIC ANIMATION VARIANTS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const pageVariants: any = {
     hidden: { opacity: 0, y: 16, filter: 'blur(12px)' },
@@ -58,49 +56,23 @@ const orbExitVariant: any = {
     },
 };
 
-const stepTransition: any = {
-    hidden: { opacity: 0, x: 40, filter: 'blur(6px)' },
-    visible: {
-        opacity: 1, x: 0, filter: 'blur(0px)',
-        transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.06 }
-    },
-    exit: {
-        opacity: 0, x: -40, filter: 'blur(6px)',
-        transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
-    },
-};
-
-const chipStagger: any = {
-    hidden: { opacity: 0, y: 12, scale: 0.9 },
-    visible: {
-        opacity: 1, y: 0, scale: 1,
-        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
-    },
-};
-
-// ─── TYPES ───────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ TYPES ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 interface JournalEntry {
     id: string;
     date: string;
     time: string;
     duration: string;
-    thoughts: string;
     bodySensations: string;
-    bodyArea: string;
     emotions: string;
     reflections: string;
-    guidance: string;
     dayNumber?: number;
     createdAt?: any;
 }
 
 type Bucket = 'today' | 'thisWeek' | 'thisMonth' | 'archive';
 
-// Journal steps
-type JournalStep = 0 | 1 | 2 | 3;
-
-// ─── TEMPORAL BUCKET LOGIC ──────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ TEMPORAL BUCKET LOGIC ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 function getBucket(entry: any): Bucket {
     const d = entry.createdAt?.toDate?.() ?? new Date(entry.date);
@@ -118,49 +90,15 @@ const bucketMeta: Record<Bucket, { label: string; columns: number }> = {
     archive: { label: 'The Archive', columns: 3 },
 };
 
-// ─── STEP PROGRESS INDICATOR ─────────────────────────────────────────────────
-
-const StepIndicator = ({ current, total }: { current: number; total: number }) => (
-    <div className="flex items-center gap-2">
-        {Array.from({ length: total }).map((_, i) => (
-            <motion.div
-                key={i}
-                className="relative"
-                animate={{
-                    scale: i === current ? 1 : 0.8,
-                }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            >
-                <div
-                    className={`h-1 rounded-full transition-all duration-700 ease-out ${i === current
-                        ? 'w-8 bg-[#D16BA5]'
-                        : i < current
-                            ? 'w-4 bg-[#ABCEC9]/60'
-                            : 'w-4 bg-white/10'
-                        }`}
-                />
-                {i === current && (
-                    <motion.div
-                        layoutId="step-glow"
-                        className="absolute inset-0 h-1 w-8 rounded-full bg-[#D16BA5] blur-md"
-                        transition={{ duration: 0.6 }}
-                    />
-                )}
-            </motion.div>
-        ))}
-    </div>
-);
-
-// ─── AWARENESS CARD WRAPPER ──────────────────────────────────────────────────
-
+// ΓöÇΓöÇΓöÇ AWARENESS CARD WRAPPER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 const AwarenessCard = ({ entry, bucket, onEdit }: { entry: JournalEntry; bucket: Bucket; onEdit: (entry: JournalEntry) => void }) => {
     const entryDate = entry.createdAt?.toDate?.() ?? new Date(entry.date);
-    const dateStr = entryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` · ${entryDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+    const dateStr = entryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` ┬╖ ${entryDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
 
     return (
         <EpochCard
             date={dateStr}
-            preview={entry.reflections || entry.thoughts || entry.bodySensations || "Presence observed."}
+            preview={entry.reflections || entry.bodySensations || "Presence observed."}
             bucket={bucket}
             emotions={entry.emotions ? entry.emotions.split(',') : []}
             onClick={() => onEdit(entry)}
@@ -168,26 +106,17 @@ const AwarenessCard = ({ entry, bucket, onEdit }: { entry: JournalEntry; bucket:
     );
 };
 
-// ─── MAIN JOURNAL COMPONENT ──────────────────────────────────────────────────
-
+// ΓöÇΓöÇΓöÇ MAIN JOURNAL COMPONENT ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
     const { user, signInWithGoogle } = useAuth();
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [currentEntry, setCurrentEntry] = useState<Partial<JournalEntry>>({
-        thoughts: '',
         bodySensations: '',
-        bodyArea: '',
         emotions: '',
         reflections: '',
-        guidance: '',
         duration: ''
     });
-
-    // Guided journal step (0-3)
-    const [journalStep, setJournalStep] = useState<JournalStep>(0);
-
-    const { emotion, isAnalyzing } = useEmotionSync(currentEntry.emotions || '');
 
     // Workflow State
     const [isPracticing, setIsPracticing] = useState(false);
@@ -212,21 +141,6 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
         setToastMessage(msg);
         setToastVisible(true);
         setTimeout(() => setToastVisible(false), 2800);
-    };
-
-    // Reset journal form state
-    const resetJournalForm = () => {
-        setJournalStep(0);
-        setCurrentEntry({
-            thoughts: '',
-            bodySensations: '',
-            bodyArea: '',
-            emotions: '',
-            reflections: '',
-            guidance: '',
-            duration: ''
-        });
-        setEditingId(null);
     };
 
     // Audio Logic
@@ -332,25 +246,13 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
         }
     }, [practiceStep, isPracticing, speak, handleNextStep, isPaused, dynamicSteps]);
 
-    // Navigate journal steps
-    const goNextStep = () => {
-        if (journalStep < 3) setJournalStep((journalStep + 1) as JournalStep);
-    };
-
-    const goPrevStep = () => {
-        if (journalStep > 0) setJournalStep((journalStep - 1) as JournalStep);
-    };
-
     const handleSaveEntry = async () => {
         if (!user) return;
         try {
             const entryData = {
-                thoughts: currentEntry.thoughts || '',
                 bodySensations: currentEntry.bodySensations || '',
-                bodyArea: currentEntry.bodyArea || '',
                 emotions: currentEntry.emotions || '',
                 reflections: currentEntry.reflections || '',
-                guidance: currentEntry.guidance || '',
                 duration: currentEntry.duration || '2 mins',
                 updatedAt: serverTimestamp()
             };
@@ -367,20 +269,12 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                 });
                 fireToast('Reflection Sealed');
             }
-            resetJournalForm();
+            setCurrentEntry({ bodySensations: '', emotions: '', reflections: '' });
             setShowLogForm(false);
         } catch (error) {
             console.error("Error saving: ", error);
         }
     };
-
-    // ─── STEP LABELS ─────────────────────────────────────────────────────────
-    const stepLabels = [
-        'Thoughts',
-        'Body Awareness',
-        'Witness',
-        'Open Reflection'
-    ];
 
     if (!user) {
         return (
@@ -476,8 +370,10 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                 {!showLogForm ? (
                     <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-24">
 
-                        {/* practice trigger */}
+                        {/* practice trigger ΓÇö pure floating float */}
                         <motion.section variants={childVariant} className="text-center py-16 relative">
+                            {/* Glow is now inside SacredCircle, no need for a container glow here */}
+
                             <div className="flex flex-col items-center gap-8 relative z-10">
                                 <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10">
                                     <Sparkles size={10} className="text-[#ABCEC9]" />
@@ -497,10 +393,10 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                                 </AnchorButton>
 
                                 <button
-                                    onClick={() => { resetJournalForm(); setShowLogForm(true); }}
+                                    onClick={() => setShowLogForm(true)}
                                     className="text-[8px] uppercase tracking-[0.5em] text-white/15 hover:text-white/70 font-bold transition-colors"
                                 >
-                                    Skip to log →
+                                    Skip to log ΓåÆ
                                 </button>
                             </div>
                         </motion.section>
@@ -539,49 +435,43 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                         )}
                     </motion.div>
                 ) : (
-                    /* ═══════════════════════════════════════════════════════════════
-                       GUIDED JOURNAL FORM
-                    ═══════════════════════════════════════════════════════════════ */
-                    <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto">
-                        <GentleJournalForm
-                            initialData={currentEntry}
-                            onSave={async (savedData) => {
-                                if (!user) return;
-                                try {
-                                    const entryData = {
-                                        thoughts: savedData.thoughts || '',
-                                        bodySensations: savedData.bodySensations || '',
-                                        bodyArea: savedData.bodyArea || '',
-                                        emotions: savedData.emotions || '',
-                                        reflections: savedData.reflections || '',
-                                        guidance: savedData.guidance || '',
-                                        duration: currentEntry.duration || '2 mins',
-                                        updatedAt: serverTimestamp()
-                                    };
-                                    if (editingId) {
-                                        await updateDoc(doc(db, 'users', user.uid, 'journal', editingId), entryData);
-                                        setEditingId(null);
-                                        fireToast('Reflection Anchored');
-                                    } else {
-                                        await addDoc(collection(db, 'users', user.uid, 'journal'), {
-                                            ...entryData,
-                                            date: new Date().toLocaleDateString(),
-                                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                                            createdAt: serverTimestamp()
-                                        });
-                                        fireToast('Reflection Sealed');
-                                    }
-                                    resetJournalForm();
-                                    setShowLogForm(false);
-                                } catch (error) {
-                                    console.error("Error saving: ", error);
-                                }
-                            }}
-                            onCancel={() => {
-                                resetJournalForm();
-                                setShowLogForm(false);
-                            }}
-                        />
+                    <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto space-y-20">
+                        <header className="flex justify-between items-end pb-8 border-b border-white/5">
+                            <div className="flex flex-col gap-3">
+                                <span className="text-[9px] uppercase tracking-[0.6em] text-[#ABCEC9]/70 font-bold">Sacred Reflection</span>
+                                <h2 className="text-6xl font-serif font-light text-white/90 leading-none">Day {entries.length + 1}</h2>
+                            </div>
+                            <button onClick={() => setShowLogForm(false)} className="p-3 rounded-full text-white/70 hover:text-white/60 transition-colors">
+                                <LogIn size={20} className="rotate-180" />
+                            </button>
+                        </header>
+
+                        <div className="space-y-16">
+                            <WhisperInput
+                                label="What arose in your inner body?"
+                                placeholder="Warmth in the chest, a settling in the hipsΓÇª"
+                                value={currentEntry.bodySensations}
+                                onChange={(v: string) => setCurrentEntry({ ...currentEntry, bodySensations: v })}
+                                multiline
+                            />
+                            <WhisperInput
+                                label="The current of emotion?"
+                                placeholder="A quiet current of gratitude, a trace of uneaseΓÇª"
+                                value={currentEntry.emotions}
+                                onChange={(v: string) => setCurrentEntry({ ...currentEntry, emotions: v })}
+                            />
+                            <WhisperInput
+                                label="Deepened Awareness"
+                                placeholder="I noticed a space between thoughts, wider than beforeΓÇª"
+                                value={currentEntry.reflections}
+                                onChange={(v: string) => setCurrentEntry({ ...currentEntry, reflections: v })}
+                                multiline
+                            />
+                        </div>
+
+                        <AnchorButton variant="ghost" onClick={handleSaveEntry} disabled={!currentEntry.bodySensations && !currentEntry.emotions && !currentEntry.reflections}>
+                            Γ£ª {editingId ? 'Anchor Reflection' : 'Seal Entry'}
+                        </AnchorButton>
                     </motion.div>
                 )}
             </AnimatePresence>
