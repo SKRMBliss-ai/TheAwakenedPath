@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BodyMapSelector from "./BodyMapSelector";
+import { useVoiceGuidance } from "../services/voiceGuidance";
 
 // ─── ANIMATIONS & STYLES ─────────────────────────────────────────────────────
 
@@ -239,6 +240,24 @@ function NavButton({ children, onClick, variant = "next", disabled = false }: { 
         >
             {children}
         </motion.button>
+    );
+}
+
+function VoiceToggle({ enabled, playing, onToggle }: { enabled: boolean, playing: boolean, onToggle: () => void }) {
+    return (
+        <button onClick={onToggle}
+            style={{
+                position: "fixed", bottom: 24, right: 24, zIndex: 100,
+                width: 56, height: 56, borderRadius: "50%",
+                background: enabled ? "rgba(171,206,201,0.15)" : "rgba(255,255,255,0.05)",
+                border: `2px solid ${enabled ? "rgba(171,206,201,0.3)" : "rgba(255,255,255,0.08)"}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer",
+            }}
+            aria-label={enabled ? "Mute voice guide" : "Enable voice guide"}
+        >
+            {enabled ? (playing ? "🔊" : "🔈") : "🔇"}
+        </button>
     );
 }
 
@@ -639,6 +658,7 @@ function EmotionSelector({
 
 export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (data: any) => void, onCancel: () => void, initialData?: any }) {
     const [step, setStep] = useState(0);
+    const { audioEnabled, isPlaying, toggleAudio, playText } = useVoiceGuidance();
 
     const [selectedThoughts, setSelectedThoughts] = useState<string[]>(initialData?.thoughts ? initialData.thoughts.split(' | ').filter(Boolean) : []);
     const [customThought, setCustomThought] = useState(initialData?.customThought || "");
@@ -656,6 +676,44 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
     const [showNextPrompt, setShowNextPrompt] = useState(false);
     useEffect(() => {
         setShowNextPrompt(false);
+    }, [step]);
+
+    // Voice playback for steps
+    useEffect(() => {
+        if (!audioEnabled) return;
+
+        let txt = "";
+
+        switch (step) {
+            case 0:
+                txt = "Take a moment... and notice what's been on your mind today. ... Sometimes thoughts come as whispers... sometimes they feel loud and heavy. ... If any of these feel familiar, simply tap the one that resonates.";
+                break;
+            case 1: {
+                const thoughtText = selectedThoughts.length > 0 ? selectedThoughts[0] : (customThought || "that thought");
+                txt = `I see... '${thoughtText}' ... That's a thought many people carry. Let's gently look at what it made you feel. ... Eckhart Tolle says... 'Emotion arises at the place where mind and body meet. It is the body's reaction to your mind.' ... What did that thought make you feel? ... Tap the feeling that comes closest.`;
+                break;
+            }
+            case 2: {
+                const emotionText = selectedEmotions.length > 0 ? selectedEmotions.join(" and ") : "that emotion";
+                txt = `You're feeling ${emotionText}. ... Thank you for naming that. Simply naming a feeling... is already an act of awareness. ... Emotions are energy in motion... and that energy always lands somewhere in the body. ... Close your eyes for a moment if you can. ... Take one slow breath. ... Now notice... where in your body do you feel it? ... Tap the area that draws your attention.`;
+                break;
+            }
+            case 3: {
+                const areaInfo = selectedArea ? `${selectedArea.description}. ... Here's a gentle suggestion... ${selectedArea.helps}` : "Where you feel it is important.";
+                const thoughtTxt = selectedThoughts.length > 0 ? selectedThoughts[0] : (customThought || "a painful thought");
+                const emotionTxt = selectedEmotions.length > 0 ? selectedEmotions[0] : "painful feelings";
+                const areaTxt = selectedArea?.label || "part of your body";
+
+                txt = `${selectedArea ? areaInfo + " ... " : ""}Now... step back. ... You had a thought... '${thoughtTxt}'. ... It created a feeling... ${emotionTxt}. ... Which you felt in your... ${areaTxt}. ... But notice something... You are not the thought. You are not the emotion. You are not the sensation. ... You... are the one... who was watching them happen. ... That awareness... that witnessing presence... that is who you truly are.`;
+                break;
+            }
+            default:
+                break;
+        }
+
+        if (txt) {
+            playText(txt);
+        }
     }, [step]);
 
     const scrollToBottom = () => {
@@ -699,6 +757,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
 
     return (
         <div ref={scrollRef} className="w-full h-full" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+            <VoiceToggle enabled={audioEnabled} playing={isPlaying} onToggle={toggleAudio} />
             <div className="relative z-10 w-full max-w-xl mx-auto pb-32">
                 {step < 5 && <StepTracker current={step} />}
 
