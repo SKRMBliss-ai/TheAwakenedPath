@@ -11,9 +11,8 @@ export const useGenerativeAudio = () => {
     const leftOsc = useRef<OscillatorNode | null>(null);
     const rightOsc = useRef<OscillatorNode | null>(null);
 
-    // Drone Synth
-    const droneOsc = useRef<OscillatorNode | null>(null);
-    const droneFilter = useRef<BiquadFilterNode | null>(null);
+    // Drone Synth Arrays
+    const droneOscs = useRef<OscillatorNode[]>([]);
 
     // LFO for slow breathing effect
     const lfo = useRef<OscillatorNode | null>(null);
@@ -59,36 +58,62 @@ export const useGenerativeAudio = () => {
         leftOsc.current.start();
         rightOsc.current.start();
 
-        // 3. Drone Synthesis (Low frequency, filtered)
-        droneOsc.current = ctxRef.current.createOscillator();
-        droneOsc.current.type = 'triangle'; // Richer harmonics
-        droneOsc.current.frequency.value = 108; // Sub-harmonic of 432 (432 / 4)
+        // 3. Ethereal Singing Bowl / Pad (Layered Sine Waves)
+        // Three pure sine waves (root, slightly detuned root, and an octave up)
+        const droneFrequencies = [108, 108.5, 216];
+        const droneGains = [0.4, 0.4, 0.1]; // Octave is very subtle
 
-        droneFilter.current = ctxRef.current.createBiquadFilter();
-        droneFilter.current.type = 'lowpass';
-        droneFilter.current.frequency.value = 200; // Warm, muffled sound
-        droneFilter.current.Q.value = 1;
+        // Sub-mix for the drone
+        const droneMasterGain = ctxRef.current.createGain();
+        droneMasterGain.gain.value = 0.5;
 
-        // Sub-gain to mix drone beneath binaural beats
-        const droneGain = ctxRef.current.createGain();
-        droneGain.gain.value = 0.4;
+        // Massive deep space delay feedback loop (creates a lush, temple-like reverb wash)
+        const delay = ctxRef.current.createDelay(4.0);
+        delay.delayTime.value = 3.14; // Pi seconds for organic rhythm
+        const feedback = ctxRef.current.createGain();
+        feedback.gain.value = 0.65; // High feedback for long trailing wash
 
-        droneOsc.current.connect(droneFilter.current);
-        droneFilter.current.connect(droneGain);
-        droneGain.connect(masterGain.current);
+        delay.connect(feedback);
+        feedback.connect(delay);
 
-        droneOsc.current.start();
+        // Connect the drone directly to master AND into the delay wash
+        droneMasterGain.connect(masterGain.current);
+        droneMasterGain.connect(delay);
+        delay.connect(masterGain.current); // Bring the delayed wash into the master out
 
-        // 4. LFO (Low-Frequency Oscillator) to create a "breathing" swell
+        droneOscs.current = droneFrequencies.map((freq, i) => {
+            const osc = ctxRef.current!.createOscillator();
+            osc.type = 'sine'; // Pure rounded tone, no buzz
+            osc.frequency.value = freq;
+
+            const oscGain = ctxRef.current!.createGain();
+            oscGain.gain.value = droneGains[i];
+
+            // Pan them slowly across the stereo field
+            // @ts-ignore
+            const panner = ctxRef.current!.createStereoPanner ? ctxRef.current!.createStereoPanner() : ctxRef.current!.createPanner();
+            if ('pan' in panner) {
+                panner.pan.value = i === 1 ? -0.4 : (i === 2 ? 0.4 : 0);
+            }
+
+            osc.connect(oscGain);
+            oscGain.connect(panner);
+            panner.connect(droneMasterGain);
+
+            osc.start();
+            return osc;
+        });
+
+        // 4. LFO (Low-Frequency Oscillator) to create a "breathing" swell on the volume (Tremolo effect)
         lfo.current = ctxRef.current.createOscillator();
         lfo.current.type = 'sine';
-        lfo.current.frequency.value = 0.05; // 20 seconds per cycle (slow breathing)
+        lfo.current.frequency.value = 0.05; // 20 seconds per cycle (slow deep breathing)
 
         lfoGain.current = ctxRef.current.createGain();
-        lfoGain.current.gain.value = 100; // Modulate filter cutoff up/down by 100Hz
+        lfoGain.current.gain.value = 0.25; // Modulate drone volume by +/- 25%
 
         lfo.current.connect(lfoGain.current);
-        lfoGain.current.connect(droneFilter.current.frequency);
+        lfoGain.current.connect(droneMasterGain.gain);
 
         lfo.current.start();
     };
@@ -124,7 +149,7 @@ export const useGenerativeAudio = () => {
     // Expose a method to shift frequencies based on app state
     // e.g., 'calm' (432Hz), 'focus' (528Hz), 'energy' (639Hz)
     const setVibrationalState = useCallback((state: 'calm' | 'focus' | 'energy') => {
-        if (!ctxRef.current || !leftOsc.current || !rightOsc.current || !droneOsc.current) return;
+        if (!ctxRef.current || !leftOsc.current || !rightOsc.current) return;
 
         const ctx = ctxRef.current;
 
@@ -146,7 +171,14 @@ export const useGenerativeAudio = () => {
         const time = ctx.currentTime + 3;
         leftOsc.current.frequency.linearRampToValueAtTime(baseFreq, time);
         rightOsc.current.frequency.linearRampToValueAtTime(baseFreq + beatFreq, time);
-        droneOsc.current.frequency.linearRampToValueAtTime(baseFreq / 4, time);
+
+        // Glide the drone layered chords
+        if (droneOscs.current.length === 3) {
+            droneOscs.current[0].frequency.linearRampToValueAtTime(baseFreq / 4, time);
+            droneOscs.current[1].frequency.linearRampToValueAtTime((baseFreq / 4) + 0.5, time); // stay slightly detuned
+            droneOscs.current[2].frequency.linearRampToValueAtTime(baseFreq / 2, time); // glide octave
+        }
+
         lfo.current?.frequency.linearRampToValueAtTime(lfoRate, time);
 
     }, []);
