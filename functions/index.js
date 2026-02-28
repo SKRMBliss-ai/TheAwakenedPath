@@ -122,9 +122,8 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey, openAiKey], cors: true }
             res.set('Content-Type', 'audio/wav');
             return res.send(audioBuffer);
         } catch (e) {
-            console.error("OpenAI Error:", e);
-            res.status(500).send("OpenAI synthesis failed.");
-            return;
+            console.warn("OpenAI Error, falling back to Gemini:", e.message);
+            // Fall through to the rest of the logic below which starts with Gemini Tier 0
         }
     }
 
