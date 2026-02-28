@@ -9,53 +9,19 @@ const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
 // Text-to-Speech Client
 const ttsClient = new textToSpeech.TextToSpeechClient();
 
-/**
- * VOICE ENGINE: Tier 0 (Gemini Multimodal TTS)
- * Highly expressive, human-like, detects tone instructions.
- */
-async function synthesizeGemini(text, gender, apiKey) {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-    const voiceName = gender === 'MALE' ? 'Charon' : 'Aoede';
-
-    // Director instructions for the Multimodal engine
-    const prompt = `
-        (Voice: ${voiceName})
-        Read this meditation script with a slow, spiritual, and very human pace. 
-        Add subtle pauses (1-2s) where appropriate. 
-        Focus on warmth and presence.
-        
-        Script: "${text}"
-    `;
-
-    const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-            responseModalities: ["AUDIO"],
-            speechConfig: {
-                voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } }
-            }
-        }
-    });
-
-    const response = await result.response;
-    const part = response.candidates[0].content.parts.find(p => p.inlineData);
-    if (!part) throw new Error("GEMINI_AUDIO_PART_NOT_FOUND");
-
-    return Buffer.from(part.inlineData.data, 'base64');
-}
+// Gemini direct HTTP audio generation is not supported in the stable v1beta API yet.
+// We are routing directly to Google Cloud Text-To-Speech (LM Journey Voices).
 
 exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
     const { text, gender = 'FEMALE' } = req.body;
 
     if (!text) return res.status(400).send("No text provided.");
 
-    // Voice Tier 1: Vertex / Studio (Chirp 3 HD) - High fidelity, emotional
-    const TIER_1_VOICE = gender === 'MALE' ? 'en-US-Chirp3-HD-Achird' : 'en-US-Chirp3-HD-Aoede';
+    // Voice Tier 1: Journey Voices (Highly expressive LM-based voices equivalent to Gemini Native)
+    const TIER_1_VOICE = gender === 'MALE' ? 'en-US-Journey-D' : 'en-US-Journey-F';
 
-    // Voice Tier 2: Neural2 (DeepMind) - Very human-like
-    const TIER_2_VOICE = gender === 'MALE' ? 'en-US-Neural2-D' : 'en-US-Neural2-F';
+    // Voice Tier 2: Studio / Neural (DeepMind) - Very human-like fallbacks
+    const TIER_2_VOICE = gender === 'MALE' ? 'en-US-Studio-Q' : 'en-US-Studio-O';
 
     // Function to add meditative pauses and rhythmic breaks
     function meditationify(rawText) {
@@ -74,7 +40,6 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
             voice: { languageCode: 'en-US', name: voiceName },
             audioConfig: {
                 audioEncoding: 'MP3',
-                pitch: -2.5,          // Lower pitch for resonance
                 speakingRate: 0.85,   // Slightly faster for better flow (from 0.8)
                 volumeGainDb: 2.0     // Slight boost for clarity at low volume
             },
@@ -84,29 +49,21 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
     }
 
     try {
-        console.log("Attempting Tier 0: Gemini Multimodal TTS");
-        const audio = await synthesizeGemini(text, gender, geminiKey.value());
+        console.log(`Attempting Tier 1 Meditative Voice: ${TIER_1_VOICE}`);
+        const audio = await synthesize(TIER_1_VOICE);
         res.set('Content-Type', 'audio/mpeg');
         return res.send(audio);
-    } catch (geminiError) {
-        console.warn("Tier 0 (Gemini TTS) Error. Falling back to Tier 1.", geminiError.message);
+    } catch (tier1Error) {
+        console.warn("Tier 1 (Journey) Limit reached or error. Falling back to Tier 2.", tier1Error.message);
+
         try {
-            console.log(`Attempting Tier 1 Meditative Voice: ${TIER_1_VOICE}`);
-            const audio = await synthesize(TIER_1_VOICE);
+            console.log(`Attempting Tier 2 Voice: ${TIER_2_VOICE}`);
+            const audio = await synthesize(TIER_2_VOICE);
             res.set('Content-Type', 'audio/mpeg');
             return res.send(audio);
-        } catch (tier1Error) {
-            console.warn("Tier 1 (Vertex) Limit reached or error. Falling back to Tier 2.", tier1Error.message);
-
-            try {
-                console.log(`Attempting Tier 2 Voice: ${TIER_2_VOICE}`);
-                const audio = await synthesize(TIER_2_VOICE);
-                res.set('Content-Type', 'audio/mpeg');
-                return res.send(audio);
-            } catch (tier2Error) {
-                console.error("All backend voice tiers exhausted.", tier2Error.message);
-                res.status(429).send("Sage is resting. All neural pathways full.");
-            }
+        } catch (tier2Error) {
+            console.error("All backend voice tiers exhausted.", tier2Error.message);
+            res.status(429).send("Sage is resting. All neural pathways full.");
         }
     }
 });

@@ -1,6 +1,10 @@
 export async function generateStepAudioUrl(stepText: string): Promise<string | null> {
     try {
-        const response = await fetch("/api/voice", {
+        const endpoint = import.meta.env.DEV
+            ? "https://texttospeech-cktimgs4pa-uc.a.run.app"
+            : "/api/voice";
+
+        const response = await fetch(endpoint, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
