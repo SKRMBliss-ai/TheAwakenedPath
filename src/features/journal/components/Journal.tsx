@@ -1,7 +1,6 @@
-// @ts-nocheck
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Sparkles, LogIn, ChevronRight, ChevronLeft, X, Heart } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { MeditationPortal } from '../../../components/ui/MeditationPortal.tsx';
 import { db } from '../../../firebase';
@@ -18,16 +17,14 @@ import {
 } from 'firebase/firestore';
 import { AwakenStage } from '../../../components/ui/SacredCircle.tsx';
 import {
-    WhisperInput,
     AnchorButton,
     EpochCard,
     EpochDivider,
     NoiseOverlay,
-    tokens,
     SacredToast,
     NavPill
 } from '../../../components/ui/SacredUI.tsx';
-import { useEmotionSync, EMOTION_COLORS } from '../../soul-intelligence/hooks/useEmotionSync';
+import { useEmotionSync } from '../../soul-intelligence/hooks/useEmotionSync';
 import { GentleJournalForm } from './GentleJournalForm';
 
 // ─── CINEMATIC ANIMATION VARIANTS ─────────────────────────────────────────────
@@ -59,25 +56,6 @@ const orbExitVariant: any = {
     },
 };
 
-const stepTransition: any = {
-    hidden: { opacity: 0, x: 40, filter: 'blur(6px)' },
-    visible: {
-        opacity: 1, x: 0, filter: 'blur(0px)',
-        transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.06 }
-    },
-    exit: {
-        opacity: 0, x: -40, filter: 'blur(6px)',
-        transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
-    },
-};
-
-const chipStagger: any = {
-    hidden: { opacity: 0, y: 12, scale: 0.9 },
-    visible: {
-        opacity: 1, y: 0, scale: 1,
-        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
-    },
-};
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -98,9 +76,6 @@ interface JournalEntry {
 
 type Bucket = 'today' | 'thisWeek' | 'thisMonth' | 'archive';
 
-// Journal steps
-type JournalStep = 0 | 1 | 2 | 3;
-
 // ─── TEMPORAL BUCKET LOGIC ──────────────────────────────────────────────────
 
 function getBucket(entry: any): Bucket {
@@ -118,39 +93,6 @@ const bucketMeta: Record<Bucket, { label: string; columns: number }> = {
     thisMonth: { label: 'This Month', columns: 2 },
     archive: { label: 'The Archive', columns: 3 },
 };
-
-// ─── STEP PROGRESS INDICATOR ─────────────────────────────────────────────────
-
-const StepIndicator = ({ current, total }: { current: number; total: number }) => (
-    <div className="flex items-center gap-2">
-        {Array.from({ length: total }).map((_, i) => (
-            <motion.div
-                key={i}
-                className="relative"
-                animate={{
-                    scale: i === current ? 1 : 0.8,
-                }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            >
-                <div
-                    className={`h-1 rounded-full transition-all duration-700 ease-out ${i === current
-                        ? 'w-8 bg-[#D16BA5]'
-                        : i < current
-                            ? 'w-4 bg-[#ABCEC9]/60'
-                            : 'w-4 bg-white/10'
-                        }`}
-                />
-                {i === current && (
-                    <motion.div
-                        layoutId="step-glow"
-                        className="absolute inset-0 h-1 w-8 rounded-full bg-[#D16BA5] blur-md"
-                        transition={{ duration: 0.6 }}
-                    />
-                )}
-            </motion.div>
-        ))}
-    </div>
-);
 
 // ─── AWARENESS CARD WRAPPER ──────────────────────────────────────────────────
 
@@ -185,10 +127,8 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
         duration: ''
     });
 
-    // Guided journal step (0-3)
-    const [journalStep, setJournalStep] = useState<JournalStep>(0);
 
-    const { emotion, isAnalyzing } = useEmotionSync(currentEntry.emotions || '');
+    useEmotionSync(currentEntry.emotions || '');
 
     // Workflow State
     const [isPracticing, setIsPracticing] = useState(false);
@@ -217,7 +157,6 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
 
     // Reset journal form state
     const resetJournalForm = () => {
-        setJournalStep(0);
         setCurrentEntry({
             thoughts: '',
             bodySensations: '',
@@ -333,56 +272,6 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
         }
     }, [practiceStep, isPracticing, speak, handleNextStep, isPaused, dynamicSteps]);
 
-    // Navigate journal steps
-    const goNextStep = () => {
-        if (journalStep < 3) setJournalStep((journalStep + 1) as JournalStep);
-    };
-
-    const goPrevStep = () => {
-        if (journalStep > 0) setJournalStep((journalStep - 1) as JournalStep);
-    };
-
-    const handleSaveEntry = async () => {
-        if (!user) return;
-        try {
-            const entryData = {
-                thoughts: currentEntry.thoughts || '',
-                bodySensations: currentEntry.bodySensations || '',
-                bodyArea: currentEntry.bodyArea || '',
-                emotions: currentEntry.emotions || '',
-                reflections: currentEntry.reflections || '',
-                guidance: currentEntry.guidance || '',
-                duration: currentEntry.duration || '2 mins',
-                updatedAt: serverTimestamp()
-            };
-            if (editingId) {
-                await updateDoc(doc(db, 'users', user.uid, 'journal', editingId), entryData);
-                setEditingId(null);
-                fireToast('Reflection Anchored');
-            } else {
-                await addDoc(collection(db, 'users', user.uid, 'journal'), {
-                    ...entryData,
-                    date: new Date().toLocaleDateString(),
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    createdAt: serverTimestamp()
-                });
-                fireToast('Reflection Sealed');
-            }
-            resetJournalForm();
-            setShowLogForm(false);
-        } catch (error) {
-            console.error("Error saving: ", error);
-        }
-    };
-
-    // ─── STEP LABELS ─────────────────────────────────────────────────────────
-    const stepLabels = [
-        'Thoughts',
-        'Body Awareness',
-        'Witness',
-        'Open Reflection'
-    ];
-
     if (!user) {
         return (
             <div className="flex flex-col items-center justify-center p-12 space-y-12 text-center h-[80vh] relative">
@@ -391,12 +280,12 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                     animate={{ opacity: [0.08, 0.18, 0.08], scale: [1, 1.1, 1] }}
                     transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
                     className="absolute w-[400px] h-[400px] rounded-full blur-[80px] pointer-events-none"
-                    style={{ background: `radial-gradient(circle, ${tokens.magenta}30, transparent)` }}
+                    style={{ background: `radial-gradient(circle, var(--accent-primary-muted), transparent)` }}
                 />
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex flex-col items-center gap-8">
-                    <p className="text-[9px] uppercase tracking-[0.6em] text-white/70 font-bold">The Awakened Path</p>
-                    <h1 className="text-6xl font-serif font-light text-white leading-tight">Sacred Access</h1>
-                    <p className="text-sm text-white/25 italic max-w-xs font-serif leading-relaxed">Sign in to begin your journey inward.</p>
+                    <p className="text-[9px] uppercase tracking-[0.6em] text-[var(--text-muted)] font-bold">The Awakened Path</p>
+                    <h1 className="text-6xl font-serif font-light text-[var(--text-primary)] leading-tight">Sacred Access</h1>
+                    <p className="text-sm text-[var(--text-muted)] italic max-w-xs font-serif leading-relaxed">Sign in to begin your journey inward.</p>
                     <AnchorButton variant="solid" onClick={signInWithGoogle}>Authenticate Presence</AnchorButton>
                 </motion.div>
             </div>
@@ -411,7 +300,7 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                         key="orb-exit"
                         variants={orbExitVariant}
                         exit="exit"
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0D0014]"
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-deep)]"
                         onMouseMove={e => {
                             const rect = e.currentTarget.getBoundingClientRect();
                             mouseX.set(e.clientX - rect.left - rect.width / 2);
@@ -421,7 +310,7 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                         <motion.div
                             animate={{ scale: [1, 1.15, 1], opacity: [0.12, 0.22, 0.12] }}
                             transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-                            style={{ position: 'absolute', inset: -160, borderRadius: '50%', background: '#7B2D8B', filter: 'blur(160px)' }}
+                            style={{ position: 'absolute', inset: -160, borderRadius: '50%', background: 'var(--accent-primary)', filter: 'blur(160px)', opacity: 0.15 }}
                         />
                         <motion.div>
                             <AwakenStage
@@ -458,18 +347,18 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                 animate={{ opacity: [0.06, 0.14, 0.06], scale: [1, 1.08, 1] }}
                 transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
                 className="fixed top-[30%] left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-[120px] pointer-events-none -z-10"
-                style={{ background: `radial-gradient(ellipse, ${tokens.magenta}50, transparent)` }}
+                style={{ background: `radial-gradient(ellipse, var(--accent-primary-muted), transparent)` }}
             />
 
             <nav className="flex justify-between items-start mb-20 relative z-10">
                 <NavPill onClick={onReturn}>Return Home</NavPill>
                 <div className="text-center">
-                    <h1 className="text-6xl font-serif font-light text-white tracking-tight leading-none [text-shadow:0_0_60px_rgba(209,107,165,0.25)]">Daily Log</h1>
-                    <p className="text-[10px] uppercase tracking-[0.6em] text-[#ABCEC9]/45 font-bold mt-4">The Presence Study</p>
+                    <h1 className="text-6xl font-serif font-light text-[var(--text-primary)] tracking-tight leading-none [text-shadow:0_0_60px_var(--accent-primary-muted)]">Daily Log</h1>
+                    <p className="text-[10px] uppercase tracking-[0.6em] text-[var(--accent-secondary)] opacity-50 font-bold mt-4">The Presence Study</p>
                 </div>
                 <div className="text-right min-w-[120px]">
-                    <p className="text-[9px] uppercase tracking-[0.6em] text-white/15 font-bold">{entries.length} moments</p>
-                    <div className="mt-4 h-[1px] bg-gradient-to-r from-transparent via-[#D16BA5]/40 to-transparent" />
+                    <p className="text-[9px] uppercase tracking-[0.6em] text-[var(--text-muted)] font-bold">{entries.length} moments</p>
+                    <div className="mt-4 h-[1px] bg-gradient-to-r from-transparent via-[var(--accent-primary-border)] to-transparent" />
                 </div>
             </nav>
 
@@ -480,16 +369,16 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
                         {/* practice trigger */}
                         <motion.section variants={childVariant} className="text-center py-16 relative">
                             <div className="flex flex-col items-center gap-8 relative z-10">
-                                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10">
-                                    <Sparkles size={10} className="text-[#ABCEC9]" />
-                                    <span className="text-[8px] uppercase tracking-[0.4em] text-white/70 font-bold">Practice First</span>
+                                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                                    <Sparkles size={10} className="text-[var(--accent-secondary)]" />
+                                    <span className="text-[8px] uppercase tracking-[0.4em] text-[var(--text-muted)] font-bold">Practice First</span>
                                 </div>
 
-                                <h2 className="text-5xl font-serif font-light text-white leading-tight max-w-lg mx-auto">
+                                <h2 className="text-5xl font-serif font-light text-[var(--text-primary)] leading-tight max-w-lg mx-auto">
                                     Ready to settle<br />into the Now?
                                 </h2>
 
-                                <p className="text-sm text-white/70 italic max-w-sm font-serif leading-relaxed">
+                                <p className="text-sm text-[var(--text-muted)] italic max-w-sm font-serif leading-relaxed">
                                     Take 2 minutes to reconnect with your inner body before logging.
                                 </p>
 
@@ -499,7 +388,7 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
 
                                 <button
                                     onClick={() => { resetJournalForm(); setShowLogForm(true); }}
-                                    className="text-[8px] uppercase tracking-[0.5em] text-white/15 hover:text-white/70 font-bold transition-colors"
+                                    className="text-[8px] uppercase tracking-[0.5em] text-[var(--text-disabled)] hover:text-[var(--text-primary)] font-bold transition-colors"
                                 >
                                     Skip to log →
                                 </button>

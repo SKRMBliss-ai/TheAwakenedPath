@@ -9,11 +9,11 @@ The palette is inspired by a meditative sunset, using deep, warm voids and lumin
 
 | Element | Color Code | Purpose |
 | :--- | :--- | :--- |
-| **Deep Plum** | `#59445C` | The primary solid background color. |
+| **Deep Cosmic** | `#0B0014` | The primary deep void background color. |
 | **Muted Rose** | `#C65F9D` | Brand primary accent; used for high-energy interactions. |
 | **Creamy Beige** | `#F4E3DA` | Primary text and secondary borders; provides high contrast with warmth. |
 | **Teal Glow** | `#ABCEC9` | Bioluminescent indicator color; signifies active presence and safety. |
-| **Indigo Mist** | `#3a2a3c` | Gradient stop for the "Infinite Depth" background. |
+| **Indigo Void** | `#050008` | Gradient stop for the "Infinite Depth" background. |
 
 ---
 
@@ -26,7 +26,7 @@ The application sits on top of a dynamic, organic layer of SVG-based "Living Blo
 
 ### B. Glassmorphism & Depth
 All containers (cards, modals, navigation) use a "Glass Surface" style:
-*   **Surface**: `rgba(89, 68, 92, 0.6)` (Deep Plum Glass).
+*   **Surface**: `rgba(11, 0, 20, 0.7)` (Deep Cosmic Glass).
 *   **Backdrop**: `blur(12px)` for a frosted effect.
 *   **Border**: `1px solid rgba(244, 227, 218, 0.15)` (Fine Cream Border).
 
@@ -75,4 +75,4 @@ These variables are the source of truth for all future components:
 *   `--ease-fluid`: `cubic-bezier(0.23, 1, 0.32, 1)`
 *   `--card-glow-base`: `rgba(198, 95, 157, 0.25)`
 *   `--card-glow-surge`: `rgba(198, 95, 157, 0.75)`
-*   `--bg-body`: Infinite gradient from Plum to Indigo.
+*   `--bg-body`: Infinite gradient from Cosmic Void to Indigo Void.

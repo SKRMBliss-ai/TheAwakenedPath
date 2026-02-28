@@ -75,6 +75,82 @@ app.post('/api/grounding', async (req, res) => {
     }
 });
 
+// 🎙️ VOICE GUIDANCE — GEMINI 2.5 FLASH TTS
+const VOICE_PERSONA = `
+AUDIO PROFILE:
+You are a gentle, warm spiritual guide. Your voice is that of
+a kind, wise woman in her 50s — like a trusted therapist in a
+quiet, safe room. You have deep empathy but never pity.
+Your tone carries natural gravitas without heaviness.
+
+SCENE:
+A sacred, quiet space. Evening light. The listener is doing
+their daily reflection journal. They are vulnerable and open.
+This is not a podcast — it is an intimate, one-on-one moment
+of guided self-awareness. A compassionate presence.
+
+DIRECTOR'S NOTES:
+- Speak slowly and deliberately. 120-130 words per minute.
+  Normal speech is 150-160 wpm. Leave SPACE between sentences.
+- Use natural pauses of 1-2 seconds after questions.
+  Render "..." as a gentle breathing pause.
+- Warm, soft tone throughout. Never clinical, never rushed,
+  never cheerful in a forced way. Never patronizing.
+- When reading back the user's own words (their thoughts,
+  emotions), shift to a slightly more intimate, quieter
+  register — like acknowledging something tender and true.
+- When reading Eckhart Tolle quotes, slow down further.
+  A slight sense of reverence — not dramatic, just present.
+- When giving guidance ("A gentle suggestion"), become
+  slightly warmer and encouraging, like offering a gift.
+- Never use filler words. No "so" or "now then" or "alright."
+- Pronounce everything clearly.
+- Skip any emoji characters silently.
+- End each narration by letting the last word breathe.
+`;
+
+app.post('/api/voice', async (req, res) => {
+    const { text, voice = "Aoede" } = req.body;
+
+    try {
+        const apiKey = await getSecret();
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: `${VOICE_PERSONA}\n\nSpeak the following:\n\n${text}`
+                    }]
+                }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: voice }
+                        }
+                    }
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error("Gemini TTS Error:", errText);
+            return res.status(response.status).json({ error: "Failed to generate voice" });
+        }
+
+        const data = await response.json();
+        const audioBase64 = data.candidates[0].content.parts[0].inlineData.data;
+        res.json({ audio: audioBase64 });
+    } catch (error) {
+        console.error("Voice Route Error:", error);
+        res.status(500).json({ error: "Silence is okay." });
+    }
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);

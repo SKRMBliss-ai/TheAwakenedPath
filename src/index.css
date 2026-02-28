@@ -3,30 +3,33 @@
 /* Padmasana Theme (Reference Image) */
 :root {
     /* 1. Core Brand Identity */
-    --brand-primary: #C65F9D;
-    /* Muted Rose */
+    --brand-primary: #D16BA5;
+    /* Brighter Rose for deep bg contrast */
     --brand-secondary: #F4E3DA;
     /* Creamy Beige */
     --text-on-brand: #ffffff;
 
-    /* 2. Dark Mode (Default) - Deep Plum Base */
-    --bg-color: #59445C;
-    --bg-body: linear-gradient(135deg, #59445C 0%, #3a2a3c 100%);
+    /* 2. Dark Mode (Default) - Deep Cosmic */
+    --bg-color: #0B0014;
+    --bg-body: linear-gradient(135deg, #0B0014 0%, #050008 100%);
     --text-main: #F4E3DA;
     /* Cream for main text */
     --text-muted: #dcc5d6;
     /* Muted lavender-grey */
 
     /* Glass Styles */
-    --glass-surface: rgba(89, 68, 92, 0.6);
-    /* Deep plum glass */
-    --glass-border: rgba(244, 227, 218, 0.15);
-    /* Cream border */
+    --glass-surface: rgba(11, 0, 20, 0.7);
+    /* Deep cosmic glass */
+    --glass-border: rgba(244, 227, 218, 0.18);
+    /* Cream border - boosted */
 
     /* 4. Glow System (Rose/Pink) */
-    --card-glow-base: rgba(198, 95, 157, 0.25);
-    --card-glow-pulse: rgba(198, 95, 157, 0.45);
-    --card-glow-surge: rgba(198, 95, 157, 0.75);
+    --card-glow-base: rgba(209, 107, 165, 0.25);
+    --card-glow-pulse: rgba(209, 107, 165, 0.45);
+    --card-glow-surge: rgba(209, 107, 165, 0.75);
+    --glow-primary: rgba(209, 107, 165, 0.3);
+    --accent-primary-dim: rgba(209, 107, 165, 0.06);
+    --accent-secondary-dim: rgba(171, 206, 201, 0.06);
 
     --ease-fluid: cubic-bezier(0.23, 1, 0.32, 1);
     --teal-glow: #ABCEC9;

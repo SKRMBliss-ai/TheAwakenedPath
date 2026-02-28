@@ -159,13 +159,13 @@ export default function BodyMapSelector({ onSelect, selectedArea }: BodyMapSelec
                         aria-label="Human body map — tap a body area to explore"
                     >
                         {/* Body silhouette */}
-                        <path d={BODY_PATH} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinejoin="round" />
-                        <path d={BODY_PATH} fill="url(#bodyGradient)" opacity="0.4" />
+                        <path d={BODY_PATH} fill="none" stroke="var(--border-subtle)" strokeWidth="1.5" strokeLinejoin="round" />
+                        <path d={BODY_PATH} fill="url(#bodyGradient)" opacity="0.3" />
 
                         <defs>
                             <radialGradient id="bodyGradient" cx="50%" cy="40%" r="60%">
-                                <stop offset="0%" stopColor="rgba(209,107,165,0.06)" />
-                                <stop offset="100%" stopColor="rgba(255,255,255,0.01)" />
+                                <stop offset="0%" stopColor="var(--accent-primary-muted)" />
+                                <stop offset="100%" stopColor="var(--bg-surface)" />
                             </radialGradient>
 
                             {/* Glow filters for each zone */}
@@ -212,8 +212,8 @@ export default function BodyMapSelector({ onSelect, selectedArea }: BodyMapSelec
                                     {/* Main dot */}
                                     <circle
                                         cx={zone.cx} cy={zone.cy} r={isSelected ? 16 : 10}
-                                        fill={isSelected ? zone.color : "rgba(255,255,255,0.4)"}
-                                        stroke={isSelected ? zone.color : "rgba(255,255,255,0.3)"}
+                                        fill={isSelected ? zone.color : "var(--text-muted)"}
+                                        stroke={isSelected ? zone.color : "var(--border-subtle)"}
                                         strokeWidth={isSelected ? 2 : 1.5}
                                         opacity={isOther ? 0.6 : 1}
                                         filter={isSelected ? `url(#glow-${zone.id})` : "none"}
@@ -236,7 +236,7 @@ export default function BodyMapSelector({ onSelect, selectedArea }: BodyMapSelec
                                         style={{
                                             fontSize: isSelected ? 14 : 12,
                                             fontWeight: isSelected ? 700 : 500,
-                                            fill: isSelected ? zone.color : isOther ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.9)",
+                                            fill: isSelected ? zone.color : isOther ? "var(--text-disabled)" : "var(--text-primary)",
                                             fontFamily: "Georgia, serif",
                                             cursor: "pointer",
                                             transition: "all 0.4s ease",
@@ -253,7 +253,7 @@ export default function BodyMapSelector({ onSelect, selectedArea }: BodyMapSelec
                                         y1={zone.cy + zone.labelOffset.y}
                                         x2={zone.cx + zone.labelOffset.x + (zone.labelOffset.x > 0 ? -4 : 4)}
                                         y2={zone.cy + zone.labelOffset.y}
-                                        stroke={isSelected ? zone.color : isOther ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.5)"}
+                                        stroke={isSelected ? zone.color : isOther ? "var(--text-disabled)" : "var(--text-muted)"}
                                         strokeWidth="1"
                                         strokeDasharray={isSelected ? "none" : "3,3"}
                                         style={{ transition: "all 0.4s ease" }}
@@ -276,25 +276,25 @@ export default function BodyMapSelector({ onSelect, selectedArea }: BodyMapSelec
                             className="space-y-4"
                             style={{ marginTop: 24 }}
                         >
-                            <div style={{ padding: "18px 22px", borderRadius: 20, background: "rgba(255,255,255,0.03)", border: `1.5px solid ${selectedArea.color}30` }}>
+                            <div style={{ padding: "18px 22px", borderRadius: 20, background: "var(--bg-surface)", border: `1.5px solid ${selectedArea.color}30` }}>
                                 <h3 style={{ fontSize: 20, fontWeight: 600, color: selectedArea.color, marginBottom: 4 }}>{selectedArea.label}</h3>
-                                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>{selectedArea.description}</p>
+                                <p style={{ fontSize: 14, color: "var(--text-muted)" }}>{selectedArea.description}</p>
                             </div>
 
-                            <div style={{ padding: "16px 20px", borderRadius: 16, background: "rgba(255,255,255,0.02)", borderLeft: `3px solid ${selectedArea.color}40` }}>
-                                <p style={{ fontSize: 15, color: "rgba(255,255,255,0.65)", fontStyle: "italic", lineHeight: 1.7 }}>
+                            <div style={{ padding: "16px 20px", borderRadius: 16, background: "var(--bg-surface)", borderLeft: `3px solid ${selectedArea.color}40`, opacity: 0.8 }}>
+                                <p style={{ fontSize: 15, color: "var(--text-primary)", fontStyle: "italic", lineHeight: 1.7 }}>
                                     {selectedArea.insight}
                                 </p>
                             </div>
 
-                            <div style={{ padding: "20px", borderRadius: 18, background: "rgba(171,206,201,0.04)", border: "1px solid rgba(171,206,201,0.1)" }}>
+                            <div style={{ padding: "20px", borderRadius: 18, background: "var(--accent-secondary-muted)", border: "1px solid var(--accent-secondary-border)" }}>
                                 <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
                                     <span style={{ fontSize: 15 }}>💚</span>
-                                    <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "rgba(171,206,201,0.6)" }}>
+                                    <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--accent-secondary)", opacity: 0.8 }}>
                                         A gentle suggestion
                                     </span>
                                 </div>
-                                <p style={{ fontSize: 15, color: "rgba(171,206,201,0.7)", lineHeight: 1.7 }}>
+                                <p style={{ fontSize: 15, color: "var(--accent-secondary)", lineHeight: 1.7 }}>
                                     {selectedArea.helps}
                                 </p>
                             </div>
@@ -308,7 +308,7 @@ export default function BodyMapSelector({ onSelect, selectedArea }: BodyMapSelec
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.5 }}
                         className="text-center"
-                        style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginTop: 24, fontStyle: "italic" }}
+                        style={{ fontSize: 13, color: "var(--text-disabled)", marginTop: 24, fontStyle: "italic" }}
                     >
                         Each glowing point on the body is tappable
                     </motion.p>

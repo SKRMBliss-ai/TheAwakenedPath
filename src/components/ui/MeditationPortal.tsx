@@ -7,25 +7,25 @@ import { VoiceService, useVoiceActive } from '../../services/voiceService';
 // ─── SACRED UI TOKENS v3 — Unified Warm Palette ──────────────────
 const T = {
     // Primary accent — warm magenta, unchanged
-    magenta: '#D16BA5',
-    magentaDim: 'rgba(209, 107, 165, 0.5)',
+    magenta: 'var(--accent-primary)',
+    magentaDim: 'var(--accent-primary-dim)',
 
     // Secondary accent — was cyan, now warm lavender
-    lavender: '#B8A5D4',
-    lavenderDim: 'rgba(184, 165, 212, 0.4)',
+    lavender: 'var(--accent-secondary)',
+    lavenderDim: 'var(--accent-secondary-dim)',
 
     // Tertiary — dusty mauve
-    mauve: '#C4A8C8',
+    mauve: 'var(--accent-secondary-muted)',
 
     // Functional — warm terracotta 
-    rose: '#D4857A',
+    rose: 'var(--accent-primary-border)',
 
     // Background
-    plum: '#0D0014',
-    deep: '#160020',
+    plum: 'var(--bg-primary)',
+    deep: 'var(--bg-secondary)',
 
     // Monospace UI only
-    tealMuted: '#8AAFA8',
+    tealMuted: 'var(--text-muted)',
 };
 
 // ─── GRAIN OVERLAY ────────────────────────────────────────────────────────────
@@ -130,7 +130,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                 transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
                 style={{
                     position: 'absolute', inset: 0,
-                    background: `radial-gradient(ellipse 80% 70% at 50% 40%, #2D104050, transparent)`,
+                    background: `radial-gradient(ellipse 80% 70% at 50% 40%, #0B001480, transparent)`,
                     pointerEvents: 'none',
                 }}
             />
@@ -172,8 +172,8 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                     transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] as any }}
                     style={{
                         padding: '8px 18px', borderRadius: 100,
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.06)',
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border-subtle)',
                         backdropFilter: 'blur(20px)',
                     }}
                 >
@@ -195,7 +195,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                     <div style={{ position: 'relative', width: 7, height: 7 }}>
                         <motion.div
                             animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
-                            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                             style={{
                                 position: 'absolute', inset: 0, borderRadius: '50%',
                                 background: T.lavender,
@@ -209,7 +209,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                     </div>
                     <span style={{
                         fontSize: 9, letterSpacing: '0.4em', textTransform: 'uppercase',
-                        color: 'rgba(255,255,255,0.2)',
+                        color: 'var(--text-muted)',
                         fontFamily: 'system-ui, sans-serif', fontWeight: 700,
                     }}>
                         {practiceCount} present
@@ -239,7 +239,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                     >
                         {/* Track */}
                         <circle cx={190} cy={190} r={178} fill="none"
-                            stroke="rgba(255,255,255,0.04)" strokeWidth={1} />
+                            stroke="var(--border-subtle)" strokeWidth={1} />
                         {/* Progress arc */}
                         <motion.circle
                             cx={190} cy={190} r={178} fill="none"
@@ -305,14 +305,14 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                             </span>
 
                             {/* Instruction */}
-                            <h2 style={{ fontSize: 'clamp(34px, 5vw, 68px)', fontWeight: 300, fontFamily: 'Georgia, serif', color: 'white', lineHeight: 1.1, margin: 0, textShadow: `0 0 40px ${T.magenta}20` }}>
+                            <h2 style={{ fontSize: 'clamp(34px, 5vw, 68px)', fontWeight: 300, fontFamily: 'Georgia, serif', color: 'var(--text-primary)', lineHeight: 1.1, margin: 0, textShadow: `0 0 40px ${T.magenta}20` }}>
                                 {currentStepInstruction}
                             </h2>
 
                             {/* Ambient quote */}
                             <motion.p
                                 style={{
-                                    fontSize: 16, color: 'rgba(255,255,255,0.4)',
+                                    fontSize: 16, color: 'var(--text-secondary)',
                                     fontStyle: 'italic', maxWidth: 360, lineHeight: 1.5,
                                 }}
                             >
@@ -335,7 +335,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                     transition={{ duration: 1, delay: 0.5 }}
                     style={{
                         fontSize: 8, letterSpacing: '0.5em', textTransform: 'uppercase',
-                        color: 'rgba(255,255,255,0.15)',
+                        color: 'var(--text-muted)',
                         fontFamily: 'system-ui, sans-serif', fontWeight: 700,
                     }}
                 >
@@ -373,19 +373,19 @@ const ControlButton: React.FC<{ onClick: () => void; children: React.ReactNode; 
                 whileTap={{ scale: 0.88 }} onClick={onClick}
                 style={{
                     width: 52, height: 52, borderRadius: '50%', cursor: 'pointer',
-                    background: hov ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${hov ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}`,
-                    color: hov ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)',
+                    background: hov ? 'var(--bg-secondary)' : 'var(--bg-surface)',
+                    border: `1px solid ${hov ? 'var(--border-default)' : 'var(--border-subtle)'}`,
+                    color: hov ? 'var(--text-primary)' : 'var(--text-muted)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1)',
-                    boxShadow: hov ? `0 0 20px rgba(255,255,255,0.04)` : 'none',
+                    boxShadow: hov ? `0 0 20px var(--glow-primary)` : 'none',
                 }}
             >
                 {children}
             </motion.button>
             <span style={{
                 fontSize: 7, letterSpacing: '0.4em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.12)',
+                color: 'var(--text-muted)',
                 fontFamily: 'system-ui, sans-serif', fontWeight: 700,
                 opacity: hov ? 1 : 0, transition: 'opacity 0.3s',
             }}>{label}</span>

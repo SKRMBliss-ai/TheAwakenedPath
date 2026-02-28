@@ -2,8 +2,15 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BodyMapSelector from "./BodyMapSelector";
 import { useVoiceGuidance } from "../services/voiceGuidance";
+import { VoiceToggle } from "./VoiceToggle";
 
 // ─── ANIMATIONS & STYLES ─────────────────────────────────────────────────────
+
+const T = {
+    rose: "var(--accent-primary)",
+    teal: "var(--accent-secondary)",
+    cream: "var(--text-primary)",
+} as const;
 
 const fadeUp: any = {
     hidden: { opacity: 0, y: 12 },
@@ -41,7 +48,7 @@ const THOUGHT_GROUPS = [
         id: "rejection",
         emoji: "💔",
         label: "Feeling rejected or unseen",
-        color: "#C65F9D", // Muted Rose
+        color: T.rose,
         thoughts: [
             "Did they just ignore me?",
             "They don't want me around",
@@ -52,7 +59,7 @@ const THOUGHT_GROUPS = [
         id: "self-doubt",
         emoji: "😔",
         label: "Doubting myself",
-        color: "#ABCEC9", // Teal Glow
+        color: T.teal,
         thoughts: [
             "I'm not good enough",
             "I messed up again",
@@ -63,7 +70,7 @@ const THOUGHT_GROUPS = [
         id: "overwhelm",
         emoji: "😰",
         label: "Worry & overwhelm",
-        color: "#F4E3DA", // Creamy Beige
+        color: T.cream,
         thoughts: [
             "It's all too much",
             "What if things go wrong?",
@@ -74,7 +81,7 @@ const THOUGHT_GROUPS = [
         id: "resentment",
         emoji: "😤",
         label: "Frustration with life or others",
-        color: "#C65F9D", // Muted Rose
+        color: T.rose,
         thoughts: [
             "That was so unfair",
             "Everyone else has it together",
@@ -88,7 +95,7 @@ const EMOTION_CARDS = [
         id: "fear",
         emoji: "😰",
         label: "Fear & Anxiety",
-        color: "#F4E3DA", // Creamy Beige
+        color: T.cream,
         description: "Worry, dread, unease",
         nuances: ["Anxious", "Panicked", "Overwhelmed", "Worried", "Insecure"],
     },
@@ -96,7 +103,7 @@ const EMOTION_CARDS = [
         id: "sadness",
         emoji: "😢",
         label: "Sadness & Grief",
-        color: "#ABCEC9", // Teal Glow
+        color: T.teal,
         description: "Loss, loneliness, heaviness",
         nuances: ["Lonely", "Heartbroken", "Hopeless", "Disappointed", "Sorrowful"],
     },
@@ -104,7 +111,7 @@ const EMOTION_CARDS = [
         id: "anger",
         emoji: "😤",
         label: "Anger & Frustration",
-        color: "#C65F9D", // Muted Rose
+        color: T.rose,
         description: "Irritation, resentment, heat",
         nuances: ["Irritated", "Resentful", "Furious", "Annoyed", "Jealous"],
     },
@@ -112,7 +119,7 @@ const EMOTION_CARDS = [
         id: "shame",
         emoji: "😳",
         label: "Shame & Worthlessness",
-        color: "#C65F9D", // Muted Rose
+        color: T.rose,
         description: "Guilt, embarrassment, not enough",
         nuances: ["Embarrassed", "Guilty", "Humiliated", "Defective", "Inadequate"],
     },
@@ -120,7 +127,7 @@ const EMOTION_CARDS = [
         id: "exhaustion",
         emoji: "😴",
         label: "Exhaustion & Numbness",
-        color: "#F4E3DA", // Creamy Beige
+        color: T.cream,
         description: "Drained, disconnected, empty",
         nuances: ["Drained", "Apathetic", "Disconnected", "Burnt out", "Empty"],
     },
@@ -128,7 +135,7 @@ const EMOTION_CARDS = [
         id: "peace",
         emoji: "😌",
         label: "Peace & Gratitude",
-        color: "#ABCEC9", // Teal Glow
+        color: T.teal,
         description: "Calm, relief, contentment",
         nuances: ["Calm", "Relieved", "Hopeful", "Appreciative", "Content"],
     },
@@ -155,20 +162,20 @@ function StepTracker({ current }: { current: number }) {
                             <div className="flex items-center justify-center rounded-full transition-all duration-500"
                                 style={{
                                     width: 32, height: 32,
-                                    background: isActive ? "rgba(209,107,165,0.25)" : isDone ? "rgba(171,206,201,0.2)" : "rgba(255,255,255,0.05)",
-                                    border: isActive ? "2px solid rgba(209,107,165,0.6)" : isDone ? "2px solid rgba(171,206,201,0.4)" : "2px solid rgba(255,255,255,0.1)",
+                                    background: isActive ? "var(--nav-active-bg)" : isDone ? "var(--accent-secondary-muted)" : "var(--bg-surface)",
+                                    border: isActive ? "2px solid var(--accent-primary)" : isDone ? "2px solid var(--accent-secondary-border)" : "2px solid var(--border-subtle)",
                                 }}>
-                                {isDone ? <span style={{ color: "rgba(171,206,201,0.8)", fontSize: 14 }}>✓</span> :
-                                    <span style={{ color: isActive ? "rgba(209,107,165,0.9)" : "rgba(255,255,255,0.25)", fontSize: 13, fontWeight: 600 }}>{step.num}</span>}
+                                {isDone ? <span style={{ color: "var(--accent-secondary)", fontSize: 14 }}>✓</span> :
+                                    <span style={{ color: isActive ? "var(--accent-primary)" : "var(--text-muted)", fontSize: 13, fontWeight: 600 }}>{step.num}</span>}
                             </div>
                             <span className="mt-1 transition-colors duration-500"
-                                style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", color: isActive ? "rgba(209,107,165,0.8)" : isDone ? "rgba(171,206,201,0.5)" : "rgba(255,255,255,0.2)" }}>
+                                style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", color: isActive ? "var(--accent-primary)" : isDone ? "var(--accent-secondary)" : "var(--text-muted)" }}>
                                 {step.label}
                             </span>
                         </div>
                         {i < STEPS.length - 1 && (
                             <div className="transition-colors duration-500"
-                                style={{ width: 24, height: 2, borderRadius: 1, marginBottom: 14, background: isDone ? "rgba(171,206,201,0.3)" : "rgba(255,255,255,0.06)" }} />
+                                style={{ width: 24, height: 2, borderRadius: 1, marginBottom: 14, background: isDone ? "var(--accent-secondary-border)" : "var(--border-subtle)" }} />
                         )}
                     </div>
                 );
@@ -188,18 +195,18 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: { label: 
 
     return (
         <motion.div variants={fadeUp} className="space-y-3">
-            {label && <label style={{ display: "block", fontSize: 18, color: "rgba(255,255,255,0.75)", fontFamily: "'Georgia', serif", lineHeight: 1.4 }}>{label}</label>}
-            {hint && <p style={{ fontSize: 14, color: "rgba(255,255,255,0.3)", fontStyle: "italic", lineHeight: 1.5 }}>{hint}</p>}
+            {label && <label style={{ display: "block", fontSize: 18, color: "var(--text-primary)", fontFamily: "'Georgia', serif", lineHeight: 1.4, opacity: 0.8 }}>{label}</label>}
+            {hint && <p style={{ fontSize: 14, color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.5 }}>{hint}</p>}
             <textarea
                 ref={ref} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} rows={4}
                 style={{
                     width: "100%", minHeight: 120, padding: "20px 24px", fontSize: 17, lineHeight: 1.7,
-                    fontFamily: "'Georgia', serif", color: "rgba(255,255,255,0.85)", background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, outline: "none", resize: "none",
+                    fontFamily: "'Georgia', serif", color: "var(--text-primary)", background: "var(--bg-input)",
+                    border: "1px solid var(--border-subtle)", borderRadius: 20, outline: "none", resize: "none",
                     transition: "border-color 0.3s, background 0.3s",
                 }}
-                onFocus={(e) => { e.target.style.borderColor = "rgba(209,107,165,0.4)"; e.target.style.background = "rgba(255,255,255,0.06)"; }}
-                onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.background = "rgba(255,255,255,0.04)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--accent-primary)"; e.target.style.background = "var(--bg-input-focus)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border-subtle)"; e.target.style.background = "var(--bg-input)"; }}
             />
         </motion.div>
     );
@@ -208,14 +215,14 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: { label: 
 function SummaryCard({ label, content, color = "white" }: { label: string, content: string, color?: "white" | "pink" | "teal" }) {
     if (!content) return null;
     const accentMap = {
-        white: { bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.06)", text: "rgba(255,255,255,0.5)", label: "rgba(255,255,255,0.25)" },
-        pink: { bg: "rgba(209,107,165,0.05)", border: "rgba(209,107,165,0.12)", text: "rgba(209,107,165,0.65)", label: "rgba(209,107,165,0.4)" },
-        teal: { bg: "rgba(171,206,201,0.05)", border: "rgba(171,206,201,0.12)", text: "rgba(171,206,201,0.65)", label: "rgba(171,206,201,0.4)" },
+        white: { bg: "var(--bg-surface)", border: "var(--border-subtle)", text: "var(--text-primary)", label: "var(--text-muted)" },
+        pink: { bg: "var(--accent-primary-muted)", border: "var(--accent-primary-border)", text: "var(--accent-primary)", label: "var(--accent-primary)" },
+        teal: { bg: "var(--accent-secondary-muted)", border: "var(--accent-secondary-border)", text: "var(--accent-secondary)", label: "var(--accent-secondary)" },
     };
     const c = accentMap[color];
     return (
-        <div style={{ padding: "16px 20px", borderRadius: 16, background: c.bg, border: `1px solid ${c.border}` }}>
-            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: c.label, marginBottom: 6 }}>{label}</p>
+        <div style={{ padding: "16px 20px", borderRadius: 16, background: c.bg, border: `1px solid ${c.border}`, opacity: 0.9 }}>
+            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: c.label, marginBottom: 6, opacity: 0.7 }}>{label}</p>
             <p style={{ fontSize: 14, color: c.text, lineHeight: 1.6, fontFamily: "'Georgia', serif" }}>{content}</p>
         </div>
     );
@@ -231,8 +238,8 @@ function NavButton({ children, onClick, variant = "next", disabled = false }: { 
         <motion.button whileTap={{ scale: 0.97 }} onClick={onClick} disabled={disabled}
             style={{
                 padding: "18px 36px", borderRadius: 16, fontSize: 16, fontWeight: 600, letterSpacing: "0.04em",
-                background: disabled ? "rgba(255,255,255,0.03)" : s.bg, border: `1.5px solid ${disabled ? "rgba(255,255,255,0.05)" : s.border}`,
-                color: disabled ? "rgba(255,255,255,0.15)" : s.color, cursor: disabled ? "not-allowed" : "pointer",
+                background: disabled ? "var(--bg-surface)" : s.bg, border: `1.5px solid ${disabled ? "var(--border-subtle)" : s.border}`,
+                color: disabled ? "var(--text-disabled)" : s.color, cursor: disabled ? "not-allowed" : "pointer",
                 transition: "all 0.3s ease", minHeight: 58, minWidth: 120,
             }}
             onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.background = s.hoverBg; }}
@@ -243,23 +250,7 @@ function NavButton({ children, onClick, variant = "next", disabled = false }: { 
     );
 }
 
-function VoiceToggle({ enabled, playing, onToggle }: { enabled: boolean, playing: boolean, onToggle: () => void }) {
-    return (
-        <button onClick={onToggle}
-            style={{
-                position: "fixed", bottom: 24, right: 24, zIndex: 100,
-                width: 56, height: 56, borderRadius: "50%",
-                background: enabled ? "rgba(171,206,201,0.15)" : "rgba(255,255,255,0.05)",
-                border: `2px solid ${enabled ? "rgba(171,206,201,0.3)" : "rgba(255,255,255,0.08)"}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-            }}
-            aria-label={enabled ? "Mute voice guide" : "Enable voice guide"}
-        >
-            {enabled ? (playing ? "🔊" : "🔈") : "🔇"}
-        </button>
-    );
-}
+
 
 function ThoughtSelector({
     selectedThoughts,
@@ -296,13 +287,13 @@ function ThoughtSelector({
                                 width: "100%",
                                 padding: "18px 20px",
                                 borderRadius: isOpen ? "18px 18px 0 0" : 18,
-                                border: `1.5px solid ${hasSelection ? group.color + "50" : isOpen ? group.color + "30" : "rgba(255,255,255,0.07)"}`,
+                                border: `1.5px solid ${hasSelection ? group.color + "50" : isOpen ? group.color + "30" : "var(--border-subtle)"}`,
                                 borderBottom: isOpen ? `1px solid ${group.color}20` : undefined,
                                 background: hasSelection
                                     ? group.color + "12"
                                     : isOpen
                                         ? group.color + "08"
-                                        : "rgba(255,255,255,0.03)",
+                                        : "var(--bg-surface)",
                                 cursor: "pointer",
                                 textAlign: "left",
                                 minHeight: 68,
@@ -366,7 +357,7 @@ function ThoughtSelector({
                                     transition={{ duration: 0.3 }}
                                     style={{
                                         fontSize: 16,
-                                        color: isOpen ? group.color + "80" : "rgba(255,255,255,0.15)",
+                                        color: isOpen ? group.color + "80" : "var(--text-disabled)",
                                         flexShrink: 0,
                                     }}
                                 >
@@ -413,10 +404,10 @@ function ThoughtSelector({
                                                         width: "100%",
                                                         padding: "14px 16px",
                                                         borderRadius: 14,
-                                                        border: `1.5px solid ${sel ? group.color + "50" : "rgba(255,255,255,0.06)"}`,
+                                                        border: `1.5px solid ${sel ? group.color + "50" : "var(--border-subtle)"}`,
                                                         background: sel
                                                             ? group.color + "15"
-                                                            : "rgba(255,255,255,0.03)",
+                                                            : "var(--bg-surface)",
                                                         cursor: "pointer",
                                                         textAlign: "left",
                                                         minHeight: 52,
@@ -474,7 +465,7 @@ function ThoughtSelector({
                     </motion.div>
                 );
             })}
-        </div>
+        </div >
     );
 }
 
@@ -548,8 +539,8 @@ function EmotionSelector({
                                     style={{
                                         fontSize: 13,
                                         color: hasSelection
-                                            ? card.color + "70"
-                                            : "rgba(255,255,255,0.3)",
+                                            ? card.color
+                                            : "var(--text-muted)",
                                         display: "block",
                                         marginTop: 2,
                                     }}
@@ -658,7 +649,7 @@ function EmotionSelector({
 
 export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (data: any) => void, onCancel: () => void, initialData?: any }) {
     const [step, setStep] = useState(0);
-    const { audioEnabled, isPlaying, toggleAudio, playText } = useVoiceGuidance();
+    const voice = useVoiceGuidance();
 
     const [selectedThoughts, setSelectedThoughts] = useState<string[]>(initialData?.thoughts ? initialData.thoughts.split(' | ').filter(Boolean) : []);
     const [customThought, setCustomThought] = useState(initialData?.customThought || "");
@@ -678,45 +669,49 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
         setShowNextPrompt(false);
     }, [step]);
 
-    // Voice playback for steps
+    // 🎙️ VOICE NARRATION SYSTEM
     useEffect(() => {
-        if (!audioEnabled) return;
+        if (!voice.audioEnabled) return;
 
-        let fallbackText = "";
-        let promptContext = "";
-
-        switch (step) {
-            case 0:
-                fallbackText = "Take a moment, and notice what's been on your mind today. Sometimes thoughts come as whispers, sometimes they feel loud and heavy. If any of these feel familiar, simply tap the one that resonates.";
-                promptContext = "The user has just opened their spiritual journal to reflect on their thoughts. Give them a very brief, warm, inviting welcome spoken directly to them. Ask them to notice what's on their mind today. Do not use any quotes or cliches.";
-                break;
-            case 1: {
-                const thoughtText = selectedThoughts.length > 0 ? selectedThoughts.join(" and ") : (customThought || "that thought");
-                fallbackText = `I see. That's a thought many people carry. Let's gently look at what it made you feel. Eckhart Tolle says, 'Emotion arises at the place where mind and body meet. It is the body's reaction to your mind.' What did that thought make you feel? Tap the feeling that comes closest.`;
-                promptContext = `The user indicated their current thought revolves around: "${thoughtText}". Compassionately acknowledge this specific thought (or theme). Ask them how this thought makes them feel emotionally. Keep it short, genuine, and human.`;
-                break;
+        // Static intros (cacheable)
+        const intros: Record<number, { text: string; key: string }> = {
+            0: {
+                text: "Take a moment... and notice what's been on your mind today. ... Sometimes thoughts come as quiet whispers... sometimes they feel loud and heavy. ... If anything below feels familiar... simply tap the one that resonates.",
+                key: "step-0-intro"
+            },
+            1: {
+                text: `Now... let's notice what that thought created inside you. ... Eckhart Tolle says... "Emotion arises at the place where mind and body meet. It is the body's reaction to your mind." ... What did that thought make you feel? ... Tap the feeling that comes closest.`,
+                key: "step-1-intro"
+            },
+            2: {
+                text: "Emotions are energy in motion... and that energy always lands somewhere in the body. ... If you can... close your eyes for a moment. ... Take one slow breath. ... Now notice... where in your body do you feel it? ... Tap the area that draws your attention.",
+                key: "step-2-intro"
             }
-            case 2: {
-                const emotionText = selectedEmotions.length > 0 ? selectedEmotions.join(" and ") : "that emotion";
-                fallbackText = `You're feeling ${emotionText}. Thank you for naming that. Simply naming a feeling is already an act of awareness. Emotions are energy in motion, and that energy always lands somewhere in the body. Close your eyes for a moment if you can. Take one slow breath. Now notice, where in your body do you feel it? Tap the area that draws your attention.`;
-                promptContext = `The user just identified they are feeling: "${emotionText}". Validate this feeling with deep empathy. Then, guide their attention from their mind down into their physical body. Ask them where in their body they currently feel this emotion holding its energy.`;
-                break;
-            }
-            case 3: {
-                const thoughtTxt = selectedThoughts.length > 0 ? selectedThoughts[0] : (customThought || "a painful thought");
-                const emotionTxt = selectedEmotions.length > 0 ? selectedEmotions[0] : "painful feelings";
-                const areaTxt = selectedArea?.label || "part of your body";
+        };
 
-                fallbackText = `Now, step back. You had a thought. It created a feeling. Which you felt in your body. But notice something. You are not the thought. You are not the emotion. You are not the sensation. You are the one who was watching them happen. That awareness, that witnessing presence, that is who you truly are.`;
-                promptContext = `The user traced their journey: A thought ("${thoughtTxt}") created an emotion ("${emotionTxt}"), which anchored in their body ("${areaTxt}"). Beautifully and briefly guide them to 'step back' and witness this cycle. Remind them that they are the silent, spacious Awareness watching this happen, not the thought or feeling itself.`;
-                break;
-            }
-            default:
-                break;
-        }
+        if (intros[step]) {
+            voice.playText(intros[step].text, intros[step].key);
+        } else if (step === 3) {
+            // Step 4 (Witness) — Fully Dynamic Narration
+            const t = [...selectedThoughts, customThought].filter(Boolean).join("... and... ");
+            const e = selectedEmotions.join("... ");
+            const body = selectedArea?.label || "part of your body";
 
-        if (fallbackText || promptContext) {
-            playText(fallbackText, promptContext);
+            const witnessText = `Now... step back. ...
+A thought arose... "${t}" ...
+Which created a feeling of... ${e}. ...
+Which you felt in your... ${body}. ...
+But notice something... ...
+You are not the thought.
+You are not the emotion.
+You are not the sensation. ...
+You... are the one... who was watching them happen. ...
+That awareness... that witnessing presence...
+that is who you truly are.`;
+
+            voice.playText(witnessText);
+        } else if (step === 5) {
+            voice.playText("Your reflection has been saved. ... By watching the thought... feeling the emotion... and noticing the body... you have already begun to dissolve the pattern.");
         }
     }, [step]);
 
@@ -731,13 +726,19 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
 
     const handleToggleThought = (label: string) => {
         setSelectedThoughts(prev => {
-            if (!prev.includes(label)) scrollToBottom();
+            if (!prev.includes(label)) {
+                scrollToBottom();
+                voice.playText(`I see... "${label}". ... That's a thought many of us carry. Let's gently look at what it created inside you.`);
+            }
             return prev.includes(label) ? prev.filter(t => t !== label) : [...prev, label];
         });
     };
     const handleToggleEmotion = (emotion: string) => {
         setSelectedEmotions(prev => {
-            if (!prev.includes(emotion)) scrollToBottom();
+            if (!prev.includes(emotion)) {
+                scrollToBottom();
+                voice.playText(`You're feeling ${emotion}. ... Thank you for naming that. ... Simply naming a feeling... is already an act of awareness.`);
+            }
             return prev.includes(emotion) ? prev.filter(e => e !== emotion) : [...prev, emotion];
         });
     };
@@ -761,7 +762,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
 
     return (
         <div ref={scrollRef} className="w-full h-full" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
-            <VoiceToggle enabled={audioEnabled} playing={isPlaying} onToggle={toggleAudio} />
+            <VoiceToggle enabled={voice.audioEnabled} playing={voice.isPlaying} loading={voice.isLoading} onToggle={voice.toggleAudio} />
             <div className="relative z-10 w-full max-w-xl mx-auto pb-32">
                 {step < 5 && <StepTracker current={step} />}
 
@@ -772,21 +773,21 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
                         {step === 0 && (
                             <motion.div key="step0" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-8">
                                 <motion.div variants={fadeUp} className="text-center space-y-2">
-                                    <h2 style={{ fontSize: 28, fontFamily: "'Georgia', serif", color: "white" }}>What's on your mind?</h2>
+                                    <h2 style={{ fontSize: 28, fontFamily: "'Georgia', serif", color: "var(--text-primary)" }}>What's on your mind?</h2>
                                 </motion.div>
 
-                                <motion.div variants={fadeUp} style={{ padding: "20px 24px", borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                                    <p style={{ fontSize: 15, color: "rgba(255,255,255,0.6)", fontStyle: "italic", fontFamily: "'Georgia', serif", lineHeight: 1.6 }}>
+                                <motion.div variants={fadeUp} style={{ padding: "20px 24px", borderRadius: 16, background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
+                                    <p style={{ fontSize: 15, color: "var(--text-muted)", fontStyle: "italic", fontFamily: "'Georgia', serif", lineHeight: 1.6 }}>
                                         "The beginning of freedom is the realization that you are not the thinker."
                                     </p>
-                                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 8, letterSpacing: "0.05em", textTransform: "uppercase" }}>— Eckhart Tolle</p>
+                                    <p style={{ fontSize: 12, color: "var(--text-disabled)", marginTop: 8, letterSpacing: "0.05em", textTransform: "uppercase" }}>— Eckhart Tolle</p>
                                 </motion.div>
 
                                 <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-4">
-                                    <p style={{ fontSize: 16, color: "rgba(255,255,255,0.85)", fontFamily: "'Georgia', serif" }}>
+                                    <p style={{ fontSize: 16, color: "var(--text-primary)", fontFamily: "'Georgia', serif", opacity: 0.9 }}>
                                         Did any of these thoughts come up?
                                     </p>
-                                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontStyle: "italic", marginTop: -8 }}>Tap all that sound familiar — or write your own below</p>
+                                    <p style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic", marginTop: -8 }}>Tap all that sound familiar — or write your own below</p>
                                     <div className="flex flex-col gap-3 mt-4">
                                         <ThoughtSelector
                                             selectedThoughts={selectedThoughts}
@@ -819,16 +820,16 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
                         {step === 1 && (
                             <motion.div key="step1" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-8">
                                 <motion.div variants={fadeUp} className="text-center space-y-2">
-                                    <h2 style={{ fontSize: 28, fontFamily: "'Georgia', serif", color: "white" }}>What did that make you feel?</h2>
-                                    <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontFamily: "'Georgia', serif" }}>Name the emotions simply, without judging them.</p>
+                                    <h2 style={{ fontSize: 28, fontFamily: "'Georgia', serif", color: "var(--text-primary)" }}>What did that make you feel?</h2>
+                                    <p style={{ fontSize: 15, color: "var(--text-muted)", fontFamily: "'Georgia', serif" }}>Name the emotions simply, without judging them.</p>
                                 </motion.div>
 
                                 {(selectedThoughts.length > 0 || customThought) && (
-                                    <motion.div variants={fadeUp} style={{ padding: "16px 20px", borderRadius: 16, background: "rgba(209,107,165,0.05)", borderLeft: "3px solid rgba(209,107,165,0.5)" }}>
-                                        <p style={{ fontSize: 12, color: "rgba(209,107,165,0.7)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 6 }}>Your thought was:</p>
+                                    <motion.div variants={fadeUp} style={{ padding: "16px 20px", borderRadius: 16, background: "var(--accent-primary-muted)", borderLeft: `3px solid var(--accent-primary)` }}>
+                                        <p style={{ fontSize: 12, color: "var(--accent-primary)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 6, opacity: 0.7 }}>Your thought was:</p>
                                         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                                            {selectedThoughts.map(t => <p key={t} style={{ fontSize: 15, color: "rgba(255,255,255,0.8)", fontFamily: "'Georgia', serif", fontStyle: "italic" }}>"{t}"</p>)}
-                                            {customThought && <p style={{ fontSize: 15, color: "rgba(255,255,255,0.8)", fontFamily: "'Georgia', serif", fontStyle: "italic" }}>"{customThought}"</p>}
+                                            {selectedThoughts.map(t => <p key={t} style={{ fontSize: 15, color: "var(--text-primary)", fontFamily: "'Georgia', serif", fontStyle: "italic", opacity: 0.9 }}>"{t}"</p>)}
+                                            {customThought && <p key="custom" style={{ fontSize: 15, color: "var(--text-primary)", fontFamily: "'Georgia', serif", fontStyle: "italic", opacity: 0.9 }}>"{customThought}"</p>}
                                         </div>
                                     </motion.div>
                                 )}
@@ -860,14 +861,14 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
                         {step === 2 && (
                             <motion.div key="step2" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-8">
                                 <motion.div variants={fadeUp} className="text-center space-y-2">
-                                    <h2 style={{ fontSize: 28, fontFamily: "'Georgia', serif", color: "white" }}>Where do you feel it in your body?</h2>
-                                    <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontFamily: "'Georgia', serif" }}>Emotion is energy in motion. It always lands somewhere physical.</p>
+                                    <h2 style={{ fontSize: 28, fontFamily: "'Georgia', serif", color: "var(--text-primary)" }}>Where do you feel it in your body?</h2>
+                                    <p style={{ fontSize: 15, color: "var(--text-muted)", fontFamily: "'Georgia', serif" }}>Emotion is energy in motion. It always lands somewhere physical.</p>
                                 </motion.div>
 
                                 {selectedEmotions.length > 0 && (
                                     <motion.div variants={fadeUp} className="flex flex-wrap gap-2 justify-center pb-4">
                                         {selectedEmotions.map(e => (
-                                            <span key={e} style={{ padding: "6px 14px", borderRadius: 100, background: "rgba(171,206,201,0.1)", border: "1px solid rgba(171,206,201,0.2)", color: "rgba(171,206,201,0.8)", fontSize: 13 }}>{e}</span>
+                                            <span key={e} style={{ padding: "6px 14px", borderRadius: 100, background: "var(--accent-secondary-muted)", border: "1px solid var(--accent-secondary-border)", color: "var(--accent-secondary)", fontSize: 13 }}>{e}</span>
                                         ))}
                                     </motion.div>
                                 )}
@@ -904,18 +905,18 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
                         {step === 3 && (
                             <motion.div key="step3" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-6">
                                 <motion.div variants={fadeUp} className="text-center space-y-2">
-                                    <h2 style={{ fontSize: 28, fontFamily: "'Georgia', serif", color: "white" }}>Step back and witness</h2>
+                                    <h2 style={{ fontSize: 28, fontFamily: "'Georgia', serif", color: "var(--text-primary)" }}>Step back and witness</h2>
                                 </motion.div>
 
-                                <motion.div variants={fadeUp} style={{ padding: "24px", borderRadius: 16, background: "rgba(255,255,255,0.03)", textAlign: "center" }}>
-                                    <p style={{ fontSize: 16, color: "rgba(255,255,255,0.7)", fontFamily: "'Georgia', serif", lineHeight: 1.6 }}>
+                                <motion.div variants={fadeUp} style={{ padding: "24px", borderRadius: 16, background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                                    <p style={{ fontSize: 16, color: "var(--text-primary)", fontFamily: "'Georgia', serif", lineHeight: 1.6, opacity: 0.8 }}>
                                         You are not the thought, not the emotion, not the sensation.<br />
-                                        <span style={{ color: "white", fontStyle: "italic" }}>You are the one who is watching them happen.</span>
+                                        <span style={{ color: "var(--accent-primary)", fontStyle: "italic", opacity: 1 }}>You are the one who is watching them happen.</span>
                                     </p>
                                 </motion.div>
 
                                 <motion.div variants={fadeUp} className="space-y-4">
-                                    <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)" }}>What you witnessed today:</p>
+                                    <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)" }}>What you witnessed today:</p>
                                     <div className="flex flex-col gap-3">
                                         <SummaryCard label="Thought" content={[...selectedThoughts, customThought].filter(Boolean).join(' | ')} />
                                         <SummaryCard label="Emotion" content={selectedEmotions.join(", ")} color="pink" />

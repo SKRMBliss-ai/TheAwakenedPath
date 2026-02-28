@@ -3,13 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────
 export const tokens = {
-    plum: "#0D0014",
-    deep: "#160020",
-    mid: "#2D1040",
-    magenta: "#D16BA5",
-    teal: "#ABCEC9",
-    muted: "rgba(255,255,255,0.08)",
-    border: "rgba(255,255,255,0.07)",
+    plum: "var(--bg-primary)",
+    deep: "var(--bg-secondary)",
+    mid: "var(--bg-surface)",
+    magenta: "var(--accent-primary)",
+    teal: "var(--accent-secondary)",
+    muted: "var(--text-muted)",
+    border: "var(--border-subtle)",
 };
 
 // ─── NOISE TEXTURE SVG (grain overlay) ────────────────────────────
@@ -29,9 +29,9 @@ export const SectionLabel = ({ children }: { children: React.ReactNode }) => (
         <div style={{ height: 1, width: 40, background: `linear-gradient(90deg, ${tokens.magenta}60, transparent)` }} />
         <span style={{
             fontFamily: "monospace", fontSize: 9, letterSpacing: "0.5em",
-            textTransform: "uppercase", color: "rgba(255,255,255,0.2)", whiteSpace: "nowrap"
+            textTransform: "uppercase", color: "var(--text-muted)", whiteSpace: "nowrap"
         }}>{children}</span>
-        <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.04))` }} />
+        <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, transparent, var(--border-subtle))` }} />
     </div>
 );
 
@@ -56,7 +56,7 @@ export const WhisperInput = ({ label, placeholder, multiline, value, onChange }:
                     y: focused || hasValue ? -24 : 0,
                     fontSize: focused || hasValue ? 9 : 11,
                     opacity: focused ? 0.6 : hasValue ? 0.3 : 0.2,
-                    color: focused ? tokens.teal : "white",
+                    color: focused ? tokens.teal : "var(--text-primary)",
                     letterSpacing: focused || hasValue ? "0.5em" : "0.35em",
                 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -81,7 +81,7 @@ export const WhisperInput = ({ label, placeholder, multiline, value, onChange }:
                     border: "none", outline: "none", resize: "none",
                     fontFamily: "Georgia, 'Times New Roman', serif",
                     fontSize: 28, fontWeight: 300, fontStyle: "italic",
-                    color: "rgba(255,255,255,0.85)",
+                    color: "var(--text-primary)",
                     lineHeight: 1.6, paddingBottom: 12, paddingTop: 4,
                     caretColor: tokens.teal,
                 } as any}
@@ -89,7 +89,7 @@ export const WhisperInput = ({ label, placeholder, multiline, value, onChange }:
 
             {/* Bottom border — animated */}
             <div style={{ position: "relative", height: 1 }}>
-                <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.06)" }} />
+                <div style={{ position: "absolute", inset: 0, background: "var(--border-subtle)" }} />
                 <motion.div
                     animate={{ scaleX: focused ? 1 : 0, opacity: focused ? 1 : 0 }}
                     transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
@@ -226,9 +226,9 @@ export const EpochDivider = ({ label }: { label: string }) => (
         <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, ${tokens.magenta}50, transparent)` }} />
         <span style={{
             fontSize: 8, letterSpacing: "0.6em", textTransform: "uppercase",
-            color: "rgba(255,255,255,0.2)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+            color: "var(--text-muted)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
         } as any}>{label}</span>
-        <div style={{ height: 1, width: 32, background: "rgba(255,255,255,0.04)" }} />
+        <div style={{ height: 1, width: 32, background: "var(--border-subtle)" }} />
     </div>
 );
 
@@ -262,25 +262,25 @@ export const EpochCard = ({ date, preview, bucket = "today", emotions, onClick }
             />
             <motion.div
                 animate={{
-                    borderColor: hovered ? `rgba(255,255,255,${0.1 * intensity})` : "rgba(255,255,255,0.04)",
-                    background: hovered ? `rgba(255,255,255,${0.02 * intensity})` : "transparent",
+                    borderColor: hovered ? "var(--border-default)" : "var(--border-subtle)",
+                    background: hovered ? "var(--bg-secondary)" : "transparent",
                 } as any}
                 transition={{ duration: 0.6 }}
                 style={{
                     position: "relative",
                     padding: bucket === "archive" ? "12px 16px" : "24px 32px",
-                    borderRadius: 24, border: "1px solid rgba(255,255,255,0.04)",
+                    borderRadius: 24, border: "1px solid var(--border-subtle)",
                 } as any}
             >
                 <div style={{
                     fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase",
-                    color: `rgba(255,255,255,${0.15 * intensity})`,
+                    color: "var(--text-muted)",
                     fontFamily: "'DM Sans', sans-serif", fontWeight: 700, marginBottom: 10,
                 } as any}>{date}</div>
 
                 <p style={{
                     fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 300,
-                    fontSize, color: `rgba(255,255,255,${0.5 + 0.35 * intensity})`,
+                    fontSize, color: "var(--text-primary)",
                     lineHeight: 1.6,
                     overflow: "hidden",
                     display: "-webkit-box",
@@ -316,13 +316,13 @@ export const ProgressFilament = ({ progress = 0.4, label }: any) => {
                 <div style={{
                     display: "flex", justifyContent: "space-between", marginBottom: 12,
                     fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.2)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                    color: "var(--text-muted)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
                 } as any}>
                     <span>{label}</span>
                     <span style={{ color: tokens.teal }}>{Math.round(progress * 100)}%</span>
                 </div>
             )}
-            <div style={{ height: 1, background: "rgba(255,255,255,0.05)", borderRadius: 1, position: "relative" }}>
+            <div style={{ height: 1, background: "var(--border-subtle)", borderRadius: 1, position: "relative" }}>
                 <motion.div
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: progress }}
@@ -434,7 +434,7 @@ export const SacredToast = ({ message, visible }: { message: string; visible: bo
                 }} />
                 <span style={{
                     fontSize: 8, letterSpacing: "0.45em", textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.65)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                    color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
                 }}>{message}</span>
             </motion.div>
         )}
@@ -454,9 +454,9 @@ export const NavPill = ({ onClick, children }: { onClick?: () => void; children:
             style={{
                 display: "flex", alignItems: "center", gap: 10,
                 padding: "8px 18px 8px 12px", borderRadius: 100, cursor: "pointer",
-                background: hovered ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)",
-                border: `1px solid ${hovered ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)"}`,
-                color: hovered ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.25)",
+                background: hovered ? "var(--bg-secondary)" : "var(--bg-surface)",
+                border: `1px solid ${hovered ? "var(--border-default)" : "var(--border-subtle)"}`,
+                color: hovered ? "var(--text-primary)" : "var(--text-muted)",
                 fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
                 fontSize: 8, letterSpacing: "0.4em", textTransform: "uppercase",
                 transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",

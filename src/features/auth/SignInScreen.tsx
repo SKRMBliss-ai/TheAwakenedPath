@@ -42,7 +42,7 @@ export const SignInScreen = () => {
     };
 
     return (
-        <div className="min-h-screen w-full relative flex flex-col items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #59445C 0%, #3a2a3c 100%)' }}>
+        <div className="min-h-screen w-full relative flex flex-col items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #0B0014 0%, #050008 100%)' }}>
             {/* Ambient Background matching app theme */}
             <div className="absolute inset-0 z-0">
                 <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] rounded-full bg-[#C65F9D]/10 blur-[150px] animate-pulse-slow" />

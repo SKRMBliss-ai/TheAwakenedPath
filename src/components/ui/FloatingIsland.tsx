@@ -45,7 +45,7 @@ const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, setActiveTab
                         }}
                         className={cn(
                             "relative flex flex-col items-center justify-center p-2 transition-all duration-500 outline-none",
-                            isActive ? "text-[#3a2a3c] scale-110" : "text-white/70 hover:text-white/90"
+                            isActive ? "text-[var(--bg-primary)] scale-110" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                         )}
                         style={{ width: `calc(100% / ${tabs.length})` }}
                     >
@@ -57,7 +57,7 @@ const FloatingIsland: React.FC<FloatingIslandProps> = ({ activeTab, setActiveTab
 
                         {/* Bioluminescent Glow */}
                         {isActive && (
-                            <div className="absolute -bottom-1 w-1 h-1 bg-[#ABCEC9] rounded-full shadow-[0_0_10px_#ABCEC9]" />
+                            <div className="absolute -bottom-1 w-1 h-1 bg-[var(--accent-secondary)] rounded-full shadow-[0_0_10px_var(--accent-secondary)]" />
                         )}
                     </button>
                 );
