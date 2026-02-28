@@ -6,8 +6,7 @@ export async function generateStepAudioUrl(stepText: string): Promise<string | n
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                text: stepText,
-                useOpenAI: true
+                text: stepText
             })
         });
 
