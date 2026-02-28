@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-// The "Director's Notes" for Gemini 2.5 Flash TTS
+// Director's Notes for GPT-4o Audio / Realtime
 export const VOICE_SYSTEM_PROMPT = `
 AUDIO PROFILE:
 You are a gentle, warm spiritual guide — like a compassionate therapist 
@@ -34,49 +34,49 @@ DIRECTOR'S NOTES:
 - If text contains an emoji, skip it silently.
 `;
 
-const GEMINI_TTS_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+const OPENAI_TTS_ENDPOINT = "https://api.openai.com/v1/chat/completions";
 
 export async function generateStepAudio(stepText: string): Promise<string | null> {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
     if (!apiKey) {
-        console.warn("No Gemini API Key found for TTS.");
+        console.warn("No OpenAI API Key found for TTS.");
         return null;
     }
 
     try {
         const response = await fetch(
-            `${GEMINI_TTS_ENDPOINT}?key=${apiKey}`,
+            OPENAI_TTS_ENDPOINT,
             {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`
+                },
                 body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: `${VOICE_SYSTEM_PROMPT}\n\nSpeak the following:\n\n${stepText}`
-                        }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.2, // Keep it consistent
-                        // Note: Gemini 2.5 Flash does not officially support responseModalities: ["AUDIO"] via REST in the exact same shape as the preview, 
-                        // but we will simulate it or rely on future availability. For the purpose of this demo, if the API doesn't return audio,
-                        // we'll fail gracefully.
-                        // We omit the actual AUDIO modality here for stability unless specifically supported by the user's api key constraints.
-                        // 
-                        // To make this fully functional with actual TTS, one would use the Cloud Text-to-Speech API or the specific gemini audio endpoints
-                        // Since this is a flash prompt, we'll implement the structure for it.
-                    }
+                    model: "gpt-4o-audio-preview",
+                    modalities: ["text", "audio"],
+                    audio: { voice: "nova", format: "wav" },
+                    messages: [
+                        {
+                            role: "system",
+                            content: VOICE_SYSTEM_PROMPT
+                        },
+                        {
+                            role: "user",
+                            content: `Speak the following respectfully and deliberately:\n\n${stepText}`
+                        }
+                    ]
                 })
             }
         );
 
         if (!response.ok) {
-            console.error("Gemini TTS Error:", await response.text());
+            console.error("OpenAI Audio Error:", await response.text());
             return null;
         }
 
         const data = await response.json();
-        // Extract base64 audio if it was generated (this depends on the exact preview API structure)
-        const audioBase64 = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+        const audioBase64 = data.choices?.[0]?.message?.audio?.data;
         return audioBase64 || null;
 
     } catch (e) {
@@ -85,54 +85,9 @@ export async function generateStepAudio(stepText: string): Promise<string | null
     }
 }
 
-// Convert PCM/Wav base64 to Blob
-function createWavBlob(bytes: Uint8Array, sampleRate: number, numChannels: number, bitsPerSample: number) {
-    const blockAlign = numChannels * bitsPerSample / 8;
-    const byteRate = sampleRate * blockAlign;
-    const dataSize = bytes.length;
-    const buffer = new ArrayBuffer(44 + dataSize);
-    const view = new DataView(buffer);
-
-    // RIFF chunk descriptor
-    writeString(view, 0, 'RIFF');
-    view.setUint32(4, 36 + dataSize, true);
-    writeString(view, 8, 'WAVE');
-
-    // fmt sub-chunk
-    writeString(view, 12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true); // PCM format
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, byteRate, true);
-    view.setUint16(32, blockAlign, true);
-    view.setUint16(34, bitsPerSample, true);
-
-    // data sub-chunk
-    writeString(view, 36, 'data');
-    view.setUint32(40, dataSize, true);
-
-    // Write PCM data
-    const pcmData = new Uint8Array(buffer, 44, dataSize);
-    pcmData.set(bytes);
-
-    return new Blob([buffer], { type: 'audio/wav' });
-}
-
-function writeString(view: DataView, offset: number, string: string) {
-    for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i));
-    }
-}
-
 export function playAudioBase64(base64Data: string): HTMLAudioElement {
-    const raw = atob(base64Data);
-    const bytes = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-
-    // Assuming 24kHz mono PCM s16le from Gemini TTS
-    const wavBlob = createWavBlob(bytes, 24000, 1, 16);
-    const url = URL.createObjectURL(wavBlob);
+    // OpenAI provides a complete WAV file payload directly in base64
+    const url = `data:audio/wav;base64,${base64Data}`;
     const audio = new Audio(url);
     audio.play();
     return audio;
