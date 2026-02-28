@@ -41,7 +41,7 @@ const THOUGHT_GROUPS = [
         id: "rejection",
         emoji: "💔",
         label: "Feeling rejected or unseen",
-        color: "#F48FB1",
+        color: "#C65F9D", // Muted Rose
         thoughts: [
             "Did they just ignore me?",
             "They don't want me around",
@@ -52,7 +52,7 @@ const THOUGHT_GROUPS = [
         id: "self-doubt",
         emoji: "😔",
         label: "Doubting myself",
-        color: "#CE93D8",
+        color: "#ABCEC9", // Teal Glow
         thoughts: [
             "I'm not good enough",
             "I messed up again",
@@ -63,7 +63,7 @@ const THOUGHT_GROUPS = [
         id: "overwhelm",
         emoji: "😰",
         label: "Worry & overwhelm",
-        color: "#FFB74D",
+        color: "#F4E3DA", // Creamy Beige
         thoughts: [
             "It's all too much",
             "What if things go wrong?",
@@ -74,7 +74,7 @@ const THOUGHT_GROUPS = [
         id: "resentment",
         emoji: "😤",
         label: "Frustration with life or others",
-        color: "#E57373",
+        color: "#C65F9D", // Muted Rose
         thoughts: [
             "That was so unfair",
             "Everyone else has it together",
@@ -88,7 +88,7 @@ const EMOTION_CARDS = [
         id: "fear",
         emoji: "😰",
         label: "Fear & Anxiety",
-        color: "#FFB74D",
+        color: "#F4E3DA", // Creamy Beige
         description: "Worry, dread, unease",
         nuances: ["Anxious", "Panicked", "Overwhelmed", "Worried", "Insecure"],
     },
@@ -96,7 +96,7 @@ const EMOTION_CARDS = [
         id: "sadness",
         emoji: "😢",
         label: "Sadness & Grief",
-        color: "#90CAF9",
+        color: "#ABCEC9", // Teal Glow
         description: "Loss, loneliness, heaviness",
         nuances: ["Lonely", "Heartbroken", "Hopeless", "Disappointed", "Sorrowful"],
     },
@@ -104,7 +104,7 @@ const EMOTION_CARDS = [
         id: "anger",
         emoji: "😤",
         label: "Anger & Frustration",
-        color: "#E57373",
+        color: "#C65F9D", // Muted Rose
         description: "Irritation, resentment, heat",
         nuances: ["Irritated", "Resentful", "Furious", "Annoyed", "Jealous"],
     },
@@ -112,7 +112,7 @@ const EMOTION_CARDS = [
         id: "shame",
         emoji: "😳",
         label: "Shame & Worthlessness",
-        color: "#CE93D8",
+        color: "#C65F9D", // Muted Rose
         description: "Guilt, embarrassment, not enough",
         nuances: ["Embarrassed", "Guilty", "Humiliated", "Defective", "Inadequate"],
     },
@@ -120,7 +120,7 @@ const EMOTION_CARDS = [
         id: "exhaustion",
         emoji: "😴",
         label: "Exhaustion & Numbness",
-        color: "#A5D6A7",
+        color: "#F4E3DA", // Creamy Beige
         description: "Drained, disconnected, empty",
         nuances: ["Drained", "Apathetic", "Disconnected", "Burnt out", "Empty"],
     },
@@ -128,7 +128,7 @@ const EMOTION_CARDS = [
         id: "peace",
         emoji: "😌",
         label: "Peace & Gratitude",
-        color: "#80CBC4",
+        color: "#ABCEC9", // Teal Glow
         description: "Calm, relief, contentment",
         nuances: ["Calm", "Relieved", "Hopeful", "Appreciative", "Content"],
     },
