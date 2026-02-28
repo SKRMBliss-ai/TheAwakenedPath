@@ -1,4 +1,4 @@
-export async function generateStepAudioUrl(stepText: string): Promise<string | null> {
+export async function generateStepAudioUrl(stepText: string, promptContext?: string): Promise<string | null> {
     try {
         const endpoint = import.meta.env.DEV
             ? "https://texttospeech-cktimgs4pa-uc.a.run.app"
@@ -10,7 +10,8 @@ export async function generateStepAudioUrl(stepText: string): Promise<string | n
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                text: stepText
+                text: stepText,
+                promptContext: promptContext
             })
         });
 
@@ -54,7 +55,7 @@ export function useVoiceGuidance() {
         });
     };
 
-    const playText = async (text: string) => {
+    const playText = async (text: string, promptContext?: string) => {
         if (!audioEnabled) return;
 
         if (currentAudio) {
@@ -66,7 +67,7 @@ export function useVoiceGuidance() {
         await new Promise(r => setTimeout(r, 500));
 
         try {
-            const url = await generateStepAudioUrl(text);
+            const url = await generateStepAudioUrl(text, promptContext);
             if (url) {
                 const audio = playAudioUrl(url);
                 setCurrentAudio(audio);

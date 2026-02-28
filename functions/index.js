@@ -13,9 +13,9 @@ const ttsClient = new textToSpeech.TextToSpeechClient();
 // We are routing directly to Google Cloud Text-To-Speech (LM Journey Voices).
 
 exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
-    const { text, gender = 'FEMALE' } = req.body;
+    let { text, promptContext, gender = 'FEMALE' } = req.body;
 
-    if (!text) return res.status(400).send("No text provided.");
+    if (!text && !promptContext) return res.status(400).send("No text or context provided.");
 
     // Voice Tier 1: Journey Voices (Highly expressive LM-based voices equivalent to Gemini Native)
     const TIER_1_VOICE = gender === 'MALE' ? 'en-US-Journey-D' : 'en-US-Journey-F';
@@ -23,34 +23,69 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
     // Voice Tier 2: Studio / Neural (DeepMind) - Very human-like fallbacks
     const TIER_2_VOICE = gender === 'MALE' ? 'en-US-Studio-Q' : 'en-US-Studio-O';
 
+    // If context is provided, use Gemini to intelligently generate the spoken script
+    if (promptContext) {
+        try {
+            const genAI = new GoogleGenerativeAI(geminiKey.value());
+            const model = genAI.getGenerativeModel({
+                model: "gemini-2.0-flash",
+                systemInstruction: `
+                    You are a compassionate, deeply intuitive, and highly human spiritual guide communicating via voice.
+                    The user has provided context about what is happening on their screen or in their mind.
+                    Your goal is to generate the EXPERIENTIAL AUDIO SCRIPT to guide them in this exact moment.
+
+                    CRITICAL VOICE RULES:
+                    1. DO NOT ever use ellipses ( "..." ) because the Google TTS engine will read them out loud as "dot dot dot". This ruins the immersion!
+                    2. Instead, use commas (,) for short breath pauses and periods (.) for reflective pauses.
+                    3. Do not include quotes, stage directions, or speaker labels. Return ONLY the spoken words.
+                    4. Keep it relatively short (1 to 3 sentences max) unless instructed otherwise.
+                    5. Be warm, empathetic, and speak directly to the user (e.g. "Ah, I see you chose...", "Notice how that feels...").
+                `
+            });
+            const result = await model.generateContent(promptContext);
+            const response = await result.response;
+            text = response.text().trim();
+            console.log("Dynamically generated intelligent voice script:", text);
+        } catch (e) {
+            console.warn("Failed to generate dynamic context voice, falling back to basic if present.", e.message);
+            if (!text) return res.status(500).send("Failed to synthesize dynamic voice.");
+        }
+    }
+
     // Function to add meditative pauses and rhythmic breaks
     function meditationify(rawText) {
+        // Strip any accidental ellipses from the raw text to strictly prevent "dot dot dot" sound
+        let cleanText = rawText.replace(/\.{2,}/g, '.');
         // Add 2s break after sentences for deep absorption
-        let ssml = rawText.replace(/([.?!])\s+/g, '$1 <break time="2000ms"/> ');
+        let ssml = cleanText.replace(/([.?!])\s+/g, '$1 <break time="1500ms"/> ');
         // Add 1s break after commas/semicolons
-        ssml = ssml.replace(/([,;])\s+/g, '$1 <break time="1000ms"/> ');
+        ssml = ssml.replace(/([,;])\s+/g, '$1 <break time="800ms"/> ');
         return `<speak>${ssml}</speak>`;
     }
 
     const ssmlContent = meditationify(text);
 
-    async function synthesize(voiceName) {
+    async function synthesize(voiceName, isJourney) {
         const request = {
-            input: { ssml: ssmlContent },
+            input: isJourney ? { text: text } : { ssml: ssmlContent },
             voice: { languageCode: 'en-US', name: voiceName },
             audioConfig: {
                 audioEncoding: 'MP3',
-                speakingRate: 0.85,   // Slightly faster for better flow (from 0.8)
-                volumeGainDb: 2.0     // Slight boost for clarity at low volume
             },
         };
+
+        if (!isJourney) {
+            request.audioConfig.speakingRate = 0.85;
+            request.audioConfig.volumeGainDb = 2.0;
+        }
+
         const [response] = await ttsClient.synthesizeSpeech(request);
         return response.audioContent;
     }
 
     try {
         console.log(`Attempting Tier 1 Meditative Voice: ${TIER_1_VOICE}`);
-        const audio = await synthesize(TIER_1_VOICE);
+        const audio = await synthesize(TIER_1_VOICE, true);
         res.set('Content-Type', 'audio/mpeg');
         return res.send(audio);
     } catch (tier1Error) {
@@ -58,7 +93,7 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
 
         try {
             console.log(`Attempting Tier 2 Voice: ${TIER_2_VOICE}`);
-            const audio = await synthesize(TIER_2_VOICE);
+            const audio = await synthesize(TIER_2_VOICE, false);
             res.set('Content-Type', 'audio/mpeg');
             return res.send(audio);
         } catch (tier2Error) {

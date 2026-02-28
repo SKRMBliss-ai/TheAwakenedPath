@@ -682,37 +682,41 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
     useEffect(() => {
         if (!audioEnabled) return;
 
-        let txt = "";
+        let fallbackText = "";
+        let promptContext = "";
 
         switch (step) {
             case 0:
-                txt = "Take a moment... and notice what's been on your mind today. ... Sometimes thoughts come as whispers... sometimes they feel loud and heavy. ... If any of these feel familiar, simply tap the one that resonates.";
+                fallbackText = "Take a moment, and notice what's been on your mind today. Sometimes thoughts come as whispers, sometimes they feel loud and heavy. If any of these feel familiar, simply tap the one that resonates.";
+                promptContext = "The user has just opened their spiritual journal to reflect on their thoughts. Give them a very brief, warm, inviting welcome spoken directly to them. Ask them to notice what's on their mind today. Do not use any quotes or cliches.";
                 break;
             case 1: {
-                const thoughtText = selectedThoughts.length > 0 ? selectedThoughts[0] : (customThought || "that thought");
-                txt = `I see... '${thoughtText}' ... That's a thought many people carry. Let's gently look at what it made you feel. ... Eckhart Tolle says... 'Emotion arises at the place where mind and body meet. It is the body's reaction to your mind.' ... What did that thought make you feel? ... Tap the feeling that comes closest.`;
+                const thoughtText = selectedThoughts.length > 0 ? selectedThoughts.join(" and ") : (customThought || "that thought");
+                fallbackText = `I see. That's a thought many people carry. Let's gently look at what it made you feel. Eckhart Tolle says, 'Emotion arises at the place where mind and body meet. It is the body's reaction to your mind.' What did that thought make you feel? Tap the feeling that comes closest.`;
+                promptContext = `The user indicated their current thought revolves around: "${thoughtText}". Compassionately acknowledge this specific thought (or theme). Ask them how this thought makes them feel emotionally. Keep it short, genuine, and human.`;
                 break;
             }
             case 2: {
                 const emotionText = selectedEmotions.length > 0 ? selectedEmotions.join(" and ") : "that emotion";
-                txt = `You're feeling ${emotionText}. ... Thank you for naming that. Simply naming a feeling... is already an act of awareness. ... Emotions are energy in motion... and that energy always lands somewhere in the body. ... Close your eyes for a moment if you can. ... Take one slow breath. ... Now notice... where in your body do you feel it? ... Tap the area that draws your attention.`;
+                fallbackText = `You're feeling ${emotionText}. Thank you for naming that. Simply naming a feeling is already an act of awareness. Emotions are energy in motion, and that energy always lands somewhere in the body. Close your eyes for a moment if you can. Take one slow breath. Now notice, where in your body do you feel it? Tap the area that draws your attention.`;
+                promptContext = `The user just identified they are feeling: "${emotionText}". Validate this feeling with deep empathy. Then, guide their attention from their mind down into their physical body. Ask them where in their body they currently feel this emotion holding its energy.`;
                 break;
             }
             case 3: {
-                const areaInfo = selectedArea ? `${selectedArea.description}. ... Here's a gentle suggestion... ${selectedArea.helps}` : "Where you feel it is important.";
                 const thoughtTxt = selectedThoughts.length > 0 ? selectedThoughts[0] : (customThought || "a painful thought");
                 const emotionTxt = selectedEmotions.length > 0 ? selectedEmotions[0] : "painful feelings";
                 const areaTxt = selectedArea?.label || "part of your body";
 
-                txt = `${selectedArea ? areaInfo + " ... " : ""}Now... step back. ... You had a thought... '${thoughtTxt}'. ... It created a feeling... ${emotionTxt}. ... Which you felt in your... ${areaTxt}. ... But notice something... You are not the thought. You are not the emotion. You are not the sensation. ... You... are the one... who was watching them happen. ... That awareness... that witnessing presence... that is who you truly are.`;
+                fallbackText = `Now, step back. You had a thought. It created a feeling. Which you felt in your body. But notice something. You are not the thought. You are not the emotion. You are not the sensation. You are the one who was watching them happen. That awareness, that witnessing presence, that is who you truly are.`;
+                promptContext = `The user traced their journey: A thought ("${thoughtTxt}") created an emotion ("${emotionTxt}"), which anchored in their body ("${areaTxt}"). Beautifully and briefly guide them to 'step back' and witness this cycle. Remind them that they are the silent, spacious Awareness watching this happen, not the thought or feeling itself.`;
                 break;
             }
             default:
                 break;
         }
 
-        if (txt) {
-            playText(txt);
+        if (fallbackText || promptContext) {
+            playText(fallbackText, promptContext);
         }
     }, [step]);
 
