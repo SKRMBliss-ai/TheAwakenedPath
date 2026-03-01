@@ -114,9 +114,9 @@ export const themes: Record<ThemeMode, Theme> = {
         glowGold: "rgba(255, 215, 0, 0.35)",
 
         // Borders — boosted for visibility on deep void
-        borderDefault: "rgba(244, 227, 218, 0.12)",
-        borderSubtle: "rgba(244, 227, 218, 0.06)",
-        borderGlass: "rgba(244, 227, 218, 0.18)",
+        borderDefault: "rgba(244, 227, 218, 0.25)",
+        borderSubtle: "rgba(244, 227, 218, 0.15)",
+        borderGlass: "rgba(244, 227, 218, 0.30)",
 
         // Shadows & Effects
         shadow: "none",
@@ -125,17 +125,17 @@ export const themes: Record<ThemeMode, Theme> = {
         ambientGlow: "radial-gradient(ellipse at 50% 0%, rgba(209,107,165,0.08), transparent 70%)",
 
         // Component-specific — boosted for deep void
-        chipBg: "rgba(255, 255, 255, 0.06)",
-        chipBorder: "rgba(255, 255, 255, 0.12)",
-        chipSelectedBg: "rgba(209, 107, 165, 0.18)",
-        chipSelectedBorder: "rgba(209, 107, 165, 0.45)",
-        quoteBg: "rgba(255, 255, 255, 0.04)",
-        quoteBorder: "rgba(171, 206, 201, 0.25)",
-        navActiveBg: "rgba(209, 107, 165, 0.18)",
-        navActiveBorder: "rgba(209, 107, 165, 0.4)",
+        chipBg: "rgba(255, 255, 255, 0.08)",
+        chipBorder: "rgba(255, 255, 255, 0.25)",
+        chipSelectedBg: "rgba(209, 107, 165, 0.25)",
+        chipSelectedBorder: "rgba(209, 107, 165, 0.60)",
+        quoteBg: "rgba(255, 255, 255, 0.06)",
+        quoteBorder: "rgba(171, 206, 201, 0.40)",
+        navActiveBg: "rgba(209, 107, 165, 0.25)",
+        navActiveBorder: "rgba(209, 107, 165, 0.50)",
 
         // Toggle
-        toggleTrack: "rgba(244, 227, 218, 0.15)",
+        toggleTrack: "rgba(244, 227, 218, 0.25)",
         toggleThumb: "#F4E3DA",
         toggleIcon: "🌙",
     },
@@ -175,9 +175,9 @@ export const themes: Record<ThemeMode, Theme> = {
         glowGold: "rgba(200, 165, 0, 0.15)",
 
         // Borders — visible on linen background
-        borderDefault: "rgba(45, 31, 48, 0.14)",
-        borderSubtle: "rgba(45, 31, 48, 0.08)",
-        borderGlass: "rgba(45, 31, 48, 0.12)",
+        borderDefault: "rgba(45, 31, 48, 0.25)",
+        borderSubtle: "rgba(45, 31, 48, 0.15)",
+        borderGlass: "rgba(45, 31, 48, 0.22)",
 
         // Shadows & Effects — shadows replace glows in light mode
         shadow: "0 1px 4px rgba(45, 31, 48, 0.08)",
@@ -186,17 +186,17 @@ export const themes: Record<ThemeMode, Theme> = {
         ambientGlow: "none",
 
         // Component-specific — boosted for light bg
-        chipBg: "rgba(45, 31, 48, 0.05)",
-        chipBorder: "rgba(45, 31, 48, 0.14)",
-        chipSelectedBg: "rgba(158, 61, 117, 0.12)",
-        chipSelectedBorder: "rgba(158, 61, 117, 0.35)",
-        quoteBg: "rgba(61, 138, 128, 0.06)",
-        quoteBorder: "rgba(61, 138, 128, 0.25)",
-        navActiveBg: "rgba(158, 61, 117, 0.1)",
-        navActiveBorder: "rgba(158, 61, 117, 0.35)",
+        chipBg: "rgba(45, 31, 48, 0.08)",
+        chipBorder: "rgba(45, 31, 48, 0.25)",
+        chipSelectedBg: "rgba(158, 61, 117, 0.15)",
+        chipSelectedBorder: "rgba(158, 61, 117, 0.45)",
+        quoteBg: "rgba(61, 138, 128, 0.08)",
+        quoteBorder: "rgba(61, 138, 128, 0.35)",
+        navActiveBg: "rgba(158, 61, 117, 0.15)",
+        navActiveBorder: "rgba(158, 61, 117, 0.45)",
 
         // Toggle
-        toggleTrack: "rgba(45, 31, 48, 0.14)",
+        toggleTrack: "rgba(45, 31, 48, 0.25)",
         toggleThumb: "#2D1F30",
         toggleIcon: "☀️",
     },
