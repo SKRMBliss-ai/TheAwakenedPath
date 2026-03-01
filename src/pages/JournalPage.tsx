@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../theme/ThemeSystem';
 import { StepIndicator } from '../components/StepIndicator';
@@ -6,16 +6,21 @@ import { ThoughtFeelingSelector } from '../features/journal/components/ThoughtFe
 import { BodyMapSelector } from '../features/journal/components/BodyMapSelector';
 import { WitnessStep } from '../components/WitnessStep';
 import { FELT_EXPERIENCES } from '../data/feltExperiences';
-import { ArrowRight, Save } from 'lucide-react';
+import { ArrowRight, Save, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useJournalVoice } from '../features/journal/hooks/useJournalVoice';
 
 export function JournalPage({ onSave }: { onSave?: () => void }) {
     const { theme } = useTheme();
     const { user } = useAuth();
     const [step, setStep] = useState<number>(1);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Voice guidance
+    const voice = useJournalVoice();
+    const hasSpokenStep = useRef<Record<number, boolean>>({});
 
     // State for Step 1
     const [selectedThoughts, setSelectedThoughts] = useState<string[]>([]);
@@ -31,15 +36,41 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
 
     const activeBodyAreas = activeCategories.flatMap(fe => fe.bodyAreas);
 
-    const handleNext = () => setStep(s => Math.min(s + 1, 3));
-    const handlePrev = () => setStep(s => Math.max(s - 1, 1));
+    // Auto-speak when step changes
+    useEffect(() => {
+        if (!voice.voiceEnabled || hasSpokenStep.current[step]) return;
+        hasSpokenStep.current[step] = true;
+
+        // Small delay for page transition animation
+        const timer = setTimeout(() => {
+            if (step === 1) {
+                voice.speakStep1();
+            } else if (step === 2) {
+                voice.speakStep2(activeBodyAreas);
+            } else if (step === 3) {
+                voice.speakStep3(activeCategories);
+            }
+        }, 800);
+
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [step, voice.voiceEnabled]);
+
+    const handleNext = () => {
+        voice.stop();
+        setStep(s => Math.min(s + 1, 3));
+    };
+    const handlePrev = () => {
+        voice.stop();
+        setStep(s => Math.max(s - 1, 1));
+    };
 
     const handleSave = async () => {
         if (!user || isSaving) return;
         setIsSaving(true);
+        voice.stop();
 
         try {
-            // Build entry matching JournalCalendar's expected fields
             const entryData = {
                 thoughts: selectedThoughts.join(' | '),
                 emotions: selectedEmotions.join(', '),
@@ -51,13 +82,11 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
                 reflections: activeCategories.map(fe => fe.cognitiveDistortion).join(', '),
                 guidance: activeCategories[0]?.microIntervention.instruction || '',
                 duration: '2 mins',
-                // New structured fields
                 feltExperienceIds: activeCategories.map(fe => fe.id),
                 selectedThoughts,
                 autoTaggedEmotions: selectedEmotions,
                 cognitiveDistortions: activeCategories.map(fe => fe.cognitiveDistortion),
                 microInterventionShown: activeCategories[0]?.microIntervention.technique || '',
-                // Timestamps
                 date: new Date().toLocaleDateString(),
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 createdAt: serverTimestamp(),
@@ -65,6 +94,10 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
             };
 
             await addDoc(collection(db, 'users', user.uid, 'journal'), entryData);
+
+            // Speak a completion message
+            voice.speak("Beautiful work. Your reflection has been saved. Remember, you are not your thoughts... you are the one who witnesses them.");
+
             onSave?.();
         } catch (error) {
             console.error('Error saving journal entry:', error);
@@ -75,7 +108,77 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
 
     return (
         <div className="min-h-screen pt-24 pb-32 px-4 max-w-2xl mx-auto" style={{ background: theme.bgGradient, color: theme.textPrimary }}>
-            <StepIndicator currentStep={step} />
+            {/* Voice toggle button */}
+            <div className="flex items-center justify-between mb-4">
+                <StepIndicator currentStep={step} />
+                <button
+                    onClick={voice.toggleVoice}
+                    className="p-3 rounded-full backdrop-blur-xl border transition-all flex items-center justify-center"
+                    style={{
+                        background: voice.voiceEnabled ? theme.accentPrimary + '15' : theme.bgSurface,
+                        border: `1px solid ${voice.voiceEnabled ? theme.accentPrimary + '40' : theme.borderDefault}`,
+                        color: voice.voiceEnabled ? theme.accentPrimary : theme.textMuted,
+                    }}
+                    aria-label={voice.voiceEnabled ? 'Mute voice guidance' : 'Enable voice guidance'}
+                >
+                    {voice.isLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : voice.voiceEnabled ? (
+                        <Volume2 className="w-5 h-5" />
+                    ) : (
+                        <VolumeX className="w-5 h-5" />
+                    )}
+                </button>
+            </div>
+
+            {/* Voice status indicator */}
+            <AnimatePresence>
+                {(voice.isPlaying || voice.isLoading) && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex items-center justify-center gap-2 mb-4 py-2"
+                    >
+                        {voice.isLoading ? (
+                            <span className="text-xs italic" style={{ color: theme.textMuted }}>
+                                Preparing voice guidance...
+                            </span>
+                        ) : (
+                            <>
+                                {/* Animated equalizer bars */}
+                                <div className="flex items-end gap-[2px] h-4">
+                                    {[0, 1, 2, 3, 4].map(i => (
+                                        <motion.div
+                                            key={i}
+                                            className="w-[3px] rounded-full"
+                                            style={{ background: theme.accentPrimary }}
+                                            animate={{
+                                                height: ['4px', `${10 + Math.random() * 6}px`, '4px'],
+                                            }}
+                                            transition={{
+                                                duration: 0.6 + i * 0.1,
+                                                repeat: Infinity,
+                                                ease: 'easeInOut',
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                                <span className="text-xs italic" style={{ color: theme.textMuted }}>
+                                    Listening to your guide...
+                                </span>
+                                <button
+                                    onClick={voice.stop}
+                                    className="text-xs underline"
+                                    style={{ color: theme.textMuted }}
+                                >
+                                    Stop
+                                </button>
+                            </>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <AnimatePresence mode="wait">
                 {step === 1 && (
