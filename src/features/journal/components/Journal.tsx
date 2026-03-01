@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Sparkles, Download } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { MeditationPortal } from '../../../components/ui/MeditationPortal.tsx';
 import { db } from '../../../firebase';
@@ -26,7 +26,7 @@ import {
 import { useEmotionSync } from '../../soul-intelligence/hooks/useEmotionSync';
 import { GentleJournalForm } from './GentleJournalForm';
 
-const JOURNAL_DOWNLOAD_URL = 'https://collection.cloudinary.com/dfopoyt9v/e1cdd575434cc6dbce9940eb51bec937';
+
 
 // ─── CINEMATIC ANIMATION VARIANTS ─────────────────────────────────────────────
 
@@ -357,19 +357,9 @@ const Journal: React.FC = () => {
                     <h1 className="text-6xl font-serif font-light text-[var(--text-primary)] tracking-tight leading-none [text-shadow:0_0_60px_var(--accent-primary-muted)]">Daily Log</h1>
                     <p className="text-[10px] uppercase tracking-[0.6em] text-[var(--accent-secondary)] opacity-50 font-bold mt-4">The Presence Study</p>
                 </div>
-                <div className="text-right min-w-[120px] space-y-3">
+                <div className="text-right min-w-[120px]">
                     <p className="text-[9px] uppercase tracking-[0.6em] text-[var(--text-muted)] font-bold">{entries.length} moments</p>
-                    <div className="h-[1px] bg-gradient-to-r from-transparent via-[var(--accent-primary-border)] to-transparent" />
-                    <a
-                        href={JOURNAL_DOWNLOAD_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/25 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/20 transition-all duration-300"
-                        title="Download printable journal"
-                    >
-                        <Download size={11} className="group-hover:scale-110 transition-transform" />
-                        <span className="text-[8px] uppercase tracking-[0.3em] font-bold">Download</span>
-                    </a>
+                    <div className="mt-4 h-[1px] bg-gradient-to-r from-transparent via-[var(--accent-primary-border)] to-transparent" />
                 </div>
             </nav>
 
@@ -399,7 +389,7 @@ const Journal: React.FC = () => {
 
                                 <button
                                     onClick={() => { resetJournalForm(); setShowLogForm(true); }}
-                                    className="text-[8px] uppercase tracking-[0.5em] text-[var(--text-disabled)] hover:text-[var(--text-primary)] font-bold transition-colors"
+                                    className="text-[9px] uppercase tracking-[0.5em] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold transition-colors"
                                 >
                                     Skip to log →
                                 </button>

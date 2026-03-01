@@ -311,8 +311,8 @@ function ThoughtSelector({
                                         color: hasSelection
                                             ? group.color
                                             : isOpen
-                                                ? "rgba(255,255,255,0.85)"
-                                                : "rgba(255,255,255,0.7)",
+                                                ? "var(--text-primary)"
+                                                : "var(--text-secondary)",
                                         display: "block",
                                     }}
                                 >
@@ -420,7 +420,7 @@ function ThoughtSelector({
                                                             width: 22,
                                                             height: 22,
                                                             borderRadius: 7,
-                                                            border: `2px solid ${sel ? group.color + "70" : "rgba(255,255,255,0.12)"}`,
+                                                            border: `2px solid ${sel ? group.color + "70" : "var(--border-default)"}`,
                                                             background: sel ? group.color + "20" : "transparent",
                                                             display: "flex",
                                                             alignItems: "center",
@@ -448,7 +448,7 @@ function ThoughtSelector({
                                                             fontSize: 15,
                                                             color: sel
                                                                 ? group.color
-                                                                : "rgba(255,255,255,0.6)",
+                                                                : "var(--text-secondary)",
                                                             fontFamily: "Georgia, serif",
                                                             lineHeight: 1.4,
                                                         }}
