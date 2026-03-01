@@ -17,6 +17,7 @@ import { AnchorButton, NoiseOverlay, ProgressFilament } from './components/ui/Sa
 import { GlobalSparkles } from './components/ui/GlobalSparkles';
 import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
 import { ThemeToggle, useTheme } from './theme/ThemeSystem';
+import appLogo from './assets/logo.png';
 
 interface PracticeStep {
   title: string;
@@ -620,7 +621,7 @@ export default function UntetheredApp() {
         <div className="flex items-center justify-between mb-12 px-2">
           <div className="flex items-center gap-3 cursor-pointer group">
             <div className="w-10 h-10 rounded-full bg-[var(--bg-surface)] flex items-center justify-center shadow-lg group-hover:shadow-[0_0_15px_var(--accent-secondary)] transition-all duration-300">
-              <img src="/logo.png" alt="Awakened Path Logo" className="w-full h-full rounded-full object-cover" />
+              <img src={appLogo} alt="Awakened Path Logo" className="w-full h-full rounded-full object-cover" />
             </div>
             <div className="flex flex-col">
               <h1 className="text-lg font-serif font-bold text-[var(--text-primary)] tracking-wide group-hover:text-[var(--accent-secondary)] transition-colors">The Awakened Path</h1>
