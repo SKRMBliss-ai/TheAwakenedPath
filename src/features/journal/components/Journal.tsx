@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Download } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { MeditationPortal } from '../../../components/ui/MeditationPortal.tsx';
 import { db } from '../../../firebase';
@@ -21,11 +21,12 @@ import {
     EpochCard,
     EpochDivider,
     NoiseOverlay,
-    SacredToast,
-    NavPill
+    SacredToast
 } from '../../../components/ui/SacredUI.tsx';
 import { useEmotionSync } from '../../soul-intelligence/hooks/useEmotionSync';
 import { GentleJournalForm } from './GentleJournalForm';
+
+const JOURNAL_DOWNLOAD_URL = 'https://collection.cloudinary.com/dfopoyt9v/e1cdd575434cc6dbce9940eb51bec937';
 
 // ─── CINEMATIC ANIMATION VARIANTS ─────────────────────────────────────────────
 
@@ -113,7 +114,7 @@ const AwarenessCard = ({ entry, bucket, onEdit }: { entry: JournalEntry; bucket:
 
 // ─── MAIN JOURNAL COMPONENT ──────────────────────────────────────────────────
 
-const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
+const Journal: React.FC = () => {
     const { user, signInWithGoogle } = useAuth();
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -351,7 +352,16 @@ const Journal: React.FC<{ onReturn?: () => void }> = ({ onReturn }) => {
             />
 
             <nav className="flex justify-between items-start mb-20 relative z-10">
-                <NavPill onClick={onReturn}>Return Home</NavPill>
+                <a
+                    href={JOURNAL_DOWNLOAD_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--accent-primary-border)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-all duration-300 shadow-sm hover:shadow-md"
+                    title="Download printable journal"
+                >
+                    <Download size={14} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-[9px] uppercase tracking-[0.3em] font-bold">Download Journal</span>
+                </a>
                 <div className="text-center">
                     <h1 className="text-6xl font-serif font-light text-[var(--text-primary)] tracking-tight leading-none [text-shadow:0_0_60px_var(--accent-primary-muted)]">Daily Log</h1>
                     <p className="text-[10px] uppercase tracking-[0.6em] text-[var(--accent-secondary)] opacity-50 font-bold mt-4">The Presence Study</p>
