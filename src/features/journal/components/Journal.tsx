@@ -357,7 +357,7 @@ const Journal: React.FC = () => {
                     <h1 className="text-6xl font-serif font-light text-[var(--text-primary)] tracking-tight leading-none [text-shadow:0_0_60px_var(--accent-primary-muted)]">Daily Log</h1>
                     <p className="text-[10px] uppercase tracking-[0.6em] text-[var(--accent-secondary)] opacity-50 font-bold mt-4">The Presence Study</p>
                     <a
-                        href="https://drive.google.com/file/d/1sztG5EOwiw__ZykQFYaraImsIAM9lZxu/view?usp=sharing"
+                        href="https://docs.google.com/document/d/1cABPEGjz-IRhFg5MOH_gZFTJm-lFn4wVN9IJbGC5de8/edit?usp=sharing"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 mt-5 px-4 py-1.5 rounded-full border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary-border)] transition-all duration-300 text-[8px] uppercase tracking-[0.3em] font-bold"
@@ -372,119 +372,158 @@ const Journal: React.FC = () => {
                 </div>
             </nav>
 
-            <AnimatePresence mode="wait">
-                {!showLogForm ? (
-                    <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-24">
+            {/* ── CONTENT AREA: Locked for non-admin users ── */}
+            {(() => {
+                const ADMIN_EMAILS = ['shrutikhungar@gmail.com', 'simkatyal1@gmail.com'];
+                const isAdmin = ADMIN_EMAILS.includes(user?.email ?? '');
+                return (
+                    <div className="relative">
+                        {/* Blur the content if not admin */}
+                        <div className={!isAdmin ? 'blur-[6px] pointer-events-none select-none' : ''}>
+                            <AnimatePresence mode="wait">
+                                {!showLogForm ? (
+                                    <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-24">
 
-                        {/* practice trigger */}
-                        <motion.section variants={childVariant} className="text-center py-16 relative">
-                            <div className="flex flex-col items-center gap-8 relative z-10">
-                                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                                    <Sparkles size={10} className="text-[var(--accent-secondary)]" />
-                                    <span className="text-[8px] uppercase tracking-[0.4em] text-[var(--text-muted)] font-bold">Practice First</span>
-                                </div>
+                                        {/* practice trigger */}
+                                        <motion.section variants={childVariant} className="text-center py-16 relative">
+                                            <div className="flex flex-col items-center gap-8 relative z-10">
+                                                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                                                    <Sparkles size={10} className="text-[var(--accent-secondary)]" />
+                                                    <span className="text-[8px] uppercase tracking-[0.4em] text-[var(--text-muted)] font-bold">Practice First</span>
+                                                </div>
 
-                                <h2 className="text-5xl font-serif font-light text-[var(--text-primary)] leading-tight max-w-lg mx-auto">
-                                    Ready to settle<br />into the Now?
-                                </h2>
+                                                <h2 className="text-5xl font-serif font-light text-[var(--text-primary)] leading-tight max-w-lg mx-auto">
+                                                    Ready to settle<br />into the Now?
+                                                </h2>
 
-                                <p className="text-sm text-[var(--text-muted)] italic max-w-sm font-serif leading-relaxed">
-                                    Take 2 minutes to reconnect with your inner body before logging.
-                                </p>
+                                                <p className="text-sm text-[var(--text-muted)] italic max-w-sm font-serif leading-relaxed">
+                                                    Take 2 minutes to reconnect with your inner body before logging.
+                                                </p>
 
-                                <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript}>
-                                    Meditate Again
-                                </AnchorButton>
+                                                <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript}>
+                                                    Meditate Again
+                                                </AnchorButton>
 
-                                <button
-                                    onClick={() => { resetJournalForm(); setShowLogForm(true); }}
-                                    className="text-[9px] uppercase tracking-[0.5em] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold transition-colors"
-                                >
-                                    Skip to log →
-                                </button>
-                            </div>
-                        </motion.section>
-
-                        {/* Temporal Spiral History */}
-                        {entries.length > 0 && (
-                            <motion.section variants={childVariant} className="space-y-16">
-                                {(['today', 'thisWeek', 'thisMonth', 'archive'] as Bucket[]).map(bucket => {
-                                    const bucketEntries = entries.filter(e => getBucket(e) === bucket);
-                                    if (bucketEntries.length === 0) return null;
-                                    const meta = bucketMeta[bucket];
-                                    return (
-                                        <div key={bucket} className="space-y-8">
-                                            <EpochDivider label={meta.label} />
-                                            <div className={`grid gap-6 ${meta.columns === 1 ? 'grid-cols-1' :
-                                                meta.columns === 2 ? 'grid-cols-1 md:grid-cols-2' :
-                                                    'grid-cols-2 md:grid-cols-3'
-                                                }`}>
-                                                {bucketEntries.map(entry => (
-                                                    <AwarenessCard
-                                                        key={entry.id}
-                                                        entry={entry}
-                                                        bucket={bucket}
-                                                        onEdit={(e) => {
-                                                            setEditingId(e.id);
-                                                            setCurrentEntry(e);
-                                                            setShowLogForm(true);
-                                                        }}
-                                                    />
-                                                ))}
+                                                <button
+                                                    onClick={() => { resetJournalForm(); setShowLogForm(true); }}
+                                                    className="text-[9px] uppercase tracking-[0.5em] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold transition-colors"
+                                                >
+                                                    Skip to log →
+                                                </button>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </motion.section>
+                                        </motion.section>
+
+                                        {/* Temporal Spiral History */}
+                                        {entries.length > 0 && (
+                                            <motion.section variants={childVariant} className="space-y-16">
+                                                {(['today', 'thisWeek', 'thisMonth', 'archive'] as Bucket[]).map(bucket => {
+                                                    const bucketEntries = entries.filter(e => getBucket(e) === bucket);
+                                                    if (bucketEntries.length === 0) return null;
+                                                    const meta = bucketMeta[bucket];
+                                                    return (
+                                                        <div key={bucket} className="space-y-8">
+                                                            <EpochDivider label={meta.label} />
+                                                            <div className={`grid gap-6 ${meta.columns === 1 ? 'grid-cols-1' :
+                                                                meta.columns === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                                                                    'grid-cols-2 md:grid-cols-3'
+                                                                }`}>
+                                                                {bucketEntries.map(entry => (
+                                                                    <AwarenessCard
+                                                                        key={entry.id}
+                                                                        entry={entry}
+                                                                        bucket={bucket}
+                                                                        onEdit={(e) => {
+                                                                            setEditingId(e.id);
+                                                                            setCurrentEntry(e);
+                                                                            setShowLogForm(true);
+                                                                        }}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </motion.section>
+                                        )}
+                                    </motion.div>
+                                ) : (
+                                    /* ═══════════════════════════════════════════════════════════════
+                                       GUIDED JOURNAL FORM
+                                    ═══════════════════════════════════════════════════════════════ */
+                                    <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto">
+                                        <GentleJournalForm
+                                            initialData={currentEntry}
+                                            onSave={async (savedData) => {
+                                                if (!user) return;
+                                                try {
+                                                    const entryData = {
+                                                        thoughts: savedData.thoughts || '',
+                                                        bodySensations: savedData.bodySensations || '',
+                                                        bodyArea: savedData.bodyArea || '',
+                                                        emotions: savedData.emotions || '',
+                                                        reflections: savedData.reflections || '',
+                                                        guidance: savedData.guidance || '',
+                                                        duration: currentEntry.duration || '2 mins',
+                                                        updatedAt: serverTimestamp()
+                                                    };
+                                                    if (editingId) {
+                                                        await updateDoc(doc(db, 'users', user.uid, 'journal', editingId), entryData);
+                                                        setEditingId(null);
+                                                        fireToast('Reflection Anchored');
+                                                    } else {
+                                                        await addDoc(collection(db, 'users', user.uid, 'journal'), {
+                                                            ...entryData,
+                                                            date: new Date().toLocaleDateString(),
+                                                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                                            createdAt: serverTimestamp()
+                                                        });
+                                                        fireToast('Reflection Sealed');
+                                                    }
+                                                    resetJournalForm();
+                                                    setShowLogForm(false);
+                                                } catch (error) {
+                                                    console.error("Error saving: ", error);
+                                                }
+                                            }}
+                                            onCancel={() => {
+                                                resetJournalForm();
+                                                setShowLogForm(false);
+                                            }}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* "Coming Soon" overlay for non-admin users */}
+                        {!isAdmin && (
+                            <div className="absolute inset-0 flex items-center justify-center z-20">
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
+                                    className="text-center px-12 py-10 rounded-3xl backdrop-blur-md"
+                                    style={{
+                                        background: 'var(--bg-glass)',
+                                        border: '1px solid var(--border-subtle)',
+                                        boxShadow: '0 24px 80px rgba(0,0,0,0.15)',
+                                    }}
+                                >
+                                    <p className="text-[10px] uppercase tracking-[0.5em] text-[var(--accent-primary)] font-bold mb-3">
+                                        Coming Soon
+                                    </p>
+                                    <p className="text-lg font-serif text-[var(--text-primary)] opacity-80">
+                                        The Journey Awaits
+                                    </p>
+                                    <p className="text-xs text-[var(--text-muted)] mt-2 font-serif italic">
+                                        This sacred space is being prepared for you.
+                                    </p>
+                                </motion.div>
+                            </div>
                         )}
-                    </motion.div>
-                ) : (
-                    /* ═══════════════════════════════════════════════════════════════
-                       GUIDED JOURNAL FORM
-                    ═══════════════════════════════════════════════════════════════ */
-                    <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto">
-                        <GentleJournalForm
-                            initialData={currentEntry}
-                            onSave={async (savedData) => {
-                                if (!user) return;
-                                try {
-                                    const entryData = {
-                                        thoughts: savedData.thoughts || '',
-                                        bodySensations: savedData.bodySensations || '',
-                                        bodyArea: savedData.bodyArea || '',
-                                        emotions: savedData.emotions || '',
-                                        reflections: savedData.reflections || '',
-                                        guidance: savedData.guidance || '',
-                                        duration: currentEntry.duration || '2 mins',
-                                        updatedAt: serverTimestamp()
-                                    };
-                                    if (editingId) {
-                                        await updateDoc(doc(db, 'users', user.uid, 'journal', editingId), entryData);
-                                        setEditingId(null);
-                                        fireToast('Reflection Anchored');
-                                    } else {
-                                        await addDoc(collection(db, 'users', user.uid, 'journal'), {
-                                            ...entryData,
-                                            date: new Date().toLocaleDateString(),
-                                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                                            createdAt: serverTimestamp()
-                                        });
-                                        fireToast('Reflection Sealed');
-                                    }
-                                    resetJournalForm();
-                                    setShowLogForm(false);
-                                } catch (error) {
-                                    console.error("Error saving: ", error);
-                                }
-                            }}
-                            onCancel={() => {
-                                resetJournalForm();
-                                setShowLogForm(false);
-                            }}
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    </div>
+                );
+            })()}
 
             <SacredToast visible={toastVisible} message={toastMessage} />
         </div>
