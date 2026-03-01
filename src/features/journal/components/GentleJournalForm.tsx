@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import BodyMapSelector from "./BodyMapSelector";
+import { BodyMapSelector } from "./BodyMapSelector";
 import { useVoiceGuidance } from "../services/voiceGuidance";
 import { VoiceToggle } from "./VoiceToggle";
 import { ThoughtFeelingSelector } from "./ThoughtFeelingSelector";

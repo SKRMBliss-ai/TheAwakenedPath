@@ -16,134 +16,8 @@ import { motion, AnimatePresence } from "framer-motion";
   ═══════════════════════════════════════════════════════════════
 */
 
-const FELT_EXPERIENCES = [
-    {
-        id: "rejected",
-        emoji: "💔",
-        label: "Feeling Rejected or Unseen",
-        subtitle: "Threat to belonging",
-        color: "#90CAF9",
-        emotions: ["Sadness", "Shame", "Loneliness", "Anxiety"],
-        thoughts: [
-            "They ignored me",
-            "I'm not important to them",
-            "I said too much",
-            "They don't value me",
-        ],
-    },
-    {
-        id: "self-doubt",
-        emoji: "😔",
-        label: "Doubting Myself",
-        subtitle: "Reduced confidence",
-        color: "#CE93D8",
-        emotions: ["Insecurity", "Anxiety"],
-        thoughts: [
-            "I'm not qualified for this",
-            "I'll mess this up",
-            "Others are better than me",
-            "I don't know enough",
-        ],
-    },
-    {
-        id: "overwhelm",
-        emoji: "😰",
-        label: "Worry & Overwhelm",
-        subtitle: "Too much future-thinking",
-        color: "#FFB74D",
-        emotions: ["Anxiety", "Pressure"],
-        thoughts: [
-            "What if I forget something?",
-            "Everything could go wrong",
-            "I can't handle all this",
-            "There's too much to do",
-        ],
-    },
-    {
-        id: "frustration",
-        emoji: "😤",
-        label: "Frustration",
-        subtitle: "Something is blocking me",
-        color: "#E57373",
-        emotions: ["Irritation", "Anger"],
-        thoughts: [
-            "Why is this so slow?",
-            "This shouldn't be happening",
-            "I can't believe this",
-            "Just work already!",
-        ],
-    },
-    {
-        id: "not-enough",
-        emoji: "😞",
-        label: "Feeling Behind or Not Enough",
-        subtitle: "Comparing myself to others",
-        color: "#CE93D8",
-        emotions: ["Shame", "Discouragement"],
-        thoughts: [
-            "Everyone's ahead of me",
-            "I'm failing at life",
-            "I should be further by now",
-            "I'm not impressive enough",
-        ],
-    },
-    {
-        id: "control",
-        emoji: "😨",
-        label: "Need for Control",
-        subtitle: "Can't handle uncertainty",
-        color: "#FFB74D",
-        emotions: ["Unease", "Vigilance"],
-        thoughts: [
-            "I need to know what's coming",
-            "This uncertainty is unbearable",
-            "I can't relax until it's resolved",
-            "What if I miss something?",
-        ],
-    },
-    {
-        id: "people-pleasing",
-        emoji: "🫣",
-        label: "People-Pleasing Mode",
-        subtitle: "Hiding my real feelings",
-        color: "#F48FB1",
-        emotions: ["Anxiety", "Resentment"],
-        thoughts: [
-            "Don't upset them",
-            "Just agree and move on",
-            "My needs can wait",
-            "I shouldn't say what I really think",
-        ],
-    },
-    {
-        id: "numbness",
-        emoji: "😶",
-        label: "Emotional Numbness",
-        subtitle: "Feeling shut down",
-        color: "#A5D6A7",
-        emotions: ["Detachment", "Flatness"],
-        thoughts: [
-            "I feel nothing",
-            "I don't care anymore",
-            "I'm disconnected from everything",
-            "It doesn't matter",
-        ],
-    },
-    {
-        id: "inner-critic",
-        emoji: "🗣️",
-        label: "Inner Critic Attack",
-        subtitle: "Harsh self-judgment",
-        color: "#E57373",
-        emotions: ["Shame", "Guilt", "Anxiety"],
-        thoughts: [
-            "You're useless",
-            "That was stupid",
-            "You always fail",
-            "You're embarrassing yourself",
-        ],
-    },
-];
+import { FELT_EXPERIENCES } from "../../../data/feltExperiences";
+import { EMOTION_COLORS } from "../../../data/emotionColors";
 
 // ─── ANIMATIONS ──────────────────────────────────────────────
 
@@ -294,14 +168,18 @@ export function ThoughtFeelingSelector({
                                             textTransform: "uppercase", color: fe.color + "50",
                                             lineHeight: "22px",
                                         }}>FEELINGS:</span>
-                                        {fe.emotions.map((e) => (
-                                            <span key={e} style={{
-                                                padding: "2px 10px", borderRadius: 8, fontSize: 11,
-                                                background: fe.color + "12",
-                                                border: `1px solid ${fe.color}20`,
-                                                color: fe.color + "90",
-                                            }}>{e}</span>
-                                        ))}
+                                        {fe.emotions.map((e) => {
+                                            const emotionColor = EMOTION_COLORS[e] || fe.color;
+                                            return (
+                                                <span key={e} style={{
+                                                    padding: "2px 10px", borderRadius: 8, fontSize: 11,
+                                                    background: emotionColor + "15",
+                                                    border: `1px solid ${emotionColor}30`,
+                                                    color: emotionColor,
+                                                    fontWeight: 500,
+                                                }}>{e}</span>
+                                            );
+                                        })}
                                     </div>
 
                                     {/* Thought checkboxes */}
@@ -395,14 +273,17 @@ export function ThoughtFeelingSelector({
                                 textTransform: "uppercase", color: "var(--text-muted)",
                                 lineHeight: "24px",
                             }}>CREATING:</span>
-                            {selectedEmotions.map((e) => (
-                                <span key={e} style={{
-                                    padding: "3px 12px", borderRadius: 10, fontSize: 12,
-                                    background: "var(--accent-primary-muted)",
-                                    border: "1px solid var(--accent-primary-border)",
-                                    color: "var(--accent-primary)",
-                                }}>{e}</span>
-                            ))}
+                            {selectedEmotions.map((e) => {
+                                const emotionColor = EMOTION_COLORS[e] || "var(--accent-primary)";
+                                return (
+                                    <span key={e} style={{
+                                        padding: "3px 12px", borderRadius: 10, fontSize: 12, fontWeight: 500,
+                                        background: emotionColor + "15",
+                                        border: `1px solid ${emotionColor}40`,
+                                        color: emotionColor,
+                                    }}>{e}</span>
+                                );
+                            })}
                         </div>
                     </motion.div>
                 )}

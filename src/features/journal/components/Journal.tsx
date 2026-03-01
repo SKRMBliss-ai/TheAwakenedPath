@@ -7,13 +7,9 @@ import { db } from '../../../firebase';
 import { VoiceService } from '../../../services/voiceService';
 import {
     collection,
-    addDoc,
     query,
     orderBy,
     onSnapshot,
-    serverTimestamp,
-    doc,
-    updateDoc
 } from 'firebase/firestore';
 import { AwakenStage } from '../../../components/ui/SacredCircle.tsx';
 import {
@@ -22,8 +18,8 @@ import {
     SacredToast,
 } from '../../../components/ui/SacredUI.tsx';
 import { useEmotionSync } from '../../soul-intelligence/hooks/useEmotionSync';
-import { GentleJournalForm } from './GentleJournalForm';
 import JournalCalendar from './JournalCalendar';
+import { JournalPage } from '../../../pages/JournalPage';
 
 
 
@@ -79,7 +75,7 @@ interface JournalEntry {
 const Journal: React.FC = () => {
     const { user, signInWithGoogle } = useAuth();
     const [entries, setEntries] = useState<JournalEntry[]>([]);
-    const [editingId, setEditingId] = useState<string | null>(null);
+    // editingId no longer needed — JournalPage manages its own state
     const [currentEntry, setCurrentEntry] = useState<Partial<JournalEntry>>({
         thoughts: '',
         bodySensations: '',
@@ -129,7 +125,7 @@ const Journal: React.FC = () => {
             guidance: '',
             duration: ''
         });
-        setEditingId(null);
+        // editingId is managed by JournalPage now
     };
 
     // Audio Logic
@@ -384,45 +380,12 @@ const Journal: React.FC = () => {
                                     </motion.div>
                                 ) : (
                                     /* ═══════════════════════════════════════════════════════════════
-                                       GUIDED JOURNAL FORM
+                                       AWAKENED PATH 3-STEP JOURNAL FLOW
                                     ═══════════════════════════════════════════════════════════════ */
                                     <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto">
-                                        <GentleJournalForm
-                                            initialData={currentEntry}
-                                            onSave={async (savedData) => {
-                                                if (!user) return;
-                                                try {
-                                                    const entryData = {
-                                                        thoughts: savedData.thoughts || '',
-                                                        bodySensations: savedData.bodySensations || '',
-                                                        bodyArea: savedData.bodyArea || '',
-                                                        emotions: savedData.emotions || '',
-                                                        reflections: savedData.reflections || '',
-                                                        guidance: savedData.guidance || '',
-                                                        duration: currentEntry.duration || '2 mins',
-                                                        updatedAt: serverTimestamp()
-                                                    };
-                                                    if (editingId) {
-                                                        await updateDoc(doc(db, 'users', user.uid, 'journal', editingId), entryData);
-                                                        setEditingId(null);
-                                                        fireToast('Reflection Anchored');
-                                                    } else {
-                                                        await addDoc(collection(db, 'users', user.uid, 'journal'), {
-                                                            ...entryData,
-                                                            date: new Date().toLocaleDateString(),
-                                                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                                                            createdAt: serverTimestamp()
-                                                        });
-                                                        fireToast('Reflection Sealed');
-                                                    }
-                                                    resetJournalForm();
-                                                    setShowLogForm(false);
-                                                } catch (error) {
-                                                    console.error("Error saving: ", error);
-                                                }
-                                            }}
-                                            onCancel={() => {
-                                                resetJournalForm();
+                                        <JournalPage
+                                            onSave={() => {
+                                                fireToast('Reflection Sealed ✦');
                                                 setShowLogForm(false);
                                             }}
                                         />
