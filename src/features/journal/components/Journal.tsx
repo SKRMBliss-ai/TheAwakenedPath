@@ -18,10 +18,8 @@ import {
 import { AwakenStage } from '../../../components/ui/SacredCircle.tsx';
 import {
     AnchorButton,
-    EpochCard,
-    EpochDivider,
     NoiseOverlay,
-    SacredToast
+    SacredToast,
 } from '../../../components/ui/SacredUI.tsx';
 import { useEmotionSync } from '../../soul-intelligence/hooks/useEmotionSync';
 import { GentleJournalForm } from './GentleJournalForm';
@@ -76,43 +74,6 @@ interface JournalEntry {
     createdAt?: any;
 }
 
-type Bucket = 'today' | 'thisWeek' | 'thisMonth' | 'archive';
-
-// ─── TEMPORAL BUCKET LOGIC ──────────────────────────────────────────────────
-
-function getBucket(entry: any): Bucket {
-    const d = entry.createdAt?.toDate?.() ?? new Date(entry.date);
-    const diff = (Date.now() - d.getTime()) / 86_400_000;
-    if (diff < 1) return 'today';
-    if (diff < 7) return 'thisWeek';
-    if (diff < 30) return 'thisMonth';
-    return 'archive';
-}
-
-const bucketMeta: Record<Bucket, { label: string; columns: number }> = {
-    today: { label: 'This Moment', columns: 1 },
-    thisWeek: { label: 'This Week', columns: 1 },
-    thisMonth: { label: 'This Month', columns: 2 },
-    archive: { label: 'The Archive', columns: 3 },
-};
-
-// ─── AWARENESS CARD WRAPPER ──────────────────────────────────────────────────
-
-const AwarenessCard = ({ entry, bucket, onEdit }: { entry: JournalEntry; bucket: Bucket; onEdit: (entry: JournalEntry) => void }) => {
-    const entryDate = entry.createdAt?.toDate?.() ?? new Date(entry.date);
-    const dateStr = entryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` · ${entryDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
-
-    return (
-        <EpochCard
-            date={dateStr}
-            preview={entry.reflections || entry.thoughts || entry.bodySensations || "Presence observed."}
-            bucket={bucket}
-            emotions={entry.emotions ? entry.emotions.split(',') : []}
-            onClick={() => onEdit(entry)}
-        />
-    );
-};
-
 // ─── MAIN JOURNAL COMPONENT ──────────────────────────────────────────────────
 
 const Journal: React.FC = () => {
@@ -143,7 +104,6 @@ const Journal: React.FC = () => {
     const [dynamicSteps, setDynamicSteps] = useState<any[]>([]);
     const [practiceStep, setPracticeStep] = useState(0);
     const [journeyTitle, setJourneyTitle] = useState("Daily Presence");
-    const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
     const lastSpokenRef = useRef<string | null>(null);
 
     // Magnetic orb tilt
@@ -415,59 +375,10 @@ const Journal: React.FC = () => {
                                             </div>
                                         </motion.section>
 
-                                        {/* View Toggle & History/Calendar */}
+                                        {/* Calendar History */}
                                         {entries.length > 0 && (
                                             <motion.section variants={childVariant} className="space-y-16">
-                                                <div className="flex justify-center mb-8">
-                                                    <div className="flex items-center gap-1 p-1 rounded-full bg-[var(--bg-surface)] backdrop-blur-md border border-[var(--border-subtle)]">
-                                                        <button
-                                                            onClick={() => setViewMode('list')}
-                                                            className={`px-6 py-2 rounded-full text-[10px] tracking-[0.2em] font-bold uppercase transition-all ${viewMode === 'list' ? 'bg-[#80CBC4] text-black shadow-[0_0_15px_rgba(128,203,196,0.4)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-                                                        >
-                                                            Timeline
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setViewMode('calendar')}
-                                                            className={`px-6 py-2 rounded-full text-[10px] tracking-[0.2em] font-bold uppercase transition-all ${viewMode === 'calendar' ? 'bg-[#80CBC4] text-black shadow-[0_0_15px_rgba(128,203,196,0.4)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-                                                        >
-                                                            Calendar
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                {viewMode === 'list' ? (
-                                                    <div className="space-y-16">
-                                                        {(['today', 'thisWeek', 'thisMonth', 'archive'] as Bucket[]).map(bucket => {
-                                                            const bucketEntries = entries.filter(e => getBucket(e) === bucket);
-                                                            if (bucketEntries.length === 0) return null;
-                                                            const meta = bucketMeta[bucket];
-                                                            return (
-                                                                <div key={bucket} className="space-y-8">
-                                                                    <EpochDivider label={meta.label} />
-                                                                    <div className={`grid gap-6 ${meta.columns === 1 ? 'grid-cols-1' :
-                                                                        meta.columns === 2 ? 'grid-cols-1 md:grid-cols-2' :
-                                                                            'grid-cols-2 md:grid-cols-3'
-                                                                        }`}>
-                                                                        {bucketEntries.map(entry => (
-                                                                            <AwarenessCard
-                                                                                key={entry.id}
-                                                                                entry={entry}
-                                                                                bucket={bucket}
-                                                                                onEdit={(e) => {
-                                                                                    setEditingId(e.id);
-                                                                                    setCurrentEntry(e);
-                                                                                    setShowLogForm(true);
-                                                                                }}
-                                                                            />
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                ) : (
-                                                    <JournalCalendar entries={entries} />
-                                                )}
+                                                <JournalCalendar entries={entries} />
                                             </motion.section>
                                         )}
                                     </motion.div>

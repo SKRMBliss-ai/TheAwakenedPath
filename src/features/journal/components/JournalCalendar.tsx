@@ -119,8 +119,8 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                     display: "flex",
                     borderRadius: 16,
                     overflow: "hidden",
-                    background: "rgba(255,255,255,0.025)",
-                    border: `1px solid ${expanded ? color + "25" : "rgba(255,255,255,0.05)"}`,
+                    background: "var(--bg-surface)",
+                    border: `1px solid ${expanded ? color + "25" : "var(--border-subtle)"}`,
                     transition: "all 0.3s ease",
                 }}>
                     {/* Color bar */}
@@ -145,14 +145,14 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 {entry.bodyArea && (
                                     <span style={{
-                                        fontSize: 11, color: "rgba(255,255,255,0.2)",
+                                        fontSize: 11, color: "var(--text-muted)",
                                         display: "flex", alignItems: "center", gap: 3,
                                     }}>
                                         <span style={{ fontSize: 13 }}>{BODY_EMOJI[entry.bodyArea] || "🫀"}</span>
                                         {entry.bodyArea}
                                     </span>
                                 )}
-                                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.18)" }}>
+                                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
                                     {formatEntryTime(entry.createdAt || entry.date)}
                                 </span>
                             </div>
@@ -161,7 +161,7 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                         {/* Thought */}
                         <p style={{
                             fontSize: 16, fontFamily: "Georgia, serif", fontStyle: "italic",
-                            color: "rgba(255,255,255,0.7)", lineHeight: 1.5, margin: 0,
+                            color: "var(--text-primary)", lineHeight: 1.5, margin: 0,
                         }}>
                             "{entry.thoughts}"
                         </p>
@@ -203,7 +203,7 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                                     style={{ overflow: "hidden" }}
                                 >
                                     <div style={{
-                                        height: 1, background: "rgba(255,255,255,0.04)",
+                                        height: 1, background: "var(--border-divider)",
                                         margin: "12px 0",
                                     }} />
 
@@ -211,11 +211,11 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                                         <div style={{ marginBottom: 10 }}>
                                             <p style={{
                                                 fontSize: 10, fontWeight: 600, letterSpacing: "0.06em",
-                                                textTransform: "uppercase", color: "rgba(255,255,255,0.15)",
+                                                textTransform: "uppercase", color: "var(--text-muted)",
                                                 marginBottom: 3,
                                             }}>BODY</p>
                                             <p style={{
-                                                fontSize: 13, color: "rgba(255,255,255,0.35)",
+                                                fontSize: 13, color: "var(--text-secondary)",
                                                 fontFamily: "Georgia, serif",
                                             }}>
                                                 {entry.bodyArea}: {entry.bodySensations}
@@ -319,9 +319,8 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
 
     return (
         <div
-            className="w-full min-h-screen rounded-[40px] overflow-hidden"
+            className="w-full min-h-screen rounded-[40px] overflow-hidden bg-transparent"
             style={{
-                background: "radial-gradient(ellipse at 50% 15%, #1a0a2e 0%, #0d0014 50%, #050008 100%)",
                 fontFamily: "Georgia, 'Times New Roman', serif",
             }}
         >
@@ -333,11 +332,11 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                 <div style={{ marginBottom: 24 }}>
                     <p style={{
                         fontSize: 11, letterSpacing: "0.35em", textTransform: "uppercase",
-                        color: "rgba(171,206,201,0.3)", marginBottom: 6,
+                        color: "var(--accent-secondary)", marginBottom: 6,
                     }}>YOUR REFLECTIONS</p>
                     <h1 style={{
                         fontSize: 28, fontWeight: 300,
-                        color: "rgba(255,255,255,0.8)", margin: 0,
+                        color: "var(--text-primary)", margin: 0,
                     }}>Journal</h1>
                 </div>
 
@@ -350,9 +349,9 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                         onClick={prevMonth}
                         style={{
                             width: 44, height: 44, borderRadius: 14,
-                            background: "rgba(255,255,255,0.04)",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                            color: "rgba(255,255,255,0.4)", cursor: "pointer",
+                            background: "var(--bg-surface)",
+                            border: "1px solid var(--border-subtle)",
+                            color: "var(--text-secondary)", cursor: "pointer",
                             fontSize: 18, display: "flex", alignItems: "center",
                             justifyContent: "center",
                         }}
@@ -361,12 +360,12 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                     <div style={{ textAlign: "center" }}>
                         <p style={{
                             fontSize: 20, fontWeight: 400,
-                            color: "rgba(255,255,255,0.7)", margin: 0,
+                            color: "var(--text-primary)", margin: 0,
                         }}>
                             {MONTHS[viewMonth]} {viewYear}
                         </p>
                         <p style={{
-                            fontSize: 12, color: "rgba(255,255,255,0.2)",
+                            fontSize: 12, color: "var(--text-muted)",
                             marginTop: 2,
                         }}>
                             {monthEntryCount} {monthEntryCount === 1 ? "reflection" : "reflections"}
@@ -377,9 +376,9 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                         onClick={nextMonth}
                         style={{
                             width: 44, height: 44, borderRadius: 14,
-                            background: "rgba(255,255,255,0.04)",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                            color: "rgba(255,255,255,0.4)", cursor: "pointer",
+                            background: "var(--bg-surface)",
+                            border: "1px solid var(--border-subtle)",
+                            color: "var(--text-secondary)", cursor: "pointer",
                             fontSize: 18, display: "flex", alignItems: "center",
                             justifyContent: "center",
                         }}
@@ -388,8 +387,8 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
 
                 {/* Calendar grid */}
                 <div style={{
-                    background: "rgba(255,255,255,0.02)",
-                    border: "1px solid rgba(255,255,255,0.05)",
+                    background: "var(--bg-surface)",
+                    border: "1px solid var(--border-divider)",
                     borderRadius: 20,
                     padding: "16px 12px 12px",
                     marginBottom: 20,
@@ -402,7 +401,7 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                         {DAYS.map((d) => (
                             <div key={d} style={{
                                 textAlign: "center", fontSize: 11, fontWeight: 600,
-                                letterSpacing: "0.05em", color: "rgba(255,255,255,0.18)",
+                                letterSpacing: "0.05em", color: "var(--text-muted)",
                                 padding: "4px 0",
                             }}>{d}</div>
                         ))}
@@ -454,10 +453,10 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                                         color: isSel
                                             ? color || "rgba(209,107,165,0.9)"
                                             : isTod
-                                                ? "rgba(209,107,165,0.7)"
+                                                ? "var(--accent-primary)"
                                                 : hasEntry
-                                                    ? "rgba(255,255,255,0.6)"
-                                                    : "rgba(255,255,255,0.15)",
+                                                    ? "var(--text-secondary)"
+                                                    : "var(--text-muted)",
                                         fontFamily: "Georgia, serif",
                                         lineHeight: 1,
                                     }}>{day}</span>
@@ -492,7 +491,7 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                                 background: color,
                             }} />
                             <span style={{
-                                fontSize: 10, color: "rgba(255,255,255,0.2)",
+                                fontSize: 10, color: "var(--text-muted)",
                                 letterSpacing: "0.02em",
                             }}>{label}</span>
                         </div>
@@ -516,7 +515,7 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                             }}>
                                 <span style={{
                                     fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
-                                    textTransform: "uppercase", color: "rgba(255,255,255,0.2)",
+                                    textTransform: "uppercase", color: "var(--text-secondary)",
                                 }}>
                                     {new Date(viewYear, viewMonth, selectedDay).toLocaleDateString(
                                         "en-US",
@@ -524,10 +523,10 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                                     )}
                                 </span>
                                 <div style={{
-                                    flex: 1, height: 1, background: "rgba(255,255,255,0.04)",
+                                    flex: 1, height: 1, background: "var(--border-divider)",
                                 }} />
                                 <span style={{
-                                    fontSize: 11, color: "rgba(255,255,255,0.12)",
+                                    fontSize: 11, color: "var(--text-muted)",
                                 }}>
                                     {selectedEntries.length} {selectedEntries.length === 1 ? "entry" : "entries"}
                                 </span>
@@ -555,7 +554,7 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                             style={{ textAlign: "center", padding: "30px 0" }}
                         >
                             <p style={{
-                                fontSize: 14, color: "rgba(255,255,255,0.2)",
+                                fontSize: 14, color: "var(--text-muted)",
                                 fontStyle: "italic",
                             }}>No reflections on this day</p>
                         </motion.div>
@@ -570,7 +569,7 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                             style={{ textAlign: "center", padding: "24px 0" }}
                         >
                             <p style={{
-                                fontSize: 14, color: "rgba(255,255,255,0.15)",
+                                fontSize: 14, color: "var(--text-muted)",
                                 fontStyle: "italic",
                             }}>
                                 Tap a day with a colored dot to see your reflection
@@ -582,7 +581,7 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                 {/* Footer */}
                 <p style={{
                     textAlign: "center", fontSize: 10,
-                    color: "rgba(255,255,255,0.06)", marginTop: 40,
+                    color: "var(--text-muted)", marginTop: 40, opacity: 0.5
                 }}>Each dot is a moment of witnessing</p>
             </div>
         </div>

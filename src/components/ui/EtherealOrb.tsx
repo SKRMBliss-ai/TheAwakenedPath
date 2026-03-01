@@ -192,7 +192,7 @@ const OrbBlob = ({ isAnimating }: { isAnimating: boolean }) => {
         if (!meshRef.current) return;
 
         // Rotate slowly, and even slower when on the dashboard resting
-        const rotationSpeed = isAnimating ? 0.1 : 0.04;
+        const rotationSpeed = isAnimating ? 0.05 : 0.02;
         meshRef.current.rotation.y = state.clock.elapsedTime * rotationSpeed;
         meshRef.current.rotation.x = state.clock.elapsedTime * (rotationSpeed * 0.5);
 
@@ -202,8 +202,8 @@ const OrbBlob = ({ isAnimating }: { isAnimating: boolean }) => {
 
         // Smoothly transition speed and distortion based on animation state
         // Resting speed boosted slightly for a more fluid feel
-        const targetSpeed = emotionSpeedRef.current !== null ? emotionSpeedRef.current : (isAnimating ? 2.5 : 0.4);
-        const targetDistort = emotionDistortRef.current !== null ? emotionDistortRef.current : (isAnimating ? 0.45 : 0.12);
+        const targetSpeed = emotionSpeedRef.current !== null ? emotionSpeedRef.current : (isAnimating ? 0.8 : 0.2);
+        const targetDistort = emotionDistortRef.current !== null ? emotionDistortRef.current : (isAnimating ? 0.25 : 0.08);
 
         mat.uniforms.uSpeed.value = THREE.MathUtils.lerp(mat.uniforms.uSpeed.value, targetSpeed, 0.05);
         mat.uniforms.uDistort.value = THREE.MathUtils.lerp(mat.uniforms.uDistort.value, targetDistort, 0.05);

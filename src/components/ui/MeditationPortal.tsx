@@ -72,7 +72,6 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
     onReset,
     onTogglePlay,
     isPlaying,
-    progress,
     children,
 }) => {
     const [timer, setTimer] = useState(0);
@@ -84,8 +83,8 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
     // Magnetic orb tilt on mouse move
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
-    const rotateX = useSpring(useTransform(mouseY, [-400, 400], [7, -7]), { stiffness: 25, damping: 18 });
-    const rotateY = useSpring(useTransform(mouseX, [-400, 400], [-7, 7]), { stiffness: 25, damping: 18 });
+    const rotateX = useSpring(useTransform(mouseY, [-400, 400], [3, -3]), { stiffness: 10, damping: 30 });
+    const rotateY = useSpring(useTransform(mouseX, [-400, 400], [-3, 3]), { stiffness: 10, damping: 30 });
 
     useEffect(() => {
         const handleResize = () => setIsLargeScreen(window.innerWidth >= 1024);
@@ -232,40 +231,6 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                     position: 'relative', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                    {/* Circular progress ring */}
-                    <svg
-                        width={380} height={380}
-                        style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) scale(0.85) sm:scale(1)', pointerEvents: 'none' }}
-                    >
-                        {/* Track */}
-                        <circle cx={190} cy={190} r={178} fill="none"
-                            stroke="var(--border-subtle)" strokeWidth={1} />
-                        {/* Progress arc */}
-                        <motion.circle
-                            cx={190} cy={190} r={178} fill="none"
-                            stroke={`url(#arcGradient)`} strokeWidth={1.5}
-                            strokeLinecap="round"
-                            strokeDasharray={2 * Math.PI * 178}
-                            initial={{ strokeDashoffset: 2 * Math.PI * 178 }}
-                            animate={{ strokeDashoffset: 2 * Math.PI * 178 * (1 - progress) }}
-                            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] as any }}
-                            transform="rotate(-90 190 190)"
-                            style={{ filter: `drop-shadow(0 0 6px ${T.lavender}80)` }}
-                        />
-                        <defs>
-                            <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stopColor={T.magenta} stopOpacity="0.6" />
-                                <stop offset="100%" stopColor={T.lavender} stopOpacity="0.9" />
-                            </linearGradient>
-                        </defs>
-                        {/* Progress head dot */}
-                        <motion.circle
-                            cx={190} cy={190 - 178} r={3} fill={T.lavender}
-                            style={{ filter: `drop-shadow(0 0 6px ${T.lavender})`, transformOrigin: "190px 190px" }}
-                            animate={{ rotate: 360 * progress }}
-                        />
-                    </svg>
-
                     {/* The orb — magnetic tilt */}
                     <motion.div style={{ scale: isLargeScreen ? 1 : 0.75 }}>
                         {children ?? (
@@ -329,18 +294,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 gap: 20, paddingBottom: 40, flexShrink: 0,
             }}>
-                {/* Progress fraction text */}
-                <motion.span
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                    style={{
-                        fontSize: 8, letterSpacing: '0.5em', textTransform: 'uppercase',
-                        color: 'var(--text-muted)',
-                        fontFamily: 'system-ui, sans-serif', fontWeight: 700,
-                    }}
-                >
-                    {Math.round(progress * 100)} % complete
-                </motion.span>
+
 
                 {/* Control row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 48 }}>

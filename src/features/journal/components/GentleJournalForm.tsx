@@ -287,7 +287,7 @@ function ThoughtSelector({
                                 width: "100%",
                                 padding: "18px 20px",
                                 borderRadius: isOpen ? "18px 18px 0 0" : 18,
-                                border: `1.5px solid ${hasSelection ? group.color + "50" : isOpen ? group.color + "30" : "var(--border-subtle)"}`,
+                                border: `1.5px solid ${hasSelection ? group.color + "50" : isOpen ? group.color + "30" : "var(--border-default)"}`,
                                 borderBottom: isOpen ? `1px solid ${group.color}20` : undefined,
                                 background: hasSelection
                                     ? group.color + "12"

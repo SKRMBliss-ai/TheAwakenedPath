@@ -620,10 +620,7 @@ export default function UntetheredApp() {
         <div className="flex items-center justify-between mb-12 px-2">
           <div className="flex items-center gap-3 cursor-pointer group">
             <div className="w-10 h-10 rounded-full bg-[var(--bg-surface)] flex items-center justify-center shadow-lg group-hover:shadow-[0_0_15px_var(--accent-secondary)] transition-all duration-300">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6 text-[var(--text-primary)]" strokeWidth="2">
-                <path d="M4 21V10a8 8 0 0 1 16 0v11" />
-                <path d="M8 21s1-4 4-4 4 4 4 4" />
-              </svg>
+              <img src="/logo.png" alt="Awakened Path Logo" className="w-full h-full rounded-full object-cover" />
             </div>
             <div className="flex flex-col">
               <h1 className="text-lg font-serif font-bold text-[var(--text-primary)] tracking-wide group-hover:text-[var(--accent-secondary)] transition-colors">The Awakened Path</h1>
