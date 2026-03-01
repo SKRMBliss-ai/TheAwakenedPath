@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Flame, Sparkles, Sun, Search, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones } from 'lucide-react';
+import { Flame, Sparkles, Sun, Search, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut } from 'lucide-react';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { PowerOfNow } from './features/soul-intelligence/components/PowerOfNow';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -53,12 +53,7 @@ const themeColors: any = {
 
 // --- Sub-components moved outside for stability ---
 
-const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin, rotateX, rotateY }: any) => {
-  const handleLogout = async () => {
-    if (window.confirm('Are you sure you want to sign out?')) {
-      await signOut();
-    }
-  };
+const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, rotateY }: any) => {
 
   return (
     <motion.div
@@ -87,7 +82,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin, 
           </div>
 
           <button
-            onClick={handleLogout}
+            onClick={onOpenSidebar}
             className="w-12 h-12 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)] text-[12px] font-bold transition-colors backdrop-blur-md"
           >
             {user.displayName ? user.displayName.substring(0, 2).toUpperCase() : 'AB'}
@@ -218,7 +213,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, signOut, isAdmin, 
   );
 };
 
-const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY }: any) => {
+const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY }: any) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -236,8 +231,7 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY
             <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">The Presence Study</p>
           </div>
         </div>
-        <button
-          onClick={signOut}
+        <div
           className="flex items-center gap-4 hover:bg-[var(--bg-surface)] p-2 rounded-xl transition-colors text-left"
         >
           <div className="text-right">
@@ -247,7 +241,7 @@ const BreadthDesktop = ({ user, setActiveTab, signOut, isAdmin, rotateX, rotateY
           <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)] text-sm font-bold">
             {user.displayName ? user.displayName.substring(0, 2).toUpperCase() : 'AB'}
           </div>
-        </button>
+        </div>
       </header>
 
       {/* Hero Guided Area - Minimalist Desktop */}
@@ -691,6 +685,23 @@ export default function UntetheredApp() {
             );
           })}
         </nav>
+
+        {/* LOGOUT BUTTON */}
+        <div className="mt-8 border-t border-[var(--border-default)] pt-6">
+          <button
+            onClick={async () => {
+              if (window.confirm('Are you sure you want to sign out?')) {
+                await signOut();
+              }
+            }}
+            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-surface)] rounded-xl transition-colors text-left group"
+          >
+            <LogOut size={15} className="text-[var(--text-muted)] group-hover:text-rose-400 transition-colors" />
+            <span className="text-[9px] uppercase tracking-[0.4em] text-[var(--text-muted)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
+              Log Out
+            </span>
+          </button>
+        </div>
       </aside>
 
       {/* MAIN CONTENT AREA */}
@@ -745,7 +756,6 @@ export default function UntetheredApp() {
                     user={user}
                     setActiveTab={setActiveTab}
                     onOpenSidebar={() => setIsSidebarOpen(true)}
-                    signOut={signOut}
                     isAdmin={isAdmin}
                     rotateX={rotateX}
                     rotateY={rotateY}
@@ -755,7 +765,6 @@ export default function UntetheredApp() {
                   <BreadthDesktop
                     user={user}
                     setActiveTab={setActiveTab}
-                    signOut={signOut}
                     isAdmin={isAdmin}
                     rotateX={rotateX}
                     rotateY={rotateY}

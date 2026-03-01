@@ -25,6 +25,7 @@ import {
 } from '../../../components/ui/SacredUI.tsx';
 import { useEmotionSync } from '../../soul-intelligence/hooks/useEmotionSync';
 import { GentleJournalForm } from './GentleJournalForm';
+import JournalCalendar from './JournalCalendar';
 
 
 
@@ -142,6 +143,7 @@ const Journal: React.FC = () => {
     const [dynamicSteps, setDynamicSteps] = useState<any[]>([]);
     const [practiceStep, setPracticeStep] = useState(0);
     const [journeyTitle, setJourneyTitle] = useState("Daily Presence");
+    const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
     const lastSpokenRef = useRef<string | null>(null);
 
     // Magnetic orb tilt
@@ -413,36 +415,59 @@ const Journal: React.FC = () => {
                                             </div>
                                         </motion.section>
 
-                                        {/* Temporal Spiral History */}
+                                        {/* View Toggle & History/Calendar */}
                                         {entries.length > 0 && (
                                             <motion.section variants={childVariant} className="space-y-16">
-                                                {(['today', 'thisWeek', 'thisMonth', 'archive'] as Bucket[]).map(bucket => {
-                                                    const bucketEntries = entries.filter(e => getBucket(e) === bucket);
-                                                    if (bucketEntries.length === 0) return null;
-                                                    const meta = bucketMeta[bucket];
-                                                    return (
-                                                        <div key={bucket} className="space-y-8">
-                                                            <EpochDivider label={meta.label} />
-                                                            <div className={`grid gap-6 ${meta.columns === 1 ? 'grid-cols-1' :
-                                                                meta.columns === 2 ? 'grid-cols-1 md:grid-cols-2' :
-                                                                    'grid-cols-2 md:grid-cols-3'
-                                                                }`}>
-                                                                {bucketEntries.map(entry => (
-                                                                    <AwarenessCard
-                                                                        key={entry.id}
-                                                                        entry={entry}
-                                                                        bucket={bucket}
-                                                                        onEdit={(e) => {
-                                                                            setEditingId(e.id);
-                                                                            setCurrentEntry(e);
-                                                                            setShowLogForm(true);
-                                                                        }}
-                                                                    />
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
+                                                <div className="flex justify-center mb-8">
+                                                    <div className="flex items-center gap-1 p-1 rounded-full bg-[var(--bg-surface)] backdrop-blur-md border border-[var(--border-subtle)]">
+                                                        <button
+                                                            onClick={() => setViewMode('list')}
+                                                            className={`px-6 py-2 rounded-full text-[10px] tracking-[0.2em] font-bold uppercase transition-all ${viewMode === 'list' ? 'bg-[#80CBC4] text-black shadow-[0_0_15px_rgba(128,203,196,0.4)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+                                                        >
+                                                            Timeline
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setViewMode('calendar')}
+                                                            className={`px-6 py-2 rounded-full text-[10px] tracking-[0.2em] font-bold uppercase transition-all ${viewMode === 'calendar' ? 'bg-[#80CBC4] text-black shadow-[0_0_15px_rgba(128,203,196,0.4)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+                                                        >
+                                                            Calendar
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {viewMode === 'list' ? (
+                                                    <div className="space-y-16">
+                                                        {(['today', 'thisWeek', 'thisMonth', 'archive'] as Bucket[]).map(bucket => {
+                                                            const bucketEntries = entries.filter(e => getBucket(e) === bucket);
+                                                            if (bucketEntries.length === 0) return null;
+                                                            const meta = bucketMeta[bucket];
+                                                            return (
+                                                                <div key={bucket} className="space-y-8">
+                                                                    <EpochDivider label={meta.label} />
+                                                                    <div className={`grid gap-6 ${meta.columns === 1 ? 'grid-cols-1' :
+                                                                        meta.columns === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                                                                            'grid-cols-2 md:grid-cols-3'
+                                                                        }`}>
+                                                                        {bucketEntries.map(entry => (
+                                                                            <AwarenessCard
+                                                                                key={entry.id}
+                                                                                entry={entry}
+                                                                                bucket={bucket}
+                                                                                onEdit={(e) => {
+                                                                                    setEditingId(e.id);
+                                                                                    setCurrentEntry(e);
+                                                                                    setShowLogForm(true);
+                                                                                }}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <JournalCalendar entries={entries} />
+                                                )}
                                             </motion.section>
                                         )}
                                     </motion.div>
