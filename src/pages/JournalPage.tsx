@@ -7,11 +7,15 @@ import { BodyMapSelector } from '../features/journal/components/BodyMapSelector'
 import { WitnessStep } from '../components/WitnessStep';
 import { FELT_EXPERIENCES } from '../data/feltExperiences';
 import { ArrowRight, Save } from 'lucide-react';
-// import { useNavigate } from 'react-router-dom'; // If using react-router
+import { useAuth } from '../features/auth/AuthContext';
+import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export function JournalPage({ onSave }: { onSave?: () => void }) {
     const { theme } = useTheme();
+    const { user } = useAuth();
     const [step, setStep] = useState<number>(1);
+    const [isSaving, setIsSaving] = useState(false);
 
     // State for Step 1
     const [selectedThoughts, setSelectedThoughts] = useState<string[]>([]);
@@ -30,27 +34,43 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
     const handleNext = () => setStep(s => Math.min(s + 1, 3));
     const handlePrev = () => setStep(s => Math.max(s - 1, 1));
 
-    const handleSave = () => {
-        // Generate journal entry
-        const entry = {
-            id: crypto.randomUUID(),
-            timestamp: new Date().toISOString(),
-            feltExperienceIds: activeCategories.map(fe => fe.id),
-            selectedThoughts,
-            autoTaggedEmotions: selectedEmotions,
-            cognitiveDistortions: activeCategories.map(fe => fe.cognitiveDistortion),
-            bodyArea: selectedBodyArea || "",
-            bodySensations: [], // Add logic if user selects specific sensations later
-            witnessReflection: "",
-            microInterventionShown: activeCategories[0]?.microIntervention.technique || "",
-            theme: theme.name
-        };
+    const handleSave = async () => {
+        if (!user || isSaving) return;
+        setIsSaving(true);
 
-        // Save to local storage
-        const existing = JSON.parse(localStorage.getItem('awakened-entries') || '[]');
-        localStorage.setItem('awakened-entries', JSON.stringify([...existing, entry]));
+        try {
+            // Build entry matching JournalCalendar's expected fields
+            const entryData = {
+                thoughts: selectedThoughts.join(' | '),
+                emotions: selectedEmotions.join(', '),
+                bodyArea: selectedBodyArea || '',
+                bodySensations: activeCategories
+                    .filter(fe => fe.bodyAreas.includes(selectedBodyArea || ''))
+                    .flatMap(fe => fe.sensations)
+                    .join(', '),
+                reflections: activeCategories.map(fe => fe.cognitiveDistortion).join(', '),
+                guidance: activeCategories[0]?.microIntervention.instruction || '',
+                duration: '2 mins',
+                // New structured fields
+                feltExperienceIds: activeCategories.map(fe => fe.id),
+                selectedThoughts,
+                autoTaggedEmotions: selectedEmotions,
+                cognitiveDistortions: activeCategories.map(fe => fe.cognitiveDistortion),
+                microInterventionShown: activeCategories[0]?.microIntervention.technique || '',
+                // Timestamps
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            };
 
-        onSave?.();
+            await addDoc(collection(db, 'users', user.uid, 'journal'), entryData);
+            onSave?.();
+        } catch (error) {
+            console.error('Error saving journal entry:', error);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -168,14 +188,16 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
                             </button>
                             <button
                                 onClick={handleSave}
+                                disabled={isSaving}
                                 className="flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold transition-all"
                                 style={{
                                     background: theme.navActiveBg,
                                     color: theme.accentPrimary,
                                     border: `1.5px solid ${theme.navActiveBorder}`,
+                                    opacity: isSaving ? 0.6 : 1,
                                 }}
                             >
-                                Save Reflection <Save className="w-5 h-5" />
+                                {isSaving ? 'Saving...' : 'Save Reflection'} <Save className="w-5 h-5" />
                             </button>
                         </div>
                     </motion.div>
