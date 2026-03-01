@@ -145,15 +145,17 @@ export const AnchorButton = ({ children, variant = "ghost", onClick, loading, cl
                     padding: "20px 56px",
                     background: hovered
                         ? `linear-gradient(135deg, ${tokens.teal}, #8AB5B0)`
-                        : `linear-gradient(135deg, ${tokens.teal}E0, #7EB8B3)`,
-                    borderRadius: 100, border: "none", cursor: disabled ? "not-allowed" : "pointer",
+                        : `linear-gradient(135deg, ${tokens.teal}, #7EB8B3)`,
+                    borderRadius: 100,
+                    border: `1.5px solid ${hovered ? tokens.teal : tokens.teal + 'CC'}`,
+                    cursor: disabled ? "not-allowed" : "pointer",
                     fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
                     fontSize: 10, letterSpacing: "0.3em", textTransform: "uppercase",
                     color: "#0D1F1E",
                     opacity: disabled ? 0.3 : 1,
                     boxShadow: hovered && !disabled
-                        ? `0 20px 60px ${tokens.teal}40, 0 0 0 1px ${tokens.teal}30`
-                        : `0 8px 32px ${tokens.teal}20`,
+                        ? `0 20px 60px ${tokens.teal}50, 0 0 0 1px ${tokens.teal}40`
+                        : `0 8px 32px ${tokens.teal}30, 0 0 0 1px ${tokens.teal}15`,
                     transition: "all 0.5s cubic-bezier(0.16,1,0.3,1)",
                 } as any}
             >

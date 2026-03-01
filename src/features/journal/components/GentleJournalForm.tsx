@@ -231,7 +231,7 @@ function SummaryCard({ label, content, color = "white" }: { label: string, conte
 function NavButton({ children, onClick, variant = "next", disabled = false }: { children: React.ReactNode, onClick: () => void, variant?: "next" | "back" | "save", disabled?: boolean }) {
     const s = {
         next: { bg: "rgba(209,107,165,0.15)", border: "rgba(209,107,165,0.35)", color: "rgba(209,107,165,0.9)", hoverBg: "rgba(209,107,165,0.25)" },
-        back: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", hoverBg: "rgba(255,255,255,0.07)" },
+        back: { bg: "var(--bg-surface)", border: "var(--border-default)", color: "var(--text-secondary)", hoverBg: "var(--bg-glass)" },
         save: { bg: "rgba(171,206,201,0.15)", border: "rgba(171,206,201,0.35)", color: "rgba(171,206,201,0.9)", hoverBg: "rgba(171,206,201,0.25)" },
     }[variant];
     return (
@@ -504,13 +504,13 @@ function EmotionSelector({
                                 width: "100%",
                                 padding: "18px 20px",
                                 borderRadius: isOpen ? "18px 18px 0 0" : 18,
-                                border: `1.5px solid ${hasSelection ? card.color + "50" : isOpen ? card.color + "30" : "rgba(255,255,255,0.07)"}`,
+                                border: `1.5px solid ${hasSelection ? card.color + "50" : isOpen ? card.color + "30" : "var(--border-subtle)"}`,
                                 borderBottom: isOpen ? `1px solid ${card.color}20` : undefined,
                                 background: hasSelection
                                     ? card.color + "12"
                                     : isOpen
                                         ? card.color + "08"
-                                        : "rgba(255,255,255,0.03)",
+                                        : "var(--bg-surface)",
                                 cursor: "pointer",
                                 textAlign: "left",
                                 minHeight: 68,
@@ -528,8 +528,8 @@ function EmotionSelector({
                                         color: hasSelection
                                             ? card.color
                                             : isOpen
-                                                ? "rgba(255,255,255,0.85)"
-                                                : "rgba(255,255,255,0.7)",
+                                                ? "var(--text-primary)"
+                                                : "var(--text-secondary)",
                                         display: "block",
                                     }}
                                 >
@@ -575,7 +575,7 @@ function EmotionSelector({
                                     transition={{ duration: 0.3 }}
                                     style={{
                                         fontSize: 16,
-                                        color: isOpen ? card.color + "80" : "rgba(255,255,255,0.15)",
+                                        color: isOpen ? card.color + "80" : "var(--text-disabled)",
                                         flexShrink: 0,
                                     }}
                                 >
@@ -618,11 +618,11 @@ function EmotionSelector({
                                                     style={{
                                                         padding: "12px 20px",
                                                         borderRadius: 14,
-                                                        border: `1.5px solid ${sel ? card.color + "55" : "rgba(255,255,255,0.07)"}`,
+                                                        border: `1.5px solid ${sel ? card.color + "55" : "var(--border-subtle)"}`,
                                                         background: sel
                                                             ? card.color + "18"
-                                                            : "rgba(255,255,255,0.03)",
-                                                        color: sel ? card.color : "rgba(255,255,255,0.6)",
+                                                            : "var(--bg-surface)",
+                                                        color: sel ? card.color : "var(--text-secondary)",
                                                         fontSize: 15,
                                                         fontWeight: sel ? 600 : 400,
                                                         cursor: "pointer",

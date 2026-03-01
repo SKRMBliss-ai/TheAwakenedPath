@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Download } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { MeditationPortal } from '../../../components/ui/MeditationPortal.tsx';
 import { db } from '../../../firebase';
@@ -356,6 +356,15 @@ const Journal: React.FC = () => {
                 <div className="text-center">
                     <h1 className="text-6xl font-serif font-light text-[var(--text-primary)] tracking-tight leading-none [text-shadow:0_0_60px_var(--accent-primary-muted)]">Daily Log</h1>
                     <p className="text-[10px] uppercase tracking-[0.6em] text-[var(--accent-secondary)] opacity-50 font-bold mt-4">The Presence Study</p>
+                    <a
+                        href="https://drive.google.com/file/d/1sztG5EOwiw__ZykQFYaraImsIAM9lZxu/view?usp=sharing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 mt-5 px-4 py-1.5 rounded-full border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary-border)] transition-all duration-300 text-[8px] uppercase tracking-[0.3em] font-bold"
+                    >
+                        <Download size={10} />
+                        Download Journal
+                    </a>
                 </div>
                 <div className="text-right min-w-[120px]">
                     <p className="text-[9px] uppercase tracking-[0.6em] text-[var(--text-muted)] font-bold">{entries.length} moments</p>
