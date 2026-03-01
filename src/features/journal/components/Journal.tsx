@@ -356,7 +356,7 @@ const Journal: React.FC = () => {
                     href={JOURNAL_DOWNLOAD_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--accent-primary-border)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-all duration-300 shadow-sm hover:shadow-md"
+                    className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/20 hover:border-[var(--accent-primary)]/50 transition-all duration-300 shadow-sm hover:shadow-md"
                     title="Download printable journal"
                 >
                     <Download size={14} className="group-hover:scale-110 transition-transform" />
