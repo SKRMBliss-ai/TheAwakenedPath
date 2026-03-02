@@ -1,20 +1,16 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} {
+    match /users/{userId}/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      match /journal/{entryId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      match /checklists/{dateId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      match /situational-logs/{logId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
+    }
+    
+    match /activity_logs/{logId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && 
+        (request.auth.token.email == 'shrutikhungar@gmail.com' || 
+         request.auth.token.email == 'smriti.duggal@gmail.com' || 
+         request.auth.token.email == 'test@example.com');
     }
   }
 }

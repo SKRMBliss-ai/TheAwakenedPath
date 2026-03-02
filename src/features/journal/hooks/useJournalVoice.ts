@@ -3,7 +3,7 @@
  * Uses Gemini TTS for human-like narration.
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { speakWithGemini } from '../../../services/geminiTTS';
+import { VoiceService } from '../../../services/voiceService';
 import type { FeltExperience } from '../../../data/feltExperiences';
 
 // Calming, spiritual prompts for each step
@@ -55,15 +55,14 @@ export function useJournalVoice() {
     }, []);
 
     const stop = useCallback(() => {
-        stopRef.current?.();
-        stopRef.current = null;
+        VoiceService.stop();
         if (isMountedRef.current) {
             setIsPlaying(false);
             setIsLoading(false);
         }
     }, []);
 
-    const speak = useCallback(async (text: string) => {
+    const speak = useCallback(async (text: string, context?: string) => {
         if (!voiceEnabled) return;
 
         // Stop any current speech
@@ -71,13 +70,16 @@ export function useJournalVoice() {
 
         setIsLoading(true);
         try {
-            const result = await speakWithGemini(
-                text,
-                'Aoede',   // Bright, warm voice
-                () => { if (isMountedRef.current) { setIsPlaying(false); } },
-                () => { if (isMountedRef.current) { setIsPlaying(false); } }
-            );
-            stopRef.current = result.stop;
+            await VoiceService.speak(text, {
+                gender: 'FEMALE',
+                promptContext: context,
+                onEnd: () => {
+                    if (isMountedRef.current) {
+                        setIsPlaying(false);
+                        setIsLoading(false);
+                    }
+                }
+            });
             if (isMountedRef.current) {
                 setIsPlaying(true);
                 setIsLoading(false);
@@ -99,17 +101,17 @@ export function useJournalVoice() {
 
     // Step-specific speak functions
     const speakStep1 = useCallback(() => {
-        speak(STEP_PROMPTS[1]);
+        speak(STEP_PROMPTS[1], "User is starting their reflection. Welcome them and guide them to select a felt experience.");
     }, [speak]);
 
     const speakStep2 = useCallback((bodyAreas: string[]) => {
-        speak(STEP_PROMPTS[2](bodyAreas));
+        speak(STEP_PROMPTS[2](bodyAreas), `The user has identified their emotion. Now guide them to feel where it sits in their body. Suggested areas: ${bodyAreas.join(', ')}`);
     }, [speak]);
 
     const speakStep3 = useCallback((categories: FeltExperience[]) => {
         const primary = categories[0];
         if (primary) {
-            speak(STEP_PROMPTS[3](primary.label, primary.cognitiveDistortion));
+            speak(STEP_PROMPTS[3](primary.label, primary.cognitiveDistortion), `The user is now witnessing the mind's pattern: ${primary.cognitiveDistortion}. Speak as the compassionate witness.`);
         }
     }, [speak]);
 

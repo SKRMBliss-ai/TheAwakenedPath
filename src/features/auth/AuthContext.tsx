@@ -30,47 +30,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                const userRef = doc(db, 'users', currentUser.uid);
-                const userSnap = await getDoc(userRef);
+            try {
+                if (currentUser) {
+                    const userRef = doc(db, 'users', currentUser.uid);
+                    const userSnap = await getDoc(userRef);
 
-                const userData = {
-                    uid: currentUser.uid,
-                    email: currentUser.email,
-                    displayName: currentUser.displayName,
-                    photoURL: currentUser.photoURL,
-                    lastLogin: serverTimestamp()
-                };
-
-                if (!userSnap.exists()) {
-                    await setDoc(userRef, {
-                        ...userData,
-                        createdAt: serverTimestamp(),
-                        level: 1,
-                        xp: 0,
-                        streak: 0
-                    });
-                } else {
-                    await updateDoc(userRef, {
+                    const userData = {
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        displayName: currentUser.displayName,
+                        photoURL: currentUser.photoURL,
                         lastLogin: serverTimestamp()
-                    });
-                }
+                    };
+                    console.log("Auth User Authenticated:", currentUser.email);
 
-                // Log Activity
-                try {
-                    await addDoc(collection(db, 'activity_logs'), {
-                        userId: currentUser.uid,
-                        userEmail: currentUser.email,
-                        activityType: 'LOGIN',
-                        details: 'User logged in',
-                        timestamp: serverTimestamp()
-                    });
-                } catch (error) {
-                    console.error("Error logging activity:", error);
+                    if (!userSnap.exists()) {
+                        await setDoc(userRef, {
+                            ...userData,
+                            createdAt: serverTimestamp(),
+                            level: 1,
+                            xp: 0,
+                            streak: 0
+                        });
+                    } else {
+                        await updateDoc(userRef, {
+                            lastLogin: serverTimestamp()
+                        });
+                    }
+
+                    // Log Activity
+                    try {
+                        console.log("Logging Activity...");
+                        await addDoc(collection(db, 'activity_logs'), {
+                            userId: currentUser.uid,
+                            userEmail: currentUser.email,
+                            activityType: 'LOGIN',
+                            details: 'User logged in',
+                            timestamp: serverTimestamp()
+                        });
+                        console.log("Activity Logged.");
+                    } catch (error) {
+                        console.error("Error logging activity:", error);
+                    }
+                } else {
+                    console.log("No authenticated user.");
                 }
+            } catch (error) {
+                console.error("Auth initialization error:", error);
+            } finally {
+                setUser(currentUser);
+                setLoading(false);
             }
-            setUser(currentUser);
-            setLoading(false);
         });
 
         return () => unsubscribe();

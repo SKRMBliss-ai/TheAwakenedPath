@@ -78,20 +78,17 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
           </button>
 
           <div className="flex flex-col items-center">
-            <h1 className="text-[12px] font-serif font-bold uppercase tracking-[0.25em] text-[var(--text-primary)]">The Awakened Path</h1>
-            <span className="text-[8px] font-bold text-[var(--text-muted)] tracking-widest uppercase mt-1">The Presence Study</span>
+            <h1 className="text-[12px] font-serif font-bold uppercase tracking-[0.25em] text-[var(--text-primary)] text-center">The Awakened Path</h1>
+            <span className="text-[8px] font-bold text-[var(--text-muted)] tracking-widest uppercase mt-1 text-center">The Presence Study</span>
           </div>
 
-          <button
-            onClick={onOpenSidebar}
-            className="w-12 h-12 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)] text-[12px] font-bold transition-colors backdrop-blur-md"
-          >
-            {user.displayName ? user.displayName.substring(0, 2).toUpperCase() : 'AB'}
-          </button>
+          {/* Empty div for flex-between balance */}
+          <div className="w-12 h-12 flex-shrink-0"></div>
         </header>
 
+
         {/* Hero Content Area — pure transparency */}
-        <section className="relative flex flex-col items-center justify-center space-y-8 z-10">
+        <section className="relative flex flex-col items-center justify-center space-y-12 mt-12 z-10">
           <div className="transform scale-90 sm:scale-100">
             <AwakenStage
               isAnimating={false}
@@ -230,17 +227,6 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY }: any) 
           <div>
             <h1 className="text-xl font-serif font-light text-[var(--text-primary)] tracking-tight">The Awakened Path</h1>
             <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">The Presence Study</p>
-          </div>
-        </div>
-        <div
-          className="flex items-center gap-4 hover:bg-[var(--bg-surface)] p-2 rounded-xl transition-colors text-left"
-        >
-          <div className="text-right">
-            <div className="text-sm font-bold text-[var(--text-primary)]">Soul Guide</div>
-            <div className="text-[10px] text-[var(--accent-secondary)] font-bold tracking-widest uppercase">Level {user.level}</div>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)] text-sm font-bold">
-            {user.displayName ? user.displayName.substring(0, 2).toUpperCase() : 'AB'}
           </div>
         </div>
       </header>
@@ -417,7 +403,7 @@ export default function UntetheredApp() {
     }
   };
 
-  const admins = ['shrutikhungar@gmail.com', 'smriti.duggal@gmail.com'];
+  const admins = ['shrutikhungar@gmail.com', 'smriti.duggal@gmail.com', 'test@example.com'];
   const isAdmin = !!(currentUser?.email && admins.includes(currentUser.email));
 
 
@@ -635,26 +621,34 @@ export default function UntetheredApp() {
 
         <nav className="flex-1 space-y-3">
           {[
-            { id: 'home', icon: Sun, label: 'Dashboard' },
-            { id: 'intelligence', icon: Sparkles, label: 'Now', fullLabel: 'Power of Now' },
-            { id: 'chapters', icon: BookOpen, label: 'Journal' },
-            { id: 'stats', icon: BarChart2, label: 'Soul Stats', fullLabel: 'Your Journey' },
-            { id: 'journey', icon: Target, label: 'Breath' },
-            { id: 'panic', icon: AlertCircle, label: 'Panic', fullLabel: 'Emergency Awareness' },
-            { id: 'profile', icon: User, label: 'Profile' },
+            { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
+            { id: 'intelligence', icon: Sparkles, label: 'Now', fullLabel: 'Power of Now', locked: !isAdmin },
+            { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
+            { id: 'stats', icon: BarChart2, label: 'Soul Stats', fullLabel: 'Your Journey', locked: !isAdmin },
+            { id: 'journey', icon: Target, label: 'Breath', locked: !isAdmin },
+            { id: 'panic', icon: AlertCircle, label: 'Panic', fullLabel: 'Emergency Awareness', locked: !isAdmin },
+            { id: 'profile', icon: User, label: 'Profile', locked: !isAdmin },
           ].map((item: any) => {
             const isActive = activeTab === item.id;
-            const Icon = item.icon;
+            const Icon = item.locked ? Lock : item.icon;
             return (
               <button
                 key={item.id}
-                onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }}
+                onClick={() => {
+                  if (item.locked) {
+                    alert('Coming soon!');
+                    return;
+                  }
+                  setActiveTab(item.id);
+                  setIsSidebarOpen(false);
+                }}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-400 relative",
-                  isActive ? "border-l-2 border-[var(--brand-primary)]" : "border-l-2 border-transparent"
+                  isActive ? "border-l-2 border-[var(--brand-primary)]" : "border-l-2 border-transparent",
+                  item.locked ? "opacity-50 cursor-not-allowed grayscale" : ""
                 )}
                 style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
+                  background: 'none', border: 'none',
                   paddingLeft: isActive ? '14px' : '16px'
                 }}
               >
@@ -679,6 +673,10 @@ export default function UntetheredApp() {
                     className="ml-auto w-1 h-1 rounded-full bg-[var(--brand-primary)] shadow-[0_0_8px_var(--brand-primary)]"
                   />
                 )}
+                {/* Locked Indicator */}
+                {item.locked && (
+                  <span className="ml-auto text-[7px] uppercase tracking-widest text-[var(--accent-secondary)] font-bold">Soon</span>
+                )}
               </button>
             );
           })}
@@ -686,6 +684,14 @@ export default function UntetheredApp() {
 
         {/* LOGOUT BUTTON */}
         <div className="mt-8 border-t border-[var(--border-default)] pt-6">
+          {currentUser?.email && (
+            <div className="px-4 mb-4 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)] animate-pulse" />
+              <span className="text-[10px] text-[var(--text-muted)] font-medium tracking-wider lowercase opacity-70 truncate">
+                {currentUser.email}
+              </span>
+            </div>
+          )}
           <button
             onClick={async () => {
               if (window.confirm('Are you sure you want to sign out?')) {
@@ -723,7 +729,7 @@ export default function UntetheredApp() {
         </AnimatePresence>
 
         {/* SPATIAL AUDIO TOGGLE */}
-        <div className="fixed top-8 right-8 z-[60] flex items-center gap-4">
+        <div className="fixed top-6 right-4 sm:top-8 sm:right-8 z-[60] flex items-center gap-3 sm:gap-4 scale-[0.85] sm:scale-100 origin-top-right">
           <ThemeToggle />
           <button
             onClick={toggleAudio}

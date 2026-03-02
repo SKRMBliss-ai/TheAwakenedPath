@@ -332,7 +332,7 @@ const Journal: React.FC = () => {
 
             {/* ── CONTENT AREA: Locked for non-admin users ── */}
             {(() => {
-                const ADMIN_EMAILS = ['shrutikhungar@gmail.com', 'simkatyal1@gmail.com'];
+                const ADMIN_EMAILS = ['shrutikhungar@gmail.com', 'simkatyal1@gmail.com', 'test@example.com'];
                 const isAdmin = ADMIN_EMAILS.includes(user?.email ?? '');
                 return (
                     <div className="relative">

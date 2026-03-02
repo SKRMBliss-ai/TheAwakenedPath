@@ -199,6 +199,12 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
                                 setSelectedThoughts(thoughts);
                                 setSelectedEmotions(emotions);
                             }}
+                            onExpandCategory={(label, thoughts) => {
+                                if (voice.voiceEnabled && thoughts.length > 0) {
+                                    const spokenText = `You selected ${label}. Which of these thoughts feels most true right now? ${thoughts.map(t => `'${t}'`).join(', or ')}.`;
+                                    voice.speak(spokenText, `Reading out the options for the category: ${label}`);
+                                }
+                            }}
                         />
 
                         <div className="flex justify-end mt-8">

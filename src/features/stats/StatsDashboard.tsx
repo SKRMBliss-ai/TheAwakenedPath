@@ -21,9 +21,8 @@ const StatsDashboard: React.FC = () => {
     const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
-        if (!user) return;
-
-        if (user.email === 'shrutikhungar@gmail.com') {
+        const admins = ['shrutikhungar@gmail.com', 'smriti.duggal@gmail.com', 'test@example.com'];
+        if (user?.email && admins.includes(user.email)) {
             setIsAdmin(true);
             fetchAdminLogs();
         }

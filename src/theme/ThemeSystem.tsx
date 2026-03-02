@@ -291,12 +291,49 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         root.style.setProperty("--glow-cyan", theme.glowCyan);
         root.style.setProperty("--glow-gold", theme.glowGold);
         root.style.setProperty("--blur-val", theme.blur);
+
+        // Class Sync
+        if (mode === "dark") {
+            document.body.classList.add("dark-mode");
+            document.body.classList.remove("light-mode");
+        } else {
+            document.body.classList.add("light-mode");
+            document.body.classList.remove("dark-mode");
+        }
     }, [theme, mode]);
 
     return (
         <ThemeContext.Provider value={{ theme, mode, toggle }}>
+            <MouseGlow />
             {children}
         </ThemeContext.Provider>
+    );
+}
+
+// ─── MOUSE GLOW COMPONENT ────────────────────────────────────
+
+function MouseGlow() {
+    const { mode } = useTheme();
+    const [pos, setPos] = useState({ x: -100, y: -100 });
+
+    useEffect(() => {
+        const handleMove = (e: MouseEvent) => {
+            setPos({ x: e.clientX, y: e.clientY });
+        };
+        window.addEventListener("mousemove", handleMove);
+        return () => window.removeEventListener("mousemove", handleMove);
+    }, []);
+
+    if (mode !== "dark") return null;
+
+    return (
+        <div
+            className="mouse-glow"
+            style={{
+                left: pos.x,
+                top: pos.y,
+            }}
+        />
     );
 }
 
@@ -339,7 +376,7 @@ export function ThemeToggle({ style = {} }: { style?: React.CSSProperties }) {
                 position: "absolute",
                 right: 8,
                 fontSize: 14,
-                opacity: mode === "dark" ? 1 : 0.3,
+                opacity: mode === "dark" ? 1 : 0.6,
                 transition: "opacity 0.3s",
                 lineHeight: 1,
             }}>🌙</span>

@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
         name: 'Awakened Path',
         short_name: 'AwakenedPath',
@@ -31,4 +31,20 @@ export default defineConfig({
       }
     })
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://us-central1-awakened-path-2026.cloudfunctions.net',
+        changeOrigin: true,
+        rewrite: (path) => {
+          if (path.startsWith('/api/voice')) return '/textToSpeech';
+          if (path.startsWith('/api/witness')) return '/witnessPresence';
+          if (path.startsWith('/api/grounding')) return '/getGrounding';
+          if (path.startsWith('/api/emotion')) return '/analyzeEmotion';
+          if (path.startsWith('/api/daily-meditation')) return '/getDailyMeditation';
+          return path.replace(/^\/api/, '');
+        }
+      }
+    }
+  }
 })

@@ -400,3 +400,27 @@ h3 {
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+
+/* Mouse Glow Effect */
+.mouse-glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, var(--accent-primary-dim) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease;
+    mix-blend-mode: plus-lighter;
+    opacity: 0;
+}
+
+body.dark-mode .mouse-glow {
+    opacity: 0.4;
+}
+
+/* Hide default cursor only if we want a fully custom one, but here we just want a glow behind it */
+/* body.dark-mode { cursor: none; } */

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
  * Includes direct MP3 support and stability guards for React lifecycle.
  */
 
-const API_BASE_URL = "https://texttospeech-us-central1-awakened-path-2026.cloudfunctions.net/textToSpeech";
+const API_BASE_URL = "/api/voice";
 
 export class VoiceService {
     private static currentAudio: HTMLAudioElement | null = null;
@@ -35,6 +35,7 @@ export class VoiceService {
      */
     static async speak(text: string, options: {
         gender?: 'MALE' | 'FEMALE';
+        promptContext?: string;
         onEnd?: () => void;
     } = {}): Promise<void> {
         this.stop();
@@ -45,6 +46,7 @@ export class VoiceService {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     text: text,
+                    promptContext: options.promptContext,
                     gender: options.gender || 'FEMALE'
                 })
             });

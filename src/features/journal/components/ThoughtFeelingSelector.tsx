@@ -41,11 +41,13 @@ const pop: any = {
 export interface ThoughtFeelingSelectorProps {
     selectedThoughts?: string[];
     onSelectionChange?: (thoughts: string[], emotions: string[]) => void;
+    onExpandCategory?: (categoryLabel: string, thoughts: string[]) => void;
 }
 
 export function ThoughtFeelingSelector({
     selectedThoughts = [],
     onSelectionChange,
+    onExpandCategory,
 }: ThoughtFeelingSelectorProps) {
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -96,7 +98,13 @@ export function ThoughtFeelingSelector({
                         {/* Category card */}
                         <motion.button
                             whileTap={{ scale: 0.98 }}
-                            onClick={() => setExpandedId(isOpen ? null : fe.id)}
+                            onClick={() => {
+                                const becomingOpen = !isOpen;
+                                setExpandedId(becomingOpen ? fe.id : null);
+                                if (becomingOpen && onExpandCategory) {
+                                    onExpandCategory(fe.label, fe.thoughts);
+                                }
+                            }}
                             style={{
                                 display: "flex", alignItems: "center", gap: 14,
                                 width: "100%", padding: "16px 18px",
@@ -165,7 +173,7 @@ export function ThoughtFeelingSelector({
                                     }}>
                                         <span style={{
                                             fontSize: 10, fontWeight: 600, letterSpacing: "0.06em",
-                                            textTransform: "uppercase", color: fe.color + "50",
+                                            textTransform: "uppercase", color: "var(--text-secondary)",
                                             lineHeight: "22px",
                                         }}>FEELINGS:</span>
                                         {fe.emotions.map((e) => {

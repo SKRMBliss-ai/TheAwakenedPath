@@ -54,20 +54,24 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
 
     // Function to add meditative pauses and rhythmic breaks
     function meditationify(rawText) {
-        // Strip any accidental ellipses from the raw text to strictly prevent "dot dot dot" sound
-        let cleanText = rawText.replace(/\.{2,}/g, '.');
+        // Strip any accidental ellipses to strictly prevent "dot dot dot" sound
+        let cleanText = rawText.replace(/\.{2,}/g, '.').replace(/\.{1,}/g, '.');
+
         // Add 2s break after sentences for deep absorption
         let ssml = cleanText.replace(/([.?!])\s+/g, '$1 <break time="1500ms"/> ');
         // Add 1s break after commas/semicolons
         ssml = ssml.replace(/([,;])\s+/g, '$1 <break time="800ms"/> ');
-        return `<speak>${ssml}</speak>`;
+        return {
+            cleanText,
+            ssml: `<speak>${ssml}</speak>`
+        };
     }
 
-    const ssmlContent = meditationify(text);
+    const { cleanText, ssml: ssmlContent } = meditationify(text);
 
     async function synthesize(voiceName, isJourney) {
         const request = {
-            input: isJourney ? { text: text } : { ssml: ssmlContent },
+            input: isJourney ? { text: cleanText } : { ssml: ssmlContent },
             voice: { languageCode: 'en-US', name: voiceName },
             audioConfig: {
                 audioEncoding: 'MP3',
