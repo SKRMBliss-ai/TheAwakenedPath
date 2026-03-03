@@ -191,7 +191,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
             { id: 'panic', label: 'Awareness', sub: 'EMERGENCY', icon: AlertCircle, color: '#FF7043', variant: 'pulse' },
             { id: 'stats', label: 'Journey', sub: 'HISTORY', icon: BarChart2, color: '#9575CD', variant: 'chart' }
           ].map((item: any) => {
-            const isLocked = !isAdmin && !['chapters', 'intelligence', 'stats'].includes(item.id);
+            const isLocked = !isAdmin && !['chapters', 'stats'].includes(item.id);
             return (
               <div key={item.id} className="relative group/card">
                 {/* Backlit Magenta Glow - Matching Soul Stats */}
@@ -361,7 +361,7 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
             { id: 'panic', label: 'Awareness', sub: 'EMERGENCY', icon: AlertCircle, color: '#FF7043', delay: 0.2, variant: 'pulse' },
             { id: 'stats', label: 'Evolution', sub: 'STATS', icon: BarChart2, color: '#9575CD', delay: 0.3, variant: 'chart' }
           ].map((item: any) => {
-            const isLocked = !isAdmin && !['chapters', 'intelligence', 'stats'].includes(item.id);
+            const isLocked = !isAdmin && !['chapters', 'stats'].includes(item.id);
             return (
               <div key={item.id} className="relative group/card">
                 {/* Individual Glow Colors - Dark Mode Only */}
@@ -751,7 +751,7 @@ export default function UntetheredApp() {
         <nav className="flex-1 space-y-3">
           {[
             { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
-            { id: 'intelligence', icon: Sparkles, label: 'Now', fullLabel: 'Power of Now', locked: false },
+            { id: 'intelligence', icon: Sparkles, label: 'Now', fullLabel: 'Power of Now', locked: !isAdmin },
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
             { id: 'stats', icon: BarChart2, label: 'Soul Stats', fullLabel: 'Your Journey', locked: false },
             { id: 'journey', icon: Target, label: 'Breath', locked: !isAdmin },
@@ -843,17 +843,22 @@ export default function UntetheredApp() {
         "lg:pl-72"
       )}>
         <AnimatePresence>
+          {/* Back Action - Integrated into the page flow */}
           {activeTab !== 'home' && (
-            <motion.button
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
-              className="fixed top-8 left-8 lg:left-80 z-[60] p-4 rounded-2xl bg-[var(--bg-surface)] backdrop-blur-3xl border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all group flex items-center gap-3"
-            >
-              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] pr-2">Return Home</span>
-            </motion.button>
+            <div className="max-w-7xl mx-auto px-6 md:px-12 pt-12 -mb-8 relative z-50">
+              <motion.button
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
+                className="flex items-center gap-3 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all group lg:ml-0"
+              >
+                <div className="p-2.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-3xl group-hover:scale-110 group-hover:bg-[var(--bg-surface-hover)] transition-all shadow-sm">
+                  <ArrowLeft className="w-4 h-4" />
+                </div>
+                <span className="text-[9px] font-bold uppercase tracking-[0.4em]">Center Navigation</span>
+              </motion.button>
+            </div>
           )}
         </AnimatePresence>
 

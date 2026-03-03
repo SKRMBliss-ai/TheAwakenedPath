@@ -204,7 +204,7 @@ const StatsDashboard: React.FC = () => {
             Continue to watch these patterns with gentle curiosity. You are doing beautiful work.
         `;
 
-        speak(script, "This is a spiritual summary of the user's progress stats.");
+        speak(script, "This is a spiritual summary of the user's progress stats.", true);
     };
 
     if (isLoading && totalEntries === 0) {

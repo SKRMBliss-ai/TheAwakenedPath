@@ -32,14 +32,13 @@ const STEP_PROMPTS = {
 };
 
 export function useJournalVoice() {
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(VoiceService.isSpeaking);
     const [isLoading, setIsLoading] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(VoiceService.isEnabled);
 
-    const stopRef = useRef<(() => void) | null>(null);
     const isMountedRef = useRef(true);
     const lastSpokenRef = useRef<string | null>(null);
-    const pendingSpeechRef = useRef<string | null>(null);
+    const pendingSpeechRef = useRef<{ text: string; force: boolean } | null>(null);
     const isInteractedRef = useRef(false);
     const speakRef = useRef<Function | null>(null);
 
@@ -53,12 +52,21 @@ export function useJournalVoice() {
         }
     }, []);
 
-    const speak = useCallback(async (text: string, context?: string) => {
-        if (!voiceEnabled) return;
+    const speak = useCallback(async (text: string, context?: string, force: boolean = false) => {
+        if (!voiceEnabled && !force) {
+            console.log("Voice: Guidance is disabled via toggle (and not forced).");
+            return;
+        }
+
+        // Auto-enable if forced
+        if (force && !VoiceService.isEnabled) {
+            VoiceService.setEnabled(true);
+            setVoiceEnabled(true);
+        }
 
         if (!isInteractedRef.current) {
             console.log("Voice: Queuing guidance for first interaction...");
-            pendingSpeechRef.current = text;
+            pendingSpeechRef.current = { text, force };
             return;
         }
 
@@ -109,25 +117,41 @@ export function useJournalVoice() {
     useEffect(() => {
         isMountedRef.current = true;
         speakRef.current = speak;
+
+        // Subscribe to global speaking state
+        const unsubscribe = VoiceService.subscribe((isSpeaking) => {
+            if (isMountedRef.current) setIsPlaying(isSpeaking);
+        });
+
+        // Polling for enabled status since it can change globally
+        const intv = setInterval(() => {
+            if (isMountedRef.current && VoiceService.isEnabled !== voiceEnabled) {
+                setVoiceEnabled(VoiceService.isEnabled);
+            }
+        }, 1000);
+
         return () => {
             isMountedRef.current = false;
-            stopRef.current?.();
+            unsubscribe();
+            clearInterval(intv);
         };
-    }, [speak]);
+    }, [speak, voiceEnabled]);
 
     useEffect(() => {
-        const handler = () => {
+        const handler = (e: any) => {
             if (isInteractedRef.current) return;
+            console.log("Voice: Detected interaction:", e.type);
             isInteractedRef.current = true;
             if (pendingSpeechRef.current) {
-                const text = pendingSpeechRef.current;
+                const { text, force } = pendingSpeechRef.current;
                 pendingSpeechRef.current = null;
-                speakRef.current?.(text);
+                speakRef.current?.(text, undefined, force);
             }
         };
         window.addEventListener('mousedown', handler, { once: true, capture: true });
         window.addEventListener('touchstart', handler, { once: true, capture: true });
         window.addEventListener('keydown', handler, { once: true, capture: true });
+        window.addEventListener('click', handler, { once: true, capture: true });
         return () => {
             window.removeEventListener('mousedown', handler);
             window.removeEventListener('touchstart', handler);
