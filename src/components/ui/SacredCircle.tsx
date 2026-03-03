@@ -62,7 +62,7 @@ const ParticleField = ({ size, isLight, variant }: { size: number, isLight: bool
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                 ctx.fillStyle = isLight
-                    ? `rgba(180, 140, 160, ${alpha})`
+                    ? `rgba(140, 100, 120, ${alpha})`
                     : `rgba(220, 180, 200, ${alpha})`;
                 ctx.fill();
             });
@@ -91,10 +91,10 @@ interface SacredCircleProps {
 }
 
 const SIZE_MAP: Record<string, number> = {
-    sm: 160,
-    md: 240,
-    lg: 300,
-    xl: 340,
+    sm: 140,
+    md: 210,
+    lg: 280,
+    xl: 320,
 };
 
 export const SacredCircle: React.FC<SacredCircleProps> = ({
@@ -123,7 +123,7 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                             className={`absolute -inset-3 rounded-full pointer-events-none ${breatheClass}`}
                             style={{
                                 background: isLight
-                                    ? "radial-gradient(circle, rgba(200,160,180,0.15) 0%, transparent 70%)"
+                                    ? "radial-gradient(circle, rgba(160,120,140,0.25) 0%, transparent 70%)"
                                     : "radial-gradient(circle, rgba(200,140,180,0.12) 0%, transparent 70%)",
                             }}
                         />
@@ -133,10 +133,10 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                             className={`relative w-full h-full rounded-full overflow-hidden shadow-2xl ${breatheClass}`}
                             style={{
                                 background: isLight
-                                    ? "radial-gradient(circle at 40% 35%, #f0e0ea 0%, #e8d4de 30%, #dcc8d6 60%, #d4bcc8 100%)"
+                                    ? "radial-gradient(circle at 40% 35%, #e1ccd8 0%, #d8bcc8 30%, #c8a8ba 60%, #b898ac 100%)"
                                     : "radial-gradient(circle at 40% 35%, #3a2535 0%, #2d1a28 30%, #221420 60%, #1a0e18 100%)",
                                 boxShadow: isLight
-                                    ? "0 0 0 1px rgba(200,160,180,0.15), 0 0 60px rgba(200,160,180,0.12), inset 0 0 40px rgba(255,255,255,0.08)"
+                                    ? "0 4px 30px rgba(140,100,130,0.12), 0 0 0 1px rgba(140,100,130,0.1), inset 0 0 40px rgba(255,255,255,0.08)"
                                     : "0 0 0 1px rgba(200,140,180,0.1), 0 0 80px rgba(180,100,160,0.08), inset 0 0 40px rgba(200,140,180,0.04)",
                             }}
                         >
@@ -158,9 +158,9 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                                     style={{
                                         fontFamily: fontSerif,
                                         fontSize: s * 0.1,
-                                        color: isLight ? "rgba(255,255,255,0.85)" : "rgba(255,240,248,0.7)",
+                                        color: isLight ? "rgba(80,60,70,0.55)" : "rgba(255,240,248,0.7)",
                                         textShadow: isLight
-                                            ? "0 0 20px rgba(200,160,180,0.3)"
+                                            ? "0 0 20px rgba(255,255,255,0.4)"
                                             : "0 0 30px rgba(200,140,180,0.2)",
                                     }}
                                 >

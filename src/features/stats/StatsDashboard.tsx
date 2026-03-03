@@ -142,8 +142,13 @@ const StatsDashboard: React.FC = () => {
                     return;
                 }
 
-                const diffTime = now.getTime() - date.getTime();
-                const diffDays = Math.floor(diffTime / oneDay);
+                const nowMidnight = new Date(now);
+                nowMidnight.setHours(0, 0, 0, 0);
+                const entryMidnight = new Date(date);
+                entryMidnight.setHours(0, 0, 0, 0);
+
+                const diffTime = nowMidnight.getTime() - entryMidnight.getTime();
+                const diffDays = Math.round(diffTime / oneDay);
 
                 // Weekly activity (Current Calendar Week only)
                 const todayIndex = (now.getDay() + 6) % 7;
