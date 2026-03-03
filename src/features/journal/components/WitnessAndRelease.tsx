@@ -1,8 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, Sparkles, Heart, Wind, ShieldCheck } from "lucide-react";
+import { Check } from "lucide-react";
 
-// ─── TYPES ───
+/*
+ * WITNESS & RELEASE — Step 3
+ * Redesigned as a compact card-stack with inner tab navigation.
+ * Integrated with the main app structure while keeping the new design philosophy.
+ */
+
 interface WitnessData {
     thought: string;
     emotions: string[];
@@ -13,369 +18,441 @@ interface WitnessData {
 interface WitnessAndReleaseProps {
     data: WitnessData;
     onComplete: (reflection: string) => void;
+    onTabChange?: (tabId: typeof TABS[number]["id"]) => void;
 }
 
-// ─── ANTIDOTE LOGIC ───
+const TABS = [
+    { id: "witness", label: "Witness", icon: "◉" },
+    { id: "truth", label: "Truth", icon: "✦" },
+    { id: "perspective", label: "Perspective", icon: "◐" },
+    { id: "release", label: "Release", icon: "〰" },
+    { id: "close", label: "Close", icon: "✓" },
+] as const;
+
+type TabId = typeof TABS[number]["id"];
+
 const ANTIDOTES: Record<string, { truth: string; reframe: string }> = {
-    "I can't manage this. It's too much.": {
-        truth: "I have managed difficult things before. I found a way then — I can find a way now.",
-        reframe: "This feeling is temporary. My track record of handling hard things is 100%.",
-    },
-    "rejected": {
-        truth: "My worth isn't determined by one person's response. I matter to many people.",
-        reframe: "I don't need external validation to know my value. I am enough as I am.",
-    },
     "default": {
         truth: "Thoughts are not facts. I have navigated challenges before and I will again.",
         reframe: "This is a story my mind is telling. I can choose a truer, kinder story.",
     },
 };
 
-const HOOPONOPONO = [
-    { phrase: "I'm sorry", icon: <Wind size={20} />, meaning: "Acknowledging the pattern" },
-    { phrase: "Please forgive me", icon: <ShieldCheck size={20} />, meaning: "Releasing attachment" },
-    { phrase: "Thank you", icon: <Sparkles size={20} />, meaning: "Gratitude for awareness" },
-    { phrase: "I love you", icon: <Heart size={20} />, meaning: "Returning to wholeness" },
-];
-
-const GRATITUDE_PROMPTS = [
-    "One person who showed you kindness this week",
-    "A small comfort you enjoyed today",
-    "Something your body did for you today",
-    "A lesson a difficult moment taught you",
-    "Something beautiful you noticed recently",
-];
-
-// ─── UI COMPONENTS ───
-
-function TimerRing({ seconds, total }: { seconds: number; total: number }) {
-    const r = 44;
-    const circ = 2 * Math.PI * r;
-    const offset = circ * (1 - seconds / total);
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-
-    return (
-        <div className="relative w-32 h-32 flex items-center justify-center">
-            <svg width="120" height="120" viewBox="0 0 120 120" className="rotate-[-90deg]">
-                <circle
-                    cx="60" cy="60" r={r}
-                    fill="none"
-                    stroke="rgba(255,255,255,0.05)"
-                    strokeWidth="4"
-                />
-                <circle
-                    cx="60" cy="60" r={r}
-                    fill="none"
-                    stroke="var(--accent-primary)"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    strokeDasharray={circ}
-                    strokeDashoffset={offset}
-                    className="transition-[stroke-dashoffset] duration-1000 linear"
-                />
-            </svg>
-            <span className="absolute font-serif text-2xl text-[var(--text-primary)]">
-                {m}:{s.toString().padStart(2, "0")}
-            </span>
-        </div>
-    );
-}
-
-const fearTraits = [
+const FEAR_TRAITS = [
     "Reacts from past wounds",
     "Needs external validation",
     "Controls, resists, grips",
     "Lives in worst-case stories",
 ];
-
-const loveTraits = [
+const LOVE_TRAITS = [
     "Responds from presence",
     "Trusts inner knowing",
     "Allows, accepts, flows",
     "Rests in what is real now",
 ];
 
-export function WitnessAndRelease({ data, onComplete }: WitnessAndReleaseProps) {
-    const mainThought = data.thought || "No thought selected";
-    const antidote = ANTIDOTES[mainThought] || ANTIDOTES["default"];
+const HOOP = [
+    { phrase: "I'm sorry", icon: "🙏", note: "Acknowledging" },
+    { phrase: "Forgive me", icon: "💧", note: "Releasing" },
+    { phrase: "Thank you", icon: "✨", note: "Gratitude" },
+    { phrase: "I love you", icon: "💛", note: "Wholeness" },
+];
 
-    const [hoopOpen, setHoopOpen] = useState(false);
+const GRATITUDE_PROMPTS = [
+    "One person who showed you kindness this week",
+    "A small comfort you enjoyed today",
+    "Something your body did for you today",
+    "A lesson from a difficult moment",
+    "Something beautiful you noticed recently",
+];
+
+export function WitnessAndRelease({ data, onComplete, onTabChange }: WitnessAndReleaseProps) {
+    const [tab, setTab] = useState<TabId>("witness");
     const [hoopRunning, setHoopRunning] = useState(false);
     const [hoopTime, setHoopTime] = useState(60);
-    const [hoopPhaseIndex, setHoopPhaseIndex] = useState(0);
+    const [hoopPhase, setHoopPhase] = useState(0);
     const [hoopDone, setHoopDone] = useState(false);
-    const timerRef = useRef<any>(null);
-
+    const [checks, setChecks] = useState({ witnessed: false, truth: false, gratitude: false, hoop: false, reflection: false });
+    const [showGratitude, setShowGratitude] = useState(false);
     const [reflection, setReflection] = useState("");
-    const [checks, setChecks] = useState({
-        witnessed: false,
-        antidote: false,
-        gratitude: false,
-        hooponopono: false,
-        reflection: false,
-    });
-    const [gratitudeExpanded, setGratitudeExpanded] = useState(false);
+    const timerRef = useRef<any | null>(null);
+
+    const handleTabChange = (newTab: TabId) => {
+        setTab(newTab);
+        onTabChange?.(newTab);
+    };
+
+    const antidote = ANTIDOTES[data.thought] || ANTIDOTES["default"];
+    const tabIdx = TABS.findIndex(t => t.id === tab);
 
     useEffect(() => {
         if (hoopRunning && hoopTime > 0) {
             timerRef.current = setTimeout(() => {
-                setHoopTime((t) => t - 1);
-                const elapsed = 60 - (hoopTime - 1);
-                setHoopPhaseIndex(Math.min(Math.floor(elapsed / 15), 3));
+                setHoopTime(t => t - 1);
+                const e = 60 - (hoopTime - 1);
+                setHoopPhase(Math.min(Math.floor(e / 15), 3));
             }, 1000);
         }
         if (hoopRunning && hoopTime === 0) {
             setHoopRunning(false);
             setHoopDone(true);
-            setChecks((c) => ({ ...c, hooponopono: true }));
+            setChecks(c => ({ ...c, hoop: true }));
         }
         return () => { if (timerRef.current) clearTimeout(timerRef.current); };
     }, [hoopRunning, hoopTime]);
 
     const startHoop = () => {
         setHoopTime(60);
-        setHoopPhaseIndex(0);
+        setHoopPhase(0);
         setHoopRunning(true);
         setHoopDone(false);
     };
 
-    const toggleCheck = (key: keyof typeof checks) => {
-        setChecks((c) => ({ ...c, [key]: !c[key] }));
-        if (key === "gratitude") {
-            setGratitudeExpanded(!checks.gratitude);
-        }
+    const toggle = (k: keyof typeof checks) => {
+        setChecks(c => ({ ...c, [k]: !c[k] }));
+        if (k === "gratitude") setShowGratitude(v => !v);
     };
 
     const allDone = Object.values(checks).every(Boolean);
 
+    const containerStyle = {
+        fontFamily: "var(--font-sans)",
+    };
+
     return (
-        <div className="space-y-10 py-6">
-            {/* 1. Pattern Summary (Matching Screenshot Style) */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-8 rounded-[32px] bg-[#1a141f] border border-white/5 shadow-2xl space-y-8 relative overflow-hidden"
-            >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 blur-[80px] -mr-32 -mt-32" />
-
-                <div className="space-y-6 relative z-10">
-                    <div>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-[#8b858f] font-bold mb-6">A PATTERN AROSE</p>
-
-                        <div className="space-y-4">
-                            <p className="text-[11px] uppercase tracking-[0.15em] text-[#8b858f] font-bold">A THOUGHT AROSE...</p>
-                            <p className="font-serif text-2xl italic text-[#e8e4df] pl-2 border-l border-purple-500/30">
-                                "{data.thought}"
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <p className="text-[11px] uppercase tracking-[0.15em] text-[#8b858f] font-bold">IT CREATED...</p>
-                        <div className="flex flex-wrap gap-2">
-                            {data.emotions.map(e => (
-                                <span key={e} className="px-5 py-2 rounded-full bg-[#2d1b33] border border-purple-500/20 text-[#d1b3d1] text-sm font-serif italic">
-                                    {e}
+        <div style={containerStyle} className="w-full max-w-2xl mx-auto py-4 bg-[var(--bg-surface)] backdrop-blur-md rounded-[32px] border border-[var(--border-default)] shadow-xl overflow-hidden">
+            <div className="p-6 sm:p-10">
+                {/* ── Inner tab bar ── */}
+                <div className="flex overflow-x-auto no-scrollbar border-b border-[var(--border-subtle)]/30 mb-8">
+                    {TABS.map((t, i) => {
+                        const active = tab === t.id;
+                        const past = i < tabIdx;
+                        return (
+                            <button
+                                key={t.id}
+                                onClick={() => handleTabChange(t.id)}
+                                className={`flex-1 min-w-[80px] py-4 px-2 flex flex-col items-center gap-1 transition-all relative
+                                ${active ? 'bg-[var(--accent-primary-muted)]/10' : 'hover:bg-[var(--bg-surface)]/50'}`}
+                            >
+                                <span className={`text-lg leading-none transition-opacity
+                                ${active ? 'opacity-100' : past ? 'opacity-60' : 'opacity-30'}`}>
+                                    {t.icon}
                                 </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <p className="text-[11px] uppercase tracking-[0.15em] text-[#8b858f] font-bold">YOU FELT IT IN YOUR...</p>
-                        <div className="flex items-center gap-2 text-[#e8e4df] font-serif text-lg">
-                            <span className="text-xl">🌿</span>
-                            <span>{data.bodyArea}</span>
-                        </div>
-                    </div>
-
-                    {/* Witness Insight Box */}
-                    <div className="mt-8 p-6 rounded-2xl bg-[#2a1a2e] border border-pink-500/10 shadow-inner">
-                        <p className="font-serif text-lg leading-relaxed text-[#cbb6ce]">
-                            But notice... <span className="text-pink-400 italic">you are the one who was watching.</span>
-                        </p>
-                        <p className="font-serif text-lg leading-relaxed text-[#a691a9] mt-1">
-                            You are not the thought. You are the awareness in which the thought arose.
-                        </p>
-                    </div>
-                </div>
-            </motion.div>
-
-            {/* 2. Antidote Thought */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-6">
-                <div className="p-8 rounded-2xl bg-gradient-to-br from-[var(--accent-secondary-muted)] to-[var(--bg-surface)] border border-[var(--accent-secondary-border)] relative shadow-2xl shadow-[var(--accent-secondary-muted)]/10">
-                    <div className="space-y-8">
-                        <div>
-                            <div className="flex items-center gap-3 text-[var(--accent-secondary)] mb-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-current" />
-                                <span className="font-serif text-sm italic">What's the truth?</span>
-                            </div>
-                            <p className="font-serif text-2xl text-[var(--text-primary)] leading-relaxed pl-4 border-l-2 border-[var(--accent-secondary-border)]">
-                                {antidote.truth}
-                            </p>
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-3 text-[var(--accent-primary)] mb-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-current" />
-                                <span className="font-serif text-sm italic">A kinder thought</span>
-                            </div>
-                            <p className="font-serif text-2xl text-[var(--text-primary)] leading-relaxed pl-4 border-l-2 border-[var(--accent-primary-border)]">
-                                {antidote.reframe}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </motion.div>
-
-            {/* 3. The Perspective Shift Diagram */}
-            <div className="space-y-6 pt-6">
-                <div className="text-center space-y-2">
-                    <p className="text-[9px] uppercase tracking-[0.4em] text-[var(--text-muted)] font-bold">Two Perspectives</p>
-                    <h3 className="font-serif text-2xl text-[var(--text-primary)]">Where is this thought coming from?</h3>
+                                <span className={`text-[10px] uppercase tracking-widest transition-colors
+                                ${active ? 'text-[var(--accent-primary)] font-bold' : 'text-[var(--text-muted)]'}`}>
+                                    {t.label}
+                                </span>
+                                {active && (
+                                    <motion.div
+                                        layoutId="activeTab"
+                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent-primary)]"
+                                    />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
 
-                <div className="flex border border-[var(--border-subtle)] rounded-3xl overflow-hidden shadow-xl">
-                    <div className="flex-1 p-8 bg-rose-500/5 border-r border-[var(--border-subtle)] text-center flex flex-col items-center">
-                        <span className="text-4xl mb-4 opacity-50">🌑</span>
-                        <h4 className="font-serif text-lg text-rose-300 mb-6 underline decoration-rose-500/30 underline-offset-8">Fear / Ego</h4>
-                        <ul className="space-y-4 text-xs text-rose-200/60 leading-relaxed font-medium">
-                            {fearTraits.map(t => <li key={t}>{t}</li>)}
-                        </ul>
-                    </div>
-                    <div className="flex-1 p-8 bg-[var(--accent-secondary-muted)] text-center flex flex-col items-center">
-                        <span className="text-4xl mb-4 opacity-70">✦</span>
-                        <h4 className="font-serif text-lg text-[var(--accent-secondary)] mb-6 underline decoration-[var(--accent-secondary)]/30 underline-offset-8">Being / Love</h4>
-                        <ul className="space-y-4 text-xs text-[var(--accent-secondary)] opacity-70 leading-relaxed font-medium">
-                            {loveTraits.map(t => <li key={t}>{t}</li>)}
-                        </ul>
-                    </div>
-                </div>
-                <p className="text-center font-serif text-sm italic text-[var(--text-muted)] opacity-60">"You are not the fear. You are the awareness witnessing it."</p>
-            </div>
+                {/* ── Content area ── */}
+                <div className="min-h-[400px] px-2">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={tab}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            {tab === "witness" && (
+                                <div className="space-y-6">
+                                    <div className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">A pattern arose</div>
 
-            {/* 4. Ho'oponopono (Optional) */}
-            <div className="pt-6">
-                <button
-                    onClick={() => setHoopOpen(!hoopOpen)}
-                    className="w-full flex items-center justify-between p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:bg-[var(--bg-glass)] transition-all"
-                >
-                    <div className="flex items-center gap-3">
-                        <span className="font-bold text-xs tracking-wider uppercase text-[var(--text-primary)]">Ho'oponopono Release</span>
-                        <span className="px-2 py-0.5 rounded bg-[var(--bg-deep)] border border-purple-500/30 text-purple-300 text-[9px] font-bold tracking-tighter">OPTIONAL</span>
-                    </div>
-                    <ChevronDown className={`transition-transform duration-300 text-[var(--text-disabled)] ${hoopOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                <AnimatePresence>
-                    {hoopOpen && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                            <div className="py-8 space-y-8">
-                                <p className="text-sm text-[var(--text-muted)] font-serif italic leading-relaxed text-center max-w-sm mx-auto">
-                                    An ancient practice to release negative energy. Silently repeat each phrase, letting them dissolve layers of resistance.
-                                </p>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    {HOOPONOPONO.map((h, i) => (
-                                        <div key={i} className={`p-6 rounded-2xl border text-center transition-all duration-500 ${(hoopRunning && hoopPhaseIndex === i) || hoopDone ? 'bg-[var(--accent-primary-muted)] border-[var(--accent-primary-border)] scale-105 shadow-lg shadow-[var(--accent-primary-muted)]/10' : 'bg-[var(--bg-surface)] border-[var(--border-subtle)]'}`}>
-                                            <div className="mb-4 text-[var(--accent-primary)] flex justify-center">{h.icon}</div>
-                                            <div className="font-serif text-lg text-[var(--text-primary)] mb-1">{h.phrase}</div>
-                                            <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">{h.meaning}</div>
+                                    <div className="space-y-2">
+                                        <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] opacity-70">A thought arose…</div>
+                                        <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-[var(--shadow-elevated)] min-h-[100px] flex items-center">
+                                            <p className="font-serif italic text-2xl text-[var(--text-primary)] leading-tight w-full" style={{ fontFamily: "var(--font-serif)" }}>
+                                                "{data.thought}"
+                                            </p>
                                         </div>
-                                    ))}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] opacity-70">It created…</div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {data.emotions.map(e => (
+                                                    <span key={e} className="px-3 py-1.5 rounded-full bg-[var(--accent-primary-muted)] border border-[var(--accent-primary-border)] text-[var(--accent-primary)] text-xs italic font-serif" style={{ fontFamily: "var(--font-serif)" }}>
+                                                        {e}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] opacity-70">Felt in…</div>
+                                            <div className="flex items-center">
+                                                <span className="px-3 py-1.5 rounded-full bg-[var(--accent-secondary-muted)] border border-[var(--accent-secondary-border)] text-[var(--accent-secondary)] text-xs italic font-serif" style={{ fontFamily: "var(--font-serif)" }}>
+                                                    {data.bodyArea}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 rounded-2xl bg-[var(--accent-secondary-muted)] border border-[var(--accent-secondary-border)]/20 mt-8">
+                                        <p className="font-serif text-lg leading-relaxed text-[var(--text-secondary)]" style={{ fontFamily: "var(--font-serif)" }}>
+                                            But notice… <span className="text-[var(--accent-secondary)] italic">you are the one who was watching.</span><br />
+                                            <span className="opacity-70">You are not the thought. You are the awareness in which the thought arose.</span>
+                                        </p>
+                                    </div>
                                 </div>
+                            )}
 
-                                <div className="flex flex-col items-center gap-8">
-                                    <TimerRing seconds={hoopTime} total={60} />
-                                    <button
-                                        disabled={hoopRunning}
-                                        onClick={startHoop}
-                                        className={`px-8 py-4 rounded-full font-bold tracking-widest uppercase text-xs transition-all ${hoopRunning ? 'bg-[var(--bg-deep)] text-[var(--text-disabled)] cursor-not-allowed' : 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-xl hover:scale-105 active:scale-95'}`}
-                                    >
-                                        {hoopDone ? "✦ Complete" : hoopRunning ? "Releasing..." : "Begin 1-Minute Practice"}
-                                    </button>
+                            {tab === "truth" && (
+                                <div className="space-y-8">
+                                    <div className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">Counter the belief</div>
+
+                                    <div className="space-y-6">
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)] shadow-[0_0_10px_var(--accent-secondary)]" />
+                                                <span className="font-serif text-sm italic text-[var(--accent-secondary)]" style={{ fontFamily: "var(--font-serif)" }}>What's the truth?</span>
+                                            </div>
+                                            <div className="p-6 rounded-2xl bg-[var(--bg-primary)]/50 border border-[var(--border-default)] shadow-sm min-h-[80px] flex items-center">
+                                                <p className="font-serif text-xl text-[var(--text-primary)] leading-relaxed italic" style={{ fontFamily: "var(--font-serif)" }}>
+                                                    {antidote.truth}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_10px_var(--accent-primary)]" />
+                                                <span className="font-serif text-sm italic text-[var(--accent-primary)]" style={{ fontFamily: "var(--font-serif)" }}>A kinder thought</span>
+                                            </div>
+                                            <div className="p-6 rounded-2xl bg-[var(--bg-primary)]/50 border border-[var(--border-default)] shadow-sm min-h-[80px] flex items-center">
+                                                <p className="font-serif text-xl text-[var(--text-primary)] leading-relaxed italic" style={{ fontFamily: "var(--font-serif)" }}>
+                                                    {antidote.reframe}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                            )}
 
-            {/* 5. Final Reflection & Checklist */}
-            <div className="pt-6 space-y-8">
-                <div className="space-y-4">
-                    <p className="text-[9px] uppercase tracking-[0.4em] text-[var(--text-muted)] font-bold">Deepen the Witness</p>
-                    <textarea
-                        value={reflection}
-                        onChange={(e) => {
-                            setReflection(e.target.value);
-                            if (!checks.reflection) toggleCheck('reflection');
-                        }}
-                        placeholder="Anything else you'd like to release or witness today?"
-                        className="w-full h-40 p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] focus:border-[var(--accent-primary)] outline-none font-serif text-lg text-[var(--text-primary)] resize-none transition-all placeholder:italic placeholder:opacity-30"
-                    />
-                </div>
+                            {tab === "perspective" && (
+                                <div className="space-y-6">
+                                    <div className="text-center space-y-2">
+                                        <p className="text-[10px] uppercase tracking-[0.4em] text-[var(--text-muted)] font-bold">Two Perspectives</p>
+                                        <h3 className="font-serif text-xl text-[var(--text-primary)]" style={{ fontFamily: "var(--font-serif)" }}>
+                                            Where is this thought <span className="text-[var(--accent-secondary)] italic">coming from?</span>
+                                        </h3>
+                                    </div>
 
-                <div className="space-y-4">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-bold mb-4">Before You Close</p>
-                    <div className="p-8 rounded-2xl bg-gradient-to-br from-[var(--bg-surface)] to-transparent border border-[var(--border-subtle)] divide-y divide-[var(--border-subtle)]/50">
-                        <CheckItem label="I witnessed my pattern without judgment" active={checks.witnessed} onToggle={() => toggleCheck('witnessed')} />
-                        <CheckItem label="I read the truth — a kinder thought" active={checks.antidote} onToggle={() => toggleCheck('antidote')} />
-                        <CheckItem label="I paused for gratitude" sub="Tap to see prompts" active={checks.gratitude} onToggle={() => toggleCheck('gratitude')} />
+                                    <div className="flex border border-[var(--border-subtle)] rounded-3xl overflow-hidden shadow-lg bg-[var(--bg-surface)]">
+                                        <div className="flex-1 p-6 border-r border-[var(--border-subtle)]/30 text-center bg-[var(--accent-primary-dim)]/20">
+                                            <div className="text-2xl mb-3">🌑</div>
+                                            <div className="font-serif text-md text-[var(--accent-primary)] font-bold mb-4" style={{ fontFamily: "var(--font-serif)" }}>Fear / Ego</div>
+                                            <ul className="space-y-3">
+                                                {FEAR_TRAITS.map(t => (
+                                                    <li key={t} className="text-[11px] text-rose-200/50 leading-snug">{t}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div className="flex-1 p-6 text-center bg-[var(--accent-secondary-muted)]/10">
+                                            <div className="text-2xl mb-3 text-[var(--accent-secondary)]">✦</div>
+                                            <div className="font-serif text-md text-[var(--accent-secondary)] font-bold mb-4" style={{ fontFamily: "var(--font-serif)" }}>Being / Love</div>
+                                            <ul className="space-y-3">
+                                                {LOVE_TRAITS.map(t => (
+                                                    <li key={t} className="text-[11px] text-[var(--accent-secondary)] opacity-60 leading-snug">{t}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
 
-                        <AnimatePresence>
-                            {gratitudeExpanded && (
-                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                                    <div className="py-4 pl-10 space-y-3">
-                                        {GRATITUDE_PROMPTS.map(p => (
-                                            <p key={p} className="text-xs text-[var(--text-muted)] italic pl-4 border-l border-amber-500/30">{p}</p>
+                                    <p className="text-center font-serif text-sm italic text-[var(--text-muted)] opacity-60 mt-4" style={{ fontFamily: "var(--font-serif)" }}>
+                                        "You are not the fear. You are the awareness witnessing it."
+                                    </p>
+                                </div>
+                            )}
+
+                            {tab === "release" && (
+                                <div className="space-y-6">
+                                    <div className="text-center space-y-2">
+                                        <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">Ho'oponopono · 1 min</p>
+                                        <p className="text-sm text-[var(--text-muted)] font-serif italic max-w-xs mx-auto" style={{ fontFamily: "var(--font-serif)" }}>
+                                            Silently repeat each phrase. Let each one dissolve a layer of resistance.
+                                        </p>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3 pb-4">
+                                        {HOOP.map((h, i) => (
+                                            <motion.div
+                                                key={i}
+                                                animate={{
+                                                    scale: hoopRunning && hoopPhase === i ? 1.05 : 1,
+                                                    opacity: hoopRunning && hoopPhase !== i && !hoopDone ? 0.5 : 1
+                                                }}
+                                                className={`p-4 rounded-xl border transition-colors text-center
+                                                ${(hoopRunning && hoopPhase === i) || hoopDone
+                                                        ? 'bg-[var(--accent-primary-muted)] border-[var(--accent-primary-border)]'
+                                                        : 'bg-[var(--bg-surface)] border-[var(--border-subtle)]/30'}`}
+                                            >
+                                                <div className="text-xl mb-1">{h.icon}</div>
+                                                <div className="font-serif text-sm text-[var(--text-primary)]" style={{ fontFamily: "var(--font-serif)" }}>{h.phrase}</div>
+                                                <div className="text-[9px] uppercase tracking-tighter text-[var(--text-muted)]/50">{h.note}</div>
+                                            </motion.div>
                                         ))}
                                     </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
 
-                        <CheckItem label="Ho'oponopono (Auto-checked after practice)" active={checks.hooponopono} onToggle={() => toggleCheck('hooponopono')} />
-                        <CheckItem label="I wrote a reflection" active={checks.reflection} onToggle={() => toggleCheck('reflection')} last />
+                                    <div className="flex flex-col items-center gap-6">
+                                        <div className="relative w-24 h-24 flex items-center justify-center">
+                                            <svg width="90" height="90" viewBox="0 0 90 90" className="rotate-[-90deg]">
+                                                <circle cx="45" cy="45" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
+                                                <circle cx="45" cy="45" r="40" fill="none" stroke="var(--accent-primary)" strokeWidth="3"
+                                                    strokeLinecap="round"
+                                                    strokeDasharray={251.3}
+                                                    strokeDashoffset={251.3 * (1 - hoopTime / 60)}
+                                                    className="transition-[stroke-dashoffset] duration-1000 linear" />
+                                            </svg>
+                                            <span className="absolute font-serif text-xl" style={{ fontFamily: "var(--font-serif)" }}>
+                                                {Math.floor(hoopTime / 60)}:{(hoopTime % 60).toString().padStart(2, '0')}
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            onClick={startHoop}
+                                            disabled={hoopRunning}
+                                            className={`px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all
+                                            ${hoopRunning
+                                                    ? 'bg-[var(--bg-deep)] text-[var(--text-disabled)]'
+                                                    : 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-lg transform hover:scale-105 active:scale-95'}`}
+                                        >
+                                            {hoopDone ? "✦ Complete" : hoopRunning ? "Releasing…" : "Begin Practice"}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {tab === "close" && (
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">Deepen the witness</div>
+                                        <textarea
+                                            value={reflection}
+                                            onChange={e => {
+                                                setReflection(e.target.value);
+                                                if (e.target.value.length > 0) setChecks(c => ({ ...c, reflection: true }));
+                                            }}
+                                            placeholder="Anything else you'd like to release or witness today?"
+                                            className="w-full h-32 p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] focus:border-[var(--accent-primary)] outline-none font-serif text-lg text-[var(--text-primary)] transition-all resize-none placeholder:opacity-30"
+                                            style={{ fontFamily: "var(--font-serif)" }}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">Before you close</div>
+                                        <div className="p-1 bg-[var(--bg-surface)] rounded-2xl border border-[var(--border-subtle)]/50 divide-y divide-[var(--border-subtle)]/20">
+                                            <CheckItem checked={checks.witnessed} onToggle={() => toggle("witnessed")} label="I witnessed my pattern without judgement" />
+                                            <CheckItem checked={checks.truth} onToggle={() => toggle("truth")} label="I read the truth — a kinder thought" />
+                                            <CheckItem checked={checks.gratitude} onToggle={() => toggle("gratitude")} label="I paused for gratitude" sub="tap to see prompts" />
+                                            <AnimatePresence>
+                                                {showGratitude && (
+                                                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden bg-[var(--bg-deep)]/30">
+                                                        <div className="py-4 px-6 space-y-2">
+                                                            {GRATITUDE_PROMPTS.map((p, i) => (
+                                                                <div key={i} className="text-[11px] text-[var(--text-muted)] italic leading-relaxed pl-4 border-l border-amber-500/20">{p}</div>
+                                                            ))}
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                            <CheckItem checked={checks.hoop} onToggle={() => toggle("hoop")} label="Ho'oponopono (Auto-checked after practice)" />
+                                            <CheckItem checked={checks.reflection} onToggle={() => toggle("reflection")} label="I wrote a reflection" />
+                                        </div>
+                                    </div>
+
+                                    <AnimatePresence>
+                                        {allDone && (
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                className="pt-8 text-center space-y-6"
+                                            >
+                                                <div className="space-y-2">
+                                                    <div className="text-3xl text-[var(--accent-primary)]">✦</div>
+                                                    <div className="font-serif text-2xl italic text-[var(--text-primary)]" style={{ fontFamily: "var(--font-serif)" }}>
+                                                        You are not your thoughts.
+                                                    </div>
+                                                    <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-[0.3em]">Practice complete</div>
+                                                </div>
+                                                <button
+                                                    onClick={() => onComplete(reflection)}
+                                                    className="w-full py-4 rounded-2xl bg-white text-black font-bold uppercase tracking-widest text-[10px] hover:bg-[var(--accent-primary)] hover:text-white transition-all shadow-xl shadow-[var(--accent-primary)]/10"
+                                                >
+                                                    Seal this Entry ✦
+                                                </button>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+
+                {/* ── Bottom nav ── */}
+                <div className="mt-12 flex justify-between items-center px-2">
+                    <button
+                        onClick={() => { const i = tabIdx - 1; if (i >= 0) handleTabChange(TABS[i].id); }}
+                        disabled={tabIdx === 0}
+                        className="px-6 py-2.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[10px] font-bold uppercase tracking-widest transition-opacity disabled:opacity-20"
+                    >
+                        ← Back
+                    </button>
+
+                    {/* Progress Dots */}
+                    <div className="flex gap-2">
+                        {TABS.map((t, i) => (
+                            <div key={t.id} className={`h-1.5 rounded-full transition-all duration-300
+                            ${i === tabIdx ? 'w-8 bg-[var(--accent-primary)]' : i < tabIdx ? 'w-1.5 bg-[var(--accent-primary)]/40' : 'w-1.5 bg-[var(--border-subtle)]'}`} />
+                        ))}
                     </div>
+
+                    <button
+                        onClick={() => { const i = tabIdx + 1; if (i < TABS.length) handleTabChange(TABS[i].id); }}
+                        disabled={tabIdx === TABS.length - 1}
+                        className={`px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-20 
+                        ${tabIdx < TABS.length - 1 ? 'bg-[var(--accent-primary)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)]'}`}
+                    >
+                        Next →
+                    </button>
                 </div>
             </div>
-
-            {/* Completion Message */}
-            <AnimatePresence>
-                {allDone && (
-                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center py-12 text-center gap-6">
-                        <div className="text-5xl text-[var(--accent-primary)] animate-pulse">✦</div>
-                        <div className="space-y-2">
-                            <h4 className="font-serif text-2xl italic text-[var(--text-primary)]">You are not your thoughts.</h4>
-                            <p className="text-xs tracking-[0.4em] uppercase text-[var(--accent-secondary)] font-bold">Practice Complete</p>
-                        </div>
-                        <button
-                            onClick={() => onComplete(reflection)}
-                            className="mt-4 px-12 py-5 rounded-2xl bg-white text-black font-bold tracking-[0.2em] uppercase text-xs hover:bg-[var(--accent-primary)] hover:text-white transition-all shadow-2xl"
-                        >
-                            Seal this Entry ✦
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }
 
-function CheckItem({ label, active, onToggle, last, sub }: { label: string; active: boolean; onToggle: () => void; last?: boolean; sub?: string }) {
+function CheckItem({ checked, onToggle, label, sub }: { checked: boolean; onToggle: () => void; label: string; sub?: string }) {
     return (
         <button
             onClick={onToggle}
-            className={`w-full flex items-start gap-4 py-5 group transition-opacity ${active ? 'opacity-40' : 'opacity-100'} ${last ? '' : 'border-b border-[var(--border-subtle)]/30'}`}
+            className="w-full flex items-start gap-4 p-5 hover:bg-[var(--bg-glass)] transition-colors group text-left"
         >
-            <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-all ${active ? 'bg-[var(--accent-secondary)] border-[var(--accent-secondary)]' : 'bg-transparent border-[var(--border-subtle)] group-hover:border-[var(--accent-secondary-border)]'}`}>
-                {active && <Check size={14} className="text-[var(--bg-deep)]" />}
+            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all mt-0.5
+                ${checked ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]' : 'border-[var(--border-subtle)] group-hover:border-[var(--accent-primary)]'}`}>
+                {checked && <Check size={12} className="text-[var(--bg-deep)]" />}
             </div>
-            <div className="text-left">
-                <p className={`text-sm font-medium transition-colors ${active ? 'text-[var(--text-disabled)] line-through' : 'text-[var(--text-primary)]'}`}>{label}</p>
-                {sub && !active && <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest mt-1">{sub}</p>}
+            <div>
+                <div className={`text-xs font-medium transition-all
+                    ${checked ? 'text-[var(--text-disabled)] line-through opacity-50' : 'text-[var(--text-primary)]'}`}>
+                    {label}
+                </div>
+                {sub && !checked && (
+                    <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-tighter mt-1 opacity-50">
+                        {sub}
+                    </div>
+                )}
             </div>
         </button>
     );
 }
+

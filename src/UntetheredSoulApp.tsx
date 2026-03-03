@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Flame, Sparkles, Sun, Search, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut } from 'lucide-react';
+import { Flame, Sparkles, Sun, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut } from 'lucide-react';
+import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { PowerOfNow } from './features/soul-intelligence/components/PowerOfNow';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -10,13 +11,14 @@ import StatsDashboard from './features/stats/StatsDashboard';
 import { SituationalPractices } from './features/practices/SituationalPractices';
 import { useAuth } from './features/auth/AuthContext';
 import { MeditationPortal } from './components/ui/MeditationPortal';
-import { AwakenStage } from './components/ui/SacredCircle';
+import { AwakenStage, SacredCircle } from './components/ui/SacredCircle';
 import { GlassShape } from './components/ui/GlassShape';
 import { SignInScreen } from './features/auth/SignInScreen';
-import { AnchorButton, NoiseOverlay, ProgressFilament } from './components/ui/SacredUI';
+import { AnchorButton, NoiseOverlay } from './components/ui/SacredUI';
 import { GlobalSparkles } from './components/ui/GlobalSparkles';
 import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
 import { ThemeToggle, useTheme } from './theme/ThemeSystem';
+import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
 import appLogo from './assets/logo.png';
 
 interface PracticeStep {
@@ -54,7 +56,11 @@ const themeColors: any = {
 
 // --- Sub-components moved outside for stability ---
 
-const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, rotateY }: any) => {
+const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, rotateY, lastEntry }: any) => {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning'
+    : hour < 17 ? 'Good afternoon'
+      : 'Good evening';
 
   return (
     <motion.div
@@ -78,8 +84,8 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
           </button>
 
           <div className="flex flex-col items-center">
-            <h1 className="text-[12px] font-serif font-bold uppercase tracking-[0.25em] text-[var(--text-primary)] text-center">The Awakened Path</h1>
-            <span className="text-[8px] font-bold text-[var(--text-muted)] tracking-widest uppercase mt-1 text-center">The Presence Study</span>
+            <p className="text-[8px] font-serif italic text-[var(--text-muted)] tracking-widest uppercase mb-0.5 text-center">{greeting},</p>
+            <h1 className="text-[14px] font-serif font-bold text-[var(--text-primary)] text-center">{user.displayName || 'Traveler'}</h1>
           </div>
 
           {/* Empty div for flex-between balance */}
@@ -100,14 +106,15 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
 
           <div className="text-center space-y-6">
             {/* Minimal Metrics Row — no pill container needed if we want full float */}
-            <div className="flex items-center gap-8 justify-center opacity-80">
-              <div className="flex flex-col items-center gap-1.5">
+            <div className="inline-flex items-center gap-6 px-6 py-2.5 rounded-full bg-[var(--bg-surface)]/50 border border-[var(--border-subtle)]/50 backdrop-blur-md shadow-lg">
+              <div className="flex items-center gap-2">
                 <Heart className="w-3 h-3 text-rose-300" />
-                <span className="text-[8px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">Gratitude</span>
+                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">Flow</span>
               </div>
-              <div className="flex flex-col items-center gap-1.5">
+              <div className="w-px h-3 bg-[var(--border-subtle)]/30" />
+              <div className="flex items-center gap-2">
                 <Flame className="w-3 h-3 text-orange-300" />
-                <span className="text-[8px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">{user.streak} Days</span>
+                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">{user.streak} Days</span>
               </div>
             </div>
           </div>
@@ -150,9 +157,33 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
         </button>
       </section>
 
+      {/* Last Reflection One-Liner */}
+      {lastEntry && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="px-6 py-6 border-b border-[var(--border-subtle)]/30 mb-4"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-2 h-2 rounded-full bg-rose-400/60 shadow-[0_0_8px_rgba(251,113,133,0.4)]" />
+            <div className="flex-1">
+              <p className="text-sm font-serif italic text-[var(--text-secondary)] line-clamp-1 opacity-90">
+                "{lastEntry.thoughts}"
+              </p>
+              <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mt-1 font-bold">
+                Latest Reflection · {lastEntry.emotions}
+              </p>
+            </div>
+            <button onClick={() => setActiveTab('chapters')} className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent-primary)] font-bold">
+              View →
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Main Practices Grid */}
       <section className="space-y-6 pb-20">
-        <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)] pl-4">Sacred Sessions</h4>
+        <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)] pl-4">Sacred sessions</h4>
         <div className="grid grid-cols-2 gap-4">
           {[
             { id: 'intelligence', label: 'Presence', sub: 'EXPLORE', icon: Sparkles, color: '#ABCEC9', variant: 'orb' },
@@ -160,7 +191,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
             { id: 'panic', label: 'Awareness', sub: 'EMERGENCY', icon: AlertCircle, color: '#FF7043', variant: 'pulse' },
             { id: 'stats', label: 'Journey', sub: 'HISTORY', icon: BarChart2, color: '#9575CD', variant: 'chart' }
           ].map((item: any) => {
-            const isLocked = !isAdmin && item.id !== 'chapters';
+            const isLocked = !isAdmin && !['chapters', 'intelligence', 'stats'].includes(item.id);
             return (
               <div key={item.id} className="relative group/card">
                 {/* Backlit Magenta Glow - Matching Soul Stats */}
@@ -211,46 +242,52 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
   );
 };
 
-const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY }: any) => {
+const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEntry }: any) => {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning'
+    : hour < 17 ? 'Good afternoon'
+      : 'Good evening';
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-12 max-w-5xl mx-auto"
+      className="space-y-8 max-w-5xl mx-auto"
     >
-      {/* Desktop Optimized Header — Floating */}
-      <header className="flex justify-between items-center p-6 border-b border-[var(--border-default)]">
-        <div className="flex items-center gap-6">
-          <div className="p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)]">
-            <Search className="w-5 h-5 text-[var(--text-muted)]" />
-          </div>
-          <div>
-            <h1 className="text-xl font-serif font-light text-[var(--text-primary)] tracking-tight">The Awakened Path</h1>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">The Presence Study</p>
-          </div>
+      {/* Desktop Optimized Header — Floating Greeting */}
+      <header className="flex justify-between items-center p-6 border-b border-[var(--border-default)]/30">
+        <div className="text-left">
+          <p className="text-xs text-[var(--text-muted)] font-serif italic mb-1">
+            {greeting},
+          </p>
+          <h1 className="text-2xl font-serif font-light text-[var(--text-primary)] tracking-tight">
+            {user.displayName}
+          </h1>
         </div>
       </header>
 
-      {/* Hero Guided Area - Minimalist Desktop */}
-      <section className="relative py-16 flex flex-col items-center justify-center min-h-[500px]">
-        <div className="relative z-10 flex flex-col items-center text-center space-y-16">
+      {/* Hero Guided Area - Optimized height */}
+      <section className="relative py-8 flex flex-col items-center justify-center min-h-[360px]">
+        <div className="relative z-10 flex flex-col items-center text-center space-y-8">
           <div className="relative group">
             <AwakenStage
               isAnimating={false}
-              size="lg"
+              size="md"
               mouseX={rotateX}
               mouseY={rotateY}
             />
           </div>
 
-          <div className="flex gap-20">
-            <div className="flex flex-col items-center gap-3">
-              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.5em]">GRATITUDE FLOW</span>
-              <div className="w-1.5 h-1.5 rounded-full bg-rose-400 opacity-60 shadow-[0_0_10px_#fb7185]" />
+          {/* Stats Glass Pill */}
+          <div className="inline-flex items-center gap-6 px-8 py-3.5 rounded-full bg-[var(--bg-surface)]/50 border border-[var(--border-subtle)]/50 backdrop-blur-xl shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <Heart size={14} className="text-rose-400" />
+              <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Flow</span>
             </div>
-            <div className="flex flex-col items-center gap-3">
-              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.5em]">{user.streak} DAY STREAK</span>
-              <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)] opacity-60 shadow-[0_0_10px_var(--accent-secondary)]" />
+            <div className="w-px h-4 bg-[var(--border-subtle)]/50" />
+            <div className="flex items-center gap-2.5">
+              <Flame size={14} className="text-amber-400" />
+              <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">{user.streak} Days</span>
             </div>
           </div>
         </div>
@@ -266,57 +303,78 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY }: any) 
               opacity: [0.3, 0.5, 0.3]
             }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-[-20px] rounded-[40px] blur-[50px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
+            className="absolute inset-[-20px] rounded-[24px] blur-[50px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
           />
         )}
         <button
           onClick={() => isAdmin ? setActiveTab('situations') : null}
           className={cn(
-            "w-full group relative overflow-hidden rounded-[40px] bg-[var(--bg-surface)] border border-[var(--border-default)] p-8 flex items-center justify-between transition-all shadow-2xl",
-            isAdmin ? "hover:bg-[var(--bg-surface-hover)] hover:scale-[1.01] active:scale-[0.99]" : "opacity-50 cursor-not-allowed grayscale"
+            "w-full group relative overflow-hidden rounded-[24px] bg-[var(--bg-surface)] border border-[var(--border-default)] p-8 flex items-center justify-between transition-all shadow-2xl",
+            isAdmin ? "hover:bg-[var(--bg-surface-hover)] hover:scale-[1.01] active:scale-[0.99]" : "opacity-35 cursor-not-allowed grayscale"
           )}
         >
           <div className="flex items-center gap-10">
-            <div className="w-20 h-20 rounded-[28px] bg-[var(--accent-primary)] flex items-center justify-center shadow-xl transition-transform duration-500">
-              {isAdmin ? <Flame className="w-10 h-10 text-[var(--bg-primary)]" /> : <Lock className="w-10 h-10 text-[var(--text-muted)]" />}
+            <div className="w-16 h-16 rounded-[20px] bg-[var(--accent-primary)] flex items-center justify-center shadow-xl transition-transform duration-500">
+              {isAdmin ? <Flame className="w-8 h-8 text-[var(--bg-primary)]" /> : <Lock className="w-8 h-8 text-[var(--text-muted)]" />}
             </div>
             <div className="text-left">
-              <h3 className="text-3xl font-serif font-bold text-[var(--text-primary)]">Transform a Situation</h3>
-              <p className="text-sm text-[var(--text-muted)] font-bold uppercase tracking-[0.2em] mt-1">Shift from challenge to peace</p>
+              <h3 className="text-2xl font-serif font-bold text-[var(--text-primary)]">Transform a Situation</h3>
+              <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-[0.2em] mt-1">Shift from challenge to peace</p>
             </div>
           </div>
-          <div className="w-16 h-16 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center text-[var(--text-primary)] shadow-lg transition-all duration-500">
-            {isAdmin ? <Play className="w-6 h-6 fill-current ml-1 group-hover:rotate-90" /> : <Lock className="w-6 h-6" />}
+          <div className="w-12 h-12 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center text-[var(--text-primary)] shadow-lg transition-all duration-500">
+            {isAdmin ? <Play className="w-5 h-5 fill-current ml-1 group-hover:rotate-90" /> : <Lock className="w-5 h-5" />}
           </div>
         </button>
       </section>
 
+      {/* Last Reflection One-Liner */}
+      {lastEntry && (
+        <section className="px-4">
+          <div className="flex items-center gap-4 py-6 border-b border-[var(--border-subtle)]/30">
+            <div className="w-2 h-2 rounded-full bg-rose-400/60 shadow-[0_0_10px_#fb718580]" />
+            <div className="flex-1">
+              <p className="text-sm font-serif italic text-[var(--text-secondary)] line-clamp-1 opacity-90">
+                "{lastEntry.thoughts}"
+              </p>
+              <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mt-1 font-bold">
+                Latest Reflection · {lastEntry.emotions}
+              </p>
+            </div>
+            <button onClick={() => setActiveTab('chapters')} className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent-primary)] font-bold hover:underline">
+              View Journal →
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* Practices Grid - Desktop Balanced */}
       <section className="space-y-8">
         <div className="flex items-center justify-between px-4">
-          <h4 className="text-[12px] font-bold uppercase tracking-[0.5em] text-[var(--text-muted)]">Sacred Practices</h4>
-          <div className="h-px flex-1 bg-[var(--border-subtle)] mx-8" />
+          <h4 className="text-[11px] font-bold uppercase tracking-[0.5em] text-[var(--text-muted)]">Sacred Practices</h4>
+          <div className="h-px flex-1 bg-[var(--border-subtle)]/30 mx-8" />
         </div>
         <div className="grid grid-cols-4 gap-6">
           {[
-            { id: 'intelligence', label: 'Presence', sub: 'EXPLORE THE NOW', icon: Sparkles, color: '#ABCEC9', delay: 0, variant: 'orb' },
-            { id: 'chapters', label: 'Journal', sub: 'SOUL JOURNEY', icon: BookOpen, color: '#C65F9D', delay: 0.1, variant: 'book' },
-            { id: 'panic', label: 'Awareness', sub: 'SURGE TOOLS', icon: AlertCircle, color: '#FF7043', delay: 0.2, variant: 'pulse' },
-            { id: 'stats', label: 'Evolution', sub: 'SPIRIT STATS', icon: BarChart2, color: '#9575CD', delay: 0.3, variant: 'chart' }
+            { id: 'intelligence', label: 'Presence', sub: 'EXPLORE', icon: Sparkles, color: '#ABCEC9', delay: 0, variant: 'orb' },
+            { id: 'chapters', label: 'Journal', sub: 'JOURNEY', icon: BookOpen, color: '#C65F9D', delay: 0.1, variant: 'book' },
+            { id: 'panic', label: 'Awareness', sub: 'EMERGENCY', icon: AlertCircle, color: '#FF7043', delay: 0.2, variant: 'pulse' },
+            { id: 'stats', label: 'Evolution', sub: 'STATS', icon: BarChart2, color: '#9575CD', delay: 0.3, variant: 'chart' }
           ].map((item: any) => {
-            const isLocked = !isAdmin && item.id !== 'chapters';
+            const isLocked = !isAdmin && !['chapters', 'intelligence', 'stats'].includes(item.id);
             return (
               <div key={item.id} className="relative group/card">
-                {/* Backlit Magenta Glow - Matching Soul Stats */}
+                {/* Individual Glow Colors - Dark Mode Only */}
                 {!isLocked && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{
-                      opacity: [0.2, 0.4, 0.2],
+                      opacity: [0.15, 0.3, 0.15],
                       scale: [1, 1.05, 1]
                     }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: item.delay }}
-                    className="absolute inset-[-15px] rounded-[40px] blur-[40px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
+                    className="absolute inset-[-10px] rounded-[24px] blur-[30px] pointer-events-none mix-blend-plus-lighter hidden dark:block"
+                    style={{ backgroundColor: item.color }}
                   />
                 )}
                 <motion.button
@@ -326,26 +384,19 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY }: any) 
                   onClick={() => !isLocked && setActiveTab(item.id)}
                   disabled={isLocked}
                   className={cn(
-                    "w-full h-full group relative overflow-hidden bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[40px] p-8 flex flex-col items-center justify-center gap-6 transition-all",
-                    !isLocked ? "hover:border-[var(--border-glass)] hover:bg-[var(--bg-surface-hover)] active:scale-95 shadow-2xl" : "opacity-40 cursor-not-allowed"
+                    "w-full h-full group relative overflow-hidden bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[24px] p-8 flex flex-col items-center justify-center gap-6 transition-all",
+                    !isLocked ? "hover:border-[var(--border-glass)] hover:bg-[var(--bg-surface-hover)] shadow-lg hover:shadow-2xl" : "opacity-35 cursor-not-allowed grayscale"
                   )}
                 >
                   {!isLocked && <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,var(--item-color),transparent_70%)]" style={{ '--item-color': item.color + '15' } as any} />}
 
-                  <div className="relative w-32 h-32 flex items-center justify-center">
-                    {isLocked ? (
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <Lock className="w-12 h-12 text-[var(--text-muted)]" />
-                        <div className="w-full h-full absolute inset-0 bg-[var(--bg-primary)]/30 backdrop-blur-[2px] rounded-full" />
-                      </div>
-                    ) : (
-                      <GlassShape icon={item.icon} color={item.color} variant={item.variant} className="w-full h-full" />
-                    )}
+                  <div className="relative w-28 h-28 flex items-center justify-center">
+                    <GlassShape icon={item.icon} color={item.color} variant={item.variant} className={cn("w-full h-full transition-transform duration-500", !isLocked && "group-hover:scale-110")} />
                   </div>
 
                   <div className="text-center relative z-10">
-                    <div className="text-2xl font-serif font-bold text-[var(--text-primary)] mb-1">{item.label}</div>
-                    <div className="text-[9px] font-bold text-[var(--text-muted)] tracking-[0.3em] uppercase">
+                    <div className="text-xl font-serif font-bold text-[var(--text-primary)] mb-1">{item.label}</div>
+                    <div className="text-[8px] font-bold text-[var(--text-muted)] tracking-[0.3em] uppercase">
                       {isLocked ? 'COMING SOON' : item.sub}
                     </div>
                   </div>
@@ -376,6 +427,76 @@ export default function UntetheredApp() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
+  const [lastEntry, setLastEntry] = useState<any>(null);
+  const [stats, setStats] = useState({
+    totalEntries: 0,
+    streak: 0,
+    xp: 0,
+    level: 1,
+    joinedAt: currentUser?.metadata.creationTime ? new Date(currentUser.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'March 2026'
+  });
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchStats = async () => {
+      const q = query(collection(db, 'users', currentUser.uid, 'journal_entries'));
+      const snapshot = await getDocs(q);
+      const entries = snapshot.docs.map((doc: any) => {
+        const d = doc.data();
+        return d.createdAt?.toDate ? d.createdAt.toDate() : new Date(d.date || Date.now());
+      }).sort((a: Date, b: Date) => b.getTime() - a.getTime());
+
+      // Calculate streak
+      let streak = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let checkDate = new Date(today);
+      const entryDates = new Set(entries.map((d: Date) => {
+        const dd = new Date(d);
+        dd.setHours(0, 0, 0, 0);
+        return dd.getTime();
+      }));
+
+      // Check today or yesterday to start streak
+      if (!entryDates.has(checkDate.getTime())) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      while (entryDates.has(checkDate.getTime())) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      const total = snapshot.size;
+      const xp = total * 100;
+      const level = Math.floor(xp / 1000) + 1;
+
+      setStats({
+        totalEntries: total,
+        streak,
+        xp,
+        level,
+        joinedAt: stats.joinedAt
+      });
+    };
+    fetchStats();
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const q = query(
+      collection(db, 'users', currentUser.uid, 'journal_entries'),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        setLastEntry({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
+      }
+    });
+    return () => unsubscribe();
+  }, [currentUser]);
 
   // Map active tab to binaural frequencies
   useEffect(() => {
@@ -503,15 +624,14 @@ export default function UntetheredApp() {
   ];
 
   const user = {
-    displayName: currentUser?.displayName || 'Traveler',
-    level: 5,
-    xp: 920,
-    xpToNext: 1000,
-    streak: 7,
-    energy: 72,
-    witnessPoints: 145,
-    zenPoints: 87,
-    nowMoments: 42
+    displayName: currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Traveler',
+    level: stats.level,
+    xp: stats.xp,
+    xpToNext: stats.level * 1000,
+    streak: stats.streak,
+    joinedAt: stats.joinedAt,
+    nowMoments: stats.totalEntries,
+    email: currentUser?.email
   };
 
   const nextStep = () => {
@@ -540,14 +660,23 @@ export default function UntetheredApp() {
         progress={(currentStep + 1) / activePractice.steps.length}
       >
         {activePractice.type === 'breath' && (
-          <div className="flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center py-12">
             <motion.div
-              animate={{ scale: themeColors[breathPhase]?.scale || 1, opacity: [1, 0.8, 1] }}
-              transition={{ duration: themeColors[breathPhase]?.duration || 4, ease: "easeInOut" }}
-              className="breath-sphere"
-              style={{ boxShadow: themeColors[breathPhase]?.glow }}
+              animate={{
+                scale: themeColors[breathPhase]?.scale || 1,
+              }}
+              transition={{
+                duration: themeColors[breathPhase]?.duration || 4,
+                ease: "easeInOut"
+              }}
+              className="relative"
             >
-              <div className="w-12 h-12 rounded-full bg-white/10 blur-md" />
+              <SacredCircle
+                variant="A"
+                size="lg"
+                isAnimating={true}
+                text={themeColors[breathPhase]?.text || 'BREATH'}
+              />
             </motion.div>
           </div>
         )}
@@ -622,15 +751,15 @@ export default function UntetheredApp() {
         <nav className="flex-1 space-y-3">
           {[
             { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
-            { id: 'intelligence', icon: Sparkles, label: 'Now', fullLabel: 'Power of Now', locked: !isAdmin },
+            { id: 'intelligence', icon: Sparkles, label: 'Now', fullLabel: 'Power of Now', locked: false },
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
-            { id: 'stats', icon: BarChart2, label: 'Soul Stats', fullLabel: 'Your Journey', locked: !isAdmin },
+            { id: 'stats', icon: BarChart2, label: 'Soul Stats', fullLabel: 'Your Journey', locked: false },
             { id: 'journey', icon: Target, label: 'Breath', locked: !isAdmin },
             { id: 'panic', icon: AlertCircle, label: 'Panic', fullLabel: 'Emergency Awareness', locked: !isAdmin },
-            { id: 'profile', icon: User, label: 'Profile', locked: !isAdmin },
+            { id: 'profile', icon: User, label: 'Profile', locked: false },
           ].map((item: any) => {
             const isActive = activeTab === item.id;
-            const Icon = item.locked ? Lock : item.icon;
+            const Icon = item.icon;
             return (
               <button
                 key={item.id}
@@ -645,7 +774,7 @@ export default function UntetheredApp() {
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-400 relative",
                   isActive ? "border-l-2 border-[var(--brand-primary)]" : "border-l-2 border-transparent",
-                  item.locked ? "opacity-50 cursor-not-allowed grayscale" : ""
+                  item.locked ? "opacity-35 cursor-not-allowed" : ""
                 )}
                 style={{
                   background: 'none', border: 'none',
@@ -657,12 +786,12 @@ export default function UntetheredApp() {
                   strokeWidth={isActive ? 1.5 : 1}
                   className={cn(
                     "transition-all duration-400",
-                    isActive ? "text-[var(--brand-primary)]" : "text-[var(--text-muted)]"
+                    isActive ? "text-[var(--brand-primary)]" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
                   )}
                 />
                 <span className={cn(
                   "text-[9px] uppercase tracking-[0.4em] font-bold transition-colors duration-400 font-sans",
-                  isActive ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"
+                  isActive ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
                 )}>
                   {item.label}
                 </span>
@@ -700,8 +829,8 @@ export default function UntetheredApp() {
             }}
             className="w-full flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-surface)] rounded-xl transition-colors text-left group"
           >
-            <LogOut size={15} className="text-[var(--text-muted)] group-hover:text-rose-400 transition-colors" />
-            <span className="text-[9px] uppercase tracking-[0.4em] text-[var(--text-muted)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
+            <LogOut size={15} className="text-[var(--text-secondary)] group-hover:text-rose-400 transition-colors" />
+            <span className="text-[9px] uppercase tracking-[0.4em] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
               Log Out
             </span>
           </button>
@@ -763,6 +892,7 @@ export default function UntetheredApp() {
                     isAdmin={isAdmin}
                     rotateX={rotateX}
                     rotateY={rotateY}
+                    lastEntry={lastEntry}
                   />
                 </div>
                 <div className="hidden lg:block">
@@ -772,6 +902,7 @@ export default function UntetheredApp() {
                     isAdmin={isAdmin}
                     rotateX={rotateX}
                     rotateY={rotateY}
+                    lastEntry={lastEntry}
                   />
                 </div>
               </>
@@ -813,62 +944,107 @@ export default function UntetheredApp() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                className="space-y-16 max-w-4xl mx-auto"
+                className="space-y-12 max-w-4xl mx-auto"
               >
-                {/* Sacred Profile Header */}
-                <header className="relative p-16 rounded-[60px] border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/10 to-transparent pointer-events-none" />
-                  <div className="absolute top-[-20%] right-[-10%] w-80 h-80 bg-[var(--accent-primary)]/5 blur-[100px] rounded-full" />
+                {/* Unified Header Card */}
+                <header className="relative p-12 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/5 to-transparent pointer-events-none" />
 
-                  <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-12 text-center md:text-left">
-                    <div className="space-y-4">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.8em] text-[var(--text-muted)]">Level {user.level} · Presence Anchor</p>
-                      <h2 className="text-7xl font-serif font-light text-[var(--text-primary)] tracking-tight">The Witness</h2>
-                      <div className="pt-4 flex items-center gap-4 justify-center md:justify-start">
-                        <div className="px-5 py-1.5 rounded-full border border-[var(--accent-secondary)]/20 bg-[var(--accent-secondary)]/5 text-[10px] uppercase font-bold tracking-[0.3em] text-[var(--accent-secondary)]">
-                          {user.xp} Total XP
+                  <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
+                    <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+                      {currentUser?.photoURL ? (
+                        <img src={currentUser.photoURL} alt="Profile" className="w-24 h-24 rounded-full border-2 border-[var(--accent-primary)]/20 shadow-xl" />
+                      ) : (
+                        <div className="w-24 h-24 rounded-full bg-[var(--accent-primary)]/10 flex items-center justify-center border-2 border-[var(--accent-primary)]/20">
+                          <User className="w-10 h-10 text-[var(--accent-primary)]" />
                         </div>
+                      )}
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-[var(--accent-primary)]">Level {user.level} · Presence Anchor</p>
+                        <h2 className="text-5xl font-serif font-light text-[var(--text-primary)] tracking-tight">{user.displayName}</h2>
+                        <p className="text-[11px] text-[var(--text-muted)] tracking-widest font-medium uppercase">
+                          Exploring since {user.joinedAt} · {user.nowMoments} reflections
+                        </p>
                       </div>
                     </div>
 
-                    <AnchorButton variant="ghost" onClick={signOut} className="!w-auto !px-12 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
-                      ✦ Unseal Session
+                    <AnchorButton variant="ghost" onClick={signOut} className="!w-auto !px-10 text-[var(--text-muted)] hover:text-rose-400 transition-colors">
+                      <LogOut className="w-4 h-4 mr-2" /> Sign Out
                     </AnchorButton>
                   </div>
                 </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Moments of Now */}
-                  <div className="p-12 rounded-[48px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex flex-col justify-between h-72 group hover:bg-[var(--bg-surface-hover)] transition-all duration-700">
-                    <div className="w-12 h-12 rounded-2xl bg-[var(--accent-secondary)]/5 border border-[var(--accent-secondary)]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
-                      <Clock className="w-6 h-6 text-[var(--accent-secondary)]" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Reflections Stats */}
+                  <div className="p-8 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex flex-col justify-between h-48 group hover:border-[var(--accent-secondary)]/30 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--accent-secondary)]/10 border border-[var(--accent-secondary)]/10 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-[var(--accent-secondary)]" />
                     </div>
                     <div>
-                      <div className="text-6xl font-serif font-light text-[var(--text-primary)] mb-3 tracking-tight">{user.nowMoments}</div>
-                      <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-[var(--text-muted)]">NOW MOMENTS</span>
+                      <div className="text-4xl font-serif font-light text-[var(--text-primary)] mb-1">{user.nowMoments}</div>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)]">Now Moments</span>
                     </div>
                   </div>
 
-                  {/* Day Streak */}
-                  <div className="p-12 rounded-[48px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex flex-col justify-between h-72 group hover:bg-[var(--bg-surface-hover)] transition-all duration-700">
-                    <div className="w-12 h-12 rounded-2xl bg-orange-400/5 border border-orange-400/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
-                      <Flame className="w-6 h-6 text-orange-400/70" />
+                  {/* Streak Stats */}
+                  <div className="p-8 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex flex-col justify-between h-48 group hover:border-orange-400/30 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-orange-400/10 border border-orange-400/10 flex items-center justify-center">
+                      <Flame className="w-5 h-5 text-orange-400/70" />
                     </div>
                     <div>
-                      <div className="text-6xl font-serif font-light text-[var(--text-primary)] mb-3 tracking-tight">{user.streak}</div>
-                      <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-[var(--text-muted)]">DAY STREAK</span>
+                      <div className="text-4xl font-serif font-light text-[var(--text-primary)] mb-1">{user.streak} Days</div>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)]">Current Streak</span>
+                    </div>
+                  </div>
+
+                  {/* Consciousness Progress */}
+                  <div className="p-8 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex flex-col justify-between h-48 md:col-span-2 lg:col-span-1 border-dashed">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)]">Evolution</span>
+                      <span className="text-[10px] font-bold text-[var(--accent-primary)]">{stats.xp % 1000} / 1000 XP</span>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="h-1.5 w-full bg-[var(--border-subtle)] rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stats.xp % 1000) / 10}%` }}
+                          className="h-full bg-[var(--accent-primary)] shadow-[0_0_10px_var(--glow-primary)]"
+                        />
+                      </div>
+                      <p className="text-[9px] text-[var(--text-muted)] italic">Next layer: Consciousness Expansion</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Evolution Progress */}
-                <div className="p-16 rounded-[60px] border border-[var(--border-default)] bg-[var(--bg-surface)] space-y-12">
-                  <div className="flex justify-between items-baseline">
-                    <h3 className="text-2xl font-serif font-light text-[var(--text-secondary)]">Consciousness Expansion</h3>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--accent-primary)]">Next Level: {user.level + 1}</span>
+                {/* Account Settings */}
+                <div className="p-10 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] space-y-10">
+                  <h3 className="text-xl font-serif font-light text-[var(--text-secondary)] border-b border-[var(--border-subtle)] pb-4">Preferences</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-primary)]">Interface Theme</span>
+                        <ThemeToggle />
+                      </div>
+                      <p className="text-[10px] text-[var(--text-muted)] tracking-wide">Adjust the visual sanctuary to your resonance.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-primary)]">Voice Guidance</span>
+                        <span className="text-[10px] font-serif italic text-[var(--accent-secondary)]">Serene Echo (Default)</span>
+                      </div>
+                      <p className="text-[10px] text-[var(--text-muted)] tracking-wide">Choose the frequency of guidance during meditation.</p>
+                    </div>
                   </div>
-                  <div className="relative h-20 w-full flex items-center">
-                    <ProgressFilament progress={0.65} />
+
+                  <div className="pt-6 border-t border-[var(--border-subtle)]/50 flex flex-wrap gap-4">
+                    <button className="px-6 py-2 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all">
+                      Download Journal Export
+                    </button>
+                    <button className="px-6 py-2 rounded-xl bg-transparent border border-rose-400/20 text-[9px] font-bold uppercase tracking-widest text-rose-400/60 hover:bg-rose-400/5 transition-all">
+                      Archive Session History
+                    </button>
                   </div>
                 </div>
               </motion.div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Sparkles, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { MeditationPortal } from '../../../components/ui/MeditationPortal.tsx';
 import { db } from '../../../firebase';
@@ -343,40 +343,45 @@ const Journal: React.FC = () => {
                         <div className={!isAdmin ? 'blur-[6px] pointer-events-none select-none' : ''}>
                             <AnimatePresence mode="wait">
                                 {!showLogForm ? (
-                                    <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-24">
-
-                                        {/* practice trigger */}
-                                        <motion.section variants={childVariant} className="text-center py-16 relative">
-                                            <div className="flex flex-col items-center gap-8 relative z-10">
-                                                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                                                    <Sparkles size={10} className="text-[var(--accent-secondary)]" />
-                                                    <span className="text-[8px] uppercase tracking-[0.4em] text-[var(--text-muted)] font-bold">Practice First</span>
+                                    <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-8">
+                                        {/* Compact Practice CTA Card */}
+                                        <motion.section variants={childVariant} className="relative">
+                                            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)]/50 rounded-[32px] p-6 shadow-sm flex items-center gap-6">
+                                                {/* Breathing Dot / Icon */}
+                                                <div className="w-16 h-16 rounded-full bg-[var(--accent-primary-muted)]/10 border border-[var(--border-subtle)]/20 flex items-center justify-center flex-shrink-0">
+                                                    <motion.div
+                                                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                                        className="w-4 h-4 rounded-full bg-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-primary-muted)]"
+                                                    />
                                                 </div>
 
-                                                <h2 className="text-5xl font-serif font-light text-[var(--text-primary)] leading-tight max-w-lg mx-auto">
-                                                    Ready to settle<br />into the Now?
-                                                </h2>
+                                                <div className="flex-1">
+                                                    <h2 className="text-2xl font-serif font-light text-[var(--text-primary)] leading-tight">
+                                                        Settle into the Now
+                                                    </h2>
+                                                    <p className="text-xs text-[var(--text-muted)] italic font-serif mt-1">
+                                                        2 min reconnection before logging.
+                                                    </p>
+                                                </div>
 
-                                                <p className="text-sm text-[var(--text-muted)] italic max-w-sm font-serif leading-relaxed">
-                                                    Take 2 minutes to reconnect with your inner body before logging.
-                                                </p>
-
-                                                <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript}>
-                                                    Meditate Again
-                                                </AnchorButton>
-
-                                                <button
-                                                    onClick={() => { resetJournalForm(); setShowLogForm(true); }}
-                                                    className="text-[9px] uppercase tracking-[0.5em] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold transition-colors"
-                                                >
-                                                    Skip to log →
-                                                </button>
+                                                <div className="flex flex-col items-end gap-3">
+                                                    <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript}>
+                                                        Begin
+                                                    </AnchorButton>
+                                                    <button
+                                                        onClick={() => { resetJournalForm(); setShowLogForm(true); }}
+                                                        className="text-[8px] uppercase tracking-[0.3em] text-[var(--text-muted)] hover:text-[var(--accent-primary)] font-bold transition-colors"
+                                                    >
+                                                        or skip to log →
+                                                    </button>
+                                                </div>
                                             </div>
                                         </motion.section>
 
                                         {/* Calendar History */}
                                         {entries.length > 0 && (
-                                            <motion.section variants={childVariant} className="space-y-16">
+                                            <motion.section variants={childVariant} className="space-y-6">
                                                 <JournalCalendar entries={entries} />
                                             </motion.section>
                                         )}

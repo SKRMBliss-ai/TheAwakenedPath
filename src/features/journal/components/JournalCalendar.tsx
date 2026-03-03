@@ -129,7 +129,7 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                         background: `linear-gradient(180deg, ${color}, ${color}50)`,
                     }} />
 
-                    <div style={{ flex: 1, padding: "14px 16px 14px 14px" }}>
+                    <div style={{ flex: 1, padding: "10px 14px" }}>
                         {/* Header row */}
                         <div style={{
                             display: "flex", alignItems: "center",
@@ -171,11 +171,18 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                             <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 10 }}>
                                 {emotions.map((e: string) => (
                                     <span key={e} style={{
+                                        display: "inline-flex", alignItems: "center", gap: 5,
                                         padding: "3px 10px", borderRadius: 8, fontSize: 11, fontWeight: 500,
                                         background: (EC[e] || color) + "12",
                                         border: `1px solid ${(EC[e] || color)}20`,
                                         color: EC[e] || color,
-                                    }}>{e}</span>
+                                    }}>
+                                        {e}
+                                        <div style={{
+                                            width: 3, height: 3, borderRadius: "50%",
+                                            background: EC[e] || color, opacity: 0.6
+                                        }} />
+                                    </span>
                                 ))}
                             </div>
                         )}
@@ -328,17 +335,7 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                 className="relative z-10 w-full max-w-xl mx-auto px-4"
                 style={{ paddingTop: 28, paddingBottom: 100 }}
             >
-                {/* Header */}
-                <div style={{ marginBottom: 24 }}>
-                    <p style={{
-                        fontSize: 11, letterSpacing: "0.35em", textTransform: "uppercase",
-                        color: "var(--accent-secondary)", marginBottom: 6,
-                    }}>YOUR REFLECTIONS</p>
-                    <h1 style={{
-                        fontSize: 28, fontWeight: 300,
-                        color: "var(--text-primary)", margin: 0,
-                    }}>Journal</h1>
-                </div>
+                {/* Header removed as it is now redundant with Daily Log title */}
 
                 {/* Month navigation */}
                 <div style={{
@@ -474,29 +471,32 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                             );
                         })}
                     </div>
+
+                    {/* Integrated Mood legend */}
+                    <div style={{
+                        display: "flex", flexWrap: "wrap", gap: 10,
+                        justifyContent: "center", marginTop: 20,
+                        padding: "12px 8px 0",
+                        borderTop: "1px solid var(--border-subtle)",
+                        opacity: 0.8
+                    }}>
+                        {Object.entries(MOOD_META).map(([color, { label }]) => (
+                            <div key={color} style={{
+                                display: "flex", alignItems: "center", gap: 4,
+                            }}>
+                                <div style={{
+                                    width: 5, height: 5, borderRadius: "50%",
+                                    background: color,
+                                }} />
+                                <span style={{
+                                    fontSize: 9, color: "var(--text-muted)",
+                                    letterSpacing: "0.02em",
+                                }}>{label}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Mood legend */}
-                <div style={{
-                    display: "flex", flexWrap: "wrap", gap: 10,
-                    justifyContent: "center", marginBottom: 24,
-                    padding: "0 8px",
-                }}>
-                    {Object.entries(MOOD_META).map(([color, { label }]) => (
-                        <div key={color} style={{
-                            display: "flex", alignItems: "center", gap: 4,
-                        }}>
-                            <div style={{
-                                width: 7, height: 7, borderRadius: "50%",
-                                background: color,
-                            }} />
-                            <span style={{
-                                fontSize: 10, color: "var(--text-muted)",
-                                letterSpacing: "0.02em",
-                            }}>{label}</span>
-                        </div>
-                    ))}
-                </div>
 
                 {/* Selected day entries */}
                 <AnimatePresence mode="wait">
@@ -584,6 +584,6 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
                     color: "var(--text-muted)", marginTop: 40, opacity: 0.5
                 }}>Each dot is a moment of witnessing</p>
             </div>
-        </div>
+        </div >
     );
 }

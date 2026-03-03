@@ -66,6 +66,8 @@ export interface Theme {
     toggleTrack: string;
     toggleThumb: string;
     toggleIcon: string;
+    fontFamilySerif: string;
+    fontFamilySans: string;
 }
 
 type ThemeMode = "dark" | "light";
@@ -83,122 +85,126 @@ export const themes: Record<ThemeMode, Theme> = {
         name: "dark",
         label: "Night",
 
-        // Backgrounds
-        bgPrimary: "#0B0014",
-        bgSecondary: "#050008",
-        bgGradient: "linear-gradient(165deg, #0B0014 0%, #050008 100%)",
-        bgSurface: "rgba(11, 0, 20, 0.7)",
-        bgSurfaceHover: "rgba(11, 0, 20, 0.85)",
-        bgSurfaceActive: "rgba(11, 0, 20, 0.95)",
+        // Backgrounds — "Sacred Night"
+        bgPrimary: "#0c0910",           // bg-deep
+        bgSecondary: "#110e16",         // bg-layer
+        bgGradient: "linear-gradient(165deg, #0c0910 0%, #110e16 100%)",
+        bgSurface: "rgba(255, 255, 255, 0.035)", // bg-card
+        bgSurfaceHover: "rgba(255, 255, 255, 0.055)",
+        bgSurfaceActive: "rgba(255, 255, 255, 0.08)",
         bgInput: "rgba(255, 255, 255, 0.04)",
         bgInputFocus: "rgba(255, 255, 255, 0.07)",
-        bgOverlay: "rgba(5, 0, 8, 0.92)",
+        bgOverlay: "rgba(12, 9, 16, 0.92)",
 
-        // Text — boosted muted for readability on deep void
-        textPrimary: "#F4E3DA",
-        textSecondary: "#dcc5d6",
-        textMuted: "rgba(244, 227, 218, 0.55)",
-        textDisabled: "rgba(244, 227, 218, 0.25)",
+        // Text
+        textPrimary: "#ede9e3",          // text-primary
+        textSecondary: "rgba(237, 233, 227, 0.5)", // text-secondary
+        textMuted: "rgba(237, 233, 227, 0.25)",    // text-muted
+        textDisabled: "rgba(237, 233, 227, 0.15)",
 
         // Accents
-        accentPrimary: "#D16BA5",        // Brighter Rose for deep bg
-        accentPrimaryHover: "#e080b5",
-        accentPrimaryMuted: "rgba(209, 107, 165, 0.18)",
-        accentPrimaryBorder: "rgba(209, 107, 165, 0.4)",
-        accentSecondary: "#ABCEC9",      // Teal Glow
-        accentSecondaryMuted: "rgba(171, 206, 201, 0.15)",
-        accentSecondaryBorder: "rgba(171, 206, 201, 0.35)",
+        accentPrimary: "#f0a0aa",        // accent-rose
+        accentPrimaryHover: "#f2b1bb",
+        accentPrimaryMuted: "rgba(240, 160, 170, 0.1)",
+        accentPrimaryBorder: "rgba(240, 160, 170, 0.3)",
+        accentSecondary: "#6ee7c2",      // accent-teal
+        accentSecondaryMuted: "rgba(110, 231, 194, 0.1)",
+        accentSecondaryBorder: "rgba(110, 231, 194, 0.25)",
 
         // Special glows
-        glowCyan: "rgba(0, 240, 255, 0.4)",
-        glowGold: "rgba(255, 215, 0, 0.35)",
+        glowCyan: "rgba(110, 231, 194, 0.25)",
+        glowGold: "rgba(232, 184, 122, 0.25)",
 
-        // Borders — boosted for visibility on deep void
-        borderDefault: "rgba(244, 227, 218, 0.25)",
-        borderSubtle: "rgba(244, 227, 218, 0.15)",
-        borderGlass: "rgba(244, 227, 218, 0.30)",
+        // Borders
+        borderDefault: "rgba(255, 255, 255, 0.1)",
+        borderSubtle: "rgba(255, 255, 255, 0.06)", // border-card
+        borderGlass: "rgba(255, 255, 255, 0.08)",
 
         // Shadows & Effects
         shadow: "none",
         shadowElevated: "0 8px 32px rgba(0, 0, 0, 0.5)",
-        blur: "blur(12px)",
-        ambientGlow: "radial-gradient(ellipse at 50% 0%, rgba(209,107,165,0.08), transparent 70%)",
+        blur: "blur(14px)",
+        ambientGlow: "radial-gradient(ellipse at 50% 0%, rgba(110, 231, 194, 0.06), transparent 70%)", // glow-card
 
-        // Component-specific — boosted for deep void
-        chipBg: "rgba(255, 255, 255, 0.08)",
-        chipBorder: "rgba(255, 255, 255, 0.25)",
-        chipSelectedBg: "rgba(209, 107, 165, 0.25)",
-        chipSelectedBorder: "rgba(209, 107, 165, 0.60)",
-        quoteBg: "rgba(255, 255, 255, 0.06)",
-        quoteBorder: "rgba(171, 206, 201, 0.40)",
-        navActiveBg: "rgba(209, 107, 165, 0.25)",
-        navActiveBorder: "rgba(209, 107, 165, 0.50)",
+        // Component-specific
+        chipBg: "rgba(255, 255, 255, 0.05)",
+        chipBorder: "rgba(255, 255, 255, 0.12)",
+        chipSelectedBg: "rgba(240, 160, 170, 0.15)",
+        chipSelectedBorder: "rgba(240, 160, 170, 0.45)",
+        quoteBg: "rgba(255, 255, 255, 0.03)",
+        quoteBorder: "rgba(110, 231, 194, 0.35)",
+        navActiveBg: "rgba(240, 160, 170, 0.15)",
+        navActiveBorder: "rgba(240, 160, 170, 0.45)",
 
         // Toggle
-        toggleTrack: "rgba(244, 227, 218, 0.25)",
-        toggleThumb: "#F4E3DA",
+        toggleTrack: "rgba(255, 255, 255, 0.1)",
+        toggleThumb: "#ede9e3",
         toggleIcon: "🌙",
+        fontFamilySerif: "'Cormorant Garamond', Georgia, serif",
+        fontFamilySans: "'Outfit', 'Inter', sans-serif",
     },
 
     light: {
         name: "light",
         label: "Day",
 
-        // Backgrounds — warm linen, not harsh white
-        bgPrimary: "#FAF6F1",           // Warm linen
-        bgSecondary: "#F0EAE2",         // Soft parchment
-        bgGradient: "linear-gradient(165deg, #FAF6F1 0%, #F5EDE4 40%, #FAF6F1 100%)",
-        bgSurface: "rgba(255, 255, 255, 0.7)",
+        // Backgrounds — "Warm Earth"
+        bgPrimary: "#f7f2ec",           // bg-page
+        bgSecondary: "#f0e8de",         // bg-warm
+        bgGradient: "linear-gradient(165deg, #f7f2ec 0%, #f0e8de 100%)",
+        bgSurface: "rgba(255, 255, 255, 0.75)", // bg-card
         bgSurfaceHover: "rgba(255, 255, 255, 0.85)",
         bgSurfaceActive: "rgba(255, 255, 255, 0.95)",
-        bgInput: "rgba(89, 68, 92, 0.03)",
-        bgInputFocus: "rgba(89, 68, 92, 0.06)",
-        bgOverlay: "rgba(250, 246, 241, 0.92)",
+        bgInput: "#ffffff",             // bg-input
+        bgInputFocus: "#ffffff",
+        bgOverlay: "rgba(247, 242, 236, 0.92)",
 
-        // Text — deep warm tones, boosted for readability
-        textPrimary: "#2D1F30",          // Deeper plum-brown for max contrast
-        textSecondary: "#5A4660",        // Stronger purple-gray
-        textMuted: "rgba(45, 31, 48, 0.55)",
-        textDisabled: "rgba(45, 31, 48, 0.25)",
+        // Text
+        textPrimary: "#2a2521",          // text-primary
+        textSecondary: "#7a726a",        // text-secondary
+        textMuted: "rgba(42, 37, 33, 0.35)", // text-muted
+        textDisabled: "rgba(42, 37, 33, 0.2)",
 
-        // Accents — richer in light mode for contrast
-        accentPrimary: "#9E3D75",        // Deeper rose (strong on linen)
-        accentPrimaryHover: "#8A3568",
-        accentPrimaryMuted: "rgba(158, 61, 117, 0.1)",
-        accentPrimaryBorder: "rgba(158, 61, 117, 0.3)",
-        accentSecondary: "#3D8A80",      // Deeper teal (strong on linen)
-        accentSecondaryMuted: "rgba(61, 138, 128, 0.1)",
-        accentSecondaryBorder: "rgba(61, 138, 128, 0.25)",
+        // Accents
+        accentPrimary: "#b8706e",        // accent-rose
+        accentPrimaryHover: "#a6605e",
+        accentPrimaryMuted: "rgba(184, 112, 110, 0.1)",
+        accentPrimaryBorder: "rgba(184, 112, 110, 0.25)",
+        accentSecondary: "#5a8679",      // accent-sage
+        accentSecondaryMuted: "rgba(90, 134, 121, 0.12)",
+        accentSecondaryBorder: "rgba(90, 134, 121, 0.2)",
 
-        // Special accents (softer in light mode)
-        glowCyan: "rgba(0, 180, 200, 0.15)",
-        glowGold: "rgba(200, 165, 0, 0.15)",
+        // Special accents
+        glowCyan: "rgba(90, 134, 121, 0.1)",
+        glowGold: "rgba(196, 149, 106, 0.1)",
 
-        // Borders — visible on linen background
-        borderDefault: "rgba(45, 31, 48, 0.25)",
-        borderSubtle: "rgba(45, 31, 48, 0.15)",
-        borderGlass: "rgba(45, 31, 48, 0.22)",
+        // Borders
+        borderDefault: "rgba(0, 0, 0, 0.08)",
+        borderSubtle: "rgba(0, 0, 0, 0.04)",    // border-card
+        borderGlass: "rgba(0, 0, 0, 0.03)",
 
-        // Shadows & Effects — shadows replace glows in light mode
-        shadow: "0 1px 4px rgba(45, 31, 48, 0.08)",
-        shadowElevated: "0 4px 24px rgba(45, 31, 48, 0.1), 0 1px 6px rgba(45, 31, 48, 0.06)",
-        blur: "blur(8px)",
+        // Shadows & Effects
+        shadow: "0 2px 20px rgba(45, 42, 38, 0.06)", // shadow-card
+        shadowElevated: "0 8px 30px rgba(45, 42, 38, 0.1)",
+        blur: "blur(12px)",
         ambientGlow: "none",
 
-        // Component-specific — boosted for light bg
-        chipBg: "rgba(45, 31, 48, 0.08)",
-        chipBorder: "rgba(45, 31, 48, 0.25)",
-        chipSelectedBg: "rgba(158, 61, 117, 0.15)",
-        chipSelectedBorder: "rgba(158, 61, 117, 0.45)",
-        quoteBg: "rgba(61, 138, 128, 0.08)",
-        quoteBorder: "rgba(61, 138, 128, 0.35)",
-        navActiveBg: "rgba(158, 61, 117, 0.15)",
-        navActiveBorder: "rgba(158, 61, 117, 0.45)",
+        // Component-specific
+        chipBg: "rgba(45, 42, 38, 0.04)",
+        chipBorder: "rgba(45, 42, 38, 0.1)",
+        chipSelectedBg: "rgba(184, 112, 110, 0.1)",
+        chipSelectedBorder: "rgba(184, 112, 110, 0.35)",
+        quoteBg: "rgba(90, 134, 121, 0.06)",
+        quoteBorder: "rgba(90, 134, 121, 0.3)",
+        navActiveBg: "rgba(184, 112, 110, 0.1)",
+        navActiveBorder: "rgba(184, 112, 110, 0.35)",
 
         // Toggle
-        toggleTrack: "rgba(45, 31, 48, 0.25)",
-        toggleThumb: "#2D1F30",
+        toggleTrack: "rgba(0, 0, 0, 0.08)",
+        toggleThumb: "#5a4f48",
         toggleIcon: "☀️",
+        fontFamilySerif: "'Cormorant Garamond', Georgia, serif",
+        fontFamilySans: "'Outfit', 'Inter', sans-serif",
     },
 };
 
@@ -291,6 +297,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         root.style.setProperty("--glow-cyan", theme.glowCyan);
         root.style.setProperty("--glow-gold", theme.glowGold);
         root.style.setProperty("--blur-val", theme.blur);
+
+        // Component specific sync
+        root.style.setProperty("--chip-bg", theme.chipBg);
+        root.style.setProperty("--chip-border", theme.chipBorder);
+        root.style.setProperty("--chip-selected-bg", theme.chipSelectedBg);
+        root.style.setProperty("--chip-selected-border", theme.chipSelectedBorder);
+
+        root.style.setProperty("--nav-active-bg", theme.navActiveBg);
+        root.style.setProperty("--nav-active-border", theme.navActiveBorder);
+
+        root.style.setProperty("--accent-secondary-muted", theme.accentSecondaryMuted);
+        root.style.setProperty("--accent-secondary-border", theme.accentSecondaryBorder);
+
+        root.style.setProperty("--font-serif", theme.fontFamilySerif);
+        root.style.setProperty("--font-sans", theme.fontFamilySans);
 
         // Class Sync
         if (mode === "dark") {

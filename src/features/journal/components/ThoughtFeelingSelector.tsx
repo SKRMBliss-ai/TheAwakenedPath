@@ -228,7 +228,7 @@ export function ThoughtFeelingSelector({
                                                         )}
                                                     </div>
                                                     <span style={{
-                                                        fontSize: 15, fontFamily: "Georgia, serif",
+                                                        fontSize: 15, fontFamily: "var(--font-serif)",
                                                         color: sel ? fe.color : "var(--text-primary)",
                                                         lineHeight: 1.4, fontStyle: "italic",
                                                     }}>"{thought}"</span>
@@ -267,7 +267,7 @@ export function ThoughtFeelingSelector({
                         <div style={{ marginBottom: 10 }}>
                             {selectedThoughts.map((t) => (
                                 <p key={t} style={{
-                                    fontSize: 14, fontFamily: "Georgia, serif",
+                                    fontSize: 14, fontFamily: "var(--font-serif)",
                                     fontStyle: "italic", color: "var(--text-primary)",
                                     lineHeight: 1.5,
                                 }}>"{t}"</p>

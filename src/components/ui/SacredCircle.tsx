@@ -1,313 +1,347 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { EtherealOrb } from './EtherealOrb';
+import { useTheme } from '../../theme/ThemeSystem';
 
-// ─── SACRED UI TOKENS v3 — Unified Warm Palette ──────────────────
-const T = {
-    // Primary accent — warm magenta, unchanged
-    magenta: '#D16BA5',
-    magentaDim: 'rgba(209, 107, 165, 0.5)',
-    magentaRgb: '209, 107, 165',
+// ─── FONT TOKENS ─────────────────────────────────────────────────────────────
+const fontSerif = "'Cormorant Garamond', Georgia, serif";
 
-    // Secondary accent — was cyan, now warm lavender
-    // Sits in the red-violet family, harmonizes with plum background
-    lavender: '#B8A5D4',
-    lavenderDim: 'rgba(184, 165, 212, 0.4)',
+// ─── PARTICLE FIELD (canvas-based) ───────────────────────────────────────────
+const ParticleField = ({ size, isLight, variant }: { size: number, isLight: boolean, variant: string }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const particles = useRef<any[]>([]);
+    const raf = useRef<number>(0);
 
-    // Tertiary — dusty mauve for third-state elements
-    mauve: '#C4A8C8',
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
-    // Functional — warm terracotta for alert/panic states
-    rose: '#D4857A',
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = size * dpr;
+        canvas.height = size * dpr;
+        ctx.scale(dpr, dpr);
 
-    // Background — unchanged
-    plum: '#0D0014',
-    deep: '#160020',
+        const count = variant === 'A' ? 60 : variant === 'B' ? 40 : 80;
+        const cx = size / 2;
+        const cy = size / 2;
+        const radius = size / 2 - 20;
 
-    // Monospace UI only (timer, code) — desaturated teal, not full cyan
-    // Use sparingly, never as a glow color
-    tealMuted: '#8AAFA8',
-    border: 'rgba(255,255,255,0.06)',
+        particles.current = Array.from({ length: count }, () => {
+            const angle = Math.random() * Math.PI * 2;
+            const r = Math.random() * radius * 0.85;
+            return {
+                x: cx + Math.cos(angle) * r,
+                y: cy + Math.sin(angle) * r,
+                baseX: cx + Math.cos(angle) * r,
+                baseY: cy + Math.sin(angle) * r,
+                size: Math.random() * 1.5 + 0.3,
+                speed: Math.random() * 0.002 + 0.001,
+                offset: Math.random() * Math.PI * 2,
+                alpha: Math.random() * 0.4 + 0.1,
+            };
+        });
+
+        let time = 0;
+        const animate = () => {
+            ctx.clearRect(0, 0, size, size);
+            time += 0.01;
+
+            particles.current.forEach((p) => {
+                const drift = Math.sin(time * p.speed * 100 + p.offset) * 8;
+                const driftY = Math.cos(time * p.speed * 80 + p.offset) * 6;
+                p.x = p.baseX + drift;
+                p.y = p.baseY + driftY;
+
+                const dist = Math.sqrt((p.x - cx) ** 2 + (p.y - cy) ** 2);
+                if (dist > radius) return;
+
+                const pulse = 0.5 + 0.5 * Math.sin(time * 2 + p.offset);
+                const alpha = p.alpha * (0.6 + 0.4 * pulse);
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = isLight
+                    ? `rgba(180, 140, 160, ${alpha})`
+                    : `rgba(220, 180, 200, ${alpha})`;
+                ctx.fill();
+            });
+
+            raf.current = requestAnimationFrame(animate);
+        };
+        animate();
+        return () => cancelAnimationFrame(raf.current);
+    }, [size, isLight, variant]);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{ width: size, height: size }}
+        />
+    );
 };
 
-// ─── SIZE MAP ─────────────────────────────────────────────────────────────────
-const SIZE: Record<string, number> = {
+// ─── MAIN SACRED CIRCLE COMPONENT ───────────────────────────────────────────
+interface SacredCircleProps {
+    variant?: 'A' | 'B' | 'C';
+    size?: number | 'sm' | 'md' | 'lg' | 'xl';
+    text?: string;
+    isAnimating?: boolean;
+}
+
+const SIZE_MAP: Record<string, number> = {
     sm: 160,
     md: 240,
     lg: 300,
     xl: 340,
-    '2xl': 400,
 };
 
-interface SacredCircleProps {
-    text?: string;
-    isAnimating?: boolean;
-    size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-}
-
-/**
- * SACRED CIRCLE — High fidelity implementation
- * Implements three-layer breathing glows, transparent void-glass core,
- * and cinematic light-weight typography.
- */
 export const SacredCircle: React.FC<SacredCircleProps> = ({
+    variant = 'A',
+    size = 'md',
     text = 'AWAKEN',
     isAnimating = false,
-    size = 'xl',
 }) => {
-    const diameter = SIZE[size] ?? 340;
+    const { mode } = useTheme();
+    const isLight = mode === 'light';
+    const s = typeof size === 'number' ? size : (SIZE_MAP[size] || 240);
+
+    // Common Breathe Animation Class
+    // Using CSS for infinite breathing as per rule 4
+    const breatheClass = isAnimating ? "animate-[breathe_4s_ease-in-out_infinite]" : "animate-[breathe_6s_ease-in-out_infinite]";
+    const breatheClassSlow = isAnimating ? "animate-[breathe_6s_ease-in-out_infinite]" : "animate-[breathe_8s_ease-in-out_infinite]";
+    const innerPulseClass = isAnimating ? "animate-[innerPulse_3s_ease-in-out_infinite]" : "animate-[innerPulse_4s_ease-in-out_infinite]";
+
+    const renderVariant = () => {
+        switch (variant) {
+            case 'A':
+                return (
+                    <div className="relative group" style={{ width: s, height: s }}>
+                        {/* Outer breathing glow */}
+                        <div
+                            className={`absolute -inset-3 rounded-full pointer-events-none ${breatheClass}`}
+                            style={{
+                                background: isLight
+                                    ? "radial-gradient(circle, rgba(200,160,180,0.15) 0%, transparent 70%)"
+                                    : "radial-gradient(circle, rgba(200,140,180,0.12) 0%, transparent 70%)",
+                            }}
+                        />
+
+                        {/* Main circle */}
+                        <div
+                            className={`relative w-full h-full rounded-full overflow-hidden shadow-2xl ${breatheClass}`}
+                            style={{
+                                background: isLight
+                                    ? "radial-gradient(circle at 40% 35%, #f0e0ea 0%, #e8d4de 30%, #dcc8d6 60%, #d4bcc8 100%)"
+                                    : "radial-gradient(circle at 40% 35%, #3a2535 0%, #2d1a28 30%, #221420 60%, #1a0e18 100%)",
+                                boxShadow: isLight
+                                    ? "0 0 0 1px rgba(200,160,180,0.15), 0 0 60px rgba(200,160,180,0.12), inset 0 0 40px rgba(255,255,255,0.08)"
+                                    : "0 0 0 1px rgba(200,140,180,0.1), 0 0 80px rgba(180,100,160,0.08), inset 0 0 40px rgba(200,140,180,0.04)",
+                            }}
+                        >
+                            <ParticleField size={s} isLight={isLight} variant="A" />
+
+                            {/* Edge light rim */}
+                            <div className="absolute inset-0 rounded-full"
+                                style={{
+                                    background: isLight
+                                        ? "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.25) 0%, transparent 50%)"
+                                        : "radial-gradient(circle at 30% 25%, rgba(255,220,240,0.06) 0%, transparent 50%)",
+                                }}
+                            />
+
+                            {/* AWAKEN text */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span
+                                    className="font-light tracking-[0.25em] uppercase pointer-events-none text-center"
+                                    style={{
+                                        fontFamily: fontSerif,
+                                        fontSize: s * 0.1,
+                                        color: isLight ? "rgba(255,255,255,0.85)" : "rgba(255,240,248,0.7)",
+                                        textShadow: isLight
+                                            ? "0 0 20px rgba(200,160,180,0.3)"
+                                            : "0 0 30px rgba(200,140,180,0.2)",
+                                    }}
+                                >
+                                    {text}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Single thin ring */}
+                        <div
+                            className={`absolute -inset-1.5 rounded-full border pointer-events-none ${breatheClass}`}
+                            style={{
+                                borderColor: isLight
+                                    ? "rgba(200,160,180,0.12)"
+                                    : "rgba(200,140,180,0.08)",
+                            }}
+                        />
+                    </div>
+                );
+
+            case 'B':
+                return (
+                    <div className="relative" style={{ width: s, height: s }}>
+                        {/* Outer ring 2 */}
+                        <div
+                            className={`absolute -inset-[18px] rounded-full border-[0.5px] pointer-events-none ${breatheClassSlow}`}
+                            style={{
+                                borderColor: isLight
+                                    ? "rgba(180,140,160,0.1)"
+                                    : "rgba(200,160,180,0.06)",
+                                animationDelay: '0.5s'
+                            }}
+                        />
+
+                        {/* Outer ring 1 */}
+                        <div
+                            className={`absolute -inset-2 rounded-full border pointer-events-none ${breatheClass}`}
+                            style={{
+                                borderColor: isLight
+                                    ? "rgba(200,160,180,0.18)"
+                                    : "rgba(200,140,180,0.1)",
+                            }}
+                        />
+
+                        {/* Main circle */}
+                        <div
+                            className={`relative w-full h-full rounded-full overflow-hidden shadow-2xl ${breatheClass}`}
+                            style={{
+                                background: isLight
+                                    ? "radial-gradient(circle at 45% 40%, #ede0e8 0%, #e2d2dc 40%, #d8c6d0 100%)"
+                                    : "radial-gradient(circle at 45% 40%, #2e1e2a 0%, #241828 40%, #1c1020 100%)",
+                                boxShadow: isLight
+                                    ? "0 0 0 1px rgba(200,160,180,0.12), 0 0 40px rgba(200,160,180,0.08)"
+                                    : "0 0 0 1px rgba(200,140,180,0.08), 0 0 60px rgba(180,100,160,0.06)",
+                            }}
+                        >
+                            <ParticleField size={s} isLight={isLight} variant="B" />
+
+                            <div className="absolute inset-0 rounded-full"
+                                style={{
+                                    background: isLight
+                                        ? "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.2) 0%, transparent 45%)"
+                                        : "radial-gradient(circle at 35% 30%, rgba(255,220,240,0.04) 0%, transparent 45%)",
+                                }}
+                            />
+
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span
+                                    className="font-light tracking-[0.3em] uppercase pointer-events-none text-center"
+                                    style={{
+                                        fontFamily: fontSerif,
+                                        fontSize: s * 0.095,
+                                        color: isLight ? "rgba(255,255,255,0.8)" : "rgba(255,240,248,0.6)",
+                                        textShadow: isLight
+                                            ? "0 0 15px rgba(200,160,180,0.25)"
+                                            : "0 0 20px rgba(200,140,180,0.15)",
+                                    }}
+                                >
+                                    {text}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case 'C':
+                return (
+                    <div className="relative" style={{ width: s, height: s }}>
+                        {/* Ambient glow behind */}
+                        <div
+                            className={`absolute -inset-[30px] rounded-full pointer-events-none ${breatheClass}`}
+                            style={{
+                                background: isLight
+                                    ? "radial-gradient(circle, rgba(200,160,180,0.1) 0%, transparent 60%)"
+                                    : "radial-gradient(circle, rgba(180,100,160,0.08) 0%, transparent 60%)",
+                            }}
+                        />
+
+                        {/* Main circle — frosted glass */}
+                        <div
+                            className={`relative w-full h-full rounded-full overflow-hidden backdrop-blur-[20px] ${breatheClass}`}
+                            style={{
+                                background: isLight
+                                    ? "radial-gradient(circle at 50% 50%, rgba(230,215,225,0.95) 0%, rgba(215,200,210,0.9) 100%)"
+                                    : "radial-gradient(circle at 50% 50%, rgba(40,28,38,0.95) 0%, rgba(28,18,28,0.9) 100%)",
+                                boxShadow: isLight
+                                    ? "0 0 0 1px rgba(200,160,180,0.08), inset 0 0 60px rgba(200,160,180,0.06)"
+                                    : "0 0 0 1px rgba(200,140,180,0.06), inset 0 0 60px rgba(180,100,160,0.04)",
+                            }}
+                        >
+                            <ParticleField size={s} isLight={isLight} variant="C" />
+
+                            {/* Center icon glow */}
+                            <div
+                                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none ${innerPulseClass}`}
+                                style={{
+                                    width: s * 0.22,
+                                    height: s * 0.22,
+                                    background: isLight
+                                        ? "radial-gradient(circle, rgba(200,140,170,0.2) 0%, transparent 70%)"
+                                        : "radial-gradient(circle, rgba(200,140,180,0.15) 0%, transparent 70%)",
+                                }}
+                            />
+
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span
+                                    className="font-light tracking-[0.28em] uppercase pointer-events-none text-center"
+                                    style={{
+                                        fontFamily: fontSerif,
+                                        fontSize: s * 0.09,
+                                        color: isLight ? "rgba(120,90,108,0.7)" : "rgba(220,190,210,0.5)",
+                                    }}
+                                >
+                                    {text}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                );
+        }
+    };
 
     return (
-        /**
-         * WRAPPER — transparent, no background, no border, no shadow.
-         * Sized exactly to the circle so nothing rectangular bleeds out.
-         * The only visual mass is the circle + its filter-applied glow.
-         */
-        <div style={{
-            position: 'relative',
-            width: diameter,
-            height: diameter,
-            // ─── THE KEY: transparent — inherits whatever is behind it ───
-            background: 'transparent',
-            border: 'none',
-            boxShadow: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            // overflow:visible lets glows bleed outward past the div boundary
-            overflow: 'visible',
-        }}>
-
-            {/* ══ LAYER 1: DEEP UNDERTOW — large, very soft, slow ══════════
-          A wide elliptical bloom that fades into the plum background.
-          Not clipped — it bleeds 120px beyond the circle in every direction.
-          This is what creates the "floating" sensation.             */}
-            <motion.div
-                animate={{
-                    scale: isAnimating ? [1, 1.18, 1] : [1, 1.06, 1],
-                    opacity: isAnimating ? [0.22, 0.38, 0.22] : [0.1, 0.18, 0.1],
-                }}
-                transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-                style={{
-                    position: 'absolute',
-                    // Deliberately oversized — bleeds 120px beyond the orb
-                    width: diameter + 240,
-                    height: diameter + 240,
-                    top: -120,
-                    left: -120,
-                    borderRadius: '50%',
-                    background: `radial-gradient(circle, rgba(${T.magentaRgb}, 0.6) 0%, rgba(${T.magentaRgb}, 0) 70%)`,
-                    filter: 'blur(70px)',
-                    pointerEvents: 'none',
-                    // mix-blend-mode: screen prevents the glow from
-                    // darkening the background on its edges
-                    mixBlendMode: 'screen',
-                }}
-            />
-
-            {/* ══ LAYER 2: MID AURA — matches Soul Stats card glow ═════════
-          This is the primary "Soul Stats style" magenta halo.
-          Tighter radius, medium blur — gives the orb a warm backlight. */}
-            <motion.div
-                animate={{
-                    scale: isAnimating ? [1, 1.25, 1] : [1, 1.1, 1],
-                    opacity: isAnimating ? [0.45, 0.65, 0.45] : [0.25, 0.4, 0.25],
-                }}
-                transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                style={{
-                    position: 'absolute',
-                    width: diameter + 100,
-                    height: diameter + 100,
-                    top: -50,
-                    left: -50,
-                    borderRadius: '50%',
-                    // rgba(230, 132, 174, 0.5) as specified — matches Soul Stats
-                    background: `radial-gradient(circle, rgba(230, 132, 174, 0.55) 0%, rgba(${T.magentaRgb}, 0) 65%)`,
-                    filter: 'blur(40px)',
-                    pointerEvents: 'none',
-                    mixBlendMode: 'screen',
-                }}
-            />
-
-            {/* ══ LAYER 3: CORE FLICKER — tight, bright, fast ══════════════
-          Sits just inside the orb boundary. Creates the sensation of
-          an inner light source pulsing behind the frosted glass rim. */}
-            <motion.div
-                animate={{
-                    scale: isAnimating ? [0.85, 1.05, 0.85] : [0.9, 0.98, 0.9],
-                    opacity: isAnimating ? [0.5, 0.8, 0.5] : [0.2, 0.35, 0.2],
-                }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                style={{
-                    position: 'absolute',
-                    width: diameter * 0.7,
-                    height: diameter * 0.7,
-                    top: diameter * 0.15,
-                    left: diameter * 0.15,
-                    borderRadius: '50%',
-                    background: `radial-gradient(circle, rgba(${T.magentaRgb}, 0.9) 0%, rgba(${T.magentaRgb}, 0) 70%)`,
-                    filter: 'blur(24px)',
-                    pointerEvents: 'none',
-                    mixBlendMode: 'screen',
-                }}
-            />
-
-            {/* ══ THE CIRCLE ITSELF ═════════════════════════════════════════
-          Transparent background — the glow layers beneath provide
-          all the color. The border is a barely-visible structural ring.
-          filter: drop-shadow() applied here bleeds outward without
-          clipping at the div boundary (unlike box-shadow).           */}
-            <motion.div
-                animate={isAnimating ? {
-                    scale: [1, 1.015, 1],
-                } : { scale: 1 }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                style={{
-                    position: 'relative',
-                    width: diameter,
-                    height: diameter,
-                    borderRadius: '50%',
-
-                    // ─── TRANSPARENT — never opaque ───────────────────────────
-                    background: `
-            radial-gradient(
-              circle at 38% 38%,
-              rgba(255, 255, 255, 0.06) 0%,
-              rgba(255, 255, 255, 0.01) 40%,
-              transparent 70%
-            )
-          `,
-
-                    // ─── STRUCTURAL RING — barely visible ─────────────────────
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-
-                    // ─── THE SOUL STATS GLOW ──────────────────────────────────
-                    // drop-shadow on the circle element itself — this is what
-                    // makes it feel backlit and bleed into the background.
-                    // Using filter: drop-shadow rather than box-shadow because
-                    // box-shadow is clipped by overflow:hidden on parents.
-                    filter: isAnimating
-                        ? `
-              drop-shadow(0 0 30px rgba(${T.magentaRgb}, 0.55))
-              drop-shadow(0 0 80px rgba(${T.magentaRgb}, 0.25))
-              drop-shadow(0 0 140px rgba(${T.magentaRgb}, 0.12))
-            `
-                        : `
-              drop-shadow(0 0 20px rgba(${T.magentaRgb}, 0.35))
-              drop-shadow(0 0 60px rgba(${T.magentaRgb}, 0.15))
-            `,
-
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 2,
-                }}
-            >
-                {/* ── AWAKEN TEXT ─────────────────────────────────────────── */}
-                <motion.h2
-                    animate={isAnimating ? {
-                        opacity: [0.75, 1, 0.75],
-                        textShadow: [
-                            `0 0 20px rgba(255,255,255,0.3)`,
-                            `0 0 40px rgba(255,255,255,0.6)`,
-                            `0 0 20px rgba(255,255,255,0.3)`,
-                        ],
-                    } : {
-                        opacity: 0.7,
-                        textShadow: `0 0 20px rgba(255,255,255,0.2)`,
-                    }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                    style={{
-                        fontFamily: 'Georgia, "Times New Roman", serif',
-                        fontWeight: 300,          // light — sacred inscription, not command
-                        fontSize: Math.round(diameter * 0.1),
-                        letterSpacing: '0.55em',
-                        textTransform: 'uppercase',
-                        color: 'rgba(255, 255, 255, 0.88)',
-                        margin: 0,
-                        userSelect: 'none',
-                    }}
-                >
-                    {text}
-                </motion.h2>
-            </motion.div>
-
-            {/* ══ OUTER STRUCTURAL RING — barely visible orbit ═════════════
-          A second, larger ring gives depth without adding a container.
-          Opacity so low it reads as negative space, not a border.    */}
-            <div style={{
-                position: 'absolute',
-                width: diameter + 48,
-                height: diameter + 48,
-                top: -24,
-                left: -24,
-                borderRadius: '50%',
-                border: '1px solid rgba(255, 255, 255, 0.035)',
-                pointerEvents: 'none',
-                zIndex: 1,
-            }} />
-
-            {/* ══ INNERMOST HIGHLIGHT ARC — top-left specular ══════════════
-          A tiny bright arc at the top-left of the sphere, like light
-          catching a glass surface. Pure CSS, no image needed.        */}
-            <div style={{
-                position: 'absolute',
-                width: diameter * 0.45,
-                height: diameter * 0.45,
-                top: diameter * 0.06,
-                left: diameter * 0.1,
-                borderRadius: '50%',
-                background: 'radial-gradient(circle at 40% 30%, rgba(255,255,255,0.06), transparent 65%)',
-                pointerEvents: 'none',
-                zIndex: 3,
-            }} />
+        <div
+            className="flex items-center justify-center pointer-events-none"
+            style={{ width: s + 60, height: s + 60 }}
+        >
+            {renderVariant()}
         </div>
     );
 };
 
-// ══════════════════════════════════════════════════════════════════════════════
-// AWAKEN STAGE — drop-in wrapper for use in MeditationPortal
-// Adds the magnetic tilt effect and ensures no rectangular parent
-// ══════════════════════════════════════════════════════════════════════════════
+// ─── AWAKEN STAGE WRAPPER ────────────────────────────────────────────────────
 interface AwakenStageProps {
     isAnimating?: boolean;
     size?: SacredCircleProps['size'];
+    variant?: SacredCircleProps['variant'];
     mouseX?: any;
     mouseY?: any;
 }
 
 export const AwakenStage: React.FC<AwakenStageProps> = ({
     isAnimating,
-    size = 'xl',
+    size = 'md',
+    variant = 'A',
     mouseX,
     mouseY,
 }) => {
-    // If no mouse motion values supplied, component works standalone
     return (
-        <div style={{
-            // The stage is also transparent — it is purely a positioning context
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'transparent',
-            border: 'none',
-            // overflow: visible — critical so glows are never clipped
-            overflow: 'visible',
-        }}>
+        <div className="relative flex items-center justify-center bg-transparent border-none overflow-visible">
             <motion.div
                 style={{
                     ...(mouseX && mouseY ? {
-                        rotateX: mouseX,   // caller passes in useSpring values
+                        rotateX: mouseX,
                         rotateY: mouseY,
                     } : {}),
                     transformPerspective: 1000,
-                    // transparent wrapper — no visual mass
-                    background: 'transparent',
-                    overflow: 'visible', // Ensure no clipping here either
                 }}
+                className="bg-transparent overflow-visible"
             >
-                <EtherealOrb isAnimating={isAnimating} size={size} />
+                <SacredCircle isAnimating={isAnimating} size={size} variant={variant} />
             </motion.div>
         </div>
     );

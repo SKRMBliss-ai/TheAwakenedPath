@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, AudioLines } from "lucide-react";
+import { Loader2, AudioLines, X } from "lucide-react";
 import { BodyMapSelector } from "./BodyMapSelector";
 import { WitnessAndRelease } from "./WitnessAndRelease";
 import { useJournalVoice } from "../hooks/useJournalVoice";
@@ -73,13 +73,13 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: { label: 
 
     return (
         <motion.div variants={fadeUp} className="space-y-3">
-            {label && <label style={{ display: "block", fontSize: 18, color: "var(--text-primary)", fontFamily: "'Georgia', serif", lineHeight: 1.4, opacity: 0.8 }}>{label}</label>}
+            {label && <label style={{ display: "block", fontSize: 18, color: "var(--text-primary)", fontFamily: "var(--font-serif)", lineHeight: 1.4, opacity: 0.8 }}>{label}</label>}
             {hint && <p style={{ fontSize: 14, color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.5 }}>{hint}</p>}
             <textarea
                 ref={ref} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} rows={4}
                 style={{
                     width: "100%", minHeight: 120, padding: "20px 24px", fontSize: 17, lineHeight: 1.7,
-                    fontFamily: "'Georgia', serif", color: "var(--text-primary)", background: "var(--bg-input)",
+                    fontFamily: "var(--font-serif)", color: "var(--text-primary)", background: "var(--bg-input)",
                     border: "1px solid var(--border-subtle)", borderRadius: 20, outline: "none", resize: "none",
                     transition: "border-color 0.3s, background 0.3s",
                 }}
@@ -93,9 +93,24 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: { label: 
 
 function NavButton({ children, onClick, variant = "next", disabled = false }: { children: React.ReactNode, onClick: () => void, variant?: "next" | "back" | "save", disabled?: boolean }) {
     const s = {
-        next: { bg: "rgba(209,107,165,0.15)", border: "rgba(209,107,165,0.35)", color: "rgba(209,107,165,0.9)", hoverBg: "rgba(209,107,165,0.25)" },
-        back: { bg: "var(--bg-surface)", border: "var(--border-default)", color: "var(--text-secondary)", hoverBg: "var(--bg-glass)" },
-        save: { bg: "rgba(171,206,201,0.15)", border: "rgba(171,206,201,0.35)", color: "rgba(171,206,201,0.9)", hoverBg: "rgba(171,206,201,0.25)" },
+        next: {
+            bg: "var(--accent-primary-dim)",
+            border: "var(--accent-primary-border)",
+            color: "var(--accent-primary)",
+            hoverBg: "var(--nav-active-bg)"
+        },
+        back: {
+            bg: "var(--bg-surface)",
+            border: "var(--border-default)",
+            color: "var(--text-secondary)",
+            hoverBg: "var(--bg-surface-hover)"
+        },
+        save: {
+            bg: "var(--accent-secondary-dim)",
+            border: "var(--accent-secondary-border)",
+            color: "var(--accent-secondary)",
+            hoverBg: "var(--accent-secondary-muted)"
+        },
     }[variant];
     return (
         <motion.button whileTap={{ scale: 0.97 }} onClick={onClick} disabled={disabled}
@@ -141,6 +156,26 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
         setShowNextPrompt(false);
     }, [step]);
 
+    const handleWitnessTabChange = (tabId: string) => {
+        if (!voice.voiceEnabled) return;
+
+        const t = [...selectedThoughts, customThought].filter(Boolean).join("... and... ");
+        const e = selectedEmotions.join("... ");
+        const body = selectedArea?.label || bodySensations || "part of your body";
+
+        const tabScripts: Record<string, string> = {
+            witness: `Now... step back. ... A thought arose... "${t}" ... Which created a feeling of... ${e}. ... Which you felt in your... ${body}. ... But notice something... ... You are not the thought. You are not the emotion. You are not the sensation. ... You... are the one... who was watching them happen. ... That awareness... that witnessing presence... that is who you truly are.`,
+            truth: "Now... let's bring in the light of truth. ... Thoughts are not facts. ... Read this antidote to yourself. ... How does it feel to hear a truer... kinder story?",
+            perspective: "Notice where this thought is coming from. ... Is it from the fearful ego... or from your true being? ... Remind yourself... you are not the fear. You are the awareness witnessing it.",
+            release: "Let's practice a moment of deep release. ... Silently repeat these phrases... and let each one dissolve a layer of resistance. ... Click 'Begin' when you're ready.",
+            close: "As we close this practice... take a final moment to reflect. ... What have you learned about yourself? ... Complete the checklist to seal this entry.",
+        };
+
+        if (tabScripts[tabId]) {
+            voice.speak(tabScripts[tabId]);
+        }
+    };
+
     // 🎙️ VOICE NARRATION SYSTEM
     useEffect(() => {
         if (!voice.voiceEnabled) return;
@@ -152,40 +187,20 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
                 key: "step-0-intro"
             },
             1: {
-                text: `Now... let's notice what that thought created inside you. ... Eckhart Tolle says... "Emotion arises at the place where mind and body meet. It is the body's reaction to your mind." ... What did that thought make you feel? ... Tap the feeling that comes closest.`,
-                key: "step-1-intro"
-            },
-            2: {
                 text: "Emotions are energy in motion... and that energy always lands somewhere in the body. ... If you can... close your eyes for a moment. ... Take one slow breath. ... Now notice... where in your body do you feel it? ... Tap the area that draws your attention.",
-                key: "step-2-intro"
+                key: "step-1-intro"
             }
         };
 
         if (intros[step]) {
             voice.speak(intros[step].text);
-        } else if (step === 3) {
-            // Step 4 (Witness) — Fully Dynamic Narration
-            const t = [...selectedThoughts, customThought].filter(Boolean).join("... and... ");
-            const e = selectedEmotions.join("... ");
-            const body = selectedArea?.label || "part of your body";
-
-            const witnessText = `Now... step back. ...
-A thought arose... "${t}" ...
-Which created a feeling of... ${e}. ...
-Which you felt in your... ${body}. ...
-But notice something... ...
-You are not the thought.
-You are not the emotion.
-You are not the sensation. ...
-You... are the one... who was watching them happen. ...
-That awareness... that witnessing presence...
-that is who you truly are.`;
-
-            voice.speak(witnessText);
+        } else if (step === 2) {
+            // Witness Step Start - initial tab is "witness"
+            handleWitnessTabChange("witness");
         } else if (step === 5) {
             voice.speak("Your reflection has been saved. ... By watching the thought... feeling the emotion... and noticing the body... you have already begun to dissolve the pattern.");
         }
-    }, [step]);
+    }, [step, voice.voiceEnabled]);
 
     const scrollToBottom = () => {
         setTimeout(() => {
@@ -242,7 +257,7 @@ that is who you truly are.`;
                 {step < 5 && <StepTracker current={step} />}
 
                 {/* 🎙️ Voice Status Indicators */}
-                <div className="flex flex-col items-center justify-center mt-8 mb-4 min-h-[48px]">
+                <div className="flex flex-col items-center justify-center mt-4 mb-6 min-h-[48px]">
                     <AnimatePresence mode="wait">
                         {voice.isLoading ? (
                             <motion.div
@@ -250,9 +265,9 @@ that is who you truly are.`;
                                 initial={{ opacity: 0, y: 5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -5 }}
-                                className="flex items-center gap-4"
+                                className="flex items-center gap-4 p-2 pl-4 pr-3 border border-[var(--border-subtle)] rounded-full bg-[var(--bg-surface)] backdrop-blur-sm"
                             >
-                                <div className="flex items-center gap-2 text-[13px] text-[var(--text-muted)] italic font-serif">
+                                <div className="flex items-center gap-2 text-[12px] text-[var(--text-muted)] italic font-serif">
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                     <span>Preparing voice guidance...</span>
                                 </div>
@@ -270,17 +285,18 @@ that is who you truly are.`;
                                 initial={{ opacity: 0, y: 5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -5 }}
-                                className="flex items-center gap-4 text-[13px] text-[var(--accent-secondary)] italic font-serif"
+                                className="flex items-center gap-4 bg-[var(--bg-surface)] border border-[var(--accent-secondary-dim)] p-2 pl-4 pr-2 rounded-full backdrop-blur-sm shadow-sm"
                             >
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 text-[12px] text-[var(--accent-secondary)] italic font-serif">
                                     <AudioLines className="w-4 h-4 animate-pulse" />
-                                    <span>Listening to your guide...</span>
+                                    <span>Guidance in flow...</span>
                                 </div>
                                 <button
                                     onClick={() => voice.stop()}
-                                    className="text-[11px] font-bold uppercase tracking-widest border-b border-[var(--accent-secondary-border)] pb-0.5 hover:text-[var(--text-primary)] transition-colors"
+                                    className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--accent-secondary-dim)] border border-[var(--accent-secondary-border)] text-[var(--accent-secondary)] hover:bg-[var(--accent-secondary-muted)] transition-all active:scale-90 shadow-sm"
+                                    aria-label="Stop guidance"
                                 >
-                                    Stop
+                                    <X className="w-5 h-5" />
                                 </button>
                             </motion.div>
                         ) : (
@@ -408,6 +424,7 @@ that is who you truly are.`;
                                         bodyArea: selectedArea?.label || bodySensations || "the body",
                                         distortion: cognitiveDistortion || "Hidden Pattern"
                                     }}
+                                    onTabChange={handleWitnessTabChange}
                                     onComplete={(reflection) => {
                                         setOpenReflection(reflection);
                                         handleSave(reflection);
