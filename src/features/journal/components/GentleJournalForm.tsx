@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, AudioLines } from "lucide-react";
 import { BodyMapSelector } from "./BodyMapSelector";
 import { WitnessAndRelease } from "./WitnessAndRelease";
 import { useJournalVoice } from "../hooks/useJournalVoice";
@@ -248,6 +249,49 @@ that is who you truly are.`;
                     />
                 </div>
                 {step < 5 && <StepTracker current={step} />}
+
+                {/* 🎙️ Voice Status Indicators */}
+                <div className="flex flex-col items-center justify-center mt-6 h-8">
+                    <AnimatePresence mode="wait">
+                        {voice.voiceEnabled && (
+                            <>
+                                {voice.isLoading && (
+                                    <motion.div
+                                        key="loading"
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -5 }}
+                                        className="flex items-center gap-2 text-[13px] text-[var(--text-muted)] italic font-serif"
+                                    >
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        <span>Preparing voice guidance...</span>
+                                    </motion.div>
+                                )}
+                                {voice.isPlaying && !voice.isLoading && (
+                                    <motion.div
+                                        key="playing"
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -5 }}
+                                        className="flex items-center gap-4 text-[13px] text-[var(--accent-secondary)] italic font-serif"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <AudioLines className="w-4 h-4 animate-pulse" />
+                                            <span>Listening to your guide...</span>
+                                        </div>
+                                        <VoiceToggle
+                                            enabled={voice.voiceEnabled}
+                                            playing={voice.isPlaying}
+                                            loading={voice.isLoading}
+                                            onToggle={voice.toggleVoice}
+                                            className="scale-75 origin-right"
+                                        />
+                                    </motion.div>
+                                )}
+                            </>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 <div style={{ marginTop: 24 }}>
                     <AnimatePresence mode="wait">

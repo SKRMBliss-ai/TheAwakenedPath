@@ -1,15 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, Sparkles, Heart, Wind, ShieldCheck } from "lucide-react";
-import { useTheme } from "../theme/ThemeSystem";
-import type { FeltExperience } from "../data/feltExperiences";
 
 // ─── TYPES ───
 interface WitnessStepProps {
     selectedThoughts: string[];
     selectedEmotions: string[];
     selectedBodyArea: string;
-    activeCategories: FeltExperience[];
     onComplete?: (reflection: string) => void;
 }
 
@@ -98,13 +95,11 @@ export function WitnessStep({
     selectedThoughts,
     selectedEmotions,
     selectedBodyArea,
-    activeCategories,
     onComplete
 }: WitnessStepProps) {
-    const { theme } = useTheme();
     const mainThought = selectedThoughts[0] || "No thought selected";
     const antidote = ANTIDOTES[mainThought] || ANTIDOTES["default"];
-    const distortion = activeCategories[0]?.cognitiveDistortion || "Hidden Pattern";
+    // const distortion = activeCategories[0]?.cognitiveDistortion || "Hidden Pattern";
 
     const [hoopOpen, setHoopOpen] = useState(false);
     const [hoopRunning, setHoopRunning] = useState(false);

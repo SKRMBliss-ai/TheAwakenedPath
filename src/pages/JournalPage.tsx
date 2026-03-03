@@ -276,7 +276,6 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
                             selectedThoughts={selectedThoughts}
                             selectedEmotions={selectedEmotions}
                             selectedBodyArea={selectedBodyArea!}
-                            activeCategories={activeCategories}
                         />
 
                         <div className="flex justify-between mt-8">
