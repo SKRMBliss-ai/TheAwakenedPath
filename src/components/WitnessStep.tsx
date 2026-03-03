@@ -372,7 +372,7 @@ function CheckItem({ label, active, onToggle, last, sub }: { label: string; acti
             onClick={onToggle}
             className={`w-full flex items-start gap-4 py-5 group transition-opacity ${active ? 'opacity-40' : 'opacity-100'} ${last ? '' : 'border-b border-[var(--border-subtle)]/30'}`}
         >
-            <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-all ${active ? 'bg-[var(--accent-secondary)] border-[var(--accent-secondary)]' : 'bg-transparent border-[var(--border-subtle)] group-hover:border-[var(--accent-secondary-border)]'}`}>
+            <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${active ? 'bg-[var(--accent-secondary)] border-[var(--accent-secondary)]' : 'bg-transparent border-[var(--text-muted)] group-hover:border-[var(--accent-secondary-border)]'}`}>
                 {active && <Check size={14} className="text-[var(--bg-deep)]" />}
             </div>
             <div className="text-left">

@@ -14,6 +14,7 @@ import {
     serverTimestamp,
 } from 'firebase/firestore';
 import { AwakenStage } from '../../../components/ui/SacredCircle.tsx';
+import { useAchievements } from '../../achievements/useAchievements';
 import {
     AnchorButton,
     NoiseOverlay,
@@ -97,6 +98,7 @@ const Journal: React.FC = () => {
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [showLogForm, setShowLogForm] = useState(false);
+    const { awardEvent, checkAndUnlock } = useAchievements();
     const [isLoadingScript, setIsLoadingScript] = useState(false);
     const [toastVisible, setToastVisible] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
@@ -398,6 +400,22 @@ const Journal: React.FC = () => {
                                             updatedAt: serverTimestamp(),
                                         };
                                         await addDoc(collection(db, 'users', user.uid, 'journal'), finalData);
+
+                                        // Award achievement points
+                                        await awardEvent('journal_entry');
+                                        checkAndUnlock({
+                                            journalEntries: entries.length + 1,
+                                            videosWatched: 0, // Placeholder
+                                            chaptersComplete: 0,
+                                            currentStreak: 0,
+                                            maxStreak: 0,
+                                            panicUsed: 0,
+                                            bodyTruthTests: 0,
+                                            voiceWitnessed: 0,
+                                            remindersEnabled: false,
+                                            statsViewed: 0,
+                                        });
+
                                         fireToast('Reflection Sealed ✦');
                                         setShowLogForm(false);
                                     } catch (err) {

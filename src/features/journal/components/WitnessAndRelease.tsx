@@ -437,8 +437,8 @@ function CheckItem({ checked, onToggle, label, sub }: { checked: boolean; onTogg
             onClick={onToggle}
             className="w-full flex items-start gap-4 p-5 hover:bg-[var(--bg-glass)] transition-colors group text-left"
         >
-            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all mt-0.5
-                ${checked ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]' : 'border-[var(--border-subtle)] group-hover:border-[var(--accent-primary)]'}`}>
+            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all mt-0.5
+                ${checked ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]' : 'border-[var(--text-muted)] group-hover:border-[var(--accent-primary)]'}`}>
                 {checked && <Check size={12} className="text-[var(--bg-deep)]" />}
             </div>
             <div>

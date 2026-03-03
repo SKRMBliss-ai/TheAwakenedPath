@@ -5,6 +5,8 @@ import { useJournalVoice } from '../journal/hooks/useJournalVoice';
 import { useAuth } from '../auth/AuthContext';
 import { db } from '../../firebase';
 import { collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebase/firestore';
+import { useAchievements } from '../achievements/useAchievements';
+import { AchievementsPanel } from '../achievements/AchievementsPanel';
 
 interface ActivityLog {
     id: string;
@@ -47,11 +49,12 @@ const StreakGrid = ({ days }: { days: number[] }) => {
                     style={{
                         background: active
                             ? 'var(--accent-secondary-dim)'
-                            : 'var(--bg-surface)',
+                            : 'var(--border-subtle)',
                         border: active
-                            ? '1px solid var(--accent-secondary)'
-                            : '1px solid var(--border-default)',
-                        opacity: active ? 1 : 0.4
+                            ? '1.5px solid var(--accent-secondary)'
+                            : '1.5px solid var(--border-default)',
+                        opacity: 1,
+                        boxShadow: active ? '0 0 6px var(--accent-secondary)' : 'none',
                     }}
                     title={`Day ${i + 1}: ${active ? "Active" : "Rest"}`}
                 />
@@ -73,6 +76,11 @@ const StatsDashboard: React.FC = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const { speak, stop, isPlaying, isLoading: isVoiceLoading } = useJournalVoice();
+    const { unlocked, points, awardEvent, checkAndUnlock } = useAchievements();
+
+    useEffect(() => {
+        awardEvent('stats_viewed');
+    }, [awardEvent]);
 
     useEffect(() => {
         const admins = ['shrutikhungar@gmail.com', 'smriti.duggal@gmail.com', 'test@example.com'];
@@ -162,6 +170,29 @@ const StatsDashboard: React.FC = () => {
             setEmotionFreq(sortMap(emMap));
             setDistortionFreq(sortMap(distMap));
             setBodyFreq(sortMap(bodyMap));
+
+            // Check for new achievements
+            const streakCount = (() => {
+                let s = 0;
+                for (let i = streakArr.length - 1; i >= 0; i--) {
+                    if (streakArr[i]) s++;
+                    else if (i < streakArr.length - 1) break;
+                }
+                return s;
+            })();
+
+            checkAndUnlock({
+                journalEntries: journalSnap.size,
+                videosWatched: powerWatched,
+                chaptersComplete: 0,
+                currentStreak: streakCount,
+                maxStreak: streakCount,
+                panicUsed: 0,
+                bodyTruthTests: 0,
+                voiceWitnessed: 0,
+                remindersEnabled: false,
+                statsViewed: 1,
+            });
         } finally {
             setIsLoading(false);
         }
@@ -274,6 +305,18 @@ const StatsDashboard: React.FC = () => {
                             <BarChart2 className="w-4 h-4 text-[var(--accent-secondary)]" />
                             <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Weekly Resonance</h4>
                         </div>
+                        <span className="text-[10px] text-[var(--text-muted)] font-sans">
+                            {(() => {
+                                const now = new Date();
+                                const day = now.getDay(); // 0=Sun
+                                const monday = new Date(now);
+                                monday.setDate(now.getDate() - ((day + 6) % 7));
+                                const sunday = new Date(monday);
+                                sunday.setDate(monday.getDate() + 6);
+                                const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                return `${fmt(monday)} – ${fmt(sunday)}`;
+                            })()}
+                        </span>
                     </div>
 
                     <div className="h-44 flex items-end justify-between px-2 gap-4">
@@ -290,7 +333,7 @@ const StatsDashboard: React.FC = () => {
                                             initial={{ height: 0 }}
                                             animate={{ height: `${Math.max(h, 4)}%` }}
                                             transition={{ duration: 1, ease: "easeOut", delay: i * 0.05 }}
-                                            className={`absolute bottom-0 left-0 right-0 ${val > 0 ? 'bg-gradient-to-t from-[var(--accent-primary)] to-[var(--accent-secondary)]' : 'bg-[var(--text-muted)] opacity-5'} rounded-t-sm shadow-sm`}
+                                            className={`absolute bottom-0 left-0 right-0 ${val > 0 ? 'bg-gradient-to-t from-[var(--accent-primary)] to-[var(--accent-secondary)] shadow-sm' : 'bg-[var(--border-default)] opacity-60'} rounded-t-sm`}
                                         />
                                     </div>
                                     <span className="text-[10px] uppercase font-bold text-[var(--text-muted)]">{days[i]}</span>
@@ -305,7 +348,18 @@ const StatsDashboard: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <TrendingUp className="w-4 h-4 text-[var(--accent-primary)]" />
-                            <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.15em]">Presence History (28d)</h4>
+                            <div>
+                                <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.15em]">Presence History</h4>
+                                <p className="text-[10px] text-[var(--text-muted)] mt-0.5 font-sans">
+                                    {(() => {
+                                        const end = new Date();
+                                        const start = new Date(end);
+                                        start.setDate(end.getDate() - 27);
+                                        const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                        return `${fmt(start)} – ${fmt(end)}`;
+                                    })()}
+                                </p>
+                            </div>
                         </div>
                         <span className="text-[10px] text-[var(--accent-secondary)] font-bold">{currentStreak} Day Streak</span>
                     </div>
@@ -328,6 +382,9 @@ const StatsDashboard: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Achievements Panel */}
+            <AchievementsPanel unlocked={unlocked} points={points} />
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

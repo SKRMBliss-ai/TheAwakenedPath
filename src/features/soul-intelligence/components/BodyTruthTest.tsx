@@ -9,8 +9,11 @@ import { WhisperInput, AnchorButton } from '../../../components/ui/SacredUI';
  */
 
 type BodyTestState = 'idle' | 'input' | 'testing' | 'result' | 'numbness_guidance';
+interface BodyTruthTestProps {
+    onComplete?: () => void;
+}
 
-export const BodyTruthTest: React.FC = () => {
+export const BodyTruthTest: React.FC<BodyTruthTestProps> = ({ onComplete }) => {
     const [testState, setTestState] = useState<BodyTestState>('idle');
     const [thought, setThought] = useState('');
     const [, setResult] = useState<'expansion' | 'contraction' | 'numbness' | null>(null);
@@ -31,7 +34,7 @@ export const BodyTruthTest: React.FC = () => {
     };
 
     return (
-        <div className="p-12 space-y-10 relative overflow-hidden rounded-[48px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+        <div className="p-6 md:p-8 space-y-6 relative overflow-hidden rounded-[32px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
             <div className="absolute inset-0 bg-gradient-to-br from-[#ABCEC9]/5 to-transparent pointer-events-none" />
             {/* Background Ambiance for Numbness State */}
             {testState === 'numbness_guidance' && (
@@ -67,8 +70,8 @@ export const BodyTruthTest: React.FC = () => {
             </div>
 
             {testState === 'idle' && (
-                <div className="space-y-8">
-                    <p className="text-base text-[var(--text-secondary)] leading-relaxed font-normal max-w-md">
+                <div className="space-y-6">
+                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-normal max-w-md">
                         The mind can lie, but the body cannot. Enter a thought that causes friction, and we will guide you into the somatic response.
                     </p>
                     <WhisperInput
@@ -116,7 +119,7 @@ export const BodyTruthTest: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <AnchorButton
                             variant="ghost"
-                            onClick={() => { setResult('expansion'); resetTest(); }}
+                            onClick={() => { setResult('expansion'); onComplete?.(); resetTest(); }}
                             className="!flex !flex-col !h-48 !p-8 !items-center !justify-center !gap-4 !border-emerald-500/20 group hover:!bg-emerald-500/5 transition-all"
                         >
                             <div className="p-3 rounded-full bg-emerald-500/5 border border-emerald-500/10 group-hover:scale-110 transition-transform">
@@ -127,7 +130,7 @@ export const BodyTruthTest: React.FC = () => {
 
                         <AnchorButton
                             variant="ghost"
-                            onClick={() => { setResult('contraction'); resetTest(); }}
+                            onClick={() => { setResult('contraction'); onComplete?.(); resetTest(); }}
                             className="!flex !flex-col !h-48 !p-8 !items-center !justify-center !gap-4 !border-rose-500/20 group hover:!bg-rose-500/5 transition-all"
                         >
                             <div className="p-3 rounded-full bg-rose-500/5 border border-rose-500/10 group-hover:scale-110 transition-transform">
@@ -137,7 +140,7 @@ export const BodyTruthTest: React.FC = () => {
                         </AnchorButton>
 
                         <button
-                            onClick={() => setTestState('numbness_guidance')}
+                            onClick={() => { setTestState('numbness_guidance'); onComplete?.(); }}
                             className="col-span-1 md:col-span-2 py-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-[10px] uppercase tracking-[0.5em] transition-all flex items-center justify-center gap-2 font-bold"
                         >
                             I Feel Nothing / Resistance

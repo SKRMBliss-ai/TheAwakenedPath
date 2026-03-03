@@ -213,12 +213,13 @@ export function BodyMapSelector({
                                     <circle
                                         cx={zone.cx} cy={zone.cy} r={Math.max(zone.r, 30)}
                                         fill="transparent"
-                                        style={{ cursor: "pointer" }}
+                                        style={{ cursor: "pointer", outline: "none" }}
                                         onClick={() => handleSelect(zone)}
                                         role="button"
                                         aria-label={`${zone.label}: ${zone.description}`}
                                         tabIndex={0}
                                         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleSelect(zone); }}
+                                        className="outline-none focus:outline-none"
                                     />
 
                                     {/* Pulsing outer ring (idle / pre-highlighted) */}
@@ -237,11 +238,11 @@ export function BodyMapSelector({
                                     {/* Main dot */}
                                     <circle
                                         cx={zone.cx} cy={zone.cy} r={isSelected ? 16 : 10}
-                                        fill={isSelected ? zone.color : "var(--text-muted)"}
-                                        stroke={isSelected ? zone.color : "var(--border-subtle)"}
-                                        strokeWidth={isSelected ? 2 : 1.5}
+                                        fill={isSelected ? zone.color : isPreHighlighted ? zone.color : "var(--text-muted)"}
+                                        stroke={isSelected ? zone.color : isPreHighlighted ? zone.color : "var(--border-subtle)"}
+                                        strokeWidth={isSelected || isPreHighlighted ? 2 : 1.5}
                                         opacity={isOther ? 0.6 : 1}
-                                        filter={isSelected ? `url(#glow-${zone.id})` : "none"}
+                                        filter={isSelected || isPreHighlighted ? `url(#glow-${zone.id})` : "none"}
                                         style={{ cursor: "pointer", transition: "all 0.4s ease" }}
                                         onClick={() => handleSelect(zone)}
                                     />

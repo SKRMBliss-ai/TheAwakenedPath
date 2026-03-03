@@ -21,6 +21,8 @@ import { ThemeToggle, useTheme } from './theme/ThemeSystem';
 import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
 import appLogo from './assets/logo.png';
 import EngagementReport from './features/admin/EngagementReport';
+import { useAchievements } from './features/achievements/useAchievements';
+import { AchievementToast } from './features/achievements/AchievementsPanel';
 
 interface PracticeStep {
   title: string;
@@ -187,12 +189,12 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
         <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)] pl-4">Sacred sessions</h4>
         <div className="grid grid-cols-2 gap-4">
           {[
-            { id: 'intelligence', label: 'Presence', sub: 'EXPLORE', icon: Sparkles, color: '#ABCEC9', variant: 'orb' },
+            { id: 'intelligence', label: 'Presence', sub: 'COURSE & PRACTICE', icon: Sparkles, color: '#ABCEC9', variant: 'orb' },
             { id: 'chapters', label: 'Journal', sub: 'GUIDED', icon: BookOpen, color: '#C65F9D', variant: 'book' },
             { id: 'panic', label: 'Awareness', sub: 'EMERGENCY', icon: AlertCircle, color: '#FF7043', variant: 'pulse' },
-            { id: 'stats', label: 'Journey', sub: 'HISTORY', icon: BarChart2, color: '#9575CD', variant: 'chart' }
+            { id: 'stats', label: 'Soul Stats', sub: 'HISTORY', icon: BarChart2, color: '#9575CD', variant: 'chart' }
           ].map((item: any) => {
-            const isLocked = !isAdmin && ['intelligence', 'panic'].includes(item.id);
+            const isLocked = !isAdmin && ['panic'].includes(item.id);
             return (
               <div key={item.id} className="relative group/card">
                 {/* Backlit Magenta Glow - Matching Soul Stats */}
@@ -357,12 +359,12 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
         </div>
         <div className="grid grid-cols-4 gap-6">
           {[
-            { id: 'intelligence', label: 'Presence', sub: 'EXPLORE', icon: Sparkles, color: '#ABCEC9', delay: 0, variant: 'orb' },
+            { id: 'intelligence', label: 'Presence', sub: 'COURSE & PRACTICE', icon: Sparkles, color: '#ABCEC9', delay: 0, variant: 'orb' },
             { id: 'chapters', label: 'Journal', sub: 'JOURNEY', icon: BookOpen, color: '#C65F9D', delay: 0.1, variant: 'book' },
             { id: 'panic', label: 'Awareness', sub: 'EMERGENCY', icon: AlertCircle, color: '#FF7043', delay: 0.2, variant: 'pulse' },
-            { id: 'stats', label: 'Evolution', sub: 'STATS', icon: BarChart2, color: '#9575CD', delay: 0.3, variant: 'chart' }
+            { id: 'stats', label: 'Soul Stats', sub: 'STATS', icon: BarChart2, color: '#9575CD', delay: 0.3, variant: 'chart' }
           ].map((item: any) => {
-            const isLocked = !isAdmin && ['intelligence', 'panic'].includes(item.id);
+            const isLocked = !isAdmin && ['panic'].includes(item.id);
             return (
               <div key={item.id} className="relative group/card">
                 {/* Individual Glow Colors - Dark Mode Only */}
@@ -426,6 +428,7 @@ export default function UntetheredApp() {
   const [, setBreathCount] = useState(0);
   const [showReward, setShowReward] = useState<Reward | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
 
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
@@ -481,9 +484,24 @@ export default function UntetheredApp() {
         level,
         joinedAt: stats.joinedAt
       });
+
+      // Global check for unlocking new standard achievements on boot/refresh
+      checkAndUnlock({
+        journalEntries: total,
+        videosWatched: 0, // Should read from powerOfNow store later
+        chaptersComplete: 0,
+        currentStreak: streak,
+        maxStreak: streak,
+        panicUsed: 0,
+        bodyTruthTests: 0,
+        voiceWitnessed: 0,
+        remindersEnabled: false,
+        statsViewed: 0,
+      });
+
     };
     fetchStats();
-  }, [currentUser]);
+  }, [currentUser, checkAndUnlock]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -642,6 +660,20 @@ export default function UntetheredApp() {
       setCurrentStep(s => s + 1);
       setPracticeState('active');
     } else {
+      awardEvent('practice_session');
+      checkAndUnlock({
+        journalEntries: stats.totalEntries,
+        videosWatched: 0,
+        chaptersComplete: 0,
+        currentStreak: stats.streak,
+        maxStreak: stats.streak,
+        panicUsed: 0,
+        bodyTruthTests: 0,
+        voiceWitnessed: 0,
+        remindersEnabled: false,
+        statsViewed: 0,
+      });
+
       setShowReward({ xp: activePractice.xp, title: activePractice.title });
       setTimeout(() => { setShowReward(null); setActivePractice(null); }, 3000);
     }
@@ -849,16 +881,17 @@ export default function UntetheredApp() {
           {activeTab !== 'home' && (
             <div className="max-w-7xl mx-auto px-6 md:px-12 pt-12 -mb-8 relative z-50">
               <motion.button
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: -14 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
+                exit={{ opacity: 0, x: -14 }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
-                className="flex items-center gap-3 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all group lg:ml-0"
+                className="flex items-center gap-3 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all group"
               >
-                <div className="p-2.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-3xl group-hover:scale-110 group-hover:bg-[var(--bg-surface-hover)] transition-all shadow-sm">
-                  <ArrowLeft className="w-4 h-4" />
+                <div className="p-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-3xl group-hover:scale-110 group-hover:bg-[var(--bg-surface-hover)] group-hover:border-[var(--border-default)] transition-all duration-300 shadow-sm">
+                  <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 duration-300" />
                 </div>
-                <span className="text-[9px] font-bold uppercase tracking-[0.4em]">Center Navigation</span>
+                <span className="text-[9px] font-bold uppercase tracking-[0.45em] opacity-60 group-hover:opacity-100 transition-opacity duration-300">Return</span>
               </motion.button>
             </div>
           )}
@@ -1069,6 +1102,10 @@ export default function UntetheredApp() {
         </div>
       </main>
       <EngagementReport isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} />
+      <AchievementToast
+        achievement={toastQueue[0] || null}
+        onDismiss={dismissToast}
+      />
     </div>
   );
 }

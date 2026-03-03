@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, AlertCircle, Bell, Activity, Sparkles, Play, CheckCircle2, X, ChevronRight } from 'lucide-react';
+import { Mic, AlertCircle, Bell, Activity, Sparkles, Play, CheckCircle2, X, ChevronRight, Lock } from 'lucide-react';
 import { useWitnessingVoice } from '../hooks/useWitnessingVoice';
 import { getNoMindGrounding } from '../services/geminiService';
 import { BodyTruthTest } from './BodyTruthTest';
@@ -10,6 +10,8 @@ import { useAuth } from '../../auth/AuthContext';
 import { useTheme } from '../../../theme/ThemeSystem';
 import { db } from '../../../firebase';
 import { doc, onSnapshot, setDoc, arrayUnion } from 'firebase/firestore';
+import { useAchievements } from '../../achievements/useAchievements';
+import { type UserStats } from '../../achievements/achievementsDefs';
 
 // ─── HELPER: Extract YouTube ID from URL ─────────────────────────────────────
 const extractYouTubeId = (url: string): string => {
@@ -78,9 +80,9 @@ const CHAPTERS = [
         icon: Sparkles,
         color: '#ABCEC9',
         parts: [
-            { id: 'B1', title: 'Coming Soon', youtubeId: '', duration: '--:--' },
-            { id: 'B2', title: 'Coming Soon', youtubeId: '', duration: '--:--' },
-            { id: 'B3', title: 'Coming Soon', youtubeId: '', duration: '--:--' },
+            { id: 'B1', title: 'Why do we forget who we are?', youtubeId: 'zKvSH7H1qo4', duration: '5:24' },
+            { id: 'B2', title: 'Stop Overthinking', youtubeId: 'S79_XZAaBII', duration: '14:32' },
+            { id: 'B3', title: 'A Short Meditation', youtubeId: '-Z6akljf7mc', duration: '14:00' },
         ]
     },
 ];
@@ -153,27 +155,27 @@ const SolidButton: React.FC<{ onClick?: () => void; children: React.ReactNode }>
 const ProgressFilament: React.FC<{ progress: number; label?: string }> = ({ progress, label }) => (
     <div className="w-full">
         {label && (
-            <div className="flex justify-between mb-3 text-[8px] tracking-[0.5em] uppercase font-sans font-bold text-[var(--text-muted)]">
+            <div className="flex justify-between mb-4 text-[10px] tracking-[0.2em] uppercase font-sans font-bold text-[var(--text-secondary)]">
                 <span>{label}</span>
-                <span className="text-[var(--accent-secondary)]">{Math.round(progress * 100)}%</span>
+                <span className="text-[var(--text-primary)] text-[11px]">{Math.round(progress * 100)}%</span>
             </div>
         )}
-        <div className="h-px relative rounded-sm bg-[var(--border-subtle)]">
+        <div className="h-[4px] relative rounded-full bg-[var(--border-subtle)] shadow-inner">
             <motion.div
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: progress }}
                 transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute left-0 top-0 bottom-0 rounded-sm origin-left"
+                className="absolute left-0 top-0 bottom-0 rounded-full origin-left"
                 style={{
                     background: 'linear-gradient(90deg, var(--accent-secondary), var(--accent-primary))',
-                    boxShadow: '0 0 12px var(--accent-primary), 0 0 4px var(--accent-primary)',
+                    boxShadow: '0 0 16px var(--accent-primary), 0 0 8px var(--accent-primary)',
                 }}
             />
             <motion.div
-                animate={{ left: `${progress * 100}%` }}
+                animate={{ left: `calc(${progress * 100}% - 6px)` }}
                 transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]"
-                style={{ boxShadow: '0 0 12px var(--accent-primary), 0 0 24px var(--accent-primary)' }}
+                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[var(--text-primary)]"
+                style={{ boxShadow: '0 0 16px var(--accent-primary), 0 0 24px var(--accent-primary)' }}
             />
         </div>
     </div>
@@ -315,36 +317,38 @@ const TeachingsSection: React.FC<{
                                 youtubeId: part.youtubeId,
                             })}
                             className={`
-                                flex items-center gap-4 p-4 rounded-[24px] cursor-pointer
-                                transition-all duration-300 text-left border
+                                flex flex-col cursor-pointer rounded-[20px]
+                                transition-all duration-300 text-left border overflow-hidden
                                 ${isPlaying
                                     ? 'bg-[var(--bg-surface-hover)] border-[var(--accent-primary)] shadow-xl ring-1 ring-[var(--accent-primary)]/20'
                                     : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] hover:border-[var(--accent-primary-muted)] hover:bg-[var(--bg-surface-hover)] hover:shadow-md'
                                 }
                             `}
                         >
-                            {/* Thumbnail */}
-                            <div className="relative w-[110px] h-[62px] rounded-xl overflow-hidden flex-shrink-0 bg-black/40 shadow-inner">
+                            {/* Thumbnail – full width, 16:9 */}
+                            <div className="relative w-full aspect-video bg-black/40 flex-shrink-0">
                                 <img
                                     src={`https://img.youtube.com/vi/${part.youtubeId}/mqdefault.jpg`}
                                     alt=""
                                     className="w-full h-full object-cover"
-                                    style={{ opacity: isPlaying ? 0.9 : 0.65 }}
+                                    style={{ opacity: isPlaying ? 0.9 : 0.72 }}
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).style.display = 'none';
                                     }}
                                 />
+                                {/* Play / Live overlay */}
                                 <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
                                     {isPlaying ? (
                                         <div className="w-5 h-5 rounded-full bg-[var(--accent-primary)] animate-ping" />
                                     ) : (
                                         <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                            <Play size={16} fill="white" color="white" className="ml-0.5 opacity-90" />
+                                            <Play size={14} fill="white" color="white" className="ml-0.5 opacity-90" />
                                         </div>
                                     )}
                                 </div>
+                                {/* Watched badge */}
                                 {isWatched && (
-                                    <div className="absolute top-1.5 right-1.5">
+                                    <div className="absolute top-2 right-2">
                                         <div className="bg-[var(--bg-surface)] rounded-full p-0.5 shadow-sm">
                                             <CheckCircle2
                                                 size={16}
@@ -356,13 +360,15 @@ const TeachingsSection: React.FC<{
                                 )}
                             </div>
 
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                                <h5 className="text-[14px] font-serif font-medium m-0 leading-tight text-[var(--text-primary)]">
-                                    <span className="text-[11px] font-sans font-black opacity-30 mr-2">{part.id.includes('bonus') ? 'B' : part.id}:</span>
+                            {/* Info — full width text */}
+                            <div className="p-3.5">
+                                <p className="text-[9px] font-sans font-black opacity-30 mb-1 tracking-wider">
+                                    {part.id.includes('bonus') ? 'BONUS' : part.id.toUpperCase()}
+                                </p>
+                                <h5 className="text-[13px] font-serif font-medium leading-snug text-[var(--text-primary)] mb-2 line-clamp-2">
                                     {part.title}
                                 </h5>
-                                <div className="flex items-center gap-2.5 mt-2">
+                                <div className="flex items-center gap-2.5">
                                     <span className="text-[10px] text-[var(--text-secondary)] font-sans tracking-wider font-bold">
                                         {part.duration}
                                     </span>
@@ -397,6 +403,10 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
     } = useWitnessingVoice();
     const { lastReminder, requestPermission } = usePresenceScheduler();
 
+    // Admin Check
+    const admins = ['shrutikhungar@gmail.com', 'smriti.duggal@gmail.com', 'test@example.com'];
+    const isAdmin = !!(user?.email && admins.includes(user.email));
+
     // UI State
     const [panicMode, setPanicMode] = useState(false);
     const [groundingText, setGroundingText] = useState('');
@@ -427,6 +437,8 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
         return unsub;
     }, [user]);
 
+    const { awardEvent, checkAndUnlock } = useAchievements();
+
     const markAsWatched = async (partId: string) => {
         if (!user || watchedParts.includes(partId)) return;
         try {
@@ -435,10 +447,52 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                 { watched: arrayUnion(partId) },
                 { merge: true }
             );
+
+            // Award points for video watched
+            await awardEvent('video_watched');
+
+            // Calculate current stats to check for chapter completions
+            const newWatched = [...watchedParts, partId];
+            const chaptersComplete = CHAPTERS.filter(ch =>
+                ch.parts.every(p => newWatched.includes(p.id))
+            ).length;
+
+            checkAndUnlock({
+                journalEntries: 0, // Will be filled from current app state if we combined everything
+                videosWatched: newWatched.length,
+                chaptersComplete,
+                currentStreak: 0,
+                maxStreak: 0,
+                panicUsed: panicMode ? 1 : 0,
+                bodyTruthTests: 0,
+                voiceWitnessed: 0,
+                remindersEnabled: notificationsEnabled,
+                statsViewed: 0,
+            });
+
         } catch (error) {
             console.error('Error saving progress:', error);
         }
     };
+
+    // Watch for notification change to award 'Presence Bell'
+    useEffect(() => {
+        if (notificationsEnabled) {
+            awardEvent('reminders_enabled');
+            checkAndUnlock({
+                journalEntries: 0,
+                videosWatched: watchedParts.length,
+                chaptersComplete: CHAPTERS.filter(ch => ch.parts.every(p => watchedParts.includes(p.id))).length,
+                currentStreak: 0,
+                maxStreak: 0,
+                panicUsed: 0,
+                bodyTruthTests: 0,
+                voiceWitnessed: 0,
+                remindersEnabled: true,
+                statsViewed: 0,
+            });
+        }
+    }, [notificationsEnabled, awardEvent, checkAndUnlock, watchedParts]);
 
     useEffect(() => {
         if (initialChapter) setExpanded(initialChapter);
@@ -449,12 +503,48 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
         setNotificationsEnabled(true);
     };
 
-    const togglePanic = () => setPanicMode(p => !p);
+    const togglePanic = () => {
+        setPanicMode(p => !p);
+        if (!panicMode) {
+            awardEvent('panic_used');
+            checkAndUnlock({
+                journalEntries: 0,
+                videosWatched: watchedParts.length,
+                chaptersComplete: 0,
+                currentStreak: 0,
+                maxStreak: 0,
+                panicUsed: 1,
+                bodyTruthTests: 0,
+                voiceWitnessed: 0,
+                remindersEnabled: notificationsEnabled,
+                statsViewed: 0,
+            });
+        }
+    };
 
     const runGrounding = async (input: string) => {
         const exercise = await getNoMindGrounding(input);
         setGroundingText(exercise);
     };
+
+    // Watch for voice reflection completion
+    useEffect(() => {
+        if (reflection) {
+            awardEvent('voice_witnessed');
+            checkAndUnlock({
+                journalEntries: 0,
+                videosWatched: watchedParts.length,
+                chaptersComplete: 0,
+                currentStreak: 0,
+                maxStreak: 0,
+                panicUsed: 0,
+                bodyTruthTests: 0,
+                voiceWitnessed: 1,
+                remindersEnabled: notificationsEnabled,
+                statsViewed: 0,
+            });
+        }
+    }, [reflection, awardEvent, checkAndUnlock, watchedParts, notificationsEnabled]);
 
     // ── Compute real progress ─────────────────────────────────────────────────
     const totalParts = CHAPTERS.reduce((sum, ch) => sum + ch.parts.length, 0);
@@ -665,12 +755,24 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                 />
 
                                                 {/* ── DIVIDER before Practice Tool ── */}
-                                                <div className="px-7">
-                                                    <SectionDivider label="Interactive Practice" color={chapter.color} />
-                                                </div>
+                                                {(chapter.id === 'observer' || chapter.id === 'consciousness' || chapter.id === 'now') && (
+                                                    <div className="px-7">
+                                                        <SectionDivider label="Interactive Practice" color={chapter.color} />
+
+                                                        {!isAdmin && (
+                                                            <div className="flex flex-col items-center justify-center py-12 mb-8 opacity-70">
+                                                                <div className="w-16 h-16 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface-hover)] shadow-inner flex items-center justify-center mb-5">
+                                                                    <Lock size={22} className="text-[var(--text-muted)]" strokeWidth={1.5} />
+                                                                </div>
+                                                                <h3 className="text-2xl font-serif font-light text-[var(--text-primary)] mb-2 tracking-tight">Practice Coming Soon</h3>
+                                                                <p className="text-sm font-serif italic text-[var(--text-muted)] tracking-wide">This deeper integration is being prepared for you.</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
 
                                                 {/* ── CHAPTER I: WITNESS THE VOICE ── */}
-                                                {chapter.id === 'observer' && (
+                                                {isAdmin && chapter.id === 'observer' && (
                                                     <motion.div
                                                         initial={{ opacity: 0, y: 12 }}
                                                         animate={{ opacity: 1, y: 0 }}
@@ -776,18 +878,32 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                 )}
 
                                                 {/* ── CHAPTER II: INNER BODY ── */}
-                                                {chapter.id === 'consciousness' && (
+                                                {isAdmin && chapter.id === 'consciousness' && (
                                                     <motion.div
                                                         initial={{ opacity: 0, y: 12 }}
                                                         animate={{ opacity: 1, y: 0 }}
                                                         className="px-7 pb-10"
                                                     >
-                                                        <BodyTruthTest />
+                                                        <BodyTruthTest onComplete={() => {
+                                                            awardEvent('body_truth_test');
+                                                            checkAndUnlock({
+                                                                journalEntries: 0,
+                                                                videosWatched: watchedParts.length,
+                                                                chaptersComplete: 0,
+                                                                currentStreak: 0,
+                                                                maxStreak: 0,
+                                                                panicUsed: 0,
+                                                                bodyTruthTests: 1,
+                                                                voiceWitnessed: 0,
+                                                                remindersEnabled: notificationsEnabled,
+                                                                statsViewed: 0,
+                                                            });
+                                                        }} />
                                                     </motion.div>
                                                 )}
 
                                                 {/* ── CHAPTER III: MOVING INTO THE NOW ── */}
-                                                {chapter.id === 'now' && (
+                                                {isAdmin && chapter.id === 'now' && (
                                                     <motion.div
                                                         initial={{ opacity: 0, y: 12 }}
                                                         animate={{ opacity: 1, y: 0 }}
