@@ -324,16 +324,16 @@ export const ProgressFilament = ({ progress = 0.4, label }: any) => {
                     <span style={{ color: tokens.teal }}>{Math.round(progress * 100)}%</span>
                 </div>
             )}
-            <div style={{ height: 1, background: "var(--border-subtle)", borderRadius: 1, position: "relative" }}>
+            <div style={{ height: 2, background: "var(--border-default)", borderRadius: 2, position: "relative" }}>
                 <motion.div
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: progress }}
                     transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
                     style={{
                         position: "absolute", left: 0, top: 0, bottom: 0,
-                        background: `linear-gradient(90deg, ${tokens.magenta}80, ${tokens.teal})`,
-                        borderRadius: 1, transformOrigin: "left",
-                        boxShadow: `0 0 8px ${tokens.teal}60`,
+                        background: `linear-gradient(90deg, ${tokens.magenta}, ${tokens.teal})`,
+                        borderRadius: 2, transformOrigin: "left",
+                        boxShadow: `0 0 10px ${tokens.teal}80`,
                     }}
                 />
                 {/* Glowing head */}
@@ -343,9 +343,10 @@ export const ProgressFilament = ({ progress = 0.4, label }: any) => {
                     transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
                     style={{
                         position: "absolute", top: "50%", transform: "translate(-50%,-50%)",
-                        width: 4, height: 4, borderRadius: "50%",
+                        width: 10, height: 10, borderRadius: "50%",
                         background: tokens.teal,
-                        boxShadow: `0 0 8px ${tokens.teal}, 0 0 20px ${tokens.teal}60`,
+                        boxShadow: `0 0 12px ${tokens.teal}, 0 0 25px ${tokens.teal}80`,
+                        border: "2px solid white",
                     }}
                 />
             </div>

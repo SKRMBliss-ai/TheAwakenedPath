@@ -89,9 +89,9 @@ export const themes: Record<ThemeMode, Theme> = {
         bgPrimary: "#0c0910",           // bg-deep
         bgSecondary: "#110e16",         // bg-layer
         bgGradient: "linear-gradient(165deg, #0c0910 0%, #110e16 100%)",
-        bgSurface: "rgba(255, 255, 255, 0.035)", // bg-card
-        bgSurfaceHover: "rgba(255, 255, 255, 0.055)",
-        bgSurfaceActive: "rgba(255, 255, 255, 0.08)",
+        bgSurface: "rgba(255, 255, 255, 0.06)", // bg-card
+        bgSurfaceHover: "rgba(255, 255, 255, 0.08)",
+        bgSurfaceActive: "rgba(255, 255, 255, 0.1)",
         bgInput: "rgba(255, 255, 255, 0.04)",
         bgInputFocus: "rgba(255, 255, 255, 0.07)",
         bgOverlay: "rgba(12, 9, 16, 0.92)",
@@ -116,9 +116,9 @@ export const themes: Record<ThemeMode, Theme> = {
         glowGold: "rgba(232, 184, 122, 0.25)",
 
         // Borders
-        borderDefault: "rgba(255, 255, 255, 0.1)",
-        borderSubtle: "rgba(255, 255, 255, 0.06)", // border-card
-        borderGlass: "rgba(255, 255, 255, 0.08)",
+        borderDefault: "rgba(255, 255, 255, 0.15)",
+        borderSubtle: "rgba(255, 255, 255, 0.1)", // border-card
+        borderGlass: "rgba(255, 255, 255, 0.12)",
 
         // Shadows & Effects
         shadow: "none",
@@ -152,9 +152,9 @@ export const themes: Record<ThemeMode, Theme> = {
         bgPrimary: "#f7f2ec",           // bg-page
         bgSecondary: "#f0e8de",         // bg-warm
         bgGradient: "linear-gradient(165deg, #f7f2ec 0%, #f0e8de 100%)",
-        bgSurface: "rgba(255, 255, 255, 0.75)", // bg-card
-        bgSurfaceHover: "rgba(255, 255, 255, 0.85)",
-        bgSurfaceActive: "rgba(255, 255, 255, 0.95)",
+        bgSurface: "rgba(255, 255, 255, 0.85)", // bg-card
+        bgSurfaceHover: "rgba(255, 255, 255, 0.92)",
+        bgSurfaceActive: "rgba(255, 255, 255, 0.98)",
         bgInput: "#ffffff",             // bg-input
         bgInputFocus: "#ffffff",
         bgOverlay: "rgba(247, 242, 236, 0.92)",
@@ -179,9 +179,9 @@ export const themes: Record<ThemeMode, Theme> = {
         glowGold: "rgba(196, 149, 106, 0.1)",
 
         // Borders
-        borderDefault: "rgba(0, 0, 0, 0.08)",
-        borderSubtle: "rgba(0, 0, 0, 0.04)",    // border-card
-        borderGlass: "rgba(0, 0, 0, 0.03)",
+        borderDefault: "rgba(0, 0, 0, 0.12)",
+        borderSubtle: "rgba(0, 0, 0, 0.08)",    // border-card
+        borderGlass: "rgba(0, 0, 0, 0.06)",
 
         // Shadows & Effects
         shadow: "0 2px 20px rgba(45, 42, 38, 0.06)", // shadow-card
@@ -255,6 +255,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         root.style.setProperty("--bg-body", theme.bgGradient);
         root.style.setProperty("--bg-surface", theme.bgSurface);
         root.style.setProperty("--bg-input", theme.bgInput);
+
+        // RGB variants for transparency-heavy components like Tooltips
+        if (mode === "dark") {
+            root.style.setProperty("--bg-surface-rgb", "20, 18, 26"); // Darker surface
+        } else {
+            root.style.setProperty("--bg-surface-rgb", "255, 255, 255"); // White surface
+        }
 
         // Core Text
         root.style.setProperty("--text-main", theme.textPrimary);
