@@ -2,11 +2,18 @@
 // AWAKENED PATH — ACHIEVEMENTS & POINTS SYSTEM
 // ══════════════════════════════════════════════════════════════════════════════
 
+import {
+    Sprout, Eye, BookOpen, PenTool, Film, Brain,
+    Activity, Hourglass, Sparkles, Moon, Flame,
+    Circle, Waves, Shield, Mic, Bell
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
 export interface Achievement {
     id: string;
     name: string;
     desc: string;
-    icon: string;       // emoji used as medal face
+    icon: LucideIcon;   // Lucide component used as medal face
     color: string;      // accent colour for glow
     category: AchievementCategory;
     points: number;     // awarded on unlock
@@ -20,6 +27,13 @@ export type AchievementCategory =
     | 'presence-study'
     | 'streaks'
     | 'practices';
+
+export const CATEGORY_COLORS: Record<AchievementCategory, string> = {
+    'witnessing': '#C6B4CE',      // Lavender
+    'presence-study': '#7EB8B3',  // Teal
+    'streaks': '#F4A261',         // Amber
+    'practices': '#C65F9D',       // Rose
+};
 
 export interface UserStats {
     journalEntries: number;
@@ -59,7 +73,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'first_thought',
         name: 'First Thought',
         desc: 'You witnessed your first thought.',
-        icon: '🌱',
+        icon: Sprout,
         color: '#7EC8A0',
         category: 'witnessing',
         points: 15,
@@ -70,7 +84,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'the_observer',
         name: 'The Observer',
         desc: 'You have witnessed yourself 5 times.',
-        icon: '👁️',
+        icon: Eye,
         color: '#ABCEC9',
         category: 'witnessing',
         points: 50,
@@ -81,7 +95,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'dedicated_witness',
         name: 'Dedicated Witness',
         desc: '20 entries of honest witnessing.',
-        icon: '📖',
+        icon: BookOpen,
         color: '#C65F9D',
         category: 'witnessing',
         points: 100,
@@ -92,7 +106,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'inner_scribe',
         name: 'Inner Scribe',
         desc: 'A soul dedicated to 50 moments of truth.',
-        icon: '✍️',
+        icon: PenTool,
         color: '#F4A261',
         category: 'witnessing',
         points: 200,
@@ -105,7 +119,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'first_lesson',
         name: 'First Teaching',
         desc: 'You received your first teaching.',
-        icon: '🎬',
+        icon: Film,
         color: '#9B8CC9',
         category: 'presence-study',
         points: 10,
@@ -116,7 +130,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'chapter1_complete',
         name: 'The Observer',
         desc: 'You Are Not Your Mind — chapter complete.',
-        icon: '🧠',
+        icon: Brain,
         color: '#7B9FCC',
         category: 'presence-study',
         points: 50,
@@ -127,7 +141,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'chapter2_complete',
         name: 'Inner Body',
         desc: 'Consciousness — chapter complete.',
-        icon: '🫀',
+        icon: Activity,
         color: '#C65F9D',
         category: 'presence-study',
         points: 50,
@@ -138,7 +152,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'chapter3_complete',
         name: 'Into the Now',
         desc: 'Moving Into the Now — chapter complete.',
-        icon: '⏳',
+        icon: Hourglass,
         color: '#F4A261',
         category: 'presence-study',
         points: 50,
@@ -149,7 +163,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'fully_awakened',
         name: 'Fully Awakened',
         desc: 'You have walked the full Presence Study.',
-        icon: '✨',
+        icon: Sparkles,
         color: '#FFD700',
         category: 'presence-study',
         points: 200,
@@ -162,7 +176,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'streak_3',
         name: 'Returning',
         desc: 'You returned for 3 days in a row.',
-        icon: '🌙',
+        icon: Moon,
         color: '#7EC8A0',
         category: 'streaks',
         points: 25,
@@ -173,7 +187,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'streak_7',
         name: 'Unwavering',
         desc: '7 days of unbroken presence.',
-        icon: '🔥',
+        icon: Flame,
         color: '#F4A261',
         category: 'streaks',
         points: 75,
@@ -184,7 +198,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'streak_28',
         name: 'The Presence',
         desc: '28 days — a full moon cycle of awakening.',
-        icon: '🌕',
+        icon: Circle,
         color: '#FFD700',
         category: 'streaks',
         points: 200,
@@ -197,7 +211,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'still_point',
         name: 'Still Point',
         desc: 'You used the grounding anchor in a moment of panic.',
-        icon: '🌊',
+        icon: Waves,
         color: '#ABCEC9',
         category: 'practices',
         points: 5,
@@ -208,7 +222,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'body_truth',
         name: 'Body Truth',
         desc: 'You listened to what your body was saying.',
-        icon: '🫁',
+        icon: Shield,
         color: '#C65F9D',
         category: 'practices',
         points: 10,
@@ -219,7 +233,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'silent_voice',
         name: 'The Silent Voice',
         desc: 'You spoke a thought and witnessed it from the outside.',
-        icon: '🎙️',
+        icon: Mic,
         color: '#9B8CC9',
         category: 'practices',
         points: 20,
@@ -230,7 +244,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'presence_bell',
         name: 'Presence Bell',
         desc: 'You invited the Now to ring for you throughout the day.',
-        icon: '🔔',
+        icon: Bell,
         color: '#FFD700',
         category: 'practices',
         points: 15,

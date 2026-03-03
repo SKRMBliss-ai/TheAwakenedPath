@@ -282,15 +282,15 @@ const StatsDashboard: React.FC = () => {
 
             {/* Quick Metrics Row - Moved out of header to avoid overlap with fixed toggles */}
             <div className="flex flex-wrap gap-8">
-                <div className="text-left py-4 px-6 rounded-2xl bg-[var(--bg-surface)] border-2 border-[var(--border-default)] shadow-lg transition-transform hover:-translate-y-1">
+                <div className="text-left py-4 px-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-lg transition-transform hover:-translate-y-1">
                     <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--text-muted)] mb-1 font-bold">Total Witnessed</p>
                     <span className="text-3xl font-serif text-[var(--text-primary)]">{totalEntries}</span>
                 </div>
-                <div className="text-left py-4 px-6 rounded-2xl bg-[var(--bg-surface)] border-2 border-[var(--border-default)] shadow-lg transition-transform hover:-translate-y-1">
+                <div className="text-left py-4 px-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-lg transition-transform hover:-translate-y-1">
                     <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--accent-primary)] mb-1 font-bold">Active Streak</p>
                     <span className="text-3xl font-serif text-[var(--text-primary)]">🔥 {currentStreak} Days</span>
                 </div>
-                <div className="text-left py-4 px-6 rounded-2xl bg-[var(--bg-surface)] border-2 border-[var(--border-default)] shadow-lg transition-transform hover:-translate-y-1">
+                <div className="text-left py-4 px-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-lg transition-transform hover:-translate-y-1">
                     <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--accent-secondary)] mb-1 font-bold">Power of Now</p>
                     <span className="text-3xl font-serif text-[var(--text-primary)]">{powerWatched} <span className="text-sm opacity-40 text-[var(--text-muted)]">/ 20</span></span>
                 </div>
@@ -299,7 +299,7 @@ const StatsDashboard: React.FC = () => {
             {/* Top Row: Chart & Streak */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Weekly Chart */}
-                <div className="p-8 rounded-[24px] border-2 border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-8">
+                <div className="p-8 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-8">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <BarChart2 className="w-4 h-4 text-[var(--accent-secondary)]" />
@@ -344,7 +344,7 @@ const StatsDashboard: React.FC = () => {
                 </div>
 
                 {/* Streak Grid Card */}
-                <div className="p-8 rounded-[24px] border-2 border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-8">
+                <div className="p-8 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-8">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <TrendingUp className="w-4 h-4 text-[var(--accent-primary)]" />
@@ -389,7 +389,7 @@ const StatsDashboard: React.FC = () => {
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Emotions */}
-                <div className="p-6 rounded-[24px] border-2 border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-6">
+                <div className="p-6 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-6">
                     <div className="flex items-center gap-3 mb-2">
                         <Activity className="w-4 h-4 text-[var(--accent-secondary)]" />
                         <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Emotion Map</h4>
@@ -408,7 +408,7 @@ const StatsDashboard: React.FC = () => {
                 </div>
 
                 {/* Mind Traps (Distortions) */}
-                <div className="p-6 rounded-[24px] border-2 border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-6">
+                <div className="p-6 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-6">
                     <div className="flex items-center gap-3 mb-2">
                         <Shield className="w-4 h-4 text-[var(--accent-primary)]" />
                         <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Mind Traps</h4>
@@ -433,7 +433,7 @@ const StatsDashboard: React.FC = () => {
                 </div>
 
                 {/* Body Areas */}
-                <div className="p-6 rounded-[24px] border-2 border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-6">
+                <div className="p-6 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-6">
                     <div className="flex items-center gap-3 mb-2">
                         <MapPin className="w-4 h-4 text-[var(--accent-secondary)]" />
                         <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Somatic Heatmap</h4>
