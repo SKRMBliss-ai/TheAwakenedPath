@@ -27,12 +27,12 @@ const CHAPTERS = [
         icon: Mic,
         color: '#B8A5D4',
         parts: [
-            { id: 'ch1-1', title: 'Stop Overthinking', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=S79_XZAaBII'), duration: '14:32' },
-            { id: 'ch1-2', title: 'The Greatest Obstacle to Enlightenment', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=pW8yC8f9p9k'), duration: '11:45' },
-            { id: 'ch1-3', title: 'Freeing Yourself from Your Mind', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=A5DmCojZxno'), duration: '13:20' },
-            { id: 'ch1-4a', title: 'The Origin of Fear', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=DpVYPFKcTJ8'), duration: '10:15' },
-            { id: 'ch1-4b', title: 'Suppressed Emotions', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=YfNH_Gl-H-s'), duration: '12:08' },
-            { id: 'ch1-5', title: 'Stop Your Mind From Lying to You', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=Xz7vV9-Y9-k'), duration: '15:40' },
+            { id: '1.1', title: 'Stop Overthinking', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=S79_XZAaBII'), duration: '14:32' },
+            { id: '1.2', title: 'The Greatest Obstacle to Enlightenment', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=pW8yC8f9p9k'), duration: '11:45' },
+            { id: '1.3', title: 'Freeing Yourself from Your Mind', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=A5DmCojZxno'), duration: '13:20' },
+            { id: '1.4a', title: 'The Origin of Fear', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=DpVYPFKcTJ8'), duration: '10:15' },
+            { id: '1.4b', title: 'Suppressed Emotions', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=YfNH_Gl-H-s'), duration: '12:08' },
+            { id: '1.5a', title: 'STOP Your Mind From Lying to You', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=Xz7vV9-Y9-k'), duration: '15:40' },
         ]
     },
     {
@@ -43,14 +43,14 @@ const CHAPTERS = [
         icon: Activity,
         color: '#D16BA5',
         parts: [
-            { id: 'ch2-1', title: 'Stop Fighting Reality', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=hHJAoVYARqw'), duration: '12:10' },
-            { id: 'ch2-2', title: 'How to Accept an Awful Moment', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=N6J-U9X9y_w'), duration: '9:45' },
-            { id: 'ch2-3', title: 'The "Watcher" Technique', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=8V-D9gW8wE8'), duration: '11:30' },
-            { id: 'ch2-4', title: 'Beyond Happiness and Unhappiness', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=mZ-7V9-Q9-k'), duration: '13:20' },
-            { id: 'ch2-5', title: "The Ego's Search for Wholeness", youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=kY-6V9-P9-k'), duration: '10:55' },
-            { id: 'ch2-6', title: 'Pain Gets Louder Before Healing', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=pX-5V9-O9-k'), duration: '8:40' },
-            { id: 'ch2-7', title: 'Why You Still Suffer Even When Life Is "Fine"', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=vL-4V9-N9-k'), duration: '14:15' },
-            { id: 'ch2-10', title: 'The Way Out of Pain — Finale', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=rW-3V9-M9-k'), duration: '16:30' },
+            { id: '2.1', title: 'Stop Fighting Reality', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=hHJAoVYARqw'), duration: '12:10' },
+            { id: '2.2', title: 'How to Accept an Awful Moment', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=N6J-U9X9y_w'), duration: '9:45' },
+            { id: '2.3', title: 'The "Watcher" Technique', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=8V-D9gW8wE8'), duration: '11:30' },
+            { id: '2.4', title: 'Beyond Happiness and Unhappiness', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=mZ-7V9-Q9-k'), duration: '13:20' },
+            { id: '2.5', title: "The Ego's Search for Wholeness", youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=kY-6V9-P9-k'), duration: '10:55' },
+            { id: '2.6', title: 'Pain Gets LOUDER Before Healing', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=pX-5V9-O9-k'), duration: '8:40' },
+            { id: '2.7', title: 'Why You Still Suffer Even When Life Is "Fine"', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=vL-4V9-N9-k'), duration: '14:15' },
+            { id: '2.10', title: 'Consciousness: The Way Out of Pain (Ch. 2 Finale)', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=rW-3V9-M9-k'), duration: '16:30' },
         ]
     },
     {
@@ -61,10 +61,10 @@ const CHAPTERS = [
         icon: Bell,
         color: '#C4A8C8',
         parts: [
-            { id: 'ch3-1', title: 'Stop Thinking & Start Living', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=MAHHfa2thto'), duration: '15:20' },
-            { id: 'ch3-2', title: 'Ending the Delusion of Time', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=nB-2V9-L9-k'), duration: '11:45' },
-            { id: 'ch3-3', title: 'All Problems are Illusions of the Mind', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=oA-1V9-K9-k'), duration: '12:30' },
-            { id: 'ch3-4', title: 'The Joy of Being', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=qC-9V9-J9-k'), duration: '10:10' },
+            { id: '3.1', title: 'Stop Thinking & Start LIVING', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=MAHHfa2thto'), duration: '15:20' },
+            { id: '3.2', title: 'Ending the Delusion of Time', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=nB-2V9-L9-k'), duration: '11:45' },
+            { id: '3.3', title: 'All Problems are Illusions of the Mind', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=oA-1V9-K9-k'), duration: '12:30' },
+            { id: '3.4', title: 'The Joy of Being', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=qC-9V9-J9-k'), duration: '10:10' },
         ]
     },
     {
