@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../theme/ThemeSystem';
 import { StepIndicator } from '../components/StepIndicator';
@@ -20,7 +20,6 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
 
     // Voice guidance
     const voice = useJournalVoice();
-    const hasSpokenStep = useRef<Record<number, boolean>>({});
 
     // State for Step 1
     const [selectedThoughts, setSelectedThoughts] = useState<string[]>([]);
@@ -38,21 +37,14 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
 
     // Auto-speak when step changes
     useEffect(() => {
-        if (!voice.voiceEnabled || hasSpokenStep.current[step]) return;
-        hasSpokenStep.current[step] = true;
-
-        // Small delay for page transition animation
-        const timer = setTimeout(() => {
-            if (step === 1) {
-                voice.speakStep1();
-            } else if (step === 2) {
-                voice.speakStep2(activeBodyAreas);
-            } else if (step === 3) {
-                voice.speakStep3(activeCategories);
-            }
-        }, 800);
-
-        return () => clearTimeout(timer);
+        // Instant trigger
+        if (step === 1) {
+            voice.speakStep1();
+        } else if (step === 2) {
+            voice.speakStep2(activeBodyAreas);
+        } else if (step === 3) {
+            voice.speakStep3(activeCategories);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [step, voice.voiceEnabled]);
 
@@ -107,7 +99,7 @@ export function JournalPage({ onSave }: { onSave?: () => void }) {
     };
 
     return (
-        <div className="min-h-screen pt-24 pb-32 px-4 max-w-2xl mx-auto" style={{ background: theme.bgGradient, color: theme.textPrimary }}>
+        <div className="w-full pb-32 px-4 max-w-2xl mx-auto" style={{ background: theme.bgGradient, color: theme.textPrimary }}>
             {/* Voice toggle button */}
             <div className="flex items-center justify-between mb-4">
                 <StepIndicator currentStep={step} />

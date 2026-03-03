@@ -376,8 +376,9 @@ export function ThemeToggle({ style = {} }: { style?: React.CSSProperties }) {
                 position: "absolute",
                 right: 8,
                 fontSize: 14,
-                opacity: mode === "dark" ? 1 : 0.6,
-                transition: "opacity 0.3s",
+                opacity: mode === "dark" ? 1 : 0.9,
+                filter: mode === "light" ? "drop-shadow(0px 1px 1px rgba(0,0,0,0.2)) saturate(1.2)" : "none",
+                transition: "all 0.3s",
                 lineHeight: 1,
             }}>🌙</span>
 

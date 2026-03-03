@@ -11,6 +11,7 @@ const API_BASE_URL = "/api/voice";
 export class VoiceService {
     private static currentAudio: HTMLAudioElement | null = null;
     private static currentUrl: string | null = null;
+    private static currentRequestId: number = 0;
     private static listeners: ((isSpeaking: boolean) => void)[] = [];
     private static _isSpeaking: boolean = false;
 
@@ -35,10 +36,14 @@ export class VoiceService {
      */
     static async speak(text: string, options: {
         gender?: 'MALE' | 'FEMALE';
+        voice?: string;
         promptContext?: string;
         onEnd?: () => void;
     } = {}): Promise<void> {
+        const requestId = ++this.currentRequestId;
+        console.log(`VOICE REQUEST [${requestId}]: Speaking with identity [${options.voice || options.gender || 'DEFAULT'}]`);
         this.stop();
+        this.currentRequestId = requestId; // Restore after stop() increases it
 
         try {
             const response = await fetch(API_BASE_URL, {
@@ -47,13 +52,16 @@ export class VoiceService {
                 body: JSON.stringify({
                     text: text,
                     promptContext: options.promptContext,
-                    gender: options.gender || 'FEMALE'
+                    gender: options.gender || 'FEMALE',
+                    voice: options.voice
                 })
             });
 
+            if (this.currentRequestId !== requestId) return;
             if (!response.ok) throw new Error("Backend Budget Exhausted");
 
             const audioBlob = await response.blob();
+            if (this.currentRequestId !== requestId) return;
             const audioUrl = URL.createObjectURL(audioBlob);
 
             const audio = new Audio(audioUrl);
@@ -80,14 +88,15 @@ export class VoiceService {
      * Plays a direct audio URL (e.g., local MP3) instead of generating TTS.
      */
     static async playAudioURL(url: string, onEnd?: () => void): Promise<void> {
-        // Guard: Already playing this exact URL?
         if (this.currentUrl === url && this.currentAudio && !this.currentAudio.paused) {
             console.log("VoiceService: Already playing URL.");
             return;
         }
 
-        console.log("VoiceService: Triggering playback for:", url);
+        const requestId = ++this.currentRequestId;
+        console.log(`VoiceService [${requestId}]: Triggering playback for:`, url);
         this.stop();
+        this.currentRequestId = requestId;
 
         try {
             // Use constructor directly for better browser compatibility
@@ -148,11 +157,10 @@ export class VoiceService {
     }
 
     static stop() {
+        this.currentRequestId++; // Invalidate any in-flight requests
         this.setSpeaking(false);
         if (this.currentAudio) {
             this.currentAudio.pause();
-            // Avoid setting src="" which can cause "Empty src" errors in some browsers
-            // Just clearing it is enough
             this.currentAudio.removeAttribute('src');
             this.currentAudio.load();
             this.currentAudio = null;

@@ -1,6 +1,6 @@
 /**
  * useJournalVoice — provides voice guidance for each step of the 3-step journal.
- * Uses Gemini TTS for human-like narration.
+ * Optimized to use the high-fidelity Backend Voice Service.
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { VoiceService } from '../../../services/voiceService';
@@ -8,10 +8,7 @@ import type { FeltExperience } from '../../../data/feltExperiences';
 
 // Calming, spiritual prompts for each step
 const STEP_PROMPTS = {
-    1: `Take a gentle breath... Welcome to your reflection space. 
-        Look through these felt experiences and notice which one resonates with you right now. 
-        There's no right or wrong answer... just notice what feels true. 
-        Tap the one that speaks to you, and then select the specific thoughts underneath.`,
+    1: `Take a gentle breath. Welcome to your reflection space. Look through these felt experiences and notice which one resonates with you right now. There is no right or wrong answer... just notice what feels true. Tap the one that speaks to you, and then select the specific thoughts underneath.`,
 
     2: (bodyAreas: string[]): string => {
         if (bodyAreas.length > 0) {
@@ -39,23 +36,22 @@ export function useJournalVoice() {
     const [isLoading, setIsLoading] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(() => {
         try {
-            return localStorage.getItem('awakened-journal-voice') !== 'off';
+            const saved = localStorage.getItem('awakened-journal-voice');
+            return saved === null ? true : saved !== 'off';
         } catch { return true; }
     });
 
     const stopRef = useRef<(() => void) | null>(null);
     const isMountedRef = useRef(true);
-
-    useEffect(() => {
-        isMountedRef.current = true;
-        return () => {
-            isMountedRef.current = false;
-            stopRef.current?.();
-        };
-    }, []);
+    const lastSpokenRef = useRef<string | null>(null);
+    const pendingSpeechRef = useRef<string | null>(null);
+    const isInteractedRef = useRef(false);
+    const speakRef = useRef<Function | null>(null);
 
     const stop = useCallback(() => {
         VoiceService.stop();
+        pendingSpeechRef.current = null;
+        lastSpokenRef.current = null;
         if (isMountedRef.current) {
             setIsPlaying(false);
             setIsLoading(false);
@@ -65,13 +61,21 @@ export function useJournalVoice() {
     const speak = useCallback(async (text: string, context?: string) => {
         if (!voiceEnabled) return;
 
-        // Stop any current speech
+        if (!isInteractedRef.current) {
+            console.log("Voice: Queuing guidance for first interaction...");
+            pendingSpeechRef.current = text;
+            return;
+        }
+
+        if (text === lastSpokenRef.current && isPlaying) return;
+        lastSpokenRef.current = text;
+
         stop();
 
         setIsLoading(true);
         try {
             await VoiceService.speak(text, {
-                gender: 'FEMALE',
+                voice: 'Enceladus',
                 promptContext: context,
                 onEnd: () => {
                     if (isMountedRef.current) {
@@ -90,7 +94,7 @@ export function useJournalVoice() {
                 setIsLoading(false);
             }
         }
-    }, [voiceEnabled, stop]);
+    }, [voiceEnabled, stop, isPlaying]);
 
     const toggleVoice = useCallback(() => {
         const next = !voiceEnabled;
@@ -99,21 +103,43 @@ export function useJournalVoice() {
         if (!next) stop();
     }, [voiceEnabled, stop]);
 
-    // Step-specific speak functions
-    const speakStep1 = useCallback(() => {
-        speak(STEP_PROMPTS[1], "User is starting their reflection. Welcome them and guide them to select a felt experience.");
-    }, [speak]);
-
-    const speakStep2 = useCallback((bodyAreas: string[]) => {
-        speak(STEP_PROMPTS[2](bodyAreas), `The user has identified their emotion. Now guide them to feel where it sits in their body. Suggested areas: ${bodyAreas.join(', ')}`);
-    }, [speak]);
-
+    const speakStep1 = useCallback(() => { speak(STEP_PROMPTS[1]); }, [speak]);
+    const speakStep2 = useCallback((bodyAreas: string[]) => { speak(STEP_PROMPTS[2](bodyAreas)); }, [speak]);
     const speakStep3 = useCallback((categories: FeltExperience[]) => {
         const primary = categories[0];
         if (primary) {
-            speak(STEP_PROMPTS[3](primary.label, primary.cognitiveDistortion), `The user is now witnessing the mind's pattern: ${primary.cognitiveDistortion}. Speak as the compassionate witness.`);
+            speak(STEP_PROMPTS[3](primary.label, primary.cognitiveDistortion));
         }
     }, [speak]);
+
+    useEffect(() => {
+        isMountedRef.current = true;
+        speakRef.current = speak;
+        return () => {
+            isMountedRef.current = false;
+            stopRef.current?.();
+        };
+    }, [speak]);
+
+    useEffect(() => {
+        const handler = () => {
+            if (isInteractedRef.current) return;
+            isInteractedRef.current = true;
+            if (pendingSpeechRef.current) {
+                const text = pendingSpeechRef.current;
+                pendingSpeechRef.current = null;
+                speakRef.current?.(text);
+            }
+        };
+        window.addEventListener('mousedown', handler, { once: true, capture: true });
+        window.addEventListener('touchstart', handler, { once: true, capture: true });
+        window.addEventListener('keydown', handler, { once: true, capture: true });
+        return () => {
+            window.removeEventListener('mousedown', handler);
+            window.removeEventListener('touchstart', handler);
+            window.removeEventListener('keydown', handler);
+        };
+    }, []);
 
     return {
         isPlaying,

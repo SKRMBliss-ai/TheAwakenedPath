@@ -9,101 +9,50 @@ const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
 // Text-to-Speech Client
 const ttsClient = new textToSpeech.TextToSpeechClient();
 
-// Gemini direct HTTP audio generation is not supported in the stable v1beta API yet.
-// We are routing directly to Google Cloud Text-To-Speech (LM Journey Voices).
-
 exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
-    let { text, promptContext, gender = 'FEMALE' } = req.body;
+    let { text, promptContext, gender = 'FEMALE', voice = 'Enceladus' } = req.body;
+    const apiKey = geminiKey.value();
+
+    console.log(`DEBUG: Quick Voice Request. Persona: ${voice}, Context: ${!!promptContext}`);
 
     if (!text && !promptContext) return res.status(400).send("No text or context provided.");
 
-    // Voice Tier 1: Journey Voices (Highly expressive LM-based voices equivalent to Gemini Native)
-    const TIER_1_VOICE = gender === 'MALE' ? 'en-US-Journey-D' : 'en-US-Journey-F';
-
-    // Voice Tier 2: Studio / Neural (DeepMind) - Very human-like fallbacks
-    const TIER_2_VOICE = gender === 'MALE' ? 'en-US-Studio-Q' : 'en-US-Studio-O';
-
-    // If context is provided, use Gemini to intelligently generate the spoken script
+    // High-Fidelity Journey Voices
+    const isMale = (voice === 'Enceladus' || voice === 'Charon' || gender === 'MALE');
+    const voiceName = isMale ? 'en-US-Journey-D' : 'en-US-Journey-F';
+    // 1. Intelligent Script Generation (Step 3 or context-heavy)
     if (promptContext) {
         try {
-            const genAI = new GoogleGenerativeAI(geminiKey.value());
-            const model = genAI.getGenerativeModel({
-                model: "gemini-2.0-flash",
-                systemInstruction: `
-                    You are a compassionate, deeply intuitive, and highly human spiritual guide communicating via voice.
-                    The user has provided context about what is happening on their screen or in their mind.
-                    Your goal is to generate the EXPERIENTIAL AUDIO SCRIPT to guide them in this exact moment.
-
-                    CRITICAL VOICE RULES:
-                    1. DO NOT ever use ellipses ( "..." ) because the Google TTS engine will read them out loud as "dot dot dot". This ruins the immersion!
-                    2. Instead, use commas (,) for short breath pauses and periods (.) for reflective pauses.
-                    3. Do not include quotes, stage directions, or speaker labels. Return ONLY the spoken words.
-                    4. Keep it relatively short (1 to 3 sentences max) unless instructed otherwise.
-                    5. Be warm, empathetic, and speak directly to the user (e.g. "Ah, I see you chose...", "Notice how that feels...").
-                `
-            });
-            const result = await model.generateContent(promptContext);
-            const response = await result.response;
-            text = response.text().trim();
-            console.log("Dynamically generated intelligent voice script:", text);
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const prompt = `
+                Act as a Presence Coach.
+                Generate a short 1-2 sentence spoken script for: ${promptContext}
+                IMPORTANT: Return ONLY the spoken words. No ellipses (...). Use commas (,) for pauses.
+            `;
+            const result = await model.generateContent(prompt);
+            text = (await result.response).text().trim();
         } catch (e) {
-            console.warn("Failed to generate dynamic context voice, falling back to basic if present.", e.message);
-            if (!text) return res.status(500).send("Failed to synthesize dynamic voice.");
+            console.error("Gemini fallback:", e.message);
         }
     }
 
-    // Function to add meditative pauses and rhythmic breaks
-    function meditationify(rawText) {
-        // Strip any accidental ellipses to strictly prevent "dot dot dot" sound
-        let cleanText = rawText.replace(/\.{2,}/g, '.').replace(/\.{1,}/g, '.');
-
-        // Add 2s break after sentences for deep absorption
-        let ssml = cleanText.replace(/([.?!])\s+/g, '$1 <break time="1500ms"/> ');
-        // Add 1s break after commas/semicolons
-        ssml = ssml.replace(/([,;])\s+/g, '$1 <break time="800ms"/> ');
-        return {
-            cleanText,
-            ssml: `<speak>${ssml}</speak>`
-        };
-    }
-
-    const { cleanText, ssml: ssmlContent } = meditationify(text);
-
-    async function synthesize(voiceName, isJourney) {
-        const request = {
-            input: isJourney ? { text: cleanText } : { ssml: ssmlContent },
+    // 2. Synthesize with Neural Journey Engine (Fastest Path)
+    try {
+        const [response] = await ttsClient.synthesizeSpeech({
+            input: { text: text },
             voice: { languageCode: 'en-US', name: voiceName },
             audioConfig: {
                 audioEncoding: 'MP3',
+                speakingRate: 0.9 // Slower for spiritual depth
             },
-        };
+        });
 
-        if (!isJourney) {
-            request.audioConfig.speakingRate = 0.85;
-            request.audioConfig.volumeGainDb = 2.0;
-        }
-
-        const [response] = await ttsClient.synthesizeSpeech(request);
-        return response.audioContent;
-    }
-
-    try {
-        console.log(`Attempting Tier 1 Meditative Voice: ${TIER_1_VOICE}`);
-        const audio = await synthesize(TIER_1_VOICE, true);
         res.set('Content-Type', 'audio/mpeg');
-        return res.send(audio);
-    } catch (tier1Error) {
-        console.warn("Tier 1 (Journey) Limit reached or error. Falling back to Tier 2.", tier1Error.message);
-
-        try {
-            console.log(`Attempting Tier 2 Voice: ${TIER_2_VOICE}`);
-            const audio = await synthesize(TIER_2_VOICE, false);
-            res.set('Content-Type', 'audio/mpeg');
-            return res.send(audio);
-        } catch (tier2Error) {
-            console.error("All backend voice tiers exhausted.", tier2Error.message);
-            res.status(429).send("Sage is resting. All neural pathways full.");
-        }
+        return res.send(response.audioContent);
+    } catch (error) {
+        console.error("Voice Engine Failure:", error.message);
+        res.status(500).send("Silence is okay.");
     }
 });
 
@@ -117,6 +66,7 @@ exports.witnessPresence = onRequest({ secrets: [geminiKey], cors: true }, async 
 
     try {
         const apiKey = geminiKey.value();
+        console.log("DEBUG: witnessPresence request. Secret present:", !!apiKey, apiKey ? `(Starts with: ${apiKey.substring(0, 6)}...)` : "");
         if (!apiKey) {
             console.error("CRITICAL: GEMINI_API_KEY secret is missing or empty.");
             throw new Error("Missing API Key");

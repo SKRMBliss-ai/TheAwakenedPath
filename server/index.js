@@ -110,7 +110,7 @@ DIRECTOR'S NOTES:
 `;
 
 app.post('/api/voice', async (req, res) => {
-    const { text, voice = "Aoede" } = req.body;
+    const { text, voice = "Kore" } = req.body;
 
     try {
         const apiKey = await getSecret();

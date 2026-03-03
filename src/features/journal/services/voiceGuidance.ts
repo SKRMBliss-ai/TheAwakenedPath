@@ -133,8 +133,8 @@ export function useVoiceGuidance() {
             URL.revokeObjectURL(url);
         };
 
-        // Small delay so user sees the screen first
-        setTimeout(() => audio.play().catch(() => { }), 600);
+        // Play immediately without artificial delay
+        audio.play().catch(() => { });
     }, [audioEnabled, stop]);
 
     // Cleanup on unmount

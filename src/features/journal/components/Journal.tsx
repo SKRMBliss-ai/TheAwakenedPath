@@ -309,7 +309,7 @@ const Journal: React.FC = () => {
                 style={{ background: `radial-gradient(ellipse, var(--accent-primary-muted), transparent)` }}
             />
 
-            <nav className="flex justify-between items-start mb-20 relative z-10">
+            <nav className="flex justify-between items-start mb-10 relative z-10">
                 <div className="min-w-[120px]" />
                 <div className="text-center">
                     <h1 className="text-6xl font-serif font-light text-[var(--text-primary)] tracking-tight leading-none [text-shadow:0_0_60px_var(--accent-primary-muted)]">Daily Log</h1>

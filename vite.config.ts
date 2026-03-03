@@ -33,11 +33,15 @@ export default defineConfig({
   ],
   server: {
     proxy: {
+      '/api/voice': {
+        target: 'https://texttospeech-cktimgs4pa-uc.a.run.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/voice/, ''),
+      },
       '/api': {
         target: 'https://us-central1-awakened-path-2026.cloudfunctions.net',
         changeOrigin: true,
         rewrite: (path) => {
-          if (path.startsWith('/api/voice')) return '/textToSpeech';
           if (path.startsWith('/api/witness')) return '/witnessPresence';
           if (path.startsWith('/api/grounding')) return '/getGrounding';
           if (path.startsWith('/api/emotion')) return '/analyzeEmotion';
