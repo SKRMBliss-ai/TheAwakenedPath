@@ -68,16 +68,16 @@ const CHAPTERS = [
         ]
     },
     {
-        id: 'panic',
-        num: 'IV',
-        subtitle: 'Beyond the Storm',
-        desc: 'Immediate grounding tools for when the mind-storm is too loud.',
-        icon: AlertCircle,
-        color: '#D4857A',
+        id: 'bonus',
+        num: 'Bonus',
+        subtitle: 'Bonus Sections & Practice',
+        desc: 'Deepen your journey with advanced insights and guided practice tools.',
+        icon: Sparkles,
+        color: '#ABCEC9',
         parts: [
-            { id: 'bonus-1', title: "The Inner Fire That's Killing Your Joy", youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=wE-8V9-H9-k'), duration: '13:40' },
-            { id: 'bonus-2', title: 'The Secret of Samskara / Pain Body', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=uD-7V9-G9-k'), duration: '11:20' },
-            { id: 'bonus-3', title: 'Guided Practice for Presence', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=tF-6V9-F9-k'), duration: '18:00' },
+            { id: 'B1', title: "The Inner Fire That's Killing Your Joy", youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=wE-8V9-H9-k'), duration: '13:40' },
+            { id: 'B2', title: 'The Secret of Samskara / Pain Body', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=uD-7V9-G9-k'), duration: '11:20' },
+            { id: 'B3', title: 'Guided Practice for Presence', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=tF-6V9-F9-k'), duration: '18:00' },
         ]
     },
 ];
@@ -262,17 +262,18 @@ const TeachingsSection: React.FC<{
     const watchedCount = chapter.parts.filter((p: any) => watchedParts.includes(p.id)).length;
 
     return (
-        <div className="px-7 pb-6" style={{ paddingLeft: 100 }}>
+    return (
+        <div className="px-7 pb-8">
             {/* Section header with progress */}
             <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                    <div className="w-3 h-px" style={{ background: `${chapter.color}60` }} />
-                    <span className="text-[9px] tracking-[0.5em] uppercase font-bold text-[var(--text-muted)] font-sans">
-                        Teachings
+                    <div className="h-px w-8 bg-[var(--text-muted)] opacity-50" />
+                    <span className="text-[10px] tracking-[0.4em] uppercase font-bold text-[var(--text-secondary)] font-sans">
+                        Lessons
                     </span>
                 </div>
-                <span className="text-[10px] text-[var(--text-muted)] font-sans">
-                    {watchedCount}/{chapter.parts.length} watched
+                <span className="text-[10px] text-[var(--text-muted)] font-sans font-medium">
+                    {watchedCount}/{chapter.parts.length} completed
                 </span>
             </div>
 
@@ -284,7 +285,7 @@ const TeachingsSection: React.FC<{
                         animate={{ opacity: 1, height: 'auto', scale: 1 }}
                         exit={{ opacity: 0, height: 0, scale: 0.97 }}
                         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        className="mb-6 overflow-hidden"
+                        className="mb-8 overflow-hidden rounded-[32px] border border-[var(--border-subtle)] bg-black/5 shadow-2xl"
                     >
                         <VideoPlayer
                             youtubeId={playingVideo.youtubeId}
@@ -295,11 +296,8 @@ const TeachingsSection: React.FC<{
                 )}
             </AnimatePresence>
 
-            {/* Video List — horizontal scroll for 6+ parts, vertical otherwise */}
-            <div
-                className={`flex gap-3 ${isScrollable ? 'overflow-x-auto pb-4' : 'flex-col'}`}
-                style={{ scrollbarWidth: 'none' }}
-            >
+            {/* Video List — Responsive Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {chapter.parts.map((part: any, idx: number) => {
                     const isWatched = watchedParts.includes(part.id);
                     const isPlaying = playingVideo?.partId === part.id;
@@ -307,7 +305,7 @@ const TeachingsSection: React.FC<{
                     return (
                         <motion.button
                             key={part.id}
-                            whileHover={{ y: -1 }}
+                            whileHover={{ y: -3, scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setPlayingVideo({
                                 chapterId: chapter.id,
@@ -315,53 +313,63 @@ const TeachingsSection: React.FC<{
                                 youtubeId: part.youtubeId,
                             })}
                             className={`
-                                ${isScrollable ? 'flex-shrink-0 w-[260px]' : 'w-full'}
-                                flex items-center gap-4 p-3 rounded-2xl cursor-pointer
+                                flex items-center gap-4 p-4 rounded-[24px] cursor-pointer
                                 transition-all duration-300 text-left border
                                 ${isPlaying
-                                    ? 'bg-[var(--bg-surface-hover)] border-[var(--accent-primary-border)] shadow-md'
-                                    : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] hover:border-[var(--border-default)] hover:bg-[var(--bg-surface-hover)]'
+                                    ? 'bg-[var(--bg-surface-hover)] border-[var(--accent-primary)] shadow-xl ring-1 ring-[var(--accent-primary)]/20'
+                                    : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] hover:border-[var(--accent-primary-muted)] hover:bg-[var(--bg-surface-hover)] hover:shadow-md'
                                 }
                             `}
                         >
                             {/* Thumbnail */}
-                            <div className="relative w-[80px] h-[45px] rounded-xl overflow-hidden flex-shrink-0 bg-black/20">
+                            <div className="relative w-[110px] h-[62px] rounded-xl overflow-hidden flex-shrink-0 bg-black/40 shadow-inner">
                                 <img
                                     src={`https://img.youtube.com/vi/${part.youtubeId}/mqdefault.jpg`}
                                     alt=""
                                     className="w-full h-full object-cover"
-                                    style={{ opacity: 0.75 }}
+                                    style={{ opacity: isPlaying ? 0.9 : 0.65 }}
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).style.display = 'none';
                                     }}
                                 />
-                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
                                     {isPlaying ? (
-                                        <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+                                        <div className="w-5 h-5 rounded-full bg-[var(--accent-primary)] animate-ping" />
                                     ) : (
-                                        <Play size={16} fill="white" color="white" style={{ opacity: 0.8 }} />
+                                        <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
+                                            <Play size={16} fill="white" color="white" className="ml-0.5 opacity-90" />
+                                        </div>
                                     )}
                                 </div>
                                 {isWatched && (
-                                    <div className="absolute top-1 right-1">
-                                        <CheckCircle2
-                                            size={14}
-                                            className="text-[var(--accent-primary)]"
-                                            fill="var(--bg-surface)"
-                                        />
+                                    <div className="absolute top-1.5 right-1.5">
+                                        <div className="bg-[var(--bg-surface)] rounded-full p-0.5 shadow-sm">
+                                            <CheckCircle2
+                                                size={16}
+                                                className="text-[var(--accent-primary)]"
+                                                fill="currentColor"
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </div>
 
                             {/* Info */}
                             <div className="flex-1 min-w-0">
-                                <h5 className="text-[13px] font-serif font-normal m-0 leading-snug text-[var(--text-primary)] truncate">
-                                    <span className="text-[var(--text-muted)] mr-1.5">{part.id.includes('bonus') ? 'Bonus' : part.id}:</span>
+                                <h5 className="text-[14px] font-serif font-medium m-0 leading-tight text-[var(--text-primary)]">
+                                    <span className="text-[11px] font-sans font-black opacity-30 mr-2">{part.id.includes('bonus') ? 'B' : part.id}:</span>
                                     {part.title}
                                 </h5>
-                                <span className="text-[10px] text-[var(--text-muted)] font-sans mt-0.5 block">
-                                    {part.duration}
-                                </span>
+                                <div className="flex items-center gap-2.5 mt-2">
+                                    <span className="text-[10px] text-[var(--text-secondary)] font-sans tracking-wider font-bold">
+                                        {part.duration}
+                                    </span>
+                                    {isPlaying && (
+                                        <span className="text-[9px] text-[var(--accent-primary)] font-sans font-black uppercase tracking-widest animate-pulse">
+                                            Live
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </motion.button>
                     );
