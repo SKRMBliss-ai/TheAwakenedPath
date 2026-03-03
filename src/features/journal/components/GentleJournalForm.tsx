@@ -238,57 +238,66 @@ that is who you truly are.`;
 
     return (
         <div ref={scrollRef} className="w-full h-full" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
-            <div className="relative z-10 w-full max-w-xl mx-auto pb-32">
-                <div className="flex justify-center mb-8">
-                    <VoiceToggle
-                        enabled={voice.voiceEnabled}
-                        playing={voice.isPlaying}
-                        loading={voice.isLoading}
-                        onToggle={voice.toggleVoice}
-                        className="scale-90"
-                    />
-                </div>
+            <div className="relative z-10 w-full max-w-xl mx-auto pb-32 pt-8">
                 {step < 5 && <StepTracker current={step} />}
 
                 {/* 🎙️ Voice Status Indicators */}
-                <div className="flex flex-col items-center justify-center mt-6 h-8">
+                <div className="flex flex-col items-center justify-center mt-8 mb-4 min-h-[48px]">
                     <AnimatePresence mode="wait">
-                        {voice.voiceEnabled && (
-                            <>
-                                {voice.isLoading && (
-                                    <motion.div
-                                        key="loading"
-                                        initial={{ opacity: 0, y: 5 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -5 }}
-                                        className="flex items-center gap-2 text-[13px] text-[var(--text-muted)] italic font-serif"
-                                    >
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                        <span>Preparing voice guidance...</span>
-                                    </motion.div>
-                                )}
-                                {voice.isPlaying && !voice.isLoading && (
-                                    <motion.div
-                                        key="playing"
-                                        initial={{ opacity: 0, y: 5 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -5 }}
-                                        className="flex items-center gap-4 text-[13px] text-[var(--accent-secondary)] italic font-serif"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <AudioLines className="w-4 h-4 animate-pulse" />
-                                            <span>Listening to your guide...</span>
-                                        </div>
-                                        <VoiceToggle
-                                            enabled={voice.voiceEnabled}
-                                            playing={voice.isPlaying}
-                                            loading={voice.isLoading}
-                                            onToggle={voice.toggleVoice}
-                                            className="scale-75 origin-right"
-                                        />
-                                    </motion.div>
-                                )}
-                            </>
+                        {voice.isLoading ? (
+                            <motion.div
+                                key="loading"
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -5 }}
+                                className="flex items-center gap-4"
+                            >
+                                <div className="flex items-center gap-2 text-[13px] text-[var(--text-muted)] italic font-serif">
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    <span>Preparing voice guidance...</span>
+                                </div>
+                                <VoiceToggle
+                                    enabled={voice.voiceEnabled}
+                                    playing={false}
+                                    loading={false}
+                                    onToggle={voice.toggleVoice}
+                                    className="scale-75"
+                                />
+                            </motion.div>
+                        ) : voice.isPlaying ? (
+                            <motion.div
+                                key="playing"
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -5 }}
+                                className="flex items-center gap-4 text-[13px] text-[var(--accent-secondary)] italic font-serif"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <AudioLines className="w-4 h-4 animate-pulse" />
+                                    <span>Listening to your guide...</span>
+                                </div>
+                                <button
+                                    onClick={() => voice.stop()}
+                                    className="text-[11px] font-bold uppercase tracking-widest border-b border-[var(--accent-secondary-border)] pb-0.5 hover:text-[var(--text-primary)] transition-colors"
+                                >
+                                    Stop
+                                </button>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="idle"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                            >
+                                <VoiceToggle
+                                    enabled={voice.voiceEnabled}
+                                    playing={false}
+                                    loading={false}
+                                    onToggle={voice.toggleVoice}
+                                    className="scale-90"
+                                />
+                            </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
