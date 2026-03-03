@@ -98,9 +98,9 @@ export const themes: Record<ThemeMode, Theme> = {
 
         // Text
         textPrimary: "#ede9e3",          // text-primary
-        textSecondary: "rgba(237, 233, 227, 0.5)", // text-secondary
-        textMuted: "rgba(237, 233, 227, 0.25)",    // text-muted
-        textDisabled: "rgba(237, 233, 227, 0.15)",
+        textSecondary: "rgba(237, 233, 227, 0.7)", // text-secondary
+        textMuted: "rgba(237, 233, 227, 0.45)",    // text-muted
+        textDisabled: "rgba(237, 233, 227, 0.2)",
 
         // Accents
         accentPrimary: "#f0a0aa",        // accent-rose
@@ -161,9 +161,9 @@ export const themes: Record<ThemeMode, Theme> = {
 
         // Text
         textPrimary: "#2a2521",          // text-primary
-        textSecondary: "#7a726a",        // text-secondary
-        textMuted: "rgba(42, 37, 33, 0.35)", // text-muted
-        textDisabled: "rgba(42, 37, 33, 0.2)",
+        textSecondary: "#5c544e",        // text-secondary
+        textMuted: "rgba(42, 37, 33, 0.55)", // text-muted
+        textDisabled: "rgba(42, 37, 33, 0.3)",
 
         // Accents
         accentPrimary: "#b8706e",        // accent-rose

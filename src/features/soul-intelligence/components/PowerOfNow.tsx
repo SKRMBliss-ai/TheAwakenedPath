@@ -28,11 +28,12 @@ const CHAPTERS = [
         color: '#B8A5D4',
         parts: [
             { id: '1.1', title: 'Stop Overthinking', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=S79_XZAaBII'), duration: '14:32' },
-            { id: '1.2', title: 'The Greatest Obstacle to Enlightenment', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=pW8yC8f9p9k'), duration: '11:45' },
+            { id: '1.2a', title: 'You Are Not Your Thoughts (Here\'s Proof)', youtubeId: 'CyByxCxMZLk', duration: '11:45' },
+            { id: '1.2b', title: 'Is Thinking a Disease?', youtubeId: 'N17onqQSQEc', duration: '10:20' },
             { id: '1.3', title: 'Freeing Yourself from Your Mind', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=A5DmCojZxno'), duration: '13:20' },
             { id: '1.4a', title: 'The Origin of Fear', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=DpVYPFKcTJ8'), duration: '10:15' },
             { id: '1.4b', title: 'Suppressed Emotions', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=YfNH_Gl-H-s'), duration: '12:08' },
-            { id: '1.5a', title: 'STOP Your Mind From Lying to You', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=Xz7vV9-Y9-k'), duration: '15:40' },
+            { id: '1.5a', title: 'STOP Your Mind From Lying to You', youtubeId: 'DpVYPFKcTJ8', duration: '15:40' },
         ]
     },
     {
@@ -44,13 +45,15 @@ const CHAPTERS = [
         color: '#D16BA5',
         parts: [
             { id: '2.1', title: 'Stop Fighting Reality', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=hHJAoVYARqw'), duration: '12:10' },
-            { id: '2.2', title: 'How to Accept an Awful Moment', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=N6J-U9X9y_w'), duration: '9:45' },
-            { id: '2.3', title: 'The "Watcher" Technique', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=8V-D9gW8wE8'), duration: '11:30' },
-            { id: '2.4', title: 'Beyond Happiness and Unhappiness', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=mZ-7V9-Q9-k'), duration: '13:20' },
-            { id: '2.5', title: "The Ego's Search for Wholeness", youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=kY-6V9-P9-k'), duration: '10:55' },
-            { id: '2.6', title: 'Pain Gets LOUDER Before Healing', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=pX-5V9-O9-k'), duration: '8:40' },
-            { id: '2.7', title: 'Why You Still Suffer Even When Life Is "Fine"', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=vL-4V9-N9-k'), duration: '14:15' },
-            { id: '2.10', title: 'Consciousness: The Way Out of Pain (Ch. 2 Finale)', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=rW-3V9-M9-k'), duration: '16:30' },
+            { id: '2.2', title: 'How to Accept an Awful Moment', youtubeId: '73WJo3-4TxE', duration: '9:45' },
+            { id: '2.3', title: 'The "Watcher" Technique: Secret to Instant Peace', youtubeId: '3B9ZtrIOaBs', duration: '11:30' },
+            { id: '2.4', title: 'The Pain Body: Trapped Emotional Energy', youtubeId: 'dxyTsA2JIRI', duration: '13:20' },
+            { id: '2.5', title: 'Why Pain Gets Louder Before It Heals', youtubeId: 'c_nGfqdvBZk', duration: '10:55' },
+            { id: '2.6', title: 'Pain Gets LOUDER Before Healing: 4 Steps to Dissolve It', youtubeId: '-UstwEMF93c', duration: '8:40' },
+            { id: '2.7', title: 'Why You Still Suffer Even When Life Is "Fine"', youtubeId: 'FpiRpv_0wUU', duration: '14:15' },
+            { id: '2.8', title: 'The Anxiety Trap: 90% Of Your Fear Isn\'t Real', youtubeId: 'T_2cqBcySfs', duration: '12:00' },
+            { id: '2.9', title: 'Addicted to Your Own Suffering?', youtubeId: 'YfNH_Gl-H-s', duration: '11:00' },
+            { id: '2.10', title: 'Consciousness: The Way Out of Pain (Ch. 2 Finale)', youtubeId: 'hHJAoVYARqw', duration: '16:30' },
         ]
     },
     {
@@ -62,9 +65,9 @@ const CHAPTERS = [
         color: '#C4A8C8',
         parts: [
             { id: '3.1', title: 'Stop Thinking & Start LIVING', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=MAHHfa2thto'), duration: '15:20' },
-            { id: '3.2', title: 'Ending the Delusion of Time', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=nB-2V9-L9-k'), duration: '11:45' },
-            { id: '3.3', title: 'All Problems are Illusions of the Mind', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=oA-1V9-K9-k'), duration: '12:30' },
-            { id: '3.4', title: 'The Joy of Being', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=qC-9V9-J9-k'), duration: '10:10' },
+            { id: '3.2', title: 'Coming Soon', youtubeId: '', duration: '--:--' },
+            { id: '3.3', title: 'Coming Soon', youtubeId: '', duration: '--:--' },
+            { id: '3.4', title: 'Coming Soon', youtubeId: '', duration: '--:--' },
         ]
     },
     {
@@ -75,9 +78,9 @@ const CHAPTERS = [
         icon: Sparkles,
         color: '#ABCEC9',
         parts: [
-            { id: 'B1', title: "The Inner Fire That's Killing Your Joy", youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=wE-8V9-H9-k'), duration: '13:40' },
-            { id: 'B2', title: 'The Secret of Samskara / Pain Body', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=uD-7V9-G9-k'), duration: '11:20' },
-            { id: 'B3', title: 'Guided Practice for Presence', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=tF-6V9-F9-k'), duration: '18:00' },
+            { id: 'B1', title: 'Coming Soon', youtubeId: '', duration: '--:--' },
+            { id: 'B2', title: 'Coming Soon', youtubeId: '', duration: '--:--' },
+            { id: 'B3', title: 'Coming Soon', youtubeId: '', duration: '--:--' },
         ]
     },
 ];
@@ -261,7 +264,6 @@ const TeachingsSection: React.FC<{
     const isScrollable = chapter.parts.length >= 6;
     const watchedCount = chapter.parts.filter((p: any) => watchedParts.includes(p.id)).length;
 
-    return (
     return (
         <div className="px-7 pb-8">
             {/* Section header with progress */}
@@ -514,7 +516,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                 <h1 className="text-[clamp(40px,5vw,60px)] font-serif font-light tracking-tight m-0 leading-[0.95] text-[var(--text-primary)]">
                                     The Power<br />of Now
                                 </h1>
-                                <p className="text-[9px] tracking-[0.65em] uppercase text-[var(--text-muted)] font-sans font-bold mt-4 opacity-60">
+                                <p className="text-[9px] tracking-[0.65em] uppercase text-[var(--text-muted)] font-sans font-bold mt-4 opacity-100">
                                     Eckhart Tolle · Living Study
                                 </p>
                             </div>
@@ -646,9 +648,9 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                 className="overflow-hidden"
                                             >
                                                 {/* Description */}
-                                                <div className="px-7 pb-4" style={{ paddingLeft: 100 }}>
+                                                <div className="px-7 pb-6">
                                                     <p className="text-sm font-serif italic text-[var(--text-muted)] leading-relaxed font-light
-                                                        pl-4 border-l border-[var(--border-subtle)] max-w-[520px]">
+                                                        pl-4 border-l border-[var(--border-subtle)] max-w-[550px]">
                                                         {chapter.desc}
                                                     </p>
                                                 </div>
@@ -663,8 +665,8 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                 />
 
                                                 {/* ── DIVIDER before Practice Tool ── */}
-                                                <div className="px-7" style={{ paddingLeft: 100 }}>
-                                                    <SectionDivider label="Practice Tool" color={chapter.color} />
+                                                <div className="px-7">
+                                                    <SectionDivider label="Interactive Practice" color={chapter.color} />
                                                 </div>
 
                                                 {/* ── CHAPTER I: WITNESS THE VOICE ── */}
@@ -749,7 +751,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                                         </div>
                                                                     </div>
                                                                     <div>
-                                                                        <p className="text-[8px] tracking-[0.5em] uppercase text-[var(--accent-primary)] font-sans font-bold mb-3 opacity-60">
+                                                                        <p className="text-[8px] tracking-[0.5em] uppercase text-[var(--accent-primary)] font-sans font-bold mb-3 opacity-90">
                                                                             Presence's Light
                                                                         </p>
                                                                         <div
@@ -845,11 +847,11 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                 )}
 
                                                 {/* ── CHAPTER IV: BEYOND THE STORM ── */}
-                                                {chapter.id === 'panic' && (
+                                                {chapter.id === 'bonus' && (
                                                     <motion.div
                                                         initial={{ opacity: 0, y: 12 }}
                                                         animate={{ opacity: 1, y: 0 }}
-                                                        className="px-7 pb-12 flex flex-col items-center gap-7 text-center"
+                                                        className="px-7 pb-12 flex flex-col items-center gap-9 text-center"
                                                     >
                                                         <div className="relative">
                                                             <motion.div
@@ -865,21 +867,21 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                                     border: `1px solid ${chapter.color}18`
                                                                 }}
                                                             >
-                                                                <AlertCircle size={26} strokeWidth={1.5} style={{ color: chapter.color }} />
+                                                                <Sparkles size={28} strokeWidth={1.5} style={{ color: chapter.color }} />
                                                             </div>
                                                         </div>
 
                                                         <div>
-                                                            <h3 className="text-3xl font-serif font-light text-[var(--text-primary)] mb-3">
-                                                                Emergency Awareness
+                                                            <h3 className="text-3xl font-serif font-light text-[var(--text-primary)] mb-4 tracking-tight">
+                                                                Presence Portal
                                                             </h3>
                                                             <p className="text-sm font-serif italic text-[var(--text-muted)] max-w-sm leading-relaxed font-light mx-auto">
-                                                                When the storm of noise is too loud, return to the inner body anchor immediately.
+                                                                When the mind's storm is too loud, enter the portal to return to the silence of being.
                                                             </p>
                                                         </div>
 
                                                         <GhostButton onClick={togglePanic}>
-                                                            Activate Rescue Anchor
+                                                            Enter Presence Portal
                                                         </GhostButton>
                                                     </motion.div>
                                                 )}
@@ -939,7 +941,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                 <h2 className="text-6xl font-serif font-light text-[var(--text-primary)] mb-4 tracking-tight leading-none">
                                     Stay Here
                                 </h2>
-                                <p className="text-lg font-serif italic text-[var(--text-muted)] leading-relaxed font-light m-0">
+                                <p className="text-lg font-serif italic text-[var(--text-secondary)] leading-relaxed font-light m-0">
                                     {groundingText || 'The thoughts are noise. Your breath is the silence.\nFeel the life within your hands right now.'}
                                 </p>
                             </div>
