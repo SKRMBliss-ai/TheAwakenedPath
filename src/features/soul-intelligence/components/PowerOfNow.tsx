@@ -356,7 +356,7 @@ const TeachingsSection: React.FC<{
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <h5 className="text-[13px] font-serif font-normal m-0 leading-snug text-[var(--text-primary)] truncate">
-                                    <span className="text-[var(--text-muted)] mr-1.5">{idx + 1}.</span>
+                                    <span className="text-[var(--text-muted)] mr-1.5">{part.id.includes('bonus') ? 'Bonus' : part.id}:</span>
                                     {part.title}
                                 </h5>
                                 <span className="text-[10px] text-[var(--text-muted)] font-sans mt-0.5 block">
