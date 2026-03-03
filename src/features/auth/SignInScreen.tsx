@@ -1,16 +1,20 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './AuthContext';
-import { Sparkles, ArrowRight, Eye, EyeOff, LayoutGrid } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, LayoutGrid, ChevronDown, ChevronUp } from 'lucide-react';
+import { useTheme } from '../../theme/ThemeSystem';
+import appLogo from '../../assets/logo.png';
 
 export const SignInScreen = () => {
     const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+    const { theme, mode } = useTheme();
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [showEmailForm, setShowEmailForm] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,136 +46,231 @@ export const SignInScreen = () => {
     };
 
     return (
-        <div className="min-h-screen w-full relative flex flex-col items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #0B0014 0%, #050008 100%)' }}>
-            {/* Ambient Background matching app theme */}
-            <div className="absolute inset-0 z-0">
-                <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] rounded-full bg-[#C65F9D]/10 blur-[150px] animate-pulse-slow" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#ABCEC9]/10 blur-[120px] animate-pulse-slower" />
+        <div
+            className="min-h-screen w-full relative flex flex-col items-center justify-center overflow-hidden p-6"
+            style={{ background: theme.bgGradient }}
+        >
+            {/* Ambient Background Glows */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div
+                    className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] rounded-full opacity-20 blur-[120px] transition-all duration-1000"
+                    style={{ background: theme.accentPrimary }}
+                />
+                <div
+                    className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full opacity-10 blur-[100px] transition-all duration-1000"
+                    style={{ background: theme.accentSecondary }}
+                />
             </div>
 
-            {/* Ambient Corner Glows - Matching the reference card's environment */}
-            <div className="absolute top-1/4 -left-20 w-96 h-96 bg-purple-500/20 rounded-full blur-[128px]" />
-            <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-teal-500/10 rounded-full blur-[128px]" />
-
-            {/* Title Outside Card */}
+            {/* App Identity */}
             <motion.div
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.8 }}
-                className="relative z-10 mb-8 mt-[-10vh]"
+                className="relative z-10 flex flex-col items-center mb-10"
             >
-                <h1 className="text-3xl md:text-5xl font-serif font-bold text-white text-center tracking-wide drop-shadow-lg">
-                    Enter Presence
+                <div className="w-20 h-20 mb-4 rounded-2xl p-1 bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] shadow-xl flex items-center justify-center">
+                    <img src={appLogo} alt="Logo" className="w-full h-full object-contain rounded-xl bg-black/20" />
+                </div>
+                <h1
+                    className="text-2xl font-serif font-bold tracking-[0.15em] uppercase text-center"
+                    style={{ color: theme.textPrimary }}
+                >
+                    The Awakened Path
                 </h1>
+                <p
+                    className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase mt-2 opacity-60"
+                    style={{ color: theme.textSecondary }}
+                >
+                    A Presence Study
+                </p>
             </motion.div>
 
-            {/* The Main Reference Card */}
+            {/* Main Auth Card */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="relative z-10 w-full max-w-sm"
             >
-                {/* Card Container with Specific Gradient Border/Glow */}
-                <div className="relative rounded-[3rem] p-[1px] bg-gradient-to-br from-[#7EE7F9]/50 via-white/10 to-[#C65F9D]/50 shadow-[0_0_40px_rgba(126,231,249,0.1)]">
-
-                    {/* Glass Content Background - Inner Layer */}
-                    <div className="relative rounded-[3rem] bg-[#2A2638]/40 backdrop-blur-xl p-8 overflow-hidden h-full flex flex-col items-center">
-
-                        {/* Internal Glow Effects */}
-                        <div className="absolute top-0 left-0 w-32 h-32 bg-[#7EE7F9]/20 blur-[60px]" />
-                        <div className="absolute bottom-0 right-0 w-32 h-32 bg-[#C65F9D]/20 blur-[60px]" />
-
-                        {/* Icon Box */}
-                        <div className="relative w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-[#C65F9D] to-[#9575CD] flex items-center justify-center shadow-lg shadow-purple-500/20">
-                            <Sparkles className="w-8 h-8 text-white" />
-                        </div>
-
-                        {/* Subtitle / Graphic Text */}
-                        <h2 className="text-xl md:text-2xl font-serif font-bold text-white text-center leading-tight mb-8 drop-shadow-md">
-                            Your Sacred Space
+                <div
+                    className="relative rounded-[24px] overflow-hidden shadow-2xl transition-all duration-500"
+                    style={{
+                        background: theme.bgSurface,
+                        border: `1.5px solid ${theme.borderGlass}`,
+                        backdropFilter: theme.blur,
+                        boxShadow: mode === 'dark' ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 25px 50px -12px rgba(0, 0, 0, 0.1)'
+                    }}
+                >
+                    <div className="p-8 flex flex-col items-center">
+                        <h2 className="text-xl font-serif font-light mb-8 text-center" style={{ color: theme.textPrimary }}>
+                            Enter Presence
                         </h2>
 
-                        {/* Inputs */}
-                        <form onSubmit={handleSubmit} className="w-full space-y-4">
+                        {/* Error Message */}
+                        <AnimatePresence>
                             {error && (
-                                <p className="text-red-300 text-[10px] text-center font-bold tracking-widest uppercase">{error}</p>
-                            )}
-
-                            <div className="relative">
-                                <input
-                                    type="email"
-                                    placeholder="Email Address"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/20 rounded-2xl py-3 px-4 text-white text-sm placeholder-white/30 focus:outline-none focus:bg-white/10 focus:border-white/40 transition-all font-sans"
-                                    required
-                                />
-                            </div>
-
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="Password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/20 rounded-2xl py-3 px-4 text-white text-sm placeholder-white/30 focus:outline-none focus:bg-white/10 focus:border-white/40 transition-all font-sans"
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="w-full mb-6 p-3 rounded-xl border flex items-center justify-center"
+                                    style={{
+                                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                        borderColor: 'rgba(239, 68, 68, 0.2)'
+                                    }}
                                 >
-                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                </button>
-                            </div>
+                                    <p className="text-red-500 text-[12px] font-medium text-center">{error}</p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
-                            {/* Main Action Button - White Pill */}
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full mt-4 bg-white hover:bg-white/90 text-[#1E1B2E] text-sm font-bold py-3 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                            >
-                                {loading ? (
-                                    <div className="w-4 h-4 border-2 border-[#1E1B2E] border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                    <>
-                                        {isLogin ? 'SIGN IN' : 'CREATE ACCOUNT'}
-                                        <ArrowRight className="w-4 h-4" />
-                                    </>
-                                )}
-                            </button>
-                        </form>
+                        {/* Google Sign In - Hero Action */}
+                        <button
+                            onClick={handleGoogleSignIn}
+                            disabled={loading}
+                            className="w-full group relative flex items-center justify-center gap-3 px-6 py-4 rounded-2xl transition-all active:scale-95 mb-6"
+                            style={{
+                                background: mode === 'dark' ? 'white' : '#1E1B2E',
+                                color: mode === 'dark' ? '#1E1B2E' : 'white',
+                                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                            }}
+                        >
+                            <LayoutGrid className="w-5 h-5 opacity-80 group-hover:rotate-12 transition-transform" />
+                            <span className="text-sm font-bold tracking-wide">Continue with Google</span>
+                        </button>
 
-                        {/* Google Sign In - Subtle Grid Link */}
-                        <div className="mt-6">
-                            <button
-                                onClick={handleGoogleSignIn}
-                                className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-xs font-bold tracking-wide group"
-                            >
-                                <LayoutGrid className="w-4 h-4 group-hover:text-[#C65F9D] transition-colors" />
-                                <span>Sign in with Google</span>
-                            </button>
+                        {/* Divider */}
+                        <div className="w-full flex items-center gap-4 mb-6">
+                            <div className="flex-1 h-[1px] opacity-10" style={{ background: theme.textPrimary }} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-30" style={{ color: theme.textSecondary }}>or</span>
+                            <div className="flex-1 h-[1px] opacity-10" style={{ background: theme.textPrimary }} />
                         </div>
 
-                        {/* Toggle Mode */}
-                        <div className="mt-6">
+                        {/* Email Form Toggle */}
+                        <button
+                            onClick={() => setShowEmailForm(!showEmailForm)}
+                            className="w-full flex items-center justify-between px-4 py-2 rounded-xl hover:bg-black/5 transition-colors mb-2"
+                        >
+                            <span className="text-xs font-bold tracking-widest uppercase opacity-60" style={{ color: theme.textPrimary }}>
+                                Use Email Address
+                            </span>
+                            {showEmailForm ? <ChevronUp className="w-4 h-4 opacity-40" /> : <ChevronDown className="w-4 h-4 opacity-40" />}
+                        </button>
+
+                        <AnimatePresence>
+                            {showEmailForm && (
+                                <motion.form
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    onSubmit={handleSubmit}
+                                    className="w-full space-y-5 overflow-hidden pt-4"
+                                >
+                                    {/* Email Field */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest pl-2 opacity-50" style={{ color: theme.textPrimary }}>Email</label>
+                                        <input
+                                            type="email"
+                                            placeholder="your@soul.com"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="w-full rounded-2xl py-3.5 px-5 text-sm transition-all outline-none"
+                                            style={{
+                                                background: theme.bgInput,
+                                                border: `1.5px solid ${theme.borderDefault}`,
+                                                color: theme.textPrimary
+                                            }}
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Password Field */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest pl-2 opacity-50" style={{ color: theme.textPrimary }}>Password</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                placeholder="••••••••"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                className="w-full rounded-2xl py-3.5 px-5 text-sm transition-all outline-none"
+                                                style={{
+                                                    background: theme.bgInput,
+                                                    border: `1.5px solid ${theme.borderDefault}`,
+                                                    color: theme.textPrimary
+                                                }}
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 transition-opacity"
+                                                style={{ color: theme.textPrimary }}
+                                            >
+                                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Email Action Button */}
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white text-xs font-bold py-4 rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 mt-4"
+                                    >
+                                        {loading ? (
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <>
+                                                <span className="tracking-[0.2em] uppercase">{isLogin ? 'Sign In' : 'Create Account'}</span>
+                                                <ArrowRight className="w-4 h-4" />
+                                            </>
+                                        )}
+                                    </button>
+                                </motion.form>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Auth Mode Toggle */}
+                        <div className="mt-8">
                             <button
                                 onClick={() => setIsLogin(!isLogin)}
-                                className="text-white/70 text-[10px] font-bold uppercase tracking-widest hover:text-white/60 transition-colors"
+                                className="px-4 py-2 rounded-full border transition-all text-[10px] font-bold uppercase tracking-widest"
+                                style={{
+                                    borderColor: theme.borderDefault,
+                                    color: theme.textSecondary,
+                                    backgroundColor: 'transparent'
+                                }}
                             >
-                                {isLogin ? "Join the Path" : "Log In"}
+                                {isLogin ? (
+                                    <span>New here? <span style={{ color: theme.accentPrimary }}>Join the Path</span></span>
+                                ) : (
+                                    <span>Have an account? <span style={{ color: theme.accentPrimary }}>Log In</span></span>
+                                )}
                             </button>
                         </div>
                     </div>
                 </div>
             </motion.div>
 
-            {/* Bottom Right Decoration */}
-            <div className="absolute bottom-10 right-10 text-white/10">
-                <Sparkles className="w-8 h-8 animate-pulse" />
-            </div>
+            {/* Footer Information */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className="mt-12 flex flex-col items-center gap-4 z-10"
+            >
+                <div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest opacity-40" style={{ color: theme.textPrimary }}>
+                    <a href="#" className="hover:opacity-100 transition-opacity">Privacy Policy</a>
+                    <a href="#" className="hover:opacity-100 transition-opacity">Terms of Service</a>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-20" style={{ color: theme.textPrimary }}>
+                    <span>Presence Study</span>
+                    <span className="w-1 h-1 rounded-full bg-current" />
+                    <span>Powered by Anthropic</span>
+                </div>
+            </motion.div>
         </div>
     );
 };

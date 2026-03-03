@@ -37,23 +37,23 @@ function StepTracker({ current }: { current: number }) {
                 return (
                     <div key={step.num} className="flex items-center gap-1">
                         <div className="flex flex-col items-center" style={{ minWidth: 56 }}>
-                            <div className="flex items-center justify-center rounded-full transition-all duration-500"
+                            <div className="flex items-center justify-center rounded-full transition-all duration-500 shadow-sm"
                                 style={{
                                     width: 32, height: 32,
                                     background: isActive ? "var(--nav-active-bg)" : isDone ? "var(--accent-secondary-muted)" : "var(--bg-surface)",
-                                    border: isActive ? "2px solid var(--accent-primary)" : isDone ? "2px solid var(--accent-secondary-border)" : "2px solid var(--border-subtle)",
+                                    border: isActive ? "2.5px solid var(--accent-primary)" : isDone ? "2.5px solid var(--accent-secondary-border)" : "2px solid var(--border-default)",
                                 }}>
-                                {isDone ? <span style={{ color: "var(--accent-secondary)", fontSize: 14 }}>✓</span> :
-                                    <span style={{ color: isActive ? "var(--accent-primary)" : "var(--text-muted)", fontSize: 13, fontWeight: 600 }}>{step.num}</span>}
+                                {isDone ? <span style={{ color: "var(--accent-secondary)", fontSize: 14, fontWeight: 700 }}>✓</span> :
+                                    <span style={{ color: isActive ? "var(--accent-primary)" : "var(--text-secondary)", fontSize: 13, fontWeight: 700 }}>{step.num}</span>}
                             </div>
                             <span className="mt-1 transition-colors duration-500"
-                                style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", color: isActive ? "var(--accent-primary)" : isDone ? "var(--accent-secondary)" : "var(--text-muted)" }}>
+                                style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: isActive ? "var(--accent-primary)" : isDone ? "var(--accent-secondary)" : "var(--text-secondary)" }}>
                                 {step.label}
                             </span>
                         </div>
                         {i < STEPS.length - 1 && (
                             <div className="transition-colors duration-500"
-                                style={{ width: 24, height: 2, borderRadius: 1, marginBottom: 14, background: isDone ? "var(--accent-secondary-border)" : "var(--border-subtle)" }} />
+                                style={{ width: 24, height: 2, borderRadius: 1, marginBottom: 14, background: isDone ? "var(--accent-secondary-border)" : "var(--border-default)" }} />
                         )}
                     </div>
                 );
@@ -73,18 +73,19 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: { label: 
 
     return (
         <motion.div variants={fadeUp} className="space-y-3">
-            {label && <label style={{ display: "block", fontSize: 18, color: "var(--text-primary)", fontFamily: "var(--font-serif)", lineHeight: 1.4, opacity: 0.8 }}>{label}</label>}
-            {hint && <p style={{ fontSize: 14, color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.5 }}>{hint}</p>}
+            {label && <label style={{ display: "block", fontSize: 18, color: "var(--text-primary)", fontFamily: "var(--font-serif)", lineHeight: 1.4 }}>{label}</label>}
+            {hint && <p style={{ fontSize: 14, color: "var(--text-secondary)", fontStyle: "italic", lineHeight: 1.5, fontWeight: 500 }}>{hint}</p>}
             <textarea
                 ref={ref} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} rows={4}
                 style={{
                     width: "100%", minHeight: 120, padding: "20px 24px", fontSize: 17, lineHeight: 1.7,
                     fontFamily: "var(--font-serif)", color: "var(--text-primary)", background: "var(--bg-input)",
-                    border: "1px solid var(--border-subtle)", borderRadius: 20, outline: "none", resize: "none",
+                    border: "1.5px solid var(--border-default)", borderRadius: 20, outline: "none", resize: "none",
                     transition: "border-color 0.3s, background 0.3s",
                 }}
                 onFocus={(e) => { e.target.style.borderColor = "var(--accent-primary)"; e.target.style.background = "var(--bg-input-focus)"; }}
-                onBlur={(e) => { e.target.style.borderColor = "var(--border-subtle)"; e.target.style.background = "var(--bg-input)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border-default)"; e.target.style.background = "var(--bg-input)"; }}
+                className="placeholder:text-[var(--text-secondary)] placeholder:opacity-70"
             />
         </motion.div>
     );

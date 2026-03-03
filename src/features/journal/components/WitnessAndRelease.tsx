@@ -135,11 +135,11 @@ export function WitnessAndRelease({ data, onComplete, onTabChange }: WitnessAndR
                                 ${active ? 'bg-[var(--accent-primary-muted)]/10' : 'hover:bg-[var(--bg-surface)]/50'}`}
                             >
                                 <span className={`text-lg leading-none transition-opacity
-                                ${active ? 'opacity-100' : past ? 'opacity-60' : 'opacity-30'}`}>
+                                ${active ? 'opacity-100' : past ? 'opacity-80' : 'opacity-50'}`}>
                                     {t.icon}
                                 </span>
                                 <span className={`text-[10px] uppercase tracking-widest transition-colors
-                                ${active ? 'text-[var(--accent-primary)] font-bold' : 'text-[var(--text-muted)]'}`}>
+                                ${active ? 'text-[var(--accent-primary)] font-bold' : 'text-[var(--text-secondary)] font-medium'}`}>
                                     {t.label}
                                 </span>
                                 {active && (
@@ -294,7 +294,7 @@ export function WitnessAndRelease({ data, onComplete, onTabChange }: WitnessAndR
                                                 className={`p-4 rounded-xl border transition-colors text-center
                                                 ${(hoopRunning && hoopPhase === i) || hoopDone
                                                         ? 'bg-[var(--accent-primary-muted)] border-[var(--accent-primary-border)]'
-                                                        : 'bg-[var(--bg-surface)] border-[var(--border-subtle)]/30'}`}
+                                                        : 'bg-[var(--bg-surface)] border-[var(--border-subtle)]/60 shadow-sm'}`}
                                             >
                                                 <div className="text-xl mb-1">{h.icon}</div>
                                                 <div className="font-serif text-sm text-[var(--text-primary)]" style={{ fontFamily: "var(--font-serif)" }}>{h.phrase}</div>
@@ -343,7 +343,7 @@ export function WitnessAndRelease({ data, onComplete, onTabChange }: WitnessAndR
                                                 if (e.target.value.length > 0) setChecks(c => ({ ...c, reflection: true }));
                                             }}
                                             placeholder="Anything else you'd like to release or witness today?"
-                                            className="w-full h-32 p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] focus:border-[var(--accent-primary)] outline-none font-serif text-lg text-[var(--text-primary)] transition-all resize-none placeholder:opacity-30"
+                                            className="w-full h-32 p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] focus:border-[var(--accent-primary)] outline-none font-serif text-lg text-[var(--text-primary)] transition-all resize-none placeholder:text-[var(--text-muted)] placeholder:opacity-60"
                                             style={{ fontFamily: "var(--font-serif)" }}
                                         />
                                     </div>
@@ -442,12 +442,12 @@ function CheckItem({ checked, onToggle, label, sub }: { checked: boolean; onTogg
                 {checked && <Check size={12} className="text-[var(--bg-deep)]" />}
             </div>
             <div>
-                <div className={`text-xs font-medium transition-all
+                <div className={`text-xs font-semibold transition-all
                     ${checked ? 'text-[var(--text-disabled)] line-through opacity-50' : 'text-[var(--text-primary)]'}`}>
                     {label}
                 </div>
                 {sub && !checked && (
-                    <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-tighter mt-1 opacity-50">
+                    <div className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tighter mt-1">
                         {sub}
                     </div>
                 )}

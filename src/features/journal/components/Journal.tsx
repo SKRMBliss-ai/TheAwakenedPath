@@ -333,120 +333,84 @@ const Journal: React.FC = () => {
                 </div>
             </nav>
 
-            {/* ── CONTENT AREA: Locked for non-admin users ── */}
-            {(() => {
-                const ADMIN_EMAILS = ['shrutikhungar@gmail.com', 'simkatyal1@gmail.com', 'test@example.com'];
-                const isAdmin = ADMIN_EMAILS.includes(user?.email ?? '');
-                return (
-                    <div className="relative">
-                        {/* Blur the content if not admin */}
-                        <div className={!isAdmin ? 'blur-[6px] pointer-events-none select-none' : ''}>
-                            <AnimatePresence mode="wait">
-                                {!showLogForm ? (
-                                    <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-8">
-                                        {/* Compact Practice CTA Card */}
-                                        <motion.section variants={childVariant} className="relative">
-                                            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)]/50 rounded-[32px] p-6 shadow-sm flex items-center gap-6">
-                                                {/* Breathing Dot / Icon */}
-                                                <div className="w-16 h-16 rounded-full bg-[var(--accent-primary-muted)]/10 border border-[var(--border-subtle)]/20 flex items-center justify-center flex-shrink-0">
-                                                    <motion.div
-                                                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                                                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                                        className="w-4 h-4 rounded-full bg-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-primary-muted)]"
-                                                    />
-                                                </div>
-
-                                                <div className="flex-1">
-                                                    <h2 className="text-2xl font-serif font-light text-[var(--text-primary)] leading-tight">
-                                                        Settle into the Now
-                                                    </h2>
-                                                    <p className="text-xs text-[var(--text-muted)] italic font-serif mt-1">
-                                                        2 min reconnection before logging.
-                                                    </p>
-                                                </div>
-
-                                                <div className="flex flex-col items-end gap-3">
-                                                    <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript}>
-                                                        Begin
-                                                    </AnchorButton>
-                                                    <button
-                                                        onClick={() => { resetJournalForm(); setShowLogForm(true); }}
-                                                        className="text-[8px] uppercase tracking-[0.3em] text-[var(--text-muted)] hover:text-[var(--accent-primary)] font-bold transition-colors"
-                                                    >
-                                                        or skip to log →
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </motion.section>
-
-                                        {/* Calendar History */}
-                                        {entries.length > 0 && (
-                                            <motion.section variants={childVariant} className="space-y-6">
-                                                <JournalCalendar entries={entries} />
-                                            </motion.section>
-                                        )}
-                                    </motion.div>
-                                ) : (
-                                    /* ═══════════════════════════════════════════════════════════════
-                                       AWAKENED PATH 3-STEP JOURNAL FLOW
-                                    ═══════════════════════════════════════════════════════════════ */
-                                    <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto">
-                                        <GentleJournalForm
-                                            onSave={async (entryData) => {
-                                                if (!user) return;
-                                                try {
-                                                    const finalData = {
-                                                        ...entryData,
-                                                        date: new Date().toLocaleDateString(),
-                                                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                                                        duration: '2 mins',
-                                                        createdAt: serverTimestamp(),
-                                                        updatedAt: serverTimestamp(),
-                                                    };
-                                                    await addDoc(collection(db, 'users', user.uid, 'journal'), finalData);
-                                                    fireToast('Reflection Sealed ✦');
-                                                    setShowLogForm(false);
-                                                } catch (err) {
-                                                    console.error('Save error:', err);
-                                                    fireToast('Error preserving moment');
-                                                }
-                                            }}
-                                            onCancel={() => setShowLogForm(false)}
+            {/* Content fully unlocked for everyone */}
+            <div className="relative">
+                <AnimatePresence mode="wait">
+                    {!showLogForm ? (
+                        <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-8">
+                            {/* Compact Practice CTA Card */}
+                            <motion.section variants={childVariant} className="relative">
+                                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)]/50 rounded-[32px] p-6 shadow-sm flex items-center gap-6">
+                                    {/* Breathing Dot / Icon */}
+                                    <div className="w-16 h-16 rounded-full bg-[var(--accent-primary-muted)]/10 border border-[var(--border-subtle)]/20 flex items-center justify-center flex-shrink-0">
+                                        <motion.div
+                                            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                            className="w-4 h-4 rounded-full bg-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-primary-muted)]"
                                         />
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                                    </div>
 
-                        {/* "Coming Soon" overlay for non-admin users */}
-                        {!isAdmin && (
-                            <div className="absolute inset-0 flex items-center justify-center z-20">
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
-                                    className="text-center px-12 py-10 rounded-3xl backdrop-blur-md"
-                                    style={{
-                                        background: 'var(--bg-glass)',
-                                        border: '1px solid var(--border-subtle)',
-                                        boxShadow: '0 24px 80px rgba(0,0,0,0.15)',
-                                    }}
-                                >
-                                    <p className="text-[10px] uppercase tracking-[0.5em] text-[var(--accent-primary)] font-bold mb-3">
-                                        Coming Soon
-                                    </p>
-                                    <p className="text-lg font-serif text-[var(--text-primary)] opacity-80">
-                                        The Journey Awaits
-                                    </p>
-                                    <p className="text-xs text-[var(--text-muted)] mt-2 font-serif italic">
-                                        This sacred space is being prepared for you.
-                                    </p>
-                                </motion.div>
-                            </div>
-                        )}
-                    </div>
-                );
-            })()}
+                                    <div className="flex-1">
+                                        <h2 className="text-2xl font-serif font-light text-[var(--text-primary)] leading-tight">
+                                            Settle into the Now
+                                        </h2>
+                                        <p className="text-xs text-[var(--text-muted)] italic font-serif mt-1">
+                                            2 min reconnection before logging.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col items-end gap-3">
+                                        <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript}>
+                                            Begin
+                                        </AnchorButton>
+                                        <button
+                                            onClick={() => { resetJournalForm(); setShowLogForm(true); }}
+                                            className="text-[8px] uppercase tracking-[0.3em] text-[var(--text-muted)] hover:text-[var(--accent-primary)] font-bold transition-colors"
+                                        >
+                                            or skip to log →
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.section>
+
+                            {/* Calendar History */}
+                            {entries.length > 0 && (
+                                <motion.section variants={childVariant} className="space-y-6">
+                                    <JournalCalendar entries={entries} />
+                                </motion.section>
+                            )}
+                        </motion.div>
+                    ) : (
+                        /* ═══════════════════════════════════════════════════════════════
+                           AWAKENED PATH 3-STEP JOURNAL FLOW
+                        ═══════════════════════════════════════════════════════════════ */
+                        <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto">
+                            <GentleJournalForm
+                                onSave={async (entryData) => {
+                                    if (!user) return;
+                                    try {
+                                        const finalData = {
+                                            ...entryData,
+                                            date: new Date().toLocaleDateString(),
+                                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                            duration: '2 mins',
+                                            createdAt: serverTimestamp(),
+                                            updatedAt: serverTimestamp(),
+                                        };
+                                        await addDoc(collection(db, 'users', user.uid, 'journal'), finalData);
+                                        fireToast('Reflection Sealed ✦');
+                                        setShowLogForm(false);
+                                    } catch (err) {
+                                        console.error('Save error:', err);
+                                        fireToast('Error preserving moment');
+                                    }
+                                }}
+                                onCancel={() => setShowLogForm(false)}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
 
             <SacredToast visible={toastVisible} message={toastMessage} />
         </div>

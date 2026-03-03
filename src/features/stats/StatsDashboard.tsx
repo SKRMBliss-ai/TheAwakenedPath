@@ -262,7 +262,7 @@ const StatsDashboard: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <BarChart2 className="w-4 h-4 text-[var(--accent-secondary)]" />
-                            <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">Weekly Resonance</h4>
+                            <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Weekly Resonance</h4>
                         </div>
                     </div>
 
@@ -295,7 +295,7 @@ const StatsDashboard: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <TrendingUp className="w-4 h-4 text-[var(--accent-primary)]" />
-                            <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.15em]">Presence History (28d)</h4>
+                            <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.15em]">Presence History (28d)</h4>
                         </div>
                         <span className="text-[10px] text-[var(--accent-secondary)] font-bold">{currentStreak} Day Streak</span>
                     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Flame, Sparkles, Sun, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut } from 'lucide-react';
+import { Flame, Sparkles, Sun, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { PowerOfNow } from './features/soul-intelligence/components/PowerOfNow';
@@ -20,6 +20,7 @@ import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
 import { ThemeToggle, useTheme } from './theme/ThemeSystem';
 import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
 import appLogo from './assets/logo.png';
+import EngagementReport from './features/admin/EngagementReport';
 
 interface PracticeStep {
   title: string;
@@ -84,7 +85,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
           </button>
 
           <div className="flex flex-col items-center">
-            <p className="text-[8px] font-serif italic text-[var(--text-muted)] tracking-widest uppercase mb-0.5 text-center">{greeting},</p>
+            <p className="text-[8px] font-serif italic text-[var(--text-secondary)] tracking-widest uppercase mb-0.5 text-center">{greeting},</p>
             <h1 className="text-[14px] font-serif font-bold text-[var(--text-primary)] text-center">{user.displayName || 'Traveler'}</h1>
           </div>
 
@@ -109,12 +110,12 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
             <div className="inline-flex items-center gap-6 px-6 py-2.5 rounded-full bg-[var(--bg-surface)]/50 border border-[var(--border-subtle)]/50 backdrop-blur-md shadow-lg">
               <div className="flex items-center gap-2">
                 <Heart className="w-3 h-3 text-rose-300" />
-                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">Flow</span>
+                <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Flow</span>
               </div>
               <div className="w-px h-3 bg-[var(--border-subtle)]/30" />
               <div className="flex items-center gap-2">
                 <Flame className="w-3 h-3 text-orange-300" />
-                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">{user.streak} Days</span>
+                <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">{user.streak} Days</span>
               </div>
             </div>
           </div>
@@ -191,7 +192,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
             { id: 'panic', label: 'Awareness', sub: 'EMERGENCY', icon: AlertCircle, color: '#FF7043', variant: 'pulse' },
             { id: 'stats', label: 'Journey', sub: 'HISTORY', icon: BarChart2, color: '#9575CD', variant: 'chart' }
           ].map((item: any) => {
-            const isLocked = !isAdmin && !['chapters', 'stats'].includes(item.id);
+            const isLocked = !isAdmin && ['intelligence', 'panic'].includes(item.id);
             return (
               <div key={item.id} className="relative group/card">
                 {/* Backlit Magenta Glow - Matching Soul Stats */}
@@ -361,7 +362,7 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
             { id: 'panic', label: 'Awareness', sub: 'EMERGENCY', icon: AlertCircle, color: '#FF7043', delay: 0.2, variant: 'pulse' },
             { id: 'stats', label: 'Evolution', sub: 'STATS', icon: BarChart2, color: '#9575CD', delay: 0.3, variant: 'chart' }
           ].map((item: any) => {
-            const isLocked = !isAdmin && !['chapters', 'stats'].includes(item.id);
+            const isLocked = !isAdmin && ['intelligence', 'panic'].includes(item.id);
             return (
               <div key={item.id} className="relative group/card">
                 {/* Individual Glow Colors - Dark Mode Only */}
@@ -428,6 +429,7 @@ export default function UntetheredApp() {
 
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const [stats, setStats] = useState({
     totalEntries: 0,
     streak: 0,
@@ -439,7 +441,7 @@ export default function UntetheredApp() {
   useEffect(() => {
     if (!currentUser) return;
     const fetchStats = async () => {
-      const q = query(collection(db, 'users', currentUser.uid, 'journal_entries'));
+      const q = query(collection(db, 'users', currentUser.uid, 'journal'));
       const snapshot = await getDocs(q);
       const entries = snapshot.docs.map((doc: any) => {
         const d = doc.data();
@@ -486,7 +488,7 @@ export default function UntetheredApp() {
   useEffect(() => {
     if (!currentUser) return;
     const q = query(
-      collection(db, 'users', currentUser.uid, 'journal_entries'),
+      collection(db, 'users', currentUser.uid, 'journal'),
       orderBy('createdAt', 'desc'),
       limit(1)
     );
@@ -751,7 +753,7 @@ export default function UntetheredApp() {
         <nav className="flex-1 space-y-3">
           {[
             { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
-            { id: 'intelligence', icon: Sparkles, label: 'Now', fullLabel: 'Power of Now', locked: !isAdmin },
+            { id: 'intelligence', icon: Sparkles, label: 'Presence', fullLabel: 'Power of Now', locked: !isAdmin },
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
             { id: 'stats', icon: BarChart2, label: 'Soul Stats', fullLabel: 'Your Journey', locked: false },
             { id: 'journey', icon: Target, label: 'Breath', locked: !isAdmin },
@@ -864,6 +866,15 @@ export default function UntetheredApp() {
 
         {/* SPATIAL AUDIO TOGGLE */}
         <div className="fixed top-6 right-4 sm:top-8 sm:right-8 z-[60] flex items-center gap-3 sm:gap-4 scale-[0.85] sm:scale-100 origin-top-right">
+          {currentUser?.email === 'shrutikhungar@gmail.com' && (
+            <button
+              onClick={() => setIsReportOpen(true)}
+              className="p-4 rounded-full backdrop-blur-3xl border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-white hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center group shadow-xl"
+              title="Engagement Report"
+            >
+              <Mail className="w-5 h-5 transition-transform group-hover:scale-110 group-hover:text-[#D4AF37]" />
+            </button>
+          )}
           <ThemeToggle />
           <button
             onClick={toggleAudio}
@@ -1031,7 +1042,7 @@ export default function UntetheredApp() {
                         <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-primary)]">Interface Theme</span>
                         <ThemeToggle />
                       </div>
-                      <p className="text-[10px] text-[var(--text-muted)] tracking-wide">Adjust the visual sanctuary to your resonance.</p>
+                      <p className="text-[10px] text-[var(--text-secondary)] tracking-wide">Adjust the visual sanctuary to your resonance.</p>
                     </div>
 
                     <div className="space-y-4">
@@ -1057,6 +1068,7 @@ export default function UntetheredApp() {
           </AnimatePresence>
         </div>
       </main>
+      <EngagementReport isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} />
     </div>
   );
 }
