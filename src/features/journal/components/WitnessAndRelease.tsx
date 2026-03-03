@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, Sparkles, Heart, Wind, ShieldCheck } from "lucide-react";
-import { useTheme } from "../theme/ThemeSystem";
-import type { FeltExperience } from "../data/feltExperiences";
 
 // ─── TYPES ───
-interface WitnessStepProps {
-    selectedThoughts: string[];
-    selectedEmotions: string[];
-    selectedBodyArea: string;
-    activeCategories: FeltExperience[];
-    onComplete?: (reflection: string) => void;
+interface WitnessData {
+    thought: string;
+    emotions: string[];
+    bodyArea: string;
+    distortion: string;
+}
+
+interface WitnessAndReleaseProps {
+    data: WitnessData;
+    onComplete: (reflection: string) => void;
 }
 
 // ─── ANTIDOTE LOGIC ───
@@ -94,17 +96,9 @@ const loveTraits = [
     "Rests in what is real now",
 ];
 
-export function WitnessStep({
-    selectedThoughts,
-    selectedEmotions,
-    selectedBodyArea,
-    activeCategories,
-    onComplete
-}: WitnessStepProps) {
-    const { theme } = useTheme();
-    const mainThought = selectedThoughts[0] || "No thought selected";
+export function WitnessAndRelease({ data, onComplete }: WitnessAndReleaseProps) {
+    const mainThought = data.thought || "No thought selected";
     const antidote = ANTIDOTES[mainThought] || ANTIDOTES["default"];
-    const distortion = activeCategories[0]?.cognitiveDistortion || "Hidden Pattern";
 
     const [hoopOpen, setHoopOpen] = useState(false);
     const [hoopRunning, setHoopRunning] = useState(false);
@@ -165,14 +159,14 @@ export function WitnessStep({
             >
                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 blur-[80px] -mr-32 -mt-32" />
 
-                <div className="space-y-6 relative z-10 text-left">
+                <div className="space-y-6 relative z-10">
                     <div>
                         <p className="text-[10px] uppercase tracking-[0.2em] text-[#8b858f] font-bold mb-6">A PATTERN AROSE</p>
 
                         <div className="space-y-4">
                             <p className="text-[11px] uppercase tracking-[0.15em] text-[#8b858f] font-bold">A THOUGHT AROSE...</p>
-                            <p className="font-serif text-2xl italic text-[#e8e4df] pl-2 border-l border-purple-500/30 line-clamp-2">
-                                "{mainThought}"
+                            <p className="font-serif text-2xl italic text-[#e8e4df] pl-2 border-l border-purple-500/30">
+                                "{data.thought}"
                             </p>
                         </div>
                     </div>
@@ -180,7 +174,7 @@ export function WitnessStep({
                     <div className="space-y-4">
                         <p className="text-[11px] uppercase tracking-[0.15em] text-[#8b858f] font-bold">IT CREATED...</p>
                         <div className="flex flex-wrap gap-2">
-                            {selectedEmotions.map(e => (
+                            {data.emotions.map(e => (
                                 <span key={e} className="px-5 py-2 rounded-full bg-[#2d1b33] border border-purple-500/20 text-[#d1b3d1] text-sm font-serif italic">
                                     {e}
                                 </span>
@@ -192,7 +186,7 @@ export function WitnessStep({
                         <p className="text-[11px] uppercase tracking-[0.15em] text-[#8b858f] font-bold">YOU FELT IT IN YOUR...</p>
                         <div className="flex items-center gap-2 text-[#e8e4df] font-serif text-lg">
                             <span className="text-xl">🌿</span>
-                            <span>{selectedBodyArea}</span>
+                            <span>{data.bodyArea}</span>
                         </div>
                     </div>
 
@@ -210,7 +204,7 @@ export function WitnessStep({
 
             {/* 2. Antidote Thought */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-6">
-                <div className="p-8 rounded-2xl bg-gradient-to-br from-[var(--accent-secondary-muted)] to-[var(--bg-surface)] border border-[var(--accent-secondary-border)] relative shadow-2xl shadow-[var(--accent-secondary-muted)]/10 text-left">
+                <div className="p-8 rounded-2xl bg-gradient-to-br from-[var(--accent-secondary-muted)] to-[var(--bg-surface)] border border-[var(--accent-secondary-border)] relative shadow-2xl shadow-[var(--accent-secondary-muted)]/10">
                     <div className="space-y-8">
                         <div>
                             <div className="flex items-center gap-3 text-[var(--accent-secondary)] mb-3">
@@ -310,7 +304,7 @@ export function WitnessStep({
             {/* 5. Final Reflection & Checklist */}
             <div className="pt-6 space-y-8">
                 <div className="space-y-4">
-                    <p className="text-[9px] uppercase tracking-[0.4em] text-[var(--text-muted)] font-bold mb-4 text-left">Deepen the Witness</p>
+                    <p className="text-[9px] uppercase tracking-[0.4em] text-[var(--text-muted)] font-bold">Deepen the Witness</p>
                     <textarea
                         value={reflection}
                         onChange={(e) => {
@@ -323,7 +317,7 @@ export function WitnessStep({
                 </div>
 
                 <div className="space-y-4">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-bold mb-4 text-left">Before You Close</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-bold mb-4">Before You Close</p>
                     <div className="p-8 rounded-2xl bg-gradient-to-br from-[var(--bg-surface)] to-transparent border border-[var(--border-subtle)] divide-y divide-[var(--border-subtle)]/50">
                         <CheckItem label="I witnessed my pattern without judgment" active={checks.witnessed} onToggle={() => toggleCheck('witnessed')} />
                         <CheckItem label="I read the truth — a kinder thought" active={checks.antidote} onToggle={() => toggleCheck('antidote')} />
@@ -334,7 +328,7 @@ export function WitnessStep({
                                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                                     <div className="py-4 pl-10 space-y-3">
                                         {GRATITUDE_PROMPTS.map(p => (
-                                            <p key={p} className="text-xs text-[var(--text-muted)] italic pl-4 border-l border-amber-500/30 text-left">{p}</p>
+                                            <p key={p} className="text-xs text-[var(--text-muted)] italic pl-4 border-l border-amber-500/30">{p}</p>
                                         ))}
                                     </div>
                                 </motion.div>
@@ -356,14 +350,12 @@ export function WitnessStep({
                             <h4 className="font-serif text-2xl italic text-[var(--text-primary)]">You are not your thoughts.</h4>
                             <p className="text-xs tracking-[0.4em] uppercase text-[var(--accent-secondary)] font-bold">Practice Complete</p>
                         </div>
-                        {onComplete && (
-                            <button
-                                onClick={() => onComplete(reflection)}
-                                className="mt-4 px-12 py-5 rounded-2xl bg-white text-black font-bold tracking-[0.2em] uppercase text-xs hover:bg-[var(--accent-primary)] hover:text-white transition-all shadow-2xl"
-                            >
-                                Seal this Entry ✦
-                            </button>
-                        )}
+                        <button
+                            onClick={() => onComplete(reflection)}
+                            className="mt-4 px-12 py-5 rounded-2xl bg-white text-black font-bold tracking-[0.2em] uppercase text-xs hover:bg-[var(--accent-primary)] hover:text-white transition-all shadow-2xl"
+                        >
+                            Seal this Entry ✦
+                        </button>
                     </motion.div>
                 )}
             </AnimatePresence>

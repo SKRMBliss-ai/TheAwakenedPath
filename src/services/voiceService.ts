@@ -14,6 +14,12 @@ export class VoiceService {
     private static currentRequestId: number = 0;
     private static listeners: ((isSpeaking: boolean) => void)[] = [];
     private static _isSpeaking: boolean = false;
+    private static _isEnabled: boolean = (() => {
+        try {
+            const saved = localStorage.getItem('awakened-voice-enabled');
+            return saved === null ? true : saved !== 'off';
+        } catch { return true; }
+    })();
 
     static get isSpeaking() {
         return this._isSpeaking;
@@ -22,6 +28,19 @@ export class VoiceService {
     private static setSpeaking(val: boolean) {
         this._isSpeaking = val;
         this.listeners.forEach(l => l(val));
+    }
+
+    static get isEnabled() {
+        return this._isEnabled;
+    }
+
+    static setEnabled(val: boolean) {
+        this._isEnabled = val;
+        try {
+            localStorage.setItem('awakened-voice-enabled', val ? 'on' : 'off');
+        } catch { }
+        if (!val) this.stop();
+        // Notify listeners if needed, or just let hooks re-render on toggle
     }
 
     static subscribe(listener: (isSpeaking: boolean) => void) {
@@ -40,6 +59,7 @@ export class VoiceService {
         promptContext?: string;
         onEnd?: () => void;
     } = {}): Promise<void> {
+        if (!this._isEnabled) return;
         const requestId = ++this.currentRequestId;
         console.log(`VOICE REQUEST [${requestId}]: Speaking with identity [${options.voice || options.gender || 'DEFAULT'}]`);
         this.stop();
@@ -181,6 +201,19 @@ export class VoiceService {
         }
         return Promise.resolve();
     }
+}
+
+export function useVoiceEnabled() {
+    const [enabled, setEnabled] = useState(VoiceService.isEnabled);
+    // Note: We need to trigger an update when it changes manually
+    useEffect(() => {
+        // Simple polling or event listener would work better for global sync
+        const intv = setInterval(() => {
+            if (VoiceService.isEnabled !== enabled) setEnabled(VoiceService.isEnabled);
+        }, 500);
+        return () => clearInterval(intv);
+    }, [enabled]);
+    return enabled;
 }
 
 export function useVoiceActive() {

@@ -10,6 +10,8 @@ import {
     query,
     orderBy,
     onSnapshot,
+    addDoc,
+    serverTimestamp,
 } from 'firebase/firestore';
 import { AwakenStage } from '../../../components/ui/SacredCircle.tsx';
 import {
@@ -19,7 +21,7 @@ import {
 } from '../../../components/ui/SacredUI.tsx';
 import { useEmotionSync } from '../../soul-intelligence/hooks/useEmotionSync';
 import JournalCalendar from './JournalCalendar';
-import { JournalPage } from '../../../pages/JournalPage';
+import { GentleJournalForm } from './GentleJournalForm';
 
 
 
@@ -85,6 +87,7 @@ const Journal: React.FC = () => {
         guidance: '',
         duration: ''
     });
+
 
 
     useEmotionSync(currentEntry.emotions || '');
@@ -383,11 +386,27 @@ const Journal: React.FC = () => {
                                        AWAKENED PATH 3-STEP JOURNAL FLOW
                                     ═══════════════════════════════════════════════════════════════ */
                                     <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto">
-                                        <JournalPage
-                                            onSave={() => {
-                                                fireToast('Reflection Sealed ✦');
-                                                setShowLogForm(false);
+                                        <GentleJournalForm
+                                            onSave={async (entryData) => {
+                                                if (!user) return;
+                                                try {
+                                                    const finalData = {
+                                                        ...entryData,
+                                                        date: new Date().toLocaleDateString(),
+                                                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                                        duration: '2 mins',
+                                                        createdAt: serverTimestamp(),
+                                                        updatedAt: serverTimestamp(),
+                                                    };
+                                                    await addDoc(collection(db, 'users', user.uid, 'journal'), finalData);
+                                                    fireToast('Reflection Sealed ✦');
+                                                    setShowLogForm(false);
+                                                } catch (err) {
+                                                    console.error('Save error:', err);
+                                                    fireToast('Error preserving moment');
+                                                }
                                             }}
+                                            onCancel={() => setShowLogForm(false)}
                                         />
                                     </motion.div>
                                 )}

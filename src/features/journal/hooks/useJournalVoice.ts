@@ -34,12 +34,7 @@ const STEP_PROMPTS = {
 export function useJournalVoice() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [voiceEnabled, setVoiceEnabled] = useState(() => {
-        try {
-            const saved = localStorage.getItem('awakened-journal-voice');
-            return saved === null ? true : saved !== 'off';
-        } catch { return true; }
-    });
+    const [voiceEnabled, setVoiceEnabled] = useState(VoiceService.isEnabled);
 
     const stopRef = useRef<(() => void) | null>(null);
     const isMountedRef = useRef(true);
@@ -97,11 +92,10 @@ export function useJournalVoice() {
     }, [voiceEnabled, stop, isPlaying]);
 
     const toggleVoice = useCallback(() => {
-        const next = !voiceEnabled;
+        const next = !VoiceService.isEnabled;
+        VoiceService.setEnabled(next);
         setVoiceEnabled(next);
-        try { localStorage.setItem('awakened-journal-voice', next ? 'on' : 'off'); } catch { }
-        if (!next) stop();
-    }, [voiceEnabled, stop]);
+    }, []);
 
     const speakStep1 = useCallback(() => { speak(STEP_PROMPTS[1]); }, [speak]);
     const speakStep2 = useCallback((bodyAreas: string[]) => { speak(STEP_PROMPTS[2](bodyAreas)); }, [speak]);

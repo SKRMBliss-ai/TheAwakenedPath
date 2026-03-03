@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BodyMapSelector } from "./BodyMapSelector";
-import { useVoiceGuidance } from "../services/voiceGuidance";
-import { VoiceToggle } from "./VoiceToggle";
+import { WitnessAndRelease } from "./WitnessAndRelease";
+import { useJournalVoice } from "../hooks/useJournalVoice";
 import { ThoughtFeelingSelector } from "./ThoughtFeelingSelector";
+import { VoiceToggle } from "./VoiceToggle";
+import { FELT_EXPERIENCES } from "../../../data/feltExperiences";
 
 // ─── ANIMATIONS & STYLES ─────────────────────────────────────────────────────
 
@@ -87,21 +89,6 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: { label: 
     );
 }
 
-function SummaryCard({ label, content, color = "white" }: { label: string, content: string, color?: "white" | "pink" | "teal" }) {
-    if (!content) return null;
-    const accentMap = {
-        white: { bg: "var(--bg-surface)", border: "var(--border-subtle)", text: "var(--text-primary)", label: "var(--text-muted)" },
-        pink: { bg: "var(--accent-primary-muted)", border: "var(--accent-primary-border)", text: "var(--accent-primary)", label: "var(--accent-primary)" },
-        teal: { bg: "var(--accent-secondary-muted)", border: "var(--accent-secondary-border)", text: "var(--accent-secondary)", label: "var(--accent-secondary)" },
-    };
-    const c = accentMap[color];
-    return (
-        <div style={{ padding: "16px 20px", borderRadius: 16, background: c.bg, border: `1px solid ${c.border}`, opacity: 0.9 }}>
-            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: c.label, marginBottom: 6, opacity: 0.7 }}>{label}</p>
-            <p style={{ fontSize: 14, color: c.text, lineHeight: 1.6, fontFamily: "'Georgia', serif" }}>{content}</p>
-        </div>
-    );
-}
 
 function NavButton({ children, onClick, variant = "next", disabled = false }: { children: React.ReactNode, onClick: () => void, variant?: "next" | "back" | "save", disabled?: boolean }) {
     const s = {
@@ -132,7 +119,7 @@ function NavButton({ children, onClick, variant = "next", disabled = false }: { 
 
 export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (data: any) => void, onCancel: () => void, initialData?: any }) {
     const [step, setStep] = useState(0);
-    const voice = useVoiceGuidance();
+    const voice = useJournalVoice();
 
     const [selectedThoughts, setSelectedThoughts] = useState<string[]>(initialData?.thoughts ? initialData.thoughts.split(' | ').filter(Boolean) : []);
     const [customThought, setCustomThought] = useState(initialData?.customThought || "");
@@ -140,6 +127,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
     const [selectedArea, setSelectedArea] = useState<any>(initialData?.bodyArea ? { label: initialData.bodyArea } : null);
     const [bodySensations, setBodySensations] = useState(initialData?.bodySensations || "");
     const [openReflection, setOpenReflection] = useState(initialData?.reflections || "");
+    const [cognitiveDistortion, setCognitiveDistortion] = useState(initialData?.cognitiveDistortion || "");
 
     const scrollRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -154,7 +142,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
 
     // 🎙️ VOICE NARRATION SYSTEM
     useEffect(() => {
-        if (!voice.audioEnabled) return;
+        if (!voice.voiceEnabled) return;
 
         // Static intros (cacheable)
         const intros: Record<number, { text: string; key: string }> = {
@@ -173,7 +161,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
         };
 
         if (intros[step]) {
-            voice.playText(intros[step].text, intros[step].key);
+            voice.speak(intros[step].text);
         } else if (step === 3) {
             // Step 4 (Witness) — Fully Dynamic Narration
             const t = [...selectedThoughts, customThought].filter(Boolean).join("... and... ");
@@ -192,9 +180,9 @@ You... are the one... who was watching them happen. ...
 That awareness... that witnessing presence...
 that is who you truly are.`;
 
-            voice.playText(witnessText);
+            voice.speak(witnessText);
         } else if (step === 5) {
-            voice.playText("Your reflection has been saved. ... By watching the thought... feeling the emotion... and noticing the body... you have already begun to dissolve the pattern.");
+            voice.speak("Your reflection has been saved. ... By watching the thought... feeling the emotion... and noticing the body... you have already begun to dissolve the pattern.");
         }
     }, [step]);
 
@@ -213,9 +201,17 @@ that is who you truly are.`;
         setSelectedThoughts(thoughts);
         setSelectedEmotions(emotions);
 
+        // Find associated cognitive distortion from FELT_EXPERIENCES
+        const firstMatchingExperience = FELT_EXPERIENCES.find(fe =>
+            fe.thoughts.some(t => thoughts.includes(t))
+        );
+        if (firstMatchingExperience) {
+            setCognitiveDistortion(firstMatchingExperience.cognitiveDistortion);
+        }
+
         if (newThoughts.length > 0) {
             scrollToBottom();
-            voice.playText(`I see... "${newThoughts[0]}". ... That's a thought many of us carry. Notice the feelings it creates inside you.`);
+            voice.speak(`I see... "${newThoughts[0]}". ... That's a thought many of us carry. Notice the feelings it creates inside you.`);
         } else if (thoughts.length > selectedThoughts.length) {
             scrollToBottom();
         }
@@ -226,22 +222,31 @@ that is who you truly are.`;
         if (area) scrollToBottom();
     };
 
-    const handleSave = () => {
+    const handleSave = (reflection?: string) => {
         const thoughtsStr = [...selectedThoughts, customThought].filter(Boolean).join(' | ');
         onSave({
             thoughts: thoughtsStr,
             emotions: selectedEmotions.join(', '),
             bodyArea: selectedArea?.label || "",
             bodySensations: bodySensations,
-            reflections: openReflection,
+            cognitiveDistortion: cognitiveDistortion,
+            reflections: reflection || openReflection,
         });
         setStep(5);
     };
 
     return (
         <div ref={scrollRef} className="w-full h-full" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
-            <VoiceToggle enabled={voice.audioEnabled} playing={voice.isPlaying} loading={voice.isLoading} onToggle={voice.toggleAudio} />
             <div className="relative z-10 w-full max-w-xl mx-auto pb-32">
+                <div className="flex justify-center mb-8">
+                    <VoiceToggle
+                        enabled={voice.voiceEnabled}
+                        playing={voice.isPlaying}
+                        loading={voice.isLoading}
+                        onToggle={voice.toggleVoice}
+                        className="scale-90"
+                    />
+                </div>
                 {step < 5 && <StepTracker current={step} />}
 
                 <div style={{ marginTop: 24 }}>
@@ -340,40 +345,24 @@ that is who you truly are.`;
                             </motion.div>
                         )}
 
-                        {/* STEP 2: WITNESS AND REFLECTION */}
+                        {/* STEP 2: WITNESS AND RELEASE (NEW) */}
                         {step === 2 && (
                             <motion.div key="step2" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-6">
-                                <motion.div variants={fadeUp} className="text-center space-y-2">
-                                    <h2 style={{ fontSize: 28, fontFamily: "'Georgia', serif", color: "var(--text-primary)" }}>Step back and witness</h2>
-                                </motion.div>
-
-                                <motion.div variants={fadeUp} style={{ padding: "24px", borderRadius: 16, background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
-                                    <p style={{ fontSize: 16, color: "var(--text-primary)", fontFamily: "'Georgia', serif", lineHeight: 1.6, opacity: 0.8 }}>
-                                        You are not the thought, not the emotion, not the sensation.<br />
-                                        <span style={{ color: "var(--accent-primary)", fontStyle: "italic", opacity: 1 }}>You are the one who is watching them happen.</span>
-                                    </p>
-                                </motion.div>
-
-                                <motion.div variants={fadeUp} className="space-y-4">
-                                    <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)" }}>What you witnessed today:</p>
-                                    <div className="flex flex-col gap-3">
-                                        <SummaryCard label="Thought" content={[...selectedThoughts, customThought].filter(Boolean).join(' | ')} />
-                                        <SummaryCard label="Emotion" content={selectedEmotions.join(", ")} color="pink" />
-                                        <SummaryCard label="Body" content={selectedArea?.label || bodySensations} color="teal" />
-                                    </div>
-                                </motion.div>
-
-                                <GentleTextarea
-                                    label="Anything else to release?"
-                                    hint="A dream, an intention, something unfinished, a gratitude — this space is completely yours."
-                                    placeholder="Write freely..."
-                                    value={openReflection}
-                                    onChange={setOpenReflection}
+                                <WitnessAndRelease
+                                    data={{
+                                        thought: [...selectedThoughts, customThought].filter(Boolean)[0] || "No thought selected",
+                                        emotions: selectedEmotions,
+                                        bodyArea: selectedArea?.label || bodySensations || "the body",
+                                        distortion: cognitiveDistortion || "Hidden Pattern"
+                                    }}
+                                    onComplete={(reflection) => {
+                                        setOpenReflection(reflection);
+                                        handleSave(reflection);
+                                    }}
                                 />
-
-                                <div className="flex justify-between pt-4 mt-8">
-                                    <NavButton onClick={() => setStep(1)} variant="back">← Back</NavButton>
-                                    <NavButton onClick={handleSave} variant="save">Save Entry ✦</NavButton>
+                                <div className="flex justify-between pt-4 mt-8 opacity-50 hover:opacity-100 transition-opacity">
+                                    <NavButton onClick={() => setStep(1)} variant="back">← Back to Body</NavButton>
+                                    <p className="text-[11px] text-[var(--text-muted)] italic font-serif py-4">Pressing "Back" will reset your checklist progress</p>
                                 </div>
                             </motion.div>
                         )}
