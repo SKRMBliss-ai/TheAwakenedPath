@@ -756,8 +756,8 @@ export default function UntetheredApp() {
             { id: 'intelligence', icon: Sparkles, label: 'Presence', fullLabel: 'Power of Now', locked: false },
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
             { id: 'stats', icon: BarChart2, label: 'Soul Stats', fullLabel: 'Your Journey', locked: false },
-            { id: 'journey', icon: Target, label: 'Breath', locked: false },
-            { id: 'panic', icon: AlertCircle, label: 'Panic', fullLabel: 'Emergency Awareness', locked: false },
+            { id: 'journey', icon: Target, label: 'Breath', locked: !isAdmin },
+            { id: 'panic', icon: AlertCircle, label: 'Panic', fullLabel: 'Emergency Awareness', locked: !isAdmin },
             { id: 'profile', icon: User, label: 'Profile', locked: false },
           ].map((item: any) => {
             const isActive = activeTab === item.id;
