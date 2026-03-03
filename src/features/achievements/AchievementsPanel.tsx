@@ -162,7 +162,7 @@ export const AchievementsPanel: React.FC<AchievementsPanelProps> = ({ unlocked, 
     const progress = totalUnlocked / totalPossible;
 
     return (
-        <div className="p-7 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-7 relative overflow-hidden group/panel">
+        <div className="p-7 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-7 relative group/panel">
             {/* Minimal Header */}
             <div className="flex flex-col gap-5 relative z-10">
                 <div className="flex items-end justify-between">

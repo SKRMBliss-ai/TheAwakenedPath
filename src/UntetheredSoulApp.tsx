@@ -22,6 +22,7 @@ import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase
 import appLogo from './assets/logo.png';
 import EngagementReport from './features/admin/EngagementReport';
 import { useAchievements } from './features/achievements/useAchievements';
+import { ACHIEVEMENTS, type Achievement } from './features/achievements/achievementsDefs';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 
 interface PracticeStep {
@@ -428,7 +429,7 @@ export default function UntetheredApp() {
   const [, setBreathCount] = useState(0);
   const [showReward, setShowReward] = useState<Reward | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
+  const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
 
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
@@ -1009,7 +1010,7 @@ export default function UntetheredApp() {
                         </div>
                       )}
                       <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-[var(--accent-primary)]">Level {user.level} · Presence Anchor</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-[var(--accent-primary)]">Level {user.level} · {points} Points</p>
                         <h2 className="text-5xl font-serif font-light text-[var(--text-primary)] tracking-tight">{user.displayName}</h2>
                         <p className="text-[11px] text-[var(--text-muted)] tracking-widest font-medium uppercase">
                           Exploring since {user.joinedAt} · {user.nowMoments} reflections
@@ -1062,6 +1063,35 @@ export default function UntetheredApp() {
                       </div>
                       <p className="text-[9px] text-[var(--text-muted)] italic">Next layer: Consciousness Expansion</p>
                     </div>
+                  </div>
+                </div>
+
+                {/* Ethereal Medals Rack */}
+                <div className="p-10 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] space-y-8">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-serif font-light text-[var(--text-secondary)]">Soul Medals</h3>
+                    <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{unlocked.length} of 16 Unlocked</span>
+                  </div>
+
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-4">
+                    {ACHIEVEMENTS.map((ach: Achievement) => {
+                      const isUnlocked = unlocked.includes(ach.id);
+                      const Icon = ach.icon;
+                      return (
+                        <div
+                          key={ach.id}
+                          className={cn(
+                            "aspect-square rounded-2xl flex items-center justify-center transition-all duration-500",
+                            isUnlocked
+                              ? "bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 shadow-lg text-[var(--accent-primary)]"
+                              : "bg-[var(--bg-surface-hover)] border border-transparent text-[var(--text-muted)] opacity-30"
+                          )}
+                          title={ach.name}
+                        >
+                          <Icon className={cn("w-6 h-6", isUnlocked && "drop-shadow-[0_0_8px_var(--glow-primary)]")} />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 

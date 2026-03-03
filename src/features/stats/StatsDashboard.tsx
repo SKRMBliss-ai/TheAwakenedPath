@@ -117,6 +117,13 @@ const StatsDashboard: React.FC = () => {
             const now = new Date();
             const oneDay = 24 * 60 * 60 * 1000;
 
+            // Calculate start of current week (Monday)
+            const startOfToday = new Date(now);
+            startOfToday.setHours(0, 0, 0, 0);
+            const dayOffset = (now.getDay() + 6) % 7; // 0 for Mon, 6 for Sun
+            const startOfWeek = new Date(startOfToday);
+            startOfWeek.setDate(startOfToday.getDate() - dayOffset);
+
             const activity = [0, 0, 0, 0, 0, 0, 0];
             const emMap: Record<string, number> = {};
             const distMap: Record<string, number> = {};
@@ -138,10 +145,13 @@ const StatsDashboard: React.FC = () => {
                 const diffTime = now.getTime() - date.getTime();
                 const diffDays = Math.floor(diffTime / oneDay);
 
-                // Weekly activity
-                if (diffDays >= 0 && diffDays < 7) {
+                // Weekly activity (Current Calendar Week only)
+                const todayIndex = (now.getDay() + 6) % 7;
+                if (date >= startOfWeek && date <= now) {
                     const dayIndex = (date.getDay() + 6) % 7; // M-S
-                    activity[dayIndex] += 1;
+                    if (dayIndex >= 0 && dayIndex <= todayIndex) {
+                        activity[dayIndex] += 1;
+                    }
                 }
 
                 // 28-day streak
@@ -325,7 +335,18 @@ const StatsDashboard: React.FC = () => {
                                 <BarChart2 className="w-3.5 h-3.5 text-[var(--accent-secondary)]" />
                                 <h4 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Weekly Resonance</h4>
                             </div>
-                            <span className="text-[9px] text-[var(--text-muted)]">7 Days</span>
+                            <span className="text-[9px] text-[var(--text-muted)] font-medium">
+                                {(() => {
+                                    const now = new Date();
+                                    const day = now.getDay();
+                                    const monday = new Date(now);
+                                    monday.setDate(now.getDate() - ((day + 6) % 7));
+                                    const sunday = new Date(monday);
+                                    sunday.setDate(monday.getDate() + 6);
+                                    const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                    return `${fmt(monday)} – ${fmt(sunday)}`;
+                                })()}
+                            </span>
                         </div>
 
                         <div className="h-40 flex items-end justify-between px-2 gap-4">
@@ -359,7 +380,9 @@ const StatsDashboard: React.FC = () => {
                                 <TrendingUp className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
                                 <h4 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Presence History</h4>
                             </div>
-                            <span className="text-[9px] font-bold text-[var(--accent-secondary)]">{currentStreak}D Streak</span>
+                            <span className="text-[9px] font-bold text-[var(--accent-secondary)]">
+                                {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                            </span>
                         </div>
 
                         <div className="flex flex-col h-40 justify-center">
