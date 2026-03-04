@@ -37,6 +37,8 @@ export const CATEGORY_COLORS: Record<AchievementCategory, string> = {
 
 export interface UserStats {
     journalEntries: number;
+    situationalPractices: number;
+    journeyActivities: number;
     videosWatched: number;
     chaptersComplete: number;   // 0-4
     currentStreak: number;
@@ -250,6 +252,28 @@ export const ACHIEVEMENTS: Achievement[] = [
         points: 15,
         criteria: 'Enable Presence Reminders',
         check: (s) => s.remindersEnabled,
+    },
+    {
+        id: 'situational_awareness',
+        name: 'Situational Awareness',
+        desc: 'You brought presence to a specific life situation.',
+        icon: Sparkles,
+        color: '#7EB8B3',
+        category: 'practices',
+        points: 25,
+        criteria: '1 situational practice',
+        check: (s) => s.situationalPractices >= 1,
+    },
+    {
+        id: 'master_of_circumstance',
+        name: 'Master of Circumstance',
+        desc: '10 moments of presence in the midst of life.',
+        icon: Activity,
+        color: '#C65F9D',
+        category: 'practices',
+        points: 100,
+        criteria: '10 situational practices',
+        check: (s) => s.situationalPractices >= 10,
     },
 ];
 

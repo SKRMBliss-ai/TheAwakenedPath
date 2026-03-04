@@ -405,6 +405,8 @@ const Journal: React.FC = () => {
                                         await awardEvent('journal_entry');
                                         checkAndUnlock({
                                             journalEntries: entries.length + 1,
+                                            situationalPractices: 0,
+                                            journeyActivities: 0,
                                             videosWatched: 0, // Placeholder
                                             chaptersComplete: 0,
                                             currentStreak: 0,

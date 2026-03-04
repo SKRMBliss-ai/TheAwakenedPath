@@ -386,7 +386,9 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
             ).length;
 
             checkAndUnlock({
-                journalEntries: 0, // Will be filled from current app state if we combined everything
+                journalEntries: 0,
+                situationalPractices: 0,
+                journeyActivities: 0,
                 videosWatched: newWatched.length,
                 chaptersComplete,
                 currentStreak: 0,
@@ -409,6 +411,8 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
             awardEvent('reminders_enabled');
             checkAndUnlock({
                 journalEntries: 0,
+                situationalPractices: 0,
+                journeyActivities: 0,
                 videosWatched: watchedParts.length,
                 chaptersComplete: CHAPTERS.filter(ch => ch.parts.every(p => watchedParts.includes(p.id))).length,
                 currentStreak: 0,
@@ -437,6 +441,8 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
             awardEvent('panic_used');
             checkAndUnlock({
                 journalEntries: 0,
+                situationalPractices: 0,
+                journeyActivities: 0,
                 videosWatched: watchedParts.length,
                 chaptersComplete: 0,
                 currentStreak: 0,
@@ -461,6 +467,8 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
             awardEvent('voice_witnessed');
             checkAndUnlock({
                 journalEntries: 0,
+                situationalPractices: 0,
+                journeyActivities: 0,
                 videosWatched: watchedParts.length,
                 chaptersComplete: 0,
                 currentStreak: 0,
@@ -816,6 +824,8 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                                             awardEvent('body_truth_test');
                                                             checkAndUnlock({
                                                                 journalEntries: 0,
+                                                                situationalPractices: 0,
+                                                                journeyActivities: 0,
                                                                 videosWatched: watchedParts.length,
                                                                 chaptersComplete: 0,
                                                                 currentStreak: 0,

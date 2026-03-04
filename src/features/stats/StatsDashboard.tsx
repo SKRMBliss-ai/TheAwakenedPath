@@ -112,7 +112,31 @@ const StatsDashboard: React.FC = () => {
 
         try {
             const journalRef = collection(db, 'users', user.uid, 'journal');
-            const journalSnap = await getDocs(journalRef);
+            const situationalRef = collection(db, 'users', user.uid, 'situational-logs');
+            const journeyRef = collection(db, 'users', user.uid, 'journey');
+
+            const [journalSnap, situationalSnap, journeySnap] = await Promise.all([
+                getDocs(journalRef),
+                getDocs(situationalRef),
+                getDocs(journeyRef)
+            ]);
+
+            interface ActivityData {
+                source: string;
+                createdAt?: { toDate: () => Date };
+                timestamp?: { toDate: () => Date };
+                date?: string;
+                emotions?: string | string[];
+                cognitiveDistortion?: string;
+                bodyArea?: string;
+                [key: string]: any;
+            }
+
+            const allActivityDocs: ActivityData[] = [
+                ...journalSnap.docs.map(d => ({ ...(d.data() as any), source: 'journal' })),
+                ...situationalSnap.docs.map(d => ({ ...(d.data() as any), source: 'situational' })),
+                ...journeySnap.docs.map(d => ({ ...(d.data() as any), source: 'journey' }))
+            ];
 
             const now = new Date();
             const oneDay = 24 * 60 * 60 * 1000;
@@ -130,12 +154,13 @@ const StatsDashboard: React.FC = () => {
             const bodyMap: Record<string, number> = {};
             const streakArr = new Array(28).fill(0);
 
-            journalSnap.forEach(doc => {
-                const data = doc.data();
+            allActivityDocs.forEach(data => {
                 let date: Date;
 
                 if (data.createdAt?.toDate) {
                     date = data.createdAt.toDate();
+                } else if (data.timestamp?.toDate) {
+                    date = data.timestamp.toDate();
                 } else if (data.date) {
                     date = new Date(data.date);
                 } else {
@@ -164,9 +189,13 @@ const StatsDashboard: React.FC = () => {
                     streakArr[27 - diffDays] = 1;
                 }
 
-                // Analytics
+                // Analytics (Primarily from journal, but could be extended)
                 if (data.emotions) {
-                    data.emotions.split(', ').forEach((e: string) => {
+                    const ems = typeof data.emotions === 'string'
+                        ? data.emotions.split(', ')
+                        : Array.isArray(data.emotions) ? data.emotions : [];
+
+                    ems.forEach((e: string) => {
                         if (e) emMap[e] = (emMap[e] || 0) + 1;
                     });
                 }
@@ -180,7 +209,7 @@ const StatsDashboard: React.FC = () => {
                 }
             });
 
-            setTotalEntries(journalSnap.size);
+            setTotalEntries(allActivityDocs.length);
             setWeeklyActivity(activity);
             setStreakDays(streakArr);
 
@@ -212,8 +241,10 @@ const StatsDashboard: React.FC = () => {
 
             checkAndUnlock({
                 journalEntries: journalSnap.size,
+                situationalPractices: situationalSnap.size,
+                journeyActivities: journeySnap.size,
                 videosWatched: powerWatched,
-                chaptersComplete: 0,
+                chaptersComplete: 0, // Should calculate this properly if needed
                 currentStreak: streakCount,
                 maxStreak: streakCount,
                 panicUsed: 0,

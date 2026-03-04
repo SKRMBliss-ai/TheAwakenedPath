@@ -435,6 +435,9 @@ export default function UntetheredApp() {
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
   const [stats, setStats] = useState({
     totalEntries: 0,
+    journalCount: 0,
+    situationalCount: 0,
+    journeyCount: 0,
     streak: 0,
     xp: 0,
     level: 1,
@@ -455,11 +458,26 @@ export default function UntetheredApp() {
   useEffect(() => {
     if (!currentUser) return;
     const fetchStats = async () => {
-      const q = query(collection(db, 'users', currentUser.uid, 'journal'));
-      const snapshot = await getDocs(q);
-      const entries = snapshot.docs.map((doc: any) => {
-        const d = doc.data();
-        return d.createdAt?.toDate ? d.createdAt.toDate() : new Date(d.date || Date.now());
+      const journalRef = collection(db, 'users', currentUser.uid, 'journal');
+      const situationalRef = collection(db, 'users', currentUser.uid, 'situational-logs');
+      const journeyRef = collection(db, 'users', currentUser.uid, 'journey');
+
+      const [jSnap, sSnap, jySnap] = await Promise.all([
+        getDocs(journalRef),
+        getDocs(situationalRef),
+        getDocs(journeyRef)
+      ]);
+
+      const allDocs = [
+        ...jSnap.docs.map(d => ({ ...d.data(), source: 'journal' })),
+        ...sSnap.docs.map(d => ({ ...d.data(), source: 'situational' })),
+        ...jySnap.docs.map(d => ({ ...d.data(), source: 'journey' }))
+      ];
+
+      const entries = allDocs.map((d: any) => {
+        if (d.createdAt?.toDate) return d.createdAt.toDate();
+        if (d.timestamp?.toDate) return d.timestamp.toDate();
+        return new Date(d.date || Date.now());
       }).sort((a: Date, b: Date) => b.getTime() - a.getTime());
 
       // Calculate streak
@@ -484,12 +502,15 @@ export default function UntetheredApp() {
         checkDate.setDate(checkDate.getDate() - 1);
       }
 
-      const total = snapshot.size;
+      const total = allDocs.length;
       const totalPoints = points; // Use points from useAchievements as canonical XP
       const currentLevel = Math.floor(totalPoints / 1000) + 1;
 
       setStats({
         totalEntries: total,
+        journalCount: jSnap.size,
+        situationalCount: sSnap.size,
+        journeyCount: jySnap.size,
         streak,
         xp: totalPoints,
         level: currentLevel,
@@ -498,11 +519,13 @@ export default function UntetheredApp() {
 
       // Global check for unlocking new standard achievements on boot/refresh
       checkAndUnlock({
-        journalEntries: total,
+        journalEntries: jSnap.size,
+        situationalPractices: sSnap.size,
+        journeyActivities: jySnap.size,
         videosWatched: watchedParts.length,
         chaptersComplete: 0,
         currentStreak: streak,
-        maxStreak: streak,
+        maxStreak: streak, // This ideally should be from a history field if we tracked it
         panicUsed: 0,
         bodyTruthTests: 0,
         voiceWitnessed: 0,
@@ -672,7 +695,9 @@ export default function UntetheredApp() {
     } else {
       awardEvent('practice_session');
       checkAndUnlock({
-        journalEntries: stats.totalEntries,
+        journalEntries: stats.journalCount,
+        situationalPractices: stats.situationalCount,
+        journeyActivities: stats.journeyCount,
         videosWatched: watchedParts.length,
         chaptersComplete: 0,
         currentStreak: stats.streak,
