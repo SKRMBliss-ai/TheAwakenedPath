@@ -23,12 +23,12 @@ export const AchievementsPanel: React.FC<AchievementsPanelProps> = ({ unlocked, 
                 <div className="flex items-end justify-between">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2.5">
-                            <Trophy className="w-3 h-3 text-[var(--accent-secondary)]" />
-                            <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.3em] font-sans">
+                            <Trophy className="w-4 h-4 text-[var(--accent-secondary)]" />
+                            <h4 className="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-[0.25em] font-sans">
                                 Path Milestones
                             </h4>
                         </div>
-                        <p className="text-[11px] font-serif italic text-[var(--text-primary)] opacity-80">
+                        <p className="text-[13px] font-serif italic text-[var(--text-secondary)]">
                             {totalUnlocked} of {totalPossible} aspects awakened
                         </p>
                     </div>

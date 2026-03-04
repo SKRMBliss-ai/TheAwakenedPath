@@ -179,7 +179,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
             </div>
             <div className="text-left">
               <h3 className="text-xl font-serif font-bold text-[var(--text-primary)]">Transform a Situation</h3>
-              <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest mt-1">Shift from challenge to peace</p>
+              <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-1">Shift from challenge to peace</p>
             </div>
           </div>
 
@@ -220,7 +220,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
 
       {/* Main Practices Grid */}
       <section className="space-y-6 pb-20">
-        <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)] pl-4">Sacred sessions</h4>
+        <h4 className="text-[12px] font-bold uppercase tracking-[0.4em] text-[var(--text-primary)] pl-4">Sacred Practices</h4>
         <div className="grid grid-cols-2 gap-4">
           {[
             { id: 'intelligence', label: 'Presence', sub: 'COURSE & PRACTICE', icon: Sparkles, color: '#ABCEC9', variant: 'orb' },
@@ -340,7 +340,7 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
             </div>
             <div className="text-left">
               <h3 className="text-2xl font-serif font-bold text-[var(--text-primary)]">Transform a Situation</h3>
-              <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-[0.2em] mt-1">Shift from challenge to peace</p>
+              <p className="text-[12px] text-[var(--text-secondary)] font-bold uppercase tracking-[0.2em] mt-1.5">Shift from challenge to peace</p>
             </div>
           </div>
           <div className="w-12 h-12 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center text-[var(--text-primary)] shadow-lg transition-all duration-500">
@@ -377,8 +377,8 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
       {/* Practices Grid - Desktop Balanced */}
       <section className="space-y-8">
         <div className="flex items-center justify-between px-4">
-          <h4 className="text-[11px] font-bold uppercase tracking-[0.5em] text-[var(--text-muted)]">Sacred Practices</h4>
-          <div className="h-px flex-1 bg-[var(--border-subtle)]/30 mx-8" />
+          <h4 className="text-[13px] font-bold uppercase tracking-[0.4em] text-[var(--text-primary)]">Sacred Practices</h4>
+          <div className="h-px flex-1 bg-[var(--border-subtle)]/70 mx-8" />
         </div>
         <div className="grid grid-cols-4 gap-6">
           {[

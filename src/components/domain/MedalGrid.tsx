@@ -44,10 +44,10 @@ export const Medal: React.FC<{
                 {/* Glow ring for unlocked */}
                 {unlocked && (
                     <motion.div
-                        animate={{ opacity: [0.2, 0.4, 0.2], scale: [1, 1.1, 1] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                        className="absolute inset-0 rounded-full pointer-events-none"
-                        style={{ border: `1.2px solid ${achievement.color}40`, filter: `blur(4px)` }}
+                        animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.15, 1] }}
+                        transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+                        className="absolute inset-[-6px] rounded-full pointer-events-none"
+                        style={{ background: `radial-gradient(circle, ${achievement.color}50, transparent 70%)`, filter: `blur(8px)` }}
                     />
                 )}
 
@@ -56,30 +56,30 @@ export const Medal: React.FC<{
                     className="w-full h-full rounded-full flex items-center justify-center relative border transition-all duration-700"
                     style={{
                         background: unlocked
-                            ? `radial-gradient(circle at 35% 35%, ${achievement.color}25, ${achievement.color}05)`
-                            : 'rgba(var(--bg-surface-rgb), 0.2)',
+                            ? `radial-gradient(circle at 30% 30%, ${achievement.color}35, ${achievement.color}05)`
+                            : 'rgba(var(--text-muted-rgb), 0.05)',
                         borderColor: unlocked
-                            ? `${achievement.color}50`
+                            ? `${achievement.color}90`
                             : 'var(--border-subtle)',
                         boxShadow: unlocked
-                            ? `0 0 12px ${achievement.color}15, inset 0 0 8px ${achievement.color}05`
+                            ? `0 0 25px ${achievement.color}60, inset 0 0 15px ${achievement.color}30`
                             : 'none',
                     }}
                 >
                     <Icon
                         size={20}
-                        strokeWidth={1.5}
+                        strokeWidth={unlocked ? 2 : 1.5}
                         style={{
-                            color: unlocked ? achievement.color : 'var(--text-disabled)',
-                            opacity: unlocked ? 1 : 0.2,
-                            filter: unlocked ? `drop-shadow(0 0 8px ${achievement.color}40)` : 'none'
+                            color: unlocked ? achievement.color : 'var(--text-muted)',
+                            opacity: unlocked ? 1 : 0.4,
+                            filter: unlocked ? `drop-shadow(0 0 12px ${achievement.color}90)` : 'none'
                         }}
                     />
 
                     {/* Lock overlay */}
                     {!unlocked && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-center">
-                            <Lock size={7} className="text-[var(--text-disabled)] opacity-60" strokeWidth={2.5} />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-center shadow-sm">
+                            <Lock size={8} className="text-[var(--text-muted)] opacity-80" strokeWidth={2.5} />
                         </div>
                     )}
 
@@ -97,14 +97,14 @@ export const Medal: React.FC<{
                 </div>
             </div>
 
-            {/* Name - very tiny */}
+            {/* Name */}
             <span
                 className={cn(
-                    "text-[8px] font-bold uppercase tracking-wider text-center transition-all duration-300",
-                    unlocked ? "text-[var(--text-primary)] opacity-90" : "text-[var(--text-disabled)] opacity-40"
+                    "text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-center transition-all duration-300 leading-tight w-[72px]",
+                    unlocked ? "text-[var(--text-primary)] opacity-100" : "text-[var(--text-muted)] opacity-70"
                 )}
             >
-                {achievement.name.split(' ')[0]}
+                {achievement.name}
             </span>
 
             {/* Premium Tooltip */}

@@ -549,17 +549,17 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
 
                             {/* Real progress — computed from watched videos */}
                             <div className="text-right pt-2">
-                                <p className="text-[9px] tracking-[0.5em] uppercase text-[var(--text-secondary)] font-sans font-bold mb-1.5 opacity-90">
+                                <p className="text-[10px] sm:text-[11px] tracking-[0.4em] uppercase text-[var(--text-primary)] font-sans font-bold mb-1">
                                     Progress
                                 </p>
                                 <motion.span
                                     key={watchedParts.length}
                                     initial={{ opacity: 0, y: 8 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="text-[40px] font-serif font-light leading-none text-[var(--accent-primary)]"
+                                    className="text-[44px] sm:text-[50px] font-serif font-light leading-none text-[var(--accent-primary)] flex items-baseline justify-end gap-1.5"
                                 >
                                     {watchedParts.length}
-                                    <span className="text-sm opacity-70 ml-1 text-[var(--text-secondary)]">
+                                    <span className="text-[20px] font-medium text-[var(--text-secondary)]">
                                         / {totalParts}
                                     </span>
                                 </motion.span>
