@@ -537,6 +537,14 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
         }
     };
 
+    const timeOfDayTint = useMemo(() => {
+        const hour = new Date().getHours();
+        if (hour >= 6 && hour < 12) return 'radial-gradient(circle at top right, rgba(255,183,77,0.06), transparent 50%)';
+        if (hour >= 17 && hour < 21) return 'radial-gradient(circle at top right, rgba(255,112,67,0.06), transparent 50%)';
+        if (hour >= 21 || hour < 6) return 'radial-gradient(circle at top right, rgba(92,107,192,0.1), transparent 50%)';
+        return 'none';
+    }, []);
+
     // ── Practice mode ──
     if (isPracticing && selectedSituation) {
         return createPortal(
@@ -613,14 +621,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
         );
     }
 
-    // ── Main browse view ──
-    const timeOfDayTint = useMemo(() => {
-        const hour = new Date().getHours();
-        if (hour >= 6 && hour < 12) return 'radial-gradient(circle at top right, rgba(255,183,77,0.06), transparent 50%)';
-        if (hour >= 17 && hour < 21) return 'radial-gradient(circle at top right, rgba(255,112,67,0.06), transparent 50%)';
-        if (hour >= 21 || hour < 6) return 'radial-gradient(circle at top right, rgba(92,107,192,0.1), transparent 50%)';
-        return 'none';
-    }, []);
+
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 pb-32 relative">
