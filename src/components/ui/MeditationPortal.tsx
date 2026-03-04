@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Play, Pause, RotateCcw, ChevronRight, X, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, RotateCcw, ChevronRight, X, Volume2 } from 'lucide-react';
 import { AwakenStage } from './SacredCircle';
 import { VoiceService, useVoiceActive } from '../../services/voiceService';
 
