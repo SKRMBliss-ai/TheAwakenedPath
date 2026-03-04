@@ -1011,13 +1011,28 @@ export default function UntetheredApp() {
 
                   <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
                     <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-                      {currentUser?.photoURL ? (
-                        <img src={currentUser.photoURL} alt="Profile" className="w-24 h-24 rounded-full border-2 border-[var(--accent-primary)]/20 shadow-xl" />
-                      ) : (
-                        <div className="w-24 h-24 rounded-full bg-[var(--accent-primary)]/10 flex items-center justify-center border-2 border-[var(--accent-primary)]/20">
-                          <User className="w-10 h-10 text-[var(--accent-primary)]" />
+                      <div className="relative w-24 h-24 flex-shrink-0">
+                        {currentUser?.photoURL ? (
+                          <img
+                            src={currentUser.photoURL}
+                            alt="Profile"
+                            className="w-full h-full rounded-full border-2 border-[var(--accent-primary)]/20 shadow-xl object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.parentElement?.querySelector('.fallback')?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <div className={cn(
+                          "fallback w-full h-full rounded-full bg-gradient-to-br from-[var(--accent-primary)]/20 to-[var(--accent-secondary)]/20 flex items-center justify-center border-2 border-[var(--accent-primary)]/30",
+                          currentUser?.photoURL ? "hidden absolute inset-0" : ""
+                        )}>
+                          <span className="text-3xl font-serif font-light text-[var(--accent-primary)]">
+                            {user.displayName?.charAt(0).toUpperCase() || 'T'}
+                          </span>
                         </div>
-                      )}
+                      </div>
                       <div className="space-y-2">
                         <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-[var(--accent-primary)]">Level {user.level} · {points} Points</p>
                         <h2 className="text-5xl font-serif font-light text-[var(--text-primary)] tracking-tight">{user.displayName}</h2>
