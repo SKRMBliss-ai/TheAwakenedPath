@@ -301,26 +301,23 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
       {/* Main Action Call - Situational Practice */}
       <section className="relative">
         {/* Backlit Magenta Glow - Matching Soul Stats */}
-        {isAdmin && (
-          <motion.div
-            animate={{
-              scale: [1, 1.02, 1],
-              opacity: [0.3, 0.5, 0.3]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-[-20px] rounded-[24px] blur-[50px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
-          />
-        )}
+        <motion.div
+          animate={{
+            scale: [1, 1.02, 1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute inset-[-20px] rounded-[24px] blur-[50px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
+        />
         <button
-          onClick={() => isAdmin ? setActiveTab('situations') : null}
+          onClick={() => setActiveTab('situations')}
           className={cn(
-            "w-full group relative overflow-hidden rounded-[24px] bg-[var(--bg-surface)] border border-[var(--border-default)] p-8 flex items-center justify-between transition-all shadow-2xl",
-            isAdmin ? "hover:bg-[var(--bg-surface-hover)] hover:scale-[1.01] active:scale-[0.99]" : "opacity-35 cursor-not-allowed grayscale"
+            "w-full group relative overflow-hidden rounded-[24px] bg-[var(--bg-surface)] border border-[var(--border-default)] p-8 flex items-center justify-between transition-all shadow-2xl hover:bg-[var(--bg-surface-hover)] hover:scale-[1.01] active:scale-[0.99]"
           )}
         >
           <div className="flex items-center gap-10">
             <div className="w-16 h-16 rounded-[20px] bg-[var(--accent-primary)] flex items-center justify-center shadow-xl transition-transform duration-500">
-              {isAdmin ? <Flame className="w-8 h-8 text-[var(--bg-primary)]" /> : <Lock className="w-8 h-8 text-[var(--text-muted)]" />}
+              <Flame className="w-8 h-8 text-[var(--bg-primary)]" />
             </div>
             <div className="text-left">
               <h3 className="text-2xl font-serif font-bold text-[var(--text-primary)]">Transform a Situation</h3>
@@ -328,7 +325,7 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
             </div>
           </div>
           <div className="w-12 h-12 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center text-[var(--text-primary)] shadow-lg transition-all duration-500">
-            {isAdmin ? <Play className="w-5 h-5 fill-current ml-1 group-hover:rotate-90" /> : <Lock className="w-5 h-5" />}
+            <Play className="w-5 h-5 fill-current ml-1 group-hover:rotate-90" />
           </div>
         </button>
       </section>

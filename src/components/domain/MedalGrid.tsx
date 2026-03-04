@@ -101,7 +101,7 @@ export const Medal: React.FC<{
             <span
                 className={cn(
                     "text-[8px] font-bold uppercase tracking-wider text-center transition-all duration-300",
-                    unlocked ? "text-[var(--text-secondary)]" : "text-[var(--text-disabled)] opacity-40"
+                    unlocked ? "text-[var(--text-primary)] opacity-90" : "text-[var(--text-disabled)] opacity-40"
                 )}
             >
                 {achievement.name.split(' ')[0]}

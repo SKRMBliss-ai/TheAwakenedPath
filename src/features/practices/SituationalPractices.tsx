@@ -1,561 +1,397 @@
 // @ts-nocheck
-import React, { useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Sparkles,
-    Sun,
-    Wind,
-    Brain,
-    ArrowLeft,
-    Clock,
-    Flame,
-    PenTool,
-    Save,
-    MessageSquare,
-    Zap,
-    Anchor,
-    Moon,
-    Coffee,
-    Lightbulb,
-    X,
-    Trophy,
-    Target,
-    Timer,
-    Droplet
+    Sparkles, Sun, Wind, Brain, ArrowLeft, Clock, Flame,
+    PenTool, Save, MessageSquare, Zap, Anchor, Moon,
+    Coffee, Lightbulb, X, Trophy, Target, Timer, Droplet,
+    Search, Play, ChevronRight, CheckCircle2, ChevronDown, Info
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
+import { ThemeToggle, useTheme } from '../../theme/ThemeSystem';
 import { MeditationPortal } from '../../components/ui/MeditationPortal.tsx';
 import { db } from '../../firebase';
-import {
-    collection,
-    addDoc,
-    serverTimestamp
-} from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { VoiceService } from '../../services/voiceService';
+import { createPortal } from 'react-dom';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface Situation {
     id: string;
     title: string;
     whenToUse: string;
     description: string;
     duration: string;
+    durationNum: number; // minutes
+    category: 'Morning' | 'Work' | 'Emotions' | 'Sleep' | 'Quick';
+    tags: string[];
     icon: React.ElementType;
+    imageLight?: string;
+    imageDark?: string;
     color: string;
     intro: string;
-    steps: {
-        title: string;
-        instruction: string;
-        audioScript: string;
-    }[];
+    steps: { title: string; instruction: string; audioScript: string }[];
     realLifeExample: string;
-    journalPrompts: {
-        label: string;
-        placeholder: string;
-    }[];
+    journalPrompts: { label: string; placeholder: string }[];
 }
 
+// ─── Data ─────────────────────────────────────────────────────────────────────
 const SITUATIONS: Situation[] = [
     {
-        id: 'morning-scan',
-        title: "The Morning Energy Scan",
-        duration: "3 minutes",
-        whenToUse: "First thing in the morning, before checking your phone",
-        description: "Set your emotional state for the day by connecting with your inner body.",
-        icon: Sun,
-        color: "#ABCEC9",
+        id: 'morning-scan', title: 'Morning Energy Scan', duration: '3 min',
+        durationNum: 3, category: 'Morning', tags: ['wake up', 'body scan', 'energy', 'morning'],
+        whenToUse: 'First thing in the morning, before checking your phone',
+        description: 'Set your emotional state for the day by connecting with your inner body.',
+        icon: Sun, color: '#ABCEC9',
         intro: "Good morning. Before the world rushes in, let's check in with your inner aliveness.",
         steps: [
-            {
-                title: "Step 1: Foundational Breath",
-                instruction: "While still in bed, lie on your back. Take three deep breaths.",
-                audioScript: "While still in bed, lie on your back. Take three slow, deep breaths. Feel the air filling your lungs and the gentle release as you exhale. Arrive fully in this moment."
-            },
-            {
-                title: "Step 2: The Scan",
-                instruction: "Starting at your toes, slowly scan up through your body.",
-                audioScript: "Starting at your toes, slowly draw your attention upward. Move through your feet, your legs... slowly scanning through your torso, your arms, all the way to the top of your head."
-            },
-            {
-                title: "Step 3: Internal Inquiry",
-                instruction: "Ask at each part: 'How does this feel from the inside?'",
-                audioScript: "As your awareness passes through each part of your body, ask silently: How does this feel from the inside? Don't visualize it. FEEL it. Notice where you feel energized, or where you might feel heavy or tense."
-            }
+            { title: 'Foundational Breath', instruction: 'While still in bed, lie on your back. Take three deep breaths.', audioScript: 'While still in bed, lie on your back. Take three slow, deep breaths. Feel the air filling your lungs and the gentle release as you exhale. Arrive fully in this moment.' },
+            { title: 'The Scan', instruction: 'Starting at your toes, slowly scan up through your body.', audioScript: 'Starting at your toes, slowly draw your attention upward. Move through your feet, your legs... slowly scanning through your torso, your arms, all the way to the top of your head.' },
+            { title: 'Internal Inquiry', instruction: "Ask at each part: 'How does this feel from the inside?'", audioScript: "As your awareness passes through each part of your body, ask silently: How does this feel from the inside? Don't visualize it. FEEL it." }
         ],
-        realLifeExample: "Sarah practiced this for a week. She discovered that on mornings when her chest felt tight and heavy, she was actually anxious about work—even though her mind was saying 'I'm fine.' This awareness helped her address the anxiety instead of pushing through and getting a stress headache by noon.",
+        realLifeExample: 'Sarah practiced this for a week. She discovered that on mornings when her chest felt tight and heavy, she was actually anxious about work—even though her mind was saying "I\'m fine."',
         journalPrompts: [
-            { label: "What parts of my body felt most alive?", placeholder: "e.g., fingertips, chest..." },
-            { label: "What parts felt numb or disconnected?", placeholder: "e.g., lower back, feet..." },
-            { label: "What is my body telling me about my emotional state today?", placeholder: "Listen to the inner signal..." }
+            { label: 'What parts of my body felt most alive?', placeholder: 'e.g., fingertips, chest...' },
+            { label: 'What parts felt numb or disconnected?', placeholder: 'e.g., lower back, feet...' },
+            { label: 'What is my body telling me about my emotional state today?', placeholder: 'Listen to the inner signal...' }
         ]
     },
     {
-        id: 'traffic-light',
-        title: "The Traffic Light Check-In",
-        duration: "30 seconds",
-        whenToUse: "Throughout the day at 'traffic lights' - moments when you naturally pause",
-        description: "Turn waiting time into presence time. Perfect for computer starts, red lights, or elevators.",
-        icon: Wind,
-        color: "#C65F9D",
-        intro: "Let's use this pause to reconnect.",
+        id: 'traffic-light', title: 'Traffic Light Check-In', duration: '30 sec',
+        durationNum: 0.5, category: 'Quick', tags: ['pause', 'commute', 'micro-practice', 'quick'],
+        whenToUse: "Throughout the day at 'traffic lights' — moments when you naturally pause",
+        description: 'Turn waiting time into presence time. Perfect for red lights or elevators.',
+        icon: Wind, color: '#ABCEC9',
+        intro: 'Let\'s use this pause to reconnect.',
         steps: [
-            {
-                title: "Pause & Breathe",
-                instruction: "Pause whatever you're doing. Take one deep breath.",
-                audioScript: "Stop for a moment. Take one conscious, deep breath. Feel the pause."
-            },
-            {
-                title: "Quick Interior Scan",
-                instruction: "Feel your body from within - quick scan.",
-                audioScript: "Quickly scan your body from within. What's the dominant sensation? Tension? Ease? Heaviness? Just notice it."
-            },
-            {
-                title: "Acknowledge the Emotion",
-                instruction: "Notice the sensation and acknowledge the connected emotion.",
-                audioScript: "That sensation is connected to an emotion. Just acknowledge it without judgment. Oh, there's anxiety, or, there's fatigue. Witness it, and stay present."
-            }
+            { title: 'Pause & Breathe', instruction: "Pause whatever you're doing. Take one deep breath.", audioScript: 'Stop for a moment. Take one conscious, deep breath. Feel the pause.' },
+            { title: 'Quick Interior Scan', instruction: 'Feel your body from within - quick scan.', audioScript: 'Quickly scan your body from within. What\'s the dominant sensation? Tension? Ease? Heaviness? Just notice it.' },
+            { title: 'Acknowledge the Emotion', instruction: 'Notice the sensation and acknowledge the connected emotion.', audioScript: 'That sensation is connected to an emotion. Just acknowledge it without judgment. Witness it, and stay present.' }
         ],
-        realLifeExample: "Marcus started doing this every time he stopped at a red light during his commute. He discovered he was carrying massive shoulder tension—a sign of stress he'd been completely unaware of. Just noticing it helped the tension release. After two weeks, his chronic neck pain significantly improved.",
+        realLifeExample: 'Marcus started doing this every time he stopped at a red light. He discovered he was carrying massive shoulder tension. Just noticing it helped the tension release.',
         journalPrompts: [
-            { label: "What 'traffic lights' did I use today?", placeholder: "e.g., elevator, boiling water..." },
-            { label: "What did I notice in my body?", placeholder: "e.g., shoulders tight, stomach relaxed..." },
-            { label: "Were there patterns? (Same tension at the same times?)", placeholder: "Notice the cycle..." }
+            { label: "What 'traffic lights' did I use today?", placeholder: 'e.g., elevator, boiling water...' },
+            { label: 'What did I notice in my body?', placeholder: 'e.g., shoulders tight, stomach relaxed...' },
+            { label: 'Were there patterns?', placeholder: 'Notice the cycle...' }
         ]
     },
     {
-        id: 'emotional-detective',
-        title: "The Emotional Detective",
-        duration: "5 minutes",
+        id: 'emotional-detective', title: 'Emotional Detective', duration: '5 min',
+        durationNum: 5, category: 'Emotions', tags: ['mood', 'identify', 'sensation', 'feelings'],
         whenToUse: "When you notice you're in a 'mood' but can't identify the emotion",
-        description: "Trace sensations back to their emotional roots.",
-        icon: Brain,
-        color: "#FF7043",
+        description: 'Trace sensations back to their emotional roots.',
+        icon: Brain, color: '#C65F9D',
         intro: "You're feeling something, but you don't know what. Let's find out together.",
         steps: [
-            {
-                title: "Go Within",
-                instruction: "Sit quietly and close your eyes. Say to yourself: 'I'm feeling something, but I don't know what'",
-                audioScript: "Sit quietly. Close your eyes. Say to yourself: I am feeling something... but I don't know what it is yet. That's okay. We are just going to look."
-            },
-            {
-                title: "Sensation Search",
-                instruction: "Scan slowly: chest, stomach, throat, shoulders, jaw, face. Where is it strongest?",
-                audioScript: "Bring your attention to your body. Scan slowly... your chest, your stomach, your throat... move up to your shoulders, your jaw, your face. Where is the sensation strongest right now?"
-            },
-            {
-                title: "Feel the Quality",
-                instruction: "Stay with the sensation. Is it tight? Fluttery? Heavy? Hot? Cold?",
-                audioScript: "Stay with that sensation. Don't try to name it yet. Just feel its quality. Is it tight? Is it fluttery? Heavy? Hot or cold? Just be the space for this sensation to exist."
-            },
-            {
-                title: "The Reveal",
-                instruction: "In time, the emotion will reveal itself through the sensation.",
-                audioScript: "Rest here. Often, the emotion will reveal itself through the sensation. You aren't forcing it. You are just witnessing. Stay as long as you need."
-            }
+            { title: 'Go Within', instruction: "Sit quietly and close your eyes. Say: 'I'm feeling something, but I don't know what'", audioScript: "Sit quietly. Close your eyes. Say to yourself: I am feeling something... but I don't know what it is yet. That's okay. We are just going to look." },
+            { title: 'Sensation Search', instruction: 'Scan slowly: chest, stomach, throat, shoulders, jaw, face.', audioScript: 'Bring your attention to your body. Scan slowly... your chest, your stomach, your throat...' },
+            { title: 'Feel the Quality', instruction: 'Stay with the sensation. Is it tight? Fluttery? Heavy? Hot? Cold?', audioScript: "Stay with that sensation. Don't try to name it yet. Just feel its quality." },
+            { title: 'The Reveal', instruction: 'In time, the emotion will reveal itself through the sensation.', audioScript: 'Rest here. Often, the emotion will reveal itself through the sensation. You aren\'t forcing it.' }
         ],
-        realLifeExample: "Jennifer felt 'off' all day but couldn't identify why. She did this practice and noticed a heavy, sinking feeling in her chest and stomach. As she stayed with that sensation, she realized she was grieving—her best friend had moved away last week, and she'd been too busy to acknowledge the sadness. Once she let herself feel the grief, she cried for 10 minutes and felt significantly lighter.",
+        realLifeExample: "Jennifer felt 'off' all day. She did this practice and noticed a heavy, sinking feeling revealing grief she'd been too busy to acknowledge.",
         journalPrompts: [
-            { label: "Where in my body was the sensation strongest?", placeholder: "e.g., solar plexus, throat..." },
-            { label: "How would I describe the sensation?", placeholder: "e.g., tight, fluttery, heavy..." },
-            { label: "What emotion did it turn out to be?", placeholder: "The name of the feeling..." },
-            { label: "How did I feel after acknowledging it?", placeholder: "The shift in your state..." }
+            { label: 'Where in my body was the sensation strongest?', placeholder: 'e.g., solar plexus, throat...' },
+            { label: 'How would I describe the sensation?', placeholder: 'e.g., tight, fluttery, heavy...' },
+            { label: 'What emotion did it turn out to be?', placeholder: 'The name of the feeling...' },
+            { label: 'How did I feel after acknowledging it?', placeholder: 'The shift in your state...' }
         ]
     },
     {
-        id: 'difficult-conversation',
-        title: "The Difficult Conversation Preparation",
-        duration: "3 minutes",
-        whenToUse: "Before a challenging conversation, presentation, or difficult task",
-        description: "Ground your energy so you can speak from presence rather than reactivity.",
-        icon: MessageSquare,
-        color: "#9575CD",
-        intro: "You are about to enter a challenging space. Let's find your center first.",
+        id: 'difficult-conversation', title: 'Difficult Conversation Prep', duration: '3 min',
+        durationNum: 3, category: 'Work', tags: ['presentation', 'grounding', 'anxiety', 'focus'],
+        whenToUse: 'Before a challenging conversation, presentation, or difficult task',
+        description: 'Ground your energy so you can speak from presence rather than reactivity.',
+        icon: MessageSquare, color: '#F4E3DA',
+        intro: 'You are about to enter a challenging space. Let\'s find your center first.',
         steps: [
-            {
-                title: "Physical Grounding",
-                instruction: "Sit or stand with feet firmly on the ground. Close your eyes.",
-                audioScript: "Sit or stand with yours feet firmly on the ground. Feel the solid earth beneath you. Close your eyes and bring your awareness into this moment."
-            },
-            {
-                title: "Feeling the Foundation",
-                instruction: "Feel your feet on the floor - really feel the contact.",
-                audioScript: "Really feel the contact of your feet on the floor. The weight, the pressure. You are supported. You are here."
-            },
-            {
-                title: "Internal Aliveness",
-                instruction: "Feel your whole body - the aliveness throughout.",
-                audioScript: "Now expand your awareness to your whole body. Feel the subtle aliveness, the vibration of life throughout your entire frame."
-            },
-            {
-                title: "The Shift",
-                instruction: "Notice emotions like fear or anxiety. Breathe into them and say: 'This energy is here to help me be alert and present'",
-                audioScript: "Notice any fear or nervousness. Don't fight it. Breathe into those sensations. Say silently: This energy is here to help me be alert and present. You are grounded. You are ready."
-            }
+            { title: 'Physical Grounding', instruction: 'Sit or stand with feet firmly on the ground. Close your eyes.', audioScript: "Sit or stand with your feet firmly on the ground. Feel the solid earth beneath you. Close your eyes and bring your awareness into this moment." },
+            { title: 'Feeling the Foundation', instruction: 'Feel your feet on the floor - really feel the contact.', audioScript: 'Really feel the contact of your feet on the floor. The weight, the pressure. You are supported. You are here.' },
+            { title: 'Internal Aliveness', instruction: 'Feel your whole body - the aliveness throughout.', audioScript: 'Now expand your awareness to your whole body. Feel the subtle aliveness, the vibration of life throughout your entire frame.' },
+            { title: 'The Shift', instruction: 'Notice fear or anxiety. Breathe into them.', audioScript: "Notice any fear or nervousness. Don't fight it. Breathe into those sensations. Say silently: This energy is here to help me be alert and present." }
         ],
-        realLifeExample: "David always got terrible anxiety before presentations. He'd try to think his way through it, which made it worse. He started doing this practice before each presentation. By feeling the anxiety in his body instead of fighting it, the intensity reduced by half. His presentations improved because he was present instead of lost in anxious thoughts.",
+        realLifeExample: 'David always got terrible anxiety before presentations. By feeling the anxiety instead of fighting it, the intensity reduced by half.',
         journalPrompts: [
-            { label: "What sensations did I notice before the conversation/event?", placeholder: "e.g., butterflies, tight throat..." },
-            { label: "How did feeling my body help?", placeholder: "Did it ground you?" },
-            { label: "Did the difficult situation go differently than usual?", placeholder: "Notice the change in interaction..." }
+            { label: 'What sensations did I notice before?', placeholder: 'e.g., butterflies, tight throat...' },
+            { label: 'How did feeling my body help?', placeholder: 'Did it ground you?' },
+            { label: 'Did the situation go differently than usual?', placeholder: 'Notice the change...' }
         ]
     },
     {
-        id: 'anger-release',
-        title: "The Anger Release",
-        duration: "10 minutes",
-        whenToUse: "When you're angry but can't express it appropriately (at work, in public, etc.)",
+        id: 'anger-release', title: 'Anger Release', duration: '10 min',
+        durationNum: 10, category: 'Emotions', tags: ['anger', 'frustration', 'release', 'fire'],
+        whenToUse: "When you're angry but can't express it appropriately",
         description: "Witness the fire of anger without letting it burn you or others.",
-        icon: Zap,
-        color: "#FF7043",
-        intro: "There is fire in the system. Let's give it space to transform.",
+        icon: Zap, color: '#C65F9D',
+        intro: 'There is fire in the system. Let\'s give it space to transform.',
         steps: [
-            {
-                title: "Find Privacy",
-                instruction: "Find privacy and sit comfortably.",
-                audioScript: "Find a private space. Sit comfortably. This is your time to be with this energy without judgment."
-            },
-            {
-                title: "Locate the Fire",
-                instruction: "Bring attention to where you feel the anger in your body (jaw, fists, chest).",
-                audioScript: "Where do you feel this anger? Is it in your jaw? Your fists? Your chest or stomach? Just locate the heat."
-            },
-            {
-                title: "Full Immersion",
-                instruction: "Feel the energy - hot, tight, buzzing. Don't try to make it go away.",
-                audioScript: "Feel the energy of the anger fully. Is it hot? Buzzing? Tight? It's just energy. Don't push it away. Be the space for it."
-            },
-            {
-                title: "Vocal Release",
-                instruction: "Breathe into those areas. Sometimes making a sound (growl, sigh, humming) helps.",
-                audioScript: "Breathe directly into the heat. If it helps, make a low sound... a growl, a deep sigh, or a hum. Let the intensity vibrate through you until it naturally begins to soften."
-            }
+            { title: 'Find Privacy', instruction: 'Find privacy and sit comfortably.', audioScript: "Find a private space. Sit comfortably. This is your time to be with this energy without judgment." },
+            { title: 'Locate the Fire', instruction: 'Where do you feel anger? (jaw, fists, chest)', audioScript: "Where do you feel this anger? Is it in your jaw? Your fists? Your chest or stomach? Just locate the heat." },
+            { title: 'Full Immersion', instruction: "Feel the energy - hot, tight, buzzing. Don't make it go away.", audioScript: "Feel the energy of the anger fully. Is it hot? Buzzing? Tight? It's just energy. Don't push it away." },
+            { title: 'Vocal Release', instruction: 'Breathe into those areas. Make a sound (growl, sigh, hum).', audioScript: "Breathe directly into the heat. If it helps, make a low sound... a growl, a deep sigh, or a hum." }
         ],
-        realLifeExample: "Lisa's boss criticized her unfairly in a meeting. She couldn't respond because he's her boss. She felt rage but had to smile and nod. At lunch, she sat in her car and did this practice. She felt the rage as heat and tightness in her chest and jaw. She breathed into it, made some low growling sounds, and let the energy move through her. After 10 minutes, the rage had transformed into calm clarity about how to address the situation professionally.",
+        realLifeExample: "Lisa's boss criticized her unfairly. She sat in her car and did this practice. After 10 minutes, the rage transformed into calm clarity.",
         journalPrompts: [
-            { label: "Where did I feel the anger in my body?", placeholder: "Describe the physical location..." },
-            { label: "What did it feel like? (hot, tight, buzzing, etc.)", placeholder: "The texture of the anger..." },
-            { label: "What happened as I stayed with the sensation?", placeholder: "How did it change?" },
-            { label: "How do I feel now?", placeholder: "Your current mental state..." }
+            { label: 'Where did I feel the anger in my body?', placeholder: 'Describe the physical location...' },
+            { label: 'What did it feel like?', placeholder: 'The texture of the anger...' },
+            { label: 'What happened as I stayed with the sensation?', placeholder: 'How did it change?' },
+            { label: 'How do I feel now?', placeholder: 'Your current mental state...' }
         ]
     },
     {
-        id: 'anxiety-grounding',
-        title: "The Anxiety Grounding",
-        duration: "5 minutes",
-        whenToUse: "During anxiety attacks or when feeling overwhelmed and panicky",
-        description: "The 5-4-3-2-1 technique to anchor yourself in the physical world.",
-        icon: Anchor,
-        color: "#ABCEC9",
-        intro: "The mind is racing, but the earth is stable. Let's come back to what is real.",
+        id: 'anxiety-grounding', title: 'Anxiety Grounding', duration: '5 min',
+        durationNum: 5, category: 'Emotions', tags: ['anxiety', 'panic', 'grounding', '5-4-3-2-1'],
+        whenToUse: 'During anxiety attacks or when feeling overwhelmed and panicky',
+        description: 'The 5-4-3-2-1 technique to anchor yourself in the physical world.',
+        icon: Anchor, color: '#ABCEC9',
+        intro: 'The mind is racing, but the earth is stable. Let\'s come back to what is real.',
         steps: [
-            {
-                title: "Physical Anchor",
-                instruction: "Sit or stand with feet firmly on the ground. Press them into the floor.",
-                audioScript: "Feet on the ground. Press them down. Feel the pressure. You are here. You are safe."
-            },
-            {
-                title: "Outer Vision",
-                instruction: "Name 5 things you can see.",
-                audioScript: "Look around you. Name five things you can see right now. One... two... three... four... five. These are real. They are here."
-            },
-            {
-                title: "Sensory Check",
-                instruction: "Name 4 things you can touch, 3 things you can hear, 2 smell, 1 taste.",
-                audioScript: "Now, touch four different surfaces... notice their textures. Listen for three distinct sounds. Notice two things you can smell. And one thing you can taste, or the taste in your mouth."
-            },
-            {
-                title: "Full Presence",
-                instruction: "Bring attention to your whole body. Feel yourself solid and present.",
-                audioScript: "Bring your attention back to your whole body. You are solid. You are present. The anxiety may still be there, but you are more grounded than the anxiety."
-            }
+            { title: 'Physical Anchor', instruction: 'Sit or stand with feet firmly on the ground. Press them into the floor.', audioScript: 'Feet on the ground. Press them down. Feel the pressure. You are here. You are safe.' },
+            { title: 'Outer Vision', instruction: 'Name 5 things you can see.', audioScript: 'Look around you. Name five things you can see right now. One... two... three... four... five.' },
+            { title: 'Sensory Check', instruction: 'Name 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste.', audioScript: 'Now, touch four different surfaces... listen for three distinct sounds. Notice two things you can smell. And one thing you can taste.' },
+            { title: 'Full Presence', instruction: 'Bring attention to your whole body. Feel yourself solid and present.', audioScript: 'Bring your attention back to your whole body. You are solid. You are present. You are more grounded than the anxiety.' }
         ],
-        realLifeExample: "Tom suffered from panic attacks. When he felt one coming, he'd spiral into fear about the fear. He learned this practice and started using it at the first signs of panic. By grounding in his body through the senses, he could ride out the panic without it escalating. After a month, his panic attacks decreased significantly.",
+        realLifeExample: "Tom suffered from panic attacks. By grounding in his body through the senses, he could ride out the panic without it escalating.",
         journalPrompts: [
-            { label: "What were my anxiety symptoms?", placeholder: "e.g., racing heart, tight chest..." },
-            { label: "How did the 5-4-3-2-1 grounding help?", placeholder: "What shifted in your focus?" },
-            { label: "How did my body feel before vs. after?", placeholder: "Compare the states..." }
+            { label: 'What were my anxiety symptoms?', placeholder: 'e.g., racing heart, tight chest...' },
+            { label: 'How did the 5-4-3-2-1 grounding help?', placeholder: 'What shifted in your focus?' },
+            { label: 'How did my body feel before vs. after?', placeholder: 'Compare the states...' }
         ]
     },
     {
-        id: 'sleep-body-scan',
-        title: "The Body Scan Before Sleep",
-        duration: "10 minutes",
-        whenToUse: "Every night before bed to process the day's emotions and improve sleep",
+        id: 'sleep-body-scan', title: 'Sleep Body Scan', duration: '10 min',
+        durationNum: 10, category: 'Sleep', tags: ['sleep', 'night', 'relax', 'insomnia', 'rest'],
+        whenToUse: 'Every night before bed to process emotions and improve sleep',
         description: "Process the day's emotions and improve sleep by scanning your body.",
-        icon: Moon,
-        color: "#5C6BC0",
-        intro: "Let go of the day and prepare for rest.",
+        icon: Moon, color: '#ABCEC9',
+        intro: 'The day is over. Let\'s surrender the weight of it to the earth.',
         steps: [
-            {
-                title: "Prepare for Sleep",
-                instruction: "Lie in bed, ready for sleep.",
-                audioScript: "Lie in bed. Get comfortable. Let your body sink into the mattress. You are ready for sleep."
-            },
-            {
-                title: "Start at the Toes",
-                instruction: "Starting at your toes, slowly scan up through your body.",
-                audioScript: "Bring your attention to your toes. Then your feet. Slowly move up your ankles, your calves... scanning slowly upward."
-            },
-            {
-                title: "Notice & Release",
-                instruction: "At each area, notice tension. Breathe into it and let it soften.",
-                audioScript: "As you scan, notice any tension or sensation. Don't fight it. Just breathe into that area and let it soften. Let it go."
-            },
-            {
-                title: "Acknowledge Emotions",
-                instruction: "If emotions arise, acknowledge them: 'Hello worry, I see you. You can rest now.'",
-                audioScript: "If emotions arise—sadness, worry, frustration—just acknowledge them. Say silently: Hello worry, I see you. You can rest now."
-            },
-            {
-                title: "Whole Body Breathing",
-                instruction: "Notice your whole body breathing. Let sleep come naturally.",
-                audioScript: "Feel your whole body breathing. One unified field of aliveness. Let sleep come naturally."
-            }
+            { title: 'The Breath Anchor', instruction: 'Feel the weight of your body on the mattress. Take 3 deep, slow breaths.', audioScript: 'Feel your weight on the bed. Give in to gravity. Take three slow, deep breaths... releasing the day with every exhale.' },
+            { title: 'Melting Scan', instruction: 'Scan from toes to head. As you reach a body part, feel it "melting" into the bed.', audioScript: 'Scan slowly... toes, feet, ankles... letting them melt. Up through your legs, hips, torso... every muscle letting go. Up to your shoulders, arms, hands... melting into the mattress. Up to your neck, jaw, eyes... complete release.' },
+            { title: 'The Silent Observer', instruction: 'Let go of any remaining thoughts. Just be the empty space for sleep to arise.', audioScript: 'Behind the sensations is awareness. Resting as that awareness. Sleep will come when it is ready. You are simply here.' }
         ],
-        realLifeExample: "Emma struggled with insomnia for years. Her mind would race at night. She started this practice and discovered she was carrying the day's stress in her body - jaw clenched, shoulders tight, stomach knotted. By releasing the physical tension, the mental racing quieted. Within two weeks, she was falling asleep 30 minutes faster.",
+        realLifeExample: "Emma struggled with insomnia for years. By releasing physical tension, the mental racing quieted. Within two weeks, she was falling asleep 30 minutes faster.",
         journalPrompts: [
-            { label: "What tension did I notice before releasing it?", placeholder: "e.g., jaw, shoulders..." },
-            { label: "What emotions came up during the scan?", placeholder: "e.g., worry about tomorrow..." },
-            { label: "How was my sleep compared to usual?", placeholder: "Better? Same?" }
+            { label: 'What tension did I notice before releasing it?', placeholder: 'e.g., jaw, shoulders...' },
+            { label: 'What emotions came up during the scan?', placeholder: 'e.g., worry about tomorrow...' }
         ]
     },
     {
-        id: 'lunch-break-reset',
-        title: "The Lunch Break Reset",
-        duration: "5 minutes",
-        whenToUse: "Midday when you need to reset and recharge",
-        description: "Reset your energy midday to avoid afternoon burnout.",
-        icon: Coffee,
-        color: "#FFA726",
-        intro: "Take a moment to reset before the afternoon.",
+        id: 'lunch-break-reset', title: 'Lunch Break Reset', duration: '5 min',
+        durationNum: 5, category: 'Work', tags: ['midday', 'reset', 'work', 'recharge', 'burnout'],
+        whenToUse: 'Midday when you need to reset and recharge',
+        description: 'Reset your energy midday to avoid afternoon burnout.',
+        icon: Coffee, color: '#F4E3DA',
+        intro: 'Morning is done. Let\'s refresh your internal atmosphere.',
         steps: [
-            {
-                title: "Step Away",
-                instruction: "Step away from your desk. Find a quiet spot.",
-                audioScript: "Step away from your work. Find a quiet spot. This is your time to reset."
-            },
-            {
-                title: "Breathe Deeply",
-                instruction: "Sit comfortably. Close eyes. Take 5 deep breaths.",
-                audioScript: "Sit comfortably. Close your eyes. Take five deep, slow breaths. Reset your system."
-            },
-            {
-                title: "Scan & Acknowledge",
-                instruction: "Scan for accumulated emotions. Acknowledge them without judgment.",
-                audioScript: "Scan your body. What emotions accumulated this morning? Stress? Boredom? Excitement? Just acknowledge them without judgment."
-            },
-            {
-                title: "Fresh Energy",
-                instruction: "Imagine breathing fresh energy into your body. Return to work present.",
-                audioScript: "Imagine breathing fresh, clean energy into your body. Feel it filling you up. When you are ready, return to your day, fully present."
-            }
+            { title: 'Sense Withdrawal', instruction: 'Close your laptop. Put away your phone. Close your eyes for 1 min.', audioScript: 'Close your eyes. Step away from the digital world for just one minute.' },
+            { title: 'Taste Awareness', instruction: 'Eat your first 3 bites in complete silence, focusing only on the texture and flavour.', audioScript: 'Take your first bite slowly. Feel the texture. Experience the flavor fully. Just eating. Nothing else.' },
+            { title: 'Inner Space', instruction: 'Feel the energy in your body. Let the "worker" identity dissolve for a few minutes.', audioScript: 'Feel the energy within. You are not "the worker" right now. You are simply life, experiencing life.' }
         ],
-        realLifeExample: "Kevin would power through 10-hour workdays, then come home exhausted and irritable. He started taking a 5-minute lunch break to feel his body. He'd notice he was carrying tension and frustration. By acknowledging it and releasing it midday, he had more energy for the afternoon and came home in a better mood.",
+        realLifeExample: "Kevin would power through 10-hour workdays, exhausted and irritable. By acknowledging frustration midday and releasing it, he had more energy for the afternoon.",
         journalPrompts: [
-            { label: "What emotions had accumulated by lunchtime?", placeholder: "e.g., frustration, rush..." },
-            { label: "Where was I holding them in my body?", placeholder: "e.g., neck, stomach..." },
-            { label: "How did I feel after the reset?", placeholder: "More clear? Calmer?" },
-            { label: "Did the afternoon go differently?", placeholder: "Productivity, mood..." }
+            { label: 'What emotions had accumulated by lunchtime?', placeholder: 'e.g., frustration, rush...' },
+            { label: 'How did I feel after the reset?', placeholder: 'More clear? Calmer?' }
         ]
     },
     {
-        id: '10-second-check',
-        title: "The 10-Second Body Check",
-        duration: "10 seconds",
-        whenToUse: "Wherever you are, whatever you're doing",
-        description: "A micro-dose of presence. One breath. One sensation. Done.",
-        icon: Timer,
-        color: "#EF5350",
-        intro: "Ten seconds to come back to life.",
+        id: '10-second-check', title: '10-Second Body Check', duration: '10 sec',
+        durationNum: 0.17, category: 'Quick', tags: ['micro', 'quick', 'anytime', 'breath'],
+        whenToUse: 'Wherever you are, whatever you\'re doing',
+        description: 'A micro-dose of presence. One breath. One sensation. Done.',
+        icon: Timer, color: '#C65F9D',
+        intro: 'Ten seconds to come back to life.',
         steps: [
-            {
-                title: "Deep Breath",
-                instruction: "Take one deep breath.",
-                audioScript: "Stop. Take one deep breath. Inhale... and exhale."
-            },
-            {
-                title: "Feel Body",
-                instruction: "Feel your body for 10 seconds.",
-                audioScript: "For the next ten seconds, just feel your body. Right here. Right now."
-            },
-            {
-                title: "One Sensation",
-                instruction: "Notice one sensation. That's it! Counts as practice.",
-                audioScript: "Notice just one physical sensation. A rebel feeling. A warm spot. Anything. That's it. You're done."
-            }
+            { title: 'Deep Breath', instruction: 'Take one deep breath.', audioScript: 'Stop. Take one deep breath. Inhale... and exhale.' },
+            { title: 'Feel Body', instruction: 'Feel your body for 10 seconds.', audioScript: 'For the next ten seconds, just feel your body. Right here. Right now.' },
+            { title: 'One Sensation', instruction: 'Notice one sensation. That\'s it! Counts as practice.', audioScript: "Notice just one physical sensation. A rebel feeling. A warm spot. Anything. That's it. You're done." }
         ],
-        realLifeExample: "Mike was a busy executive who 'didn't have time' to meditate. He started doing this 10-second check between emails. He realized he was holding his breath constantly. By catching it 10 times a day, his baseline stress level dropped noticeably.",
+        realLifeExample: "Mike was a busy executive who 'didn't have time' to meditate. He started doing this between emails. His baseline stress level dropped noticeably.",
         journalPrompts: [
-            { label: "What one sensation did I notice?", placeholder: "e.g., cold hands..." },
-            { label: "How many times did I manage to do it today?", placeholder: "Number..." },
-            { label: "Did it break my autopilot mode?", placeholder: "Yes/No..." }
+            { label: 'What one sensation did I notice?', placeholder: 'e.g., cold hands...' },
+            { label: 'How many times did I manage to do it today?', placeholder: 'Number...' },
+            { label: 'Did it break my autopilot mode?', placeholder: 'Yes/No...' }
         ]
     },
     {
-        id: 'bathroom-break',
-        title: "The Bathroom Break Practice",
-        duration: "30 seconds",
-        whenToUse: "Every time you go to the bathroom",
-        description: "Use a natural biological break as a spiritual break.",
-        icon: Droplet,
-        color: "#4FC3F7",
-        intro: "A private moment to return to yourself.",
+        id: 'bathroom-break', title: 'Bathroom Break Practice', duration: '30 sec',
+        durationNum: 0.5, category: 'Quick', tags: ['quick', 'private', 'anytime', 'micro'],
+        whenToUse: 'Every time you go to the bathroom',
+        description: 'Use a natural biological break as a spiritual break.',
+        icon: Droplet, color: '#ABCEC9',
+        intro: 'A private moment to return to yourself.',
         steps: [
-            {
-                title: "Pause",
-                instruction: "Before leaving, close your eyes.",
-                audioScript: "Before you leave this private space, pause. Close your eyes."
-            },
-            {
-                title: "Feel",
-                instruction: "Feel your body for 30 seconds.",
-                audioScript: "Feel your body for just thirty seconds. Drop out of your mind and into your skin."
-            },
-            {
-                title: "Notice Emotions",
-                instruction: "Notice any emotions present.",
-                audioScript: "Is there an emotion here? Just notice it. You don't have to fix it."
-            },
-            {
-                title: "Return",
-                instruction: "Return to your day.",
-                audioScript: "Open your eyes. Return to your day refreshed."
-            }
+            { title: 'Pause', instruction: 'Before leaving, close your eyes.', audioScript: 'Before you leave this private space, pause. Close your eyes.' },
+            { title: 'Feel', instruction: 'Feel your body for 30 seconds.', audioScript: 'Feel your body for just thirty seconds. Drop out of your mind and into your skin.' },
+            { title: 'Notice Emotions', instruction: 'Notice any emotions present.', audioScript: "Is there an emotion here? Just notice it. You don't have to fix it." },
+            { title: 'Return', instruction: 'Return to your day.', audioScript: 'Open your eyes. Return to your day refreshed.' }
         ],
-        realLifeExample: "Sarah used the bathroom as an escape from her chaotic open office. By adding this 30-second grounding practice, she turned 'hiding' into 'recharging'.",
+        realLifeExample: "Sarah used the bathroom as an escape from her chaotic open office. By adding this 30-second practice, she turned 'hiding' into 'recharging'.",
         journalPrompts: [
-            { label: "What mood was I in during the break?", placeholder: "e.g., rushed, bored..." },
-            { label: "Did the pause change my re-entry to work?", placeholder: "Describe..." }
+            { label: 'What mood was I in during the break?', placeholder: 'e.g., rushed, bored...' },
+            { label: 'Did the pause change my re-entry to work?', placeholder: 'Describe...' }
         ]
     },
     {
-        id: 'morning-coffee-ritual',
-        title: "The Morning Coffee/Tea Ritual",
-        duration: "2 minutes",
-        whenToUse: "While your coffee/tea is brewing",
-        description: "Turn waiting for caffeine into waiting for presence.",
-        icon: Coffee,
-        color: "#8D6E63",
-        intro: "The brewing is happening. Let presence happen too.",
+        id: 'morning-coffee-ritual', title: 'Morning Coffee Ritual', duration: '2 min',
+        durationNum: 2, category: 'Morning', tags: ['morning', 'ritual', 'coffee', 'intention'],
+        whenToUse: 'While your coffee/tea is brewing',
+        description: 'Turn waiting for caffeine into waiting for presence.',
+        icon: Coffee, color: '#F4E3DA',
+        intro: 'The brewing is happening. Let presence happen too.',
         steps: [
-            {
-                title: "Stand Still",
-                instruction: "Stand still while it brews.",
-                audioScript: "Don't check your phone. Just stand still. Let the coffee brew."
-            },
-            {
-                title: "Feel Body",
-                instruction: "Feel your body standing there.",
-                audioScript: "Feel your feet on the floor. Feel your body standing here, waiting. Feel the anticipation."
-            },
-            {
-                title: "Set Intention",
-                instruction: "Set an intention: 'Today I will notice my body'",
-                audioScript: "Set a silent intention: Today, I will notice my body. Today, I will come back to myself."
-            }
+            { title: 'Stand Still', instruction: "Stand still while it brews.", audioScript: "Don't check your phone. Just stand still. Let the coffee brew." },
+            { title: 'Feel Body', instruction: 'Feel your body standing there.', audioScript: 'Feel your feet on the floor. Feel your body standing here, waiting.' },
+            { title: 'Set Intention', instruction: "Set an intention: 'Today I will notice my body'", audioScript: "Set a silent intention: Today, I will notice my body. Today, I will come back to myself." }
         ],
         realLifeExample: "John used to check news while his coffee brewed, starting his day with anxiety. Switching to this simple standing practice changed the tone of his entire morning.",
         journalPrompts: [
-            { label: "How hard was it not to check my phone?", placeholder: "Scale 1-10..." },
-            { label: "Did I remember my intention later in the day?", placeholder: "Yes/No..." }
+            { label: 'How hard was it not to check my phone?', placeholder: 'Scale 1-10...' },
+            { label: 'Did I remember my intention later in the day?', placeholder: 'Yes/No...' }
         ]
     }
+];
+
+const FAQ_ITEMS = [
+    { q: "What if I can't feel my body?", a: "That's perfectly normal. Just notice the 'numbness' or 'lack of sensation'. That is your sensation for now." },
+    { q: "I keep getting distracted by thoughts.", a: "Expect thoughts to come. When you notice them, gently return to the physical sensation in your body." },
+    { q: "How often should I practice?", a: "Frequency matters more than duration. Three 30-second checks are better than one long session." },
+    { q: "Can I do these while driving?", a: "Only the 'Quick' practices that don't require closing your eyes. Always prioritize safety." },
 ];
 
 const CHALLENGES = [
-    {
-        id: 'week-2',
-        title: "Week 2: Throughout the Day Awareness",
-        description: "Set an alarm every 2 hours. When it goes off, pause for 10 seconds and feel your body. Track how your body state changes throughout the day.",
-        xpRequired: 500,
-        week: 2
-    },
-    {
-        id: 'week-3',
-        title: "Week 3: Difficult Emotion Deep Dive",
-        description: "Next time a difficult emotion arises (anger, fear, sadness), instead of avoiding it, sit with it for 5 full minutes. Feel it completely in your body. Journal what happens.",
-        xpRequired: 1000,
-        week: 3
-    },
-    {
-        id: 'week-4',
-        title: "Week 4: Bring Awareness to Movement",
-        description: "During routine activities (showering, walking, eating), feel your body from within while moving. Notice how different it feels to be present in your body during these activities.",
-        xpRequired: 1500,
-        week: 4
-    },
-    {
-        id: 'week-5',
-        title: "Week 5: The Silent Body Walk",
-        description: "Go for a 20-minute walk with no phone, no music, no podcast. Just walk and feel your body moving. Notice everything - feet on ground, arms swinging, breath, body temperature.",
-        xpRequired: 2000,
-        week: 5
-    },
-    {
-        id: 'week-6',
-        title: "Week 6: Body Wisdom Decision Making",
-        description: "Next time you have a decision to make, instead of just thinking about it, feel into your body with each option. Notice which option creates expansion and ease, which creates contraction and tension.",
-        xpRequired: 3000,
-        week: 6
-    }
+    { id: 'week-2', title: 'Week 2: Throughout the Day Awareness', description: 'Set an alarm every 2 hours. When it goes off, pause for 10 seconds and feel your body. Track how your body state changes throughout the day.', xpRequired: 500, week: 2 },
+    { id: 'week-3', title: 'Week 3: Difficult Emotion Deep Dive', description: 'Next time a difficult emotion arises, instead of avoiding it, sit with it for 5 full minutes. Feel it completely in your body. Journal what happens.', xpRequired: 1000, week: 3 },
+    { id: 'week-4', title: 'Week 4: Bring Awareness to Movement', description: 'During routine activities (showering, walking, eating), feel your body from within while moving.', xpRequired: 1500, week: 4 },
+    { id: 'week-5', title: 'Week 5: The Silent Body Walk', description: 'Go for a 20-minute walk with no phone, no music, no podcast. Just walk and feel your body moving.', xpRequired: 2000, week: 5 },
+    { id: 'week-6', title: 'Week 6: Body Wisdom Decision Making', description: 'Next time you have a decision to make, feel into your body with each option. Notice which creates expansion and which creates contraction.', xpRequired: 3000, week: 6 },
 ];
 
-const COMMON_EXPERIENCES = [
-    {
-        title: "I Don't Feel Anything",
-        whatIsHappening: "You're not used to paying attention to your body. The sensations are subtle.",
-        whatToDo: [
-            "Start with stronger sensations: Press your feet firmly on the floor. Feel that pressure.",
-            "Try while doing something physical: walking, stretching, or after exercise.",
-            "Be patient - this is a skill that develops with practice.",
-            "Even noticing 'I feel nothing' is noticing something."
-        ]
-    },
-    {
-        title: "I Feel Uncomfortable Sensations",
-        whatIsHappening: "You're uncovering emotions that have been suppressed. This is good!",
-        whatToDo: [
-            "Stay with it - discomfort won't hurt you.",
-            "Breathe into the uncomfortable area.",
-            "Remind yourself: 'This is just energy moving'.",
-            "If it's too intense, ground yourself (feel your feet, look around the room).",
-            "The discomfort will pass if you let yourself feel it."
-        ]
-    },
-    {
-        title: "Emotions Suddenly Come Up Strongly",
-        whatIsHappening: "By giving space to feel, suppressed emotions are surfacing.",
-        whatToDo: [
-            "This is the practice working!",
-            "Let yourself feel - cry if you need to, shake if you need to.",
-            "You're not creating the emotion; you're releasing what was already there.",
-            "After the release, you'll feel lighter.",
-            "If it feels overwhelming, work with a therapist."
-        ]
-    },
-    {
-        title: "I Feel Tingling or Energy Moving",
-        whatIsHappening: "You're becoming aware of your body's subtle energy field.",
-        whatToDo: [
-            "This is normal and good.",
-            "The tingling is often blocked energy starting to flow.",
-            "Continue the practice - it usually intensifies then becomes calming.",
-            "You're developing sensitivity to your inner state."
-        ]
-    },
-    {
-        title: "My Mind Keeps Wandering",
-        whatIsHappening: "This is completely normal, especially at first.",
-        whatToDo: [
-            "Don't fight your thoughts.",
-            "When you notice your mind wandered, gently return attention to your body.",
-            "Each time you notice and return is a success, not a failure.",
-            "The practice is noticing the wandering and returning."
-        ]
-    }
+const COLLECTIONS = [
+    { id: 'start-here', label: 'Start Here', desc: 'Best for beginners', ids: ['10-second-check', 'traffic-light', 'morning-scan'] },
+    { id: 'emotional-toolkit', label: 'Emotional Toolkit', desc: 'For difficult feelings', ids: ['emotional-detective', 'anger-release', 'anxiety-grounding'] },
+    { id: 'daily-anchors', label: 'Daily Anchors', desc: 'Build a daily practice', ids: ['morning-coffee-ritual', 'lunch-break-reset', 'sleep-body-scan'] },
 ];
 
+const CATEGORIES = ['All', 'Morning', 'Work', 'Emotions', 'Sleep', 'Quick'] as const;
+const DURATION_TABS = [
+    { label: 'Any', fn: () => true },
+    { label: '< 1 min', fn: (d: number) => d < 1 },
+    { label: '1–5 min', fn: (d: number) => d >= 1 && d <= 5 },
+    { label: '5–10 min', fn: (d: number) => d > 5 && d <= 10 },
+    { label: '10+ min', fn: (d: number) => d > 10 },
+];
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+const DurationPill = ({ dur }: { dur: string }) => (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider"
+        style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)' }}>
+        <Clock size={12} />
+        {dur}
+    </span>
+);
+
+const CategoryPill = ({ cat }: { cat: string }) => {
+    const colors: Record<string, string> = { Morning: '#ABCEC9', Work: '#9575CD', Emotions: '#FF7043', Sleep: '#5C6BC0', Quick: '#C65F9D' };
+    const c = colors[cat] || 'var(--text-muted)';
+    return (
+        <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest"
+            style={{ background: c + '15', color: c, border: `1px solid ${c}30` }}>
+            {cat}
+        </span>
+    );
+};
+
+const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situation; onClick: () => void; mode: 'light' | 'dark' }) => {
+    const Icon = situation.icon;
+    const accent = situation.color;
+
+    return (
+        <motion.button
+            whileHover={{ y: -6, scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onClick}
+            className="flex-shrink-0 w-64 rounded-[40px] overflow-hidden text-left transition-all group relative border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-xl"
+        >
+            {/* Mesh Gradient Header */}
+            <div className="h-40 w-full relative overflow-hidden bg-[var(--bg-secondary)]">
+                {/* Dynamic Gradient Base */}
+                <div
+                    className="absolute inset-0 opacity-40 group-hover:opacity-70 transition-opacity duration-1000"
+                    style={{
+                        background: `radial-gradient(circle at 20% 30%, ${accent}70 0%, transparent 70%), 
+                                     radial-gradient(circle at 80% 70%, ${accent}40 0%, transparent 60%)`,
+                        filter: 'blur(30px)'
+                    }}
+                />
+
+                {/* Massive Watermark Icon */}
+                <div className="absolute right-[-15%] top-[-10%] opacity-[0.06] group-hover:opacity-[0.12] transition-all duration-1000 rotate-[-15deg] group-hover:rotate-0">
+                    <Icon size={180} strokeWidth={0.5} style={{ color: accent }} />
+                </div>
+
+                {/* The actual image if it exists */}
+                {(mode === 'dark' ? situation.imageDark : situation.imageLight) && (
+                    <div className="absolute inset-0 z-0 bg-[var(--bg-secondary)]">
+                        <img
+                            src={mode === 'dark' ? situation.imageDark : situation.imageLight}
+                            alt=""
+                            className="w-full h-full object-cover opacity-60 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-80 group-hover:scale-110 transition-all duration-1000"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).style.opacity = '0';
+                            }}
+                        />
+                    </div>
+                )}
+
+                {/* Glassy Floating Icon */}
+                <div className="absolute top-6 left-6 p-3 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-lg group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all">
+                    <Icon size={20} className="text-white" strokeWidth={1.5} />
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-surface)] via-[var(--bg-surface)]/20 to-transparent" />
+            </div>
+
+            <div className="p-7 space-y-4 relative z-10">
+                <div className="space-y-2">
+                    <div className="flex justify-between items-start">
+                        <h4 className="text-[19px] font-serif font-medium leading-tight text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">
+                            {situation.title}
+                        </h4>
+                    </div>
+                    <DurationPill dur={situation.duration} />
+                </div>
+
+                <p className="text-[11px] leading-relaxed line-clamp-2 text-[var(--text-secondary)] opacity-60 group-hover:opacity-90 transition-opacity">
+                    {situation.description}
+                </p>
+
+                {/* Interactive Footer */}
+                <div className="pt-4 flex items-center justify-between border-t border-[var(--border-subtle)]/30">
+                    <span className="text-[8px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">
+                        Begin Presence
+                    </span>
+                    <motion.div
+                        animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                        className="w-1.5 h-1.5 rounded-full shadow-[0_0_12px_currentColor]"
+                        style={{ color: accent, background: 'currentColor' }}
+                    />
+                </div>
+            </div>
+
+            {/* Subtle card-wide glow on hover */}
+            <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] pointer-events-none transition-opacity duration-700"
+                style={{ background: `radial-gradient(circle at center, ${accent}, transparent 80%)` }}
+            />
+        </motion.button>
+    );
+};
+
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: boolean }> = ({ onBack, isAdmin }) => {
+    const { mode } = useTheme();
     const { user } = useAuth();
     const [selectedSituation, setSelectedSituation] = useState<Situation | null>(null);
     const [currentStep, setCurrentStep] = useState(0);
@@ -563,17 +399,30 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
     const [isPaused, setIsPaused] = useState(false);
     const [showLogEntry, setShowLogEntry] = useState(false);
     const [journalData, setJournalData] = useState<Record<string, string>>({});
-    const [showGuidance, setShowGuidance] = useState(false);
+
+    // Browse state
+    const [query, setQuery] = useState('');
+    const [activeCategory, setActiveCategory] = useState<typeof CATEGORIES[number]>('All');
+    const [activeDuration, setActiveDuration] = useState(0);
+    const [showFAQ, setShowFAQ] = useState(false);
+    const [showChallenges, setShowChallenges] = useState(false);
+
+    const filtered = useMemo(() => {
+        return SITUATIONS.filter(s => {
+            const matchCat = activeCategory === 'All' || s.category === activeCategory;
+            const matchDur = DURATION_TABS[activeDuration].fn(s.durationNum);
+            const q = query.toLowerCase();
+            const matchQ = !q || s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q) || s.tags.some(t => t.includes(q));
+            return matchCat && matchDur && matchQ;
+        });
+    }, [query, activeCategory, activeDuration]);
 
     const speak = useCallback((text: string, onEnd?: () => void) => {
-        if (isPaused) return; // Do nothing if paused
+        if (isPaused) return;
         VoiceService.speak(text, { onEnd });
     }, [isPaused]);
 
-    const handleReset = useCallback(() => {
-        VoiceService.stop();
-        setCurrentStep(0);
-    }, []);
+    const handleReset = useCallback(() => { VoiceService.stop(); setCurrentStep(0); }, []);
 
     const handleNextStep = useCallback(() => {
         if (!selectedSituation) return;
@@ -606,10 +455,11 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
             });
             onBack();
         } catch (error) {
-            console.error("Error saving log:", error);
+            console.error('Error saving log:', error);
         }
     };
 
+    // ── Practice mode ──
     if (isPracticing && selectedSituation) {
         return (
             <MeditationPortal
@@ -625,244 +475,407 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
         );
     }
 
+    // ── Journal mode ──
     if (showLogEntry && selectedSituation) {
         return (
-            <div className="max-w-3xl mx-auto space-y-12 pb-32">
-                <button onClick={() => setShowLogEntry(false)} className="flex items-center gap-2 text-white/70 hover:text-white transition-all group">
-                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Back to situation</span>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl mx-auto space-y-10 pb-32">
+                <button onClick={() => setShowLogEntry(false)}
+                    className="flex items-center gap-2 transition-all group"
+                    style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Back</span>
                 </button>
 
-                <header className="space-y-6">
-                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-[#ABCEC9]/10 border border-[#ABCEC9]/20">
-                        <PenTool className="w-4 h-4 text-[#ABCEC9]" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#ABCEC9]">Journal Prompt after practice</span>
+                <header className="space-y-4">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl"
+                        style={{ background: 'var(--accent-primary-muted)', border: '1px solid var(--border-subtle)' }}>
+                        <PenTool className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
+                        <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--accent-primary)' }}>Reflection Journal</span>
                     </div>
-                    <h1 className="text-4xl font-serif font-bold text-white">{selectedSituation.title} Log</h1>
+                    <h1 className="text-4xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>{selectedSituation.title}</h1>
                 </header>
 
-                <div className="space-y-8">
+                <div className="space-y-7">
                     {selectedSituation.journalPrompts.map((prompt, i) => (
-                        <div key={i} className="space-y-4">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-white/70">{prompt.label}</label>
+                        <div key={i} className="space-y-3">
+                            <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>{prompt.label}</label>
                             <textarea
                                 value={journalData[prompt.label] || ''}
-                                onChange={(e) => setJournalData({ ...journalData, [prompt.label]: e.target.value })}
+                                onChange={e => setJournalData({ ...journalData, [prompt.label]: e.target.value })}
                                 placeholder={prompt.placeholder}
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-xl font-serif text-white focus:border-[#ABCEC9]/50 transition-all outline-none min-h-[120px] resize-none"
+                                className="w-full rounded-2xl p-5 text-lg font-serif outline-none resize-none min-h-[110px] transition-all"
+                                style={{
+                                    background: 'var(--bg-surface)',
+                                    border: '1px solid var(--border-default)',
+                                    color: 'var(--text-primary)',
+                                }}
                             />
                         </div>
                     ))}
 
-                    <button
-                        onClick={handleSaveJournal}
-                        className="w-full py-6 bg-[#ABCEC9] text-black rounded-2xl font-bold uppercase tracking-[0.2em] text-xs shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-3"
-                    >
+                    <button onClick={handleSaveJournal}
+                        className="w-full py-4 rounded-2xl font-bold uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-95 shadow-lg"
+                        style={{ background: selectedSituation.color, color: 'white' }}>
                         <Save className="w-4 h-4" /> Seal Reflection
                     </button>
                 </div>
-            </div>
+            </motion.div>
         );
     }
 
+    // ── Main browse view ──
     return (
-        <div className="space-y-12 pt-24 md:pt-0 pb-32 md:pb-0">
-            <div className="flex justify-end items-start">
-                <button
-                    onClick={() => setShowGuidance(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all border border-white/5 hover:border-white/20"
-                >
-                    <Lightbulb className="w-4 h-4 text-[#FFA726]" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Common Experiences</span>
-                </button>
-            </div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 pb-32">
 
-            <header className="space-y-4">
-                <h1 className="text-5xl font-serif font-bold text-white">Prepare for a Situation</h1>
-                <p className="text-white/70 font-serif text-xl italic max-w-xl leading-relaxed">
-                    Guided practices for specific moments, helping you transform daily challenges into presence.
-                </p>
+            {/* Header */}
+            <header className="relative py-8 md:py-12 px-6 md:px-8 rounded-[32px] overflow-hidden group">
+                {/* Ambient Aura */}
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-20 pointer-events-none"
+                    style={{ background: 'var(--accent-primary)' }} />
+
+                <div className="relative z-10 space-y-4">
+                    <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                            <p className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-60" style={{ color: 'var(--text-muted)' }}>Sacred Realm</p>
+                            <h1 className="text-4xl md:text-6xl font-serif font-light tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                                The Practice Room
+                            </h1>
+                        </div>
+                        <button onClick={() => setShowFAQ(!showFAQ)}
+                            className="p-3 rounded-2xl transition-all hover:scale-105 active:scale-95 flex items-center gap-2 group/faq"
+                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
+                            <Info size={16} className="opacity-60 group-hover/faq:opacity-100 transition-opacity" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">How to Practice</span>
+                            <ChevronDown size={14} className={`transition-transform duration-300 ${showFAQ ? 'rotate-180' : ''}`} />
+                        </button>
+                    </div>
+
+                    <p className="max-w-xl text-base md:text-lg font-serif italic leading-relaxed opacity-80" style={{ color: 'var(--text-secondary)' }}>
+                        Turn the friction of daily life into the fuel of presence. Select a state to begin.
+                    </p>
+
+                    {/* Inline FAQ */}
+                    <AnimatePresence>
+                        {showFAQ && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden"
+                            >
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-dashed border-border-default mt-6">
+                                    {FAQ_ITEMS.map((item, i) => (
+                                        <div key={i} className="p-4 rounded-2xl space-y-1" style={{ background: 'var(--bg-secondary)' }}>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--accent-primary)' }}>{item.q}</p>
+                                            <p className="text-xs leading-relaxed opacity-70" style={{ color: 'var(--text-secondary)' }}>{item.a}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {SITUATIONS.map((sit) => (
-                    <button
-                        key={sit.id}
-                        onClick={() => setSelectedSituation(sit)}
-                        className="group relative flex flex-col text-left p-10 rounded-[40px] bg-white/[0.03] border border-white/5 hover:border-white/20 hover:bg-white/[0.05] transition-all duration-500 overflow-hidden"
-                    >
-                        <div className="relative z-10 space-y-6">
-                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-500" style={{ backgroundColor: `${sit.color}15` }}>
-                                <sit.icon className="w-8 h-8" style={{ color: sit.color }} />
-                            </div>
-                            <div className="space-y-2">
-                                <h3 className="text-2xl font-serif font-bold text-white group-hover:text-[#ABCEC9] transition-colors">{sit.title}</h3>
-                                <div className="flex items-center gap-2 text-[10px] font-bold text-white/70 uppercase tracking-widest">
-                                    <Clock className="w-3 h-3" /> {sit.duration}
-                                </div>
-                            </div>
-                            <p className="text-sm text-white/70 leading-relaxed font-serif line-clamp-3">
-                                {sit.description}
-                            </p>
-                        </div>
-                        {/* Decorative Gradient Overlay */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_top_right,var(--sit-color),transparent_70%)] opacity-0 group-hover:opacity-10 transition-opacity" style={{ '--sit-color': sit.color } as any} />
-                    </button>
-                ))}
-            </div>
-
-            {/* PROGRESSIVE CHALLENGES SECTION */}
-            <div className="pt-20 space-y-8">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-[#C65F9D]/20 flex items-center justify-center">
-                        <Trophy className="w-6 h-6 text-[#C65F9D]" />
+            {/* Search + Filters Sticky Bar */}
+            <div className="sticky top-0 z-20 py-4 -mx-4 px-4 bg-base/80 backdrop-blur-md space-y-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search size={14} className="absolute left-5 top-1/2 -translate-y-1/2 opacity-40" />
+                        <input
+                            value={query}
+                            onChange={e => setQuery(e.target.value)}
+                            placeholder="Find a practice by mood, tag, or duration..."
+                            className="w-full pl-12 pr-6 py-4 rounded-2xl text-sm outline-none transition-all focus:ring-2 focus:ring-accent-primary/20"
+                            style={{
+                                background: 'var(--bg-surface)',
+                                border: '1px solid var(--border-default)',
+                                color: 'var(--text-primary)',
+                            }}
+                        />
                     </div>
-                    <div>
-                        <h2 className="text-3xl font-serif font-bold text-white">Progressive Challenges</h2>
-                        <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-1">For When You're Ready</p>
+                    <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+                        {CATEGORIES.map(cat => (
+                            <button key={cat} onClick={() => setActiveCategory(cat)}
+                                className="whitespace-nowrap px-6 py-3.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all"
+                                style={{
+                                    background: activeCategory === cat ? 'var(--accent-primary)' : 'var(--bg-surface)',
+                                    color: activeCategory === cat ? 'var(--bg-base)' : 'var(--text-secondary)',
+                                    border: activeCategory === cat ? 'none' : '1px solid var(--border-default)',
+                                    boxShadow: activeCategory === cat ? '0 8px 16px -4px var(--accent-primary-muted)' : 'none'
+                                }}>
+                                {cat}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {CHALLENGES.map((challenge) => {
-                        const isUnlocked = isAdmin || ((user as any)?.xp || 0) >= challenge.xpRequired;
+                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1">
+                    {DURATION_TABS.map((tab, i) => (
+                        <button key={tab.label} onClick={() => setActiveDuration(i)}
+                            className="whitespace-nowrap flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all"
+                            style={{
+                                color: activeDuration === i ? 'var(--text-primary)' : 'var(--text-muted)',
+                                background: activeDuration === i ? 'var(--bg-secondary)' : 'transparent',
+                            }}>
+                            <Clock size={10} className={activeDuration === i ? 'text-accent-primary' : 'opacity-40'} />
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Curated Collections — only when unfiltered */}
+            {activeCategory === 'All' && activeDuration === 0 && !query && (
+                <div className="space-y-12">
+                    {COLLECTIONS.map(col => {
+                        const colItems = col.ids.map(id => SITUATIONS.find(s => s.id === id)!).filter(Boolean);
+                        const colColors: Record<string, string> = { 'start-here': '#ABCEC9', 'emotional-toolkit': '#FF7043', 'daily-anchors': '#9575CD' };
+                        const accent = colColors[col.id];
 
                         return (
-                            <div
-                                key={challenge.id}
-                                className={`relative p-8 rounded-[32px] border transition-all ${isUnlocked
-                                    ? 'bg-white/[0.03] border-white/10 hover:border-[#C65F9D]/50'
-                                    : 'bg-black/20 border-white/5 opacity-60'
-                                    }`}
-                            >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${isUnlocked ? 'bg-[#C65F9D]/20 text-[#C65F9D]' : 'bg-white/5 text-white/70'
-                                        }`}>
-                                        Week {challenge.week}
+                            <section key={col.id} className="space-y-6">
+                                <div className="flex items-baseline justify-between">
+                                    <div className="flex items-baseline gap-3">
+                                        <h3 className="text-xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>{col.label}</h3>
+                                        <span className="text-[10px] uppercase tracking-widest font-bold opacity-40" style={{ color: 'var(--text-muted)' }}>{col.desc}</span>
                                     </div>
-                                    {!isUnlocked && (
-                                        <div className="flex items-center gap-1 text-[10px] font-bold text-white/70 uppercase tracking-widest">
-                                            <Target className="w-3 h-3" />
-                                            {challenge.xpRequired} XP
+                                </div>
+                                <div className="flex gap-6 overflow-x-auto pb-8 -mx-4 px-4 no-scrollbar scroll-smooth">
+                                    {colItems.map(sit => (
+                                        <SituationalPracticeCard
+                                            key={sit.id}
+                                            situation={sit}
+                                            onClick={() => setSelectedSituation(sit)}
+                                            mode={mode}
+                                        />
+                                    ))}
+                                </div>
+                            </section>
+                        );
+                    })}
+                    <div className="pt-8 border-t border-dashed border-border-default">
+                        <h3 className="text-[11px] uppercase tracking-[0.4em] font-bold opacity-40" style={{ color: 'var(--text-muted)' }}>Discovery Library</h3>
+                    </div>
+                </div>
+            )}
+
+            {/* Compact list of filtered results */}
+            <div className="space-y-3">
+                <AnimatePresence mode="popLayout">
+                    {filtered.length === 0 && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="py-12 text-center space-y-2">
+                            <Sparkles className="mx-auto opacity-20 mb-4" size={32} />
+                            <p className="text-lg font-serif italic" style={{ color: 'var(--text-muted)' }}>
+                                The path is clear, but no practices match...
+                            </p>
+                            <button onClick={() => { setQuery(''); setActiveCategory('All'); setActiveDuration(0); }}
+                                className="text-[10px] font-bold uppercase tracking-widest text-accent-primary">
+                                Clear Filters
+                            </button>
+                        </motion.div>
+                    )}
+                    {filtered.map((sit, i) => {
+                        const Icon = sit.icon;
+                        return (
+                            <motion.button
+                                key={sit.id}
+                                layout
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ delay: i * 0.02 }}
+                                whileTap={{ scale: 0.99 }}
+                                onClick={() => setSelectedSituation(sit)}
+                                className="w-full flex items-center gap-5 p-3 rounded-[24px] text-left group transition-all duration-300"
+                                style={{
+                                    background: 'var(--bg-surface)',
+                                    border: '1px solid var(--border-subtle)',
+                                }}
+                            >
+                                <div className="w-16 h-16 flex-shrink-0 rounded-2xl overflow-hidden relative bg-secondary">
+                                    {(mode === 'dark' ? sit.imageDark : sit.imageLight) ? (
+                                        <img src={mode === 'dark' ? sit.imageDark : sit.imageLight} alt="" className="w-full h-full object-cover opacity-80" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center opacity-20">
+                                            <Icon size={24} />
                                         </div>
                                     )}
                                 </div>
-
-                                <h3 className={`text-xl font-serif font-bold mb-3 ${isUnlocked ? 'text-white' : 'text-white/70'}`}>
-                                    {challenge.title}
-                                </h3>
-
-                                <p className={`text-sm leading-relaxed ${isUnlocked ? 'text-white/60' : 'text-white/70 blur-[1px]'}`}>
-                                    {isUnlocked ? challenge.description : "Keep practicing to unlock this challenge."}
-                                </p>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {selectedSituation && !isPracticing && !showLogEntry && (
-                <div className="fixed inset-0 z-[110] bg-[#1a151b]/95 backdrop-blur-xl flex items-center justify-center p-8">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="max-w-2xl w-full card-glow p-12 space-y-8"
-                    >
-                        <div className="flex justify-between items-start">
-                            <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ backgroundColor: `${selectedSituation.color}15` }}>
-                                <selectedSituation.icon className="w-10 h-10" style={{ color: selectedSituation.color }} />
-                            </div>
-                            <button onClick={() => setSelectedSituation(null)} className="text-white/70 hover:text-white">✕</button>
-                        </div>
-
-                        <div className="space-y-6">
-                            <h2 className="text-4xl font-serif font-bold text-white">{selectedSituation.title}</h2>
-                            <div className="space-y-2">
-                                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#ABCEC9]">When to use</div>
-                                <p className="text-white/60 font-serif leading-relaxed italic">{selectedSituation.whenToUse}</p>
-                            </div>
-                            <div className="space-y-2">
-                                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">The Practice</div>
-                                <p className="text-lg text-white/80 leading-relaxed">{selectedSituation.description}</p>
-                            </div>
-                            <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-3">
-                                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70 flex items-center gap-2">
-                                    <Sparkles className="w-3 h-3" /> Real-life example
-                                </div>
-                                <p className="text-sm text-white/70 leading-relaxed italic">
-                                    {selectedSituation.realLifeExample}
-                                </p>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => setIsPracticing(true)}
-                            className="w-full py-6 bg-white text-black rounded-2xl font-bold uppercase tracking-[0.2em] text-xs shadow-lg hover:bg-white/90 transition-all flex items-center justify-center gap-3"
-                        >
-                            <Flame className="w-4 h-4" /> Start Guidance
-                        </button>
-                    </motion.div>
-                </div>
-            )}
-
-            {/* GUIDANCE MODAL */}
-            {/* GUIDANCE MODAL */}
-            {/* GUIDANCE MODAL */}
-            {showGuidance && createPortal(
-                <div className="fixed inset-0 z-[150] bg-[#1a151b]/95 backdrop-blur-xl flex items-center justify-center p-4">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="max-w-4xl w-full max-h-[90vh] card-glow flex flex-col relative overflow-hidden"
-                    >
-                        <div className="p-6 md:p-8 border-b border-white/5 flex justify-between items-center bg-[#1a151b]/50 backdrop-blur-lg flex-shrink-0">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-[#FFA726]/20 flex items-center justify-center">
-                                    <Lightbulb className="w-5 h-5 text-[#FFA726]" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl md:text-2xl font-serif font-bold text-white">Common Experiences</h2>
-                                    <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest hidden md:block">Guidance for your journey</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setShowGuidance(false)}
-                                className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar flex-1 min-h-0">
-                            {COMMON_EXPERIENCES.map((exp, i) => (
-                                <div key={i} className="space-y-4">
-                                    <h3 className="text-lg font-serif font-bold text-white border-l-4 border-[#ABCEC9] pl-4">{exp.title}</h3>
-
-                                    <div className="bg-white/5 rounded-2xl p-5 space-y-4">
-                                        <div>
-                                            <span className="text-[10px] font-bold text-[#ABCEC9] uppercase tracking-widest block mb-2">What's Happening</span>
-                                            <p className="text-white/80 leading-relaxed italic text-sm">{exp.whatIsHappening}</p>
-                                        </div>
-
-                                        <div>
-                                            <span className="text-[10px] font-bold text-[#ABCEC9] uppercase tracking-widest block mb-2">What to do</span>
-                                            <ul className="space-y-2">
-                                                {exp.whatToDo.map((step, j) => (
-                                                    <li key={j} className="flex items-start gap-3 text-white/60 text-sm leading-relaxed">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-white/20 mt-2 flex-shrink-0" />
-                                                        {step}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                <div className="flex-1 min-w-0 py-1">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <span className="text-[15px] font-serif font-medium" style={{ color: 'var(--text-primary)' }}>{sit.title}</span>
+                                        {/* Category pill only shown if filtered results are mixed */}
+                                        {activeCategory === 'All' && <CategoryPill cat={sit.category} />}
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <DurationPill dur={sit.duration} />
+                                        <div className="w-1 h-1 rounded-full bg-border-default md:block hidden" />
+                                        <p className="text-xs truncate opacity-60 md:block hidden" style={{ color: 'var(--text-secondary)' }}>{sit.description}</p>
                                     </div>
                                 </div>
-                            ))}
+                                <div className="pr-2 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-4 group-hover:translate-x-0 group-focus:opacity-100 group-focus:translate-x-0">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transform transition-transform active:scale-90"
+                                        style={{ background: sit.color, color: 'white' }}>
+                                        <Play size={14} fill="currentColor" />
+                                    </div>
+                                </div>
+                            </motion.button>
+                        );
+                    })}
+                </AnimatePresence>
+            </div>
+
+            {/* Progressive Challenges */}
+            <section className="pt-16">
+                <div className="bg-secondary/30 rounded-[32px] p-8 border border-border-subtle">
+                    <div className="flex items-center justify-between cursor-pointer group/chal" onClick={() => setShowChallenges(!showChallenges)}>
+                        <div className="flex items-center gap-5">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+                                <Trophy size={20} className="text-accent-primary" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>Progressive Challenges</h2>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40">Expand your horizon</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 opacity-40 group-hover/chal:opacity-100 transition-opacity">
+                            <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block">View 5 Challenges</span>
+                            <ChevronDown size={18} />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Progressive Challenges Content */}
+            <AnimatePresence>
+                {showChallenges && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
+                            {CHALLENGES.map(challenge => {
+                                const isUnlocked = false;
+                                return (
+                                    <div key={challenge.id}
+                                        className="p-6 rounded-[24px] border transition-all"
+                                        style={{
+                                            background: isUnlocked ? 'var(--bg-surface)' : 'var(--bg-secondary)',
+                                            borderColor: isUnlocked ? 'var(--border-default)' : 'var(--border-subtle)',
+                                            opacity: isUnlocked ? 1 : 0.65,
+                                        }}>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
+                                                style={{
+                                                    background: isUnlocked ? 'var(--accent-primary-muted)' : 'var(--bg-surface)',
+                                                    color: isUnlocked ? 'var(--accent-primary)' : 'var(--text-muted)',
+                                                }}>
+                                                Week {challenge.week}
+                                            </span>
+                                            {!isUnlocked && (
+                                                <span className="text-[9px] font-bold flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                                                    <Target size={10} /> {challenge.xpRequired} XP
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h3 className="text-base font-serif font-light mb-2" style={{ color: isUnlocked ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{challenge.title}</h3>
+                                        <p className="text-sm leading-relaxed opacity-60" style={{ filter: isUnlocked ? 'none' : 'blur(4px)' }}>
+                                            {isUnlocked ? challenge.description : 'Continue your journey to unlock this deeper awareness challenge.'}
+                                        </p>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </motion.div>
-                </div>,
+                )}
+            </AnimatePresence>
+
+            {/* Detail Modal Portal */}
+            {selectedSituation && !isPracticing && !showLogEntry && createPortal(
+                <AnimatePresence>
+                    <div className="fixed inset-0 z-[110] flex items-end md:items-center justify-center p-0 md:p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            onClick={() => setSelectedSituation(null)}
+                        />
+                        <motion.div
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="relative w-full md:max-w-xl max-h-[90vh] md:max-h-[80vh] overflow-y-auto rounded-t-[40px] md:rounded-[40px] shadow-2xl no-scrollbar"
+                            style={{ background: 'var(--bg-base)', border: '1px solid var(--border-default)' }}
+                        >
+                            {/* Mobile Handle */}
+                            <div className="md:hidden flex justify-center py-4 sticky top-0 bg-base z-10">
+                                <div className="w-12 h-1.5 rounded-full bg-border-default opacity-40" />
+                            </div>
+
+                            <div className="px-8 pb-10 md:pt-10 space-y-8">
+                                <div className="flex justify-between items-start">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-16 h-16 rounded-3xl flex items-center justify-center shadow-lg" style={{ background: selectedSituation.color + '15' }}>
+                                            {React.createElement(selectedSituation.icon, { size: 28, style: { color: selectedSituation.color }, strokeWidth: 1.5 })}
+                                        </div>
+                                        <div>
+                                            <div className="flex gap-2 mb-1">
+                                                <CategoryPill cat={selectedSituation.category} />
+                                                <DurationPill dur={selectedSituation.duration} />
+                                            </div>
+                                            <h2 className="text-3xl font-serif font-light leading-tight" style={{ color: 'var(--text-primary)' }}>{selectedSituation.title}</h2>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setSelectedSituation(null)}
+                                        className="p-3 rounded-full hover:bg-secondary transition-colors opacity-40 hover:opacity-100 md:block hidden">
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="p-6 rounded-3xl space-y-2" style={{ background: 'var(--bg-secondary)', borderLeft: `4px solid ${selectedSituation.color}50` }}>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Ideal Guidance For</p>
+                                        <p className="text-base font-serif italic" style={{ color: 'var(--text-secondary)' }}>{selectedSituation.whenToUse}</p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Pathway Steps</p>
+                                        <div className="grid gap-3">
+                                            {selectedSituation.steps.map((step, i) => (
+                                                <div key={i} className="flex gap-4 p-4 rounded-2xl bg-surface/50 border border-border-subtle">
+                                                    <span className="text-xs font-bold opacity-30 mt-0.5">{i + 1}</span>
+                                                    <div className="space-y-0.5">
+                                                        <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{step.title}</p>
+                                                        <p className="text-xs opacity-70" style={{ color: 'var(--text-secondary)' }}>{step.instruction}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 rounded-3xl" style={{ background: 'var(--accent-primary-muted)', border: '1px solid var(--accent-primary)10' }}>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent-primary)' }}>Witness Account</p>
+                                        <p className="text-xs font-serif italic leading-relaxed opacity-80">{selectedSituation.realLifeExample}</p>
+                                    </div>
+                                </div>
+
+                                <button onClick={() => setIsPracticing(true)}
+                                    className="w-full py-5 rounded-3xl font-bold uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-[0.98] shadow-xl"
+                                    style={{ background: selectedSituation.color, color: 'white' }}>
+                                    <Play size={16} fill="white" /> Embark on Journey
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                </AnimatePresence>,
                 document.body
             )}
-        </div>
+        </motion.div>
     );
 };

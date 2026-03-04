@@ -523,7 +523,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                 className="text-[var(--accent-secondary)] opacity-50"
                                 strokeWidth={1.5}
                             />
-                            <span className="text-[9px] tracking-[0.6em] uppercase text-[var(--text-muted)] font-bold font-sans">
+                            <span className="text-[9px] tracking-[0.6em] uppercase text-[var(--text-secondary)] font-bold font-sans">
                                 Consciousness Stream
                             </span>
                         </div>
@@ -534,14 +534,14 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                 <h1 className="text-[clamp(40px,5vw,60px)] font-serif font-light tracking-tight m-0 leading-[0.95] text-[var(--text-primary)]">
                                     The Power<br />of Now
                                 </h1>
-                                <p className="text-[9px] tracking-[0.65em] uppercase text-[var(--text-muted)] font-sans font-bold mt-4 opacity-100">
+                                <p className="text-[10px] tracking-[0.65em] uppercase text-[var(--text-secondary)] font-sans font-bold mt-4 opacity-90">
                                     Eckhart Tolle · Living Study
                                 </p>
                             </div>
 
                             {/* Real progress — computed from watched videos */}
                             <div className="text-right pt-2">
-                                <p className="text-[8px] tracking-[0.5em] uppercase text-[var(--text-muted)] font-sans font-bold mb-1.5">
+                                <p className="text-[9px] tracking-[0.5em] uppercase text-[var(--text-secondary)] font-sans font-bold mb-1.5 opacity-90">
                                     Progress
                                 </p>
                                 <motion.span
@@ -551,7 +551,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                                     className="text-[40px] font-serif font-light leading-none text-[var(--accent-primary)]"
                                 >
                                     {watchedParts.length}
-                                    <span className="text-sm opacity-40 ml-1 text-[var(--text-muted)]">
+                                    <span className="text-sm opacity-70 ml-1 text-[var(--text-secondary)]">
                                         / {totalParts}
                                     </span>
                                 </motion.span>

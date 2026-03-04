@@ -121,7 +121,7 @@ export const themes: Record<ThemeMode, Theme> = {
 
         // Orb - Dark Mode
         orbFill: "radial-gradient(circle at 40% 35%, rgba(200,160,190,0.22) 0%, rgba(180,140,170,0.12) 60%, rgba(160,120,150,0.04) 100%)",
-        orbText: "rgba(255, 255, 255, 0.7)",
+        orbText: "rgba(255, 255, 255, 0.95)", // Increased contrast, much lighter for dark mode
         orbParticle: "rgba(255, 255, 255, 0.5)",
         orbShadow: "none",
 
@@ -190,7 +190,7 @@ export const themes: Record<ThemeMode, Theme> = {
 
         // Orb - Light Mode Refined
         orbFill: "radial-gradient(circle at 40% 35%, rgba(175,140,165,0.22) 0%, rgba(155,120,145,0.18) 60%, rgba(145,110,135,0.06) 100%)",
-        orbText: "rgba(90,65,80,0.45)",
+        orbText: "rgba(60,40,50,0.75)", // Increased contrast, darker and more opaque for light mode
         orbParticle: "rgba(160,120,140,0.3)",
         orbShadow: "0 8px 40px rgba(140,100,120,0.08)",
 
