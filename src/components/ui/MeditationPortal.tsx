@@ -93,9 +93,6 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
         mouseY.set(e.clientY - top - height / 2);
     };
 
-    // Progress fraction for the step bar
-    const stepProgress = totalSteps > 0 ? (currentStepIndex + 1) / totalSteps : 0;
-
     return (
         <div
             onMouseMove={handleMouseMove}

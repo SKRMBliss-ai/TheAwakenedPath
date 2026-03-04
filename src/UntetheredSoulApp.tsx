@@ -787,6 +787,9 @@ export default function UntetheredApp() {
         onTogglePlay={() => setIsTimerRunning(!isTimerRunning)}
         isPlaying={isTimerRunning}
         progress={(currentStep + 1) / activePractice.steps.length}
+        totalSteps={activePractice.steps.length}
+        currentStepIndex={currentStep}
+        onClose={() => { setActivePractice(null); setIsTimerRunning(false); }}
       >
         {activePractice.type === 'breath' && (
           <div className="flex flex-col items-center justify-center py-12">
