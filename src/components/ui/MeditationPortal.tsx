@@ -1,86 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Play, Pause, RotateCcw, ChevronRight } from 'lucide-react';
+import { Play, Pause, RotateCcw, ChevronRight, X, Volume2, VolumeX } from 'lucide-react';
 import { AwakenStage } from './SacredCircle';
 import { VoiceService, useVoiceActive } from '../../services/voiceService';
 
-// ─── SACRED UI TOKENS v3 — Unified Warm Palette ──────────────────
+// ─── SACRED UI TOKENS v4 — Theme-aware via CSS variables ────────────────────
 const T = {
-    // Primary accent — warm magenta, unchanged
     magenta: 'var(--accent-primary)',
     magentaDim: 'var(--accent-primary-dim)',
-
-    // Secondary accent — was cyan, now warm lavender
     lavender: 'var(--accent-secondary)',
     lavenderDim: 'var(--accent-secondary-dim)',
-
-    // Tertiary — dusty mauve
     mauve: 'var(--accent-secondary-muted)',
-
-    // Functional — warm terracotta 
     rose: 'var(--accent-primary-border)',
-
-    // Background
     plum: 'var(--bg-primary)',
     deep: 'var(--bg-secondary)',
-
-    // Monospace UI only
     tealMuted: 'var(--text-muted)',
 };
 
-// ─── GRAIN OVERLAY ────────────────────────────────────────────────────────────
+// ─── GRAIN OVERLAY — CSS-only, no SVG filter overhead ─────────────────────────
 const GrainOverlay = () => (
-    <svg style={{
-        position: 'fixed', inset: 0, width: '100%', height: '100%',
-        opacity: 0.025, pointerEvents: 'none', zIndex: 200,
-    }}>
-        <filter id="grain">
-            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
-            <feColorMatrix type="saturate" values="0" />
-        </filter>
-        <rect width="100%" height="100%" filter="url(#grain)" />
-    </svg>
+    <div
+        style={{
+            position: 'fixed', inset: 0,
+            opacity: 0.018, pointerEvents: 'none', zIndex: 200,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '256px 256px',
+        }}
+    />
 );
-
-// ─── AMBIENT QUOTES ───────────────────────────────────────────────────────────
-const QUOTES = [
-    'The present moment is the only moment available to us.',
-    'Breathe, and know that you are alive.',
-    'Your stillness is your strength.',
-    'Witness the flow without becoming it.',
-    'Everything you need is already here.',
-];
 
 // ─── PROPS ────────────────────────────────────────────────────────────────────
 interface MeditationPortalProps {
     title: string;
     currentStepTitle: string;
     currentStepInstruction: string;
+    totalSteps: number;
+    currentStepIndex: number;
     onNext: () => void;
     onReset: () => void;
     onTogglePlay: () => void;
+    onClose: () => void;
     isPlaying: boolean;
     progress: number;
+    accentColor?: string;
     children?: React.ReactNode;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 export const MeditationPortal: React.FC<MeditationPortalProps> = ({
+    title,
     currentStepTitle,
     currentStepInstruction,
+    totalSteps,
+    currentStepIndex,
     onNext,
     onReset,
     onTogglePlay,
+    onClose,
     isPlaying,
+    accentColor,
     children,
 }) => {
     const [timer, setTimer] = useState(0);
-    const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-    const [practiceCount] = useState(() => Math.floor(Math.random() * 5000 + 10000).toLocaleString());
     const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1024);
     const isVoiceActive = useVoiceActive();
 
-    // Magnetic orb tilt on mouse move
+    // Magnetic orb tilt
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
     const rotateX = useSpring(useTransform(mouseY, [-400, 400], [3, -3]), { stiffness: 10, damping: 30 });
@@ -107,12 +93,14 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
         mouseY.set(e.clientY - top - height / 2);
     };
 
+    // Progress fraction for the step bar
+    const stepProgress = totalSteps > 0 ? (currentStepIndex + 1) / totalSteps : 0;
+
     return (
         <div
             onMouseMove={handleMouseMove}
             style={{
                 position: 'fixed', inset: 0,
-                // Account for sidebar on large screens (288px is equivalent to Tailwind's w-72)
                 left: isLargeScreen ? '288px' : '0px',
                 zIndex: 100, overflow: 'hidden',
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -122,40 +110,29 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
         >
             <GrainOverlay />
 
-            {/* ── THREE-LAYER DEPTH BACKGROUND ──────────────────────────────────── */}
-            {/* Layer 1 — deep plum undertow, slow */}
+            {/* ── BACKGROUND — simplified to 2 layers ──────────────────────────── */}
+            {/* Layer 1 — deep ambient undertow */}
             <motion.div
-                animate={{ scale: [1, 1.15, 1], opacity: [0.12, 0.22, 0.12] }}
+                animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.18, 0.1] }}
                 transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
                 style={{
                     position: 'absolute', inset: 0,
-                    background: `radial-gradient(ellipse 80% 70% at 50% 40%, #0B001480, transparent)`,
+                    background: `radial-gradient(ellipse 70% 60% at 50% 40%, var(--bg-secondary), transparent)`,
                     pointerEvents: 'none',
                 }}
             />
-            {/* Layer 2 — magenta mid glow */}
-            <motion.div
-                animate={{ scale: [1, 1.08, 1], opacity: [0.06, 0.14, 0.06] }}
-                transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                style={{
-                    position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)',
-                    width: 600, height: 600, borderRadius: '50%',
-                    background: `radial-gradient(circle, ${T.magenta}40, transparent)`,
-                    filter: 'blur(120px)', pointerEvents: 'none',
-                }}
-            />
-            {/* Layer 3 — teal heart, tight + fast — responds to voice */}
+            {/* Layer 2 — responsive center glow (reacts to voice) */}
             <motion.div
                 animate={{
-                    scale: isVoiceActive ? [1, 1.4, 1] : [0.95, 1.05, 0.95],
-                    opacity: isVoiceActive ? [0.15, 0.35, 0.15] : [0.04, 0.1, 0.04],
+                    scale: isVoiceActive ? [1, 1.25, 1] : [0.95, 1.05, 0.95],
+                    opacity: isVoiceActive ? [0.08, 0.2, 0.08] : [0.04, 0.1, 0.04],
                 }}
-                transition={{ duration: isVoiceActive ? 2 : 5, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{ duration: isVoiceActive ? 2.5 : 6, repeat: Infinity, ease: 'easeInOut' }}
                 style={{
-                    position: 'absolute', top: '30%', left: '50%', transform: 'translateX(-50%)',
-                    width: 280, height: 280, borderRadius: '50%',
-                    background: `radial-gradient(circle, ${T.lavender}80, transparent)`,
-                    filter: 'blur(60px)', pointerEvents: 'none',
+                    position: 'absolute', top: '25%', left: '50%', transform: 'translateX(-50%)',
+                    width: 400, height: 400, borderRadius: '50%',
+                    background: `radial-gradient(circle, ${accentColor || 'var(--accent-secondary)'}40, transparent)`,
+                    filter: 'blur(80px)', pointerEvents: 'none',
                 }}
             />
 
@@ -163,76 +140,132 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
             <header style={{
                 position: 'relative', zIndex: 30, width: '100%',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '28px 40px', boxSizing: 'border-box', flexShrink: 0,
+                padding: '20px 28px', boxSizing: 'border-box', flexShrink: 0,
             }}>
-                {/* Timer pill */}
+                {/* Close button */}
+                <motion.button
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                    onClick={onClose}
+                    style={{
+                        width: 40, height: 40, borderRadius: '50%', border: 'none',
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border-subtle)',
+                        color: 'var(--text-muted)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'color 0.3s, border-color 0.3s',
+                    }}
+                    onMouseEnter={e => {
+                        (e.target as HTMLElement).style.color = 'var(--text-primary)';
+                        (e.target as HTMLElement).style.borderColor = 'var(--border-default)';
+                    }}
+                    onMouseLeave={e => {
+                        (e.target as HTMLElement).style.color = 'var(--text-muted)';
+                        (e.target as HTMLElement).style.borderColor = 'var(--border-subtle)';
+                    }}
+                >
+                    <X size={16} strokeWidth={1.5} />
+                </motion.button>
+
+                {/* Timer + title pill */}
                 <motion.div
                     initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] as any }}
                     style={{
-                        padding: '8px 18px', borderRadius: 100,
-                        background: 'var(--bg-surface)',
-                        border: '1px solid var(--border-subtle)',
-                        backdropFilter: 'blur(20px)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                     }}
                 >
                     <span style={{
-                        fontSize: 12, letterSpacing: '0.2em', color: `${T.lavender}90`,
-                        fontFamily: 'ui-monospace, monospace', fontWeight: 400,
+                        fontSize: 9, letterSpacing: '0.5em', textTransform: 'uppercase',
+                        color: 'var(--text-muted)',
+                        fontFamily: 'system-ui, sans-serif', fontWeight: 700,
                     }}>
+                        {title}
+                    </span>
+                    <span style={{
+                        fontSize: 18, letterSpacing: '0.15em', color: 'var(--text-secondary)',
+                        fontFamily: 'Georgia, serif', fontWeight: 300,
+                        fontVariantNumeric: 'tabular-nums',
+                    }} className="font-serif">
                         {fmt(timer)}
                     </span>
                 </motion.div>
 
-                {/* Practicing count */}
+                {/* Voice indicator */}
                 <motion.div
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     transition={{ duration: 1, delay: 0.3 }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                 >
-                    {/* Live pulse dot */}
-                    <div style={{ position: 'relative', width: 7, height: 7 }}>
-                        <motion.div
-                            animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
-                            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                            style={{
-                                position: 'absolute', inset: 0, borderRadius: '50%',
-                                background: T.lavender,
-                            }}
-                        />
-                        <div style={{
-                            position: 'absolute', inset: 1, borderRadius: '50%',
-                            background: T.lavender,
-                            boxShadow: `0 0 10px ${T.lavender}`,
-                        }} />
-                    </div>
-                    <span style={{
-                        fontSize: 9, letterSpacing: '0.4em', textTransform: 'uppercase',
-                        color: 'var(--text-muted)',
-                        fontFamily: 'system-ui, sans-serif', fontWeight: 700,
-                    }}>
-                        {practiceCount} present
-                    </span>
+                    {isVoiceActive && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            {[0, 1, 2].map(i => (
+                                <motion.div
+                                    key={i}
+                                    animate={{ scaleY: [0.4, 1, 0.4] }}
+                                    transition={{
+                                        duration: 0.8, repeat: Infinity,
+                                        delay: i * 0.15, ease: 'easeInOut'
+                                    }}
+                                    style={{
+                                        width: 2, height: 12, borderRadius: 1,
+                                        background: 'var(--accent-secondary)',
+                                        opacity: 0.6,
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
+                    <Volume2 size={14} style={{
+                        color: isVoiceActive ? 'var(--accent-secondary)' : 'var(--text-muted)',
+                        opacity: isVoiceActive ? 0.8 : 0.3,
+                        transition: 'all 0.3s',
+                    }} />
                 </motion.div>
             </header>
+
+            {/* ── STEP PROGRESS BAR — thin, beautiful ──────────────────────────── */}
+            <div style={{
+                width: '100%', maxWidth: 600, padding: '0 28px',
+                boxSizing: 'border-box', flexShrink: 0,
+            }}>
+                <div style={{
+                    display: 'flex', gap: 4,
+                    width: '100%',
+                }}>
+                    {Array.from({ length: totalSteps }).map((_, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                flex: 1, height: 2, borderRadius: 1,
+                                background: i <= currentStepIndex
+                                    ? (accentColor || 'var(--accent-secondary)')
+                                    : 'var(--border-subtle)',
+                                opacity: i <= currentStepIndex ? (i === currentStepIndex ? 1 : 0.5) : 0.3,
+                                transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
+                            }}
+                        />
+                    ))}
+                </div>
+            </div>
 
             {/* ── MAIN STAGE ───────────────────────────────────────────────────── */}
             <main style={{
                 position: 'relative', zIndex: 20, flex: 1, width: '100%',
-                maxWidth: 1400, margin: '0 auto',
+                maxWidth: 1200, margin: '0 auto',
                 display: 'flex', flexDirection: isLargeScreen ? 'row' : 'column',
                 alignItems: 'center', justifyContent: 'center',
-                padding: '0 48px', boxSizing: 'border-box',
-                gap: 64, overflow: 'hidden',
+                padding: '0 40px', boxSizing: 'border-box',
+                gap: isLargeScreen ? 64 : 32, overflow: 'hidden',
             }}>
 
-                {/* ── ORB ZONE — pure void, no container ──────────────────────── */}
+                {/* ── ORB ZONE ──────────────────────────────────────────────── */}
                 <div style={{
                     position: 'relative', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                    {/* The orb — magnetic tilt */}
-                    <motion.div style={{ scale: isLargeScreen ? 1 : 0.75 }}>
+                    <motion.div style={{ scale: isLargeScreen ? 1 : 0.7 }}>
                         {children ?? (
                             <AwakenStage
                                 isAnimating={isPlaying}
@@ -249,40 +282,51 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                     flex: 1, display: 'flex', flexDirection: 'column',
                     alignItems: isLargeScreen ? 'flex-start' : 'center',
                     textAlign: isLargeScreen ? 'left' : 'center',
-                    maxWidth: 500,
+                    maxWidth: 480, gap: 16,
                 }}>
                     <AnimatePresence mode="wait">
                         <motion.div
-                            key={currentStepInstruction}
-                            initial={{ opacity: 0, filter: 'blur(20px)', y: 32 }}
+                            key={`${currentStepIndex}-${currentStepInstruction}`}
+                            initial={{ opacity: 0, filter: 'blur(12px)', y: 20 }}
                             animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-                            exit={{ opacity: 0, filter: 'blur(20px)', y: -20 }}
-                            transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] as any }}
-                            style={{ display: 'flex', flexDirection: 'column', gap: 24 }}
+                            exit={{ opacity: 0, filter: 'blur(12px)', y: -12 }}
+                            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] as any }}
+                            style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
                         >
-                            {/* Step label */}
-                            <span style={{
-                                fontSize: 9, letterSpacing: '0.7em', textTransform: 'uppercase',
-                                color: `${T.lavender}50`,
-                                fontFamily: 'system-ui, sans-serif', fontWeight: 700,
-                            }}>
-                                {currentStepTitle}
-                            </span>
+                            {/* Step label — e.g. "Step 2 of 4 · The Scan" */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                <span style={{
+                                    fontSize: 9, letterSpacing: '0.5em', textTransform: 'uppercase',
+                                    color: accentColor || 'var(--accent-secondary)',
+                                    fontFamily: 'system-ui, sans-serif', fontWeight: 700,
+                                    opacity: 0.7,
+                                }}>
+                                    Step {currentStepIndex + 1} of {totalSteps}
+                                </span>
+                                <span style={{
+                                    width: 3, height: 3, borderRadius: '50%',
+                                    background: 'var(--text-muted)', opacity: 0.3,
+                                }} />
+                                <span style={{
+                                    fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase',
+                                    color: 'var(--text-muted)',
+                                    fontFamily: 'system-ui, sans-serif', fontWeight: 600,
+                                }}>
+                                    {currentStepTitle}
+                                </span>
+                            </div>
 
-                            {/* Instruction */}
-                            <h2 style={{ fontSize: 'clamp(34px, 5vw, 68px)', fontWeight: 300, fontFamily: 'Georgia, serif', color: 'var(--text-primary)', lineHeight: 1.1, margin: 0, textShadow: `0 0 40px ${T.magenta}20` }}>
+                            {/* Instruction — the main text */}
+                            <h2 style={{
+                                fontSize: 'clamp(24px, 3.5vw, 44px)',
+                                fontWeight: 300,
+                                fontFamily: 'Georgia, serif',
+                                color: 'var(--text-primary)',
+                                lineHeight: 1.25,
+                                margin: 0,
+                            }} className="font-serif">
                                 {currentStepInstruction}
                             </h2>
-
-                            {/* Ambient quote */}
-                            <motion.p
-                                style={{
-                                    fontSize: 16, color: 'var(--text-secondary)',
-                                    fontStyle: 'italic', maxWidth: 360, lineHeight: 1.5,
-                                }}
-                            >
-                                {quote}
-                            </motion.p>
                         </motion.div>
                     </AnimatePresence>
                 </div>
@@ -292,24 +336,18 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
             <footer style={{
                 position: 'relative', zIndex: 30, width: '100%',
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
-                gap: 20, paddingBottom: 40, flexShrink: 0,
+                gap: 16, paddingBottom: 32, flexShrink: 0,
             }}>
-
-
                 {/* Control row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 48 }}>
-
-                    {/* Reset */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
                     <ControlButton onClick={onReset} label="restart">
-                        <RotateCcw size={18} strokeWidth={1.5} />
+                        <RotateCcw size={16} strokeWidth={1.5} />
                     </ControlButton>
 
-                    {/* Play / Pause — the orb's sibling */}
-                    <PlayButton isPlaying={isPlaying} onClick={onTogglePlay} />
+                    <PlayButton isPlaying={isPlaying} onClick={onTogglePlay} accentColor={accentColor} />
 
-                    {/* Next */}
                     <ControlButton onClick={onNext} label="next">
-                        <ChevronRight size={20} strokeWidth={1.5} />
+                        <ChevronRight size={18} strokeWidth={1.5} />
                     </ControlButton>
                 </div>
             </footer>
@@ -317,22 +355,26 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
     );
 };
 
-// ─── CONTROL BUTTON — small ghost pill ────────────────────────────────────────
-const ControlButton: React.FC<{ onClick: () => void; children: React.ReactNode; label: string }> = ({ onClick, children, label }) => {
+// ─── CONTROL BUTTON — smaller, cleaner ────────────────────────────────────────
+const ControlButton: React.FC<{
+    onClick: () => void;
+    children: React.ReactNode;
+    label: string;
+}> = ({ onClick, children, label }) => {
     const [hov, setHov] = useState(false);
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <motion.button
                 onHoverStart={() => setHov(true)} onHoverEnd={() => setHov(false)}
                 whileTap={{ scale: 0.88 }} onClick={onClick}
                 style={{
-                    width: 52, height: 52, borderRadius: '50%', cursor: 'pointer',
+                    width: 48, height: 48, borderRadius: '50%', cursor: 'pointer',
                     background: hov ? 'var(--bg-secondary)' : 'var(--bg-surface)',
                     border: `1px solid ${hov ? 'var(--border-default)' : 'var(--border-subtle)'}`,
                     color: hov ? 'var(--text-primary)' : 'var(--text-muted)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1)',
-                    boxShadow: hov ? `0 0 20px var(--glow-primary)` : 'none',
+                    boxShadow: hov ? `0 0 16px var(--glow-primary)` : 'none',
                 }}
             >
                 {children}
@@ -342,28 +384,33 @@ const ControlButton: React.FC<{ onClick: () => void; children: React.ReactNode; 
                 color: 'var(--text-muted)',
                 fontFamily: 'system-ui, sans-serif', fontWeight: 700,
                 opacity: hov ? 1 : 0, transition: 'opacity 0.3s',
+                height: 10,
             }}>{label}</span>
         </div>
     );
 };
 
-// ─── PLAY BUTTON — orb-sibling, center of the footer ─────────────────────────
-const PlayButton: React.FC<{ isPlaying: boolean; onClick: () => void }> = ({ isPlaying, onClick }) => {
+// ─── PLAY BUTTON — uses accent color from practice ────────────────────────────
+const PlayButton: React.FC<{
+    isPlaying: boolean;
+    onClick: () => void;
+    accentColor?: string;
+}> = ({ isPlaying, onClick, accentColor }) => {
     const [hov, setHov] = useState(false);
-    const T_local = { magenta: '#D16BA5', teal: '#ABCEC9' };
+    const color = accentColor || 'var(--accent-secondary)';
 
     return (
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {/* Outer pulse — only when playing */}
+            {/* Outer pulse ring — only when playing */}
             <AnimatePresence>
                 {isPlaying && (
                     <motion.div
-                        initial={{ scale: 1, opacity: 0.3 }}
-                        animate={{ scale: 1.8, opacity: 0 }}
+                        initial={{ scale: 1, opacity: 0.25 }}
+                        animate={{ scale: 1.7, opacity: 0 }}
                         transition={{ duration: 3, repeat: Infinity, ease: 'easeOut' }}
                         style={{
-                            position: 'absolute', width: 88, height: 88, borderRadius: '50%',
-                            border: `1px solid ${T_local.teal}`,
+                            position: 'absolute', width: 80, height: 80, borderRadius: '50%',
+                            border: `1px solid ${color}`,
                             pointerEvents: 'none',
                         }}
                     />
@@ -372,11 +419,11 @@ const PlayButton: React.FC<{ isPlaying: boolean; onClick: () => void }> = ({ isP
 
             {/* Hover glow */}
             <motion.div
-                animate={{ opacity: hov ? 1 : 0 }}
+                animate={{ opacity: hov ? 0.8 : 0 }}
                 style={{
-                    position: 'absolute', width: 100, height: 100, borderRadius: '50%',
-                    background: `radial-gradient(circle, ${T_local.magenta}20, transparent)`,
-                    filter: 'blur(16px)', pointerEvents: 'none',
+                    position: 'absolute', width: 96, height: 96, borderRadius: '50%',
+                    background: `radial-gradient(circle, ${color}15, transparent)`,
+                    filter: 'blur(12px)', pointerEvents: 'none',
                 }}
             />
 
@@ -386,19 +433,19 @@ const PlayButton: React.FC<{ isPlaying: boolean; onClick: () => void }> = ({ isP
                 whileTap={{ scale: 0.93 }}
                 onClick={onClick}
                 style={{
-                    position: 'relative', width: 88, height: 88, borderRadius: '50%',
+                    position: 'relative', width: 80, height: 80, borderRadius: '50%',
                     cursor: 'pointer',
                     background: isPlaying
-                        ? `radial-gradient(circle, rgba(255,255,255,0.07), rgba(255,255,255,0.02))`
-                        : `radial-gradient(circle, ${T_local.teal}20, ${T_local.teal}05)`,
+                        ? `radial-gradient(circle, rgba(255,255,255,0.06), rgba(255,255,255,0.02))`
+                        : `radial-gradient(circle, ${color}18, ${color}05)`,
                     border: `1px solid ${isPlaying
-                        ? (hov ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)')
-                        : (hov ? `${T_local.teal}60` : `${T_local.teal}25`)}`,
-                    color: isPlaying ? 'rgba(255,255,255,0.8)' : T_local.teal,
+                        ? (hov ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)')
+                        : (hov ? `${color}50` : `${color}20`)}`,
+                    color: isPlaying ? 'rgba(255,255,255,0.75)' : color,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     boxShadow: isPlaying
-                        ? (hov ? '0 0 40px rgba(255,255,255,0.06)' : 'none')
-                        : (hov ? `0 0 40px ${T_local.teal}30` : `0 0 20px ${T_local.teal}10`),
+                        ? (hov ? '0 0 30px rgba(255,255,255,0.04)' : 'none')
+                        : (hov ? `0 0 30px ${color}20` : `0 0 12px ${color}08`),
                     transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
                 }}
             >
@@ -407,13 +454,13 @@ const PlayButton: React.FC<{ isPlaying: boolean; onClick: () => void }> = ({ isP
                         <motion.div key="pause"
                             initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.6, opacity: 0 }} transition={{ duration: 0.25 }}>
-                            <Pause size={24} strokeWidth={1.5} />
+                            <Pause size={22} strokeWidth={1.5} />
                         </motion.div>
                     ) : (
                         <motion.div key="play"
                             initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.6, opacity: 0 }} transition={{ duration: 0.25 }}>
-                            <Play size={24} strokeWidth={1.5} style={{ marginLeft: 3 }} />
+                            <Play size={22} strokeWidth={1.5} style={{ marginLeft: 2 }} />
                         </motion.div>
                     )}
                 </AnimatePresence>
