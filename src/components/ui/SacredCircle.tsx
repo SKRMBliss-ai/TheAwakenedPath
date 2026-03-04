@@ -22,10 +22,13 @@ const ParticleField = ({ size, isLight, variant }: { size: number, isLight: bool
         canvas.height = size * dpr;
         ctx.scale(dpr, dpr);
 
-        const count = variant === 'A' ? 60 : variant === 'B' ? 40 : 80;
+        const count = variant === 'A' ? 50 : variant === 'B' ? 35 : 70; // Slightly fewer particles for restraint
         const cx = size / 2;
         const cy = size / 2;
         const radius = size / 2 - 20;
+
+        // Get particle color from CSS variable
+        const particleColor = getComputedStyle(document.documentElement).getPropertyValue('--orb-particle').trim() || (isLight ? 'rgba(140, 100, 120, 0.3)' : 'rgba(220, 180, 200, 0.3)');
 
         particles.current = Array.from({ length: count }, () => {
             const angle = Math.random() * Math.PI * 2;
@@ -35,35 +38,35 @@ const ParticleField = ({ size, isLight, variant }: { size: number, isLight: bool
                 y: cy + Math.sin(angle) * r,
                 baseX: cx + Math.cos(angle) * r,
                 baseY: cy + Math.sin(angle) * r,
-                size: Math.random() * 1.5 + 0.3,
-                speed: Math.random() * 0.002 + 0.001,
+                size: Math.random() * 1.2 + 0.3,
+                speed: Math.random() * 0.0015 + 0.0008, // Slower drift
                 offset: Math.random() * Math.PI * 2,
-                alpha: Math.random() * 0.4 + 0.1,
+                alpha: Math.random() * 0.35 + 0.1,
             };
         });
 
         let time = 0;
         const animate = () => {
             ctx.clearRect(0, 0, size, size);
-            time += 0.01;
+            time += 0.008; // Slower time step
 
             particles.current.forEach((p) => {
-                const drift = Math.sin(time * p.speed * 100 + p.offset) * 8;
-                const driftY = Math.cos(time * p.speed * 80 + p.offset) * 6;
+                const drift = Math.sin(time * p.speed * 100 + p.offset) * 6;
+                const driftY = Math.cos(time * p.speed * 80 + p.offset) * 4;
                 p.x = p.baseX + drift;
                 p.y = p.baseY + driftY;
 
                 const dist = Math.sqrt((p.x - cx) ** 2 + (p.y - cy) ** 2);
                 if (dist > radius) return;
 
-                const pulse = 0.5 + 0.5 * Math.sin(time * 2 + p.offset);
+                const pulse = 0.5 + 0.5 * Math.sin(time * 1.5 + p.offset);
                 const alpha = p.alpha * (0.6 + 0.4 * pulse);
 
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = isLight
-                    ? `rgba(140, 100, 120, ${alpha})`
-                    : `rgba(220, 180, 200, ${alpha})`;
+                // Extract base color if it's rgba
+                const baseColor = particleColor.substring(0, particleColor.lastIndexOf(',')) || 'rgba(140, 100, 120';
+                ctx.fillStyle = `${baseColor}, ${alpha})`;
                 ctx.fill();
             });
 
@@ -91,10 +94,10 @@ interface SacredCircleProps {
 }
 
 const SIZE_MAP: Record<string, number> = {
-    sm: 140,
-    md: 210,
-    lg: 280,
-    xl: 320,
+    sm: 120,
+    md: 220, // Reduced from 240/300
+    lg: 260,
+    xl: 300,
 };
 
 export const SacredCircle: React.FC<SacredCircleProps> = ({
@@ -105,13 +108,12 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
 }) => {
     const { mode } = useTheme();
     const isLight = mode === 'light';
-    const s = typeof size === 'number' ? size : (SIZE_MAP[size] || 240);
+    const s = typeof size === 'number' ? size : (SIZE_MAP[size] || 220);
 
     // Common Breathe Animation Class
     // Using CSS for infinite breathing as per rule 4
-    const breatheClass = isAnimating ? "animate-[breathe_4s_ease-in-out_infinite]" : "animate-[breathe_6s_ease-in-out_infinite]";
-    const breatheClassSlow = isAnimating ? "animate-[breathe_6s_ease-in-out_infinite]" : "animate-[breathe_8s_ease-in-out_infinite]";
-    const innerPulseClass = isAnimating ? "animate-[innerPulse_3s_ease-in-out_infinite]" : "animate-[innerPulse_4s_ease-in-out_infinite]";
+    const breatheClass = isAnimating ? "animate-[orb-breathe_5s_ease-in-out_infinite]" : "animate-[orb-breathe_7s_ease-in-out_infinite]";
+    const innerPulseClass = isAnimating ? "animate-[innerPulse_4s_ease-in-out_infinite]" : "animate-[innerPulse_5s_ease-in-out_infinite]";
 
     const renderVariant = () => {
         switch (variant) {
@@ -120,24 +122,21 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                     <div className="relative group" style={{ width: s, height: s }}>
                         {/* Outer breathing glow */}
                         <div
-                            className={`absolute -inset-3 rounded-full pointer-events-none ${breatheClass}`}
+                            className={`absolute -inset-4 rounded-full pointer-events-none ${breatheClass} opacity-40`}
                             style={{
                                 background: isLight
-                                    ? "radial-gradient(circle, rgba(160,120,140,0.25) 0%, transparent 70%)"
-                                    : "radial-gradient(circle, rgba(200,140,180,0.12) 0%, transparent 70%)",
+                                    ? "radial-gradient(circle, var(--accent-primary-dim) 0%, transparent 70%)"
+                                    : "radial-gradient(circle, var(--glow-primary) 0%, transparent 70%)",
                             }}
                         />
 
                         {/* Main circle */}
                         <div
-                            className={`relative w-full h-full rounded-full overflow-hidden shadow-2xl ${breatheClass}`}
+                            className={`relative w-full h-full rounded-full overflow-hidden ${breatheClass}`}
                             style={{
-                                background: isLight
-                                    ? "radial-gradient(circle at 40% 35%, #e1ccd8 0%, #d8bcc8 30%, #c8a8ba 60%, #b898ac 100%)"
-                                    : "radial-gradient(circle at 40% 35%, #3a2535 0%, #2d1a28 30%, #221420 60%, #1a0e18 100%)",
-                                boxShadow: isLight
-                                    ? "0 4px 30px rgba(140,100,130,0.12), 0 0 0 1px rgba(140,100,130,0.1), inset 0 0 40px rgba(255,255,255,0.08)"
-                                    : "0 0 0 1px rgba(200,140,180,0.1), 0 0 80px rgba(180,100,160,0.08), inset 0 0 40px rgba(200,140,180,0.04)",
+                                background: "var(--orb-fill)",
+                                border: "1px solid var(--border-subtle)",
+                                boxShadow: "var(--orb-shadow)",
                             }}
                         >
                             <ParticleField size={s} isLight={isLight} variant="A" />
@@ -146,7 +145,7 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                             <div className="absolute inset-0 rounded-full"
                                 style={{
                                     background: isLight
-                                        ? "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.25) 0%, transparent 50%)"
+                                        ? "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.4) 0%, transparent 50%)"
                                         : "radial-gradient(circle at 30% 25%, rgba(255,220,240,0.06) 0%, transparent 50%)",
                                 }}
                             />
@@ -154,14 +153,14 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                             {/* AWAKEN text */}
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <span
-                                    className="font-light tracking-[0.25em] uppercase pointer-events-none text-center"
+                                    className="font-light tracking-[0.3em] uppercase pointer-events-none text-center"
                                     style={{
                                         fontFamily: fontSerif,
-                                        fontSize: s * 0.1,
-                                        color: isLight ? "rgba(80,60,70,0.55)" : "rgba(255,240,248,0.7)",
+                                        fontSize: s * 0.095,
+                                        color: "var(--orb-text)",
                                         textShadow: isLight
-                                            ? "0 0 20px rgba(255,255,255,0.4)"
-                                            : "0 0 30px rgba(200,140,180,0.2)",
+                                            ? "0 0 15px rgba(255,255,255,0.4)"
+                                            : "0 0 25px rgba(200,160,180,0.2)",
                                     }}
                                 >
                                     {text}
@@ -171,11 +170,11 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
 
                         {/* Single thin ring */}
                         <div
-                            className={`absolute -inset-1.5 rounded-full border pointer-events-none ${breatheClass}`}
+                            className={`absolute -inset-2 rounded-full border pointer-events-none ${breatheClass} opacity-30`}
                             style={{
                                 borderColor: isLight
-                                    ? "rgba(200,160,180,0.12)"
-                                    : "rgba(200,140,180,0.08)",
+                                    ? "rgba(184, 112, 110, 0.15)"
+                                    : "rgba(240, 160, 170, 0.1)",
                             }}
                         />
                     </div>
@@ -186,35 +185,32 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                     <div className="relative" style={{ width: s, height: s }}>
                         {/* Outer ring 2 */}
                         <div
-                            className={`absolute -inset-[18px] rounded-full border-[0.5px] pointer-events-none ${breatheClassSlow}`}
+                            className={`absolute -inset-[18px] rounded-full border-[0.5px] pointer-events-none ${breatheClass} opacity-20`}
                             style={{
                                 borderColor: isLight
-                                    ? "rgba(180,140,160,0.1)"
-                                    : "rgba(200,160,180,0.06)",
-                                animationDelay: '0.5s'
+                                    ? "rgba(184, 112, 110, 0.12)"
+                                    : "rgba(240, 160, 170, 0.08)",
+                                animationDelay: '0.8s'
                             }}
                         />
 
                         {/* Outer ring 1 */}
                         <div
-                            className={`absolute -inset-2 rounded-full border pointer-events-none ${breatheClass}`}
+                            className={`absolute -inset-2 rounded-full border pointer-events-none ${breatheClass} opacity-30`}
                             style={{
                                 borderColor: isLight
-                                    ? "rgba(200,160,180,0.18)"
-                                    : "rgba(200,140,180,0.1)",
+                                    ? "rgba(184, 112, 110, 0.2)"
+                                    : "rgba(240, 160, 170, 0.12)",
                             }}
                         />
 
                         {/* Main circle */}
                         <div
-                            className={`relative w-full h-full rounded-full overflow-hidden shadow-2xl ${breatheClass}`}
+                            className={`relative w-full h-full rounded-full overflow-hidden ${breatheClass}`}
                             style={{
-                                background: isLight
-                                    ? "radial-gradient(circle at 45% 40%, #ede0e8 0%, #e2d2dc 40%, #d8c6d0 100%)"
-                                    : "radial-gradient(circle at 45% 40%, #2e1e2a 0%, #241828 40%, #1c1020 100%)",
-                                boxShadow: isLight
-                                    ? "0 0 0 1px rgba(200,160,180,0.12), 0 0 40px rgba(200,160,180,0.08)"
-                                    : "0 0 0 1px rgba(200,140,180,0.08), 0 0 60px rgba(180,100,160,0.06)",
+                                background: "var(--orb-fill)",
+                                border: "1px solid var(--border-subtle)",
+                                boxShadow: "var(--orb-shadow)",
                             }}
                         >
                             <ParticleField size={s} isLight={isLight} variant="B" />
@@ -222,7 +218,7 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                             <div className="absolute inset-0 rounded-full"
                                 style={{
                                     background: isLight
-                                        ? "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.2) 0%, transparent 45%)"
+                                        ? "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.4) 0%, transparent 45%)"
                                         : "radial-gradient(circle at 35% 30%, rgba(255,220,240,0.04) 0%, transparent 45%)",
                                 }}
                             />
@@ -232,11 +228,11 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                                     className="font-light tracking-[0.3em] uppercase pointer-events-none text-center"
                                     style={{
                                         fontFamily: fontSerif,
-                                        fontSize: s * 0.095,
-                                        color: isLight ? "rgba(255,255,255,0.8)" : "rgba(255,240,248,0.6)",
+                                        fontSize: s * 0.092,
+                                        color: "var(--orb-text)",
                                         textShadow: isLight
-                                            ? "0 0 15px rgba(200,160,180,0.25)"
-                                            : "0 0 20px rgba(200,140,180,0.15)",
+                                            ? "0 0 12px rgba(255,255,255,0.4)"
+                                            : "0 0 20px rgba(200,160,180,0.15)",
                                     }}
                                 >
                                     {text}
@@ -251,24 +247,22 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                     <div className="relative" style={{ width: s, height: s }}>
                         {/* Ambient glow behind */}
                         <div
-                            className={`absolute -inset-[30px] rounded-full pointer-events-none ${breatheClass}`}
+                            className={`absolute -inset-[30px] rounded-full pointer-events-none ${breatheClass} opacity-30`}
                             style={{
                                 background: isLight
-                                    ? "radial-gradient(circle, rgba(200,160,180,0.1) 0%, transparent 60%)"
-                                    : "radial-gradient(circle, rgba(180,100,160,0.08) 0%, transparent 60%)",
+                                    ? "radial-gradient(circle, var(--accent-primary-dim) 0%, transparent 60%)"
+                                    : "radial-gradient(circle, var(--glow-primary) 0%, transparent 60%)",
                             }}
                         />
 
-                        {/* Main circle — frosted glass */}
+                        {/* Main circle — refined surface */}
                         <div
-                            className={`relative w-full h-full rounded-full overflow-hidden backdrop-blur-[20px] ${breatheClass}`}
+                            className={`relative w-full h-full rounded-full overflow-hidden ${breatheClass}`}
                             style={{
-                                background: isLight
-                                    ? "radial-gradient(circle at 50% 50%, rgba(230,215,225,0.95) 0%, rgba(215,200,210,0.9) 100%)"
-                                    : "radial-gradient(circle at 50% 50%, rgba(40,28,38,0.95) 0%, rgba(28,18,28,0.9) 100%)",
-                                boxShadow: isLight
-                                    ? "0 0 0 1px rgba(200,160,180,0.08), inset 0 0 60px rgba(200,160,180,0.06)"
-                                    : "0 0 0 1px rgba(200,140,180,0.06), inset 0 0 60px rgba(180,100,160,0.04)",
+                                background: "var(--orb-fill)",
+                                border: "1px solid var(--border-subtle)",
+                                boxShadow: "var(--orb-shadow)",
+                                backdropFilter: "var(--blur-val)",
                             }}
                         >
                             <ParticleField size={s} isLight={isLight} variant="C" />
@@ -280,8 +274,8 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                                     width: s * 0.22,
                                     height: s * 0.22,
                                     background: isLight
-                                        ? "radial-gradient(circle, rgba(200,140,170,0.2) 0%, transparent 70%)"
-                                        : "radial-gradient(circle, rgba(200,140,180,0.15) 0%, transparent 70%)",
+                                        ? "radial-gradient(circle, var(--accent-primary-dim) 0%, transparent 70%)"
+                                        : "radial-gradient(circle, var(--glow-primary) 0%, transparent 70%)",
                                 }}
                             />
 
@@ -290,8 +284,8 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                                     className="font-light tracking-[0.28em] uppercase pointer-events-none text-center"
                                     style={{
                                         fontFamily: fontSerif,
-                                        fontSize: s * 0.09,
-                                        color: isLight ? "rgba(120,90,108,0.7)" : "rgba(220,190,210,0.5)",
+                                        fontSize: s * 0.088,
+                                        color: "var(--orb-text)",
                                     }}
                                 >
                                     {text}

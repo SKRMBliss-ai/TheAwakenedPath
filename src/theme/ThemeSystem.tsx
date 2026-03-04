@@ -48,6 +48,10 @@ export interface Theme {
     accentSecondaryBorder: string;
     glowCyan: string;
     glowGold: string;
+    orbFill: string;
+    orbText: string;
+    orbParticle: string;
+    orbShadow: string;
     borderDefault: string;
     borderSubtle: string;
     borderGlass: string;
@@ -102,29 +106,35 @@ export const themes: Record<ThemeMode, Theme> = {
         textMuted: "rgba(237, 233, 227, 0.45)",    // text-muted
         textDisabled: "rgba(237, 233, 227, 0.2)",
 
-        // Accents
+        // Accents - Streamlined to Magenta
         accentPrimary: "#f0a0aa",        // accent-rose
         accentPrimaryHover: "#f2b1bb",
         accentPrimaryMuted: "rgba(240, 160, 170, 0.1)",
         accentPrimaryBorder: "rgba(240, 160, 170, 0.3)",
-        accentSecondary: "#6ee7c2",      // accent-teal
-        accentSecondaryMuted: "rgba(110, 231, 194, 0.1)",
-        accentSecondaryBorder: "rgba(110, 231, 194, 0.25)",
+        accentSecondary: "#f0a0aa",      // Unified accent for dark mode consistency
+        accentSecondaryMuted: "rgba(240, 160, 170, 0.1)",
+        accentSecondaryBorder: "rgba(240, 160, 170, 0.25)",
 
         // Special glows
-        glowCyan: "rgba(110, 231, 194, 0.25)",
-        glowGold: "rgba(232, 184, 122, 0.25)",
+        glowCyan: "rgba(240, 160, 170, 0.1)",
+        glowGold: "rgba(232, 184, 122, 0.15)",
+
+        // Orb - Dark Mode
+        orbFill: "radial-gradient(circle at 40% 35%, rgba(200,160,190,0.22) 0%, rgba(180,140,170,0.12) 60%, rgba(160,120,150,0.04) 100%)",
+        orbText: "rgba(255, 255, 255, 0.7)",
+        orbParticle: "rgba(255, 255, 255, 0.5)",
+        orbShadow: "none",
 
         // Borders
         borderDefault: "rgba(255, 255, 255, 0.15)",
-        borderSubtle: "rgba(255, 255, 255, 0.1)", // border-card
-        borderGlass: "rgba(255, 255, 255, 0.12)",
+        borderSubtle: "rgba(255, 255, 255, 0.08)", // border-card
+        borderGlass: "rgba(255, 255, 255, 0.1)",
 
         // Shadows & Effects
         shadow: "none",
         shadowElevated: "0 8px 32px rgba(0, 0, 0, 0.5)",
         blur: "blur(14px)",
-        ambientGlow: "radial-gradient(ellipse at 50% 0%, rgba(110, 231, 194, 0.06), transparent 70%)", // glow-card
+        ambientGlow: "radial-gradient(ellipse at 50% 0%, rgba(240, 160, 170, 0.04), transparent 70%)", // glow-card
 
         // Component-specific
         chipBg: "rgba(255, 255, 255, 0.05)",
@@ -132,7 +142,7 @@ export const themes: Record<ThemeMode, Theme> = {
         chipSelectedBg: "rgba(240, 160, 170, 0.15)",
         chipSelectedBorder: "rgba(240, 160, 170, 0.45)",
         quoteBg: "rgba(255, 255, 255, 0.03)",
-        quoteBorder: "rgba(110, 231, 194, 0.35)",
+        quoteBorder: "rgba(240, 160, 170, 0.35)",
         navActiveBg: "rgba(240, 160, 170, 0.15)",
         navActiveBorder: "rgba(240, 160, 170, 0.45)",
 
@@ -152,9 +162,9 @@ export const themes: Record<ThemeMode, Theme> = {
         bgPrimary: "#f7f2ec",           // bg-page
         bgSecondary: "#f0e8de",         // bg-warm
         bgGradient: "linear-gradient(165deg, #f7f2ec 0%, #f0e8de 100%)",
-        bgSurface: "rgba(255, 255, 255, 0.85)", // bg-card
-        bgSurfaceHover: "rgba(255, 255, 255, 0.92)",
-        bgSurfaceActive: "rgba(255, 255, 255, 0.98)",
+        bgSurface: "rgba(255, 255, 255, 0.65)", // Revised bg-card for transparency
+        bgSurfaceHover: "rgba(255, 255, 255, 0.75)",
+        bgSurfaceActive: "rgba(255, 255, 255, 0.85)",
         bgInput: "#ffffff",             // bg-input
         bgInputFocus: "#ffffff",
         bgOverlay: "rgba(247, 242, 236, 0.92)",
@@ -162,8 +172,8 @@ export const themes: Record<ThemeMode, Theme> = {
         // Text
         textPrimary: "#2a2521",          // text-primary
         textSecondary: "#5c544e",        // text-secondary
-        textMuted: "rgba(42, 37, 33, 0.55)", // text-muted
-        textDisabled: "rgba(42, 37, 33, 0.3)",
+        textMuted: "rgba(42, 37, 33, 0.45)", // text-muted
+        textDisabled: "rgba(42, 37, 33, 0.25)",
 
         // Accents
         accentPrimary: "#b8706e",        // accent-rose
@@ -172,26 +182,32 @@ export const themes: Record<ThemeMode, Theme> = {
         accentPrimaryBorder: "rgba(184, 112, 110, 0.25)",
         accentSecondary: "#5a8679",      // accent-sage
         accentSecondaryMuted: "rgba(90, 134, 121, 0.12)",
-        accentSecondaryBorder: "rgba(90, 134, 121, 0.2)",
+        accentSecondaryBorder: "rgba(90, 134, 121, 0.15)",
 
         // Special accents
-        glowCyan: "rgba(90, 134, 121, 0.1)",
-        glowGold: "rgba(196, 149, 106, 0.1)",
+        glowCyan: "rgba(90, 134, 121, 0.08)",
+        glowGold: "rgba(196, 149, 106, 0.08)",
+
+        // Orb - Light Mode Refined
+        orbFill: "radial-gradient(circle at 40% 35%, rgba(175,140,165,0.22) 0%, rgba(155,120,145,0.18) 60%, rgba(145,110,135,0.06) 100%)",
+        orbText: "rgba(90,65,80,0.45)",
+        orbParticle: "rgba(160,120,140,0.3)",
+        orbShadow: "0 8px 40px rgba(140,100,120,0.08)",
 
         // Borders
-        borderDefault: "rgba(0, 0, 0, 0.12)",
-        borderSubtle: "rgba(0, 0, 0, 0.08)",    // border-card
-        borderGlass: "rgba(0, 0, 0, 0.06)",
+        borderDefault: "rgba(0, 0, 0, 0.08)",
+        borderSubtle: "rgba(0, 0, 0, 0.04)",    // border-card
+        borderGlass: "rgba(0, 0, 0, 0.04)",
 
         // Shadows & Effects
-        shadow: "0 2px 20px rgba(45, 42, 38, 0.06)", // shadow-card
-        shadowElevated: "0 8px 30px rgba(45, 42, 38, 0.1)",
+        shadow: "0 1px 3px rgba(45, 40, 35, 0.04)", // Subtle paper shadow
+        shadowElevated: "0 4px 12px rgba(45, 42, 38, 0.06)",
         blur: "blur(12px)",
         ambientGlow: "none",
 
         // Component-specific
         chipBg: "rgba(45, 42, 38, 0.04)",
-        chipBorder: "rgba(45, 42, 38, 0.1)",
+        chipBorder: "rgba(45, 42, 38, 0.08)",
         chipSelectedBg: "rgba(184, 112, 110, 0.1)",
         chipSelectedBorder: "rgba(184, 112, 110, 0.35)",
         quoteBg: "rgba(90, 134, 121, 0.06)",
@@ -200,7 +216,7 @@ export const themes: Record<ThemeMode, Theme> = {
         navActiveBorder: "rgba(184, 112, 110, 0.35)",
 
         // Toggle
-        toggleTrack: "rgba(0, 0, 0, 0.08)",
+        toggleTrack: "rgba(0, 0, 0, 0.06)",
         toggleThumb: "#5a4f48",
         toggleIcon: "☀️",
         fontFamilySerif: "'Cormorant Garamond', Georgia, serif",
@@ -284,21 +300,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         // Glow System (Adapts based on mode)
         if (mode === "dark") {
-            root.style.setProperty("--card-glow-base", "rgba(209, 107, 165, 0.25)");
-            root.style.setProperty("--card-glow-pulse", "rgba(209, 107, 165, 0.45)");
-            root.style.setProperty("--card-glow-surge", "rgba(209, 107, 165, 0.75)");
-            root.style.setProperty("--glow-primary", "rgba(209, 107, 165, 0.3)");
-            root.style.setProperty("--accent-primary-dim", "rgba(209, 107, 165, 0.06)");
-            root.style.setProperty("--accent-secondary-dim", "rgba(171, 206, 201, 0.06)");
+            root.style.setProperty("--card-glow-base", "rgba(240, 160, 170, 0.25)");
+            root.style.setProperty("--card-glow-pulse", "rgba(240, 160, 170, 0.45)");
+            root.style.setProperty("--card-glow-surge", "rgba(240, 160, 170, 0.75)");
+            root.style.setProperty("--glow-primary", "rgba(240, 160, 170, 0.3)");
+            root.style.setProperty("--accent-primary-dim", "rgba(240, 160, 170, 0.08)");
+            root.style.setProperty("--accent-secondary-dim", "rgba(240, 160, 170, 0.06)");
         } else {
-            // Subtle shadows/glows for light mode
-            root.style.setProperty("--card-glow-base", "rgba(158, 61, 117, 0.08)");
-            root.style.setProperty("--card-glow-pulse", "rgba(158, 61, 117, 0.14)");
-            root.style.setProperty("--card-glow-surge", "rgba(158, 61, 117, 0.2)");
-            root.style.setProperty("--glow-primary", "rgba(158, 61, 117, 0.12)");
-            root.style.setProperty("--accent-primary-dim", "rgba(158, 61, 117, 0.04)");
-            root.style.setProperty("--accent-secondary-dim", "rgba(61, 138, 128, 0.04)");
+            // Subtle shadows for light mode — No strong glows
+            root.style.setProperty("--card-glow-base", "rgba(184, 112, 110, 0.04)");
+            root.style.setProperty("--card-glow-pulse", "rgba(184, 112, 110, 0.08)");
+            root.style.setProperty("--card-glow-surge", "rgba(184, 112, 110, 0.12)");
+            root.style.setProperty("--glow-primary", "rgba(184, 112, 110, 0.06)");
+            root.style.setProperty("--accent-primary-dim", "rgba(184, 112, 110, 0.03)");
+            root.style.setProperty("--accent-secondary-dim", "rgba(90, 134, 121, 0.03)");
         }
+
+        // Orb Tokens
+        root.style.setProperty("--orb-fill", theme.orbFill);
+        root.style.setProperty("--orb-text", theme.orbText);
+        root.style.setProperty("--orb-particle", theme.orbParticle);
+        root.style.setProperty("--orb-shadow", theme.orbShadow);
 
         // Other tokens
         root.style.setProperty("--glow-cyan", theme.glowCyan);
@@ -412,8 +434,11 @@ export function ThemeToggle({ style = {} }: { style?: React.CSSProperties }) {
 
             {/* Thumb */}
             <motion.div
-                animate={{ x: mode === "dark" ? 32 : 2 }}
-                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                animate={{
+                    x: mode === "dark" ? 32 : 2,
+                    rotate: mode === "dark" ? 360 : 0
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 style={{
                     width: 28,
                     height: 28,

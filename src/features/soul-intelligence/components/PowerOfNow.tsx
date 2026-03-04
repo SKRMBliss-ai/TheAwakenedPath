@@ -12,6 +12,7 @@ import { db } from '../../../firebase';
 import { doc, onSnapshot, setDoc, arrayUnion } from 'firebase/firestore';
 import { useAchievements } from '../../achievements/useAchievements';
 import { type UserStats } from '../../achievements/achievementsDefs';
+import { isAdminEmail } from '../../../config/admin';
 
 import { CHAPTERS } from '../teachingData';
 
@@ -332,8 +333,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
     const { lastReminder, requestPermission } = usePresenceScheduler();
 
     // Admin Check
-    const admins = ['shrutikhungar@gmail.com', 'smriti.duggal@gmail.com', 'test@example.com'];
-    const isAdmin = !!(user?.email && admins.includes(user.email));
+    const isAdmin = isAdminEmail(user?.email);
 
     // UI State
     const [panicMode, setPanicMode] = useState(false);

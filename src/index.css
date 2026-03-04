@@ -2,8 +2,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-    /* Base Fluid Ease from Audit */
+    /* Base Fluid Ease */
     --ease-fluid: cubic-bezier(0.23, 1, 0.32, 1);
+
+    /* Typography Scale - Refinement Guide v1.0 */
+    --font-size-hero: 48px;
+    --font-size-section: 24px;
+    --font-size-card: 18px;
+    --font-size-body: 14px;
+    --font-size-caption: 11px;
+    --font-size-label: 10px;
+
+    /* Tracking Tokens */
+    --tracking-label: 0.2em;
+    --tracking-section: -0.01em;
+    --tracking-normal: 0;
+
+    /* Spacing & Rhythm */
+    --spacing-gap: 24px;
+    /* space-y-6 equivalent */
+    --card-padding: 24px;
+    /* p-6 */
+    --hero-padding: 32px;
+    /* p-8 */
+
+    /* Radii Refinement */
+    --radius-standard: 20px;
+    --radius-hero: 28px;
+    --radius-profile: 32px;
 }
 
 body {
@@ -12,9 +38,26 @@ body {
     color: var(--text-main);
     transition: background 0.6s var(--ease-fluid), color 0.6s var(--ease-fluid);
     font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: var(--font-size-body);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    letter-spacing: var(--tracking-normal);
+}
+
+h1 {
+    font-size: var(--font-size-hero);
+    letter-spacing: var(--tracking-section);
+    line-height: 1;
+}
+
+h2 {
+    font-size: var(--font-size-section);
+    letter-spacing: var(--tracking-section);
+}
+
+h3 {
+    font-size: var(--font-size-card);
 }
 
 h1,
@@ -27,16 +70,39 @@ h6 {
     font-weight: 300;
 }
 
-/* Animations */
+/* Standardized Label Style */
+.text-label {
+    font-size: var(--font-size-label);
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+}
+
+/* Animations - Reduction Strategy */
 @keyframes heartbeat {
 
     0%,
     100% {
-        box-shadow: 0 0 30px var(--card-glow-base);
+        box-shadow: 0 0 20px var(--card-glow-base);
     }
 
     50% {
-        box-shadow: 0 0 50px var(--card-glow-pulse);
+        box-shadow: 0 0 30px var(--card-glow-pulse);
+    }
+}
+
+/* Orb Breathing Animation - Optimized */
+@keyframes orb-breathe {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.03);
+        opacity: 1;
     }
 }
 
@@ -48,51 +114,35 @@ h6 {
         transform: translate(0, 0) rotate(0deg);
     }
 
-    33% {
-        border-radius: 70% 30% 46% 54% / 30% 29% 71% 70%;
-        transform: translate(5px, 5px) rotate(5deg);
-    }
-
-    66% {
-        border-radius: 30% 70% 70% 30% / 49% 60% 40% 51%;
-        transform: translate(-5px, 2px) rotate(-5deg);
+    50% {
+        border-radius: 60% 40% 55% 45% / 40% 35% 65% 60%;
+        transform: translate(2px, 2px) rotate(2deg);
     }
 }
 
+/* Simplified Float */
 @keyframes float-blob {
 
     0%,
     100% {
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
     }
 
     50% {
-        transform: translateY(-20px) scale(1.05);
-    }
-}
-
-@keyframes sheer-trail {
-    0% {
-        transform: translateX(-100%) skewX(-15deg);
-    }
-
-    100% {
-        transform: translateX(200%) skewX(-15deg);
+        transform: translateY(-10px);
     }
 }
 
 @keyframes text-reveal {
     from {
         opacity: 0;
-        transform: translateY(10px);
-        letter-spacing: -2px;
-        filter: blur(10px);
+        transform: translateY(8px);
+        filter: blur(4px);
     }
 
     to {
         opacity: 1;
         transform: translateY(0);
-        letter-spacing: normal;
         filter: blur(0);
     }
 }
@@ -111,47 +161,42 @@ h6 {
     }
 }
 
-@keyframes breathe {
-
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 0.6;
-    }
-
-    50% {
-        transform: scale(1.10);
-        opacity: 1;
-    }
+/* Base Card & UI Components - Less Glass, More Solid */
+.card-refined {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-standard);
+    padding: var(--card-padding);
+    transition: all 0.4s var(--ease-fluid);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
 }
 
-@keyframes innerPulse {
-
-    0%,
-    100% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 0.6;
-    }
-
-    50% {
-        transform: translate(-50%, -50%) scale(1.15);
-        opacity: 1;
-    }
+.card-refined:hover {
+    transform: translateY(-2px);
+    border-color: var(--brand-primary);
+    box-shadow: var(--shadow-elevated);
 }
 
-/* Base Card & UI Components */
+/* Button Press State Factory */
+.btn-press:active {
+    transform: scale(0.97);
+    filter: brightness(0.95);
+}
+
 .card-glow {
     transform: translateZ(0);
     will-change: box-shadow, transform;
-    background: var(--glass-surface);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 24px;
-    animation: heartbeat 4s ease-in-out infinite;
-    transition: all 0.6s var(--ease-fluid);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-standard);
+    padding: var(--card-padding);
+    /* Infinite animation removed per refinement rule: max 2 per viewport */
+    transition: all 0.4s var(--ease-fluid);
     position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow);
 }
 
 .card-glow::after {

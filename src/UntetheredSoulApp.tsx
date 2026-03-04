@@ -18,12 +18,13 @@ import { AnchorButton, NoiseOverlay } from './components/ui/SacredUI';
 import { GlobalSparkles } from './components/ui/GlobalSparkles';
 import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
 import { ThemeToggle, useTheme } from './theme/ThemeSystem';
-import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, getDocs, doc } from 'firebase/firestore';
 import appLogo from './assets/logo.png';
 import EngagementReport from './features/admin/EngagementReport';
 import { useAchievements } from './features/achievements/useAchievements';
-import { ACHIEVEMENTS, type Achievement } from './features/achievements/achievementsDefs';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
+import { MedalGrid } from './components/domain/MedalGrid';
+import { isAdminEmail } from './config/admin';
 
 interface PracticeStep {
   title: string;
@@ -434,6 +435,7 @@ export default function UntetheredApp() {
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [watchedParts, setWatchedParts] = useState<string[]>([]);
   const [stats, setStats] = useState({
     totalEntries: 0,
     streak: 0,
@@ -441,6 +443,17 @@ export default function UntetheredApp() {
     level: 1,
     joinedAt: currentUser?.metadata.creationTime ? new Date(currentUser.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'March 2026'
   });
+
+  // Sync Power of Now progress for achievement matching
+  useEffect(() => {
+    if (!currentUser) return;
+    const unsub = onSnapshot(doc(db, 'users', currentUser.uid, 'progress', 'powerOfNow'), (snap: any) => {
+      if (snap.exists()) {
+        setWatchedParts(snap.data().watched || []);
+      }
+    });
+    return unsub;
+  }, [currentUser]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -475,21 +488,21 @@ export default function UntetheredApp() {
       }
 
       const total = snapshot.size;
-      const xp = total * 100;
-      const level = Math.floor(xp / 1000) + 1;
+      const totalPoints = points; // Use points from useAchievements as canonical XP
+      const currentLevel = Math.floor(totalPoints / 1000) + 1;
 
       setStats({
         totalEntries: total,
         streak,
-        xp,
-        level,
+        xp: totalPoints,
+        level: currentLevel,
         joinedAt: stats.joinedAt
       });
 
       // Global check for unlocking new standard achievements on boot/refresh
       checkAndUnlock({
         journalEntries: total,
-        videosWatched: 0, // Should read from powerOfNow store later
+        videosWatched: watchedParts.length,
         chaptersComplete: 0,
         currentStreak: streak,
         maxStreak: streak,
@@ -502,7 +515,7 @@ export default function UntetheredApp() {
 
     };
     fetchStats();
-  }, [currentUser, checkAndUnlock]);
+  }, [currentUser, checkAndUnlock, points, watchedParts.length]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -545,8 +558,7 @@ export default function UntetheredApp() {
     }
   };
 
-  const admins = ['shrutikhungar@gmail.com', 'smriti.duggal@gmail.com', 'test@example.com'];
-  const isAdmin = !!(currentUser?.email && admins.includes(currentUser.email));
+  const isAdmin = isAdminEmail(currentUser?.email);
 
 
   useEffect(() => {
@@ -664,7 +676,7 @@ export default function UntetheredApp() {
       awardEvent('practice_session');
       checkAndUnlock({
         journalEntries: stats.totalEntries,
-        videosWatched: 0,
+        videosWatched: watchedParts.length,
         chaptersComplete: 0,
         currentStreak: stats.streak,
         maxStreak: stats.streak,
@@ -1073,26 +1085,7 @@ export default function UntetheredApp() {
                     <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{unlocked.length} of 16 Unlocked</span>
                   </div>
 
-                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-4">
-                    {ACHIEVEMENTS.map((ach: Achievement) => {
-                      const isUnlocked = unlocked.includes(ach.id);
-                      const Icon = ach.icon;
-                      return (
-                        <div
-                          key={ach.id}
-                          className={cn(
-                            "aspect-square rounded-2xl flex items-center justify-center transition-all duration-500",
-                            isUnlocked
-                              ? "bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 shadow-lg text-[var(--accent-primary)]"
-                              : "bg-[var(--bg-surface-hover)] border border-transparent text-[var(--text-muted)] opacity-30"
-                          )}
-                          title={ach.name}
-                        >
-                          <Icon className={cn("w-6 h-6", isUnlocked && "drop-shadow-[0_0_8px_var(--glow-primary)]")} />
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <MedalGrid unlocked={unlocked} />
                 </div>
 
                 {/* Account Settings */}
@@ -1118,10 +1111,27 @@ export default function UntetheredApp() {
                   </div>
 
                   <div className="pt-6 border-t border-[var(--border-subtle)]/50 flex flex-wrap gap-4">
-                    <button className="px-6 py-2 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all">
+                    <button
+                      onClick={async () => {
+                        if (!currentUser) return;
+                        const q = query(collection(db, 'users', currentUser.uid, 'journal'));
+                        const snap = await getDocs(q);
+                        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `awakened-path-journal-${new Date().toISOString().split('T')[0]}.json`;
+                        a.click();
+                      }}
+                      className="px-6 py-2 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all"
+                    >
                       Download Journal Export
                     </button>
-                    <button className="px-6 py-2 rounded-xl bg-transparent border border-rose-400/20 text-[9px] font-bold uppercase tracking-widest text-rose-400/60 hover:bg-rose-400/5 transition-all">
+                    <button
+                      onClick={() => alert("Archive functionality coming soon. Your data is safely persisted in the cloud.")}
+                      className="px-6 py-2 rounded-xl bg-transparent border border-rose-400/20 text-[9px] font-bold uppercase tracking-widest text-rose-400/60 hover:bg-rose-400/5 transition-all"
+                    >
                       Archive Session History
                     </button>
                   </div>

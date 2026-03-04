@@ -8,6 +8,7 @@ import { collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebas
 import { useAchievements } from '../achievements/useAchievements';
 import { AchievementsPanel } from '../achievements/AchievementsPanel';
 import { MAIN_PARTS_COUNT } from '../soul-intelligence/teachingData';
+import { isAdminEmail } from '../../config/admin';
 
 interface ActivityLog {
     id: string;
@@ -97,8 +98,7 @@ const StatsDashboard: React.FC = () => {
     }, [awardEvent]);
 
     useEffect(() => {
-        const admins = ['shrutikhungar@gmail.com', 'smriti.duggal@gmail.com', 'test@example.com'];
-        if (user?.email && admins.includes(user.email)) {
+        if (isAdminEmail(user?.email)) {
             setIsAdmin(true);
             fetchAdminLogs();
         }
