@@ -7,6 +7,7 @@ import { useJournalVoice } from "../hooks/useJournalVoice";
 import { ThoughtFeelingSelector } from "./ThoughtFeelingSelector";
 import { VoiceToggle } from "./VoiceToggle";
 import { FELT_EXPERIENCES } from "../../../data/feltExperiences";
+import { cn } from "../../../lib/utils";
 
 // ─── ANIMATIONS & STYLES ─────────────────────────────────────────────────────
 
@@ -30,31 +31,39 @@ const STEPS = [
 
 function StepTracker({ current }: { current: number }) {
     return (
-        <div className="flex items-center justify-center gap-1 py-3">
+        <div className="flex items-center justify-center gap-10 py-10 relative">
+            {/* Connecting Line */}
+            <div className="absolute top-[48px] left-1/2 -translate-x-1/2 w-40 h-px bg-[var(--border-subtle)] opacity-40 transition-all duration-700" />
+
             {STEPS.map((step, i) => {
                 const isActive = i === current;
-                const isDone = i < current;
+                const isPast = i < current;
                 return (
-                    <div key={step.num} className="flex items-center gap-1">
-                        <div className="flex flex-col items-center" style={{ minWidth: 56 }}>
-                            <div className="flex items-center justify-center rounded-full transition-all duration-500 shadow-sm"
-                                style={{
-                                    width: 32, height: 32,
-                                    background: isActive ? "var(--nav-active-bg)" : isDone ? "var(--accent-secondary-muted)" : "var(--bg-surface)",
-                                    border: isActive ? "2.5px solid var(--accent-primary)" : isDone ? "2.5px solid var(--accent-secondary-border)" : "2px solid var(--border-default)",
-                                }}>
-                                {isDone ? <span style={{ color: "var(--accent-secondary)", fontSize: 14, fontWeight: 700 }}>✓</span> :
-                                    <span style={{ color: isActive ? "var(--accent-primary)" : "var(--text-secondary)", fontSize: 13, fontWeight: 700 }}>{step.num}</span>}
-                            </div>
-                            <span className="mt-1 transition-colors duration-500"
-                                style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: isActive ? "var(--accent-primary)" : isDone ? "var(--accent-secondary)" : "var(--text-secondary)" }}>
-                                {step.label}
-                            </span>
-                        </div>
-                        {i < STEPS.length - 1 && (
-                            <div className="transition-colors duration-500"
-                                style={{ width: 24, height: 2, borderRadius: 1, marginBottom: 14, background: isDone ? "var(--accent-secondary-border)" : "var(--border-default)" }} />
-                        )}
+                    <div key={i} className="relative z-10 flex flex-col items-center gap-3">
+                        <motion.div
+                            animate={{
+                                scale: isActive ? 1.25 : 1,
+                                backgroundColor: isActive ? 'var(--accent-primary)' : isPast ? 'var(--accent-primary-muted)' : 'var(--bg-surface)',
+                                borderColor: isActive || isPast ? 'var(--accent-primary)' : 'var(--border-default)',
+                                boxShadow: isActive ? '0 0 25px var(--accent-primary-glow)' : 'none'
+                            }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-500"
+                        >
+                            {isPast && (
+                                <motion.span
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="text-[8px] text-white font-bold"
+                                >✓</motion.span>
+                            )}
+                        </motion.div>
+                        <span className={cn(
+                            "text-[9px] font-bold uppercase tracking-[0.25em] transition-all duration-500",
+                            isActive ? "opacity-100 text-[var(--accent-primary)] translate-y-0" : "opacity-40 text-[var(--text-muted)] translate-y-1"
+                        )}>
+                            {step.label}
+                        </span>
                     </div>
                 );
             })}
@@ -329,11 +338,39 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: { onSave: (
                                     <h2 style={{ fontSize: 28, fontFamily: "'Georgia', serif", color: "var(--text-primary)" }}>What's on your mind?</h2>
                                 </motion.div>
 
-                                <motion.div variants={fadeUp} style={{ padding: "20px 24px", borderRadius: 16, background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
-                                    <p style={{ fontSize: 15, color: "var(--text-muted)", fontStyle: "italic", fontFamily: "'Georgia', serif", lineHeight: 1.6 }}>
-                                        "The beginning of freedom is the realization that you are not the thinker."
+                                {/* Quote Section */}
+                                <motion.div
+                                    variants={fadeUp}
+                                    className="relative overflow-hidden group"
+                                    style={{
+                                        padding: "32px 28px",
+                                        borderRadius: 24,
+                                        background: "var(--bg-surface)",
+                                        border: "1px solid var(--border-subtle)",
+                                        boxShadow: "0 10px 30px -10px rgba(0,0,0,0.05)"
+                                    }}
+                                >
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-[var(--accent-primary)] opacity-30" />
+                                    <p style={{
+                                        fontSize: 17,
+                                        color: "var(--text-primary)",
+                                        fontStyle: "italic",
+                                        fontFamily: "'Cormorant Garamond', serif",
+                                        lineHeight: 1.6,
+                                        opacity: 0.9
+                                    }}>
+                                        "The beginning of freedom is the realization that you are not the thinker. The moment you start watching the thinker, a higher level of consciousness becomes activated."
                                     </p>
-                                    <p style={{ fontSize: 12, color: "var(--text-disabled)", marginTop: 8, letterSpacing: "0.05em", textTransform: "uppercase" }}>— Eckhart Tolle</p>
+                                    <div className="flex items-center gap-3 mt-6">
+                                        <div className="w-8 h-px bg-[var(--border-subtle)]" />
+                                        <p style={{
+                                            fontSize: 11,
+                                            color: "var(--text-muted)",
+                                            letterSpacing: "0.15em",
+                                            textTransform: "uppercase",
+                                            fontWeight: 600
+                                        }}>Eckhart Tolle</p>
+                                    </div>
                                 </motion.div>
 
                                 <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-4">

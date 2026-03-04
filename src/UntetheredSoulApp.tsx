@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Flame, Sparkles, Sun, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
@@ -58,6 +58,33 @@ const themeColors: any = {
   exhale: { text: 'EXHALE', scale: 0.6, glow: '0 0 40px rgba(171, 206, 201, 0.2)', duration: 4 },
   rest: { text: 'REST', scale: 0.5, glow: 'none', duration: 2 }
 };
+
+const EMOTION_MAP: Record<string, string> = {
+  ANXIETY: '#FF7043',
+  SADNESS: '#5C6BC0',
+  INSECURITY: '#C65F9D',
+  ANGER: '#E53935',
+  PEACE: '#ABCEC9',
+  JOY: '#FFD54F',
+  GUILT: '#9575CD',
+  SHAME: '#7986CB',
+};
+
+const TIME_GRADIENTS: Record<string, string> = {
+  morning: 'linear-gradient(135deg, rgba(255, 214, 112, 0.08) 0%, transparent 40%)',
+  afternoon: 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 40%)',
+  evening: 'linear-gradient(135deg, rgba(255, 112, 67, 0.08) 0%, transparent 40%)',
+  night: 'linear-gradient(135deg, rgba(92, 107, 192, 0.08) 0%, transparent 40%)',
+};
+
+function getDominantEmotionColor(emotionsStr?: string) {
+  if (!emotionsStr) return null;
+  const emotions = emotionsStr.split(', ').map(e => e.trim().toUpperCase());
+  for (const e of emotions) {
+    if (EMOTION_MAP[e]) return EMOTION_MAP[e];
+  }
+  return null;
+}
 
 // --- Sub-components moved outside for stability ---
 
@@ -169,8 +196,13 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
           animate={{ opacity: 1, y: 0 }}
           className="px-6 py-6 border-b border-[var(--border-subtle)]/30 mb-4"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-2 h-2 rounded-full bg-rose-400/60 shadow-[0_0_8px_rgba(251,113,133,0.4)]" />
+          <div className="flex items-center gap-5">
+            <div className="w-2.5 h-2.5 rounded-full"
+              style={{
+                backgroundColor: getDominantEmotionColor(lastEntry.emotions) || 'var(--accent-primary)',
+                boxShadow: `0 0 12px ${getDominantEmotionColor(lastEntry.emotions) || 'var(--accent-primary)'}80`
+              }}
+            />
             <div className="flex-1">
               <p className="text-sm font-serif italic text-[var(--text-secondary)] line-clamp-1 opacity-90">
                 "{lastEntry.thoughts}"
@@ -199,47 +231,31 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
             const isLocked = !isAdmin && ['panic'].includes(item.id);
             return (
               <div key={item.id} className="relative group/card">
-                {/* Backlit Magenta Glow - Matching Soul Stats */}
-                {!isLocked && (
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      opacity: [0.3, 0.5, 0.3]
-                    }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute inset-[-10px] rounded-[32px] blur-[30px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
-                  />
-                )}
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => !isLocked && setActiveTab(item.id)}
                   disabled={isLocked}
                   className={cn(
-                    "w-full relative overflow-hidden aspect-square bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[32px] p-4 flex flex-col items-center justify-center gap-4 transition-all",
-                    !isLocked ? "hover:border-[var(--border-glass)] hover:bg-[var(--bg-surface-hover)] active:scale-95 shadow-2xl" : "opacity-40 cursor-not-allowed"
+                    "w-full aspect-square relative overflow-hidden rounded-[32px] bg-[var(--bg-surface)] border border-[var(--border-default)] flex flex-col items-center justify-center gap-3 transition-all",
+                    !isLocked ? "hover:scale-[1.02] hover:bg-[var(--bg-surface-hover)] shadow-md" : "opacity-35 cursor-not-allowed"
                   )}
                 >
-                  {!isLocked && <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,var(--item-color),transparent_70%)]" style={{ '--item-color': item.color + '15' } as any} />}
+                  {/* Category-specific Ambient Gradient */}
+                  {!isLocked && (
+                    <div className="absolute inset-0 opacity-15 pointer-events-none"
+                      style={{ background: `radial-gradient(circle at 30% 30%, ${item.color}35, transparent 70%)` }} />
+                  )}
 
-                  <div className="relative w-24 h-24 flex items-center justify-center -mt-2">
-                    {isLocked ? (
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <Lock className="w-8 h-8 text-[var(--text-muted)]" />
-                        <div className="w-full h-full absolute inset-0 bg-[var(--bg-primary)]/30 backdrop-blur-[2px] rounded-full" />
-                      </div>
-                    ) : (
-                      <GlassShape icon={item.icon} color={item.color} variant={item.variant} className="w-full h-full" />
-                    )}
+                  <div className="relative w-12 h-12 flex items-center justify-center">
+                    <GlassShape icon={item.icon} color={item.color} variant={item.variant} className="w-full h-full" />
                   </div>
-
-                  <div className="text-center relative z-10">
-                    <div className="text-lg font-serif font-bold text-[var(--text-primary)] mb-0.5">{item.label}</div>
-                    <div className="text-[8px] font-bold text-[var(--text-muted)] tracking-[0.2em]">
-                      {isLocked ? 'COMING SOON' : item.sub}
-                    </div>
+                  <div className="text-center px-2">
+                    <p className="text-xs font-serif font-bold text-[var(--text-primary)]">{item.label}</p>
+                    <p className="text-[7px] font-bold text-[var(--text-muted)] uppercase tracking-widest mt-0.5">{item.sub}</p>
                   </div>
-                </button>
+                </motion.button>
               </div>
-            )
+            );
           })}
         </div>
       </section>
@@ -284,15 +300,18 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
           </div>
 
           {/* Stats Glass Pill */}
-          <div className="inline-flex items-center gap-6 px-8 py-3.5 rounded-full bg-[var(--bg-surface)]/50 border border-[var(--border-subtle)]/50 backdrop-blur-xl shadow-lg">
-            <div className="flex items-center gap-2.5">
-              <Heart size={14} className="text-rose-400" />
-              <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Flow</span>
+          <div className="inline-flex items-center gap-10 px-10 py-4 rounded-full bg-[var(--bg-surface)]/40 border border-[var(--border-subtle)]/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
+            {/* Inner Sheen */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+
+            <div className="flex items-center gap-3">
+              <Heart size={16} className="text-rose-400" />
+              <span className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.25em]">Flow</span>
             </div>
-            <div className="w-px h-4 bg-[var(--border-subtle)]/50" />
-            <div className="flex items-center gap-2.5">
-              <Flame size={14} className="text-amber-400" />
-              <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">{user.streak} Days</span>
+            <div className="w-px h-5 bg-[var(--border-subtle)]/40" />
+            <div className="flex items-center gap-3">
+              <Flame size={16} className="text-amber-400" style={{ filter: `drop-shadow(0 0 ${Math.min(user.streak, 10) * 2}px #fbbf24)` }} />
+              <span className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.25em]">{user.streak} Days</span>
             </div>
           </div>
         </div>
@@ -333,18 +352,23 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
       {/* Last Reflection One-Liner */}
       {lastEntry && (
         <section className="px-4">
-          <div className="flex items-center gap-4 py-6 border-b border-[var(--border-subtle)]/30">
-            <div className="w-2 h-2 rounded-full bg-rose-400/60 shadow-[0_0_10px_#fb718580]" />
+          <div className="flex items-center gap-6 py-8 border-b border-[var(--border-subtle)]/30 group/reflection">
+            <div className="w-3 h-3 rounded-full transition-all duration-500 group-hover/reflection:scale-125"
+              style={{
+                backgroundColor: getDominantEmotionColor(lastEntry.emotions) || 'var(--accent-primary)',
+                boxShadow: `0 0 20px ${getDominantEmotionColor(lastEntry.emotions) || 'var(--accent-primary)'}90`
+              }}
+            />
             <div className="flex-1">
-              <p className="text-sm font-serif italic text-[var(--text-secondary)] line-clamp-1 opacity-90">
+              <p className="text-base font-serif italic text-[var(--text-secondary)] line-clamp-1 opacity-90 group-hover/reflection:opacity-100 transition-opacity">
                 "{lastEntry.thoughts}"
               </p>
-              <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mt-1 font-bold">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest mt-1.5 font-bold">
                 Latest Reflection · {lastEntry.emotions}
               </p>
             </div>
-            <button onClick={() => setActiveTab('chapters')} className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent-primary)] font-bold hover:underline">
-              View Journal →
+            <button onClick={() => setActiveTab('chapters')} className="px-6 py-2 rounded-full border border-[var(--border-subtle)] text-[10px] uppercase tracking-[0.2em] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/5 font-bold transition-all">
+              Journal →
             </button>
           </div>
         </section>
@@ -390,6 +414,12 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
                     !isLocked ? "hover:border-[var(--border-glass)] hover:bg-[var(--bg-surface-hover)] shadow-lg hover:shadow-2xl" : "opacity-35 cursor-not-allowed grayscale"
                   )}
                 >
+                  {/* Category-specific Ambient Gradient */}
+                  {!isLocked && (
+                    <div className="absolute inset-0 opacity-20 pointer-events-none group-hover:opacity-30 transition-opacity duration-700"
+                      style={{ background: `radial-gradient(circle at 30% 30%, ${item.color}25, transparent 75%)` }} />
+                  )}
+
                   {!isLocked && <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,var(--item-color),transparent_70%)]" style={{ '--item-color': item.color + '15' } as any} />}
 
                   <div className="relative w-28 h-28 flex items-center justify-center">
@@ -433,6 +463,36 @@ export default function UntetheredApp() {
   const [lastEntry, setLastEntry] = useState<any>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
+
+  const timeOfDayGradient = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 11) return TIME_GRADIENTS.morning;
+    if (hour < 16) return TIME_GRADIENTS.afternoon;
+    if (hour < 21) return TIME_GRADIENTS.evening;
+    return TIME_GRADIENTS.night;
+  }, []);
+
+  const emotionColor = useMemo(() => {
+    return getDominantEmotionColor(lastEntry?.emotions);
+  }, [lastEntry]);
+
+  useEffect(() => {
+    if (emotionColor) {
+      document.documentElement.style.setProperty('--app-emotion-color', emotionColor);
+      const event = new CustomEvent('emotional_resonance', {
+        detail: {
+          physics: {
+            speed: 0.45,
+            distort: 0.16
+          }
+        }
+      });
+      document.dispatchEvent(event);
+    } else {
+      document.documentElement.style.removeProperty('--app-emotion-color');
+    }
+  }, [emotionColor]);
+
   const [stats, setStats] = useState({
     totalEntries: 0,
     journalCount: 0,
@@ -841,39 +901,43 @@ export default function UntetheredApp() {
                   setIsSidebarOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-400 relative",
-                  isActive ? "border-l-2 border-[var(--brand-primary)]" : "border-l-2 border-transparent",
-                  item.locked ? "opacity-35 cursor-not-allowed" : ""
+                  "w-full flex items-center gap-3 px-6 py-3 transition-all duration-400 relative group",
                 )}
                 style={{
-                  background: 'none', border: 'none',
-                  paddingLeft: isActive ? '14px' : '16px'
+                  background: isActive ? 'var(--bg-surface-hover)' : 'none',
+                  borderRight: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
                 }}
               >
+                {isActive && (
+                  <motion.div
+                    layoutId="sidebar-accent"
+                    className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/5 to-transparent pointer-events-none"
+                  />
+                )}
                 <Icon
-                  size={15}
-                  strokeWidth={isActive ? 1.5 : 1}
+                  size={16}
+                  strokeWidth={isActive ? 2 : 1.2}
                   className={cn(
-                    "transition-all duration-400",
-                    isActive ? "text-[var(--brand-primary)]" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
+                    "transition-all duration-400 relative z-10",
+                    isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
                   )}
                 />
                 <span className={cn(
-                  "text-[9px] uppercase tracking-[0.4em] font-bold transition-colors duration-400 font-sans",
-                  isActive ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
+                  "text-[10px] uppercase tracking-[0.35em] transition-colors duration-400 font-sans relative z-10",
+                  isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
                 )}>
                   {item.label}
                 </span>
-                {/* Active dot — slides smoothly */}
+                {/* Active glow dot */}
                 {isActive && (
                   <motion.div
                     layoutId="nav-active-dot"
-                    className="ml-auto w-1 h-1 rounded-full bg-[var(--brand-primary)] shadow-[0_0_8px_var(--brand-primary)]"
+                    className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_12px_var(--accent-primary)] relative z-10"
                   />
                 )}
                 {/* Locked Indicator */}
                 {item.locked && (
-                  <span className="ml-auto text-[7px] uppercase tracking-widest text-[var(--accent-secondary)] font-bold">Soon</span>
+                  <span className="ml-auto text-[7px] uppercase tracking-widest text-[var(--accent-secondary)] font-bold relative z-10">Soon</span>
                 )}
               </button>
             );
@@ -908,9 +972,14 @@ export default function UntetheredApp() {
 
       {/* MAIN CONTENT AREA */}
       <main className={cn(
-        "relative z-10 min-h-screen transition-all duration-700 pb-12",
+        "relative z-10 min-h-screen transition-all duration-700 pb-12 overflow-hidden",
         "lg:pl-72"
       )}>
+        {/* Time of Day Ambient Tint */}
+        <div
+          className="absolute inset-x-0 top-0 h-[600px] pointer-events-none transition-all duration-1000 z-0"
+          style={{ background: timeOfDayGradient }}
+        />
         <AnimatePresence>
           {/* Back Action - Integrated into the page flow */}
           {activeTab !== 'home' && (

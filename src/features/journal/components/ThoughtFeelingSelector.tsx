@@ -203,14 +203,17 @@ export function ThoughtFeelingSelector({
                                                     key={thought} variants={pop}
                                                     whileTap={{ scale: 0.97 }}
                                                     onClick={() => toggleThought(thought)}
+                                                    className="group relative"
                                                     style={{
                                                         display: "flex", alignItems: "center", gap: 12,
                                                         width: "100%", padding: "13px 14px",
                                                         borderRadius: 14,
                                                         border: `1.5px solid ${sel ? fe.color + "60" : "var(--border-default)"}`,
+                                                        borderLeftWidth: sel ? "5px" : "1.5px",
+                                                        borderLeftColor: sel ? fe.color : "var(--border-default)",
                                                         background: sel ? fe.color + "12" : "var(--bg-surface)",
                                                         cursor: "pointer", textAlign: "left",
-                                                        minHeight: 50, transition: "all 0.2s ease",
+                                                        minHeight: 50, transition: "all 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
                                                     }}
                                                 >
                                                     <div style={{

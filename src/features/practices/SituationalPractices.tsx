@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { ThemeToggle, useTheme } from '../../theme/ThemeSystem';
-import { MeditationPortal } from '../../components/ui/MeditationPortal.tsx';
+import { MeditationPortal } from '../../components/ui/MeditationPortal';
 import { db } from '../../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { VoiceService } from '../../services/voiceService';
@@ -281,6 +281,42 @@ const DURATION_TABS = [
     { label: '10+ min', fn: (d: number) => d > 10 },
 ];
 
+// ─── SVG Illustrations ────────────────────────────────────────────────────────
+const CollectionIcon = ({ type, color }: { type: string; color: string }) => {
+    if (type === 'start-here') return (
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M28 44V34M28 34C24 34 20 31 20 27C20 23 23 20 28 20C33 20 36 23 36 27C36 31 32 34 28 34Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M28 20C28 14 34 10 34 10C34 10 32 16 28 20Z" fill={color} fillOpacity="0.2" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+            <circle cx="28" cy="28" r="24" stroke={color} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+        </svg>
+    );
+    if (type === 'emotional-toolkit') return (
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22" cy="28" r="14" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.1" />
+            <circle cx="34" cy="28" r="14" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.1" />
+            <circle cx="28" cy="28" r="6" fill={color} />
+        </svg>
+    );
+    return ( // daily-anchors / fallback
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M28 12V44M16 24C16 24 20 38 28 38C36 38 40 24 40 24" stroke={color} strokeWidth="2" strokeLinecap="round" />
+            <circle cx="28" cy="12" r="4" stroke={color} strokeWidth="2" />
+        </svg>
+    );
+};
+
+const EmptyStateIllustration = () => (
+    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="40" stroke="var(--accent-primary)" strokeWidth="0.5" strokeDasharray="4 8" opacity="0.3">
+            <animateTransform attributeName="transform" type="rotate" from="0 60 60" to="360 60 60" dur="20s" repeatCount="Infinity" />
+        </circle>
+        <circle cx="60" cy="60" r="25" stroke="var(--accent-primary)" strokeWidth="0.5" strokeDasharray="2 4" opacity="0.2">
+            <animateTransform attributeName="transform" type="rotate" from="360 60 60" to="0 60 60" dur="15s" repeatCount="Infinity" />
+        </circle>
+        <path d="M50 60C50 54.4772 54.4772 50 60 50C65.5228 50 70 54.4772 70 60" stroke="var(--accent-primary)" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+    </svg>
+);
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 const DurationPill = ({ dur }: { dur: string }) => (
     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider"
@@ -304,86 +340,128 @@ const CategoryPill = ({ cat }: { cat: string }) => {
 const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situation; onClick: () => void; mode: 'light' | 'dark' }) => {
     const Icon = situation.icon;
     const accent = situation.color;
+    const isLight = mode === 'light';
+
+    const categoryStyles: Record<string, { gradient: string; tint: string; pattern?: string }> = {
+        Morning: {
+            gradient: isLight
+                ? `linear-gradient(135deg, rgba(255,183,77,0.15) 0%, rgba(255,243,224,0.1) 100%)`
+                : `linear-gradient(135deg, rgba(255,183,77,0.1) 0%, rgba(255,183,77,0.02) 100%)`,
+            tint: '#FFB74D'
+        },
+        Sleep: {
+            gradient: isLight
+                ? `linear-gradient(135deg, rgba(92,107,192,0.15) 0%, rgba(232,234,246,0.1) 100%)`
+                : `linear-gradient(135deg, rgba(92,107,192,0.1) 0%, rgba(92,107,192,0.02) 100%)`,
+            tint: '#5C6BC0'
+        },
+        Emotions: {
+            gradient: isLight
+                ? `linear-gradient(135deg, rgba(255,112,67,0.15) 0%, rgba(255,243,224,0.1) 100%)`
+                : `linear-gradient(135deg, rgba(255,112,67,0.1) 0%, rgba(255,112,67,0.02) 100%)`,
+            tint: '#FF7043'
+        },
+        Quick: {
+            gradient: isLight
+                ? `linear-gradient(135deg, rgba(198,95,157,0.1) 0%, rgba(252,228,236,0.05) 100%)`
+                : `linear-gradient(135deg, rgba(198,95,157,0.08) 0%, rgba(198,95,157,0.01) 100%)`,
+            tint: '#C65F9D'
+        },
+        Work: {
+            gradient: 'transparent',
+            tint: '#9575CD',
+            pattern: 'geometric'
+        }
+    };
+
+    const style = categoryStyles[situation.category] || categoryStyles.Morning;
 
     return (
         <motion.button
             whileHover={{ y: -6, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
-            className="flex-shrink-0 w-64 rounded-[40px] overflow-hidden text-left transition-all group relative border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-xl"
+            className="flex-shrink-0 w-64 rounded-[32px] overflow-hidden text-left transition-all group relative border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)]"
+            style={{ isolation: 'isolate' }}
         >
-            {/* Mesh Gradient Header */}
-            <div className="h-40 w-full relative overflow-hidden bg-[var(--bg-secondary)]">
-                {/* Dynamic Gradient Base */}
+            {/* Category Ambient Wash */}
+            <div
+                className="absolute inset-0 z-0 pointer-events-none opacity-40 group-hover:opacity-80 transition-opacity duration-700"
+                style={{ background: style.gradient }}
+            />
+
+            {/* Header Visual Area */}
+            <div className="h-36 w-full relative overflow-hidden bg-gradient-to-b from-transparent to-[var(--bg-surface)]/20">
+                {/* Dynamic Glow Orbs */}
                 <div
-                    className="absolute inset-0 opacity-40 group-hover:opacity-70 transition-opacity duration-1000"
+                    className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-1000"
                     style={{
-                        background: `radial-gradient(circle at 20% 30%, ${accent}70 0%, transparent 70%), 
-                                     radial-gradient(circle at 80% 70%, ${accent}40 0%, transparent 60%)`,
-                        filter: 'blur(30px)'
+                        background: `radial-gradient(circle at 10% 20%, ${accent}40 0%, transparent 60%), 
+                                     radial-gradient(circle at 90% 80%, ${accent}20 0%, transparent 50%)`,
+                        filter: 'blur(25px)'
                     }}
                 />
 
-                {/* Massive Watermark Icon */}
-                <div className="absolute right-[-15%] top-[-10%] opacity-[0.06] group-hover:opacity-[0.12] transition-all duration-1000 rotate-[-15deg] group-hover:rotate-0">
-                    <Icon size={180} strokeWidth={0.5} style={{ color: accent }} />
-                </div>
-
-                {/* The actual image if it exists */}
-                {(mode === 'dark' ? situation.imageDark : situation.imageLight) && (
-                    <div className="absolute inset-0 z-0 bg-[var(--bg-secondary)]">
-                        <img
-                            src={mode === 'dark' ? situation.imageDark : situation.imageLight}
-                            alt=""
-                            className="w-full h-full object-cover opacity-60 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-80 group-hover:scale-110 transition-all duration-1000"
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).style.opacity = '0';
-                            }}
-                        />
-                    </div>
+                {/* Grid/Pattern overlay */}
+                {situation.category === 'Work' && (
+                    <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.03] pointer-events-none"
+                        style={{
+                            backgroundImage: `linear-gradient(var(--border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)`,
+                            backgroundSize: '16px 16px'
+                        }}
+                    />
                 )}
 
-                {/* Glassy Floating Icon */}
-                <div className="absolute top-6 left-6 p-3 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-lg group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all">
-                    <Icon size={20} className="text-white" strokeWidth={1.5} />
+                {/* Subtle Grain Texture for premium feel */}
+                <div className="absolute inset-0 opacity-[0.02] mix-blend-overlay pointer-events-none"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+                />
+
+                {/* Massive Watermark Icon (Abstracted Background) */}
+                <div className="absolute -right-8 -top-8 opacity-[0.03] dark:opacity-[0.05] group-hover:opacity-[0.07] transition-all duration-1000 rotate-[-12deg] group-hover:rotate-0 scale-110">
+                    <Icon size={160} strokeWidth={0.5} style={{ color: accent }} />
                 </div>
 
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-surface)] via-[var(--bg-surface)]/20 to-transparent" />
+                {/* Floating Icon with Pulse for Quick category */}
+                <div className="absolute top-6 left-6 z-20">
+                    <div className="relative">
+                        {situation.category === 'Quick' && (
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.4, 1.8],
+                                    opacity: [0.3, 0.1, 0]
+                                }}
+                                transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    ease: "easeOut"
+                                }}
+                                className="absolute inset-[-12px] rounded-full"
+                                style={{ border: `2px solid ${accent}` }}
+                            />
+                        )}
+                        <div className="p-3.5 rounded-2xl backdrop-blur-md bg-white/40 dark:bg-black/20 border border-white/40 dark:border-white/10 shadow-[0_8px_16px_-4px_rgba(0,0,0,0.1)] relative z-10 transition-transform duration-500 group-hover:scale-110">
+                            <Icon size={22} style={{ color: isLight ? accent : 'white' }} />
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div className="p-7 space-y-4 relative z-10">
-                <div className="space-y-2">
-                    <div className="flex justify-between items-start">
-                        <h4 className="text-[19px] font-serif font-medium leading-tight text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">
-                            {situation.title}
-                        </h4>
-                    </div>
+            {/* Content Area */}
+            <div className="p-6 pt-2 space-y-4 relative z-10">
+                <div className="space-y-1.5">
+                    <h4 className="text-lg font-serif leading-tight group-hover:text-[var(--accent-primary)] transition-colors" style={{ color: 'var(--text-primary)' }}>
+                        {situation.title}
+                    </h4>
+                    <p className="text-[13px] leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
+                        {situation.description}
+                    </p>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1">
                     <DurationPill dur={situation.duration} />
                 </div>
-
-                <p className="text-[11px] leading-relaxed line-clamp-2 text-[var(--text-secondary)] opacity-60 group-hover:opacity-90 transition-opacity">
-                    {situation.description}
-                </p>
-
-                {/* Interactive Footer */}
-                <div className="pt-4 flex items-center justify-between border-t border-[var(--border-subtle)]/30">
-                    <span className="text-[8px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">
-                        Begin Presence
-                    </span>
-                    <motion.div
-                        animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                        className="w-1.5 h-1.5 rounded-full shadow-[0_0_12px_currentColor]"
-                        style={{ color: accent, background: 'currentColor' }}
-                    />
-                </div>
             </div>
-
-            {/* Subtle card-wide glow on hover */}
-            <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] pointer-events-none transition-opacity duration-700"
-                style={{ background: `radial-gradient(circle at center, ${accent}, transparent 80%)` }}
-            />
         </motion.button>
     );
 };
@@ -461,76 +539,99 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
 
     // ── Practice mode ──
     if (isPracticing && selectedSituation) {
-        return (
+        return createPortal(
             <MeditationPortal
                 title={selectedSituation.title}
-                currentStepTitle={selectedSituation.steps[currentStep].title}
-                currentStepInstruction={selectedSituation.steps[currentStep].instruction}
+                currentStepTitle={selectedSituation.steps[currentStep]?.title || "Preparing..."}
+                currentStepInstruction={selectedSituation.steps[currentStep]?.instruction || "Arriving in the present moment..."}
                 onNext={handleNextStep}
                 onReset={handleReset}
                 onTogglePlay={() => setIsPaused(!isPaused)}
                 isPlaying={!isPaused}
-                progress={(currentStep + 1) / selectedSituation.steps.length}
-            />
+                progress={selectedSituation.steps.length > 0 ? (currentStep + 1) / selectedSituation.steps.length : 0}
+            />,
+            document.body
         );
     }
 
     // ── Journal mode ──
     if (showLogEntry && selectedSituation) {
         return (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-2xl mx-auto space-y-10 pb-32">
-                <button onClick={() => setShowLogEntry(false)}
-                    className="flex items-center gap-2 transition-all group"
-                    style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Back</span>
-                </button>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto pb-32 relative">
+                {/* Completion Header Gradient */}
+                <div className="fixed top-0 left-0 right-0 h-40 pointer-events-none -z-10 opacity-30"
+                    style={{ background: `linear-gradient(to bottom, ${selectedSituation.color}40, transparent)` }} />
 
-                <header className="space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl"
-                        style={{ background: 'var(--accent-primary-muted)', border: '1px solid var(--border-subtle)' }}>
-                        <PenTool className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
-                        <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--accent-primary)' }}>Reflection Journal</span>
-                    </div>
-                    <h1 className="text-4xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>{selectedSituation.title}</h1>
-                </header>
-
-                <div className="space-y-7">
-                    {selectedSituation.journalPrompts.map((prompt, i) => (
-                        <div key={i} className="space-y-3">
-                            <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>{prompt.label}</label>
-                            <textarea
-                                value={journalData[prompt.label] || ''}
-                                onChange={e => setJournalData({ ...journalData, [prompt.label]: e.target.value })}
-                                placeholder={prompt.placeholder}
-                                className="w-full rounded-2xl p-5 text-lg font-serif outline-none resize-none min-h-[110px] transition-all"
-                                style={{
-                                    background: 'var(--bg-surface)',
-                                    border: '1px solid var(--border-default)',
-                                    color: 'var(--text-primary)',
-                                }}
-                            />
-                        </div>
-                    ))}
-
-                    <button onClick={handleSaveJournal}
-                        className="w-full py-4 rounded-2xl font-bold uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-95 shadow-lg"
-                        style={{ background: selectedSituation.color, color: 'white' }}>
-                        <Save className="w-4 h-4" /> Seal Reflection
+                <div className="space-y-10">
+                    <button onClick={() => setShowLogEntry(false)}
+                        className="flex items-center gap-2 transition-all group"
+                        style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Back</span>
                     </button>
+
+                    <header className="space-y-6 text-center">
+                        <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center shadow-lg mb-4"
+                            style={{ background: selectedSituation.color, color: 'white' }}>
+                            <CheckCircle2 size={32} />
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]" style={{ color: selectedSituation.color }}>Practice Complete</h3>
+                            <div className="flex items-center justify-center gap-4">
+                                {React.createElement(selectedSituation.icon, { size: 24, style: { color: selectedSituation.color }, opacity: 0.6 })}
+                                <h1 className="text-4xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>Reflect</h1>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="space-y-7 bg-[var(--bg-surface)] p-8 rounded-[40px] border border-[var(--border-subtle)] shadow-sm">
+                        {selectedSituation.journalPrompts.map((prompt, i) => (
+                            <div key={i} className="space-y-3">
+                                <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>{prompt.label}</label>
+                                <textarea
+                                    value={journalData[prompt.label] || ''}
+                                    onChange={e => setJournalData({ ...journalData, [prompt.label]: e.target.value })}
+                                    placeholder={prompt.placeholder}
+                                    className="w-full rounded-2xl p-6 text-lg font-serif outline-none resize-none min-h-[140px] transition-all focus:border-[var(--accent-primary)]"
+                                    style={{
+                                        background: 'var(--bg-secondary)',
+                                        border: '1px solid var(--border-default)',
+                                        color: 'var(--text-primary)',
+                                    }}
+                                />
+                            </div>
+                        ))}
+
+                        <button onClick={handleSaveJournal}
+                            className="w-full py-5 rounded-3xl font-bold uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95 shadow-xl"
+                            style={{ background: selectedSituation.color, color: 'white' }}>
+                            <Save className="w-4 h-4" /> Seal Reflection
+                        </button>
+                    </div>
                 </div>
             </motion.div>
         );
     }
 
     // ── Main browse view ──
+    const timeOfDayTint = useMemo(() => {
+        const hour = new Date().getHours();
+        if (hour >= 6 && hour < 12) return 'radial-gradient(circle at top right, rgba(255,183,77,0.06), transparent 50%)';
+        if (hour >= 17 && hour < 21) return 'radial-gradient(circle at top right, rgba(255,112,67,0.06), transparent 50%)';
+        if (hour >= 21 || hour < 6) return 'radial-gradient(circle at top right, rgba(92,107,192,0.1), transparent 50%)';
+        return 'none';
+    }, []);
+
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 pb-32">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 pb-32 relative">
+            {/* Ambient Time of Day Tint */}
+            <div className="fixed inset-0 pointer-events-none -z-10" style={{ background: timeOfDayTint }} />
 
             {/* Header */}
             <header className="relative py-8 md:py-12 px-6 md:px-8 rounded-[32px] overflow-hidden group">
+                <Search size={14} className="absolute left-5 top-1/2 -translate-y-1/2 opacity-40 text-[var(--text-primary)]" />
                 {/* Ambient Aura */}
-                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-20 pointer-events-none"
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-10 pointer-events-none"
                     style={{ background: 'var(--accent-primary)' }} />
 
                 <div className="relative z-10 space-y-4">
@@ -635,10 +736,13 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
 
                         return (
                             <section key={col.id} className="space-y-6">
-                                <div className="flex items-baseline justify-between">
-                                    <div className="flex items-baseline gap-3">
-                                        <h3 className="text-xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>{col.label}</h3>
-                                        <span className="text-[10px] uppercase tracking-widest font-bold opacity-40" style={{ color: 'var(--text-muted)' }}>{col.desc}</span>
+                                <div className="flex items-center gap-5">
+                                    <div className="p-1 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm">
+                                        <CollectionIcon type={col.id} color={accent} />
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <h3 className="text-2xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>{col.label}</h3>
+                                        <p className="text-[10px] uppercase tracking-widest font-bold opacity-50" style={{ color: 'var(--text-muted)' }}>{col.desc}</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-6 overflow-x-auto pb-8 -mx-4 px-4 no-scrollbar scroll-smooth">
@@ -665,15 +769,19 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                 <AnimatePresence mode="popLayout">
                     {filtered.length === 0 && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="py-12 text-center space-y-2">
-                            <Sparkles className="mx-auto opacity-20 mb-4" size={32} />
-                            <p className="text-lg font-serif italic" style={{ color: 'var(--text-muted)' }}>
-                                The path is clear, but no practices match...
-                            </p>
-                            <button onClick={() => { setQuery(''); setActiveCategory('All'); setActiveDuration(0); }}
-                                className="text-[10px] font-bold uppercase tracking-widest text-accent-primary">
-                                Clear Filters
-                            </button>
+                            className="py-16 text-center space-y-6">
+                            <div className="flex justify-center">
+                                <EmptyStateIllustration />
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-xl font-serif italic text-[var(--text-muted)]">
+                                    The path is clear, but no practices match...
+                                </p>
+                                <button onClick={() => { setQuery(''); setActiveCategory('All'); setActiveDuration(0); }}
+                                    className="px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest border border-[var(--accent-primary-border)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary-muted)]/10 transition-all">
+                                    Clear all filters
+                                </button>
+                            </div>
                         </motion.div>
                     )}
                     {filtered.map((sit, i) => {
@@ -687,7 +795,12 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                                 exit={{ opacity: 0, scale: 0.98 }}
                                 transition={{ delay: i * 0.02 }}
                                 whileTap={{ scale: 0.99 }}
-                                onClick={() => setSelectedSituation(sit)}
+                                onClick={() => {
+                                    setCurrentStep(0);
+                                    setIsPaused(false);
+                                    setShowLogEntry(false);
+                                    setSelectedSituation(sit);
+                                }}
                                 className="w-full flex items-center gap-5 p-3 rounded-[24px] text-left group transition-all duration-300"
                                 style={{
                                     background: 'var(--bg-surface)',
@@ -762,30 +875,41 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                                 const isUnlocked = false;
                                 return (
                                     <div key={challenge.id}
-                                        className="p-6 rounded-[24px] border transition-all"
+                                        className="p-7 rounded-[32px] border transition-all relative overflow-hidden group/card"
                                         style={{
                                             background: isUnlocked ? 'var(--bg-surface)' : 'var(--bg-secondary)',
                                             borderColor: isUnlocked ? 'var(--border-default)' : 'var(--border-subtle)',
-                                            opacity: isUnlocked ? 1 : 0.65,
                                         }}>
-                                        <div className="flex justify-between items-start mb-3">
-                                            <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
+                                        {!isUnlocked && (
+                                            <div className="absolute top-6 right-6 opacity-30 group-hover/card:opacity-60 transition-opacity">
+                                                <Target size={18} />
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between items-start mb-4">
+                                            <span className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full"
                                                 style={{
                                                     background: isUnlocked ? 'var(--accent-primary-muted)' : 'var(--bg-surface)',
                                                     color: isUnlocked ? 'var(--accent-primary)' : 'var(--text-muted)',
+                                                    border: '1px solid var(--border-subtle)'
                                                 }}>
-                                                Week {challenge.week}
+                                                Phase {challenge.week}
                                             </span>
-                                            {!isUnlocked && (
-                                                <span className="text-[9px] font-bold flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                                                    <Target size={10} /> {challenge.xpRequired} XP
-                                                </span>
-                                            )}
                                         </div>
-                                        <h3 className="text-base font-serif font-light mb-2" style={{ color: isUnlocked ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{challenge.title}</h3>
-                                        <p className="text-sm leading-relaxed opacity-60" style={{ filter: isUnlocked ? 'none' : 'blur(4px)' }}>
-                                            {isUnlocked ? challenge.description : 'Continue your journey to unlock this deeper awareness challenge.'}
+                                        <h3 className="text-lg font-serif font-light mb-3" style={{ color: 'var(--text-primary)' }}>{challenge.title}</h3>
+                                        <p className="text-sm leading-relaxed text-[var(--text-secondary)] opacity-70 mb-6">
+                                            {challenge.description}
                                         </p>
+                                        {!isUnlocked && (
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between text-[8px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                                                    <span>Unlock at {challenge.xpRequired} pts</span>
+                                                    <span>120 / {challenge.xpRequired} XP</span>
+                                                </div>
+                                                <div className="h-1 w-full bg-[var(--border-subtle)] rounded-full overflow-hidden">
+                                                    <div className="h-full bg-[var(--accent-primary)] rounded-full opacity-30" style={{ width: `${(120 / challenge.xpRequired) * 100}%` }} />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -813,63 +937,112 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                             className="relative w-full md:max-w-xl max-h-[90vh] md:max-h-[80vh] overflow-y-auto rounded-t-[40px] md:rounded-[40px] shadow-2xl no-scrollbar"
                             style={{ background: 'var(--bg-base)', border: '1px solid var(--border-default)' }}
                         >
-                            {/* Mobile Handle */}
-                            <div className="md:hidden flex justify-center py-4 sticky top-0 bg-base z-10">
-                                <div className="w-12 h-1.5 rounded-full bg-border-default opacity-40" />
+                            {/* Hero Gradient Zone */}
+                            <div className="h-24 rounded-t-[40px] relative overflow-hidden flex flex-col items-center justify-center gap-1.5">
+                                <div className="absolute inset-0 opacity-20" style={{ background: `linear-gradient(135deg, ${selectedSituation.color}, #ffffff00)` }} />
+                                <button onClick={() => setSelectedSituation(null)}
+                                    className="absolute top-3 right-5 p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-md">
+                                    <X size={16} className="text-[var(--text-primary)]" />
+                                </button>
+
+                                <div className="relative">
+                                    <div className="absolute inset-0 blur-xl opacity-40" style={{ background: selectedSituation.color }} />
+                                    <div className="relative w-9 h-9 rounded-xl bg-white/80 dark:bg-black/40 flex items-center justify-center shadow-lg backdrop-blur-xl border border-white/20">
+                                        {React.createElement(selectedSituation.icon, { size: 18, style: { color: selectedSituation.color }, strokeWidth: 1.5 })}
+                                    </div>
+                                </div>
+                                <div className="flex gap-1.5 opacity-60 scale-90">
+                                    <span className="text-[7px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+                                        {selectedSituation.category}
+                                    </span>
+                                    <span className="text-[7px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+                                        {selectedSituation.duration}
+                                    </span>
+                                </div>
                             </div>
 
-                            <div className="px-8 pb-10 md:pt-10 space-y-8">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-16 h-16 rounded-3xl flex items-center justify-center shadow-lg" style={{ background: selectedSituation.color + '15' }}>
-                                            {React.createElement(selectedSituation.icon, { size: 28, style: { color: selectedSituation.color }, strokeWidth: 1.5 })}
-                                        </div>
-                                        <div>
-                                            <div className="flex gap-2 mb-1">
-                                                <CategoryPill cat={selectedSituation.category} />
-                                                <DurationPill dur={selectedSituation.duration} />
-                                            </div>
-                                            <h2 className="text-3xl font-serif font-light leading-tight" style={{ color: 'var(--text-primary)' }}>{selectedSituation.title}</h2>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => setSelectedSituation(null)}
-                                        className="p-3 rounded-full hover:bg-secondary transition-colors opacity-40 hover:opacity-100 md:block hidden">
-                                        <X size={20} />
-                                    </button>
+                            <div className="px-5 pb-6 space-y-4">
+                                <div className="text-center space-y-0.5">
+                                    <h2 className="text-xl font-serif font-light leading-tight" style={{ color: 'var(--text-primary)' }}>{selectedSituation.title}</h2>
+                                    <p className="text-[11px] font-serif italic text-[var(--text-secondary)] opacity-40">{selectedSituation.description}</p>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <div className="p-6 rounded-3xl space-y-2" style={{ background: 'var(--bg-secondary)', borderLeft: `4px solid ${selectedSituation.color}50` }}>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Ideal Guidance For</p>
-                                        <p className="text-base font-serif italic" style={{ color: 'var(--text-secondary)' }}>{selectedSituation.whenToUse}</p>
+                                <div className="space-y-3">
+                                    <div className="p-3 rounded-xl space-y-0.5" style={{ background: 'var(--bg-secondary)', borderLeft: `2px solid ${selectedSituation.color}50` }}>
+                                        <p className="text-[7px] font-bold uppercase tracking-widest opacity-30">Ideal Guidance For</p>
+                                        <p className="text-xs font-serif italic" style={{ color: 'var(--text-secondary)' }}>{selectedSituation.whenToUse}</p>
                                     </div>
 
-                                    <div className="space-y-4">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Pathway Steps</p>
-                                        <div className="grid gap-3">
+                                    <div className="space-y-3">
+                                        <p className="text-[7px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] text-center opacity-40">Pathway Journey</p>
+                                        <div className="relative px-2">
+                                            {/* Timeline Line */}
+                                            <div className="absolute top-[12px] left-[30px] right-[30px] h-[1px] bg-[var(--border-default)] -z-0 opacity-50" />
+
+                                            <div className="flex justify-between relative z-10">
+                                                {selectedSituation.steps.map((step, i) => (
+                                                    <div key={i} className="flex flex-col items-center gap-1.5 group/step max-w-[60px]">
+                                                        <div className="w-6 h-6 rounded-full bg-[var(--bg-surface)] border-[1.5px] border-[var(--border-default)] flex items-center justify-center text-[8px] font-bold transition-all group-hover/step:border-[var(--accent-primary)]"
+                                                            style={{ color: 'var(--text-primary)' }}>
+                                                            {i + 1}
+                                                        </div>
+                                                        <div className="text-[7px] font-bold text-center leading-tight opacity-30 group-hover/step:opacity-80 transition-opacity uppercase tracking-widest">
+                                                            {step.title.split(' ')[0]}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Detailed Step Content (current/interactive) */}
+                                        <div className="grid gap-1.5 pt-1">
                                             {selectedSituation.steps.map((step, i) => (
-                                                <div key={i} className="flex gap-4 p-4 rounded-2xl bg-surface/50 border border-border-subtle">
-                                                    <span className="text-xs font-bold opacity-30 mt-0.5">{i + 1}</span>
-                                                    <div className="space-y-0.5">
-                                                        <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{step.title}</p>
-                                                        <p className="text-xs opacity-70" style={{ color: 'var(--text-secondary)' }}>{step.instruction}</p>
+                                                <div key={i} className="flex gap-2.5 p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] hover:border-[var(--accent-primary-border)] transition-all">
+                                                    <div className="w-4 h-4 rounded-md bg-[var(--bg-surface)] flex items-center justify-center text-[8px] font-bold flex-shrink-0" style={{ color: selectedSituation.color }}>{i + 1}</div>
+                                                    <div className="space-y-0">
+                                                        <p className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>{step.title}</p>
+                                                        <p className="text-[10px] leading-relaxed opacity-50" style={{ color: 'var(--text-secondary)' }}>{step.instruction}</p>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <div className="p-6 rounded-3xl" style={{ background: 'var(--accent-primary-muted)', border: '1px solid var(--accent-primary)10' }}>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent-primary)' }}>Witness Account</p>
-                                        <p className="text-xs font-serif italic leading-relaxed opacity-80">{selectedSituation.realLifeExample}</p>
+                                    <div className="p-3 rounded-xl" style={{ background: 'var(--accent-primary-muted)', border: '1px solid var(--accent-primary)10' }}>
+                                        <p className="text-[7px] font-bold uppercase tracking-widest mb-0.5 opacity-40" style={{ color: 'var(--accent-primary)' }}>Witness Account</p>
+                                        <p className="text-[10px] font-serif italic leading-snug opacity-60">{selectedSituation.realLifeExample}</p>
                                     </div>
                                 </div>
 
-                                <button onClick={() => setIsPracticing(true)}
-                                    className="w-full py-5 rounded-3xl font-bold uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-[0.98] shadow-xl"
-                                    style={{ background: selectedSituation.color, color: 'white' }}>
-                                    <Play size={16} fill="white" /> Embark on Journey
-                                </button>
+                                <div className="flex flex-col items-center gap-2 pt-1">
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => {
+                                            setCurrentStep(0);
+                                            setIsPaused(false);
+                                            setShowLogEntry(false);
+                                            setIsPracticing(true);
+                                        }}
+                                        className="relative w-12 h-12 rounded-full flex items-center justify-center shadow-xl group/portal"
+                                    >
+                                        <motion.div
+                                            animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.1, 0.3] }}
+                                            transition={{ duration: selectedSituation.durationNum > 5 ? 6 : 3, repeat: Infinity, ease: "easeInOut" }}
+                                            className="absolute inset-[-4px] rounded-full"
+                                            style={{ background: selectedSituation.color }}
+                                        />
+                                        <div className="absolute inset-0 rounded-full shadow-[inset_0_0_10px_rgba(255,255,255,0.3)] bg-gradient-to-br from-white/20 to-transparent" />
+                                        <div className="w-full h-full rounded-full flex items-center justify-center backdrop-blur-md border border-white/20"
+                                            style={{ background: selectedSituation.color }}>
+                                            <Play size={16} fill="white" className="text-white ml-0.5" />
+                                        </div>
+                                    </motion.button>
+                                    <div className="text-center">
+                                        <p className="text-[9px] font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--text-primary)' }}>Begin Journey</p>
+                                        <p className="text-[7px] font-bold uppercase tracking-widest opacity-20" style={{ color: 'var(--text-muted)' }}>Guided Voice Session</p>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
                     </div>

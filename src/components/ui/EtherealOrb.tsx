@@ -2,6 +2,7 @@ import React, { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Sparkles } from '@react-three/drei';
+import { useTheme } from '../../theme/ThemeSystem';
 // ─── T TOKENS ────────────────────────────────────────────────────────────────
 const T = {
     magenta: '#D16BA5',
@@ -154,7 +155,7 @@ void main() {
 `;
 
 // ─── 3D ORB COMPONENT ────────────────────────────────────────────────────────
-const OrbBlob = ({ isAnimating }: { isAnimating: boolean }) => {
+const OrbBlob = ({ isAnimating, isLight }: { isAnimating: boolean; isLight: boolean }) => {
     const meshRef = useRef<THREE.Mesh>(null);
 
     // Emotion-driven targets
@@ -224,7 +225,7 @@ const OrbBlob = ({ isAnimating }: { isAnimating: boolean }) => {
                 fragmentShader={fragmentShader}
                 uniforms={uniforms}
                 transparent={true}
-                blending={THREE.AdditiveBlending}
+                blending={isLight ? THREE.NormalBlending : THREE.AdditiveBlending}
                 depthWrite={false}
             />
         </mesh>
@@ -252,6 +253,8 @@ export const EtherealOrb: React.FC<EtherealOrbProps> = ({
     text = 'AWAKEN'
 }) => {
     const diameter = SIZE[size] ?? 340;
+    const { mode } = useTheme();
+    const isLight = mode === 'light';
 
     return (
         <div style={{
@@ -262,30 +265,40 @@ export const EtherealOrb: React.FC<EtherealOrbProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
         }}>
+            {/* Light-mode: subtle rose-teal halo so orb isn't floating in void */}
+            {isLight && (
+                <div style={{
+                    position: 'absolute',
+                    inset: -30,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(209,107,165,0.12) 0%, rgba(171,206,201,0.08) 50%, transparent 75%)',
+                    pointerEvents: 'none',
+                    zIndex: 0,
+                }} />
+            )}
 
             {/* The 3D Canvas Context */}
             <div style={{
                 position: 'absolute',
-                inset: -100, // Make the canvas larger to allow the glowing edges to bleed out naturally
+                inset: -100,
                 pointerEvents: 'none',
                 zIndex: 1,
             }}>
                 <Canvas camera={{ position: [0, 0, 4.5], fov: 50 }}>
-                    <OrbBlob isAnimating={isAnimating} />
-                    {/* Floating Silver Sprinkles around the void */}
+                    <OrbBlob isAnimating={isAnimating} isLight={isLight} />
                     <Sparkles
                         count={isAnimating ? 350 : 180}
                         scale={8}
                         size={isAnimating ? 3.5 : 2}
                         speed={isAnimating ? 0.9 : 0.2}
-                        opacity={isAnimating ? 0.6 : 0.3}
-                        color="#E1E7EF" // Metallic silver
-                        noise={3} // chaotic drifting
+                        opacity={isLight ? (isAnimating ? 0.4 : 0.15) : (isAnimating ? 0.6 : 0.3)}
+                        color={isLight ? '#C65F9D' : '#E1E7EF'}
+                        noise={3}
                     />
                 </Canvas>
             </div>
 
-            {/* Floating Text matching SacredCircle */}
+            {/* Floating Text — theme-aware */}
             <h2 style={{
                 position: 'relative',
                 zIndex: 2,
@@ -294,16 +307,18 @@ export const EtherealOrb: React.FC<EtherealOrbProps> = ({
                 fontSize: Math.round(diameter * 0.1),
                 letterSpacing: '0.55em',
                 textTransform: 'uppercase',
-                color: 'rgba(255, 255, 255, 0.88)',
+                color: isLight ? 'var(--text-secondary)' : 'rgba(255, 255, 255, 0.88)',
                 margin: 0,
                 userSelect: 'none',
-                textShadow: isAnimating
-                    ? `0 0 40px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.3)`
-                    : `0 0 20px rgba(255,255,255,0.2)`,
-                transition: 'text-shadow 0.8s ease-in-out',
+                textShadow: isLight
+                    ? (isAnimating ? '0 0 20px rgba(198,95,157,0.4)' : 'none')
+                    : (isAnimating
+                        ? '0 0 40px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.3)'
+                        : '0 0 20px rgba(255,255,255,0.2)'),
+                transition: 'all 0.8s ease-in-out',
             }}>
                 {text}
             </h2>
-        </div >
+        </div>
     );
 };
