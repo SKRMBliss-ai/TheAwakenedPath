@@ -291,12 +291,9 @@ const Journal: React.FC = () => {
                         title={journeyTitle.toUpperCase()}
                         currentStepTitle={dynamicSteps[practiceStep].title}
                         currentStepInstruction={dynamicSteps[practiceStep].instructions.join('. ')}
-                        totalSteps={dynamicSteps.length}
-                        currentStepIndex={practiceStep}
                         onNext={handleNextStep}
                         onReset={() => setIsPracticing(false)}
                         onTogglePlay={() => setIsPaused(!isPaused)}
-                        onClose={() => setIsPracticing(false)}
                         isPlaying={!isPaused}
                         progress={(practiceStep + 1) / dynamicSteps.length}
                     />

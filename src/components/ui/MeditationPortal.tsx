@@ -145,7 +145,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                     transition={{ duration: 0.6 }}
                     onClick={onClose}
                     style={{
-                        width: 40, height: 40, borderRadius: '50%',
+                        width: 40, height: 40, borderRadius: '50%', border: 'none',
                         background: 'var(--bg-surface)',
                         border: '1px solid var(--border-subtle)',
                         color: 'var(--text-muted)',
