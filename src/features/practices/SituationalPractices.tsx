@@ -746,7 +746,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                                         <p className="text-[10px] uppercase tracking-widest font-bold opacity-50" style={{ color: 'var(--text-muted)' }}>{col.desc}</p>
                                     </div>
                                 </div>
-                                <div className="flex gap-6 overflow-x-auto pb-8 -mx-4 px-4 no-scrollbar scroll-smooth">
+                                <div className="flex gap-6 overflow-x-auto pb-8 -mx-4 px-4 scroll-x-styled scroll-smooth">
                                     {colItems.map(sit => (
                                         <SituationalPracticeCard
                                             key={sit.id}

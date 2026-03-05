@@ -279,9 +279,27 @@ h6 {
     -webkit-text-fill-color: transparent;
 }
 
-/* Custom Scrollbar */
+/* ─── Hide Scrollbar Utility ───────────────────────────────────────────────── */
+.no-scrollbar {
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 11 */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Edge */
+}
+
+/* ─── Themed Vertical Scrollbar ────────────────────────────────────────────── */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-primary) transparent;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -289,12 +307,38 @@ h6 {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
+    background: var(--accent-primary);
+    border-radius: 99px;
+    opacity: 0.5;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--accent-secondary);
+}
+
+/* ─── Themed Horizontal Scrollbar (for card rows) ──────────────────────────── */
+.scroll-x-styled {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-primary-muted) transparent;
+}
+
+.scroll-x-styled::-webkit-scrollbar {
+    height: 3px;
+}
+
+.scroll-x-styled::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 0 24px;
+}
+
+.scroll-x-styled::-webkit-scrollbar-thumb {
+    background: var(--accent-primary);
+    border-radius: 99px;
+    opacity: 0.4;
+}
+
+.scroll-x-styled::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-secondary);
 }
 
 /* Floating Island Nav */
