@@ -9,6 +9,7 @@ import { useAchievements } from '../achievements/useAchievements';
 import { AchievementsPanel } from '../achievements/AchievementsPanel';
 import { MAIN_PARTS_COUNT } from '../soul-intelligence/teachingData';
 import { isAdminEmail } from '../../config/admin';
+import PastReflections from './PastReflections';
 
 interface ActivityLog {
     id: string;
@@ -439,7 +440,10 @@ const StatsDashboard: React.FC = () => {
             </div >
 
             {/* Achievements Panel */}
-            < AchievementsPanel unlocked={unlocked} points={points} />
+            <AchievementsPanel unlocked={unlocked} points={points} />
+
+            {/* Past Reflections Log */}
+            <PastReflections />
 
             {/* Metrics Grid */}
             < div className="grid grid-cols-1 md:grid-cols-3 gap-6" >
