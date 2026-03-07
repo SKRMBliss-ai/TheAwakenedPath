@@ -2,6 +2,7 @@ export const ADMIN_EMAILS = [
     'shrutikhungar@gmail.com',
     'smriti.duggal@gmail.com',
     'simkatyal1@gmail.com',
+    'rashmi.purbey@gmail.com',
     'test@example.com'
 ];
 

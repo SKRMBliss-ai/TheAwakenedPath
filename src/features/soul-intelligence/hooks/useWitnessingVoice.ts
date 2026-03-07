@@ -24,6 +24,7 @@ export function useWitnessingVoice() {
 
     const speak = useCallback((text: string) => {
         VoiceService.speak(text, {
+            voice: 'Enceladus',
             onEnd: () => {
                 setActiveCharIndex(-1);
             }

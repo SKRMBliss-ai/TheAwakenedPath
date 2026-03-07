@@ -140,6 +140,7 @@ const Journal: React.FC = () => {
             VoiceService.playAudioURL(text, onEnd);
         } else {
             VoiceService.speak(text, {
+                voice: 'Enceladus',
                 onEnd: () => {
                     if (onEnd) setTimeout(onEnd, 1500);
                 }
@@ -293,9 +294,12 @@ const Journal: React.FC = () => {
                         currentStepInstruction={dynamicSteps[practiceStep].instructions.join('. ')}
                         onNext={handleNextStep}
                         onReset={() => setIsPracticing(false)}
+                        onClose={() => setIsPracticing(false)}
                         onTogglePlay={() => setIsPaused(!isPaused)}
                         isPlaying={!isPaused}
                         progress={(practiceStep + 1) / dynamicSteps.length}
+                        totalSteps={dynamicSteps.length}
+                        currentStepIndex={practiceStep}
                     />
                 )}
             </AnimatePresence>

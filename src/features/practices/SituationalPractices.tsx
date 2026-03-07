@@ -497,7 +497,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
 
     const speak = useCallback((text: string, onEnd?: () => void) => {
         if (isPaused) return;
-        VoiceService.speak(text, { onEnd });
+        VoiceService.speak(text, { voice: 'Enceladus', onEnd });
     }, [isPaused]);
 
     const handleReset = useCallback(() => { VoiceService.stop(); setCurrentStep(0); }, []);
