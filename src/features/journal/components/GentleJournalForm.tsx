@@ -225,41 +225,56 @@ function JournalHeader({
                 <button
                     onClick={onToggleVoice}
                     className={cn(
-                        "group relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300",
+                        "group relative h-9 px-3.5 rounded-full flex items-center justify-center gap-2 transition-all duration-300",
                         voiceEnabled
                             ? "bg-[var(--accent-secondary-dim)] border border-[var(--accent-secondary-border)] text-[var(--accent-secondary)]"
-                            : "bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-muted)]"
+                            : "bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[var(--text-muted)] hover:border-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     )}
                     style={{ cursor: 'pointer' }}
                     aria-label={voiceEnabled ? "Turn voice off" : "Turn voice on"}
                 >
                     {voiceEnabled ? (
-                        <Volume2 className="w-4 h-4" />
+                        <>
+                            <Volume2 className="w-4 h-4" />
+                            <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-[1px]">Auto Voice: On</span>
+                        </>
                     ) : (
-                        <VolumeX className="w-4 h-4" />
+                        <>
+                            <VolumeX className="w-4 h-4" />
+                            <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-[1px]">Auto Voice: Off</span>
+                        </>
                     )}
                     
                     {/* Hover Tooltip */}
                     <div 
-                        className="absolute right-0 top-full mt-2 w-max px-2.5 py-1.5 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60] shadow-md pointer-events-none"
-                        style={{
-                            background: 'var(--bg-surface)',
-                            border: '1px solid var(--border-subtle)',
-                            color: 'var(--text-secondary)'
+                        className="absolute right-0 top-full mt-2 w-max max-w-[200px] px-3 py-2 rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60] shadow-[0_4px_20px_rgba(0,0,0,0.15)] pointer-events-none"
+                        style={{ 
+                            background: 'var(--bg-secondary)', 
+                            border: '1px solid var(--border-default)',
+                            backdropFilter: 'blur(12px)'
                         }}
                     >
                         {/* Little triangle arrow pointing up */}
                         <div 
-                            className="absolute -top-[5px] right-[13px] w-2.5 h-2.5 rotate-45"
+                            className="absolute -top-[5px] right-[24px] w-2.5 h-2.5 rotate-45"
                             style={{ 
                                 background: 'var(--bg-surface)',
                                 borderTop: '1px solid var(--border-subtle)',
                                 borderLeft: '1px solid var(--border-subtle)',
                             }} 
                         />
-                        <span className="relative z-10 text-[11px] font-medium tracking-wide">
-                            Voice {voiceEnabled ? "On" : "Off"}
-                        </span>
+                        <div className="relative z-10 text-[11px] font-medium tracking-wide text-left">
+                            {voiceEnabled ? (
+                                "Voice Guidance is ON"
+                            ) : (
+                                <div className="flex flex-col gap-1 w-[150px] whitespace-normal">
+                                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Voice Guidance is OFF</span>
+                                    <span style={{ fontSize: 9.5, color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                                        It will remain paused on future visits until you decide to turn it back on.
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </button>
             </div>
