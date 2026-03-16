@@ -326,7 +326,7 @@ const Journal: React.FC = () => {
     }
 
     return (
-        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto px-6 pt-4 pb-40 relative">
+        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto px-6 pt-4 pb-12 relative">
             <NoiseOverlay />
 
             {/* Ambient continuous glow */}

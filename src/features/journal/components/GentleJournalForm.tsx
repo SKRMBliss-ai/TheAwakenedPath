@@ -527,7 +527,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
 
     return (
         <div ref={scrollRef} className="w-full h-full" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
-            <div className="relative z-10 w-full max-w-4xl mx-auto pb-16 px-4 sm:px-6">
+            <div className="relative z-10 w-full max-w-4xl mx-auto pb-4 px-4 sm:px-6">
 
                 {/* ═══ HEADER BAR — compact, docked ═══ */}
                 {step < 5 && (
