@@ -38,6 +38,7 @@ export function useJournalVoice() {
 
     const isMountedRef = useRef(true);
     const lastSpokenRef = useRef<string | null>(null);
+    const lastSpokenTimeRef = useRef<number>(0);
     const pendingSpeechRef = useRef<{ text: string; force: boolean } | null>(null);
     const isInteractedRef = useRef(false);
     const speakRef = useRef<Function | null>(null);
@@ -46,6 +47,7 @@ export function useJournalVoice() {
         VoiceService.stop();
         pendingSpeechRef.current = null;
         lastSpokenRef.current = null;
+        lastSpokenTimeRef.current = 0;
         if (isMountedRef.current) {
             setIsPlaying(false);
             setIsLoading(false);
@@ -70,8 +72,17 @@ export function useJournalVoice() {
             return;
         }
 
-        if (text === lastSpokenRef.current && isPlaying) return;
+        // Prevent exact duplicate calls from resetting the audio if it's already playing
+        // or if it was requested very recently.
+        if (text === lastSpokenRef.current) {
+            const timeSinceLast = Date.now() - lastSpokenTimeRef.current;
+            if (VoiceService.isSpeaking || timeSinceLast < 1000) {
+                return;
+            }
+        }
+
         lastSpokenRef.current = text;
+        lastSpokenTimeRef.current = Date.now();
 
         stop();
 

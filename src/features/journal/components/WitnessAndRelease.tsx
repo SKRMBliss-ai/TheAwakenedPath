@@ -120,7 +120,7 @@ export function WitnessAndRelease({ data, onComplete, onTabChange }: WitnessAndR
     };
 
     return (
-        <div style={containerStyle} className="w-full max-w-2xl mx-auto py-4 bg-[var(--bg-surface)] backdrop-blur-md rounded-[32px] border border-[var(--border-default)] shadow-xl overflow-hidden">
+        <div style={containerStyle} className="w-full max-w-4xl mx-auto py-4 bg-[var(--bg-surface)] backdrop-blur-md rounded-[32px] border border-[var(--border-default)] shadow-xl overflow-hidden">
             <div className="p-6 sm:p-10">
                 {/* ── Inner tab bar ── */}
                 <div className="flex overflow-x-auto no-scrollbar border-b border-[var(--border-subtle)]/30 mb-8">
@@ -169,7 +169,7 @@ export function WitnessAndRelease({ data, onComplete, onTabChange }: WitnessAndR
 
                                     <div className="space-y-2">
                                         <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] opacity-70">A thought arose…</div>
-                                        <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-[var(--shadow-elevated)] min-h-[100px] flex items-center">
+                                        <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-[var(--shadow-elevated)] min-h-[100px] flex items-center w-full">
                                             <p className="font-serif italic text-2xl text-[var(--text-primary)] leading-tight w-full" style={{ fontFamily: "var(--font-serif)" }}>
                                                 "{data.thought}"
                                             </p>

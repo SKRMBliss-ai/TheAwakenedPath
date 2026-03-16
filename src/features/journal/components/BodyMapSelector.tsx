@@ -154,11 +154,14 @@ export function BodyMapSelector({
     onSelect,
     activeCategories = [],
 }: BodyMapProps) {
-    const selectedZone = BODY_ZONES.find(z => z.id === selectedArea) || null;
+    // GentleJournalForm passes the full zone object for backward compatibility
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const selectedZoneId = typeof selectedArea === 'object' ? (selectedArea as any)?.id : selectedArea;
+    const selectedZone = BODY_ZONES.find(z => z.id === selectedZoneId) || null;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleSelect = (zone: any) => {
-        const toggled = selectedArea === zone.id ? null : zone.id;
+        const toggled = selectedZoneId === zone.id ? null : zone.id;
         onSelectArea?.(toggled);
         // Backward compat for old GentleJournalForm
         if (onSelect) {
@@ -168,11 +171,11 @@ export function BodyMapSelector({
 
     return (
         <div className="w-full flex flex-col items-center" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-            <div className="relative z-10 w-full max-w-md mx-auto pt-4 pb-12">
+            <div className="relative z-10 w-full max-w-md mx-auto pt-4 pb-4">
                 <div className="relative flex justify-center">
                     <svg
                         viewBox="60 30 280 440"
-                        className="w-full"
+                        className="w-full text-[var(--text-primary)]"
                         style={{ maxWidth: 380, maxHeight: 520, overflow: 'visible' }}
                         role="img"
                         aria-label="Human body map — tap a body area to explore"
@@ -203,9 +206,10 @@ export function BodyMapSelector({
 
                         {/* Zone hotspots */}
                         {BODY_ZONES.map((zone, i) => {
-                            const isSelected = selectedArea === zone.id;
-                            const isOther = selectedArea && selectedArea !== zone.id;
-                            const isPreHighlighted = activeAreas.includes(zone.id);
+                            const isSelected = selectedZoneId === zone.id;
+                            const isOther = selectedZoneId && !isSelected;
+                            const isPreHighlighted = activeAreas.includes(zone.id) ||
+                                activeCategories.some((c: any) => c.bodyAreas?.includes(zone.id));
 
                             return (
                                 <g key={zone.id}>
@@ -238,20 +242,29 @@ export function BodyMapSelector({
                                     {/* Main dot */}
                                     <circle
                                         cx={zone.cx} cy={zone.cy} r={isSelected ? 16 : 10}
-                                        fill={isSelected ? zone.color : isPreHighlighted ? zone.color : "var(--text-muted)"}
-                                        stroke={isSelected ? zone.color : isPreHighlighted ? zone.color : "var(--border-subtle)"}
-                                        strokeWidth={isSelected || isPreHighlighted ? 2 : 1.5}
                                         opacity={isOther ? 0.6 : 1}
-                                        filter={isSelected || isPreHighlighted ? `url(#glow-${zone.id})` : "none"}
-                                        style={{ cursor: "pointer", transition: "all 0.4s ease" }}
+                                        style={{ 
+                                            cursor: "pointer", 
+                                            transition: "all 0.4s ease",
+                                            fill: isSelected ? zone.color : isPreHighlighted ? zone.color : "var(--text-muted)",
+                                            stroke: isSelected ? zone.color : isPreHighlighted ? zone.color : "var(--border-subtle)",
+                                            strokeWidth: isSelected || isPreHighlighted ? 2 : 1.5,
+                                            filter: (isSelected || isPreHighlighted) ? `drop-shadow(0 0 12px ${zone.color})` : "none"
+                                        }}
                                         onClick={() => handleSelect(zone)}
                                     />
 
-                                    {/* Inner bright center */}
+                                    {/* Inner bright center and Outer Glowing Aura */}
                                     {isSelected && (
-                                        <circle cx={zone.cx} cy={zone.cy} r={5} fill="white" opacity="0.5">
-                                            <animate attributeName="opacity" values="0.5;0.2;0.5" dur="2s" repeatCount="indefinite" />
-                                        </circle>
+                                        <>
+                                            <circle cx={zone.cx} cy={zone.cy} r={5} fill="white" opacity="0.8">
+                                                <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite" />
+                                            </circle>
+                                            <circle cx={zone.cx} cy={zone.cy} r={28} fill={zone.color} opacity="0.4">
+                                                <animate attributeName="opacity" values="0.25;0.6;0.25" dur="2.5s" repeatCount="indefinite" />
+                                                <animate attributeName="r" values="24;36;24" dur="2.5s" repeatCount="indefinite" />
+                                            </circle>
+                                        </>
                                     )}
 
                                     {/* Label */}
@@ -262,7 +275,7 @@ export function BodyMapSelector({
                                         style={{
                                             fontSize: isSelected ? 14 : 12,
                                             fontWeight: isSelected ? 700 : 500,
-                                            fill: isSelected ? zone.color : isOther ? "var(--text-disabled)" : "var(--text-primary)",
+                                            fill: isSelected ? zone.color : isOther ? "var(--text-disabled)" : "currentColor",
                                             fontFamily: "Georgia, serif",
                                             cursor: "pointer",
                                             transition: "all 0.4s ease",
@@ -279,10 +292,13 @@ export function BodyMapSelector({
                                         y1={zone.cy + zone.labelOffset.y}
                                         x2={zone.cx + zone.labelOffset.x + (zone.labelOffset.x > 0 ? -4 : 4)}
                                         y2={zone.cy + zone.labelOffset.y}
-                                        stroke={isSelected ? zone.color : isOther ? "var(--text-disabled)" : "var(--text-muted)"}
                                         strokeWidth="1"
                                         strokeDasharray={isSelected ? "none" : "3,3"}
-                                        style={{ transition: "all 0.4s ease" }}
+                                        style={{ 
+                                            transition: "all 0.4s ease", 
+                                            stroke: isSelected ? zone.color : "var(--text-muted)",
+                                            opacity: isOther ? 0.35 : 0.8
+                                        }}
                                     />
                                 </g>
                             );

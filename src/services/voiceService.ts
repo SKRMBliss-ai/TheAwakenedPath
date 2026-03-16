@@ -176,6 +176,27 @@ export class VoiceService {
         window.speechSynthesis.speak(utterance);
     }
 
+    static pause() {
+        this.setSpeaking(false);
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+        }
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.pause();
+        }
+    }
+
+    static resume() {
+        if (!this._isEnabled) return;
+        this.setSpeaking(true);
+        if (this.currentAudio) {
+            this.currentAudio.play().catch(e => console.error("Resume failed", e));
+        }
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.resume();
+        }
+    }
+
     static stop() {
         this.currentRequestId++; // Invalidate any in-flight requests
         this.setSpeaking(false);
@@ -193,9 +214,6 @@ export class VoiceService {
 
     static init(): Promise<void> {
         if (typeof window !== 'undefined') {
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) this.stop();
-            });
             window.addEventListener('pagehide', () => this.stop());
             window.addEventListener('beforeunload', () => this.stop());
         }

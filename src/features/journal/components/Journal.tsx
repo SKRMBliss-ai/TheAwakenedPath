@@ -237,6 +237,25 @@ const Journal: React.FC = () => {
         }
     }, [practiceStep, isPracticing, speak, handleNextStep, isPaused, dynamicSteps]);
 
+    // Handle tab switching / backgrounding
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                setIsPaused(true);
+                VoiceService.pause();
+            } else {
+                // Optionally resume immediately if they come back:
+                if (isPracticing) {
+                    setIsPaused(false);
+                }
+                VoiceService.resume();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, [isPracticing]);
+
     if (!user) {
         return (
             <div className="flex flex-col items-center justify-center p-12 space-y-12 text-center h-[80vh] relative">
@@ -307,7 +326,7 @@ const Journal: React.FC = () => {
     }
 
     return (
-        <div className="w-full max-w-4xl mx-auto px-6 pt-12 pb-40 relative">
+        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto px-6 pt-4 pb-40 relative">
             <NoiseOverlay />
 
             {/* Ambient continuous glow */}
@@ -318,7 +337,7 @@ const Journal: React.FC = () => {
                 style={{ background: `radial-gradient(ellipse, var(--accent-primary-muted), transparent)` }}
             />
 
-            <nav className="flex justify-between items-start mb-10 relative z-10">
+            <nav className="flex justify-between items-start mb-2 relative z-10">
                 <div className="min-w-[120px]" />
                 <div className="text-center">
                     <h1 className="text-6xl font-serif font-light text-[var(--text-primary)] tracking-tight leading-none [text-shadow:0_0_60px_var(--accent-primary-muted)]">Daily Log</h1>
@@ -390,7 +409,7 @@ const Journal: React.FC = () => {
                         /* ═══════════════════════════════════════════════════════════════
                            AWAKENED PATH 3-STEP JOURNAL FLOW
                         ═══════════════════════════════════════════════════════════════ */
-                        <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto">
+                        <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-5xl xl:max-w-6xl mx-auto w-full">
                             <GentleJournalForm
                                 onSave={async (entryData) => {
                                     if (!user) return;

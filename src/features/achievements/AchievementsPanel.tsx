@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy } from 'lucide-react';
+import { Trophy, X } from 'lucide-react';
 import { ACHIEVEMENTS, type Achievement } from './achievementsDefs';
 import { ProgressFilament } from '../../components/ui/SacredUI';
 import { Medal } from '../../components/domain/MedalGrid';
@@ -83,60 +83,72 @@ export const AchievementToast: React.FC<{
                 animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
                 exit={{ opacity: 0, x: 50, scale: 0.9, filter: 'blur(10px)' }}
                 transition={{ type: "spring", stiffness: 300, damping: 25, mass: 1 }}
-                className="fixed bottom-12 right-8 md:right-12 z-[9999] cursor-pointer group"
+                className="fixed bottom-4 right-8 md:right-190 z-[9999] cursor-pointer group"
                 onClick={onDismiss}
             >
                 {/* Intense Background Glow (Surge) */}
                 <motion.div
                     animate={{
-                        scale: [1, 1.25, 1],
-                        opacity: [0.3, 0.6, 0.3]
+                        scale: [1, 1.05, 1],
+                        opacity: [0.1, 0.25, 0.1]
                     }}
                     transition={{
-                        duration: 3,
+                        duration: 4,
                         repeat: Infinity,
                         ease: "easeInOut"
                     }}
-                    className="absolute inset-[-40px] rounded-full blur-[40px] pointer-events-none mix-blend-plus-lighter hidden dark:block"
+                    className="absolute inset-[-15px] rounded-[30px] blur-[16px] pointer-events-none mix-blend-plus-lighter hidden dark:block"
                     style={{ background: achievement.color }}
                 />
 
-                <div className="relative flex items-center gap-6 px-8 py-6 rounded-[32px] border shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-3xl overflow-hidden bg-[var(--bg-surface)]"
+                <div className="relative flex items-center gap-4 px-5 py-3 rounded-[20px] border shadow-2xl backdrop-blur-3xl overflow-hidden bg-[var(--bg-surface)]"
                     style={{
-                        borderColor: `${achievement.color}50`,
-                        boxShadow: `0 20px 40px -10px rgba(0,0,0,0.5), inset 0 0 20px ${achievement.color}15`
+                        borderColor: `${achievement.color}40`,
+                        boxShadow: `0 10px 25px -10px rgba(0,0,0,0.5), inset 0 0 10px ${achievement.color}10`
                     }}>
 
                     {/* Inner sheen */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
 
-                    <div className="relative flex flex-col items-start pr-4 border-r border-[var(--border-subtle)]/50">
-                        <div className="flex items-center gap-2 mb-1">
+                    <div className="relative flex flex-col items-start pr-3 border-r border-[var(--border-subtle)]/50">
+                        <div className="flex items-center gap-1.5 mb-1">
                             <motion.div
-                                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                                className="w-1.5 h-1.5 rounded-full"
-                                style={{ background: achievement.color, boxShadow: `0 0 10px ${achievement.color}` }}
+                                animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                                transition={{ duration: 3, repeat: Infinity }}
+                                className="w-1 h-1 rounded-full"
+                                style={{ background: achievement.color, boxShadow: `0 0 4px ${achievement.color}` }}
                             />
-                            <p className="text-[9px] uppercase tracking-[0.4em] font-bold" style={{ color: achievement.color }}>SOUL MEDAL UNLOCKED</p>
+                            <p className="text-[8px] uppercase tracking-[0.3em] font-bold" style={{ color: achievement.color }}>SOUL MEDAL UNLOCKED</p>
                         </div>
-                        <h4 className="text-[22px] font-serif font-light text-[var(--text-primary)] tracking-tight">{achievement.name}</h4>
-                        <p className="text-[12px] font-serif italic text-[var(--text-secondary)] mt-1 opacity-80">+{achievement.points} EXP</p>
+                        <h4 className="text-[16px] font-serif font-light text-[var(--text-primary)] tracking-tight">{achievement.name}</h4>
+                        <p className="text-[10px] font-serif italic text-[var(--text-secondary)] mt-0.5 opacity-80">+{achievement.points} EXP</p>
                     </div>
 
-                    <div className="relative w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0"
+                    <div className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                         style={{
-                            background: `radial-gradient(circle, ${achievement.color}30, ${achievement.color}05)`,
-                            border: `1px solid ${achievement.color}40`,
-                            boxShadow: `0 0 30px ${achievement.color}30`
+                            background: `radial-gradient(circle, ${achievement.color}20, ${achievement.color}05)`,
+                            border: `1px solid ${achievement.color}30`,
+                            boxShadow: `0 0 10px ${achievement.color}20`
                         }}>
                         <motion.div
-                            animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
+                            animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
                             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                         >
-                            <Icon size={32} style={{ color: achievement.color, filter: `drop-shadow(0 0 8px ${achievement.color})` }} />
+                            <Icon size={18} style={{ color: achievement.color, filter: `drop-shadow(0 0 3px ${achievement.color})` }} />
                         </motion.div>
                     </div>
+
+                    {/* Close Button */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDismiss();
+                        }}
+                        className="absolute top-2 right-2 p-1 rounded-full bg-white/5 hover:bg-white/10 transition-colors pointer-events-auto"
+                        aria-label="Close"
+                    >
+                        <X size={12} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]" />
+                    </button>
                 </div>
             </motion.div>
         </AnimatePresence>
