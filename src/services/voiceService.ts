@@ -216,8 +216,13 @@ export class VoiceService {
         if (!this._isEnabled) return;
         this.setSpeaking(true);
         if (this.currentAudio) {
-            if (this.savedTime > 0) {
-                this.currentAudio.currentTime = this.savedTime;
+            try {
+                if (this.savedTime > 0 && this.currentAudio.readyState >= 1) {
+                    this.currentAudio.currentTime = this.savedTime;
+                }
+            } catch (err) {
+                console.warn("Could not set audio currentTime", err);
+            } finally {
                 this.savedTime = 0;
             }
             this.currentAudio.play().catch(e => console.error("Resume failed", e));

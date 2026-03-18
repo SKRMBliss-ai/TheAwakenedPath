@@ -80,9 +80,15 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
         return () => {
             window.removeEventListener('resize', handleResize);
             clearInterval(id);
-            VoiceService.stop();
         };
     }, [isPlaying]);
+
+    // Only clean up audio when the portal itself closes
+    useEffect(() => {
+        return () => {
+            VoiceService.stop();
+        };
+    }, []);
 
     const fmt = (s: number) =>
         `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;

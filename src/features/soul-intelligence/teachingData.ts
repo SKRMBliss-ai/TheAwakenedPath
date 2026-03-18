@@ -58,6 +58,22 @@ export const CHAPTERS = [
         ]
     },
     {
+        id: 'mind-strategies',
+        num: 'IV',
+        subtitle: 'Mind Strategies for Avoiding Now',
+        desc: 'Understand how the egoic mind continually seeks to escape the present moment.',
+        icon: Sparkles, // Or another icon
+        color: '#A9CBB7',
+        parts: [
+            { id: '4.1', title: 'Loss of Now: The Core Delusion', youtubeId: 'FLLZ4EQofQY', duration: '--:--' },
+            { id: '4.2', title: 'Ordinary Unconsciousness', youtubeId: 'Ro-gAvnjNj8', duration: '--:--' },
+            { id: '4.3', title: 'What Are You Searching For?', youtubeId: 'C7T7b0XFS0I', duration: '--:--' },
+            { id: '4.4', title: 'Dissolving Ordinary Unconsciousness', youtubeId: 'V7yITPggtTs', duration: '--:--' },
+            { id: '4.5', title: 'Freedom from Unhappiness', youtubeId: 'ahf_93U8as0', duration: '--:--' },
+            { id: '4.6', title: 'Wherever You Are, Be There Totally', youtubeId: 'dAVLVCAktnQ', duration: '--:--' },
+        ]
+    },
+    {
         id: 'bonus',
         num: 'Bonus',
         subtitle: 'Bonus Sections & Practice',
