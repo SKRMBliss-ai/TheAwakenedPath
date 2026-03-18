@@ -80,7 +80,7 @@ function JournalHeader({
                                             ? 'var(--accent-primary)' 
                                             : isActive 
                                                 ? 'var(--accent-primary)' 
-                                                : 'transparent',
+                                                : 'rgba(0,0,0,0)',
                                         borderColor: isDone || isActive 
                                             ? 'var(--accent-primary)' 
                                             : 'var(--border-default)',

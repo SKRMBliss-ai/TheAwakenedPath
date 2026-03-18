@@ -121,7 +121,11 @@ export class VoiceService {
             };
 
             await audio.play();
-        } catch (error) {
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                console.log("VoiceService: audio.play() was aborted (likely by a manual stop/pause).");
+                return;
+            }
             console.warn("Cascading to Browser Speech Synthesis.", error);
             this.speakFallbackBrowser(text, options);
         }

@@ -151,6 +151,7 @@ export function useJournalVoice() {
             isMountedRef.current = false;
             unsubscribe();
             clearInterval(intv);
+            VoiceService.stop();
         };
     }, [speak, voiceEnabled]);
 
