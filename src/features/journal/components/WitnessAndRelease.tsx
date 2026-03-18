@@ -19,6 +19,7 @@ interface WitnessAndReleaseProps {
     data: WitnessData;
     onComplete: (reflection: string) => void;
     onTabChange?: (tabId: typeof TABS[number]["id"]) => void;
+    onHoopComplete?: () => void;
 }
 
 const TABS = [
@@ -51,11 +52,13 @@ const LOVE_TRAITS = [
     "Rests in what is real now",
 ];
 
+import { VoiceService } from "../../../services/voiceService";
+
 const HOOP = [
-    { phrase: "I'm sorry", icon: "🙏", note: "Acknowledging" },
-    { phrase: "Forgive me", icon: "💧", note: "Releasing" },
-    { phrase: "Thank you", icon: "✨", note: "Gratitude" },
-    { phrase: "I love you", icon: "💛", note: "Wholeness" },
+    { phrase: "I'm sorry.", speak: "I am sorry.", icon: "🙏", note: "Acknowledging" },
+    { phrase: "Forgive me.", speak: "Please... forgive me.", icon: "💧", note: "Releasing" },
+    { phrase: "Thank you.", speak: "Thank you.", icon: "✨", note: "Gratitude" },
+    { phrase: "I love you.", speak: "I love you.", icon: "💛", note: "Wholeness" },
 ];
 
 const GRATITUDE_PROMPTS = [
@@ -66,7 +69,7 @@ const GRATITUDE_PROMPTS = [
     "Something beautiful you noticed recently",
 ];
 
-export function WitnessAndRelease({ data, onComplete, onTabChange }: WitnessAndReleaseProps) {
+export function WitnessAndRelease({ data, onComplete, onTabChange, onHoopComplete }: WitnessAndReleaseProps) {
     const [tab, setTab] = useState<TabId>("witness");
     const [hoopRunning, setHoopRunning] = useState(false);
     const [hoopTime, setHoopTime] = useState(60);
@@ -97,8 +100,16 @@ export function WitnessAndRelease({ data, onComplete, onTabChange }: WitnessAndR
             setHoopRunning(false);
             setHoopDone(true);
             setChecks(c => ({ ...c, hoop: true }));
+            onHoopComplete?.();
         }
         return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    }, [hoopRunning, hoopTime, onHoopComplete]);
+
+    // Speak all phrases once at the start of the practice
+    useEffect(() => {
+        if (hoopRunning && VoiceService.isEnabled && hoopTime === 60) {
+            VoiceService.speak("I am sorry. ... Please forgive me. ... Thank you. ... I love you.");
+        }
     }, [hoopRunning, hoopTime]);
 
     const startHoop = () => {
@@ -417,14 +428,16 @@ export function WitnessAndRelease({ data, onComplete, onTabChange }: WitnessAndR
                         ))}
                     </div>
 
-                    <button
-                        onClick={() => { const i = tabIdx + 1; if (i < TABS.length) handleTabChange(TABS[i].id); }}
-                        disabled={tabIdx === TABS.length - 1}
-                        className={`px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-20 
-                        ${tabIdx < TABS.length - 1 ? 'bg-[var(--accent-primary)] text-white' : 'bg-[var(--bg-surface)] text-[var(--text-muted)]'}`}
-                    >
-                        Next →
-                    </button>
+                    {tabIdx < TABS.length - 1 ? (
+                        <button
+                            onClick={() => { handleTabChange(TABS[tabIdx + 1].id); }}
+                            className="px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all bg-[var(--accent-primary)] text-white"
+                        >
+                            Next →
+                        </button>
+                    ) : (
+                        <div className="w-[100px]" /> /* Spacer to balance the 'Back' button */
+                    )}
                 </div>
             </div>
         </div>
