@@ -107,6 +107,20 @@ const Journal: React.FC = () => {
     const [journeyTitle, setJourneyTitle] = useState("Daily Presence");
     const lastSpokenRef = useRef<string | null>(null);
 
+    const bellRef = useRef<HTMLAudioElement | null>(null);
+
+    useEffect(() => {
+        bellRef.current = new Audio('/mp3/tibetanbell.mp3');
+        bellRef.current.preload = 'auto';
+    }, []);
+
+    const playBell = useCallback(() => {
+        if (bellRef.current) {
+            bellRef.current.currentTime = 0;
+            bellRef.current.play().catch(e => console.log('Bell play failed', e));
+        }
+    }, []);
+
     // Magnetic orb tilt
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
@@ -132,6 +146,14 @@ const Journal: React.FC = () => {
         });
         // editingId is managed by JournalPage now
     };
+
+    const prevIsPracticing = useRef(false);
+    useEffect(() => {
+        if (isPracticing && !prevIsPracticing.current) {
+            playBell();
+        }
+        prevIsPracticing.current = isPracticing;
+    }, [isPracticing, playBell]);
 
     // Audio Logic
     const speak = useCallback((text: string, onEnd?: () => void, isAudioUrl: boolean = false) => {
@@ -208,13 +230,14 @@ const Journal: React.FC = () => {
     };
 
     const handleCompleteMeditation = useCallback(async () => {
+        playBell();
         setIsTransitioning(true);
         await new Promise(r => setTimeout(r, 1400));
         setIsPracticing(false);
         setIsTransitioning(false);
         setShowLogForm(true);
         setPracticeStep(0);
-    }, []);
+    }, [playBell]);
 
     const handleNextStep = useCallback(() => {
         if (practiceStep < dynamicSteps.length - 1) {
