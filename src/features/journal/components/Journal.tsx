@@ -23,6 +23,7 @@ import {
 import { useEmotionSync } from '../../soul-intelligence/hooks/useEmotionSync';
 import JournalCalendar from './JournalCalendar';
 import { GentleJournalForm } from './GentleJournalForm';
+import { PracticeHistory } from './PracticeHistory';
 
 
 
@@ -51,7 +52,7 @@ const childVariant: any = {
 const orbExitVariant: any = {
     exit: {
         scale: 3.5, opacity: 0, filter: 'blur(60px)',
-        transition: { duration: 1.4, ease: [0.16, 1, 0.3, 1] }
+        transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
     },
 };
 
@@ -98,6 +99,7 @@ const Journal: React.FC = () => {
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [showLogForm, setShowLogForm] = useState(false);
+    const [historyTab, setHistoryTab] = useState<'calendar' | 'timeline'>('calendar');
     const { awardEvent, checkAndUnlock } = useAchievements();
     const [isLoadingScript, setIsLoadingScript] = useState(false);
     const [toastVisible, setToastVisible] = useState(false);
@@ -232,7 +234,7 @@ const Journal: React.FC = () => {
     const handleCompleteMeditation = useCallback(async () => {
         playBell();
         setIsTransitioning(true);
-        await new Promise(r => setTimeout(r, 1400));
+        await new Promise(r => setTimeout(r, 800));
         setIsPracticing(false);
         setIsTransitioning(false);
         setShowLogForm(true);
@@ -300,20 +302,22 @@ const Journal: React.FC = () => {
 
     if (!user) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 space-y-12 text-center h-[80vh] relative">
-                <NoiseOverlay />
-                <motion.div
-                    animate={{ opacity: [0.08, 0.18, 0.08], scale: [1, 1.1, 1] }}
-                    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute w-[400px] h-[400px] rounded-full blur-[80px] pointer-events-none"
-                    style={{ background: `radial-gradient(circle, var(--accent-primary-muted), transparent)` }}
-                />
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex flex-col items-center gap-8">
-                    <p className="text-[9px] uppercase tracking-[0.6em] text-[var(--text-muted)] font-bold">The Awakened Path</p>
-                    <h1 className="text-6xl font-serif font-light text-[var(--text-primary)] leading-tight">Sacred Access</h1>
-                    <p className="text-sm text-[var(--text-muted)] italic max-w-xs font-serif leading-relaxed">Sign in to begin your journey inward.</p>
-                    <AnchorButton variant="solid" onClick={signInWithGoogle}>Authenticate Presence</AnchorButton>
-                </motion.div>
+            <div className="flex flex-col items-center justify-center p-12 text-center h-[60vh]">
+                <p className="text-[10px] uppercase tracking-[0.3em] font-bold mb-3"
+                    style={{ color: 'var(--text-muted)' }}>
+                    The Awakened Path
+                </p>
+                <h1 className="text-3xl font-serif font-light mb-2"
+                    style={{ color: 'var(--text-primary)' }}>
+                    Sign in to continue
+                </h1>
+                <p className="text-sm italic mb-8 max-w-xs"
+                    style={{ color: 'var(--text-muted)' }}>
+                    Your journal entries are private and encrypted.
+                </p>
+                <AnchorButton variant="solid" onClick={signInWithGoogle}>
+                    Sign In
+                </AnchorButton>
             </div>
         );
     }
@@ -354,8 +358,12 @@ const Journal: React.FC = () => {
                         currentStepTitle={dynamicSteps[practiceStep].title}
                         currentStepInstruction={dynamicSteps[practiceStep].instructions.join('. ')}
                         onNext={handleNextStep}
-                        onReset={() => setIsPracticing(false)}
-                        onClose={() => setIsPracticing(false)}
+                        onReset={() => { setPracticeStep(0); VoiceService.stop(); }}
+                        onClose={() => {
+                            setIsPracticing(false);
+                            VoiceService.stop();
+                            lastSpokenRef.current = null;
+                        }}
                         onTogglePlay={() => setIsPaused(!isPaused)}
                         isPlaying={!isPaused}
                         progress={(practiceStep + 1) / dynamicSteps.length}
@@ -368,36 +376,31 @@ const Journal: React.FC = () => {
     }
 
     return (
-        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto px-6 pt-4 pb-12 relative">
+        <div className="w-full max-w-3xl mx-auto px-6 pt-4 pb-12 relative">
             <NoiseOverlay />
 
-            {/* Ambient continuous glow */}
-            <motion.div
-                animate={{ opacity: [0.06, 0.14, 0.06], scale: [1, 1.08, 1] }}
-                transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-                className="fixed top-[30%] left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-[120px] pointer-events-none -z-10"
-                style={{ background: `radial-gradient(ellipse, var(--accent-primary-muted), transparent)` }}
-            />
-
-            <nav className="flex justify-between items-start mb-2 relative z-10">
-                <div className="min-w-[120px]" />
-                <div className="text-center">
-                    <h1 className="text-6xl font-serif font-light text-[var(--text-primary)] tracking-tight leading-none [text-shadow:0_0_60px_var(--accent-primary-muted)]">Daily Log</h1>
-                    <p className="text-[11px] uppercase tracking-[0.6em] text-[var(--accent-secondary)] opacity-90 font-bold mt-4">The Presence Study</p>
-                    <a
-                        href="https://docs.google.com/document/d/1cABPEGjz-IRhFg5MOH_gZFTJm-lFn4wVN9IJbGC5de8/edit?usp=sharing"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 mt-5 px-4 py-1.5 rounded-full border border-[var(--border-default)] text-[var(--text-secondary)] opacity-90 hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary-border)] transition-all duration-300 text-[9px] uppercase tracking-[0.3em] font-bold"
-                    >
-                        <Download size={10} />
-                        Download Journal
-                    </a>
+            <nav className="flex items-center justify-between mb-6 relative z-10">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-serif font-light" 
+                        style={{ color: 'var(--text-primary)' }}>
+                        Daily Log
+                    </h1>
+                    <p className="text-[11px] font-serif italic mt-0.5" 
+                        style={{ color: 'var(--text-muted)' }}>
+                        {entries.length} reflections
+                    </p>
                 </div>
-                <div className="text-right min-w-[120px]">
-                    <p className="text-[10px] uppercase tracking-[0.6em] text-[var(--text-secondary)] opacity-90 font-bold">{entries.length} moments</p>
-                    <div className="mt-4 h-[1px] bg-gradient-to-r from-transparent via-[var(--accent-primary-border)] to-transparent" />
-                </div>
+                <a
+                    href="https://docs.google.com/document/d/1cABPEGjz-IRhFg5MOH_gZFTJm-lFn4wVN9IJbGC5de8/edit?usp=sharing"
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all"
+                    style={{ 
+                        background: 'var(--bg-surface)', 
+                        border: '1px solid var(--border-subtle)',
+                        color: 'var(--text-muted)',
+                    }}>
+                    <Download size={11} /> Export
+                </a>
             </nav>
 
             {/* Content fully unlocked for everyone */}
@@ -407,51 +410,76 @@ const Journal: React.FC = () => {
                         <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-8">
                             {/* Compact Practice CTA Card */}
                             <motion.section variants={childVariant} className="relative">
-                                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)]/50 rounded-[32px] p-6 shadow-sm flex items-center gap-6">
-                                    {/* Breathing Dot / Icon */}
-                                    <div className="w-16 h-16 rounded-full bg-[var(--accent-primary-muted)]/10 border border-[var(--border-subtle)]/20 flex items-center justify-center flex-shrink-0">
+                                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-5 flex items-center gap-5">
+                                    {/* Breathing dot — keep as-is, just smaller */}
+                                    <div className="w-12 h-12 rounded-full bg-[var(--accent-primary-muted)]/10 border border-[var(--border-subtle)] flex items-center justify-center flex-shrink-0">
                                         <motion.div
                                             animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                                             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                            className="w-4 h-4 rounded-full bg-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-primary-muted)]"
+                                            className="w-3 h-3 rounded-full"
+                                            style={{ background: 'var(--accent-primary)', boxShadow: '0 0 12px var(--accent-primary-muted)' }}
                                         />
                                     </div>
 
                                     <div className="flex-1">
-                                        <h2 className="text-2xl font-serif font-light text-[var(--text-primary)] leading-tight">
+                                        <h2 className="text-xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>
                                             Settle into the Now
                                         </h2>
-                                        <p className="text-sm text-[var(--text-secondary)] italic font-serif mt-1 opacity-90">
-                                            2 min reconnection before logging.
+                                        <p className="text-[12px] font-serif italic mt-0.5 opacity-70" 
+                                            style={{ color: 'var(--text-secondary)' }}>
+                                            A brief reconnection before journaling
                                         </p>
                                     </div>
 
-                                    <div className="flex flex-col items-end gap-3">
+                                    <div className="flex flex-col items-end gap-2">
                                         <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript}>
                                             Begin
                                         </AnchorButton>
-                                        <button
-                                            onClick={() => { resetJournalForm(); setShowLogForm(true); }}
-                                            className="text-[8px] uppercase tracking-[0.3em] text-[var(--text-muted)] hover:text-[var(--accent-primary)] font-bold transition-colors"
-                                        >
-                                            or skip to log →
+                                        <button onClick={() => { resetJournalForm(); setShowLogForm(true); }}
+                                            className="text-[9px] uppercase tracking-[0.2em] font-bold transition-colors"
+                                            style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                            Skip to journal →
                                         </button>
                                     </div>
                                 </div>
                             </motion.section>
 
-                            {/* Calendar History */}
-                            {entries.length > 0 && (
-                                <motion.section variants={childVariant} className="space-y-6">
-                                    <JournalCalendar entries={entries} />
-                                </motion.section>
-                            )}
+                            {/* Calendar / Timeline Toggle & View */}
+                            <motion.section variants={childVariant} className="space-y-6 mt-8">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex bg-[var(--bg-surface)] rounded-xl p-0.5 border border-[var(--border-subtle)]">
+                                        {(['calendar', 'timeline'] as const).map(tab => (
+                                            <button key={tab} onClick={() => setHistoryTab(tab)}
+                                                className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all ${
+                                                    historyTab === tab 
+                                                        ? 'bg-[var(--accent-primary)] text-white shadow-sm' 
+                                                        : 'text-[var(--text-muted)]'
+                                                }`}>
+                                                {tab === 'calendar' ? 'Calendar' : 'History'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {/* Entry count */}
+                                    <span className="text-[10px] font-bold uppercase tracking-wider"
+                                        style={{ color: 'var(--text-muted)' }}>
+                                        {entries.length} journal
+                                    </span>
+                                </div>
+                                
+                                <div className="pt-2">
+                                    {historyTab === 'calendar' ? (
+                                        <JournalCalendar entries={entries} />
+                                    ) : (
+                                        <PracticeHistory />
+                                    )}
+                                </div>
+                            </motion.section>
                         </motion.div>
                     ) : (
                         /* ═══════════════════════════════════════════════════════════════
                            AWAKENED PATH 3-STEP JOURNAL FLOW
                         ═══════════════════════════════════════════════════════════════ */
-                        <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-5xl xl:max-w-6xl mx-auto w-full">
+                        <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto w-full">
                             <GentleJournalForm
                                 onSave={async (entryData) => {
                                     if (!user) return;
