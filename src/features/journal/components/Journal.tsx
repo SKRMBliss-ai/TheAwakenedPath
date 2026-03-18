@@ -260,24 +260,27 @@ const Journal: React.FC = () => {
         }
     }, [practiceStep, isPracticing, speak, handleNextStep, isPaused, dynamicSteps]);
 
+    const wasPlayingWhenHiddenRef = useRef(false);
+
     // Handle tab switching / backgrounding
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.hidden) {
+                wasPlayingWhenHiddenRef.current = !isPaused;
                 setIsPaused(true);
                 VoiceService.pause();
             } else {
-                // Optionally resume immediately if they come back:
-                if (isPracticing) {
+                // Only resume if it was actively playing before switching tabs
+                if (isPracticing && wasPlayingWhenHiddenRef.current) {
                     setIsPaused(false);
+                    VoiceService.resume();
                 }
-                VoiceService.resume();
             }
         };
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
         return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-    }, [isPracticing]);
+    }, [isPracticing, isPaused]);
 
     if (!user) {
         return (

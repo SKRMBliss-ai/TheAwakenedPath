@@ -21,7 +21,7 @@ export class VoiceService {
         } catch { return true; }
     })();
 
-    private static audioCache: Record<string, string> = {};
+    private static audioCache: Record<string, Promise<string>> = {};
 
     static get isSpeaking() {
         return this._isSpeaking;
@@ -52,28 +52,32 @@ export class VoiceService {
         };
     }
 
-    static async preloadText(text: string, options: {
+    static preloadText(text: string, options: {
         gender?: 'MALE' | 'FEMALE';
         voice?: string;
         promptContext?: string;
-    } = {}): Promise<void> {
-        if (!this._isEnabled || this.audioCache[text]) return;
-        try {
-            const response = await fetch(API_BASE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: text,
-                    promptContext: options.promptContext,
-                    gender: options.gender || 'FEMALE',
-                    voice: options.voice
-                })
-            });
-            if (response.ok) {
-                const audioBlob = await response.blob();
-                this.audioCache[text] = URL.createObjectURL(audioBlob);
-            }
-        } catch { console.warn("Preload failed for", text) }
+    } = {}): void {
+        if (!this._isEnabled || text in this.audioCache) return;
+        this.audioCache[text] = fetch(API_BASE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: text,
+                promptContext: options.promptContext,
+                gender: options.gender || 'FEMALE',
+                voice: options.voice
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Backend Budget Exhausted");
+            return res.blob();
+        })
+        .then(blob => URL.createObjectURL(blob))
+        .catch(err => {
+            console.warn("Preload failed for", text, err);
+            delete this.audioCache[text]; // Remove failed preload so we can retry on next speak
+            throw err;
+        });
     }
 
     /**
@@ -92,34 +96,22 @@ export class VoiceService {
         this.currentRequestId = requestId; // Restore after stop() increases it
 
         try {
-            let audioUrl = this.audioCache[text];
-            if (!audioUrl) {
-                const response = await fetch(API_BASE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        text: text,
-                        promptContext: options.promptContext,
-                        gender: options.gender || 'FEMALE',
-                        voice: options.voice
-                    })
-                });
-
-                if (this.currentRequestId !== requestId) return;
-                if (!response.ok) throw new Error("Backend Budget Exhausted");
-
-                const audioBlob = await response.blob();
-                if (this.currentRequestId !== requestId) return;
-                audioUrl = URL.createObjectURL(audioBlob);
-                this.audioCache[text] = audioUrl; // Cache the dynamically fetched audio as well
-            } else {
-                console.log(`VOICE REQUEST [${requestId}]: Using preloaded audio cache`);
+            if (!(text in this.audioCache)) {
+                // If not preloaded, start the fetch now by leveraging preloadText
+                this.preloadText(text, options);
             }
+
+            // Wait for the preload fetch to finish (or the inline fetch we just started)
+            const audioUrl = await this.audioCache[text];
+
+            if (this.currentRequestId !== requestId) return;
 
             const audio = new Audio(audioUrl);
             this.currentAudio = audio;
             this.currentUrl = "tts_blob";
-            this.setSpeaking(true);
+
+            // Wait until it's actually about to play before showing "Guiding..."
+            audio.onplay = () => this.setSpeaking(true);
 
             audio.onended = () => {
                 this.setSpeaking(false);
