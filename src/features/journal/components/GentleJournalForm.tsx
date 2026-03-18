@@ -451,16 +451,16 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
 
     const handleWitnessTabChange = (tabId: string) => {
         if (!voice.voiceEnabled) return;
-        const t = [...selectedThoughts, customThought].filter(Boolean).join("... and... ");
-        const e = selectedEmotions.join("... ");
+        const t = [...selectedThoughts, customThought].filter(Boolean).join(", and ");
+        const e = selectedEmotions.join(", ");
         const body = selectedArea?.label || bodySensations || "part of your body";
 
         const tabScripts: Record<string, string> = {
-            witness: `Now... step back. ... A thought arose... "${t}" ... Which created a feeling of... ${e}. ... Which you felt in your... ${body}. ... But notice something... ... You are not the thought. You are not the emotion. You are not the sensation. ... You... are the one... who was watching them happen. ... That awareness... that witnessing presence... that is who you truly are. ... When you're ready to look closer, click next to find the deeper truth.`,
-            truth: "Now... let's bring in the light of truth. ... Thoughts are not facts. ... Read this antidote to yourself. ... How does it feel to hear a truer... kinder story? ... Click next to shift your perspective on this entirely.",
-            perspective: "Notice where this thought is coming from. ... Is it from the fearful ego... or from your true being? ... Remind yourself... you are not the fear. You are the awareness witnessing it. ... Click next to begin releasing this energy.",
-            release: "Let's practice a moment of deep release. ... Silently repeat these phrases... and let each one dissolve a layer of resistance. ... Click Begin Practice to start.",
-            close: "As we close this practice... take a final moment to reflect. ... What have you learned about yourself? ... Check off the steps you completed on the checklist above... Ask yourself the final question on the screen... and then tap Seal This Entry.",
+            witness: `Now, step back. A thought arose, ${t}. Which created a feeling of, ${e}. Which you felt in your, ${body}. But notice something. You are not the thought. You are not the emotion. You are not the sensation. You, are the one who was watching them happen. That awareness, that witnessing presence, that is who you truly are. When you're ready to look closer, click next to find the deeper truth.`,
+            truth: "Now, let's bring in the light of truth. Thoughts are not facts. Read this antidote to yourself. How does it feel to hear a truer, kinder story? Click next to shift your perspective on this entirely.",
+            perspective: "Notice where this thought is coming from. Is it from the fearful ego, or from your true being? Remind yourself, you are not the fear. You are the awareness witnessing it. Click next to begin releasing this energy.",
+            release: "Let's practice a moment of deep release. Silently repeat these phrases, and let each one dissolve a layer of resistance. Click Begin Practice to start.",
+            close: "As we close this practice, take a final moment to reflect. What have you learned about yourself? Check off the steps you completed on the checklist above, ask yourself the final question on the screen, and then tap Seal This Entry.",
         };
         if (tabScripts[tabId]) voice.speak(tabScripts[tabId]);
     };
@@ -470,11 +470,11 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         if (!voice.voiceEnabled) return;
         const intros: Record<number, { text: string; key: string }> = {
             0: {
-                text: "Take a moment... and notice what's been on your mind today. ... Sometimes thoughts come as quiet whispers... sometimes they feel loud and heavy. ... If anything below feels familiar... simply tap the one that resonates. ... Once you've selected what's on your mind... click next to find out where this energy is hiding in your body.",
+                text: "Take a moment, and notice what's been on your mind today. Sometimes thoughts come as quiet whispers, sometimes they feel loud and heavy. If anything below feels familiar, simply tap the one that resonates. Once you've selected what's on your mind, click next to find out where this energy is hiding in your body.",
                 key: "step-0-intro"
             },
             1: {
-                text: "Emotions are energy in motion... and that energy always lands somewhere in the body. ... If you can... close your eyes for a moment. ... Take one slow breath. ... Now notice... where in your body do you feel it? ... Tap the area that draws your attention. ... Once you've found it... click next to begin the process of releasing it.",
+                text: "Emotions are energy in motion, and that energy always lands somewhere in the body. If you can, close your eyes for a moment. Take one slow breath. Now notice, where in your body do you feel it? Tap the area that draws your attention. Once you've found it, click next to begin the process of releasing it.",
                 key: "step-1-intro"
             }
         };
@@ -484,7 +484,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         } else if (step === 2) {
             handleWitnessTabChange("witness");
         } else if (step === 5) {
-            voice.speak("Your reflection has been saved. ... By watching the thought... feeling the emotion... and noticing the body... you have already begun to dissolve the pattern.");
+            voice.speak("Your reflection has been saved. By watching the thought, feeling the emotion, and noticing the body, you have already begun to dissolve the pattern.");
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [step, voice.voiceEnabled]);
@@ -495,22 +495,22 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         
         if (step === 0) {
             // "intros[1].text" hardcoded so we don't need to rebuild the object
-            VoiceService.preloadText("Emotions are energy in motion... and that energy always lands somewhere in the body. ... If you can... close your eyes for a moment. ... Take one slow breath. ... Now notice... where in your body do you feel it? ... Tap the area that draws your attention. ... Once you've found it... click next to begin the process of releasing it.");
+            VoiceService.preloadText("Emotions are energy in motion, and that energy always lands somewhere in the body. If you can, close your eyes for a moment. Take one slow breath. Now notice, where in your body do you feel it? Tap the area that draws your attention. Once you've found it, click next to begin the process of releasing it.");
         } else if (step === 1) {
             // We use the same generation logic as the witness tab, so it perfectly matches the cache key in handleWitnessTabChange
-            const t = [...selectedThoughts, customThought].filter(Boolean).join("... and... ");
-            const e = selectedEmotions.join("... ");
+            const t = [...selectedThoughts, customThought].filter(Boolean).join(", and ");
+            const e = selectedEmotions.join(", ");
             const body = selectedArea?.label || bodySensations || "part of your body";
-            const witnessIntro = `Now... step back. ... A thought arose... "${t}" ... Which created a feeling of... ${e}. ... Which you felt in your... ${body}. ... But notice something... ... You are not the thought. You are not the emotion. You are not the sensation. ... You... are the one... who was watching them happen. ... That awareness... that witnessing presence... that is who you truly are. ... When you're ready to look closer, click next to find the deeper truth.`;
+            const witnessIntro = `Now, step back. A thought arose, ${t}. Which created a feeling of, ${e}. Which you felt in your, ${body}. But notice something. You are not the thought. You are not the emotion. You are not the sensation. You, are the one who was watching them happen. That awareness, that witnessing presence, that is who you truly are. When you're ready to look closer, click next to find the deeper truth.`;
             VoiceService.preloadText(witnessIntro);
         } else if (step === 2) {
             // Preload all remaining static tabs!
-            VoiceService.preloadText("Now... let's bring in the light of truth. ... Thoughts are not facts. ... Read this antidote to yourself. ... How does it feel to hear a truer... kinder story? ... Click next to shift your perspective on this entirely.");
-            VoiceService.preloadText("Notice where this thought is coming from. ... Is it from the fearful ego... or from your true being? ... Remind yourself... you are not the fear. You are the awareness witnessing it. ... Click next to begin releasing this energy.");
-            VoiceService.preloadText("Let's practice a moment of deep release. ... Silently repeat these phrases... and let each one dissolve a layer of resistance. ... Click Begin Practice to start.");
-            VoiceService.preloadText("I am sorry. ... Please forgive me. ... Thank you. ... I love you.");
+            VoiceService.preloadText("Now, let's bring in the light of truth. Thoughts are not facts. Read this antidote to yourself. How does it feel to hear a truer, kinder story? Click next to shift your perspective on this entirely.");
+            VoiceService.preloadText("Notice where this thought is coming from. Is it from the fearful ego, or from your true being? Remind yourself, you are not the fear. You are the awareness witnessing it. Click next to begin releasing this energy.");
+            VoiceService.preloadText("Let's practice a moment of deep release. Silently repeat these phrases, and let each one dissolve a layer of resistance. Click Begin Practice to start.");
+            VoiceService.preloadText("I am sorry. Please forgive me. Thank you. I love you.");
             VoiceService.preloadText("You have completed the release practice. Complete your checklist and click on the Seal this entry button. Return back tomorrow for the same activity.");
-            VoiceService.preloadText("As we close this practice... take a final moment to reflect. ... What have you learned about yourself? ... Check off the steps you completed on the checklist above... Ask yourself the final question on the screen... and then tap Seal This Entry.");
+            VoiceService.preloadText("As we close this practice, take a final moment to reflect. What have you learned about yourself? Check off the steps you completed on the checklist above, ask yourself the final question on the screen, and then tap Seal This Entry.");
         }
     }, [step, voice.voiceEnabled, selectedThoughts, customThought, selectedEmotions, selectedArea, bodySensations]);
 
@@ -530,7 +530,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
 
         if (newThoughts.length > 0) {
             showScrollPrompt();
-            voice.speak(`I see... "${newThoughts[0]}". ... That's a thought many of us carry. Notice the feelings it creates inside you. ... When you're ready, scroll down and click Next.`);
+            voice.speak(`I see, ${newThoughts[0]}. That's a thought many of us carry. Notice the feelings it creates inside you. When you're ready, scroll down and click Next.`);
         } else if (thoughts.length > selectedThoughts.length) {
             showScrollPrompt();
         }
