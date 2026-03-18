@@ -176,7 +176,7 @@ const SITUATIONS: Situation[] = [
         ]
     },
     {
-        id: 'lunch-break-reset', title: 'Lunch Break Reset', duration: '5 min',
+        id: 'lunch-break-reset', title: 'Work Break', duration: '5 min',
         durationNum: 5, category: 'Work', tags: ['midday', 'reset', 'work', 'recharge', 'burnout'],
         whenToUse: 'Midday when you need to reset and recharge',
         description: 'Reset your energy midday to avoid afternoon burnout.',
@@ -189,7 +189,7 @@ const SITUATIONS: Situation[] = [
         ],
         realLifeExample: "Kevin would power through 10-hour workdays, exhausted and irritable. By acknowledging frustration midday and releasing it, he had more energy for the afternoon.",
         journalPrompts: [
-            { label: 'What emotions had accumulated by lunchtime?', placeholder: 'e.g., frustration, rush...' },
+            { label: 'What emotions had accumulated by your break?', placeholder: 'e.g., frustration, rush...' },
             { label: 'How did I feel after the reset?', placeholder: 'More clear? Calmer?' }
         ]
     },

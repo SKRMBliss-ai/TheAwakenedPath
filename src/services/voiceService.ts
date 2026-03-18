@@ -21,6 +21,8 @@ export class VoiceService {
         } catch { return true; }
     })();
 
+    private static audioCache: Record<string, string> = {};
+
     static get isSpeaking() {
         return this._isSpeaking;
     }
@@ -50,6 +52,30 @@ export class VoiceService {
         };
     }
 
+    static async preloadText(text: string, options: {
+        gender?: 'MALE' | 'FEMALE';
+        voice?: string;
+        promptContext?: string;
+    } = {}): Promise<void> {
+        if (!this._isEnabled || this.audioCache[text]) return;
+        try {
+            const response = await fetch(API_BASE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: text,
+                    promptContext: options.promptContext,
+                    gender: options.gender || 'FEMALE',
+                    voice: options.voice
+                })
+            });
+            if (response.ok) {
+                const audioBlob = await response.blob();
+                this.audioCache[text] = URL.createObjectURL(audioBlob);
+            }
+        } catch { console.warn("Preload failed for", text) }
+    }
+
     /**
      * Pulls high-fidelity audio from the backend and plays it.
      */
@@ -66,23 +92,29 @@ export class VoiceService {
         this.currentRequestId = requestId; // Restore after stop() increases it
 
         try {
-            const response = await fetch(API_BASE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: text,
-                    promptContext: options.promptContext,
-                    gender: options.gender || 'FEMALE',
-                    voice: options.voice
-                })
-            });
+            let audioUrl = this.audioCache[text];
+            if (!audioUrl) {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        promptContext: options.promptContext,
+                        gender: options.gender || 'FEMALE',
+                        voice: options.voice
+                    })
+                });
 
-            if (this.currentRequestId !== requestId) return;
-            if (!response.ok) throw new Error("Backend Budget Exhausted");
+                if (this.currentRequestId !== requestId) return;
+                if (!response.ok) throw new Error("Backend Budget Exhausted");
 
-            const audioBlob = await response.blob();
-            if (this.currentRequestId !== requestId) return;
-            const audioUrl = URL.createObjectURL(audioBlob);
+                const audioBlob = await response.blob();
+                if (this.currentRequestId !== requestId) return;
+                audioUrl = URL.createObjectURL(audioBlob);
+                this.audioCache[text] = audioUrl; // Cache the dynamically fetched audio as well
+            } else {
+                console.log(`VOICE REQUEST [${requestId}]: Using preloaded audio cache`);
+            }
 
             const audio = new Audio(audioUrl);
             this.currentAudio = audio;
@@ -90,7 +122,6 @@ export class VoiceService {
             this.setSpeaking(true);
 
             audio.onended = () => {
-                URL.revokeObjectURL(audioUrl);
                 this.setSpeaking(false);
                 options.onEnd?.();
                 this.currentAudio = null;

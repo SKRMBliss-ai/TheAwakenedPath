@@ -6,6 +6,7 @@ import { WitnessAndRelease } from "./WitnessAndRelease";
 import { useJournalVoice } from "../hooks/useJournalVoice";
 import { ThoughtFeelingSelector } from "./ThoughtFeelingSelector";
 import { FELT_EXPERIENCES } from "../../../data/feltExperiences";
+import { getDailyQuote } from "../../../data/dailyQuotes";
 import { cn } from "../../../lib/utils";
 
 // ─── ANIMATIONS ──────────────────────────────────────────────────────────────
@@ -585,7 +586,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                                 lineHeight: 1.55,
                                                 opacity: 0.85,
                                             }}>
-                                                "The beginning of freedom is the realization that you are not the thinker."
+                                                "{getDailyQuote().text}"
                                             </p>
                                             <p style={{
                                                 fontSize: 10,
@@ -596,7 +597,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                                 marginTop: 4,
                                                 fontFamily: "system-ui, sans-serif",
                                             }}>
-                                                Eckhart Tolle
+                                                {getDailyQuote().author}
                                             </p>
                                         </div>
                                     </motion.div>

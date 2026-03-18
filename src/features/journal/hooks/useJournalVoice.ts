@@ -128,6 +128,9 @@ export function useJournalVoice() {
     useEffect(() => {
         isMountedRef.current = true;
         speakRef.current = speak;
+        
+        // Background network preload for the first step
+        VoiceService.preloadText(STEP_PROMPTS[1], { voice: 'Enceladus' }).catch(() => {});
 
         // Subscribe to global speaking state
         const unsubscribe = VoiceService.subscribe((isSpeaking) => {
