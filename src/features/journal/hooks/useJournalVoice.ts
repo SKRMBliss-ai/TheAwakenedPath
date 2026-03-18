@@ -130,7 +130,7 @@ export function useJournalVoice() {
         speakRef.current = speak;
         
         // Background network preload for the first step
-        VoiceService.preloadText(STEP_PROMPTS[1], { voice: 'Enceladus' }).catch(() => {});
+        VoiceService.preloadText(STEP_PROMPTS[1], { voice: 'Enceladus' });
 
         // Subscribe to global speaking state
         const unsubscribe = VoiceService.subscribe((isSpeaking) => {
