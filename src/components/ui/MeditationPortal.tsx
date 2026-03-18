@@ -433,15 +433,15 @@ const PlayButton: React.FC<{
                     position: 'relative', width: 80, height: 80, borderRadius: '50%',
                     cursor: 'pointer',
                     background: isPlaying
-                        ? `radial-gradient(circle, rgba(255,255,255,0.06), rgba(255,255,255,0.02))`
+                        ? `radial-gradient(circle, ${color}15, ${color}02)`
                         : `radial-gradient(circle, ${color}18, ${color}05)`,
                     border: `1px solid ${isPlaying
-                        ? (hov ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)')
+                        ? (hov ? `${color}40` : `${color}20`)
                         : (hov ? `${color}50` : `${color}20`)}`,
-                    color: isPlaying ? 'rgba(255,255,255,0.75)' : color,
+                    color: color,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     boxShadow: isPlaying
-                        ? (hov ? '0 0 30px rgba(255,255,255,0.04)' : 'none')
+                        ? (hov ? `0 0 30px ${color}15` : 'none')
                         : (hov ? `0 0 30px ${color}20` : `0 0 12px ${color}08`),
                     transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
                 }}
