@@ -111,7 +111,9 @@ export class VoiceService {
             this.currentUrl = "tts_blob";
 
             // Wait until it's actually about to play before showing "Guiding..."
-            audio.onplay = () => this.setSpeaking(true);
+            audio.onplay = () => {
+                if (this.currentAudio === audio) this.setSpeaking(true);
+            };
 
             audio.onended = () => {
                 this.setSpeaking(false);

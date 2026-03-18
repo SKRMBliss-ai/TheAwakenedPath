@@ -259,7 +259,7 @@ const Journal: React.FC = () => {
                     VoiceService.pause();
                 }
             }
-        } else if (!isPracticing) {
+        } else if (!isPracticing && lastSpokenRef.current !== null) {
             VoiceService.stop();
             lastSpokenRef.current = null;
         }

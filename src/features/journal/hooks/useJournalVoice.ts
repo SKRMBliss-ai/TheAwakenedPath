@@ -148,12 +148,18 @@ export function useJournalVoice() {
         }, 1000);
 
         return () => {
-            isMountedRef.current = false;
             unsubscribe();
             clearInterval(intv);
-            VoiceService.stop();
         };
     }, [speak, voiceEnabled]);
+
+    // Full unmount cleanup
+    useEffect(() => {
+        return () => {
+            isMountedRef.current = false;
+            VoiceService.stop();
+        };
+    }, []);
 
     useEffect(() => {
         const handler = (e: any) => {
