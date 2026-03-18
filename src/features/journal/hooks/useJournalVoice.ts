@@ -31,16 +31,19 @@ const STEP_PROMPTS = {
     }
 };
 
+let globalHasInteracted = typeof window !== 'undefined' ? navigator.userActivation?.hasBeenActive || false : false;
+
 export function useJournalVoice() {
-    const [isPlaying, setIsPlaying] = useState(VoiceService.isSpeaking);
+    const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [voiceEnabled, setVoiceEnabled] = useState(VoiceService.isEnabled);
+    const [voiceEnabled, setVoiceEnabled] = useState(() => VoiceService.isEnabled);
 
     const isMountedRef = useRef(true);
     const lastSpokenRef = useRef<string | null>(null);
     const lastSpokenTimeRef = useRef<number>(0);
-    const pendingSpeechRef = useRef<{ text: string; force: boolean } | null>(null);
-    const isInteractedRef = useRef(false);
+    const pendingSpeechRef = useRef<{ text: string; force?: boolean; context?: string } | null>(null);
+    const isInteractedRef = useRef(globalHasInteracted || (typeof window !== 'undefined' ? navigator.userActivation?.hasBeenActive || false : false));
+    const wasPlayingWhenHiddenRef = useRef(false);
     const speakRef = useRef<Function | null>(null);
 
     const stop = useCallback(() => {
@@ -156,6 +159,7 @@ export function useJournalVoice() {
             if (isInteractedRef.current) return;
             console.log("Voice: Detected interaction:", e.type);
             isInteractedRef.current = true;
+            globalHasInteracted = true;
             if (pendingSpeechRef.current) {
                 const { text, force } = pendingSpeechRef.current;
                 pendingSpeechRef.current = null;
@@ -166,12 +170,32 @@ export function useJournalVoice() {
         window.addEventListener('touchstart', handler, { once: true, capture: true });
         window.addEventListener('keydown', handler, { once: true, capture: true });
         window.addEventListener('click', handler, { once: true, capture: true });
-        return () => {
-            window.removeEventListener('mousedown', handler);
-            window.removeEventListener('touchstart', handler);
-            window.removeEventListener('keydown', handler);
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                wasPlayingWhenHiddenRef.current = VoiceService.isSpeaking;
+                if (VoiceService.isSpeaking) {
+                    // Temporarily pause our own tracking to know we paused it
+                    isInteractedRef.current = true; // ensure we don't accidentally block it later
+                    VoiceService.pause();
+                }
+            } else {
+                if (voiceEnabled && wasPlayingWhenHiddenRef.current) {
+                    VoiceService.resume();
+                }
+            }
         };
-    }, []);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // If voice isn't enabled globally yet, wait for interaction
+        return () => {
+            window.removeEventListener('mousedown', handler, { capture: true });
+            window.removeEventListener('touchstart', handler, { capture: true });
+            window.removeEventListener('keydown', handler, { capture: true });
+            window.removeEventListener('click', handler, { capture: true }); // Added missing cleanup for click
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [voiceEnabled]);
 
     return {
         isPlaying,

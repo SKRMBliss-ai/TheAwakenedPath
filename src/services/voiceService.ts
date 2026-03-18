@@ -214,8 +214,9 @@ export class VoiceService {
 
     static resume() {
         if (!this._isEnabled) return;
-        this.setSpeaking(true);
+        
         if (this.currentAudio) {
+            this.setSpeaking(true);
             try {
                 if (this.savedTime > 0 && this.currentAudio.readyState >= 1) {
                     this.currentAudio.currentTime = this.savedTime;
