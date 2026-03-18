@@ -5,13 +5,14 @@ import {
     Sparkles, Sun, Wind, Brain, ArrowLeft, Clock, Flame,
     PenTool, Save, MessageSquare, Zap, Anchor, Moon,
     Coffee, Lightbulb, X, Trophy, Target, Timer, Droplet,
-    Search, Play, ChevronRight, CheckCircle2, ChevronDown, Info
+    Search, Play, ChevronRight, CheckCircle2, ChevronDown, Info,
+    Volume2, VolumeX, BookOpen
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { ThemeToggle, useTheme } from '../../theme/ThemeSystem';
 import { MeditationPortal } from '../../components/ui/MeditationPortal';
 import { db } from '../../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { VoiceService } from '../../services/voiceService';
 import { createPortal } from 'react-dom';
 
@@ -456,10 +457,18 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
                     <p className="text-[13px] leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
                         {situation.description}
                     </p>
+                    <p className="text-[11px] font-serif italic opacity-0 group-hover:opacity-50 transition-opacity duration-300 line-clamp-1 mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                        {situation.whenToUse}
+                    </p>
                 </div>
 
                 <div className="flex items-center justify-between gap-2 pt-1">
-                    <DurationPill dur={situation.duration} />
+                    <div className="flex items-center gap-2">
+                        <DurationPill dur={situation.duration} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-40" style={{ color: 'var(--text-muted)' }}>
+                            {situation.steps.length} steps
+                        </span>
+                    </div>
                 </div>
             </div>
         </motion.button>
@@ -476,7 +485,25 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
     const [isPracticing, setIsPracticing] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [showLogEntry, setShowLogEntry] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
     const [journalData, setJournalData] = useState<Record<string, string>>({});
+    
+    const [logVoiceEnabled, setLogVoiceEnabled] = useState(() => {
+        try {
+            const saved = localStorage.getItem('awakened-voice-enabled');
+            if (saved !== null) return saved !== 'off';
+        } catch { }
+        return true;
+    });
+    const [logVoicePlaying, setLogVoicePlaying] = useState(false);
+
+    const toggleVoice = () => {
+        setLogVoiceEnabled((prev: boolean) => {
+             const next = !prev;
+             VoiceService.setEnabled(next);
+             return next;
+        });
+    };
 
     // Browse state
     const [query, setQuery] = useState('');
@@ -515,10 +542,39 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
     useEffect(() => {
         if (isPracticing && selectedSituation && !isPaused) {
             speak(selectedSituation.steps[currentStep].audioScript, handleNextStep);
-        } else {
+        } else if (!showLogEntry) {
+            // Only stop if we are neither practicing nor showing the log entry
+            // This allows the log entry voice to play without being immediately cancelled
             VoiceService.stop();
         }
-    }, [currentStep, isPracticing, selectedSituation, speak, handleNextStep, isPaused]);
+    }, [currentStep, isPracticing, selectedSituation, speak, handleNextStep, isPaused, showLogEntry]);
+
+    useEffect(() => {
+        if (showLogEntry && selectedSituation) {
+            if (logVoiceEnabled) {
+                setLogVoicePlaying(true);
+                VoiceService.speak(
+                    "Welcome back. Take a moment to notice any subtle shifts in your body or mind. You can reflect using the text fields below. Even resting with a single word is enough. When you are ready, save your reflection, or gently skip to exit.",
+                    { 
+                        voice: 'Enceladus',
+                        onEnd: () => setLogVoicePlaying(false)
+                    }
+                );
+            } else {
+                VoiceService.stop();
+                setLogVoicePlaying(false);
+            }
+        }
+    }, [showLogEntry, selectedSituation, logVoiceEnabled]);
+
+    useEffect(() => {
+        return () => {
+             if (showLogEntry) {
+                 VoiceService.stop();
+                 setLogVoicePlaying(false);
+             }
+        };
+    }, [showLogEntry]);
 
     const handleSaveJournal = async () => {
         if (!user || !selectedSituation) return;
@@ -531,7 +587,8 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                 date: new Date().toLocaleDateString(),
                 createdAt: serverTimestamp()
             });
-            onBack();
+            setShowLogEntry(false);
+            setShowSuccess(true);
         } catch (error) {
             console.error('Error saving log:', error);
         }
@@ -552,9 +609,18 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                 title={selectedSituation.title}
                 currentStepTitle={selectedSituation.steps[currentStep]?.title || "Preparing..."}
                 currentStepInstruction={selectedSituation.steps[currentStep]?.instruction || "Arriving in the present moment..."}
+                totalSteps={selectedSituation.steps.length}
+                currentStepIndex={currentStep}
+                accentColor={selectedSituation.color}
                 onNext={handleNextStep}
+                onPrev={currentStep > 0 ? () => setCurrentStep(prev => prev - 1) : undefined}
                 onReset={handleReset}
                 onTogglePlay={() => setIsPaused(!isPaused)}
+                onClose={() => {
+                    setIsPracticing(false);
+                    setSelectedSituation(null);
+                    VoiceService.stop();
+                }}
                 isPlaying={!isPaused}
                 progress={selectedSituation.steps.length > 0 ? (currentStep + 1) / selectedSituation.steps.length : 0}
             />,
@@ -562,58 +628,234 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
         );
     }
 
-    // ── Journal mode ──
-    if (showLogEntry && selectedSituation) {
+    // ── Success mode — elegant confirmation ──
+    if (showSuccess && selectedSituation) {
         return (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto pb-32 relative">
-                {/* Completion Header Gradient */}
-                <div className="fixed top-0 left-0 right-0 h-40 pointer-events-none -z-10 opacity-30"
-                    style={{ background: `linear-gradient(to bottom, ${selectedSituation.color}40, transparent)` }} />
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="max-w-xl mx-auto px-4 py-20 text-center flex flex-col items-center justify-center min-h-[60vh]"
+            >
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-8"
+                    style={{ background: 'var(--bg-surface)', border: `1.5px solid ${selectedSituation.color}` }}>
+                    <CheckCircle2 size={32} style={{ color: selectedSituation.color }} />
+                </div>
+                <h2 className="text-3xl font-serif font-light mb-4" style={{ color: 'var(--text-primary)' }}>
+                    Saved Safely
+                </h2>
+                <p className="text-base mb-10 max-w-sm mx-auto leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                    Your reflection for <span className="italic">{selectedSituation.title}</span> has been securely saved. You can revisit this moment anytime in the <strong style={{color: 'var(--text-primary)'}}>Journal</strong> tab.
+                </p>
+                <button 
+                    onClick={() => {
+                        setShowSuccess(false);
+                        setIsPracticing(false);
+                        setSelectedSituation(null);
+                        setCurrentStep(0);
+                        setJournalData({});
+                        VoiceService.stop();
+                        setLogVoicePlaying(false);
+                    }}
+                    className="px-8 py-3.5 rounded-full font-bold uppercase tracking-[0.15em] text-[11px] transition-all active:scale-[0.98]"
+                    style={{ 
+                        background: 'transparent',
+                        border: `1px solid ${selectedSituation.color}`,
+                        color: selectedSituation.color,
+                        cursor: 'pointer'
+                    }}
+                >
+                    Return to Practices
+                </button>
+            </motion.div>
+        );
+    }
 
-                <div className="space-y-10">
-                    <button onClick={() => setShowLogEntry(false)}
-                        className="flex items-center gap-2 transition-all group"
-                        style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Back</span>
-                    </button>
-
-                    <header className="space-y-6 text-center">
-                        <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center shadow-lg mb-4"
+    // ── Journal mode — compact, clean ──
+    if (showLogEntry && selectedSituation) {
+        const Icon = selectedSituation.icon;
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 8 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                className="max-w-xl mx-auto pb-20 px-4"
+            >
+                {/* Compact header — one row */}
+                <div className="flex items-center justify-between py-5 mb-4 border-b" 
+                    style={{ borderColor: 'var(--border-subtle)' }}>
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                             style={{ background: selectedSituation.color, color: 'white' }}>
-                            <CheckCircle2 size={32} />
+                            <CheckCircle2 size={16} />
                         </div>
-                        <div className="space-y-2">
-                            <h3 className="text-[10px] font-bold uppercase tracking-[0.4em]" style={{ color: selectedSituation.color }}>Practice Complete</h3>
-                            <div className="flex items-center justify-center gap-4">
-                                {React.createElement(selectedSituation.icon, { size: 24, style: { color: selectedSituation.color }, opacity: 0.6 })}
-                                <h1 className="text-4xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>Reflect</h1>
-                            </div>
+                        <div>
+                            <p className="text-[9px] font-bold uppercase tracking-[0.2em]" 
+                                style={{ color: selectedSituation.color }}>
+                                Practice Complete
+                            </p>
+                            <h2 className="text-[17px] font-serif font-light leading-tight" 
+                                style={{ color: 'var(--text-primary)' }}>
+                                {selectedSituation.title}
+                            </h2>
                         </div>
-                    </header>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center">
+                            <AnimatePresence>
+                                {logVoicePlaying && logVoiceEnabled ? (
+                                    <motion.div 
+                                        initial={{ opacity: 0, scale: 0.9, x: 10 }}
+                                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                                        exit={{ opacity: 0, scale: 0.9, x: 10 }}
+                                        className="flex items-center gap-1.5 px-3 h-8 rounded-full relative mr-1"
+                                        style={{ 
+                                            background: 'transparent',
+                                            border: '1px solid var(--accent-secondary-border)',
+                                            color: 'var(--accent-secondary)'
+                                        }}
+                                    >
+                                        <div className="flex gap-[2px] items-center h-3 mr-1">
+                                            {[1, 2, 3].map((i) => (
+                                                <motion.div
+                                                    key={i}
+                                                    animate={{ height: ['40%', '100%', '40%'] }}
+                                                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }}
+                                                    className="w-[2px] rounded-full"
+                                                    style={{
+                                                        background: 'var(--accent-secondary)',
+                                                        opacity: 0.7,
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                        <span className="text-[9px] italic font-serif hidden sm:block"
+                                            style={{ color: 'var(--accent-secondary)' }}>
+                                            Guiding...
+                                        </span>
+                                        <button
+                                            onClick={() => {
+                                                VoiceService.stop();
+                                                setLogVoicePlaying(false);
+                                            }}
+                                            className="w-4 h-4 rounded-full flex items-center justify-center ml-0.5 transition-all active:scale-90"
+                                            style={{ 
+                                                background: 'var(--accent-secondary-muted)',
+                                                border: '1px solid var(--accent-secondary-border)',
+                                                color: 'var(--accent-secondary)',
+                                            }}
+                                        >
+                                            <X className="w-2.5 h-2.5" />
+                                        </button>
+                                    </motion.div>
+                                ) : null}
+                            </AnimatePresence>
 
-                    <div className="space-y-7 bg-[var(--bg-surface)] p-8 rounded-[40px] border border-[var(--border-subtle)] shadow-sm">
-                        {selectedSituation.journalPrompts.map((prompt, i) => (
-                            <div key={i} className="space-y-3">
-                                <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>{prompt.label}</label>
-                                <textarea
-                                    value={journalData[prompt.label] || ''}
-                                    onChange={e => setJournalData({ ...journalData, [prompt.label]: e.target.value })}
-                                    placeholder={prompt.placeholder}
-                                    className="w-full rounded-2xl p-6 text-lg font-serif outline-none resize-none min-h-[140px] transition-all focus:border-[var(--accent-primary)]"
-                                    style={{
-                                        background: 'var(--bg-secondary)',
-                                        border: '1px solid var(--border-default)',
-                                        color: 'var(--text-primary)',
-                                    }}
-                                />
-                            </div>
-                        ))}
+                            <button
+                                onClick={toggleVoice}
+                                className={`group relative h-8 px-3 rounded-full flex items-center justify-center gap-1.5 transition-all duration-300 ${
+                                    logVoiceEnabled
+                                        ? "bg-[var(--accent-secondary-dim)] border border-[var(--accent-secondary-border)] text-[var(--accent-secondary)]"
+                                        : "bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[var(--text-muted)] hover:border-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                                }`}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                {logVoiceEnabled ? (
+                                    <>
+                                        <Volume2 className="w-3.5 h-3.5" />
+                                        <span className="text-[8px] font-bold uppercase tracking-widest leading-none mt-[1px]">Auto Voice: On</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <VolumeX className="w-3.5 h-3.5" />
+                                        <span className="text-[8px] font-bold uppercase tracking-widest leading-none mt-[1px]">Auto Voice: Off</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                        <button 
+                            onClick={() => { 
+                                setShowLogEntry(false); 
+                                setSelectedSituation(null); 
+                                setJournalData({});
+                                setLogVoicePlaying(false);
+                                VoiceService.stop();
+                                onBack(); 
+                            }}
+                            className="text-[10px] font-bold uppercase tracking-wider transition-opacity hover:opacity-100"
+                            style={{ 
+                                color: 'var(--text-muted)', 
+                                background: 'none', 
+                                border: 'none', 
+                                cursor: 'pointer',
+                                opacity: 0.6,
+                            }}>
+                            Skip →
+                        </button>
+                    </div>
+                </div>
 
-                        <button onClick={handleSaveJournal}
-                            className="w-full py-5 rounded-3xl font-bold uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 transition-all hover:brightness-110 active:scale-95 shadow-xl"
-                            style={{ background: selectedSituation.color, color: 'white' }}>
-                            <Save className="w-4 h-4" /> Seal Reflection
+                {/* Gentle prompt */}
+                <p className="text-[14px] font-serif italic mb-6 leading-relaxed"
+                    style={{ color: 'var(--text-secondary)' }}>
+                    Take a moment to notice what shifted. Even one word counts.
+                </p>
+
+                {/* Journal prompts — tight, no wrapper card */}
+                <div className="space-y-4">
+                    {selectedSituation.journalPrompts.map((prompt, i) => (
+                        <div key={i}>
+                            <label className="block text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5"
+                                style={{ color: 'var(--text-secondary)' }}>
+                                {prompt.label}
+                            </label>
+                            <textarea
+                                value={journalData[prompt.label] || ''}
+                                onChange={e => setJournalData({ ...journalData, [prompt.label]: e.target.value })}
+                                placeholder={prompt.placeholder}
+                                rows={2}
+                                className="w-full rounded-xl p-4 text-[15px] font-serif outline-none resize-none transition-all"
+                                style={{
+                                    background: 'var(--bg-surface)',
+                                    border: '1px solid var(--border-default)',
+                                    color: 'var(--text-primary)',
+                                    minHeight: 72,
+                                }}
+                                onFocus={e => { e.target.style.borderColor = selectedSituation.color; }}
+                                onBlur={e => { e.target.style.borderColor = 'var(--border-default)'; }}
+                            />
+                        </div>
+                    ))}
+
+                    {/* Action row */}
+                    <div className="flex gap-3 pt-4">
+                        <button 
+                            onClick={() => { 
+                                setShowLogEntry(false); 
+                                setSelectedSituation(null); 
+                                setJournalData({});
+                                setLogVoicePlaying(false);
+                                VoiceService.stop();
+                                onBack(); 
+                            }}
+                            className="flex-1 py-3.5 rounded-xl font-bold uppercase tracking-[0.12em] text-[11px] transition-all"
+                            style={{ 
+                                background: 'transparent',
+                                border: '1px solid var(--border-subtle)',
+                                color: 'var(--text-muted)',
+                                cursor: 'pointer',
+                            }}>
+                            Skip
+                        </button>
+                        <button 
+                            onClick={handleSaveJournal}
+                            className="flex-[2] py-3.5 rounded-xl font-bold uppercase tracking-[0.15em] text-[11px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                            style={{ 
+                                background: selectedSituation.color, 
+                                color: 'white',
+                                cursor: 'pointer',
+                                border: 'none',
+                                boxShadow: `0 8px 24px -8px ${selectedSituation.color}80`
+                            }}>
+                            <Save size={13} /> Save Reflection
                         </button>
                     </div>
                 </div>
@@ -628,59 +870,60 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
             {/* Ambient Time of Day Tint */}
             <div className="fixed inset-0 pointer-events-none -z-10" style={{ background: timeOfDayTint }} />
 
-            {/* Header */}
-            <header className="relative py-8 md:py-12 px-6 md:px-8 rounded-[32px] overflow-hidden group">
-                <Search size={14} className="absolute left-5 top-1/2 -translate-y-1/2 opacity-40 text-[var(--text-primary)]" />
-                {/* Ambient Aura */}
-                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-10 pointer-events-none"
-                    style={{ background: 'var(--accent-primary)' }} />
-
-                <div className="relative z-10 space-y-4">
-                    <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                            <p className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-60" style={{ color: 'var(--text-muted)' }}>Sacred Realm</p>
-                            <h1 className="text-4xl md:text-6xl font-serif font-light tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                                The Practice Room
-                            </h1>
-                        </div>
-                        <button onClick={() => setShowFAQ(!showFAQ)}
-                            className="p-3 rounded-2xl transition-all hover:scale-105 active:scale-95 flex items-center gap-2 group/faq"
-                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
-                            <Info size={16} className="opacity-60 group-hover/faq:opacity-100 transition-opacity" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">How to Practice</span>
-                            <ChevronDown size={14} className={`transition-transform duration-300 ${showFAQ ? 'rotate-180' : ''}`} />
-                        </button>
+            {/* Header — clean, no box */}
+            <header className="space-y-2 pb-2">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-serif font-light tracking-tight" 
+                            style={{ color: 'var(--text-primary)' }}>
+                            The Practice Room
+                        </h1>
+                        <p className="text-sm font-serif italic mt-1 opacity-70" 
+                            style={{ color: 'var(--text-secondary)' }}>
+                            {SITUATIONS.length} guided practices · 10 seconds to 10 minutes
+                        </p>
                     </div>
-
-                    <p className="max-w-xl text-base md:text-lg font-serif italic leading-relaxed opacity-80" style={{ color: 'var(--text-secondary)' }}>
-                        Turn the friction of daily life into the fuel of presence. Select a state to begin.
-                    </p>
-
-                    {/* Inline FAQ */}
-                    <AnimatePresence>
-                        {showFAQ && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden"
-                            >
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-dashed border-border-default mt-6">
-                                    {FAQ_ITEMS.map((item, i) => (
-                                        <div key={i} className="p-4 rounded-2xl space-y-1" style={{ background: 'var(--bg-secondary)' }}>
-                                            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--accent-primary)' }}>{item.q}</p>
-                                            <p className="text-xs leading-relaxed opacity-70" style={{ color: 'var(--text-secondary)' }}>{item.a}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    <button onClick={() => setShowFAQ(!showFAQ)}
+                        className="p-2.5 rounded-xl transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                        style={{ 
+                            background: 'var(--bg-surface)', 
+                            border: '1px solid var(--border-subtle)', 
+                            color: 'var(--text-muted)' 
+                        }}>
+                        <Info size={14} />
+                        <span className="text-[9px] font-bold uppercase tracking-widest hidden sm:inline">FAQ</span>
+                        <ChevronDown size={12} className={`transition-transform duration-300 ${showFAQ ? 'rotate-180' : ''}`} />
+                    </button>
                 </div>
+
+                {/* Inline FAQ */}
+                <AnimatePresence>
+                    {showFAQ && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4 border-t mt-3"
+                                style={{ borderColor: 'var(--border-subtle)' }}>
+                                {FAQ_ITEMS.map((item, i) => (
+                                    <div key={i} className="p-3 rounded-xl space-y-0.5" 
+                                        style={{ background: 'var(--bg-surface)' }}>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider" 
+                                            style={{ color: 'var(--accent-primary)' }}>{item.q}</p>
+                                        <p className="text-[11px] leading-relaxed opacity-60" 
+                                            style={{ color: 'var(--text-secondary)' }}>{item.a}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </header>
 
             {/* Search + Filters Sticky Bar */}
-            <div className="sticky top-0 z-20 py-4 -mx-4 px-4 bg-base/80 backdrop-blur-md space-y-4">
+            <div className="sticky top-0 z-20 py-3 -mx-4 px-4 space-y-3 backdrop-blur-md" style={{ background: 'color-mix(in srgb, var(--bg-primary) 85%, transparent)' }}>
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
                         <Search size={14} className="absolute left-5 top-1/2 -translate-y-1/2 opacity-40" />
@@ -751,7 +994,14 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                                         <SituationalPracticeCard
                                             key={sit.id}
                                             situation={sit}
-                                            onClick={() => setSelectedSituation(sit)}
+                                            onClick={() => {
+                                                setSelectedSituation(sit);
+                                                setCurrentStep(0);
+                                                setIsPaused(false);
+                                                setShowLogEntry(false);
+                                                setJournalData({});
+                                                setIsPracticing(true);
+                                            }}
                                             mode={mode}
                                         />
                                     ))}
@@ -797,10 +1047,12 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                                 transition={{ delay: i * 0.02 }}
                                 whileTap={{ scale: 0.99 }}
                                 onClick={() => {
+                                    setSelectedSituation(sit);
                                     setCurrentStep(0);
                                     setIsPaused(false);
                                     setShowLogEntry(false);
-                                    setSelectedSituation(sit);
+                                    setJournalData({});
+                                    setIsPracticing(true);
                                 }}
                                 className="w-full flex items-center gap-5 p-3 rounded-[24px] text-left group transition-all duration-300"
                                 style={{
@@ -919,137 +1171,6 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                 )}
             </AnimatePresence>
 
-            {/* Detail Modal Portal */}
-            {selectedSituation && !isPracticing && !showLogEntry && createPortal(
-                <AnimatePresence>
-                    <div className="fixed inset-0 z-[110] flex items-end md:items-center justify-center p-0 md:p-6">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-xl"
-                            onClick={() => setSelectedSituation(null)}
-                        />
-                        <motion.div
-                            initial={{ y: '100%' }}
-                            animate={{ y: 0 }}
-                            exit={{ y: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="relative w-full md:max-w-xl max-h-[90vh] md:max-h-[80vh] overflow-y-auto rounded-t-[40px] md:rounded-[40px] shadow-[0_32px_80px_rgba(0,0,0,0.5)] no-scrollbar backdrop-blur-3xl"
-                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', boxShadow: '0 32px 80px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05)' }}
-                        >
-                            {/* Hero Gradient Zone */}
-                            <div className="h-24 rounded-t-[40px] relative overflow-hidden flex flex-col items-center justify-center gap-1.5">
-                                <div className="absolute inset-0 opacity-20" style={{ background: `linear-gradient(135deg, ${selectedSituation.color}, #ffffff00)` }} />
-                                <button onClick={() => setSelectedSituation(null)}
-                                    className="absolute top-3 right-5 p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-all backdrop-blur-md">
-                                    <X size={16} className="text-[var(--text-primary)]" />
-                                </button>
-
-                                <div className="relative">
-                                    <div className="absolute inset-0 blur-xl opacity-40" style={{ background: selectedSituation.color }} />
-                                    <div className="relative w-9 h-9 rounded-xl bg-white/80 dark:bg-black/40 flex items-center justify-center shadow-lg backdrop-blur-xl border border-white/20">
-                                        {React.createElement(selectedSituation.icon, { size: 18, style: { color: selectedSituation.color }, strokeWidth: 1.5 })}
-                                    </div>
-                                </div>
-                                <div className="flex gap-1.5 opacity-60 scale-90">
-                                    <span className="text-[7px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
-                                        {selectedSituation.category}
-                                    </span>
-                                    <span className="text-[7px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
-                                        {selectedSituation.duration}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="px-5 pb-6 space-y-4">
-                                <div className="text-center space-y-0.5">
-                                    <h2 className="text-xl font-serif font-light leading-tight" style={{ color: 'var(--text-primary)' }}>{selectedSituation.title}</h2>
-                                    <p className="text-[11px] font-serif italic text-[var(--text-secondary)] opacity-40">{selectedSituation.description}</p>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className="p-3 rounded-xl space-y-0.5" style={{ background: 'var(--bg-secondary)', borderLeft: `2px solid ${selectedSituation.color}50` }}>
-                                        <p className="text-[7px] font-bold uppercase tracking-widest opacity-30">Ideal Guidance For</p>
-                                        <p className="text-xs font-serif italic" style={{ color: 'var(--text-secondary)' }}>{selectedSituation.whenToUse}</p>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <p className="text-[7px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] text-center opacity-40">Pathway Journey</p>
-                                        <div className="relative px-2">
-                                            {/* Timeline Line */}
-                                            <div className="absolute top-[12px] left-[30px] right-[30px] h-[1px] bg-[var(--border-default)] -z-0 opacity-50" />
-
-                                            <div className="flex justify-between relative z-10">
-                                                {selectedSituation.steps.map((step, i) => (
-                                                    <div key={i} className="flex flex-col items-center gap-1.5 group/step max-w-[60px]">
-                                                        <div className="w-6 h-6 rounded-full bg-[var(--bg-surface)] border-[1.5px] border-[var(--border-default)] flex items-center justify-center text-[8px] font-bold transition-all group-hover/step:border-[var(--accent-primary)]"
-                                                            style={{ color: 'var(--text-primary)' }}>
-                                                            {i + 1}
-                                                        </div>
-                                                        <div className="text-[7px] font-bold text-center leading-tight opacity-30 group-hover/step:opacity-80 transition-opacity uppercase tracking-widest">
-                                                            {step.title.split(' ')[0]}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Detailed Step Content (current/interactive) */}
-                                        <div className="grid gap-1.5 pt-1">
-                                            {selectedSituation.steps.map((step, i) => (
-                                                <div key={i} className="flex gap-2.5 p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] hover:border-[var(--accent-primary-border)] transition-all">
-                                                    <div className="w-4 h-4 rounded-md bg-[var(--bg-surface)] flex items-center justify-center text-[8px] font-bold flex-shrink-0" style={{ color: selectedSituation.color }}>{i + 1}</div>
-                                                    <div className="space-y-0">
-                                                        <p className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>{step.title}</p>
-                                                        <p className="text-[10px] leading-relaxed opacity-50" style={{ color: 'var(--text-secondary)' }}>{step.instruction}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="p-3 rounded-xl" style={{ background: 'var(--accent-primary-muted)', border: '1px solid var(--accent-primary)10' }}>
-                                        <p className="text-[7px] font-bold uppercase tracking-widest mb-0.5 opacity-40" style={{ color: 'var(--accent-primary)' }}>Witness Account</p>
-                                        <p className="text-[10px] font-serif italic leading-snug opacity-60">{selectedSituation.realLifeExample}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col items-center gap-2 pt-1">
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => {
-                                            setCurrentStep(0);
-                                            setIsPaused(false);
-                                            setShowLogEntry(false);
-                                            setIsPracticing(true);
-                                        }}
-                                        className="relative w-12 h-12 rounded-full flex items-center justify-center shadow-xl group/portal"
-                                    >
-                                        <motion.div
-                                            animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.1, 0.3] }}
-                                            transition={{ duration: selectedSituation.durationNum > 5 ? 6 : 3, repeat: Infinity, ease: "easeInOut" }}
-                                            className="absolute inset-[-4px] rounded-full"
-                                            style={{ background: selectedSituation.color }}
-                                        />
-                                        <div className="absolute inset-0 rounded-full shadow-[inset_0_0_10px_rgba(255,255,255,0.3)] bg-gradient-to-br from-white/20 to-transparent" />
-                                        <div className="w-full h-full rounded-full flex items-center justify-center backdrop-blur-md border border-white/20"
-                                            style={{ background: selectedSituation.color }}>
-                                            <Play size={16} fill="white" className="text-white ml-0.5" />
-                                        </div>
-                                    </motion.button>
-                                    <div className="text-center">
-                                        <p className="text-[9px] font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--text-primary)' }}>Begin Journey</p>
-                                        <p className="text-[7px] font-bold uppercase tracking-widest opacity-20" style={{ color: 'var(--text-muted)' }}>Guided Voice Session</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                </AnimatePresence>,
-                document.body
-            )}
         </motion.div>
     );
 };
