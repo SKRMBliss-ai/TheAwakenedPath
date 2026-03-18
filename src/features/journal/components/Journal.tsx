@@ -248,17 +248,33 @@ const Journal: React.FC = () => {
     }, [practiceStep, dynamicSteps.length, handleCompleteMeditation]);
 
     useEffect(() => {
-        if (isPracticing && !isPaused && dynamicSteps.length > 0) {
+        if (isPracticing && dynamicSteps.length > 0) {
             const step = dynamicSteps[practiceStep];
             if (lastSpokenRef.current !== step.audioScript) {
                 speak(step.audioScript, handleNextStep, step.isFullAudio);
                 lastSpokenRef.current = step.audioScript;
+                
+                // If we're starting a new step but are already paused, pause it immediately
+                if (isPaused) {
+                    VoiceService.pause();
+                }
             }
-        } else {
+        } else if (!isPracticing) {
             VoiceService.stop();
             lastSpokenRef.current = null;
         }
-    }, [practiceStep, isPracticing, speak, handleNextStep, isPaused, dynamicSteps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [practiceStep, isPracticing, speak, handleNextStep, dynamicSteps]);
+
+    // Sync play/pause state without restarting audio
+    useEffect(() => {
+        if (!isPracticing) return;
+        if (isPaused) {
+            VoiceService.pause();
+        } else {
+            VoiceService.resume();
+        }
+    }, [isPaused, isPracticing]);
 
     const wasPlayingWhenHiddenRef = useRef(false);
 

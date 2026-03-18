@@ -199,9 +199,12 @@ export class VoiceService {
         window.speechSynthesis.speak(utterance);
     }
 
+    private static savedTime: number = 0;
+
     static pause() {
         this.setSpeaking(false);
         if (this.currentAudio) {
+            this.savedTime = this.currentAudio.currentTime;
             this.currentAudio.pause();
         }
         if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -213,6 +216,10 @@ export class VoiceService {
         if (!this._isEnabled) return;
         this.setSpeaking(true);
         if (this.currentAudio) {
+            if (this.savedTime > 0) {
+                this.currentAudio.currentTime = this.savedTime;
+                this.savedTime = 0;
+            }
             this.currentAudio.play().catch(e => console.error("Resume failed", e));
         }
         if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -223,6 +230,7 @@ export class VoiceService {
     static stop() {
         this.currentRequestId++; // Invalidate any in-flight requests
         this.setSpeaking(false);
+        this.savedTime = 0;
         if (this.currentAudio) {
             this.currentAudio.pause();
             this.currentAudio.removeAttribute('src');
