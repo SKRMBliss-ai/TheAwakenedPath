@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Play, Pause, RotateCcw, ChevronRight, X, Volume2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, ChevronRight, ChevronLeft, X, Volume2 } from 'lucide-react';
 import { AwakenStage } from './SacredCircle';
 import { VoiceService, useVoiceActive } from '../../services/voiceService';
 
@@ -38,6 +38,7 @@ interface MeditationPortalProps {
     totalSteps: number;
     currentStepIndex: number;
     onNext: () => void;
+    onPrev?: () => void;
     onReset: () => void;
     onTogglePlay: () => void;
     onClose: () => void;
@@ -55,6 +56,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
     totalSteps,
     currentStepIndex,
     onNext,
+    onPrev,
     onReset,
     onTogglePlay,
     onClose,
@@ -342,10 +344,16 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                 gap: 16, paddingBottom: 32, flexShrink: 0,
             }}>
                 {/* Control row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
                     <ControlButton onClick={onReset} label="restart">
                         <RotateCcw size={16} strokeWidth={1.5} />
                     </ControlButton>
+
+                    {onPrev && (
+                        <ControlButton onClick={onPrev} label="back">
+                            <ChevronLeft size={18} strokeWidth={1.5} />
+                        </ControlButton>
+                    )}
 
                     <PlayButton isPlaying={isPlaying} onClick={onTogglePlay} accentColor={accentColor} />
 

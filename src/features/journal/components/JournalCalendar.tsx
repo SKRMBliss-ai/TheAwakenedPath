@@ -248,6 +248,7 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                                             <p style={{
                                                 fontSize: 14, color: "rgba(171,206,201,0.55)",
                                                 fontFamily: "Georgia, serif", lineHeight: 1.7, fontStyle: "italic",
+                                                whiteSpace: "pre-wrap"
                                             }}>{entry.reflections}</p>
                                         </div>
                                     )}

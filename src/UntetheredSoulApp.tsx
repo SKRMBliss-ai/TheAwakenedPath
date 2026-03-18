@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Flame, Sparkles, Sun, Play, BookOpen, User, Target, AlertCircle, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail } from 'lucide-react';
+import { Flame, Sparkles, Sun, Play, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail, MessageCircle } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
-import { PowerOfNow } from './features/soul-intelligence/components/PowerOfNow';
+import { CoursesHub } from './features/courses/CoursesHub';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { cn } from './lib/utils';
 import Journal from './features/journal/components/Journal';
@@ -223,10 +223,9 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
         <h4 className="text-[12px] font-bold uppercase tracking-[0.4em] text-[var(--text-primary)] pl-4">Sacred Practices</h4>
         <div className="grid grid-cols-2 gap-4">
           {[
-            { id: 'intelligence', label: 'Presence', sub: 'COURSE & PRACTICE', icon: Sparkles, color: '#ABCEC9', variant: 'orb' },
+            { id: 'intelligence', label: 'Courses', sub: 'VIDEOS', icon: Sparkles, color: '#ABCEC9', variant: 'orb' },
             { id: 'chapters', label: 'Journal', sub: 'GUIDED', icon: BookOpen, color: '#C65F9D', variant: 'book' },
-            { id: 'panic', label: 'Awareness', sub: 'EMERGENCY', icon: AlertCircle, color: '#FF7043', variant: 'pulse' },
-            { id: 'stats', label: 'Soul Stats', sub: 'HISTORY', icon: BarChart2, color: '#9575CD', variant: 'chart' }
+            { id: 'stats', label: 'Progress', sub: 'HISTORY', icon: BarChart2, color: '#9575CD', variant: 'chart' }
           ].map((item: any) => {
             const isLocked = !isAdmin && ['panic'].includes(item.id);
             return (
@@ -380,12 +379,11 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
           <h4 className="text-[13px] font-bold uppercase tracking-[0.4em] text-[var(--text-primary)]">Sacred Practices</h4>
           <div className="h-px flex-1 bg-[var(--border-subtle)]/70 mx-8" />
         </div>
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-3 gap-6">
           {[
-            { id: 'intelligence', label: 'Presence', sub: 'COURSE & PRACTICE', icon: Sparkles, color: '#ABCEC9', delay: 0, variant: 'orb' },
+            { id: 'intelligence', label: 'Courses', sub: 'VIDEOS', icon: Sparkles, color: '#ABCEC9', delay: 0, variant: 'orb' },
             { id: 'chapters', label: 'Journal', sub: 'JOURNEY', icon: BookOpen, color: '#C65F9D', delay: 0.1, variant: 'book' },
-            { id: 'panic', label: 'Awareness', sub: 'EMERGENCY', icon: AlertCircle, color: '#FF7043', delay: 0.2, variant: 'pulse' },
-            { id: 'stats', label: 'Soul Stats', sub: 'STATS', icon: BarChart2, color: '#9575CD', delay: 0.3, variant: 'chart' }
+            { id: 'stats', label: 'Progress', sub: 'STATS', icon: BarChart2, color: '#9575CD', delay: 0.2, variant: 'chart' }
           ].map((item: any) => {
             const isLocked = !isAdmin && ['panic'].includes(item.id);
             return (
@@ -783,6 +781,7 @@ export default function UntetheredApp() {
         currentStepTitle={activePractice.type === 'breath' ? (themeColors[breathPhase]?.text || 'BREATH') : step.title}
         currentStepInstruction={step.instruction}
         onNext={nextStep}
+        onPrev={currentStep > 0 ? () => setCurrentStep(prev => prev - 1) : undefined}
         onReset={() => { setActivePractice(null); setPracticeState('active'); }}
         onTogglePlay={() => setIsTimerRunning(!isTimerRunning)}
         isPlaying={isTimerRunning}
@@ -883,11 +882,10 @@ export default function UntetheredApp() {
         <nav className="flex-1 space-y-3">
           {[
             { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
-            { id: 'intelligence', icon: Sparkles, label: 'Presence', fullLabel: 'Power of Now', locked: false },
+            { id: 'intelligence', icon: Sparkles, label: 'Courses', fullLabel: 'Courses', locked: false },
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
-            { id: 'stats', icon: BarChart2, label: 'Soul Stats', fullLabel: 'Your Journey', locked: false },
-            { id: 'journey', icon: Target, label: 'Breath', locked: !isAdmin },
-            { id: 'panic', icon: AlertCircle, label: 'Panic', fullLabel: 'Emergency Awareness', locked: !isAdmin },
+            { id: 'situations', icon: Flame, label: 'Situations', fullLabel: 'Situational Practice', locked: false },
+            { id: 'stats', icon: BarChart2, label: 'Progress', fullLabel: 'Your Progress', locked: false },
             { id: 'profile', icon: User, label: 'Profile', locked: false },
           ].map((item: any) => {
             const isActive = activeTab === item.id;
@@ -970,6 +968,15 @@ export default function UntetheredApp() {
               Log Out
             </span>
           </button>
+
+          <div className="mt-8 pt-6 border-t border-[var(--border-default)]">
+            <p className="text-[9px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex items-center flex-wrap gap-1">
+              Designed and thought by
+              <a href="https://www.skrmblissai.in/shrutikhungar" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold font-sans tracking-[0.2em] transition-colors group">
+                www.skrmblissai.in/shrutikhungar
+              </a>
+            </p>
+          </div>
         </div>
       </aside>
 
@@ -1076,9 +1083,9 @@ export default function UntetheredApp() {
               </motion.div>
             )}
 
-            {(activeTab === 'intelligence' || activeTab === 'panic') && (
+            {activeTab === 'intelligence' && (
               <motion.div key={activeTab} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }}>
-                <PowerOfNow initialChapter={activeTab === 'panic' ? 'panic' : undefined} />
+                <CoursesHub />
               </motion.div>
             )}
 
@@ -1100,7 +1107,7 @@ export default function UntetheredApp() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                className="space-y-12 max-w-4xl mx-auto"
+                className="space-y-12 max-w-7xl w-full mx-auto"
               >
                 {/* Unified Header Card */}
                 <header className="relative p-12 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden group">
@@ -1245,6 +1252,21 @@ export default function UntetheredApp() {
                     </button>
                   </div>
                 </div>
+
+                {/* Footer Credits */}
+                <div className="w-full pt-8 pb-12 flex flex-col items-center justify-center text-center opacity-60 hover:opacity-100 transition-opacity">
+                  <p className="text-[9px] font-serif tracking-[0.2em] text-[var(--text-muted)] uppercase mb-2 text-center">
+                    Designed and thought by
+                  </p>
+                  <a 
+                    href="https://www.skrmblissai.in/shrutikhungar" 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="text-[10px] font-bold tracking-widest text-[var(--accent-secondary)] hover:text-[var(--accent-primary)] transition-colors"
+                  >
+                    www.skrmblissai.in/shrutikhungar
+                  </a>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1255,6 +1277,17 @@ export default function UntetheredApp() {
         achievement={toastQueue[0] || null}
         onDismiss={dismissToast}
       />
+
+      {/* Floating WhatsApp Widget */}
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3">
+        <a href="https://wa.me/+918217581238?text=I+would+like+to+request+a+feature+or+report+a+technical+issue." target="_blank" rel="noopener noreferrer"
+          className="group flex items-center justify-center w-14 h-14 bg-green-500 text-white rounded-full shadow-lg hover:shadow-[0_4px_20px_rgba(34,197,94,0.4)] transition-all duration-300 hover:scale-110">
+          <span className="absolute right-full mr-4 text-[11px] font-bold text-white bg-black/80 backdrop-blur-md px-4 py-2 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl border border-white/10">
+            Request a feature / Report technical issue
+          </span>
+          <MessageCircle className="w-6 h-6" />
+        </a>
+      </div>
     </div>
   );
 }

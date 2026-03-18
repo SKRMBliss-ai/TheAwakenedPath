@@ -398,10 +398,6 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
     const [showVoiceTip, setShowVoiceTip] = useState(false);
 
     useEffect(() => {
-        // Enable voice by default on mount
-        if (!voice.voiceEnabled) {
-            voice.toggleVoice();
-        }
         // Show tooltip after a short delay (let UI settle)
         const tipSeen = localStorage?.getItem?.('awakened-voice-tip-seen');
         if (!tipSeen) {

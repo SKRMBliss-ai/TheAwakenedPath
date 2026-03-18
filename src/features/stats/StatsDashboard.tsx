@@ -323,7 +323,9 @@ const StatsDashboard: React.FC = () => {
                     <div className="space-y-4">
                         <div className="space-y-1">
                             <p className="text-[10px] uppercase tracking-[0.4em] text-[var(--accent-secondary)] font-bold">Essence Report</p>
-                            <h2 className="text-3xl font-serif font-light text-[var(--text-primary)]">Soul Stats</h2>
+                            <div className="flex items-center gap-4 mb-2">
+                                <h2 className="text-3xl font-serif font-light text-[var(--text-primary)]">Your Progress</h2>
+                            </div>
                         </div>
 
                         {/* Inline Metrics Row - Glass Pill Style */}
@@ -348,15 +350,28 @@ const StatsDashboard: React.FC = () => {
                     <button
                         onClick={handleListen}
                         disabled={isVoiceLoading}
-                        className="p-3 rounded-full bg-[var(--accent-secondary)]/10 border border-[var(--accent-secondary)]/20 text-[var(--accent-secondary)] hover:bg-[var(--accent-secondary)]/20 transition-all group"
+                        className={`group relative h-9 px-3.5 rounded-full flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer border ${
+                            isPlaying
+                                ? "bg-[var(--accent-secondary-dim)] border-[var(--accent-secondary-border)] text-[var(--accent-secondary)]"
+                                : "bg-[var(--bg-surface-hover)] border-[var(--border-default)] text-[var(--text-muted)] hover:border-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                        }`}
                         title="Listen to Insights"
                     >
                         {isVoiceLoading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-[1px]">Preparing...</span>
+                            </>
                         ) : isPlaying ? (
-                            <Square className="w-4 h-4 fill-current" />
+                            <>
+                                <Square className="w-4 h-4 fill-current" />
+                                <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-[1px]">Voice Guidance</span>
+                            </>
                         ) : (
-                            <Volume2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                            <>
+                                <Volume2 className="w-4 h-4" />
+                                <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-[1px]">Voice Guidance</span>
+                            </>
                         )}
                     </button>
                 </div>

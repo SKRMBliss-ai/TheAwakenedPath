@@ -503,7 +503,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
     };
 
     return (
-        <div className="w-full max-w-[860px] mx-auto px-6 pt-12 pb-40 relative">
+        <div className="w-full mx-auto px-6 pt-12 pb-40 relative">
             <GrainOverlay />
 
             {/* Subtle ambient glow — small and restrained */}

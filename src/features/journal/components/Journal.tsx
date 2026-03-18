@@ -376,10 +376,10 @@ const Journal: React.FC = () => {
     }
 
     return (
-        <div className="w-full max-w-3xl mx-auto px-6 pt-4 pb-12 relative">
+        <div className="w-full max-w-7xl mx-auto px-6 pt-4 pb-12 relative">
             <NoiseOverlay />
 
-            <nav className="flex items-center justify-between mb-6 relative z-10">
+            <nav className="flex items-center justify-between mb-12 relative z-10 w-full border-b border-[var(--border-subtle)]/30 pb-8">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-serif font-light" 
                         style={{ color: 'var(--text-primary)' }}>
@@ -393,7 +393,7 @@ const Journal: React.FC = () => {
                 <a
                     href="https://docs.google.com/document/d/1cABPEGjz-IRhFg5MOH_gZFTJm-lFn4wVN9IJbGC5de8/edit?usp=sharing"
                     target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-[var(--accent-primary-muted)] hover:text-[var(--text-primary)]"
                     style={{ 
                         background: 'var(--bg-surface)', 
                         border: '1px solid var(--border-subtle)',
@@ -410,33 +410,35 @@ const Journal: React.FC = () => {
                         <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-8">
                             {/* Compact Practice CTA Card */}
                             <motion.section variants={childVariant} className="relative">
-                                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-5 flex items-center gap-5">
-                                    {/* Breathing dot — keep as-is, just smaller */}
-                                    <div className="w-12 h-12 rounded-full bg-[var(--accent-primary-muted)]/10 border border-[var(--border-subtle)] flex items-center justify-center flex-shrink-0">
-                                        <motion.div
-                                            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                            className="w-3 h-3 rounded-full"
-                                            style={{ background: 'var(--accent-primary)', boxShadow: '0 0 12px var(--accent-primary-muted)' }}
-                                        />
+                                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-5 px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 w-full mx-auto shadow-sm transition-all hover:shadow-md">
+                                    <div className="flex items-center gap-5">
+                                        {/* Breathing dot */}
+                                        <div className="w-12 h-12 rounded-full bg-[var(--accent-primary-muted)]/10 border border-[var(--border-subtle)] flex items-center justify-center flex-shrink-0">
+                                            <motion.div
+                                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                                className="w-3 h-3 rounded-full"
+                                                style={{ background: 'var(--accent-primary)', boxShadow: '0 0 12px var(--accent-primary-muted)' }}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <h2 className="text-xl font-serif font-light tracking-wide" style={{ color: 'var(--text-primary)' }}>
+                                                Settle into the Now
+                                            </h2>
+                                            <p className="text-[12px] font-serif italic mt-1 opacity-80" 
+                                                style={{ color: 'var(--text-secondary)' }}>
+                                                A brief reconnection before journaling
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    <div className="flex-1">
-                                        <h2 className="text-xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>
-                                            Settle into the Now
-                                        </h2>
-                                        <p className="text-[12px] font-serif italic mt-0.5 opacity-70" 
-                                            style={{ color: 'var(--text-secondary)' }}>
-                                            A brief reconnection before journaling
-                                        </p>
-                                    </div>
-
-                                    <div className="flex flex-col items-end gap-2">
-                                        <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript}>
+                                    <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-2 w-full sm:w-auto mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-[var(--border-subtle)]">
+                                        <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript} className="w-full sm:w-auto justify-center">
                                             Begin
                                         </AnchorButton>
                                         <button onClick={() => { resetJournalForm(); setShowLogForm(true); }}
-                                            className="text-[9px] uppercase tracking-[0.2em] font-bold transition-colors"
+                                            className="text-[9px] uppercase tracking-[0.2em] font-bold transition-colors w-full sm:w-auto text-center sm:text-right hover:text-[var(--accent-primary)]"
                                             style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
                                             Skip to journal →
                                         </button>
@@ -446,14 +448,14 @@ const Journal: React.FC = () => {
 
                             {/* Calendar / Timeline Toggle & View */}
                             <motion.section variants={childVariant} className="space-y-6 mt-8">
-                                <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center justify-between mb-6 w-full mx-auto">
                                     <div className="flex bg-[var(--bg-surface)] rounded-xl p-0.5 border border-[var(--border-subtle)]">
                                         {(['calendar', 'timeline'] as const).map(tab => (
                                             <button key={tab} onClick={() => setHistoryTab(tab)}
                                                 className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all ${
                                                     historyTab === tab 
                                                         ? 'bg-[var(--accent-primary)] text-white shadow-sm' 
-                                                        : 'text-[var(--text-muted)]'
+                                                        : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-base)]'
                                                 }`}>
                                                 {tab === 'calendar' ? 'Calendar' : 'History'}
                                             </button>
@@ -462,7 +464,7 @@ const Journal: React.FC = () => {
                                     {/* Entry count */}
                                     <span className="text-[10px] font-bold uppercase tracking-wider"
                                         style={{ color: 'var(--text-muted)' }}>
-                                        {entries.length} journal
+                                        {entries.length} journal entries
                                     </span>
                                 </div>
                                 
@@ -479,7 +481,7 @@ const Journal: React.FC = () => {
                         /* ═══════════════════════════════════════════════════════════════
                            AWAKENED PATH 3-STEP JOURNAL FLOW
                         ═══════════════════════════════════════════════════════════════ */
-                        <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-3xl mx-auto w-full">
+                        <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-6xl mx-auto w-full">
                             <GentleJournalForm
                                 onSave={async (entryData) => {
                                     if (!user) return;
