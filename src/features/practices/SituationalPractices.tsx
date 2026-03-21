@@ -31,6 +31,7 @@ interface Situation {
     imageDark?: string;
     color: string;
     intro: string;
+    audioFile?: string;
     steps: { title: string; instruction: string; audioScript: string }[];
     realLifeExample: string;
     journalPrompts: { label: string; placeholder: string }[];
@@ -249,6 +250,90 @@ const SITUATIONS: Situation[] = [
             { label: 'How hard was it not to check my phone?', placeholder: 'Scale 1-10...' },
             { label: 'Did I remember my intention later in the day?', placeholder: 'Yes/No...' }
         ]
+    },
+    {
+        id: 'awareness-of-space', title: 'Awareness of Space', duration: 'Guided',
+        durationNum: 10, category: 'Quick', tags: ['space', 'presence', 'guided'],
+        whenToUse: 'When you want to detach from thought forms and tune into emptiness.',
+        description: 'Guided audio meditation focusing on the deep stillness of space.',
+        icon: Sparkles, color: '#C0A0EE',
+        intro: "Allow yourself to merge with the subtle stillness of space.",
+        audioFile: '/mp3/Meditation - Awareness of Space.mp3',
+        steps: [{ title: 'Listen', instruction: 'Follow the guided audio meditation.', audioScript: '' }],
+        realLifeExample: 'Space meditation shifts focus from "things" to the field of consciousness itself.',
+        journalPrompts: [{ label: 'How did the sensation of space feel?', placeholder: 'Describe the emptiness...' }]
+    },
+    {
+        id: 'surrender-to-present', title: 'Surrender to the Present', duration: 'Guided',
+        durationNum: 10, category: 'Emotions', tags: ['surrender', 'acceptance', 'guided'],
+        whenToUse: 'When you feel strong resistance or emotional stress.',
+        description: 'Guided audio meditation to release resistance and accept what is.',
+        icon: Wind, color: '#FFB8D0',
+        intro: "Drop the inner resistance. Let this moment be exactly as it is.",
+        audioFile: '/mp3/Meditation - Surrender to the Present Moment.mp3',
+        steps: [{ title: 'Listen', instruction: 'Follow the guided audio meditation.', audioScript: '' }],
+        realLifeExample: 'Acceptance is not passivity; it is yielding to the flow of life right now.',
+        journalPrompts: [{ label: 'What resistance did you release?', placeholder: 'What tension let go?' }]
+    },
+    {
+        id: 'observing-emotions', title: 'Observing Emotions', duration: 'Guided',
+        durationNum: 10, category: 'Emotions', tags: ['emotions', 'observing', 'guided'],
+        whenToUse: 'When you are overwhelmed by an emotional wave.',
+        description: 'Guided audio meditation to watch emotions without becoming them.',
+        icon: Target, color: '#FFD180',
+        intro: "Step back into the seat of the observer.",
+        audioFile: '/mp3/Meditation - Observing Emotions.mp3',
+        steps: [{ title: 'Listen', instruction: 'Follow the guided audio meditation.', audioScript: '' }],
+        realLifeExample: 'Emotions rise and fall. You are the space in which they happen.',
+        journalPrompts: [{ label: 'Which emotion did you observe?', placeholder: 'Name the feeling...' }]
+    },
+    {
+        id: 'listening-to-silence', title: 'Listening to Silence', duration: 'Guided',
+        durationNum: 10, category: 'Sleep', tags: ['silence', 'peace', 'guided'],
+        whenToUse: 'When your mind is noisy or before sleep.',
+        description: 'Guided audio meditation that uses silence as a doorway to presence.',
+        icon: Moon, color: '#90CAF9',
+        intro: "Listen to the silence beneath the sounds.",
+        audioFile: '/mp3/Medutation Listening to Silence.mp3',
+        steps: [{ title: 'Listen', instruction: 'Follow the guided audio meditation.', audioScript: '' }],
+        realLifeExample: 'Listening to silence automatically stops the mind from thinking.',
+        journalPrompts: [{ label: 'How deep did the silence feel?', placeholder: 'Reflect on the quiet...' }]
+    },
+    {
+        id: 'inner-body-awareness', title: 'Inner Body Awareness', duration: 'Guided',
+        durationNum: 15, category: 'Morning', tags: ['body', 'presence', 'guided'],
+        whenToUse: 'As a deep grounding practice.',
+        description: 'Comprehensive guided inner body meditation.',
+        icon: Anchor, color: '#A5D6A7',
+        intro: "Inhabit your body fully. Feel the life running through your cells.",
+        audioFile: '/mp3/Meditation -  Inner Body Awareness.mp3',
+        steps: [{ title: 'Listen', instruction: 'Follow the guided audio meditation.', audioScript: '' }],
+        realLifeExample: 'Dwelling in the inner body anchors you firmly in the Now.',
+        journalPrompts: [{ label: 'Where did you feel aliveness?', placeholder: 'Describe the sensations...' }]
+    },
+    {
+        id: 'arriving-in-present', title: 'Arriving in the Present Moment', duration: 'Guided',
+        durationNum: 5, category: 'Quick', tags: ['present', 'focus', 'guided'],
+        whenToUse: 'To quickly ground yourself during a busy day.',
+        description: 'A gentle arriving meditation with soothing background energy.',
+        icon: Sun, color: '#FFE082',
+        intro: "Arrive fully, right where you are.",
+        audioFile: '/mp3/Arriving in the Present Moment-esv2-90p-bg-10p-music-10p.mp3',
+        steps: [{ title: 'Listen', instruction: 'Follow the guided audio meditation.', audioScript: '' }],
+        realLifeExample: 'Five minutes of true presence is worth hours of scattered effort.',
+        journalPrompts: [{ label: 'How do you feel now compared to 5 minutes ago?', placeholder: '...' }]
+    },
+    {
+        id: 'conscious-breathing', title: 'Conscious Breathing', duration: 'Guided',
+        durationNum: 5, category: 'Quick', tags: ['breath', 'calm', 'guided'],
+        whenToUse: 'When you need to actively steady your nervous system.',
+        description: 'Focus your entire consciousness on the act of breathing.',
+        icon: Wind, color: '#80DEEA',
+        intro: "Follow each breath exactly as it is.",
+        audioFile: '/mp3/Conscious Breathing-esv2-90p-bg-10p-music-10p.mp3',
+        steps: [{ title: 'Listen', instruction: 'Follow the guided audio meditation.', audioScript: '' }],
+        realLifeExample: 'The breath is always happening in the present moment.',
+        journalPrompts: [{ label: 'Did your breathing slow down naturally?', placeholder: '...' }]
     }
 ];
 
@@ -511,6 +596,7 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
     const [activeDuration, setActiveDuration] = useState(0);
     const [showFAQ, setShowFAQ] = useState(false);
     const [showChallenges, setShowChallenges] = useState(false);
+    const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
     const filtered = useMemo(() => {
         return SITUATIONS.filter(s => {
@@ -541,11 +627,24 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
 
     useEffect(() => {
         if (isPracticing && selectedSituation && !isPaused) {
-            speak(selectedSituation.steps[currentStep].audioScript, handleNextStep);
-        } else if (!showLogEntry) {
-            // Only stop if we are neither practicing nor showing the log entry
-            // This allows the log entry voice to play without being immediately cancelled
-            VoiceService.stop();
+            if (selectedSituation.audioFile) {
+                if (!audioRef.current) {
+                    audioRef.current = new Audio(selectedSituation.audioFile);
+                    audioRef.current.onended = handleNextStep;
+                }
+                audioRef.current.play().catch(console.warn);
+            } else {
+                speak(selectedSituation.steps[currentStep].audioScript, handleNextStep);
+            }
+        } else {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                if (!isPracticing) {
+                    audioRef.current.currentTime = 0;
+                    audioRef.current = null;
+                }
+            }
+            if (!showLogEntry) VoiceService.stop();
         }
     }, [currentStep, isPracticing, selectedSituation, speak, handleNextStep, isPaused, showLogEntry]);
 
