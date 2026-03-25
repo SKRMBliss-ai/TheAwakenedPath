@@ -391,8 +391,8 @@ const Journal: React.FC = () => {
                     </p>
                 </div>
                 <a
-                    href="https://docs.google.com/document/d/1cABPEGjz-IRhFg5MOH_gZFTJm-lFn4wVN9IJbGC5de8/edit?usp=sharing"
-                    target="_blank" rel="noopener noreferrer"
+                    href="/Journal/Journal.pdf"
+                    download="Journal.pdf"
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-[var(--accent-primary-muted)] hover:text-[var(--text-primary)]"
                     style={{ 
                         background: 'var(--bg-surface)', 
