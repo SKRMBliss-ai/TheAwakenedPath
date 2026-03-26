@@ -972,8 +972,8 @@ export default function UntetheredApp() {
           <div className="mt-8 pt-6 border-t border-[var(--border-default)]">
             <p className="text-[9px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex items-center flex-wrap gap-1">
               Designed and thought by
-              <a href="https://www.skrmblissai.in/shrutikhungar" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold font-sans tracking-[0.2em] transition-colors group">
-                www.skrmblissai.in/shrutikhungar
+              <a href="https://www.skrmblissai.in/twins" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold font-sans tracking-[0.2em] transition-colors group">
+                www.skrmblissai.in/twins
               </a>
             </p>
           </div>
@@ -1259,12 +1259,12 @@ export default function UntetheredApp() {
                     Designed and thought by
                   </p>
                   <a 
-                    href="https://www.skrmblissai.in/shrutikhungar" 
+                    href="https://www.skrmblissai.in/twins" 
                     target="_blank" 
                     rel="noreferrer" 
                     className="text-[10px] font-bold tracking-widest text-[var(--accent-secondary)] hover:text-[var(--accent-primary)] transition-colors"
                   >
-                    www.skrmblissai.in/shrutikhungar
+                    www.skrmblissai.in/twins
                   </a>
                 </div>
               </motion.div>
