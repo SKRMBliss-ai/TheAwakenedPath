@@ -26,7 +26,7 @@ const imageMap: Record<string, string> = {
   "placeholder_tightening": "/WisdomUntethered/Chap1/Question1/08_NoticeTheTightening.jpg",    
   "placeholder_matrix":    "/WisdomUntethered/Chap1/Question1/02_WhatIsItActually.jpg",      
   "placeholder_practice":  "/WisdomUntethered/Chap1/Question1/09_The5SecondPractice.png",    
-  "placeholder_feeling":   "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.jpg", 
+  "placeholder_feeling":   "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.png", 
 };
 
 const TOTAL_SLIDES = 15; // sections data-section="0" … "14"

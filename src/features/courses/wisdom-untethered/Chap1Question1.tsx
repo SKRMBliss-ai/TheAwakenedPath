@@ -3,8 +3,8 @@ import { ArrowLeft } from 'lucide-react';
 import styles from './Chap1Question1.module.css';
 
 const imageMap: Record<string, string> = {
-  "slide1": "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.jpg",
-  "slide2": "/WisdomUntethered/Chap1/Question1/03_ItsNotQuiteDepression.jpg",
+  "slide1": "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.png",
+  "slide2": "/WisdomUntethered/Chap1/Question1/03_ItsNotQuiteDepression.png",
   "slide3": "/WisdomUntethered/Chap1/Question1/07_WhenYouFeltTrulyAlive.jpg",
   "slide4": "/WisdomUntethered/Chap1/Question1/01_BuildingTheInnerWalls.png",
   "slide5": "/WisdomUntethered/Chap1/Question1/05_LockingOutLife.jpg",
@@ -14,7 +14,7 @@ const imageMap: Record<string, string> = {
   "slide9_10_11": "/WisdomUntethered/Chap1/Question1/09_The5SecondPractice.png",
   "slide12": "/WisdomUntethered/Chap1/Question1/10_HowTheWallsComeDown.jpg",
   "placeholder_alive": "/WisdomUntethered/Chap1/Question1/07_WhenYouFeltTrulyAlive.jpg",
-  "placeholder_feeling": "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.jpg",
+  "placeholder_feeling": "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.png",
 };
 
 const TOTAL_SLIDES = 16; // sections data-section="0" … "15"
