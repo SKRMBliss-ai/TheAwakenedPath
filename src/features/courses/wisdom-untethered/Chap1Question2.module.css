@@ -5,11 +5,12 @@
   --gold: #B8973A;
   --gold-light: #D4AE5C;
   --gold-pale: #F0E4C0;
-  --bg-primary: #1C1814;
-  --bg-surface: #26221E;
+  --bg-primary: #FDFAF4; /* Light by default */
+  --bg-surface: #F5EDD8; /* Parchment for light */
+  --ink: #1C1814;
   --ink-soft: #3A342C;
-  --text-primary: #FDFAF4;
-  --text-secondary: rgba(253,250,244,0.7);
+  --text-primary: #1C1814;
+  --text-secondary: rgba(28, 24, 20, 0.75);
   --parchment: #F5EDD8;
   --warm-white: #FDFAF4;
   --muted: #8C7E6A;
@@ -50,12 +51,12 @@
 
 /* --- HERO --- */
 .hero {
-  min-height: 100vh;
+  min-height: 70vh;
   display: flex; flex-direction: column;
-  justify-content: center; align-items: center;
-  text-align: center; padding: 5rem 2rem;
+  justify-content: flex-start; align-items: center;
+  text-align: center; padding: 15vh 2rem 3rem;
   position: relative; overflow: hidden;
-  background: radial-gradient(circle at center, #2C2620 0%, #1C1814 100%);
+  background: radial-gradient(circle at center, #FDFCF8 0%, #F5F1E6 100%);
 }
 .heroEyebrow {
   font-size: 0.65rem; font-weight: 500;
@@ -80,7 +81,7 @@
   font-size: 1rem; color: var(--text-secondary); max-width: 500px;
 }
 .heroScroll {
-  position: absolute; bottom: 3rem; left: 50%; transform: translateX(-50%);
+  position: relative; margin-top: 4rem;
   font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--gold); opacity: 0.5;
 }
@@ -110,7 +111,7 @@
 
 /* Background alternation */
 .slideSection:nth-child(even) {
-  background: rgba(255,255,255,0.02);
+  background: rgba(0,0,0,0.02);
 }
 
 .slideWrapper {
@@ -153,11 +154,11 @@
 
 /* --- CHAPTER INTRO / BAND --- */
 .chapterIntro {
-  background: var(--parchment);
+  background: var(--bg-surface);
   padding: 5rem 2rem; text-align: center;
-  border-top: 1px solid var(--gold-pale);
-  border-bottom: 1px solid var(--gold-pale);
-  margin: 4rem 0; color: var(--bg-primary);
+  border-top: 1px solid rgba(184,151,58,0.25);
+  border-bottom: 1px solid rgba(184,151,58,0.25);
+  margin: 4rem 0; color: var(--text-primary);
 }
 .chapterIntroInner { max-width: 680px; margin: 0 auto; }
 .chapterIntro h2 {
@@ -233,9 +234,9 @@
 /* --- PRESENTATION CONTROLS --- */
 .slideshowControl { position: fixed; bottom: 2rem; right: 2rem; z-index: 500; }
 .slideshowPlayBtn {
-  background: white; border: 1px solid var(--gold); border-radius: 40px;
+  background: var(--bg-surface); border: 1px solid var(--gold); border-radius: 40px;
   padding: 0.6rem 1.6rem 0.6rem 0.8rem; display: flex; align-items: center; gap: 0.8rem;
-  cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 .slideshowSvg { width: 34px; height: 34px; transform: rotate(-90deg); }
 .svgTrack { fill: none; stroke: rgba(184,151,58,0.1); stroke-width: 3; }
@@ -245,9 +246,9 @@
 .slideshowLabel { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); font-weight: 500; }
 
 .slideshowPlayer {
-  background: white; border: 1px solid var(--gold); border-radius: 40px;
+  background: var(--bg-surface); border: 1px solid var(--gold); border-radius: 40px;
   display: flex; align-items: center; padding: 0.4rem 0.6rem; gap: 0.4rem;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
 }
 .slideshowNavBtn {
   width: 32px; height: 32px; border: none; background: none; border-radius: 50%;
@@ -259,7 +260,7 @@
 
 .fullscreenReturnBtn {
   position: fixed; top: 2rem; left: 2rem;
-  background: rgba(255,255,255,0.9); border: 1px solid var(--gold);
+  background: var(--bg-surface); border: 1px solid var(--gold);
   padding: 0.7rem 1.2rem; border-radius: 20px;
   display: flex; align-items: center; gap: 0.8rem;
   z-index: 600; cursor: pointer; color: var(--gold); font-size: 0.75rem;
@@ -268,6 +269,50 @@
 
 .clickableImg { cursor: zoom-in; transition: transform 0.3s; }
 .clickableImg:hover { transform: scale(1.02); }
+
+/* ── DARK MODE OVERRIDES ── */
+:global(.dark) .container {
+  --bg-primary: #1C1814;
+  --bg-surface: #26221E;
+  --text-primary: #FDFAF4;
+  --text-secondary: rgba(253,250,244,0.7);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+:global(.dark) .hero {
+  background: radial-gradient(circle at center, #2C2620 0%, #1C1814 100%);
+}
+
+:global(.dark) .slideSection:nth-child(even) {
+  background: rgba(255,255,255,0.02);
+}
+
+:global(.dark) .slideSection.matrixBand {
+  background: #26221E;
+}
+
+:global(.dark) .slideSection.gripBand {
+  background: #2C2620;
+}
+
+:global(.dark) .chapterIntro {
+  background: #26221E;
+}
+
+:global(.dark) .practiceCard {
+  background: #26221E;
+}
+
+:global(.dark) .closing {
+  background: #1C1814;
+}
+
+:global(.dark) .slideshowPlayBtn,
+:global(.dark) .slideshowPlayer,
+:global(.dark) .fullscreenReturnBtn {
+  background: #26221E;
+}
 
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 

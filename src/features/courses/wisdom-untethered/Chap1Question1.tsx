@@ -22,13 +22,18 @@ const lightImages: Record<string, string> = {
   "slide5": "/WisdomUntethered/Chap1/Question1/05_Transmutation_light.png",
   "slide6": "/WisdomUntethered/Chap1/Question1/06_MindAsTool_light.png",
   // slide7 light version pending quota reset — falls back to dark
-  "slide7": "/WisdomUntethered/Chap1/Question1/07_Meditation.png",
+  "slide7": "/WisdomUntethered/Chap1/Question1/07_Meditation_light.jpeg",
   "placeholder_alive": "/WisdomUntethered/Chap1/Question1/01_BadMood_light.png",
 };
 
 const TOTAL_SLIDES = 13; // sections data-section="0" ... "12"
 
-export function Chap1Question1() {
+interface Chap1Question1Props {
+  isPresenting?: boolean;
+  onExitPresentation?: () => void;
+}
+
+export function Chap1Question1({ isPresenting: propPresenting = false, onExitPresentation }: Chap1Question1Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
@@ -51,8 +56,16 @@ export function Chap1Question1() {
   const imageMap = isDark ? darkImages : lightImages;
 
   // ── Presentation mode ──
-  const [isPresenting, setIsPresenting] = useState(false);
+  const [isPresenting, setIsPresenting] = useState(propPresenting);
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    setIsPresenting(propPresenting);
+    if (propPresenting) {
+      setCurrentSlide(0);
+      scrollToSection(0);
+    }
+  }, [propPresenting]);
 
   // ── Lightbox ──
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -105,7 +118,7 @@ export function Chap1Question1() {
     if (section) section.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // ── Presentation controls ──
+
   const startPresentation = () => {
     setIsPresenting(true);
     setCurrentSlide(0);
@@ -128,6 +141,7 @@ export function Chap1Question1() {
     setIsPresenting(false);
     setCurrentSlide(0);
     scrollToSection(0);
+    onExitPresentation?.();
   };
 
   // ── Keyboard shortcuts ──
@@ -156,6 +170,7 @@ export function Chap1Question1() {
   const circumference = 2 * Math.PI * radius;
   const positionPct = TOTAL_SLIDES > 1 ? (currentSlide / (TOTAL_SLIDES - 1)) * 100 : 0;
   const ringOffset = circumference - (positionPct / 100) * circumference;
+
 
   return (
     <div

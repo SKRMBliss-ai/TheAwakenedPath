@@ -25,8 +25,8 @@ const CHAPTERS: Chapter[] = [
 
 interface CourseProps {
   activeQuestionId: string;
-  viewMode: 'explanation' | 'video';
-  setViewMode: (mode: 'explanation' | 'video') => void;
+  viewMode: 'explanation' | 'video' | 'presentation';
+  setViewMode: (mode: 'explanation' | 'video' | 'presentation') => void;
 }
 
 export function WisdomUntetheredCourse({ 
@@ -85,9 +85,9 @@ export function WisdomUntetheredCourse({
       {/* ── Main Content Area ── */}
       <div className="flex-1 min-h-0 overflow-hidden relative">
         <AnimatePresence mode="wait">
-          {viewMode === 'explanation' && activeChapter && (
+          {(viewMode === 'explanation' || viewMode === 'presentation') && activeChapter && (
             <motion.div
-              key={activeQuestionId}
+              key={activeQuestionId + (viewMode === 'presentation' ? '_present' : '_expl')}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -95,7 +95,9 @@ export function WisdomUntetheredCourse({
               className="w-full h-full"
             >
               {activeChapter.id === 1 ? (
-                activeQuestionId === 'question1' ? <Chap1Question1 /> : <Chap1Question2 />
+                activeQuestionId === 'question1' 
+                  ? <Chap1Question1 isPresenting={viewMode === 'presentation'} onExitPresentation={() => setViewMode('explanation')} /> 
+                  : <Chap1Question2 isPresenting={viewMode === 'presentation'} onExitPresentation={() => setViewMode('explanation')} />
               ) : (
                 <div className="p-12 overflow-y-auto h-full">
                   <p className="text-[16px] leading-[2.2] font-sans text-[var(--text-secondary)] tracking-wide max-w-2xl">

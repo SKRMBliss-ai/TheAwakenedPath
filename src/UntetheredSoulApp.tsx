@@ -464,7 +464,7 @@ export default function UntetheredApp() {
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
 
   const [activeQuestionId, setActiveQuestionId] = useState('question1');
-  const [viewMode, setViewMode] = useState<'explanation' | 'video'>('explanation');
+  const [viewMode, setViewMode] = useState<'explanation' | 'video' | 'presentation'>('explanation');
 
   const timeOfDayGradient = useMemo(() => {
     const hour = new Date().getHours();
