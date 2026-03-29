@@ -353,27 +353,11 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 6: PATTERNS ── */}
+      {/* ── SLIDE 6: REALIZATION ── */}
       <section className={styles.slideSection} data-section="6">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>06</span>
-            <img src={imageMap["escalating"]} alt="Patterns" onClick={() => openLightbox(imageMap["escalating"], "Patterns")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>Patterns</span>
-            <h2 className={styles.slideHeading}>Same Fear,<br /><em>Different Clothes</em></h2>
-            <p className={styles.slideBody}>When you watch, you see the patterns. The same fear showing up in different situations. The same story — "I might not be okay" — playing out in a hundred variations.</p>
-            <p className={styles.slideBody}>When you see the pattern clearly enough, you stop taking it so seriously. You stop believing that the endless narration holds the key to your wellbeing.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SLIDE 7: REALIZATION ── */}
-      <section className={styles.slideSection} data-section="7">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>07</span>
             <img src={imageMap["participant"]} alt="Realization" onClick={() => openLightbox(imageMap["participant"], "Realization")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
@@ -385,11 +369,11 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 8: PRACTICE ── */}
-      <section className={styles.slideSection} data-section="8">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
+      {/* ── SLIDE 7: PRACTICE ── */}
+      <section className={styles.slideSection} data-section="7">
+        <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>08</span>
+            <span className={styles.slideNumber}>07</span>
             <img src={imageMap["meditation"]} alt="The Practice" onClick={() => openLightbox(imageMap["meditation"], "The Practice")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
@@ -397,6 +381,22 @@ export function Chap1Question2() {
             <h2 className={styles.slideHeading}>Notice. Name.<br /><em>Detach</em>.</h2>
             <p className={styles.slideBody}>Today — just once — when the voice starts up with guilt, doubt, or fear, try naming it. "There's the worry voice." "There's the guilt loop."</p>
             <p className={styles.slideBody}>Don't fix it. Just see it as the mind doing its thing — the same way you'd notice a radio playing in another room.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SLIDE 8: PATTERNS ── */}
+      <section className={styles.slideSection} data-section="8">
+        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
+          <div className={styles.slideImageWrap}>
+            <span className={styles.slideNumber}>08</span>
+            <img src={imageMap["escalating"]} alt="Patterns" onClick={() => openLightbox(imageMap["escalating"], "Patterns")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideLabel}>Patterns</span>
+            <h2 className={styles.slideHeading}>Same Fear,<br /><em>Different Clothes</em></h2>
+            <p className={styles.slideBody}>When you watch, you see the patterns. The same fear showing up in different situations. The same story — "I might not be okay" — playing out in a hundred variations.</p>
+            <p className={styles.slideBody}>When you see the pattern clearly enough, you stop taking it so seriously. You stop believing that the endless narration holds the key to your wellbeing.</p>
           </div>
         </div>
       </section>
@@ -511,7 +511,6 @@ export function Chap1Question2() {
             <img src={imageMap["grip"]} alt="The Grip" onClick={() => openLightbox(imageMap["grip"], "The Grip")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>Transmutation</span>
             <h2 className={styles.slideHeading}>The <em>Grip</em> Loosens</h2>
             <p className={styles.slideBody}>The grip is what engagement looks like in the body: Tension. Resistance. By softening, you transmute the energy, letting it pass through rather than fighting it.</p>
           </div>
