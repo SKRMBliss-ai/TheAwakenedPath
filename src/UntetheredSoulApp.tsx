@@ -463,6 +463,9 @@ export default function UntetheredApp() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
 
+  const [activeQuestionId, setActiveQuestionId] = useState('question1');
+  const [viewMode, setViewMode] = useState<'explanation' | 'video'>('explanation');
+
   const timeOfDayGradient = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 11) return TIME_GRADIENTS.morning;
@@ -907,38 +910,72 @@ export default function UntetheredApp() {
                     {item.subItems.map((sub: any) => {
                       const isActive = activeTab === sub.id;
                       return (
-                        <button
-                          key={sub.id}
-                          onClick={() => {
-                            setActiveTab(sub.id);
-                            setIsSidebarOpen(false);
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-400 relative group rounded-l-xl text-left",
+                        <div key={sub.id} className="flex flex-col">
+                          <button
+                            onClick={() => {
+                              setActiveTab(sub.id);
+                              setIsSidebarOpen(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-400 relative group rounded-l-xl text-left",
+                            )}
+                            style={{
+                              background: isActive ? 'var(--bg-surface-hover)' : 'none',
+                            }}
+                          >
+                            {isActive && (
+                              <motion.div
+                                layoutId="sidebar-accent"
+                                className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/10 to-transparent pointer-events-none rounded-l-xl"
+                              />
+                            )}
+                            <span className={cn(
+                              "text-[9px] uppercase tracking-[0.25em] transition-colors duration-400 font-sans relative z-10 w-full",
+                              isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
+                            )}>
+                              {sub.label}
+                            </span>
+                            {isActive && (
+                              <motion.div
+                                layoutId="nav-active-dot"
+                                className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_12px_var(--accent-primary)] z-10"
+                              />
+                            )}
+                          </button>
+
+                          {/* Render questions if Wisdom Untethered is active */}
+                          {isActive && sub.id === 'wisdom_untethered' && (
+                            <div className="flex flex-col ml-1 border-l border-[var(--border-subtle)]/30">
+                              {[
+                                { id: 'question1', label: 'Question 1', locked: false },
+                                { id: 'question2', label: 'Question 2', locked: false },
+                                { id: 'question3', label: 'Question 3', locked: true },
+                                { id: 'question4', label: 'Question 4', locked: true },
+                              ].map((q) => (
+                                <button
+                                  key={q.id}
+                                  disabled={q.locked}
+                                  onClick={() => setActiveQuestionId(q.id)}
+                                  className={cn(
+                                    "flex items-center gap-2 px-4 py-2 text-[8px] uppercase tracking-widest transition-all text-left",
+                                    activeQuestionId === q.id
+                                      ? "text-[var(--accent-primary)] font-bold"
+                                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
+                                    q.locked && "opacity-40 cursor-not-allowed"
+                                  )}
+                                >
+                                  <div className={cn(
+                                    "w-1 h-1 rounded-full",
+                                    activeQuestionId === q.id ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" : "bg-transparent",
+                                    q.locked && "bg-[var(--text-muted)]"
+                                  )} />
+                                  <span className="flex-1">{q.label}</span>
+                                  {q.locked && <Lock size={8} className="ml-2 text-[var(--accent-secondary)]" />}
+                                </button>
+                              ))}
+                            </div>
                           )}
-                          style={{
-                            background: isActive ? 'var(--bg-surface-hover)' : 'none',
-                          }}
-                        >
-                          {isActive && (
-                            <motion.div
-                              layoutId="sidebar-accent"
-                              className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/10 to-transparent pointer-events-none rounded-l-xl"
-                            />
-                          )}
-                          <span className={cn(
-                            "text-[9px] uppercase tracking-[0.25em] transition-colors duration-400 font-sans relative z-10 w-full",
-                            isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
-                          )}>
-                            {sub.label}
-                          </span>
-                          {isActive && (
-                            <motion.div
-                              layoutId="nav-active-dot"
-                              className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_12px_var(--accent-primary)] z-10"
-                            />
-                          )}
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -1159,7 +1196,11 @@ export default function UntetheredApp() {
               exit={{ opacity: 0 }}
               className="flex-1 min-h-0 h-[calc(100vh-5rem)] overflow-hidden"
             >
-              <WisdomUntetheredCourse />
+              <WisdomUntetheredCourse 
+                activeQuestionId={activeQuestionId}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+              />
             </motion.div>
           )}
         </AnimatePresence>

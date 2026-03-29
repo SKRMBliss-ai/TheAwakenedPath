@@ -3,20 +3,18 @@ import { ArrowLeft } from 'lucide-react';
 import styles from './Chap1Question1.module.css';
 
 const imageMap: Record<string, string> = {
-  "Slide8.PNG":  "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.jpg",
-  "Slide9.PNG":  "/WisdomUntethered/Chap1/Question1/03_ItsNotQuiteDepression.jpg",
-  "Slide13.PNG": "/WisdomUntethered/Chap1/Question1/07_WhenYouFeltTrulyAlive.jpg",
-  "Slide11.PNG": "/WisdomUntethered/Chap1/Question1/01_BuildingTheInnerWalls.png",
-  "Slide12.PNG": "/WisdomUntethered/Chap1/Question1/05_LockingOutLife.jpg",
-  "Slide14.PNG": "/WisdomUntethered/Chap1/Question1/06_TheRiverAndTheClench.jpg",
-  "Slide15.PNG": "/WisdomUntethered/Chap1/Question1/08_NoticeTheTightening.jpg",
-  "Slide10.PNG": "/WisdomUntethered/Chap1/Question1/02_WhatIsItActually.jpg",
-  "Slide3.PNG":  "/WisdomUntethered/Chap1/Question1/09_The5SecondPractice.png",
-  "Slide4.PNG":  "/WisdomUntethered/Chap1/Question1/10_HowTheWallsComeDown.jpg",
-  "Slide5.PNG":  "/WisdomUntethered/Chap1/Question1/01_BuildingTheInnerWalls.png",
-  "Slide2.PNG":  "/WisdomUntethered/Chap1/Question1/10_HowTheWallsComeDown.jpg",
-  "Slide6.PNG":  "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.jpg",
-  "Slide7.PNG":  "/WisdomUntethered/Chap1/Question1/02_WhatIsItActually.jpg",
+  "slide1": "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.jpg",
+  "slide2": "/WisdomUntethered/Chap1/Question1/03_ItsNotQuiteDepression.jpg",
+  "slide3": "/WisdomUntethered/Chap1/Question1/07_WhenYouFeltTrulyAlive.jpg",
+  "slide4": "/WisdomUntethered/Chap1/Question1/01_BuildingTheInnerWalls.png",
+  "slide5": "/WisdomUntethered/Chap1/Question1/05_LockingOutLife.jpg",
+  "slide6": "/WisdomUntethered/Chap1/Question1/06_TheRiverAndTheClench.jpg",
+  "slide7": "/WisdomUntethered/Chap1/Question1/08_NoticeTheTightening.jpg",
+  "slide8": "/WisdomUntethered/Chap1/Question1/02_WhatIsItActually.jpg",
+  "slide9_10_11": "/WisdomUntethered/Chap1/Question1/09_The5SecondPractice.png",
+  "slide12": "/WisdomUntethered/Chap1/Question1/10_HowTheWallsComeDown.jpg",
+  "placeholder_alive": "/WisdomUntethered/Chap1/Question1/07_WhenYouFeltTrulyAlive.jpg",
+  "placeholder_feeling": "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.jpg",
 };
 
 const TOTAL_SLIDES = 16; // sections data-section="0" … "15"
@@ -274,7 +272,7 @@ export function Chap1Question1() {
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>01</span>
-            <img src={imageMap["Slide8.PNG"]} alt="The Feeling Nobody Talks About" onClick={() => openLightbox(imageMap["Slide8.PNG"], "The Feeling Nobody Talks About")} className={styles.clickableImg} />
+            <img src={imageMap["slide1"]} alt="The Feeling Nobody Talks About" onClick={() => openLightbox(imageMap["slide1"], "The Feeling Nobody Talks About")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>Where it begins</span>
@@ -292,7 +290,7 @@ export function Chap1Question1() {
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>02</span>
-            <img src={imageMap["Slide9.PNG"]} alt="It's Not Quite Depression" onClick={() => openLightbox(imageMap["Slide9.PNG"], "It's Not Quite Depression")} className={styles.clickableImg} />
+            <img src={imageMap["slide2"]} alt="It's Not Quite Depression" onClick={() => openLightbox(imageMap["slide2"], "It's Not Quite Depression")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The search for a name</span>
@@ -311,7 +309,7 @@ export function Chap1Question1() {
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>03</span>
-            <img src={imageMap["Slide13.PNG"]} alt="When You Felt Truly Alive" onClick={() => openLightbox(imageMap["Slide13.PNG"], "When You Felt Truly Alive")} className={styles.clickableImg} />
+            <img src={imageMap["slide3"]} alt="When You Felt Truly Alive" onClick={() => openLightbox(imageMap["slide3"], "When You Felt Truly Alive")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The contrast</span>
@@ -329,7 +327,7 @@ export function Chap1Question1() {
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>04</span>
-            <img src={imageMap["Slide11.PNG"]} alt="Building The Inner Walls" onClick={() => openLightbox(imageMap["Slide11.PNG"], "Building The Inner Walls")} className={styles.clickableImg} />
+            <img src={imageMap["slide4"]} alt="Building The Inner Walls" onClick={() => openLightbox(imageMap["slide4"], "Building The Inner Walls")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>How it happens</span>
@@ -347,7 +345,7 @@ export function Chap1Question1() {
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>05</span>
-            <img src={imageMap["Slide12.PNG"]} alt="Locking Out Life" onClick={() => openLightbox(imageMap["Slide12.PNG"], "Locking Out Life")} className={styles.clickableImg} />
+            <img src={imageMap["slide5"]} alt="Locking Out Life" onClick={() => openLightbox(imageMap["slide5"], "Locking Out Life")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The cost</span>
@@ -366,7 +364,7 @@ export function Chap1Question1() {
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>06</span>
-            <img src={imageMap["Slide14.PNG"]} alt="The River & The Clench" onClick={() => openLightbox(imageMap["Slide14.PNG"], "The River & The Clench")} className={styles.clickableImg} />
+            <img src={imageMap["slide6"]} alt="The River & The Clench" onClick={() => openLightbox(imageMap["slide6"], "The River & The Clench")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>Singer's model</span>
@@ -384,7 +382,7 @@ export function Chap1Question1() {
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>07</span>
-            <img src={imageMap["Slide15.PNG"]} alt="Notice The Tightening" onClick={() => openLightbox(imageMap["Slide15.PNG"], "Notice The Tightening")} className={styles.clickableImg} />
+            <img src={imageMap["slide7"]} alt="Notice The Tightening" onClick={() => openLightbox(imageMap["slide7"], "Notice The Tightening")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The signal</span>
@@ -402,7 +400,7 @@ export function Chap1Question1() {
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>08</span>
-            <img src={imageMap["Slide10.PNG"]} alt="What Is It Actually?" onClick={() => openLightbox(imageMap["Slide10.PNG"], "What Is It Actually?")} className={styles.clickableImg} />
+            <img src={imageMap["slide8"]} alt="What Is It Actually?" onClick={() => openLightbox(imageMap["slide8"], "What Is It Actually?")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The path forward</span>
@@ -422,7 +420,7 @@ export function Chap1Question1() {
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>09</span>
-            <img src={imageMap["Slide3.PNG"]} alt="Softening Beats Trying Harder" onClick={() => openLightbox(imageMap["Slide3.PNG"], "Softening Beats Trying Harder")} className={styles.clickableImg} />
+            <img src={imageMap["slide9_10_11"]} alt="Softening Beats Trying Harder" onClick={() => openLightbox(imageMap["slide9_10_11"], "Softening Beats Trying Harder")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The counterintuitive truth</span>
@@ -438,7 +436,7 @@ export function Chap1Question1() {
 
       {/* ── SLIDE 10 ── */}
       <section className={styles.fullImageSlide} data-section="10">
-        <img src={imageMap["Slide4.PNG"]} alt="Let's Soften Right Now" onClick={() => openLightbox(imageMap["Slide4.PNG"], "Let's Soften Right Now")} className={styles.clickableImg} />
+        <img src={imageMap["slide9_10_11"]} alt="Let's Soften Right Now" onClick={() => openLightbox(imageMap["slide9_10_11"], "Let's Soften Right Now")} className={styles.clickableImg} />
         <div className={styles.slideContent} style={{ textAlign: 'center' }}>
           <span className={styles.slideLabel} style={{ display: 'block' }}>A moment of practice</span>
           <h2 className={styles.slideHeading}>"Let's Soften<br /><em>Right Now"</em></h2>
@@ -453,7 +451,7 @@ export function Chap1Question1() {
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>11</span>
-            <img src={imageMap["Slide5.PNG"]} alt="Loosening The Fist" onClick={() => openLightbox(imageMap["Slide5.PNG"], "Loosening The Fist")} className={styles.clickableImg} />
+            <img src={imageMap["slide9_10_11"]} alt="Loosening The Fist" onClick={() => openLightbox(imageMap["slide9_10_11"], "Loosening The Fist")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>What opens</span>
@@ -471,7 +469,7 @@ export function Chap1Question1() {
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>12</span>
-            <img src={imageMap["Slide2.PNG"]} alt="How The Walls Come Down" onClick={() => openLightbox(imageMap["Slide2.PNG"], "How The Walls Come Down")} className={styles.clickableImg} />
+            <img src={imageMap["slide12"]} alt="How The Walls Come Down" onClick={() => openLightbox(imageMap["slide12"], "How The Walls Come Down")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The long arc</span>
@@ -489,7 +487,7 @@ export function Chap1Question1() {
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>13</span>
-            <img src={imageMap["Slide6.PNG"]} alt="On The Other Side" onClick={() => openLightbox(imageMap["Slide6.PNG"], "On The Other Side")} className={styles.clickableImg} />
+            <img src={imageMap["placeholder_alive"]} alt="On The Other Side" onClick={() => openLightbox(imageMap["placeholder_alive"], "On The Other Side")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The result</span>
@@ -512,7 +510,7 @@ export function Chap1Question1() {
 
       {/* ── SLIDE 15 ── */}
       <section className={styles.fullImageSlide} data-section="15">
-        <img src={imageMap["Slide7.PNG"]} alt="Stay With The Feeling" onClick={() => openLightbox(imageMap["Slide7.PNG"], "Stay With The Feeling")} className={styles.clickableImg} />
+        <img src={imageMap["slide7"]} alt="Stay With The Feeling" onClick={() => openLightbox(imageMap["slide7"], "Stay With The Feeling")} className={styles.clickableImg} />
         <div className={styles.slideContent} style={{ textAlign: 'center' }}>
           <span className={styles.slideLabel} style={{ display: 'block' }}>Your invitation</span>
           <h2 className={styles.slideHeading}><em>Stay</em> With<br />the Feeling</h2>
