@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PowerOfNow } from '../soul-intelligence/components/PowerOfNow';
+import { useAuth } from '../auth/AuthContext';
+import { hasWisdomAccess } from '../../config/admin';
+import { AnchorButton } from '../../components/ui/SacredUI';
+import { Lock } from 'lucide-react';
 
 interface CoursesHubProps {
     initialChapter?: string;
+    onCourseSelect?: (courseId: string) => void;
 }
 
-export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter }) => {
+export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourseSelect }) => {
+    const { user } = useAuth();
     const [activeCourseId, setActiveCourseId] = useState<'power-of-now' | 'untethered'>('power-of-now');
+    const isWisdomAuthorized = hasWisdomAccess(user?.email);
 
     return (
         <div className="w-full flex flex-col min-h-screen">
@@ -51,7 +58,10 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter }) => {
                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             />
                         )}
-                        <span className="relative z-10 w-full text-center">Wisdom Untethered</span>
+                        <span className="relative z-10 w-full text-center flex items-center justify-center gap-2">
+                            Wisdom Untethered
+                            {!isWisdomAuthorized && <Lock size={10} className="opacity-40" />}
+                        </span>
                     </button>
                 </div>
             </div>
@@ -78,19 +88,44 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter }) => {
                             transition={{ duration: 0.4 }}
                             className="flex flex-col items-center justify-center py-32 px-6"
                         >
-                            <div className="w-24 h-24 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface-hover)] shadow-inner flex items-center justify-center mb-8">
-                                <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                                    className="w-12 h-12 rounded-full border border-dashed border-[var(--text-muted)] opacity-50"
-                                />
+                            <div className="w-24 h-24 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface-hover)] shadow-inner flex items-center justify-center mb-8 relative">
+                                {isWisdomAuthorized ? (
+                                    <motion.div
+                                        animate={{ scale: [1, 1.2, 1], rotate: 360 }}
+                                        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                                        className="w-16 h-16 rounded-full border border-[var(--accent-primary)]/40 shadow-[0_0_20px_var(--glow-primary)] flex items-center justify-center"
+                                    >
+                                        <div className="w-4 h-4 rounded-full bg-[var(--accent-primary)]" />
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                        className="w-12 h-12 rounded-full border border-dashed border-[var(--text-muted)] opacity-50"
+                                    />
+                                )}
                             </div>
                             <h2 className="text-4xl font-serif font-light text-[var(--text-primary)] mb-4 tracking-tight">Wisdom Untethered</h2>
-                            <p className="text-lg font-serif italic text-[var(--accent-primary)] mb-6 opacity-90 tracking-wide">Coming Soon</p>
-                            <p className="text-sm text-[var(--text-muted)] text-center max-w-sm leading-relaxed">
-                                A journey into the depths of your inner world is being prepared. 
-                                In the meantime, continue anchoring your presence in the Power of Now.
-                            </p>
+                            {isWisdomAuthorized ? (
+                                <>
+                                    <p className="text-lg font-serif italic text-[var(--accent-primary)] mb-10 opacity-90 tracking-wide">The path is open for you.</p>
+                                    <AnchorButton 
+                                        variant="glow"
+                                        onClick={() => onCourseSelect?.('wisdom_untethered')}
+                                        className="!px-12 !py-5"
+                                    >
+                                        Enter Journey
+                                    </AnchorButton>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-lg font-serif italic text-[var(--accent-primary)] mb-6 opacity-90 tracking-wide">Coming Soon</p>
+                                    <p className="text-sm text-[var(--text-muted)] text-center max-w-sm leading-relaxed">
+                                        A journey into the depths of your inner world is being prepared. 
+                                        In the meantime, continue anchoring your presence in the Power of Now.
+                                    </p>
+                                </>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

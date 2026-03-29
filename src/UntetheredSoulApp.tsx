@@ -25,7 +25,7 @@ import EngagementReport from './features/admin/EngagementReport';
 import { useAchievements } from './features/achievements/useAchievements';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
-import { isAdminEmail } from './config/admin';
+import { isAdminEmail, hasWisdomAccess } from './config/admin';
 
 interface PracticeStep {
   title: string;
@@ -888,7 +888,7 @@ export default function UntetheredApp() {
             { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
             { id: 'courses_group', icon: Sparkles, label: 'Courses', locked: false, isGroup: true, subItems: [
               { id: 'intelligence', label: 'The Power of Now' },
-              { id: 'wisdom_untethered', label: 'Wisdom Untethered' },
+              { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: !hasWisdomAccess(currentUser?.email) },
             ]},
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
             { id: 'situations', icon: Flame, label: 'Situations', fullLabel: 'Situational Practice', locked: false },
@@ -913,6 +913,10 @@ export default function UntetheredApp() {
                         <div key={sub.id} className="flex flex-col">
                           <button
                             onClick={() => {
+                              if (sub.locked) {
+                                alert('This sacred path is currently undergoing refinement for a select group of travelers.');
+                                return;
+                              }
                               setActiveTab(sub.id);
                               setIsSidebarOpen(false);
                             }}
@@ -934,6 +938,7 @@ export default function UntetheredApp() {
                               isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
                             )}>
                               {sub.label}
+                              {sub.locked && <Lock size={8} className="inline-block ml-2 text-[var(--accent-secondary)]" />}
                             </span>
                             {isActive && (
                               <motion.div
@@ -1180,7 +1185,7 @@ export default function UntetheredApp() {
 
             {activeTab === 'intelligence' && (
               <motion.div key="intelligence" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }}>
-                <CoursesHub />
+                <CoursesHub onCourseSelect={(id) => setActiveTab(id)} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -1196,11 +1201,36 @@ export default function UntetheredApp() {
               exit={{ opacity: 0 }}
               className="flex-1 min-h-0 h-[calc(100vh-5rem)] overflow-hidden"
             >
-              <WisdomUntetheredCourse 
-                activeQuestionId={activeQuestionId}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-              />
+              {hasWisdomAccess(currentUser?.email) ? (
+                <WisdomUntetheredCourse 
+                  activeQuestionId={activeQuestionId}
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center p-12 space-y-8 bg-[var(--bg-base)]">
+                  <div className="relative group">
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute inset-[-20px] bg-[var(--accent-primary)]/10 blur-[40px] rounded-full"
+                    />
+                    <div className="w-24 h-24 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center relative z-10 shadow-2xl">
+                      <Lock className="w-10 h-10 text-[var(--accent-primary)] opacity-60" />
+                    </div>
+                  </div>
+                  <div className="space-y-4 max-w-sm">
+                    <h2 className="text-4xl font-serif font-light text-[var(--text-primary)] tracking-tight">Access Restricted</h2>
+                    <p className="text-[15px] font-serif italic text-[var(--text-secondary)] leading-relaxed opacity-80">
+                      This sacred passage is currently undergoing final refinements for a select group of travelers. 
+                      Your patience is a form of presence.
+                    </p>
+                  </div>
+                  <AnchorButton variant="secondary" onClick={() => setActiveTab('home')} className="mt-4">
+                    Return to Sanctuary
+                  </AnchorButton>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
