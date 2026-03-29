@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, BookOpen, Play } from 'lucide-react';
+import { Sparkles, BookOpen, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
 
 interface Chapter {
   id: number;
   title: string;
+  subtitle: string;
   explanation: string;
   videoId: string;
 }
@@ -14,150 +15,189 @@ interface Chapter {
 const CHAPTERS: Chapter[] = [
   {
     id: 1,
-    title: "Chapter 1: The Mind",
+    title: "The Mind",
+    subtitle: "Chapter 1",
     explanation: "Chapter 1 of Wisdom Untethered explores one of the most fundamental insights in Singer's teachings: you are not your mind. The mind has a lower layer that reacts automatically based on past experiences, and a higher layer that can consciously redirect itself toward steadier ground. Singer teaches that you don't need to fight negative thoughts — you can use the mind as a tool, through affirmations and deliberate redirection, to lift yourself out of spiraling patterns. At the deepest level, the practice is even simpler: learn to relax in the face of whatever the mind is doing. When you stop feeding the reaction, the negativity gradually loses its grip. Freedom isn't about fixing the mind. It's about stopping the habit of letting it run your life.",
     videoId: "PLACEHOLDER"
   }
 ];
 
+type InnerTab = 'question1' | 'video';
+
 export function WisdomUntetheredCourse() {
   const [activeChapterId, setActiveChapterId] = useState<number>(1);
-  const [activeInnerTab, setActiveInnerTab] = useState<'question1' | 'video'>('question1');
+  const [activeInnerTab, setActiveInnerTab] = useState<InnerTab>('question1');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const activeChapter = CHAPTERS.find(c => c.id === activeChapterId);
 
-  // When Chapter 1 + Question 1 tab: go full-frame (no card, full width)
-  const isFullFrame = activeChapter?.id === 1 && activeInnerTab === 'question1';
-
   return (
-    <div className="flex h-full w-full overflow-hidden">
+    <div className="flex h-full w-full overflow-hidden bg-[var(--bg-base)]">
 
-      {/* ── Slim Chapter Sidebar ── */}
-      <div className={cn(
-        "flex-shrink-0 flex flex-col border-r border-[var(--border-default)] bg-[var(--bg-surface)] transition-all duration-500",
-        isFullFrame ? "w-14 items-center py-4 gap-3" : "w-72 lg:w-80 p-6 gap-4"
-      )}>
-        {!isFullFrame && (
-          <h2 className="text-lg font-serif font-bold text-[var(--text-primary)] mb-2 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[var(--accent-primary)]" />
-            Wisdom Untethered
-          </h2>
-        )}
+      {/* ── Sidebar ── */}
+      <motion.div
+        animate={{ width: sidebarCollapsed ? 64 : 280 }}
+        transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+        className="flex-shrink-0 flex flex-col border-r border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden relative z-10"
+      >
+        {/* Sidebar header */}
+        <div className={cn(
+          "flex items-center border-b border-[var(--border-default)] transition-all duration-300",
+          sidebarCollapsed ? "justify-center px-0 py-4 h-[60px]" : "justify-between px-5 h-[60px]"
+        )}>
+          {!sidebarCollapsed && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center gap-2"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent-primary)] flex-shrink-0" />
+              <span className="text-[11px] uppercase tracking-[0.25em] font-bold text-[var(--text-muted)]">
+                Wisdom Untethered
+              </span>
+            </motion.div>
+          )}
+          {sidebarCollapsed && (
+            <Sparkles className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
+          )}
+        </div>
 
-        {isFullFrame && (
-          <div className="mb-2 mt-1">
-            <Sparkles className="w-4 h-4 text-[var(--accent-primary)]" />
-          </div>
-        )}
-
-        <div className={cn("flex flex-col overflow-y-auto", isFullFrame ? "gap-3 items-center w-full" : "gap-2")}>
+        {/* Chapter list */}
+        <div className="flex-1 overflow-y-auto py-4 px-2 flex flex-col gap-2">
           {CHAPTERS.map(chapter => (
             <button
               key={chapter.id}
-              title={isFullFrame ? chapter.title : undefined}
+              title={sidebarCollapsed ? `${chapter.subtitle}: ${chapter.title}` : undefined}
               onClick={() => {
                 setActiveChapterId(chapter.id);
                 setActiveInnerTab('question1');
               }}
               className={cn(
-                "transition-all duration-500 group flex items-center",
-                isFullFrame
-                  ? cn(
-                      "w-10 h-10 rounded-full border justify-center flex-shrink-0",
-                      activeChapterId === chapter.id
-                        ? "border-[var(--accent-primary)] bg-[var(--bg-surface-hover)] shadow-[0_0_14px_var(--accent-primary)]"
-                        : "border-[var(--border-default)] hover:border-[var(--accent-primary)]"
-                    )
-                  : cn(
-                      "w-full text-left px-5 py-4 rounded-[20px] border gap-3",
-                      activeChapterId === chapter.id
-                        ? "bg-[var(--bg-surface-hover)] border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-primary)]"
-                        : "bg-[var(--bg-surface)] border-[var(--border-default)] hover:border-[var(--border-glass)] hover:bg-[var(--bg-surface-hover)]"
-                    )
+                "group w-full flex items-center transition-all duration-200 rounded-2xl border text-left",
+                sidebarCollapsed
+                  ? "justify-center h-10 w-10 mx-auto px-0"
+                  : "gap-3 px-4 py-3",
+                activeChapterId === chapter.id
+                  ? "bg-[var(--bg-surface-hover)] border-[var(--accent-primary)] shadow-[0_0_16px_-2px_var(--accent-primary)]"
+                  : "border-transparent hover:border-[var(--border-default)] hover:bg-[var(--bg-surface-hover)]"
               )}
             >
-              {isFullFrame ? (
-                <span className="text-[var(--accent-primary)] font-serif text-xs font-bold">
-                  {chapter.id}
-                </span>
-              ) : (
-                <>
+              {/* Chapter number badge */}
+              <div className={cn(
+                "flex-shrink-0 rounded-full flex items-center justify-center font-serif font-bold transition-all",
+                sidebarCollapsed ? "w-7 h-7 text-xs" : "w-8 h-8 text-sm",
+                activeChapterId === chapter.id
+                  ? "bg-[var(--accent-primary)]/15 text-[var(--accent-primary)]"
+                  : "bg-[var(--border-default)] text-[var(--text-muted)] group-hover:bg-[var(--accent-primary)]/10 group-hover:text-[var(--accent-primary)]"
+              )}>
+                {chapter.id}
+              </div>
+
+              {!sidebarCollapsed && (
+                <div className="flex flex-col min-w-0">
                   <span className={cn(
-                    "font-serif text-sm tracking-wide transition-colors flex-1",
-                    activeChapterId === chapter.id
-                      ? "text-[var(--text-primary)]"
-                      : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
+                    "text-[10px] uppercase tracking-[0.2em] font-bold transition-colors",
+                    activeChapterId === chapter.id ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]"
+                  )}>
+                    {chapter.subtitle}
+                  </span>
+                  <span className={cn(
+                    "text-[13px] font-serif truncate transition-colors mt-0.5",
+                    activeChapterId === chapter.id ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
                   )}>
                     {chapter.title}
                   </span>
-                  {activeChapterId === chapter.id && (
-                    <motion.div
-                      layoutId="activeChapterDot"
-                      className="w-2 h-2 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]"
-                    />
-                  )}
-                </>
+                </div>
               )}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      {/* ── Main Content Area ── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-        {/* Tab bar */}
-        <div className="flex-shrink-0 flex items-center gap-8 px-6 border-b border-[var(--border-default)] bg-[var(--bg-surface)]/60 backdrop-blur-md z-20">
-          {!isFullFrame && activeChapter && (
-            <div className="mr-4 border-r border-[var(--border-subtle)] pr-8 py-4">
-              <p className="text-sm font-serif font-light text-[var(--text-primary)] leading-none">{activeChapter.title}</p>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-[var(--text-muted)] mt-1">The Journey Within</p>
-            </div>
-          )}
-
-          {[
-            { id: 'question1', label: 'Question 1', icon: <BookOpen className="w-3.5 h-3.5" /> },
-            { id: 'video',     label: 'Video',      icon: <Play className="w-3.5 h-3.5" /> }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveInnerTab(tab.id as 'question1' | 'video')}
-              className={cn(
-                "py-4 flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] font-bold transition-all relative",
-                activeInnerTab === tab.id
-                  ? "text-[var(--accent-primary)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] opacity-60 hover:opacity-100"
-              )}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-              {activeInnerTab === tab.id && (
+              {!sidebarCollapsed && activeChapterId === chapter.id && (
                 <motion.div
-                  layoutId="innerTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent-primary)] rounded-t-full shadow-[0_-2px_8px_var(--accent-primary)]"
+                  layoutId="activeDot"
+                  className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_6px_var(--accent-primary)] flex-shrink-0"
                 />
               )}
             </button>
           ))}
         </div>
 
-        {/* Content */}
+        {/* Collapse toggle at bottom */}
+        <div className="flex-shrink-0 border-t border-[var(--border-default)] p-3 flex justify-end">
+          <button
+            onClick={() => setSidebarCollapsed(prev => !prev)}
+            className="w-8 h-8 rounded-xl flex items-center justify-center border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--border-glass)] hover:bg-[var(--bg-surface-hover)] transition-all"
+          >
+            {sidebarCollapsed
+              ? <ChevronRight className="w-3.5 h-3.5" />
+              : <ChevronLeft className="w-3.5 h-3.5" />
+            }
+          </button>
+        </div>
+      </motion.div>
+
+      {/* ── Main Content ── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* Top bar: Chapter title + Tabs */}
+        <div className="flex-shrink-0 h-[60px] flex items-center gap-0 px-6 border-b border-[var(--border-default)] bg-[var(--bg-surface)]/80 backdrop-blur-md">
+          {/* Chapter label */}
+          {activeChapter && (
+            <div className="flex flex-col justify-center mr-8 pr-8 border-r border-[var(--border-default)] h-full">
+              <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-[var(--text-muted)]">
+                {activeChapter.subtitle}
+              </span>
+              <span className="text-[14px] font-serif text-[var(--text-primary)] mt-0.5 leading-none">
+                {activeChapter.title}
+              </span>
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div className="flex items-center gap-1 h-full">
+            {[
+              { id: 'question1' as InnerTab, label: 'Question 1', icon: <BookOpen className="w-3.5 h-3.5" /> },
+              { id: 'video' as InnerTab,     label: 'Video',      icon: <Play className="w-3.5 h-3.5" /> },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveInnerTab(tab.id)}
+                className={cn(
+                  "relative flex items-center gap-2 px-4 h-full text-[11px] uppercase tracking-[0.2em] font-bold transition-all",
+                  activeInnerTab === tab.id
+                    ? "text-[var(--accent-primary)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] opacity-60 hover:opacity-100"
+                )}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+                {activeInnerTab === tab.id && (
+                  <motion.div
+                    layoutId="tabUnderline"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent-primary)] rounded-t-full shadow-[0_-1px_8px_var(--accent-primary)]"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content area */}
         <div className="flex-1 min-h-0 overflow-hidden">
           <AnimatePresence mode="wait">
             {activeInnerTab === 'question1' && activeChapter && (
               <motion.div
-                key="question1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                key="q1"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
                 className="w-full h-full"
               >
                 {activeChapter.id === 1 ? (
                   <Chap1Question1 />
                 ) : (
                   <div className="p-12 overflow-y-auto h-full">
-                    <p className="text-[16px] leading-[2.2] font-sans text-[var(--text-secondary)] tracking-wide">
+                    <p className="text-[16px] leading-[2.2] font-sans text-[var(--text-secondary)] tracking-wide max-w-2xl">
                       {activeChapter.explanation}
                     </p>
                   </div>
@@ -168,25 +208,27 @@ export function WisdomUntetheredCourse() {
             {activeInnerTab === 'video' && activeChapter && (
               <motion.div
                 key="video"
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="flex flex-col gap-8 h-full p-10 overflow-y-auto"
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="flex flex-col items-center justify-center gap-8 h-full p-10 overflow-y-auto"
               >
-                <div className="aspect-video w-full rounded-[24px] overflow-hidden border border-[var(--border-default)] shadow-2xl relative bg-black">
-                  <div className="absolute inset-0 bg-[#D16BA5]/5 blur-3xl pointer-events-none" />
-                  <iframe
-                    className="w-full h-full relative z-10"
-                    src={`https://www.youtube.com/embed/${activeChapter.videoId}?rel=0`}
-                    title={activeChapter.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                <div className="w-full max-w-3xl">
+                  <div className="aspect-video w-full rounded-[20px] overflow-hidden border border-[var(--border-default)] shadow-2xl relative bg-black">
+                    <div className="absolute inset-0 bg-[var(--accent-primary)]/5 blur-3xl pointer-events-none" />
+                    <iframe
+                      className="w-full h-full relative z-10"
+                      src={`https://www.youtube.com/embed/${activeChapter.videoId}?rel=0`}
+                      title={activeChapter.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                  <p className="text-center text-[11px] uppercase tracking-[0.22em] text-[var(--accent-primary)] font-bold mt-5 opacity-70">
+                    Full lesson — {activeChapter.subtitle}: {activeChapter.title}
+                  </p>
                 </div>
-                <p className="text-center text-[12px] uppercase tracking-[0.2em] text-[var(--accent-primary)] font-bold">
-                  Watch the full lesson for {activeChapter.title.split(':')[0]}
-                </p>
               </motion.div>
             )}
           </AnimatePresence>

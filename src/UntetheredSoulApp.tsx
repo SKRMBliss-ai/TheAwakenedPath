@@ -1051,7 +1051,7 @@ export default function UntetheredApp() {
         <AnimatePresence>
           {/* Back Action - Integrated into the page flow */}
           {activeTab !== 'home' && (
-            <div className="max-w-7xl mx-auto px-6 md:px-12 pt-12 -mb-8 relative z-50">
+            <div className="w-full px-6 md:px-12 pt-12 -mb-8 relative z-50 flex justify-start">
               <motion.button
                 initial={{ opacity: 0, x: -14 }}
                 animate={{ opacity: 1, x: 0 }}

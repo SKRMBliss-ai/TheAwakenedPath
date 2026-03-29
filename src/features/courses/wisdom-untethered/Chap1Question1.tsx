@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import styles from './Chap1Question1.module.css';
 
 const imageMap: Record<string, string> = {
@@ -133,8 +134,24 @@ export function Chap1Question1() {
   const ringOffset = circumference - (positionPct / 100) * circumference;
 
   return (
-    <div className={styles.container} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
+    <div
+      className={`${styles.container} ${isPresenting ? styles.isPresenting : ''}`}
+      ref={containerRef}
+      style={{ height: '100%', overflowY: 'auto' }}
+    >
       <div className={styles.progressBar} style={{ width: `${scrollProgress}%` }} />
+
+      {/* ── Fullscreen Return Button ── */}
+      {isPresenting && (
+        <button
+          className={styles.fullscreenReturnBtn}
+          onClick={stopPresentation}
+          aria-label="Exit presentation"
+        >
+          <ArrowLeft size={18} />
+          <span>Exit Slideshow</span>
+        </button>
+      )}
 
       {/* ── Nav Dots ── */}
       <nav className={styles.navDots}>
@@ -165,6 +182,14 @@ export function Chap1Question1() {
           </button>
         ) : (
           <div className={styles.slideshowPlayer}>
+            {/* Stop / Return */}
+            <button
+              className={`${styles.slideshowNavBtn} ${styles.stopBtn}`}
+              onClick={stopPresentation}
+              aria-label="Exit presentation"
+              title="Exit"
+            >✕</button>
+
             {/* Position ring */}
             <div className={styles.slideshowRingBtn} aria-label={`Slide ${currentSlide + 1} of ${TOTAL_SLIDES}`}>
               <svg viewBox="0 0 60 60" className={styles.slideshowSvg} aria-hidden="true">
@@ -201,14 +226,6 @@ export function Chap1Question1() {
 
             {/* Slide counter */}
             <span className={styles.slideCounter}>{currentSlide + 1}&thinsp;/&thinsp;{TOTAL_SLIDES}</span>
-
-            {/* Stop */}
-            <button
-              className={`${styles.slideshowNavBtn} ${styles.stopBtn}`}
-              onClick={stopPresentation}
-              aria-label="Exit presentation"
-              title="Exit"
-            >✕</button>
           </div>
         )}
       </div>
