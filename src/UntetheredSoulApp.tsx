@@ -3,6 +3,7 @@ import { Flame, Sparkles, Sun, Play, BookOpen, User, BarChart2, ArrowLeft, Clock
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
+import { WisdomUntetheredCourse } from './features/courses/WisdomUntetheredCourse';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { cn } from './lib/utils';
 import Journal from './features/journal/components/Journal';
@@ -614,7 +615,7 @@ export default function UntetheredApp() {
   useEffect(() => {
     if (activeTab === 'home' || activeTab === 'chapters') {
       setVibrationalState('calm'); // 432Hz + 4Hz
-    } else if (activeTab === 'intelligence') {
+    } else if (activeTab === 'intelligence' || activeTab === 'wisdom_untethered') {
       setVibrationalState('focus'); // 528Hz + 14Hz
     } else if (activeTab === 'panic' || activeTab === 'situations') {
       setVibrationalState('energy'); // 639Hz + 40Hz
@@ -882,12 +883,69 @@ export default function UntetheredApp() {
         <nav className="flex-1 space-y-3">
           {[
             { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
-            { id: 'intelligence', icon: Sparkles, label: 'Courses', fullLabel: 'Courses', locked: false },
+            { id: 'courses_group', icon: Sparkles, label: 'Courses', locked: false, isGroup: true, subItems: [
+              { id: 'intelligence', label: 'The Power of Now' },
+              { id: 'wisdom_untethered', label: 'Wisdom Untethered' },
+            ]},
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
             { id: 'situations', icon: Flame, label: 'Situations', fullLabel: 'Situational Practice', locked: false },
             { id: 'stats', icon: BarChart2, label: 'Progress', fullLabel: 'Your Progress', locked: false },
             { id: 'profile', icon: User, label: 'Profile', locked: false },
           ].map((item: any) => {
+            if (item.isGroup) {
+              const anySubActive = item.subItems.some((sub: any) => activeTab === sub.id);
+              const Icon = item.icon;
+              return (
+                <div key={item.id} className="space-y-1 my-2">
+                  <div className="flex items-center gap-3 px-6 py-2">
+                    <Icon size={16} strokeWidth={anySubActive ? 2 : 1.2} className={cn("transition-colors", anySubActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
+                    <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-[var(--text-muted)] font-sans">
+                      {item.label}
+                    </span>
+                  </div>
+                  <div className="flex flex-col ml-[2.75rem] space-y-1 relative before:content-[''] before:absolute before:left-[-1.25rem] before:top-2 before:bottom-2 before:w-px before:bg-[var(--border-subtle)]/50">
+                    {item.subItems.map((sub: any) => {
+                      const isActive = activeTab === sub.id;
+                      return (
+                        <button
+                          key={sub.id}
+                          onClick={() => {
+                            setActiveTab(sub.id);
+                            setIsSidebarOpen(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-400 relative group rounded-l-xl text-left",
+                          )}
+                          style={{
+                            background: isActive ? 'var(--bg-surface-hover)' : 'none',
+                          }}
+                        >
+                          {isActive && (
+                            <motion.div
+                              layoutId="sidebar-accent"
+                              className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/10 to-transparent pointer-events-none rounded-l-xl"
+                            />
+                          )}
+                          <span className={cn(
+                            "text-[9px] uppercase tracking-[0.25em] transition-colors duration-400 font-sans relative z-10 w-full",
+                            isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
+                          )}>
+                            {sub.label}
+                          </span>
+                          {isActive && (
+                            <motion.div
+                              layoutId="nav-active-dot"
+                              className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_12px_var(--accent-primary)] z-10"
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
+
             const isActive = activeTab === item.id;
             const Icon = item.icon;
             return (
@@ -1084,11 +1142,30 @@ export default function UntetheredApp() {
             )}
 
             {activeTab === 'intelligence' && (
-              <motion.div key={activeTab} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }}>
+              <motion.div key="intelligence" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }}>
                 <CoursesHub />
               </motion.div>
             )}
+          </AnimatePresence>
+        </div>
 
+        {/* ── Full-frame tabs (no padding/max-width wrapper) ── */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'wisdom_untethered' && (
+            <motion.div
+              key="wisdom_untethered"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 min-h-0 h-[calc(100vh-5rem)] overflow-hidden"
+            >
+              <WisdomUntetheredCourse />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="max-w-7xl mx-auto p-6 md:p-12 space-y-12">
+          <AnimatePresence mode="wait">
             {activeTab === 'chapters' && (
               <motion.div key="chapters" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <Journal />
