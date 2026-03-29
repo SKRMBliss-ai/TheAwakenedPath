@@ -16,6 +16,7 @@ const imageMap: Record<string, string> = {
   "stillness":    "/WisdomUntethered/Chap1/Question2/10_StillnessChaos.jpg",
   "matrix":       "/WisdomUntethered/Chap1/Question2/11_DiagnosticMatrix.jpg",
   "grip":         "/WisdomUntethered/Chap1/Question2/12_GripLoosens.jpg",
+  "meditation":   "/WisdomUntethered/Chap1/Question1/08_NoticeTheTightening.jpg",
   "watcher":      "/WisdomUntethered/Chap1/Question2/14_NoticeLoosenBecome.jpg",
   
   // Reused Question 1 images
@@ -29,7 +30,7 @@ const imageMap: Record<string, string> = {
   "placeholder_feeling":   "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.png", 
 };
 
-const TOTAL_SLIDES = 15; // sections data-section="0" … "14"
+const TOTAL_SLIDES = 19; // Main: 0-13, Extras: 14-18
 
 export function Chap1Question2() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -266,256 +267,284 @@ export function Chap1Question2() {
       {/* ── HERO ── */}
       <section className={styles.hero} data-section="0">
         <div className={styles.heroEyebrow}>Wisdom Untethered · Chapter 1 · Question 2</div>
-        <h1 className={styles.heroTitle}>The Voice That Creates<br /><strong>Doubt, Guilt &amp; Fear</strong></h1>
+        <h1 className={styles.heroTitle}>The Voice in Your Head<br /><strong>Is Not Trying to Help You</strong></h1>
         <div className={styles.heroDivider}></div>
         <p className={styles.heroSubtitle}>Why your mind keeps talking — and how to stop letting it run your life</p>
-        <div className={styles.heroScroll}>Scroll</div>
+        <div className={styles.heroScroll}>Scroll to Begin</div>
       </section>
 
-      {/* ── INTRO BAND ── */}
-      <div className={styles.chapterIntro}>
-        <div className={styles.chapterIntroInner}>
-          <p>"The voice in your head never stops. It narrates, judges, worries. But here is what Singer wants you to see — that voice is not trying to hurt you. It is trying to protect you. The tragedy is that the protection itself has become the prison."</p>
-        </div>
-      </div>
-
-      {/* ── SLIDE 1 ── */}
+      {/* ── SLIDE 1: INTRO ── */}
       <section className={styles.slideSection} data-section="1">
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>01</span>
-            <img src={imageMap["intro"]} alt="Wisdom Untethered — A visual guide to moving from mental noise to witness consciousness" onClick={() => openLightbox(imageMap["intro"], "A visual guide to moving from mental noise to witness consciousness")} className={styles.clickableImg} />
+            <img src={imageMap["intro"]} alt="Wisdom Untethered Intro" onClick={() => openLightbox(imageMap["intro"], "Wisdom Untethered Intro")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The question</span>
-            <h2 className={styles.slideHeading}>From <em>Mental Noise</em><br />to Witness Consciousness</h2>
-            <p className={styles.slideBody}>Singer's question for this chapter is deceptively simple: how do you handle the narrator inside your head — the voice that generates doubt about your decisions, guilt about your past, and fear about your future? The answer he points to changes everything.</p>
+            <span className={styles.slideLabel}>The Question</span>
+            <h2 className={styles.slideHeading}>The Endless <em>Narrator</em></h2>
+            <p className={styles.slideBody}>You know that moment when you're lying in bed, trying to sleep, and a thought arrives out of nowhere. Something you said three days ago. A decision you haven't made yet. A version of a conversation that hasn't happened.</p>
+            <p className={styles.slideBody}>Within seconds — the mind is off. Guilt about the past. Worry about the future. A low hum of "what if I'm getting this wrong?" You didn't ask for any of it. You were just trying to sleep.</p>
           </div>
         </div>
       </section>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 2 ── */}
+      {/* ── SLIDE 2: THE ROOT CAUSE ── */}
       <section className={styles.slideSection} data-section="2">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>02</span>
-            <img src={imageMap["claustro"]} alt="The claustrophobia of the late-night mind" onClick={() => openLightbox(imageMap["claustro"], "The claustrophobia of the late-night mind")} className={styles.clickableImg} />
+            <img src={imageMap["claustro"]} alt="The Root Cause" onClick={() => openLightbox(imageMap["claustro"], "The Root Cause")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>Where it lives</span>
-            <h2 className={styles.slideHeading}>The Claustrophobia of the<br /><em>Late-Night Mind</em></h2>
-            <p className={styles.slideBody}>You know this experience. It's 11pm, the day is over, and yet the mind is only getting started. "What if." "I should have." "What did they mean?" "Did I forget?" The thoughts loop — not solving anything, just revisiting the same unsolvable questions.</p>
-            <p className={styles.slideBody}>Singer names three things happening simultaneously: the endless loop of unsolvable narratives, the body responding to thoughts as if they were physical threats, and — beneath all of it — an awareness that has always been present and always been quiet.</p>
+            <span className={styles.slideLabel}>The Root Cause</span>
+            <h2 className={styles.slideHeading}>Deep down, you're <em>afraid</em></h2>
+            <p className={styles.slideBody}>The reason the mind won't stop talking is this: deep down, you're afraid you won't be okay. That's the whole engine.</p>
+            <p className={styles.slideBody}>You believe — without ever examining it — that if things don't go exactly the way you need them to go, your well-being is at risk. It's not malicious. It's not broken. It's genuinely trying to protect you.</p>
           </div>
         </div>
       </section>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 3 ── */}
+      {/* ── SLIDE 3: THE ENGINE ── */}
       <section className={styles.slideSection} data-section="3">
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>03</span>
-            <img src={imageMap["deconstruct"]} alt="Deconstructing the anatomy of everyday anxiety" onClick={() => openLightbox(imageMap["deconstruct"], "Deconstructing the anatomy of everyday anxiety")} className={styles.clickableImg} />
+            <img src={imageMap["deconstruct"]} alt="The Engine" onClick={() => openLightbox(imageMap["deconstruct"], "The Engine")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The anatomy</span>
-            <h2 className={styles.slideHeading}>Deconstructing<br /><em>Everyday Anxiety</em></h2>
-            <p className={styles.slideBody}>Singer breaks anxiety into three parts. The fuel — the core fear: "I'm afraid I won't be okay." The engine — the mind's relentless mechanical habit of scanning for problems and trying to solve them. The output — the surface worries about work, money, relationships that we spend our energy on.</p>
-            <div className={styles.pullQuote}>We treat the outputs as separate problems. Singer points to the single fuel powering all of them.</div>
-            <p className={styles.slideBody}>You don't have to fix ten thousand things. You have one core pattern showing up in ten thousand different situations.</p>
+            <span className={styles.slideLabel}>The Engine</span>
+            <h2 className={styles.slideHeading}>A <em>Flawed</em> Advisor</h2>
+            <p className={styles.slideBody}>The mind that is trying to solve the problem of doubt and fear — is the same mind that is generating the doubt and fear in the first place.</p>
+            <p className={styles.slideBody}>You're asking a mind filled with anxiety to give you advice about how to feel at peace. You're asking the thing that's creating the noise to tell you how to find quiet. It can't do it.</p>
           </div>
         </div>
       </section>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 4 ── */}
+      {/* ── SLIDE 4: DAILY LIFE ── */}
       <section className={styles.slideSection} data-section="4">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>04</span>
-            <img src={imageMap["oneroot"]} alt="Finding the singular root beneath the surface noise" onClick={() => openLightbox(imageMap["oneroot"], "Finding the singular root beneath the surface noise")} className={styles.clickableImg} />
+            <img src={imageMap["oneroot"]} alt="Daily Life" onClick={() => openLightbox(imageMap["oneroot"], "Daily Life")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The root</span>
-            <h2 className={styles.slideHeading}>One Root,<br /><em>Ten Thousand Faces</em></h2>
-            <p className={styles.slideBody}>The work email that spirals you. The broken relationship you can't stop thinking about. The financial worry that wakes you at 3am. These look like three separate problems. But trace each one downward and you find the same thing at the bottom: "I might not be okay."</p>
-            <p className={styles.slideBody}>Singer's insight is both disturbing and liberating: you do not have 10,000 distinct problems to solve. You have one core pattern manifesting in 10,000 different ways. And that means the work is not about fixing your life — it's about addressing the pattern itself.</p>
+            <span className={styles.slideLabel}>In Daily Life</span>
+            <h2 className={styles.slideHeading}>Working the <em>Case</em></h2>
+            <p className={styles.slideBody}>You get a message at work that's slightly ambiguous. Immediately the mind starts working the case. "What did they mean? Should I reply now? What if they're upset with me?"</p>
+            <p className={styles.slideBody}>Every time you engage — the mind gets louder. It takes the engagement as confirmation that the situation is real and serious. The more you try to solve it, the more it grows.</p>
           </div>
         </div>
       </section>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 5 ── */}
+      {/* ── SLIDE 5: THE SHIFT ── */}
       <section className={styles.slideSection} data-section="5">
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>05</span>
-            <img src={imageMap["futility"]} alt="The futility of thinking your way out of thinking" onClick={() => openLightbox(imageMap["futility"], "The futility of thinking your way out of thinking")} className={styles.clickableImg} />
+            <img src={imageMap["futility"]} alt="The Shift" onClick={() => openLightbox(imageMap["futility"], "The Shift")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The trap</span>
-            <h2 className={styles.slideHeading}>You Cannot Use the Mind<br /><em>to Fix the Mind</em></h2>
-            <p className={styles.slideBody}>This is the central paradox Singer names. You're asking a mind filled with doubt, fear, and insecurity to give you advice about how to be at peace. The mind is an evolutionary survival tool designed to detect threats. It is not a peace-generating instrument.</p>
-            <div className={styles.pullQuote}>Asking a threat-detection system for peace only generates more perceived threats.</div>
-            <p className={styles.slideBody}>The more you engage with the fearful mind, the more you confirm to it that there is something serious to be afraid of. The more you try to think your way out, the deeper in you go.</p>
+            <span className={styles.slideLabel}>The Shift</span>
+            <h2 className={styles.slideHeading}>Stop Silencing.<br />Start <em>Watching</em>.</h2>
+            <p className={styles.slideBody}>Singer says: stop trying to silence the mind. That doesn't work. What works is stepping back and watching it. Not fighting it. Not agreeing with it. Just watching.</p>
+            <div className={styles.pullQuote}>When you step back, you stop being inside the story.</div>
           </div>
         </div>
       </section>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 6 ── */}
+      {/* ── SLIDE 6: PATTERNS ── */}
       <section className={styles.slideSection} data-section="6">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>06</span>
-            <img src={imageMap["escalating"]} alt="The escalating feedback loop of mental engagement" onClick={() => openLightbox(imageMap["escalating"], "The escalating feedback loop of mental engagement")} className={styles.clickableImg} />
+            <img src={imageMap["escalating"]} alt="Patterns" onClick={() => openLightbox(imageMap["escalating"], "Patterns")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The mechanism</span>
-            <h2 className={styles.slideHeading}>The Escalating<br /><em>Feedback Loop</em></h2>
-            <p className={styles.slideBody}>Here is exactly how it works. The mind generates a fearful thought. You give it attention — you engage with it. The mind registers that attention as proof that this is a real danger. So it amplifies the noise. Which draws more of your attention. Which confirms the danger further.</p>
-            <p className={styles.slideBody}>Singer is precise about this: your own precious awareness — the very energy of your consciousness — is being used to amplify the noise that disturbs you. The loop doesn't need an external threat. It feeds on your engagement with it.</p>
+            <span className={styles.slideLabel}>Patterns</span>
+            <h2 className={styles.slideHeading}>Same Fear,<br /><em>Different Clothes</em></h2>
+            <p className={styles.slideBody}>When you watch, you see the patterns. The same fear showing up in different situations. The same story — "I might not be okay" — playing out in a hundred variations.</p>
+            <p className={styles.slideBody}>When you see the pattern clearly enough, you stop taking it so seriously. You stop believing that the endless narration holds the key to your wellbeing.</p>
           </div>
         </div>
       </section>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 7 ── */}
+      {/* ── SLIDE 7: REALIZATION ── */}
       <section className={styles.slideSection} data-section="7">
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>07</span>
-            <img src={imageMap["participant"]} alt="Shifting the paradigm from participant to observer" onClick={() => openLightbox(imageMap["participant"], "Shifting the paradigm from participant to observer")} className={styles.clickableImg} />
+            <img src={imageMap["participant"]} alt="Realization" onClick={() => openLightbox(imageMap["participant"], "Realization")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The shift</span>
-            <h2 className={styles.slideHeading}>From <em>Participant</em><br />to Observer</h2>
-            <p className={styles.slideBody}>Singer's instruction is not what we expect. He doesn't say: calm the mind. He doesn't say: fix the thoughts. He says: step back and watch. Move from inside the storm to outside it.</p>
-            <p className={styles.slideBody}>Inside the box: "I am the storm." Total identification with the mental content. Outside the box — the seat of awareness: "I observe the storm." The storm is still there. But the relationship to it has completely changed.</p>
-            <div className={styles.pullQuote}>The goal is never to stop the storm. The goal is simply to step out of the box.</div>
+            <span className={styles.slideLabel}>The Realization</span>
+            <h2 className={styles.slideHeading}>You Are Not <em>Your Mind</em></h2>
+            <p className={styles.slideBody}>The moment this lands — not as an idea, but as something felt — you're free. Not because the thoughts stop, but because they stop running the show.</p>
+            <p className={styles.slideBody}>Establishing the permanent identity of the watcher is the whole work.</p>
           </div>
         </div>
       </section>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 8 ── */}
+      {/* ── SLIDE 8: PRACTICE ── */}
       <section className={styles.slideSection} data-section="8">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>08</span>
-            <img src={imageMap["listener"]} alt="Creating intentional space between the listener and the noise" onClick={() => openLightbox(imageMap["listener"], "Creating intentional space between the listener and the noise")} className={styles.clickableImg} />
+            <img src={imageMap["meditation"]} alt="The Practice" onClick={() => openLightbox(imageMap["meditation"], "The Practice")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The analogy</span>
-            <h2 className={styles.slideHeading}><em>You Are the Listener.</em><br />You Are Not the Radio.</h2>
-            <p className={styles.slideBody}>Imagine a room with a radio playing loudly in the corner — frantic noise, static, urgent voices. On the other side of the room sits someone who is completely aware of the radio, but completely unbothered by it. They are the witness consciousness — aware, listening, but entirely unmoved.</p>
-            <p className={styles.slideBody}>The space between the listener and the radio is the space of freedom. Singer calls this creating intentional space between yourself and the conditioned mind. The radio keeps playing. But you are not the radio. And the distance between you and it — that is where peace lives.</p>
+            <span className={styles.slideLabel}>The Practice</span>
+            <h2 className={styles.slideHeading}>Notice. Name.<br /><em>Detach</em>.</h2>
+            <p className={styles.slideBody}>Today — just once — when the voice starts up with guilt, doubt, or fear, try naming it. "There's the worry voice." "There's the guilt loop."</p>
+            <p className={styles.slideBody}>Don't fix it. Just see it as the mind doing its thing — the same way you'd notice a radio playing in another room.</p>
           </div>
         </div>
       </section>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 9 ── */}
+      {/* ── SLIDE 9: ANALOGY ── */}
       <section className={styles.slideSection} data-section="9">
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>09</span>
-            <img src={imageMap["riverbank"]} alt="Thoughts are objects floating in the river of your awareness" onClick={() => openLightbox(imageMap["riverbank"], "Thoughts are objects floating in the river of your awareness")} className={styles.clickableImg} />
+            <img src={imageMap["listener"]} alt="The Radio Analogy" onClick={() => openLightbox(imageMap["listener"], "The Radio Analogy")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>Your true nature</span>
-            <h2 className={styles.slideHeading}>You Are<br /><em>the Riverbank</em></h2>
-            <p className={styles.slideBody}>Singer offers a clarifying image: thoughts are objects floating in the river of your awareness. They come and go — the leaf of a worry, the box of a plan, the tangled knot of an old regret. They drift past, requiring no action.</p>
-            <p className={styles.slideBody}>You are not the thoughts. You are not even the river. You are the bank — the unmoving observer on the shore, watching the stream of time and awareness flow by. The bank does not become the leaf. It simply holds its ground while everything passes.</p>
-            <div className={styles.pullQuote}>Establishing the permanent identity of the watcher is the whole work.</div>
+            <span className={styles.slideLabel}>The Analogy</span>
+            <h2 className={styles.slideHeading}>You Are the <em>Listener</em>.<br />Not the Radio.</h2>
+            <p className={styles.slideBody}>The space between the listener and the radio is the space of freedom. The radio keeps playing. But you are not the radio. And the distance between you and it — that is where peace lives.</p>
           </div>
         </div>
       </section>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 10 ── */}
+      {/* ── SLIDE 10: RESULT ── */}
       <section className={styles.slideSection} data-section="10">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>10</span>
-            <img src={imageMap["stillness"]} alt="Anchoring internal stillness within external chaos" onClick={() => openLightbox(imageMap["stillness"], "Anchoring internal stillness within external chaos")} className={styles.clickableImg} />
+            <img src={imageMap["grip"]} alt="The Result" onClick={() => openLightbox(imageMap["grip"], "The Result")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The promise</span>
-            <h2 className={styles.slideHeading}>Internal Stillness<br /><em>Within External Chaos</em></h2>
-            <p className={styles.slideBody}>This is what Singer is pointing toward: not a life free from noise and difficulty, but a life where you stand in the golden center — unmoved, peaceful, anchored — while the outer ring of the world keeps spinning.</p>
-            <p className={styles.slideBody}>The world will always be demanding, always moving, inherently uncontrollable. That is not a problem to be solved. The witness consciousness does not need the outer ring to quieten down. It simply remains at the centre, undisturbed by what cannot be controlled.</p>
-            <p className={styles.slideBody}>You do not have to escape the noise to find peace. You can stand in the centre of the world without being of it.</p>
+            <span className={styles.slideLabel}>The Result</span>
+            <h2 className={styles.slideHeading}>Freedom <em>Inside</em> Life</h2>
+            <p className={styles.slideBody}>The voice doesn't disappear. But its grip loosens. One day you realise the thing that used to spiral you for hours barely moved you at all.</p>
+            <p className={styles.slideBody}>That's not distance from life. That's freedom inside it.</p>
           </div>
         </div>
       </section>
 
-      {/* ── PARCHMENT: DIAGNOSTIC MATRIX (Slide 11) ── */}
-      <div className={styles.chapterIntro} style={{ marginTop: '2rem', marginBottom: '2rem' }}>
-        <section className={styles.matrixSlide} data-section="11">
-          <div className={styles.slideWrapper}>
-            <div className={styles.slideImageWrap}>
-              <span className={styles.slideNumber}>11</span>
-              <img src={imageMap["matrix"]} alt="Diagnostic Matrix: Two paradigms of experience" onClick={() => openLightbox(imageMap["matrix"], "Diagnostic Matrix: Two paradigms of experience")} className={styles.clickableImg} />
-            </div>
-            <div className={styles.slideContent}>
-              <span className={styles.slideLabel}>Two ways of being</span>
-              <h2 className={styles.slideHeading}>The Diagnostic<br /><em>Matrix</em></h2>
-              <p className={styles.slideBody}>Singer draws a clear line between two modes of living. In the engaged mind: "I am my thoughts." You grasp, analyse, attempt to fix. The body tightens, breathing shallows, and every fearful thought amplifies the signal.</p>
-              <p className={styles.slideBody}>In witness consciousness: "I am the one noticing my thoughts." You watch, allow, let pass. The body softens and expands. And fear, when it arises, does not amplify — it unplugs. The radio loses its power the moment you stop feeding it your attention.</p>
-              <div className={styles.pullQuote}>Which paradigm are you living from right now?</div>
-            </div>
-          </div>
-        </section>
+      {/* ── SLIDE 11: GUIDED MEDITATION INTRO ── */}
+      <div className={styles.chapterIntro} data-section="11">
+        <div className={styles.chapterIntroInner}>
+          <span className={styles.slideLabel} style={{ display: 'block', marginBottom: '1rem' }}>Guided Practice</span>
+          <h2 className={styles.slideHeading} style={{ fontSize: '2.5rem' }}>Restoring the <em>Watcher</em></h2>
+          <p className={styles.slideBody}>A 90-second journey to the golden center.</p>
+        </div>
       </div>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 12 ── */}
+      {/* ── SLIDE 12: GUIDED MEDITATION STEPS ── */}
       <section className={styles.slideSection} data-section="12">
+        <div className={styles.slideWrapper}>
+          <div className={styles.slideImageWrap}>
+             <span className={styles.slideNumber}>12</span>
+             <img src={imageMap["watcher"]} alt="Guided Meditation" onClick={() => openLightbox(imageMap["watcher"], "Guided Meditation")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <h2 className={styles.slideHeading}>Step Away From the <em>Noise</em></h2>
+            <p className={styles.slideBody}>Close your eyes... Take one slow breath... Notice what the mind is currently saying.</p>
+            <p className={styles.slideBody}>Don't answer it. Just see it like a cloud from a window. Now ask yourself: <strong>Who is noticing this?</strong></p>
+            <div className={styles.pullQuote}>Rest there. The one noticing is perfectly still.</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SLIDE 13: END OF TEACHING ── */}
+      <div className={styles.practiceCard} data-section="13">
+        <p className={styles.practiceCardEyebrow}>Summary</p>
+        <h2 className={styles.practiceCardTitle}>Notice. Loosen.<br />Become the Watcher.</h2>
+        <p className={styles.practiceCardBody}>The voice in your head is just a mechanism trying to protect you. You don't have to silence it; you only have to stop being it.</p>
+        <div className={styles.practiceMantra}>"I am the one who is aware."</div>
+      </div>
+
+      {/* ── EXTRA SECTION HEADER ── */}
+      <div className={styles.chapterIntro} style={{ backgroundColor: 'var(--parchment)', borderTop: '2px solid var(--gold)', marginTop: '8rem' }}>
+        <div className={styles.chapterIntroInner}>
+           <h2 className={styles.slideHeading} style={{ color: 'var(--gold)' }}>Extra Wisdom</h2>
+           <p className={styles.slideBody}>Dive deeper into the technical mechanics of Singer's teaching after the YouTube session.</p>
+        </div>
+      </div>
+
+      {/* ── SLIDE 14: RIVERBANK (EXTRA) ── */}
+      <section className={styles.slideSection} data-section="14">
+        <div className={styles.slideWrapper}>
+          <div className={styles.slideImageWrap}>
+            <span className={styles.slideNumber}>Extra</span>
+            <img src={imageMap["riverbank"]} alt="The Riverbank" onClick={() => openLightbox(imageMap["riverbank"], "The Riverbank")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideLabel}>Visualization</span>
+            <h2 className={styles.slideHeading}>You Are <em>the Riverbank</em></h2>
+            <p className={styles.slideBody}>Thoughts are objects floating in the river. You are the bank — the unmoving observer on the shore. The bank does not become the leaf; it simply holds its ground while everything passes.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SLIDE 15: DIAGNOSTIC MATRIX (EXTRA) ── */}
+      <section className={styles.slideSection} data-section="15">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>12</span>
-            <img src={imageMap["grip"]} alt="Transmuting nervous energy through physical release" onClick={() => openLightbox(imageMap["grip"], "Transmuting nervous energy through physical release")} className={styles.clickableImg} />
+            <span className={styles.slideNumber}>Extra</span>
+            <img src={imageMap["matrix"]} alt="Diagnostic Matrix" onClick={() => openLightbox(imageMap["matrix"], "Diagnostic Matrix")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The release</span>
-            <h2 className={styles.slideHeading}><em>The Grip</em><br />Loosens</h2>
-            <p className={styles.slideBody}>The grip is what engagement looks like in the body. Resistance. Tension. The effort of trying to control what cannot be controlled — trapping the energy inside, exhausting you, producing nothing.</p>
-            <p className={styles.slideBody}>The release is not collapse. It is surrender — softening, allowing, transmuting the energy by letting it pass through rather than fighting it. Singer calls this the transmutation of energy. When you stop gripping what disturbs you, the disturbance itself begins to dissolve. Not because you solved it. Because you stopped feeding it.</p>
-            <p className={styles.slideBody}>Over time, the things that used to spiral you for hours barely move you at all. That is not distance from life. That is freedom inside it.</p>
+            <span className={styles.slideLabel}>Mechanics</span>
+            <h2 className={styles.slideHeading}>The Diagnostic <em>Matrix</em></h2>
+            <p className={styles.slideBody}>Singer draws a clear line: In the engaged mind, "I am my thoughts." In witness consciousness, "I am the one noticing my thoughts." One path leads to circular feedback; the other to instant peace.</p>
           </div>
         </div>
       </section>
 
-      {/* ── INSIGHT CARD / PRACTICE CARD ── */}
-      <div className={styles.practiceCard} data-section="13">
-        <p className={styles.practiceCardEyebrow}>The practice</p>
-        <h2 className={styles.practiceCardTitle}>Notice the Noise.<br />Loosen the Grip.<br />Become the Watcher.</h2>
-        <p className={styles.practiceCardBody}>Singer's instruction is not to silence the mind. It is to stop taking it so seriously. When the voice of doubt, guilt, or fear arrives — don't fight it, don't follow it. Step back and watch it. Notice the pattern. See it for what it is: the mind doing its old thing, trying to protect you from a danger that is mostly imagined.</p>
-        <div className={styles.practiceMantra}>"You are not your mind.<br />You are the one who is aware of it."</div>
-        <p className={styles.practiceCardBody}>Just once today — when the narrator starts its loop — try naming it instead of joining it. "There's the worry voice." "There's the guilt loop." See it as an object in your awareness, not as the truth about reality. That small gap between you and the thought is where the whole practice begins.</p>
-      </div>
+      {/* ── SLIDE 16: THE GRIP (EXTRA) ── */}
+      <section className={styles.slideSection} data-section="16">
+        <div className={styles.slideWrapper}>
+          <div className={styles.slideImageWrap}>
+            <span className={styles.slideNumber}>Extra</span>
+            <img src={imageMap["grip"]} alt="The Grip" onClick={() => openLightbox(imageMap["grip"], "The Grip")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideLabel}>Transmutation</span>
+            <h2 className={styles.slideHeading}>The <em>Grip</em> Loosens</h2>
+            <p className={styles.slideBody}>The grip is what engagement looks like in the body: Tension. Resistance. By softening, you transmute the energy, letting it pass through rather than fighting it.</p>
+          </div>
+        </div>
+      </section>
 
-      {/* ── SLIDE 13 ── */}
-      <section className={styles.fullImageSlide} data-section="14">
-        <img src={imageMap["watcher"]} alt="Notice the noise. Loosen the grip. Become the watcher." onClick={() => openLightbox(imageMap["watcher"], "Notice the noise. Loosen the grip. Become the watcher.")} className={styles.clickableImg} />
-        <div className={styles.slideContent} style={{ textAlign: 'center' }}>
-          <span className={styles.slideLabel} style={{ display: 'block' }}>Your invitation</span>
-          <h2 className={styles.slideHeading}><em>Notice. Loosen.<br />Become the Watcher.</em></h2>
-          <p className={styles.slideBody} style={{ maxWidth: '520px', margin: '0 auto' }}>Three words. That is the entire teaching of this question distilled to its simplest form. Notice the noise — don't pretend it isn't there. Loosen the grip — stop feeding the feedback loop with your engagement. And become the watcher — the one who is aware, always available, always still beneath the storm.</p>
-          <p className={styles.slideBody} style={{ maxWidth: '520px', margin: '1rem auto 0' }}>Take one moment today to sit with what you've read here. What is the voice in your head currently saying? Can you notice it — just notice it — without following it all the way in? Write what you found in your journal. Not what the voice said. What it felt like to watch it instead of become it.</p>
+      {/* ── SLIDE 17: INTERNAL STILLNESS (EXTRA) ── */}
+      <section className={styles.slideSection} data-section="17">
+        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
+          <div className={styles.slideImageWrap}>
+            <span className={styles.slideNumber}>Extra</span>
+            <img src={imageMap["stillness"]} alt="Internal Stillness" onClick={() => openLightbox(imageMap["stillness"], "Internal Stillness")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideLabel}>The Promise</span>
+            <h2 className={styles.slideHeading}>Stillness in <em>Chaos</em></h2>
+            <p className={styles.slideBody}>The witness consciousness does not need the outer ring to quieten down. It simply remains at the centre, undisturbed by what cannot be controlled.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SLIDE 18: ONE ROOT (EXTRA) ── */}
+      <section className={styles.slideSection} data-section="18">
+        <div className={styles.slideWrapper}>
+          <div className={styles.slideImageWrap}>
+            <span className={styles.slideNumber}>Extra</span>
+            <img src={imageMap["oneroot"]} alt="One Root" onClick={() => openLightbox(imageMap["oneroot"], "One Root")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideLabel}>Foundation</span>
+            <h2 className={styles.slideHeading}>One Root,<br /><em>Ten Thousand Faces</em></h2>
+            <p className={styles.slideBody}>Every worry is just the same fear wearing a different costume. Solve the root, and the costumes lose their power.</p>
+          </div>
         </div>
       </section>
 
