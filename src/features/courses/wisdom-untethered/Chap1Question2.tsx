@@ -30,7 +30,7 @@ const imageMap: Record<string, string> = {
   "placeholder_feeling":   "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.png", 
 };
 
-const TOTAL_SLIDES = 18; // Main: 0-12, Extras: 13-17
+const TOTAL_SLIDES = 19; // Main: 0-9, Extras: 10-18
 
 export function Chap1Question2() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -369,55 +369,8 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 7: PRACTICE ── */}
-      <section className={styles.slideSection} data-section="7">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>07</span>
-            <img src={imageMap["meditation"]} alt="The Practice" onClick={() => openLightbox(imageMap["meditation"], "The Practice")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Practice</span>
-            <h2 className={styles.slideHeading}>Notice. Name.<br /><em>Detach</em>.</h2>
-            <p className={styles.slideBody}>Today — just once — when the voice starts up with guilt, doubt, or fear, try naming it. "There's the worry voice." "There's the guilt loop."</p>
-            <p className={styles.slideBody}>Don't fix it. Just see it as the mind doing its thing — the same way you'd notice a radio playing in another room.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SLIDE 8: ANALOGY ── */}
-      <section className={styles.slideSection} data-section="8">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>08</span>
-            <img src={imageMap["listener"]} alt="The Radio Analogy" onClick={() => openLightbox(imageMap["listener"], "The Radio Analogy")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Analogy</span>
-            <h2 className={styles.slideHeading}>You Are the <em>Listener</em>.<br />Not the Radio.</h2>
-            <p className={styles.slideBody}>The space between the listener and the radio is the space of freedom. The radio keeps playing. But you are not the radio. And the distance between you and it — that is where peace lives.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SLIDE 9: RESULT ── */}
-      <section className={styles.slideSection} data-section="9">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>09</span>
-            <img src={imageMap["grip"]} alt="The Result" onClick={() => openLightbox(imageMap["grip"], "The Result")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Result</span>
-            <h2 className={styles.slideHeading}>Freedom <em>Inside</em> Life</h2>
-            <p className={styles.slideBody}>The voice doesn't disappear. But its grip loosens. One day you realise the thing that used to spiral you for hours barely moved you at all.</p>
-            <p className={styles.slideBody}>That's not distance from life. That's freedom inside it.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SLIDE 10: GUIDED MEDITATION INTRO ── */}
-      <div className={styles.chapterIntro} data-section="10">
+      {/* ── SLIDE 7: GUIDED MEDITATION INTRO ── */}
+      <div className={styles.chapterIntro} data-section="7">
         <div className={styles.chapterIntroInner}>
           <span className={styles.slideLabel} style={{ display: 'block', marginBottom: '1rem' }}>Guided Practice</span>
           <h2 className={styles.slideHeading} style={{ fontSize: '2.5rem' }}>Restoring the <em>Watcher</em></h2>
@@ -425,11 +378,11 @@ export function Chap1Question2() {
         </div>
       </div>
 
-      {/* ── SLIDE 11: GUIDED MEDITATION STEPS ── */}
-      <section className={styles.slideSection} data-section="11">
+      {/* ── SLIDE 8: GUIDED MEDITATION STEPS ── */}
+      <section className={styles.slideSection} data-section="8">
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
-             <span className={styles.slideNumber}>11</span>
+             <span className={styles.slideNumber}>08</span>
              <img src={imageMap["watcher"]} alt="Guided Meditation" onClick={() => openLightbox(imageMap["watcher"], "Guided Meditation")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
@@ -441,21 +394,68 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 12: SUMMARY ── */}
-      <div className={styles.practiceCard} data-section="12">
+      {/* ── SLIDE 9: SUMMARY ── */}
+      <div className={styles.practiceCard} data-section="9">
         <p className={styles.practiceCardEyebrow}>Summary</p>
         <h2 className={styles.practiceCardTitle}>Notice. Loosen.<br />Become the Watcher.</h2>
         <p className={styles.practiceCardBody}>The voice in your head is just a mechanism trying to protect you. You don't have to silence it; you only have to stop being it.</p>
         <div className={styles.practiceMantra}>"I am the one who is aware."</div>
       </div>
 
-      {/* ── EXTRA SECTION HEADER ── */}
-      <div className={styles.chapterIntro} data-section="13" style={{ backgroundColor: 'var(--parchment)', borderTop: '2px solid var(--gold)', marginTop: '8rem' }}>
+      {/* ── SLIDE 10: EXTRA SECTION HEADER ── */}
+      <div className={styles.chapterIntro} data-section="10" style={{ backgroundColor: 'var(--parchment)', borderTop: '2px solid var(--gold)', marginTop: '8rem' }}>
         <div className={styles.chapterIntroInner}>
            <h2 className={styles.slideHeading} style={{ color: 'var(--gold)' }}>Extra Wisdom</h2>
            <p className={styles.slideBody}>Dive deeper into the technical mechanics of Singer's teaching after the YouTube session.</p>
         </div>
       </div>
+
+      {/* ── SLIDE 11: PRACTICE (EXTRA) ── */}
+      <section className={styles.slideSection} data-section="11">
+        <div className={styles.slideWrapper}>
+          <div className={styles.slideImageWrap}>
+            <span className={styles.slideNumber}>Extra</span>
+            <img src={imageMap["meditation"]} alt="The Practice" onClick={() => openLightbox(imageMap["meditation"], "The Practice")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideLabel}>The Practice</span>
+            <h2 className={styles.slideHeading}>Notice. Name.<br /><em>Detach</em>.</h2>
+            <p className={styles.slideBody}>Today — just once — when the voice starts up with guilt, doubt, or fear, try naming it. "There's the worry voice." "There's the guilt loop."</p>
+            <p className={styles.slideBody}>Don't fix it. Just see it as the mind doing its thing — the same way you'd notice a radio playing in another room.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SLIDE 12: ANALOGY (EXTRA) ── */}
+      <section className={styles.slideSection} data-section="12">
+        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
+          <div className={styles.slideImageWrap}>
+            <span className={styles.slideNumber}>Extra</span>
+            <img src={imageMap["listener"]} alt="The Radio Analogy" onClick={() => openLightbox(imageMap["listener"], "The Radio Analogy")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideLabel}>The Analogy</span>
+            <h2 className={styles.slideHeading}>You Are the <em>Listener</em>.<br />Not the Radio.</h2>
+            <p className={styles.slideBody}>The space between the listener and the radio is the space of freedom. The radio keeps playing. But you are not the radio. And the distance between you and it — that is where peace lives.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SLIDE 13: RESULT (EXTRA) ── */}
+      <section className={styles.slideSection} data-section="13">
+        <div className={styles.slideWrapper}>
+          <div className={styles.slideImageWrap}>
+            <span className={styles.slideNumber}>Extra</span>
+            <img src={imageMap["grip"]} alt="The Result" onClick={() => openLightbox(imageMap["grip"], "The Result")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideLabel}>The Result</span>
+            <h2 className={styles.slideHeading}>Freedom <em>Inside</em> Life</h2>
+            <p className={styles.slideBody}>The voice doesn't disappear. But its grip loosens. One day you realise the thing that used to spiral you for hours barely moved you at all.</p>
+            <p className={styles.slideBody}>That's not distance from life. That's freedom inside it.</p>
+          </div>
+        </div>
+      </section>
 
       {/* ── SLIDE 14: RIVERBANK (EXTRA) ── */}
       <section className={styles.slideSection} data-section="14">
