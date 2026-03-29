@@ -3,20 +3,20 @@ import { ArrowLeft } from 'lucide-react';
 import styles from './Chap1Question1.module.css';
 
 const imageMap: Record<string, string> = {
-  "Slide8.PNG":  "/WisdomUntethered/Chap1/Question1/media__1774780736954.png",
-  "Slide9.PNG":  "/WisdomUntethered/Chap1/Question1/media__1774780739975.jpg",
-  "Slide13.PNG": "/WisdomUntethered/Chap1/Question1/media__1774780742719.jpg",
-  "Slide11.PNG": "/WisdomUntethered/Chap1/Question1/media__1774780745387.png",
-  "Slide12.PNG": "/WisdomUntethered/Chap1/Question1/media__1774780747692.jpg",
-  "Slide14.PNG": "/WisdomUntethered/Chap1/Question1/media__1774780798472.jpg",
-  "Slide15.PNG": "/WisdomUntethered/Chap1/Question1/media__1774780800868.png",
-  "Slide10.PNG": "/WisdomUntethered/Chap1/Question1/media__1774780802802.png",
-  "Slide3.PNG":  "/WisdomUntethered/Chap1/Question1/media__1774780804567.jpg",
-  "Slide4.PNG":  "/WisdomUntethered/Chap1/Question1/media__1774780806465.jpg",
-  "Slide5.PNG":  "/WisdomUntethered/Chap1/Question1/media__1774780817160.jpg",
-  "Slide2.PNG":  "/WisdomUntethered/Chap1/Question1/media__1774780818809.png",
-  "Slide6.PNG":  "/WisdomUntethered/Chap1/Question1/media__1774780821170.jpg",
-  "Slide7.PNG":  "/WisdomUntethered/Chap1/Question1/media__1774780822978.jpg",
+  "Slide8.PNG":  "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.jpg",
+  "Slide9.PNG":  "/WisdomUntethered/Chap1/Question1/03_ItsNotQuiteDepression.jpg",
+  "Slide13.PNG": "/WisdomUntethered/Chap1/Question1/07_WhenYouFeltTrulyAlive.jpg",
+  "Slide11.PNG": "/WisdomUntethered/Chap1/Question1/01_BuildingTheInnerWalls.png",
+  "Slide12.PNG": "/WisdomUntethered/Chap1/Question1/05_LockingOutLife.jpg",
+  "Slide14.PNG": "/WisdomUntethered/Chap1/Question1/06_TheRiverAndTheClench.jpg",
+  "Slide15.PNG": "/WisdomUntethered/Chap1/Question1/08_NoticeTheTightening.jpg",
+  "Slide10.PNG": "/WisdomUntethered/Chap1/Question1/02_WhatIsItActually.jpg",
+  "Slide3.PNG":  "/WisdomUntethered/Chap1/Question1/09_The5SecondPractice.png",
+  "Slide4.PNG":  "/WisdomUntethered/Chap1/Question1/10_HowTheWallsComeDown.jpg",
+  "Slide5.PNG":  "/WisdomUntethered/Chap1/Question1/01_BuildingTheInnerWalls.png",
+  "Slide2.PNG":  "/WisdomUntethered/Chap1/Question1/10_HowTheWallsComeDown.jpg",
+  "Slide6.PNG":  "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.jpg",
+  "Slide7.PNG":  "/WisdomUntethered/Chap1/Question1/02_WhatIsItActually.jpg",
 };
 
 const TOTAL_SLIDES = 16; // sections data-section="0" … "15"

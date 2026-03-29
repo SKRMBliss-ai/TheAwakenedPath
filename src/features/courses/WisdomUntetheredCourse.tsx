@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, BookOpen, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
+import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
 
 interface Chapter {
   id: number;
@@ -22,7 +23,7 @@ const CHAPTERS: Chapter[] = [
   }
 ];
 
-type InnerTab = 'question1' | 'video';
+type InnerTab = 'question1' | 'question2' | 'video';
 
 export function WisdomUntetheredCourse() {
   const [activeChapterId, setActiveChapterId] = useState<number>(1);
@@ -156,6 +157,7 @@ export function WisdomUntetheredCourse() {
           <div className="flex items-center gap-1 h-full">
             {[
               { id: 'question1' as InnerTab, label: 'Question 1', icon: <BookOpen className="w-3.5 h-3.5" /> },
+              { id: 'question2' as InnerTab, label: 'Question 2', icon: <BookOpen className="w-3.5 h-3.5" /> },
               { id: 'video' as InnerTab,     label: 'Video',      icon: <Play className="w-3.5 h-3.5" /> },
             ].map(tab => (
               <button
@@ -195,6 +197,27 @@ export function WisdomUntetheredCourse() {
               >
                 {activeChapter.id === 1 ? (
                   <Chap1Question1 />
+                ) : (
+                  <div className="p-12 overflow-y-auto h-full">
+                    <p className="text-[16px] leading-[2.2] font-sans text-[var(--text-secondary)] tracking-wide max-w-2xl">
+                      {activeChapter.explanation}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {activeInnerTab === 'question2' && activeChapter && (
+              <motion.div
+                key="q2"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="w-full h-full"
+              >
+                {activeChapter.id === 1 ? (
+                  <Chap1Question2 />
                 ) : (
                   <div className="p-12 overflow-y-auto h-full">
                     <p className="text-[16px] leading-[2.2] font-sans text-[var(--text-secondary)] tracking-wide max-w-2xl">
