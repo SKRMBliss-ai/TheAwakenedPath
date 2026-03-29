@@ -119,11 +119,6 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
   };
 
 
-  const startPresentation = () => {
-    setIsPresenting(true);
-    setCurrentSlide(0);
-    scrollToSection(0);
-  };
 
   const goNext = () => {
     const next = Math.min(currentSlide + 1, TOTAL_SLIDES - 1);
@@ -165,11 +160,6 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
 
   const dots = Array.from({ length: TOTAL_SLIDES });
 
-  // Ring progress
-  const radius = 22;
-  const circumference = 2 * Math.PI * radius;
-  const positionPct = TOTAL_SLIDES > 1 ? (currentSlide / (TOTAL_SLIDES - 1)) * 100 : 0;
-  const ringOffset = circumference - (positionPct / 100) * circumference;
 
 
   return (
@@ -201,32 +191,6 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
         ))}
       </nav>
 
-      {/* --- Presentation Controls --- */}
-      <div className={styles.slideshowControl}>
-        {!isPresenting ? (
-          <button className={styles.slideshowPlayBtn} onClick={startPresentation}>
-            <svg viewBox="0 0 60 60" className={styles.slideshowSvg}>
-              <circle cx="30" cy="30" r="28" className={styles.svgTrack} />
-              <polygon points="23,18 45,30 23,42" className={styles.svgPlay} />
-            </svg>
-            <span className={styles.slideshowLabel}>Present</span>
-          </button>
-        ) : (
-          <div className={styles.slideshowPlayer}>
-            <button className={`${styles.slideshowNavBtn} ${styles.stopBtn}`} onClick={stopPresentation}>✕</button>
-            <div className={styles.slideshowRingBtn}>
-              <svg viewBox="0 0 60 60" className={styles.slideshowSvg}>
-                <circle cx="30" cy="30" r={radius} className={styles.svgTrack} />
-                <circle cx="30" cy="30" r={radius} className={styles.svgRing} strokeDasharray={circumference} strokeDashoffset={ringOffset} />
-                <text x="30" y="35" textAnchor="middle" className={styles.svgCountText}>{currentSlide + 1}</text>
-              </svg>
-            </div>
-            <button className={styles.slideshowNavBtn} onClick={goPrev} disabled={currentSlide === 0}>‹</button>
-            <button className={`${styles.slideshowNavBtn} ${styles.nextBtn}`} onClick={goNext} disabled={currentSlide === TOTAL_SLIDES - 1}>›</button>
-            <span className={styles.slideCounter}>{currentSlide + 1}&thinsp;/&thinsp;{TOTAL_SLIDES}</span>
-          </div>
-        )}
-      </div>
 
       {/* --- Lightbox --- */}
       {lightboxSrc && (

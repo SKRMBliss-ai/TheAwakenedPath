@@ -80,6 +80,14 @@ export function WisdomUntetheredCourse({
             </button>
           ))}
         </div>
+        
+        <button
+          onClick={() => setViewMode('presentation')}
+          className="flex items-center gap-2 px-5 py-2 rounded-full border border-[var(--brand-primary)] text-[var(--brand-primary)] text-[10px] uppercase tracking-[0.2em] font-bold shadow-sm hover:bg-[var(--brand-primary)] hover:text-white transition-all ml-4"
+        >
+          <Play className="w-3.5 h-3.5 fill-current" />
+          <span>Present</span>
+        </button>
       </div>
 
       {/* ── Main Content Area ── */}

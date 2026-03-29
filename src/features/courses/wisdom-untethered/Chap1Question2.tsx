@@ -114,11 +114,6 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
     if (section) section.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const startPresentation = () => {
-    setIsPresenting(true);
-    setCurrentSlide(0);
-    scrollToSection(0);
-  };
 
   const goNext = () => {
     const next = Math.min(currentSlide + 1, TOTAL_SLIDES - 1);
@@ -153,10 +148,6 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
   const openLightbox = (src: string, alt: string) => { setLightboxSrc(src); setLightboxAlt(alt); };
 
   const dots = Array.from({ length: TOTAL_SLIDES });
-  const radius = 22;
-  const circumference = 2 * Math.PI * radius;
-  const positionPct = TOTAL_SLIDES > 1 ? (currentSlide / (TOTAL_SLIDES - 1)) * 100 : 0;
-  const ringOffset = circumference - (positionPct / 100) * circumference;
 
   return (
     <div className={`${styles.container} ${isPresenting ? styles.isPresenting : ''}`} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
@@ -171,29 +162,6 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
           <button key={i} className={`${styles.navDot} ${activeSection === i ? styles.active : ''}`} aria-label={`Go to section ${i + 1}`} onClick={() => scrollToSection(i)} />
         ))}
       </nav>
-      <div className={styles.slideshowControl}>
-        {!isPresenting ? (
-          <button className={styles.slideshowPlayBtn} onClick={startPresentation} aria-label="Start presentation">
-            <svg viewBox="0 0 60 60" className={styles.slideshowSvg} aria-hidden="true">
-              <circle cx="30" cy="30" r="28" className={styles.svgTrack} /><polygon points="23,18 45,30 23,42" className={styles.svgPlay} />
-            </svg>
-            <span className={styles.slideshowLabel}>Present</span>
-          </button>
-        ) : (
-          <div className={styles.slideshowPlayer}>
-            <button className={`${styles.slideshowNavBtn} ${styles.stopBtn}`} onClick={stopPresentation} aria-label="Exit presentation">✕</button>
-            <div className={styles.slideshowRingBtn} aria-label={`Slide ${currentSlide + 1} of ${TOTAL_SLIDES}`}>
-              <svg viewBox="0 0 60 60" className={styles.slideshowSvg} aria-hidden="true">
-                <circle cx="30" cy="30" r={radius} className={styles.svgTrack} /><circle cx="30" cy="30" r={radius} className={styles.svgRing} strokeDasharray={circumference} strokeDashoffset={ringOffset} />
-                <text x="30" y="35" textAnchor="middle" className={styles.svgCountText}>{currentSlide + 1}</text>
-              </svg>
-            </div>
-            <button className={styles.slideshowNavBtn} onClick={goPrev} aria-label="Previous slide" disabled={currentSlide === 0}>‹</button>
-            <button className={`${styles.slideshowNavBtn} ${styles.nextBtn}`} onClick={goNext} aria-label="Next slide" disabled={currentSlide === TOTAL_SLIDES - 1}>›</button>
-            <span className={styles.slideCounter}>{currentSlide + 1}&thinsp;/&thinsp;{TOTAL_SLIDES}</span>
-          </div>
-        )}
-      </div>
 
       {/* --- Lightbox --- */}
       {lightboxSrc && (

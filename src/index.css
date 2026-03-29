@@ -310,7 +310,12 @@ h6 {
 .custom-scrollbar::-webkit-scrollbar-thumb {
     background: var(--accent-primary);
     border-radius: 99px;
-    opacity: 0.5;
+    opacity: 0.35;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(184, 151, 58, 0.5); /* Use a visible gold in dark mode */
+    opacity: 1;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
