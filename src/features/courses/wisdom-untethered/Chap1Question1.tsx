@@ -1,30 +1,56 @@
+/* Chap1Question1.tsx */
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import styles from './Chap1Question1.module.css';
 
-const imageMap: Record<string, string> = {
-  "slide1": "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.png",
-  "slide2": "/WisdomUntethered/Chap1/Question1/03_ItsNotQuiteDepression.png",
-  "slide3": "/WisdomUntethered/Chap1/Question1/07_WhenYouFeltTrulyAlive.jpg",
-  "slide4": "/WisdomUntethered/Chap1/Question1/01_BuildingTheInnerWalls.png",
-  "slide5": "/WisdomUntethered/Chap1/Question1/05_LockingOutLife.jpg",
-  "slide6": "/WisdomUntethered/Chap1/Question1/06_TheRiverAndTheClench.jpg",
-  "slide7": "/WisdomUntethered/Chap1/Question1/08_NoticeTheTightening.jpg",
-  "slide8": "/WisdomUntethered/Chap1/Question1/02_WhatIsItActually.jpg",
-  "slide9_10_11": "/WisdomUntethered/Chap1/Question1/09_The5SecondPractice.png",
-  "slide12": "/WisdomUntethered/Chap1/Question1/10_HowTheWallsComeDown.jpg",
-  "placeholder_alive": "/WisdomUntethered/Chap1/Question1/07_WhenYouFeltTrulyAlive.jpg",
-  "placeholder_feeling": "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.png",
+const darkImages: Record<string, string> = {
+  "slide1": "/WisdomUntethered/Chap1/Question1/01_BadMood.png",
+  "slide2": "/WisdomUntethered/Chap1/Question1/02_QuestionAsked.png",
+  "slide3": "/WisdomUntethered/Chap1/Question1/03_HigherMind.png",
+  "slide4": "/WisdomUntethered/Chap1/Question1/04_Relax.png",
+  "slide5": "/WisdomUntethered/Chap1/Question1/05_Transmutation.png",
+  "slide6": "/WisdomUntethered/Chap1/Question1/06_MindAsTool.png",
+  "slide7": "/WisdomUntethered/Chap1/Question1/07_Meditation.png",
+  "placeholder_alive": "/WisdomUntethered/Chap1/Question1/01_BadMood.png",
 };
 
-const TOTAL_SLIDES = 16; // sections data-section="0" … "15"
+const lightImages: Record<string, string> = {
+  "slide1": "/WisdomUntethered/Chap1/Question1/01_BadMood_light.png",
+  "slide2": "/WisdomUntethered/Chap1/Question1/02_QuestionAsked_light.png",
+  "slide3": "/WisdomUntethered/Chap1/Question1/03_HigherMind_light.png",
+  "slide4": "/WisdomUntethered/Chap1/Question1/04_Relax_light.png",
+  "slide5": "/WisdomUntethered/Chap1/Question1/05_Transmutation_light.png",
+  "slide6": "/WisdomUntethered/Chap1/Question1/06_MindAsTool_light.png",
+  // slide7 light version pending quota reset — falls back to dark
+  "slide7": "/WisdomUntethered/Chap1/Question1/07_Meditation.png",
+  "placeholder_alive": "/WisdomUntethered/Chap1/Question1/01_BadMood_light.png",
+};
+
+const TOTAL_SLIDES = 13; // sections data-section="0" ... "12"
 
 export function Chap1Question1() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
 
-  // ── Presentation mode (manual only — no auto-advance) ──
+  // ── Theme detection ──
+  const [isDark, setIsDark] = useState(
+    () => document.documentElement.classList.contains('dark') ||
+          document.documentElement.getAttribute('data-theme') === 'dark'
+  );
+  useEffect(() => {
+    const obs = new MutationObserver(() => {
+      setIsDark(
+        document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark'
+      );
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+    return () => obs.disconnect();
+  }, []);
+  const imageMap = isDark ? darkImages : lightImages;
+
+  // ── Presentation mode ──
   const [isPresenting, setIsPresenting] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -55,7 +81,7 @@ export function Chap1Question1() {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add(styles.visible); });
     }, { root: container, threshold: 0.12 });
 
-    container.querySelectorAll(`.${styles.slideSection}, .${styles.fullImageSlide}`).forEach(s => {
+    container.querySelectorAll(`.${styles.slide}, .${styles.mantraCard}, .${styles.threeOptions}, .${styles.meditationBand}, .${styles.layersBand}`).forEach(s => {
       fadeObserver.observe(s);
     });
 
@@ -104,7 +130,7 @@ export function Chap1Question1() {
     scrollToSection(0);
   };
 
-  // ── Keyboard shortcuts (Esc closes lightbox / ArrowRight advances) ──
+  // ── Keyboard shortcuts ──
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setLightboxSrc(null);
@@ -125,7 +151,7 @@ export function Chap1Question1() {
 
   const dots = Array.from({ length: TOTAL_SLIDES });
 
-  // Ring shows position through deck (0 → 100%)
+  // Ring progress
   const radius = 22;
   const circumference = 2 * Math.PI * radius;
   const positionPct = TOTAL_SLIDES > 1 ? (currentSlide / (TOTAL_SLIDES - 1)) * 100 : 0;
@@ -135,44 +161,36 @@ export function Chap1Question1() {
     <div
       className={`${styles.container} ${isPresenting ? styles.isPresenting : ''}`}
       ref={containerRef}
-      style={{ height: '100%', overflowY: 'auto' }}
     >
       <div className={styles.progressBar} style={{ width: `${scrollProgress}%` }} />
 
-      {/* ── Fullscreen Return Button ── */}
+      {/* --- Fullscreen Exit --- */}
       {isPresenting && (
         <button
           className={styles.fullscreenReturnBtn}
           onClick={stopPresentation}
-          aria-label="Exit presentation"
         >
           <ArrowLeft size={18} />
           <span>Exit Slideshow</span>
         </button>
       )}
 
-      {/* ── Nav Dots ── */}
+      {/* --- Nav Dots --- */}
       <nav className={styles.navDots}>
         {dots.map((_, i) => (
           <button
             key={i}
             className={`${styles.navDot} ${activeSection === i ? styles.active : ''}`}
-            aria-label={`Go to section ${i + 1}`}
             onClick={() => scrollToSection(i)}
           />
         ))}
       </nav>
 
-      {/* ── Floating Presentation Controls ── */}
+      {/* --- Presentation Controls --- */}
       <div className={styles.slideshowControl}>
         {!isPresenting ? (
-          <button
-            className={styles.slideshowPlayBtn}
-            onClick={startPresentation}
-            aria-label="Start presentation"
-            title="Present slides"
-          >
-            <svg viewBox="0 0 60 60" className={styles.slideshowSvg} aria-hidden="true">
+          <button className={styles.slideshowPlayBtn} onClick={startPresentation}>
+            <svg viewBox="0 0 60 60" className={styles.slideshowSvg}>
               <circle cx="30" cy="30" r="28" className={styles.svgTrack} />
               <polygon points="23,18 45,30 23,42" className={styles.svgPlay} />
             </svg>
@@ -180,351 +198,230 @@ export function Chap1Question1() {
           </button>
         ) : (
           <div className={styles.slideshowPlayer}>
-            {/* Stop / Return */}
-            <button
-              className={`${styles.slideshowNavBtn} ${styles.stopBtn}`}
-              onClick={stopPresentation}
-              aria-label="Exit presentation"
-              title="Exit"
-            >✕</button>
-
-            {/* Position ring */}
-            <div className={styles.slideshowRingBtn} aria-label={`Slide ${currentSlide + 1} of ${TOTAL_SLIDES}`}>
-              <svg viewBox="0 0 60 60" className={styles.slideshowSvg} aria-hidden="true">
+            <button className={`${styles.slideshowNavBtn} ${styles.stopBtn}`} onClick={stopPresentation}>✕</button>
+            <div className={styles.slideshowRingBtn}>
+              <svg viewBox="0 0 60 60" className={styles.slideshowSvg}>
                 <circle cx="30" cy="30" r={radius} className={styles.svgTrack} />
-                <circle
-                  cx="30" cy="30" r={radius}
-                  className={styles.svgRing}
-                  strokeDasharray={circumference}
-                  strokeDashoffset={ringOffset}
-                />
-                <text x="30" y="35" textAnchor="middle" className={styles.svgCountText}>
-                  {currentSlide + 1}
-                </text>
+                <circle cx="30" cy="30" r={radius} className={styles.svgRing} strokeDasharray={circumference} strokeDashoffset={ringOffset} />
+                <text x="30" y="35" textAnchor="middle" className={styles.svgCountText}>{currentSlide + 1}</text>
               </svg>
             </div>
-
-            {/* Prev */}
-            <button
-              className={styles.slideshowNavBtn}
-              onClick={goPrev}
-              aria-label="Previous slide"
-              title="Previous (←)"
-              disabled={currentSlide === 0}
-            >‹</button>
-
-            {/* Next */}
-            <button
-              className={`${styles.slideshowNavBtn} ${styles.nextBtn}`}
-              onClick={goNext}
-              aria-label="Next slide"
-              title="Next (→)"
-              disabled={currentSlide === TOTAL_SLIDES - 1}
-            >›</button>
-
-            {/* Slide counter */}
+            <button className={styles.slideshowNavBtn} onClick={goPrev} disabled={currentSlide === 0}>‹</button>
+            <button className={`${styles.slideshowNavBtn} ${styles.nextBtn}`} onClick={goNext} disabled={currentSlide === TOTAL_SLIDES - 1}>›</button>
             <span className={styles.slideCounter}>{currentSlide + 1}&thinsp;/&thinsp;{TOTAL_SLIDES}</span>
           </div>
         )}
       </div>
 
-      {/* ── Lightbox ── */}
+      {/* --- Lightbox --- */}
       {lightboxSrc && (
-        <div
-          className={styles.lightboxOverlay}
-          onClick={() => setLightboxSrc(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Image lightbox"
-        >
-          <button
-            className={styles.lightboxClose}
-            onClick={() => setLightboxSrc(null)}
-            aria-label="Close image"
-          >✕</button>
-          <img
-            src={lightboxSrc}
-            alt={lightboxAlt}
-            className={styles.lightboxImg}
-            onClick={e => e.stopPropagation()}
-          />
+        <div className={styles.lightboxOverlay} onClick={() => setLightboxSrc(null)}>
+          <button className={styles.lightboxClose}>✕</button>
+          <img src={lightboxSrc} alt={lightboxAlt} className={styles.lightboxImg} onClick={e => e.stopPropagation()} />
         </div>
       )}
 
-      {/* ── HERO ── */}
+      {/* --- HERO --- */}
       <section className={styles.hero} data-section="0">
-        <div className={styles.heroEyebrow}>Wisdom Untethered · Chapter 1 · The Mind</div>
-        <h1 className={styles.heroTitle}>Why You Feel <em>Numb</em><br />When Nothing Is Wrong</h1>
-        <div className={styles.heroDivider}></div>
-        <p className={styles.heroSubtitle}>A lesson on the heart that closes — and how to open it again</p>
+        <div className={styles.heroEyebrow}>Wisdom Untethered · Chapter 1 · Question 1</div>
+        <h1 className={styles.heroTitle}>How to Use the Mind<br />as a <strong>Tool</strong></h1>
+        <div className={styles.heroRule}></div>
+        <p className={styles.heroSub}>When a bad mood hits and the spiral begins — Singer's two honest answers for what to actually do</p>
         <div className={styles.heroScroll}>Scroll</div>
       </section>
 
-      {/* ── INTRO BAND ── */}
-      <div className={styles.chapterIntro}>
-        <div className={styles.chapterIntroInner}>
-          <p>"The most important thing you can do in life is recognise that you are not your mind. That voice in your head — it never stops talking. But here's what it never tells you: you have a heart that can close. And when it does, the whole world goes quiet in the wrong way."</p>
+      {/* --- OPENING BAND --- */}
+      <div className={styles.openingBand}>
+        <p>"Most of us assume the answer is better thinking. More positive thinking. Singer says: yes — that's actually a real technique. But it's only step one. There's something deeper available."</p>
+      </div>
+
+      {/* --- SLIDE 1 --- */}
+      <section className={styles.slide} data-section="1">
+        <div className={styles.slideGrid}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>01</span>
+            <img src={imageMap["slide1"]} alt="The hook" onClick={() => openLightbox(imageMap["slide1"], "The hook")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>The hook</span>
+            <h2 className={styles.slideH}>The Bad Mood<br /><em>That Just Hits</em></h2>
+            <p className={styles.slideP}>You know this feeling. Nothing dramatic happened. But something shifts inside — and suddenly your mind is running. Replaying things. Criticising. Worrying. You didn't invite it. It just arrived.</p>
+            <p className={styles.slideP}>And the harder you try to think your way out of it, the worse it gets. The mind that's creating the spiral is being asked to solve the spiral. That's the trap most of us are stuck in.</p>
+            <div className={styles.pull}>"Nothing happened. But something shifted."</div>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* --- SLIDE 2 --- */}
+      <section className={styles.slide} data-section="2">
+        <div className={`${styles.slideGrid} ${styles.flip}`}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>02</span>
+            <img src={imageMap["slide2"]} alt="The question" onClick={() => openLightbox(imageMap["slide2"], "The question")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>The question</span>
+            <h2 className={styles.slideH}>The Question<br /><em>Most of Us Have Asked</em></h2>
+            <p className={styles.slideP}>This lesson is based on the very first question in Wisdom Untethered — from the opening chapter called The Mind, in the section called The Foundation.</p>
+            <p className={styles.slideP}>Someone asked Michael Singer: "How can I use the mind as a tool to escape negative thoughts or feelings?" Most of us have already asked this in some form.</p>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* --- SLIDE 3 --- */}
+      <section className={styles.slide} data-section="3">
+        <div className={styles.slideGrid}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>03</span>
+            <img src={imageMap["slide3"]} alt="Singer's model" onClick={() => openLightbox(imageMap["slide3"], "Singer's model")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>Singer's model</span>
+            <h2 className={styles.slideH}>The Mind Has<br /><em>Two Layers</em></h2>
+            <p className={styles.slideP}>The lower mind is the reactive layer — trained by every hurt, every fear, every difficult experience. The higher mind is the layer that can redirect.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* --- LAYERS INTERLUDE --- */}
+      <div className={styles.layersBand} data-section="4">
+        <div className={styles.layersBandInner}>
+          <div className={`${styles.layerCol} ${styles.lower}`}>
+            <span className={styles.layerLabel}>Layer one</span>
+            <div className={styles.layerName}>The Lower Mind</div>
+            <p className={styles.layerDesc}>Reactive. Trained by past experience. Pulls you automatically toward old patterns.</p>
+          </div>
+          <div className={`${styles.layerCol} ${styles.higher}`}>
+            <span className={styles.layerLabel}>Layer two</span>
+            <div className={styles.layerName}>The Higher Mind</div>
+            <p className={styles.layerDesc}>Conscious. Capable of lifting you out of conditioned patterns.</p>
+          </div>
+        </div>
+        <p className={styles.layersBandQ}>Which one are you feeding right now?</p>
+      </div>
+
+      {/* --- SLIDE 4 --- */}
+      <section className={styles.slide} data-section="5">
+        <div className={`${styles.slideGrid} ${styles.flip}`}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>04</span>
+            <img src={imageMap["slide4"]} alt="Step one" onClick={() => openLightbox(imageMap["slide4"], "Step one")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>Step one</span>
+            <h2 className={styles.slideH}>Use the Higher Mind.<br /><em>"I Can Handle This."</em></h2>
+            <p className={styles.slideP}>Singer's first practical answer: use an affirmation. "I can handle this." Not as a magic formula, but as a way to redirect energy upward.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* --- MANTRA CARD --- */}
+      <div className={styles.mantraCard} data-section="6">
+        <span className={styles.mantraTag}>The affirmation practice</span>
+        <h2 className={styles.mantraTitle}>When the Spiral Begins —<br />Say This Instead</h2>
+        <div className={styles.mantraHighlight}>"I can handle this."</div>
+        <p className={styles.mantraBody}>Repeat it. Over and over. You are taking the energy that was about to collapse and redirecting it upward.</p>
+      </div>
+
+      {/* --- SLIDE 5 --- */}
+      <section className={styles.slide} data-section="7">
+        <div className={styles.slideGrid}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>05</span>
+            <img src={imageMap["slide5"]} alt="Step two" onClick={() => openLightbox(imageMap["slide5"], "Step two")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>Step two</span>
+            <h2 className={styles.slideH}><em>Relax</em> in the<br />Face of It</h2>
+            <p className={styles.slideP}>The deeper level: relax. Let go. If you stay relaxed, the energy transmutes and rises up inside you.</p>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* --- SLIDE 6 --- */}
+      <section className={styles.slide} data-section="8">
+        <div className={`${styles.slideGrid} ${styles.flip}`}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>06</span>
+            <img src={imageMap["slide6"]} alt="The third option" onClick={() => openLightbox(imageMap["slide6"], "The third option")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>The third option</span>
+            <h2 className={styles.slideH}>Transmutation:<br /><em>Neither Collapse Nor Fight</em></h2>
+            <p className={styles.slideP}>Collapse makes it louder. Fighting makes it louder. Transmutation is the third option: simply relax and let it pass through.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* --- THREE OPTIONS --- */}
+      <div className={styles.threeOptions} data-section="9">
+        <div className={styles.threeOptionsInner}>
+          <div className={styles.threeOptionsHeader}>
+            <span className={styles.threeOptionsEyebrow}>Singer's three options</span>
+            <h2 className={styles.threeOptionsTitle}>What to Do When a Negative Feeling Arrives</h2>
+          </div>
+          <div className={styles.optionsGrid}>
+            <div className={`${styles.optionCard} ${styles.bad}`}>
+              <div className={styles.optionIcon}>↓</div>
+              <div className={styles.optionName}>Collapse</div>
+              <span className={styles.optionResult}>Makes it louder</span>
+            </div>
+            <div className={`${styles.optionCard} ${styles.worse}`}>
+              <div className={styles.optionIcon}>✕</div>
+              <div className={styles.optionName}>Fight</div>
+              <span className={styles.optionResult}>Also makes it louder</span>
+            </div>
+            <div className={`${styles.optionCard} ${styles.third}`}>
+              <div className={styles.optionIcon}>↑</div>
+              <div className={styles.optionName}>Transmute</div>
+              <span className={styles.optionResult}>The energy rises</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── SLIDE 1 ── */}
-      <section className={styles.slideSection} data-section="1">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>01</span>
-            <img src={imageMap["slide1"]} alt="The Feeling Nobody Talks About" onClick={() => openLightbox(imageMap["slide1"], "The Feeling Nobody Talks About")} className={styles.clickableImg} />
+      {/* --- SLIDE 7 --- */}
+      <section className={styles.slide} data-section="10">
+        <div className={styles.slideGrid}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>07</span>
+            <img src={imageMap["slide7"]} alt="The real teaching" onClick={() => openLightbox(imageMap["slide7"], "The real teaching")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>Where it begins</span>
-            <h2 className={styles.slideHeading}>The Feeling <em>Nobody<br />Talks About</em></h2>
-            <p className={styles.slideBody}>There's a state that isn't quite sadness. It isn't depression. It isn't anxiety. It's a kind of flatness — a muffled quality to life where things happen around you but don't quite reach you. Everything looks fine on the outside. Inside, something has gone quiet.</p>
-            <p className={styles.slideBody}>This is what Singer calls the closed heart. And it's far more common than anyone admits.</p>
+            <span className={styles.slideTag}>The real teaching</span>
+            <h2 className={styles.slideH}>The Mind Is a Tool.<br /><em>Not Who You Are.</em></h2>
+            <p className={styles.slideP}>The mind is a tool, not who you are. Stop asking the problem to solve itself. Soften and let it pass through.</p>
           </div>
         </div>
       </section>
 
-      <div className={styles.sectionDivider}><span>✦</span></div>
+      <div className={styles.rule}><span>✦</span></div>
 
-      {/* ── SLIDE 2 ── */}
-      <section className={styles.slideSection} data-section="2">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>02</span>
-            <img src={imageMap["slide2"]} alt="It's Not Quite Depression" onClick={() => openLightbox(imageMap["slide2"], "It's Not Quite Depression")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The search for a name</span>
-            <h2 className={styles.slideHeading}><em>It's Not Quite</em><br />Depression…</h2>
-            <p className={styles.slideBody}>You've Googled it. You've tried to fit it into a category — anxiety, burnout, low mood. But the label never quite fits. Because what you're experiencing isn't a disorder. It's a pattern.</p>
-            <div className={styles.pullQuote}>"Why do I feel empty?" — the question the mind keeps asking, never finding the answer inside itself.</div>
-            <p className={styles.slideBody}>The mind can't solve this one. Because the mind isn't where it lives.</p>
+      {/* --- MEDITATION BAND --- */}
+      <div className={styles.meditationBand} data-section="11">
+        <div className={styles.meditationInner}>
+          <span className={styles.meditationEyebrow}>Guided meditation</span>
+          <h2 className={styles.meditationTitle}>Soften Around It</h2>
+          <div className={styles.meditationStep}>
+            <span className={styles.meditationStepLabel}>Steps</span>
+            <p>Settle. Notice. Watch. Soften. Transmute. Return.</p>
           </div>
         </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 3 ── */}
-      <section className={styles.slideSection} data-section="3">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>03</span>
-            <img src={imageMap["slide3"]} alt="When You Felt Truly Alive" onClick={() => openLightbox(imageMap["slide3"], "When You Felt Truly Alive")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The contrast</span>
-            <h2 className={styles.slideHeading}>When You Felt <br /><em>Truly Alive</em></h2>
-            <p className={styles.slideBody}>You know the difference. There are moments — maybe rare, maybe distant now — when you felt completely open. When life landed on you fully. When a piece of music, a conversation, a moment in nature seemed to arrive without any barrier between you and it.</p>
-            <p className={styles.slideBody}>That openness is your heart's natural state. The closedness is what happens when life hurts and we protect ourselves.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 4 ── */}
-      <section className={styles.slideSection} data-section="4">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>04</span>
-            <img src={imageMap["slide4"]} alt="Building The Inner Walls" onClick={() => openLightbox(imageMap["slide4"], "Building The Inner Walls")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>How it happens</span>
-            <h2 className={styles.slideHeading}>Building the<br /><em>Inner Walls</em></h2>
-            <p className={styles.slideBody}>Life hurts us. Someone rejects us. Something fails. And in that moment, the heart does something completely natural — it protects itself. It closes around the hurt, like a fist clenching.</p>
-            <p className={styles.slideBody}>One closure. Then another. Then another. Over years, those protective movements build walls. What began as a single act of self-protection becomes a structure you live inside — without even knowing it was built.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 5 ── */}
-      <section className={styles.slideSection} data-section="5">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>05</span>
-            <img src={imageMap["slide5"]} alt="Locking Out Life" onClick={() => openLightbox(imageMap["slide5"], "Locking Out Life")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The cost</span>
-            <h2 className={styles.slideHeading}><em>Locking Out</em><br />Life</h2>
-            <p className={styles.slideBody}>Here's the painful irony: the walls that protected you from hurt also lock out everything else. Beauty. Connection. Spontaneous joy. All of it is out there — but you're inside, behind the structure you built to stay safe.</p>
-            <div className={styles.pullQuote}>The same wall that keeps pain out keeps life out too.</div>
-            <p className={styles.slideBody}>And the numbness you feel isn't emptiness. It's fullness that can't get through.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 6 ── */}
-      <section className={styles.slideSection} data-section="6">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>06</span>
-            <img src={imageMap["slide6"]} alt="The River & The Clench" onClick={() => openLightbox(imageMap["slide6"], "The River & The Clench")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>Singer's model</span>
-            <h2 className={styles.slideHeading}>The River<br /><em>&amp; The Clench</em></h2>
-            <p className={styles.slideBody}>Singer describes life energy as a river — a constant, natural flow moving through you. When the heart is open, it flows. When something disturbs us and we close around it, we clench. The river is still there. But it can't get through.</p>
-            <p className={styles.slideBody}>That blockage — that strangled, dimmed quality — is what we feel as numbness. We're not broken. We're clenched. And a clench can always be released.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 7 ── */}
-      <section className={styles.slideSection} data-section="7">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>07</span>
-            <img src={imageMap["slide7"]} alt="Notice The Tightening" onClick={() => openLightbox(imageMap["slide7"], "Notice The Tightening")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The signal</span>
-            <h2 className={styles.slideHeading}><em>Notice</em> the<br />Tightening</h2>
-            <p className={styles.slideBody}>The heart doesn't close silently. There's always a signal — a tightening in the chest, a pulling inward, a subtle hardening. Resentment, dismissiveness, a sudden flatness in the middle of something that should matter to you.</p>
-            <p className={styles.slideBody}>These aren't personality traits. They're moments of closing. And the extraordinary thing Singer points to is this: you can learn to notice the closing as it happens. That noticing is the beginning of everything.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 8 ── */}
-      <section className={styles.slideSection} data-section="8">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>08</span>
-            <img src={imageMap["slide8"]} alt="What Is It Actually?" onClick={() => openLightbox(imageMap["slide8"], "What Is It Actually?")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The path forward</span>
-            <h2 className={styles.slideHeading}>What Is It<br /><em>Actually?</em></h2>
-            <p className={styles.slideBody}>Three steps. Not complicated. Not easy — but simple.</p>
-            <p className={styles.slideBody}><strong style={{ color: 'var(--gold)', fontWeight: 400 }}>See what it is.</strong> Not depression. Not a character flaw. A closed heart — a protective movement that outlived its usefulness.</p>
-            <p className={styles.slideBody}><strong style={{ color: 'var(--gold)', fontWeight: 400 }}>The practice.</strong> Five seconds. That's all. The moment of closing is the moment of practice.</p>
-            <p className={styles.slideBody}><strong style={{ color: 'var(--gold)', fontWeight: 400 }}>The shift.</strong> Over time, as you choose not to close, the energy rises. The walls thin. Life gets back in.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 9 ── */}
-      <section className={styles.slideSection} data-section="9">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>09</span>
-            <img src={imageMap["slide9_10_11"]} alt="Softening Beats Trying Harder" onClick={() => openLightbox(imageMap["slide9_10_11"], "Softening Beats Trying Harder")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The counterintuitive truth</span>
-            <h2 className={styles.slideHeading}><em>Softening</em><br />Beats Trying Harder</h2>
-            <p className={styles.slideBody}>Everything in us wants to push. To force. To will ourselves into feeling better. But Singer points to the opposite direction: softening. Not collapse — not giving up — but releasing the clench.</p>
-            <div className={styles.pullQuote}>"If you stay relaxed, the energy that was about to get caught in negativity will actually rise up inside you."</div>
-            <p className={styles.slideBody}>You can't muscle your way to an open heart. But you can soften your way there.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 10 ── */}
-      <section className={styles.fullImageSlide} data-section="10">
-        <img src={imageMap["slide9_10_11"]} alt="Let's Soften Right Now" onClick={() => openLightbox(imageMap["slide9_10_11"], "Let's Soften Right Now")} className={styles.clickableImg} />
-        <div className={styles.slideContent} style={{ textAlign: 'center' }}>
-          <span className={styles.slideLabel} style={{ display: 'block' }}>A moment of practice</span>
-          <h2 className={styles.slideHeading}>"Let's Soften<br /><em>Right Now"</em></h2>
-          <p className={styles.slideBody} style={{ maxWidth: '520px', margin: '0 auto' }}>Close your eyes if you can. Notice whatever is tight in your chest, your jaw, your shoulders. Don't try to fix it. Just notice it. And for one breath — soften around it. Not away from it. Around it. Feel the difference.</p>
-        </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 11 ── */}
-      <section className={styles.slideSection} data-section="11">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>11</span>
-            <img src={imageMap["slide9_10_11"]} alt="Loosening The Fist" onClick={() => openLightbox(imageMap["slide9_10_11"], "Loosening The Fist")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>What opens</span>
-            <h2 className={styles.slideHeading}>Loosening<br /><em>the Fist</em></h2>
-            <p className={styles.slideBody}>When the fist opens, something flows back in. Singer calls it aliveness — the natural energetic state of an open heart. It isn't euphoria. It's something quieter and more reliable: a quality of being present, available, fully here.</p>
-            <p className={styles.slideBody}>The open hand can receive what the closed fist cannot.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 12 ── */}
-      <section className={styles.slideSection} data-section="12">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>12</span>
-            <img src={imageMap["slide12"]} alt="How The Walls Come Down" onClick={() => openLightbox(imageMap["slide12"], "How The Walls Come Down")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The long arc</span>
-            <h2 className={styles.slideHeading}>How the Walls<br /><em>Come Down</em></h2>
-            <p className={styles.slideBody}>Not all at once. That's not how this works. The walls came up one closure at a time — one hurt responded to with protection. And they come down the same way. One moment at a time. One choice not to close, where you would have closed before.</p>
-            <p className={styles.slideBody}>Singer is clear: you won't always succeed. You'll get pulled in. That's fine. What matters is that you keep returning to the practice — not as punishment, but as the natural next step.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.sectionDivider}><span>✦</span></div>
-
-      {/* ── SLIDE 13 ── */}
-      <section className={styles.slideSection} data-section="13">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>13</span>
-            <img src={imageMap["placeholder_alive"]} alt="On The Other Side" onClick={() => openLightbox(imageMap["placeholder_alive"], "On The Other Side")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The result</span>
-            <h2 className={styles.slideHeading}>On the<br /><em>Other Side…</em></h2>
-            <p className={styles.slideBody}>Singer's promise, earned over decades of practice: the things that used to close you — the dismissive comment, the unexpected news, the small daily friction — gradually lose their power. Not because they stop happening. Because you stop clenching around them.</p>
-            <div className={styles.pullQuote}>Stop closing. That's the whole practice.</div>
-            <p className={styles.slideBody}>And on the other side of that discipline is a kind of freedom that is steady and available — not dependent on circumstances going well.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PRACTICE CARD ── */}
-      <div className={styles.practiceCard} data-section="14">
-        <p className={styles.practiceCardEyebrow}>The 5-Second Practice</p>
-        <h2 className={styles.practiceCardTitle}>"I'm Not Going to<br />Close Around This."</h2>
-        <p className={styles.practiceCardBody}>The next time you feel the tightening — in a conversation, in traffic, reading a message — you have a 5-second window. That's the moment of practice. Not later. Not in meditation. Right there, in the middle of it.</p>
-        <div className={styles.practiceMantra}>"I'm NOT going to close around this."</div>
-        <p className={styles.practiceCardBody}>You don't have to feel calm. You don't have to fix the situation. You just have to refuse the clench. Relax the area around your heart — not forcing it open, just refusing to pull it shut. That's the whole thing. Do it once today. Then again tomorrow.</p>
       </div>
 
-      {/* ── SLIDE 15 ── */}
-      <section className={styles.fullImageSlide} data-section="15">
-        <img src={imageMap["slide7"]} alt="Stay With The Feeling" onClick={() => openLightbox(imageMap["slide7"], "Stay With The Feeling")} className={styles.clickableImg} />
-        <div className={styles.slideContent} style={{ textAlign: 'center' }}>
-          <span className={styles.slideLabel} style={{ display: 'block' }}>Your invitation</span>
-          <h2 className={styles.slideHeading}><em>Stay</em> With<br />the Feeling</h2>
-          <p className={styles.slideBody} style={{ maxWidth: '520px', margin: '0 auto' }}>After the video. After this lesson. Notice what's alive in you right now. Write it down — not what you thought, but what you felt. That thread is worth following. That's where the real work lives.</p>
-        </div>
-      </section>
-
-      {/* ── CLOSING ── */}
-      <section className={styles.closing}>
+      {/* --- CLOSING --- */}
+      <section className={styles.closing} data-section="12">
         <div className={styles.closingInner}>
-          <p className={styles.closingEyebrow}>End of Chapter 1 · Question 1</p>
-          <h2 className={styles.closingTitle}>You Are Not<br />Your Closed Heart</h2>
-          <p className={styles.closingBody}>The closing was protection. The opening is freedom. And the distance between the two is nothing more than a single breath, a softening, a choice not to clench one more time.</p>
-          <button className={styles.closingJournal}>Open Journal →</button>
+          <span className={styles.closingTag}>End of Chapter 1 · Question 1</span>
+          <h2 className={styles.closingTitle}>Both Paths Are<br /><em>Available Right Now</em></h2>
+          <p className={styles.closingBody}>Redirect or Transmute. Choose one today.</p>
+          <button className={styles.closingButton}>Open Journal →</button>
         </div>
       </section>
     </div>
