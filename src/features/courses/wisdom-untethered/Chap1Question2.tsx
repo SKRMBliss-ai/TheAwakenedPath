@@ -8,7 +8,7 @@ const imageMap: Record<string, string> = {
   "claustro":     "/WisdomUntethered/Chap1/Question2/02_Claustrophobia.jpg",
   "deconstruct":  "/WisdomUntethered/Chap1/Question2/01_Deconstructing.jpg",
   "oneroot":      "/WisdomUntethered/Chap1/Question2/06_OneRoot.png",
-  "futility":     "/WisdomUntethered/Chap1/Question2/04_Futility.jpg",
+  "futility":     "/WisdomUntethered/Chap1/Question2/04_TheSpaceOfFreedom.png",
   "escalating":   "/WisdomUntethered/Chap1/Question2/05_EscalatingFeedback.jpg",
   "participant":  "/WisdomUntethered/Chap1/Question2/07_ParticipantObserver.png",
   "listener":     "/WisdomUntethered/Chap1/Question2/08_ListenerRadio.png",
@@ -353,27 +353,11 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 6: PRACTICE ── */}
+      {/* ── SLIDE 6: PATTERNS ── */}
       <section className={styles.slideSection} data-section="6">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>06</span>
-            <img src={imageMap["meditation"]} alt="The Practice" onClick={() => openLightbox(imageMap["meditation"], "The Practice")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Practice</span>
-            <h2 className={styles.slideHeading}>Notice. Name.<br /><em>Detach</em>.</h2>
-            <p className={styles.slideBody}>Today — just once — when the voice starts up with guilt, doubt, or fear, try naming it. "There's the worry voice." "There's the guilt loop."</p>
-            <p className={styles.slideBody}>Don't fix it. Just see it as the mind doing its thing — the same way you'd notice a radio playing in another room.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SLIDE 7: PATTERNS ── */}
-      <section className={styles.slideSection} data-section="7">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>07</span>
             <img src={imageMap["escalating"]} alt="Patterns" onClick={() => openLightbox(imageMap["escalating"], "Patterns")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
@@ -381,6 +365,22 @@ export function Chap1Question2() {
             <h2 className={styles.slideHeading}>Same Fear,<br /><em>Different Clothes</em></h2>
             <p className={styles.slideBody}>When you watch, you see the patterns. The same fear showing up in different situations. The same story — "I might not be okay" — playing out in a hundred variations.</p>
             <p className={styles.slideBody}>When you see the pattern clearly enough, you stop taking it so seriously. You stop believing that the endless narration holds the key to your wellbeing.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SLIDE 7: PRACTICE ── */}
+      <section className={styles.slideSection} data-section="7">
+        <div className={styles.slideWrapper}>
+          <div className={styles.slideImageWrap}>
+            <span className={styles.slideNumber}>07</span>
+            <img src={imageMap["meditation"]} alt="The Practice" onClick={() => openLightbox(imageMap["meditation"], "The Practice")} className={styles.clickableImg} />
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideLabel}>The Practice</span>
+            <h2 className={styles.slideHeading}>Notice. Name.<br /><em>Detach</em>.</h2>
+            <p className={styles.slideBody}>Today — just once — when the voice starts up with guilt, doubt, or fear, try naming it. "There's the worry voice." "There's the guilt loop."</p>
+            <p className={styles.slideBody}>Don't fix it. Just see it as the mind doing its thing — the same way you'd notice a radio playing in another room.</p>
           </div>
         </div>
       </section>
