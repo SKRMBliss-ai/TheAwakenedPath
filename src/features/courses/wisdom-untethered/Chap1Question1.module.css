@@ -356,7 +356,7 @@
 /* ── SLIDE SECTION ── */
 .slideSection {
   padding: 5rem 2rem;
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
   opacity: 0;
   transform: translateY(30px);
@@ -375,7 +375,7 @@
 .slideWrapper {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3.5rem;
+  gap: 5rem;
   align-items: center;
 }
 
@@ -596,7 +596,7 @@
 
 /* ── FULL-WIDTH IMAGE SLIDE ── */
 .fullImageSlide {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 3rem 2rem;
   text-align: center;
