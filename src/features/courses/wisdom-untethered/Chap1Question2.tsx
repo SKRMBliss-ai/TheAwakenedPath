@@ -30,7 +30,7 @@ const imageMap: Record<string, string> = {
   "placeholder_feeling":   "/WisdomUntethered/Chap1/Question1/04_TheFeelingNobodyTalksAbout.png", 
 };
 
-const TOTAL_SLIDES = 19; // Main: 0-13, Extras: 14-18
+const TOTAL_SLIDES = 18; // Main: 0-12, Extras: 13-17
 
 export function Chap1Question2() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -353,27 +353,11 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 6: REALIZATION ── */}
+      {/* ── SLIDE 6: PRACTICE ── */}
       <section className={styles.slideSection} data-section="6">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>06</span>
-            <img src={imageMap["participant"]} alt="Realization" onClick={() => openLightbox(imageMap["participant"], "Realization")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Realization</span>
-            <h2 className={styles.slideHeading}>You Are Not <em>Your Mind</em></h2>
-            <p className={styles.slideBody}>The moment this lands — not as an idea, but as something felt — you're free. Not because the thoughts stop, but because they stop running the show.</p>
-            <p className={styles.slideBody}>Establishing the permanent identity of the watcher is the whole work.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SLIDE 7: PRACTICE ── */}
-      <section className={styles.slideSection} data-section="7">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>07</span>
             <img src={imageMap["meditation"]} alt="The Practice" onClick={() => openLightbox(imageMap["meditation"], "The Practice")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
@@ -385,11 +369,11 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 8: PATTERNS ── */}
-      <section className={styles.slideSection} data-section="8">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
+      {/* ── SLIDE 7: PATTERNS ── */}
+      <section className={styles.slideSection} data-section="7">
+        <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>08</span>
+            <span className={styles.slideNumber}>07</span>
             <img src={imageMap["escalating"]} alt="Patterns" onClick={() => openLightbox(imageMap["escalating"], "Patterns")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
@@ -401,11 +385,11 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 9: ANALOGY ── */}
-      <section className={styles.slideSection} data-section="9">
-        <div className={styles.slideWrapper}>
+      {/* ── SLIDE 8: ANALOGY ── */}
+      <section className={styles.slideSection} data-section="8">
+        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>09</span>
+            <span className={styles.slideNumber}>08</span>
             <img src={imageMap["listener"]} alt="The Radio Analogy" onClick={() => openLightbox(imageMap["listener"], "The Radio Analogy")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
@@ -416,11 +400,11 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 10: RESULT ── */}
-      <section className={styles.slideSection} data-section="10">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
+      {/* ── SLIDE 9: RESULT ── */}
+      <section className={styles.slideSection} data-section="9">
+        <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>10</span>
+            <span className={styles.slideNumber}>09</span>
             <img src={imageMap["grip"]} alt="The Result" onClick={() => openLightbox(imageMap["grip"], "The Result")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
@@ -432,8 +416,8 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 11: GUIDED MEDITATION INTRO ── */}
-      <div className={styles.chapterIntro} data-section="11">
+      {/* ── SLIDE 10: GUIDED MEDITATION INTRO ── */}
+      <div className={styles.chapterIntro} data-section="10">
         <div className={styles.chapterIntroInner}>
           <span className={styles.slideLabel} style={{ display: 'block', marginBottom: '1rem' }}>Guided Practice</span>
           <h2 className={styles.slideHeading} style={{ fontSize: '2.5rem' }}>Restoring the <em>Watcher</em></h2>
@@ -441,11 +425,11 @@ export function Chap1Question2() {
         </div>
       </div>
 
-      {/* ── SLIDE 12: GUIDED MEDITATION STEPS ── */}
-      <section className={styles.slideSection} data-section="12">
+      {/* ── SLIDE 11: GUIDED MEDITATION STEPS ── */}
+      <section className={styles.slideSection} data-section="11">
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
-             <span className={styles.slideNumber}>12</span>
+             <span className={styles.slideNumber}>11</span>
              <img src={imageMap["watcher"]} alt="Guided Meditation" onClick={() => openLightbox(imageMap["watcher"], "Guided Meditation")} className={styles.clickableImg} />
           </div>
           <div className={styles.slideContent}>
@@ -457,8 +441,8 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 13: END OF TEACHING ── */}
-      <div className={styles.practiceCard} data-section="13">
+      {/* ── SLIDE 12: SUMMARY ── */}
+      <div className={styles.practiceCard} data-section="12">
         <p className={styles.practiceCardEyebrow}>Summary</p>
         <h2 className={styles.practiceCardTitle}>Notice. Loosen.<br />Become the Watcher.</h2>
         <p className={styles.practiceCardBody}>The voice in your head is just a mechanism trying to protect you. You don't have to silence it; you only have to stop being it.</p>
@@ -466,7 +450,7 @@ export function Chap1Question2() {
       </div>
 
       {/* ── EXTRA SECTION HEADER ── */}
-      <div className={styles.chapterIntro} style={{ backgroundColor: 'var(--parchment)', borderTop: '2px solid var(--gold)', marginTop: '8rem' }}>
+      <div className={styles.chapterIntro} data-section="13" style={{ backgroundColor: 'var(--parchment)', borderTop: '2px solid var(--gold)', marginTop: '8rem' }}>
         <div className={styles.chapterIntroInner}>
            <h2 className={styles.slideHeading} style={{ color: 'var(--gold)' }}>Extra Wisdom</h2>
            <p className={styles.slideBody}>Dive deeper into the technical mechanics of Singer's teaching after the YouTube session.</p>
@@ -517,7 +501,7 @@ export function Chap1Question2() {
         </div>
       </section>
 
-      {/* ── SLIDE 17: INTERNAL STILLNESS (EXTRA) ── */}
+      {/* ── SLIDE 17: Stillness (EXTRA) ── */}
       <section className={styles.slideSection} data-section="17">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
