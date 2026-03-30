@@ -169,6 +169,9 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
           />
           <div className={styles.lightboxNav}>
             <button className={styles.lightboxNavBtn} onClick={(e) => { e.stopPropagation(); goLightboxPrev(); }}>←</button>
+            <div className={styles.lightboxCounter}>
+              {lightboxIndex + 1} / {ALL_SLIDES.length}
+            </div>
             <button className={styles.lightboxNavBtn} onClick={(e) => { e.stopPropagation(); goLightboxNext(); }}>→</button>
           </div>
         </div>

@@ -154,6 +154,9 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
           </div>
           <div className={styles.lightboxNav} onClick={e => e.stopPropagation()}>
             <button className={styles.lightboxNavBtn} onClick={goLightboxPrev} aria-label="Previous image">←</button>
+            <div className={styles.lightboxCounter}>
+              {lightboxIndex + 1} / {ALL_SLIDES.length}
+            </div>
             <button className={styles.lightboxNavBtn} onClick={goLightboxNext} aria-label="Next image">→</button>
           </div>
         </div>
