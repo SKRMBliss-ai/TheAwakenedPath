@@ -894,7 +894,7 @@ export default function UntetheredApp() {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-3">
+        <nav className="flex-1 space-y-1">
           {[
             { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
             { id: 'courses_group', icon: Sparkles, label: 'Courses', locked: false, isGroup: true, subItems: [
@@ -910,14 +910,14 @@ export default function UntetheredApp() {
               const anySubActive = item.subItems.some((sub: any) => activeTab === sub.id);
               const Icon = item.icon;
               return (
-                <div key={item.id} className="space-y-1 my-2">
+                <div key={item.id} className="space-y-0.5 my-1">
                   <div className="flex items-center gap-3 px-6 py-2">
                     <Icon size={16} strokeWidth={anySubActive ? 2 : 1.2} className={cn("transition-colors", anySubActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
                     <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-[var(--text-muted)] font-sans">
                       {item.label}
                     </span>
                   </div>
-                  <div className="flex flex-col ml-[2.75rem] space-y-1 relative before:content-[''] before:absolute before:left-[-1.25rem] before:top-2 before:bottom-2 before:w-px before:bg-[var(--border-subtle)]/50">
+                  <div className="flex flex-col ml-[2.75rem] space-y-0.5 relative before:content-[''] before:absolute before:left-[-1.25rem] before:top-2 before:bottom-2 before:w-px before:bg-[var(--border-subtle)]/50">
                     {item.subItems.map((sub: any) => {
                       const isActive = activeTab === sub.id;
                       return (
@@ -936,7 +936,7 @@ export default function UntetheredApp() {
                               }
                             }}
                             className={cn(
-                              "w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-400 relative group rounded-l-xl text-left",
+                              "w-full flex items-center gap-3 px-3 py-1.5 transition-all duration-400 relative group rounded-l-xl text-left",
                             )}
                             style={{
                               background: isActive ? 'var(--bg-surface-hover)' : 'none',
@@ -1000,7 +1000,7 @@ export default function UntetheredApp() {
                                           if (window.innerWidth < 1024) setIsSidebarOpen(false);
                                         }}
                                         className={cn(
-                                          "flex items-center gap-2 pl-6 pr-4 py-2 text-[8px] uppercase tracking-widest transition-all text-left",
+                                          "flex items-center gap-2 pl-6 pr-4 py-1.5 text-[8px] uppercase tracking-widest transition-all text-left",
                                           activeQuestionId === q.id
                                             ? "text-[var(--accent-primary)] font-bold"
                                             : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
@@ -1043,7 +1043,7 @@ export default function UntetheredApp() {
                   setIsSidebarOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-6 py-3 transition-all duration-400 relative group",
+                  "w-full flex items-center gap-3 px-6 py-2 transition-all duration-400 relative group",
                 )}
                 style={{
                   background: isActive ? 'var(--bg-surface-hover)' : 'none',
@@ -1113,8 +1113,8 @@ export default function UntetheredApp() {
           <div className="mt-8 pt-6 border-t border-[var(--border-default)]">
             <p className="text-[9px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex items-center flex-wrap gap-1">
               Designed and thought by
-              <a href="https://www.skrmblissai.in/twins" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold font-sans tracking-[0.2em] transition-colors group">
-                www.skrmblissai.in/twins
+              <a href="https://www.skrmblissai.in/twinsouls" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold font-sans tracking-[0.2em] transition-colors group">
+                www.skrmblissai.in/twinsouls
               </a>
             </p>
           </div>
@@ -1449,12 +1449,12 @@ export default function UntetheredApp() {
                     Designed and thought by
                   </p>
                   <a 
-                    href="https://www.skrmblissai.in/twins" 
+                    href="https://www.skrmblissai.in/twinsouls" 
                     target="_blank" 
                     rel="noreferrer" 
                     className="text-[10px] font-bold tracking-widest text-[var(--accent-secondary)] hover:text-[var(--accent-primary)] transition-colors"
                   >
-                    www.skrmblissai.in/twins
+                    www.skrmblissai.in/twinsouls
                   </a>
                 </div>
               </motion.div>
