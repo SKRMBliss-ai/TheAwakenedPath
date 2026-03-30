@@ -879,7 +879,7 @@ export default function UntetheredApp() {
         "lg:flex lg:translate-x-0",
         isSidebarOpen ? "translate-x-0 flex" : "-translate-x-full lg:flex"
       )}>
-        <div className="flex items-center justify-between mb-12 px-2">
+        <div className="flex items-center justify-between mb-6 px-2">
           <div className="flex items-center gap-3 cursor-pointer group">
             <div className="w-10 h-10 rounded-full bg-[var(--bg-surface)] flex items-center justify-center shadow-lg group-hover:shadow-[0_0_15px_var(--accent-secondary)] transition-all duration-300">
               <img src={appLogo} alt="Awakened Path Logo" className="w-full h-full rounded-full object-cover" />
@@ -894,7 +894,7 @@ export default function UntetheredApp() {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1">
+        <nav className="space-y-0.5">
           {[
             { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
             { id: 'courses_group', icon: Sparkles, label: 'Courses', locked: false, isGroup: true, subItems: [
@@ -911,7 +911,7 @@ export default function UntetheredApp() {
               const Icon = item.icon;
               return (
                 <div key={item.id} className="space-y-0.5 my-1">
-                  <div className="flex items-center gap-3 px-6 py-2">
+                  <div className="flex items-center gap-3 px-6 py-1.5">
                     <Icon size={16} strokeWidth={anySubActive ? 2 : 1.2} className={cn("transition-colors", anySubActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
                     <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-[var(--text-muted)] font-sans">
                       {item.label}
@@ -1043,7 +1043,7 @@ export default function UntetheredApp() {
                   setIsSidebarOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-6 py-2 transition-all duration-400 relative group",
+                  "w-full flex items-center gap-3 px-6 py-1.5 transition-all duration-400 relative group",
                 )}
                 style={{
                   background: isActive ? 'var(--bg-surface-hover)' : 'none',
@@ -1087,9 +1087,9 @@ export default function UntetheredApp() {
         </nav>
 
         {/* LOGOUT BUTTON */}
-        <div className="mt-8 border-t border-[var(--border-default)] pt-6">
+        <div className="mt-12 border-t border-[var(--border-default)] pt-4">
           {currentUser?.email && (
-            <div className="px-4 mb-4 flex items-center gap-2">
+            <div className="px-4 mb-2 flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)] animate-pulse" />
               <span className="text-[10px] text-[var(--text-muted)] font-medium tracking-wider lowercase opacity-70 truncate">
                 {currentUser.email}
@@ -1110,7 +1110,7 @@ export default function UntetheredApp() {
             </span>
           </button>
 
-          <div className="mt-8 pt-6 border-t border-[var(--border-default)]">
+          <div className="mt-4 pt-4 border-t border-[var(--border-default)]">
             <p className="text-[9px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex items-center flex-wrap gap-1">
               Designed and thought by
               <a href="https://www.skrmblissai.in/twinsouls" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold font-sans tracking-[0.2em] transition-colors group">
@@ -1444,7 +1444,7 @@ export default function UntetheredApp() {
                 </div>
 
                 {/* Footer Credits */}
-                <div className="w-full pt-8 pb-12 flex flex-col items-center justify-center text-center opacity-60 hover:opacity-100 transition-opacity">
+                <div className="w-full pt-4 pb-8 flex flex-col items-center justify-center text-center opacity-60 hover:opacity-100 transition-opacity">
                   <p className="text-[9px] font-serif tracking-[0.2em] text-[var(--text-muted)] uppercase mb-2 text-center">
                     Designed and thought by
                   </p>
