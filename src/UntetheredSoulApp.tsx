@@ -446,7 +446,7 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
 export default function UntetheredApp() {
   const { user: currentUser, loading, signOut } = useAuth();
   const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('awakened-path-active-tab') || 'home');
   const [activePractice, setActivePractice] = useState<Practice | null>(null);
   const [practiceState, setPracticeState] = useState('active');
   const [currentStep, setCurrentStep] = useState(0);
@@ -463,8 +463,8 @@ export default function UntetheredApp() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
 
-  const [activeQuestionId, setActiveQuestionId] = useState('question1');
-  const [viewMode, setViewMode] = useState<'explanation' | 'video' | 'presentation'>('explanation');
+  const [activeQuestionId, setActiveQuestionId] = useState(() => localStorage.getItem('awakened-path-active-question') || 'question1');
+  const [viewMode, setViewMode] = useState<'explanation' | 'video' | 'presentation'>(() => (localStorage.getItem('awakened-path-view-mode') as any) || 'explanation');
   const [expandedChapter1, setExpandedChapter1] = useState(true);
 
   const timeOfDayGradient = useMemo(() => {
@@ -478,6 +478,13 @@ export default function UntetheredApp() {
   const emotionColor = useMemo(() => {
     return getDominantEmotionColor(lastEntry?.emotions);
   }, [lastEntry]);
+
+  // Persist Navigation State
+  useEffect(() => {
+    localStorage.setItem('awakened-path-active-tab', activeTab);
+    localStorage.setItem('awakened-path-active-question', activeQuestionId);
+    localStorage.setItem('awakened-path-view-mode', viewMode);
+  }, [activeTab, activeQuestionId, viewMode]);
 
   useEffect(() => {
     if (emotionColor) {
