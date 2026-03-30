@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import styles from './Chap1Question2.module.css';
-import { Q2Infographic } from './Q2Infographics';
 
 const TOTAL_SLIDES = 11;
 
@@ -161,8 +160,18 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>01</span>
-            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="intro" isDark={isDarkMode} />)}>
-               <Q2Infographic type="intro" isDark={isDarkMode} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(
+              <img 
+                src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorDark.png" : "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorLight.png"} 
+                alt="The Endless Narrator" 
+                className={styles.slideImage}
+              />
+            )}>
+               <img 
+                 src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorDark.png" : "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorLight.png"} 
+                 alt="The Endless Narrator" 
+                 className={styles.slideImage}
+               />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -180,8 +189,18 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>02</span>
-            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="root_cause" isDark={isDarkMode} />)}>
-               <Q2Infographic type="root_cause" isDark={isDarkMode} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(
+              <img 
+                src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/Deep down, you're afraidDark.png" : "/WisdomUntethered/Chap1/Question2/Deep down, you're afraidLight.png"} 
+                alt="Deep down, you're afraid" 
+                className={styles.slideImage}
+              />
+            )}>
+               <img 
+                 src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/Deep down, you're afraidDark.png" : "/WisdomUntethered/Chap1/Question2/Deep down, you're afraidLight.png"} 
+                 alt="Deep down, you're afraid" 
+                 className={styles.slideImage}
+               />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -199,8 +218,18 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>03</span>
-            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="flawed_advisor" isDark={isDarkMode} />)}>
-               <Q2Infographic type="flawed_advisor" isDark={isDarkMode} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(
+              <img 
+                src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorDark.png" : "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorLight.png"} 
+                alt="A Flawed Advisor" 
+                className={styles.slideImage}
+              />
+            )}>
+               <img 
+                 src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorDark.png" : "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorLight.png"} 
+                 alt="A Flawed Advisor" 
+                 className={styles.slideImage}
+               />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -218,8 +247,18 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>04</span>
-            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="one_root" isDark={isDarkMode} />)}>
-               <Q2Infographic type="one_root" isDark={isDarkMode} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(
+              <img 
+                src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/OneRootDark.png" : "/WisdomUntethered/Chap1/Question2/OneRootLight.png"} 
+                alt="One Root" 
+                className={styles.slideImage}
+              />
+            )}>
+               <img 
+                 src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/OneRootDark.png" : "/WisdomUntethered/Chap1/Question2/OneRootLight.png"} 
+                 alt="One Root" 
+                 className={styles.slideImage}
+               />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -238,8 +277,18 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>05</span>
-            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="shift" isDark={isDarkMode} />)}>
-               <Q2Infographic type="shift" isDark={isDarkMode} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(
+              <img 
+                src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/YoucannotuseurmindtofixyourmindDark.png" : "/WisdomUntethered/Chap1/Question2/YoucannotuseurmindtofixyourmindLight.png"} 
+                alt="The Shift" 
+                className={styles.slideImage}
+              />
+            )}>
+               <img 
+                 src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/YoucannotuseurmindtofixyourmindDark.png" : "/WisdomUntethered/Chap1/Question2/YoucannotuseurmindtofixyourmindLight.png"} 
+                 alt="The Shift" 
+                 className={styles.slideImage}
+               />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -258,8 +307,18 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>06</span>
-            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="listener" isDark={isDarkMode} />)}>
-               <Q2Infographic type="listener" isDark={isDarkMode} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(
+              <img 
+                src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/RadioDark.png" : "/WisdomUntethered/Chap1/Question2/RadioLight.png"} 
+                alt="The Listener" 
+                className={styles.slideImage}
+              />
+            )}>
+               <img 
+                 src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/RadioDark.png" : "/WisdomUntethered/Chap1/Question2/RadioLight.png"} 
+                 alt="The Listener" 
+                 className={styles.slideImage}
+               />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -277,8 +336,18 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>07</span>
-            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="grip" isDark={isDarkMode} />)}>
-               <Q2Infographic type="grip" isDark={isDarkMode} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(
+              <img 
+                src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/The ReleaseDark.png" : "/WisdomUntethered/Chap1/Question2/The ReleaseLight.png"} 
+                alt="The Release" 
+                className={styles.slideImage}
+              />
+            )}>
+               <img 
+                 src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/The ReleaseDark.png" : "/WisdomUntethered/Chap1/Question2/The ReleaseLight.png"} 
+                 alt="The Release" 
+                 className={styles.slideImage}
+               />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -303,8 +372,18 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>08</span>
-            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="meditation" isDark={isDarkMode} />)}>
-               <Q2Infographic type="meditation" isDark={isDarkMode} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(
+              <img 
+                src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/GmDark.png" : "/WisdomUntethered/Chap1/Question2/GmLight.png"} 
+                alt="Meditation" 
+                className={styles.slideImage}
+              />
+            )}>
+               <img 
+                 src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/GmDark.png" : "/WisdomUntethered/Chap1/Question2/GmLight.png"} 
+                 alt="Meditation" 
+                 className={styles.slideImage}
+               />
             </div>
           </div>
           <div className={styles.slideContent}>

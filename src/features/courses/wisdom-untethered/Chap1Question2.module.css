@@ -128,7 +128,7 @@
   color: var(--gold-light);
 }
 .slideSection.gripBand {
-  background: #2C2620; /* Slightly different dark */
+  /* background: #2C2620; Removed to stay light in light mode */
 }
 
 /* Background alternation */
@@ -144,8 +144,10 @@
 .slideWrapper.reverse > * { direction: ltr; }
 
 .slideImageWrap { position: relative; }
-.slideImageWrap img {
-  width: 100%; border-radius: 4px; display: block;
+.slideImage {
+  width: 100%;
+  border-radius: 4px;
+  display: block;
   box-shadow: 0 10px 40px rgba(0,0,0,0.3);
 }
 .slideNumber {
