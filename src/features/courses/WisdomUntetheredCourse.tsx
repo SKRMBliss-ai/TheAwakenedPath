@@ -27,12 +27,14 @@ interface CourseProps {
   activeQuestionId: string;
   viewMode: 'explanation' | 'video' | 'presentation';
   setViewMode: (mode: 'explanation' | 'video' | 'presentation') => void;
+  onOpenJournal?: () => void;
 }
 
 export function WisdomUntetheredCourse({ 
   activeQuestionId, 
   viewMode, 
-  setViewMode 
+  setViewMode,
+  onOpenJournal
 }: CourseProps) {
   const [activeChapterId] = useState<number>(1);
   const activeChapter = CHAPTERS.find(c => c.id === activeChapterId);
@@ -104,8 +106,8 @@ export function WisdomUntetheredCourse({
             >
               {activeChapter.id === 1 ? (
                 activeQuestionId === 'question1' 
-                  ? <Chap1Question1 isPresenting={viewMode === 'presentation'} onExitPresentation={() => setViewMode('explanation')} /> 
-                  : <Chap1Question2 isPresenting={viewMode === 'presentation'} onExitPresentation={() => setViewMode('explanation')} />
+                  ? <Chap1Question1 isPresenting={viewMode === 'presentation'} onExitPresentation={() => setViewMode('explanation')} onOpenJournal={onOpenJournal} /> 
+                  : <Chap1Question2 isPresenting={viewMode === 'presentation'} onExitPresentation={() => setViewMode('explanation')} onOpenJournal={onOpenJournal} />
               ) : (
                 <div className="p-12 overflow-y-auto h-full">
                   <p className="text-[16px] leading-[2.2] font-sans text-[var(--text-secondary)] tracking-wide max-w-2xl">

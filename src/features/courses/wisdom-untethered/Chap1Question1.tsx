@@ -31,9 +31,10 @@ const TOTAL_SLIDES = 13; // sections data-section="0" ... "12"
 interface Chap1Question1Props {
   isPresenting?: boolean;
   onExitPresentation?: () => void;
+  onOpenJournal?: () => void;
 }
 
-export function Chap1Question1({ isPresenting: propPresenting = false, onExitPresentation }: Chap1Question1Props) {
+export function Chap1Question1({ isPresenting: propPresenting = false, onExitPresentation, onOpenJournal }: Chap1Question1Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
@@ -219,7 +220,10 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>01</span>
-            <img src={imageMap["slide1"]} alt="The hook" onClick={() => openLightbox(imageMap["slide1"], "The hook")} className={styles.clickableImg} />
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide1"]} alt="The hook" onClick={() => openLightbox(imageMap["slide1"], "The hook")} className={styles.clickableImg} />
+              <div className={styles.watermarkOverlay} />
+            </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The hook</span>
@@ -238,7 +242,9 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideGrid} ${styles.flip}`}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>02</span>
-            <img src={imageMap["slide2"]} alt="The question" onClick={() => openLightbox(imageMap["slide2"], "The question")} className={styles.clickableImg} />
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide2"]} alt="The question" onClick={() => openLightbox(imageMap["slide2"], "The question")} className={styles.clickableImg} />
+            </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The question</span>
@@ -256,7 +262,9 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>03</span>
-            <img src={imageMap["slide3"]} alt="Singer's model" onClick={() => openLightbox(imageMap["slide3"], "Singer's model")} className={styles.clickableImg} />
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide3"]} alt="Singer's model" onClick={() => openLightbox(imageMap["slide3"], "Singer's model")} className={styles.clickableImg} />
+            </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>Singer's model</span>
@@ -288,7 +296,9 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideGrid} ${styles.flip}`}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>04</span>
-            <img src={imageMap["slide4"]} alt="Step one" onClick={() => openLightbox(imageMap["slide4"], "Step one")} className={styles.clickableImg} />
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide4"]} alt="Step one" onClick={() => openLightbox(imageMap["slide4"], "Step one")} className={styles.clickableImg} />
+            </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>Step one</span>
@@ -311,7 +321,9 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>05</span>
-            <img src={imageMap["slide5"]} alt="Step two" onClick={() => openLightbox(imageMap["slide5"], "Step two")} className={styles.clickableImg} />
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide5"]} alt="Step two" onClick={() => openLightbox(imageMap["slide5"], "Step two")} className={styles.clickableImg} />
+            </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>Step two</span>
@@ -328,7 +340,9 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideGrid} ${styles.flip}`}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>06</span>
-            <img src={imageMap["slide6"]} alt="The third option" onClick={() => openLightbox(imageMap["slide6"], "The third option")} className={styles.clickableImg} />
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide6"]} alt="The third option" onClick={() => openLightbox(imageMap["slide6"], "The third option")} className={styles.clickableImg} />
+            </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The third option</span>
@@ -370,7 +384,10 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>07</span>
-            <img src={imageMap["slide7"]} alt="The real teaching" onClick={() => openLightbox(imageMap["slide7"], "The real teaching")} className={styles.clickableImg} />
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide7"]} alt="The real teaching" onClick={() => openLightbox(imageMap["slide7"], "The real teaching")} className={styles.clickableImg} />
+              <div className={styles.watermarkOverlay} />
+            </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The real teaching</span>
@@ -400,7 +417,7 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
           <span className={styles.closingTag}>End of Chapter 1 · Question 1</span>
           <h2 className={styles.closingTitle}>Both Paths Are<br /><em>Available Right Now</em></h2>
           <p className={styles.closingBody}>Redirect or Transmute. Choose one today.</p>
-          <button className={styles.closingButton}>Open Journal →</button>
+          <button className={styles.closingButton} onClick={onOpenJournal}>Open Journal →</button>
         </div>
       </section>
     </div>

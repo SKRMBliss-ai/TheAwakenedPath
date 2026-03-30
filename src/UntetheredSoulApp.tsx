@@ -1237,6 +1237,7 @@ export default function UntetheredApp() {
                   activeQuestionId={activeQuestionId}
                   viewMode={viewMode}
                   setViewMode={setViewMode}
+                  onOpenJournal={() => setActiveTab('chapters')}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center p-12 space-y-8 bg-[var(--bg-base)]">

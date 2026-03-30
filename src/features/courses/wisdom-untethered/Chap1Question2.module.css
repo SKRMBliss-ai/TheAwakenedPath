@@ -127,9 +127,6 @@
 .slideSection.matrixBand .slideHeading {
   color: var(--gold-light);
 }
-.slideSection.gripBand {
-  /* background: #2C2620; Removed to stay light in light mode */
-}
 
 /* Background alternation */
 .slideSection:nth-child(even) {
@@ -143,12 +140,51 @@
 .slideWrapper.reverse { direction: rtl; }
 .slideWrapper.reverse > * { direction: ltr; }
 
-.slideImageWrap { position: relative; }
+.slideImageWrap { 
+  position: relative; 
+  overflow: hidden; 
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+.imageContainer {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16 / 9; /* Or adjust to match your image aspect ratio */
+}
+.imageContainer .slideImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.watermarkOverlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, transparent 50%, var(--bg-surface) 50%);
+  pointer-events: none;
+  z-index: 2;
+}
+:global(.dark) .watermarkOverlay {
+  background: linear-gradient(135deg, transparent 50%, #171614 50%);
+}
+.imgWrap:not(:has(.imageContainer))::after {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transform: scale(1.03); /* Scales slightly to push watermark out of bounds */
+}
 .slideImage {
   width: 100%;
-  border-radius: 4px;
+  height: 100%;
   display: block;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  object-fit: cover;
+  transform: scale(1.03); /* Scales slightly to push watermark out of bounds */
+  transform-origin: top left;
 }
 .slideNumber {
   position: absolute; top: -1.2rem; left: 0;
@@ -171,6 +207,21 @@
 .slideBody {
   font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8; font-weight: 300;
   margin-bottom: 1.2rem;
+}
+.slideList {
+  list-style: none; padding: 0; margin: 0 0 1.5rem 0;
+}
+.slideList li {
+  position: relative; padding-left: 1.5rem; margin-bottom: 0.8rem;
+  font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6;
+}
+.slideList li::before {
+  content: "✦"; position: absolute; left: 0; color: var(--gold);
+  font-size: 0.8rem; top: 0.2rem;
+}
+.slideBodySmall {
+  font-size: 0.85rem; font-style: italic; color: var(--muted);
+  border-top: 1px solid rgba(184,151,58,0.1); padding-top: 1rem; margin-top: 1.5rem;
 }
 .pullQuote {
   border-left: 2px solid var(--gold);

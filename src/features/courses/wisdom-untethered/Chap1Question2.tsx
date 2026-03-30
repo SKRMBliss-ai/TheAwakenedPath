@@ -7,9 +7,10 @@ const TOTAL_SLIDES = 11;
 interface Chap1Question2Props {
   isPresenting?: boolean;
   onExitPresentation?: () => void;
+  onOpenJournal?: () => void;
 }
 
-export function Chap1Question2({ isPresenting: propPresenting = false, onExitPresentation }: Chap1Question2Props) {
+export function Chap1Question2({ isPresenting: propPresenting = false, onExitPresentation, onOpenJournal }: Chap1Question2Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
@@ -177,9 +178,12 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The Question</span>
             <h2 className={styles.slideHeading}>The Endless <em>Narrator</em></h2>
-            <p className={styles.slideBody}>You know that moment when you're lying in bed, trying to sleep, and a thought arrives out of nowhere. Something you said three days ago. A decision you haven't made yet. A version of a conversation that hasn't happened.</p>
-            <p className={styles.slideBody}>And within seconds — the mind is off. Guilt about the past. Worry about the future. A low hum of "what if I'm getting this wrong?"</p>
-            <p className={styles.slideBody}>Here's the question Singer wants you to sit with. Why does the mind do this? Where does all that doubt and fear and guilt actually come from? And more importantly — why does it have so much power over you?</p>
+            <ul className={styles.slideList}>
+              <li>Thoughts arrive uninvited: past regrets, future worries.</li>
+              <li>A "low hum" of doubt keeps the mind racing.</li>
+              <li><strong>Singer's Inquiry:</strong> Why does this voice have so much power?</li>
+            </ul>
+            <p className={styles.slideBodySmall}>Log in to the app for the full deep-dive on these patterns.</p>
           </div>
         </div>
       </section>
@@ -206,9 +210,12 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>Deconstructing Anxiety</span>
             <h2 className={styles.slideHeading}>Deep down, you're <em>afraid</em></h2>
-            <p className={styles.slideBody}>The reason the mind won't stop talking is this: deep down, you're afraid you won't be okay. That's it. That's the whole engine.</p>
-            <p className={styles.slideBody}>You believe — and most of us believe this without ever examining it — that if you make the wrong decision, if you say the wrong thing, if things don't go exactly the way you need them to go — your well-being is at risk. And so the mind talks. Constantly. Trying to figure out how to make sure you'll be okay.</p>
-            <p className={styles.slideBody}>It's not malicious. It's not broken. It's genuinely trying to protect you. But here's what Singer points to — and this takes a moment to really land.</p>
+            <ul className={styles.slideList}>
+              <li>The engine of talk is the fear that you won't be "okay."</li>
+              <li>We believe our well-being depends on external outcomes.</li>
+              <li>The mind creates noise to "protect" you from imagined risk.</li>
+            </ul>
+            <p className={styles.slideBodySmall}>Explore the "Grip of Fear" module in our premium journey.</p>
           </div>
         </div>
       </section>
@@ -235,9 +242,11 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The Deception</span>
             <h2 className={styles.slideHeading}>A <em>Flawed</em> Advisor</h2>
-            <p className={styles.slideBody}>The mind that is trying to solve the problem of doubt and fear — is the same mind that is generating the doubt and fear in the first place.</p>
-            <p className={styles.slideBody}>Think about that. You're asking a mind filled with anxiety to give you advice about how to feel at peace. You're asking the thing that's creating the noise to tell you how to find quiet.</p>
-            <p className={styles.slideBody}>It can't do it. Not because it doesn't want to. Because it is the problem.</p>
+            <ul className={styles.slideList}>
+              <li>The mind that creates the fear cannot solve it for you.</li>
+              <li>Asking an anxious mind for "quiet" only creates more noise.</li>
+              <li>The mind isn't broken — it's simply the wrong tool for peace.</li>
+            </ul>
           </div>
         </div>
       </section>
@@ -264,10 +273,12 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The Mechanics</span>
             <h2 className={styles.slideHeading}>One Root,<br/><em>Ten Thousand</em> Faces</h2>
-            <p className={styles.slideBody}>Here's what that actually looks like in daily life. You get a message at work that's slightly ambiguous. Could mean nothing. Could mean something. And immediately the mind starts working the case. What did they mean? Should I reply now or wait? What if they're upset with me?</p>
-            <p className={styles.slideBody}>You try to reason your way through it. You talk to someone about it. You go back and re-read the message four times. And every time you engage — the mind gets louder. More urgent. More convinced that this matters.</p>
-            <p className={styles.slideBody}>Because that's what the mind does when you engage with it. It takes the engagement as confirmation that the situation is real and serious. The more you try to solve it, the more it grows.</p>
-            <p className={styles.slideBody}>Singer says: stop trying to silence the mind. That doesn't work either. What works is something different — stepping back and watching it. Not fighting it. Not agreeing with it. Just watching.</p>
+            <ul className={styles.slideList}>
+              <li>Engagement = Confirmation. The mind grows what you feed.</li>
+              <li>Reasoning with thoughts only validates their "seriousness."</li>
+              <li><strong>The Solution:</strong> Become the one who watches without answering.</li>
+            </ul>
+            <p className={styles.slideBodySmall}>Detailed "Watching" exercises available in Chapter 1.</p>
           </div>
         </div>
       </section>
@@ -294,10 +305,11 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The Shift</span>
             <h2 className={styles.slideHeading}>You Cannot Use the Mind<br />to Fix <em>the Mind</em></h2>
-            <p className={styles.slideBody}>This is the shift Singer is pointing to — and it's not a small one.</p>
-            <p className={styles.slideBody}>When you step back and watch the mind instead of being inside it, something changes. You start to see the patterns. The same fear showing up in different clothes. The same doubt cycling through different situations. The same story — "I might not be okay" — playing out in a hundred different variations.</p>
-            <p className={styles.slideBody}>And when you truly see it — when you see the pattern clearly enough — you stop taking it so seriously.</p>
-            <p className={styles.slideBody}>You stop believing that the endless narration holds the key to your wellbeing. Because you can see — it's just the mind doing what minds do. You are not your mind. And the moment that actually lands — not as an idea, but as something felt — you're free. Not because the thoughts stop. But because they stop running the show.</p>
+            <ul className={styles.slideList}>
+              <li>Stepping back reveals patterns: same fear, different clothes.</li>
+              <li>You stop believing you are the narration.</li>
+              <li>Freedom comes when the patterns are felt, not just understood.</li>
+            </ul>
           </div>
         </div>
       </section>
@@ -307,26 +319,31 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>06</span>
-            <div className={styles.clickableImg} onClick={() => openLightbox(
-              <img 
-                src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/RadioDark.png" : "/WisdomUntethered/Chap1/Question2/RadioLight.png"} 
-                alt="The Listener" 
-                className={styles.slideImage}
-              />
-            )}>
-               <img 
-                 src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/RadioDark.png" : "/WisdomUntethered/Chap1/Question2/RadioLight.png"} 
-                 alt="The Listener" 
-                 className={styles.slideImage}
-               />
+            <div className={styles.imageContainer}>
+              <div className={styles.clickableImg} onClick={() => openLightbox(
+                <img 
+                  src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/RadioDark.png" : "/WisdomUntethered/Chap1/Question2/RadioLight.png"} 
+                  alt="The Listener" 
+                  className={styles.slideImage}
+                />
+              )}>
+                 <img 
+                   src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/RadioDark.png" : "/WisdomUntethered/Chap1/Question2/RadioLight.png"} 
+                   alt="The Listener" 
+                   className={styles.slideImage}
+                 />
+              </div>
+              <div className={styles.watermarkOverlay} />
             </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The Analogy</span>
             <h2 className={styles.slideHeading}>You Are the <em>Listener</em>.<br />Not the Radio.</h2>
-            <p className={styles.slideBody}>Here's what this looks like as a practice.</p>
-            <p className={styles.slideBody}>When the voice starts up with guilt, doubt, or fear, try this instead of engaging with it. Just notice it. Name it, even, if that helps. "There's the worry voice." "There's the guilt loop."</p>
-            <p className={styles.slideBody}>Don't try to answer it. Don't try to fix what it's pointing at. Just see it as the mind doing its thing — the same way you'd notice a radio playing in another room. You're not the radio. You're the one who can hear it.</p>
+            <ul className={styles.slideList}>
+              <li><strong>Step 1:</strong> Notice and name the loop ("Worry voice").</li>
+              <li><strong>Step 2:</strong> Withdraw engagement. Don't fix it.</li>
+              <li><strong>Insight:</strong> The one who notices is always perfectly still.</li>
+            </ul>
           </div>
         </div>
       </section>
@@ -353,9 +370,12 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The Release</span>
             <h2 className={styles.slideHeading}>The <em>Grip</em> Loosens</h2>
-            <p className={styles.slideBody}>Over time, Singer says, the mind naturally quiets. Not because you forced it — but because you stopped feeding it. Every time you step back instead of engage, you withdraw a little of the energy that keeps the narration alive.</p>
-            <p className={styles.slideBody}>The voice doesn't disappear. But its grip loosens. And one day — you realise the thing that used to spiral you for hours barely moved you at all.</p>
-            <p className={styles.slideBody}>That's not distance from life. That's freedom inside it.</p>
+            <ul className={styles.slideList}>
+              <li>The mind quiets naturally when it isn't "fed" by energy.</li>
+              <li>Freedom is felt when spirals no longer move you.</li>
+              <li>Distance from judgment creates intimacy with life.</li>
+            </ul>
+            <p className={styles.slideBodySmall}>Sign in for daily "Watcher" journal prompts.</p>
           </div>
         </div>
       </section>
@@ -404,7 +424,7 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.closingInner}>
           <p className={styles.closingEyebrow}>End of Chapter 1 · Question 2</p>
           <h2 className={styles.closingTitle}>You Are Not<br />the Radio</h2>
-          <button className={styles.closingJournal}>Open Journal →</button>
+          <button className={styles.closingJournal} onClick={onOpenJournal}>Open Journal →</button>
         </div>
       </section>
     </div>
