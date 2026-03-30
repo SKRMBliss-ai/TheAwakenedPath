@@ -2,18 +2,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
 
 .container {
-  --gold: #B8973A;
-  --gold-light: #D4AE5C;
-  --gold-pale: #F0E4C0;
-  --bg-primary: #FDFAF4; /* Light by default */
-  --bg-surface: #F5EDD8; /* Parchment for light */
+  --gold: #8B6D1B; /* Deeper gold for light mode visibility */
+  --gold-light: #B8973A;
+  --gold-pale: #D4AE5C;
+  --bg-primary: #FDFAF4;
+  --bg-surface: #F5EDD8;
   --ink: #1C1814;
   --ink-soft: #3A342C;
   --text-primary: #1C1814;
-  --text-secondary: rgba(28, 24, 20, 0.75);
+  --text-secondary: rgba(28, 24, 20, 0.85); /* Increased contrast */
   --parchment: #F5EDD8;
   --warm-white: #FDFAF4;
-  --muted: #8C7E6A;
+  --muted: #5C544E; /* Darker muted text */
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'DM Sans', sans-serif;
   
@@ -99,7 +99,8 @@
   margin: 2.5rem auto;
 }
 .heroSubtitle {
-  font-size: 1rem; color: var(--text-secondary); max-width: 800px;
+  font-size: 1.1rem; color: var(--text-secondary); max-width: 850px;
+  line-height: 1.6;
 }
 .heroScroll {
   position: relative; margin-top: 4rem;
@@ -161,7 +162,10 @@
   font-family: var(--serif); font-size: clamp(1.8rem, 3.2vw, 2.6rem);
   font-weight: 300; line-height: 1.2; color: var(--text-primary); margin-bottom: 1.5rem;
 }
-.slideHeading em { font-style: italic; color: var(--gold-pale); }
+.slideHeading em {
+  font-style: italic; font-weight: 500;
+  color: #8B6D1B; /* Darker, authoritative gold for light mode contrast */
+}
 .slideBody {
   font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8; font-weight: 300;
   margin-bottom: 1.2rem;
@@ -314,12 +318,18 @@
 
 /* ── DARK MODE OVERRIDES ── */
 :global(.dark) .container {
+  --gold: #E6C57D; /* Brighter gold for dark mode */
+  --gold-light: #F0E4C0;
   --bg-primary: #1C1814;
   --bg-surface: #26221E;
   --text-primary: #FDFAF4;
-  --text-secondary: rgba(253,250,244,0.7);
+  --text-secondary: rgba(253,250,244,0.8); /* Increased contrast */
   background: var(--bg-primary);
   color: var(--text-primary);
+}
+:global(.dark) .slideHeading em {
+  color: #E6C57D; /* Brighter gold for pop in dark mode */
+  text-shadow: 0 0 10px rgba(230, 197, 125, 0.2);
 }
 
 :global(.dark) .hero {

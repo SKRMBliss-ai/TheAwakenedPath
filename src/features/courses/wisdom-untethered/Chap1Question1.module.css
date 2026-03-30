@@ -2,14 +2,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
 
 .container {
-  --gold: #B8973A;
-  --gold-light: #D4AE5C;
-  --gold-pale: #F0E4C0;
+  --gold: #8B6D1B; /* Deeper gold for light mode */
+  --gold-light: #B8973A;
+  --gold-pale: #D4AE5C;
   --ink: #1C1814;
   --ink-soft: #3A342C;
   --parchment: #F5EDD8;
   --warm-white: #FDFAF4;
-  --muted: #8C7E6A;
+  --muted: #5C544E; /* Darker muted text for consistency */
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'DM Sans', sans-serif;
   
@@ -119,8 +119,9 @@
   position: relative; z-index: 1;
 }
 .heroSub {
-  font-size: 0.95rem; font-weight: 300;
-  color: rgba(28,24,20,0.5); max-width: 800px;
+  font-size: 1.05rem; font-weight: 300;
+  color: rgba(28,24,20,0.75); max-width: 850px;
+  line-height: 1.6;
   opacity: 0; animation: fadeUp 0.9s 0.6s ease forwards;
   position: relative; z-index: 1;
 }
@@ -156,7 +157,7 @@
 /* --- SLIDES --- */
 .slide {
   padding: 4.5rem 2rem;
-  max-width: 1200px; margin: 0 auto;
+  max-width: 1400px; margin: 0 auto;
   opacity: 0; transform: translateY(28px);
   transition: opacity 0.72s ease, transform 0.72s ease;
 }
@@ -201,7 +202,10 @@
   font-weight: 300; line-height: 1.22;
   color: var(--ink); margin-bottom: 1.1rem;
 }
-.slideH em { font-style: italic; color: var(--ink-soft); }
+.slideH em {
+  font-style: italic; font-weight: 500;
+  color: #8B6D1B; /* Consistent high-contrast gold for light mode */
+}
 .slideP {
   font-size: 0.97rem; color: var(--ink-soft);
   line-height: 1.82; font-weight: 300; margin-bottom: 0.9rem;
@@ -592,6 +596,10 @@
 
 /* ── DARK MODE OVERRIDES ── */
 :global(.dark) .container {
+  --gold: #E6C57D;
+  --gold-light: #F0E4C0;
+  --text-primary: #FDFAF4;
+  --text-secondary: rgba(253,250,244,0.8);
   background: #1C1814;
   color: #FDFAF4;
 }
@@ -606,7 +614,7 @@
   color: #D4AE5C;
 }
 :global(.dark) .heroSub {
-  color: rgba(253,250,244,0.65); /* increased from 0.45 */
+  color: rgba(253,250,244,0.72);
 }
 :global(.dark) .heroScroll {
   color: rgba(253,250,244,0.28);
@@ -626,7 +634,8 @@
   color: #FDFAF4;
 }
 :global(.dark) .slideH em {
-  color: #E6C57D; /* Brighter gold for visibility */
+  color: #E6C57D;
+  text-shadow: 0 0 10px rgba(230, 197, 125, 0.2);
 }
 :global(.dark) .slideP {
   color: rgba(253,250,244,0.8); /* increased from 0.68 */

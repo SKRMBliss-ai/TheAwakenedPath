@@ -465,6 +465,7 @@ export default function UntetheredApp() {
 
   const [activeQuestionId, setActiveQuestionId] = useState('question1');
   const [viewMode, setViewMode] = useState<'explanation' | 'video' | 'presentation'>('explanation');
+  const [expandedChapter1, setExpandedChapter1] = useState(true);
 
   const timeOfDayGradient = useMemo(() => {
     const hour = new Date().getHours();
@@ -918,7 +919,11 @@ export default function UntetheredApp() {
                                 return;
                               }
                               setActiveTab(sub.id);
-                              setIsSidebarOpen(false);
+                              if (sub.id !== 'wisdom_untethered') {
+                                setIsSidebarOpen(false);
+                              } else if (sub.id === 'wisdom_untethered' && !expandedChapter1) {
+                                setExpandedChapter1(true);
+                              }
                             }}
                             className={cn(
                               "w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-400 relative group rounded-l-xl text-left",
@@ -950,34 +955,60 @@ export default function UntetheredApp() {
 
                           {/* Render questions if Wisdom Untethered is active */}
                           {isActive && sub.id === 'wisdom_untethered' && (
-                            <div className="flex flex-col ml-1 border-l border-[var(--border-subtle)]/30">
-                              {[
-                                { id: 'question1', label: 'Question 1', locked: false },
-                                { id: 'question2', label: 'Question 2', locked: false },
-                                { id: 'question3', label: 'Question 3', locked: true },
-                                { id: 'question4', label: 'Question 4', locked: true },
-                              ].map((q) => (
-                                <button
-                                  key={q.id}
-                                  disabled={q.locked}
-                                  onClick={() => setActiveQuestionId(q.id)}
-                                  className={cn(
-                                    "flex items-center gap-2 px-4 py-2 text-[8px] uppercase tracking-widest transition-all text-left",
-                                    activeQuestionId === q.id
-                                      ? "text-[var(--accent-primary)] font-bold"
-                                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
-                                    q.locked && "opacity-40 cursor-not-allowed"
-                                  )}
-                                >
-                                  <div className={cn(
-                                    "w-1 h-1 rounded-full",
-                                    activeQuestionId === q.id ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" : "bg-transparent",
-                                    q.locked && "bg-[var(--text-muted)]"
-                                  )} />
-                                  <span className="flex-1">{q.label}</span>
-                                  {q.locked && <Lock size={8} className="ml-2 text-[var(--accent-secondary)]" />}
-                                </button>
-                              ))}
+                            <div className="flex flex-col mt-2 ml-1 border-l border-[var(--border-subtle)]/30 overflow-hidden">
+                              <button
+                                onClick={() => setExpandedChapter1(!expandedChapter1)}
+                                className="flex justify-between items-center w-full px-4 py-2 text-[9px] uppercase tracking-widest text-[var(--text-primary)] font-bold transition-colors group"
+                              >
+                                <span>Chapter 1: The Mind</span>
+                                <span className={cn(
+                                  "text-[10px] text-[var(--accent-primary)] transition-transform duration-300",
+                                  expandedChapter1 ? "rotate-90" : "rotate-0"
+                                )}>▶</span>
+                              </button>
+                              
+                              <AnimatePresence>
+                                {expandedChapter1 && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="flex flex-col overflow-hidden"
+                                  >
+                                    {[
+                                      { id: 'question1', label: 'Question 1', locked: false },
+                                      { id: 'question2', label: 'Question 2', locked: false },
+                                      { id: 'question3', label: 'Question 3', locked: true },
+                                      { id: 'question4', label: 'Question 4', locked: true },
+                                    ].map((q) => (
+                                      <button
+                                        key={q.id}
+                                        disabled={q.locked}
+                                        onClick={() => {
+                                          setActiveQuestionId(q.id);
+                                          if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                                        }}
+                                        className={cn(
+                                          "flex items-center gap-2 pl-6 pr-4 py-2 text-[8px] uppercase tracking-widest transition-all text-left",
+                                          activeQuestionId === q.id
+                                            ? "text-[var(--accent-primary)] font-bold"
+                                            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
+                                          q.locked && "opacity-40 cursor-not-allowed"
+                                        )}
+                                      >
+                                        <div className={cn(
+                                          "w-1 h-1 rounded-full",
+                                          activeQuestionId === q.id ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" : "bg-transparent",
+                                          q.locked && "bg-[var(--text-muted)]"
+                                        )} />
+                                        <span className="flex-1">{q.label}</span>
+                                        {q.locked && <Lock size={8} className="ml-2 text-[var(--accent-secondary)]" />}
+                                      </button>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
                             </div>
                           )}
                         </div>

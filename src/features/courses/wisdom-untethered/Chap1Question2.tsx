@@ -1,30 +1,9 @@
-/* Chap1Question2.tsx */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import styles from './Chap1Question2.module.css';
+import { Q2Infographic } from './Q2Infographics';
 
-const darkImages: Record<string, string> = {
-  "intro":        "/WisdomUntethered/Chap1/Question2/03_WisdomUntethered.jpg",
-  "claustro":     "/WisdomUntethered/Chap1/Question2/02_Claustrophobia.jpg",
-  "deconstruct":  "/WisdomUntethered/Chap1/Question2/01_Deconstructing.jpg",
-  "oneroot":      "/WisdomUntethered/Chap1/Question2/06_OneRoot.png",
-  "futility":     "/WisdomUntethered/Chap1/Question2/04_TheSpaceOfFreedom.png",
-  "escalating":   "/WisdomUntethered/Chap1/Question2/05_EscalatingFeedback.jpg",
-  "watcher":      "/WisdomUntethered/Chap1/Question2/07_ParticipantObserver.png",
-  "matrix":       "/WisdomUntethered/Chap1/Question2/11_DiagnosticMatrix.jpg",
-  "grip":         "/WisdomUntethered/Chap1/Question2/12_GripLoosens.jpg",
-  "meditation":   "/WisdomUntethered/Chap1/Question2/14_NoticeLoosenBecome.jpg",
-  "listener":     "/WisdomUntethered/Chap1/Question2/08_ListenerRadio.png",
-  "riverbank":    "/WisdomUntethered/Chap1/Question2/09_Riverbank.jpg",
-  "stillness":    "/WisdomUntethered/Chap1/Question2/10_StillnessChaos.jpg"
-};
-
-const lightImages: Record<string, string> = {
-  // Use same as dark for now until light versions are generated
-  ...darkImages
-};
-
-const TOTAL_SLIDES = 19;
+const TOTAL_SLIDES = 11;
 
 interface Chap1Question2Props {
   isPresenting?: boolean;
@@ -37,22 +16,19 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
   const [activeSection, setActiveSection] = useState(0);
 
   // ── Theme detection ──
-  const [isDark, setIsDark] = useState(
-    () => document.documentElement.classList.contains('dark') ||
-          document.documentElement.getAttribute('data-theme') === 'dark'
-  );
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    const observer = new MutationObserver(() => {
-      const dark = document.documentElement.classList.contains('dark') ||
-                   document.documentElement.getAttribute('data-theme') === 'dark';
-      setIsDark(dark);
-    });
+    const checkDark = () => {
+      const isD = document.documentElement.classList.contains('dark') || 
+                  document.documentElement.getAttribute('data-theme') === 'dark';
+      setIsDarkMode(isD);
+    };
+    checkDark();
+    const observer = new MutationObserver(checkDark);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
     return () => observer.disconnect();
   }, []);
-
-  const currentMap = isDark ? darkImages : lightImages;
 
   // ── Presentation mode state ──
   const [isPresenting, setIsPresenting] = useState(propPresenting);
@@ -66,8 +42,7 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
   }, [propPresenting]);
 
   // ── Lightbox state ──
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
-  const [lightboxAlt, setLightboxAlt] = useState('');
+  const [lightboxContent, setLightboxContent] = useState<ReactNode | null>(null);
 
   // Track scroll for progress bar
   useEffect(() => {
@@ -114,7 +89,6 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
     if (section) section.scrollIntoView({ behavior: 'smooth' });
   };
 
-
   const goNext = () => {
     const next = Math.min(currentSlide + 1, TOTAL_SLIDES - 1);
     setCurrentSlide(next);
@@ -134,8 +108,8 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxSrc(null);
-      if (isPresenting && !lightboxSrc) {
+      if (e.key === 'Escape') setLightboxContent(null);
+      if (isPresenting && !lightboxContent) {
         if (e.key === 'ArrowRight') goNext();
         if (e.key === 'ArrowLeft') goPrev();
       }
@@ -143,9 +117,9 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPresenting, currentSlide, lightboxSrc]);
+  }, [isPresenting, currentSlide, lightboxContent]);
 
-  const openLightbox = (src: string, alt: string) => { setLightboxSrc(src); setLightboxAlt(alt); };
+  const openLightbox = (content: ReactNode) => { setLightboxContent(content); };
 
   const dots = Array.from({ length: TOTAL_SLIDES });
 
@@ -164,10 +138,12 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
       </nav>
 
       {/* --- Lightbox --- */}
-      {lightboxSrc && (
-        <div className={styles.lightboxOverlay} onClick={() => setLightboxSrc(null)} role="dialog" aria-modal="true" aria-label="Image lightbox">
-          <button className={styles.lightboxClose} onClick={() => setLightboxSrc(null)} aria-label="Close image">✕</button>
-          <img src={lightboxSrc} alt={lightboxAlt} className={styles.lightboxImg} onClick={e => e.stopPropagation()} />
+      {lightboxContent && (
+        <div className={styles.lightboxOverlay} onClick={() => setLightboxContent(null)} role="dialog" aria-modal="true" aria-label="Image lightbox">
+          <button className={styles.lightboxClose} onClick={() => setLightboxContent(null)} aria-label="Close image">✕</button>
+          <div className={styles.lightboxImg} onClick={e => e.stopPropagation()} style={{ width: '90vw', maxWidth: '800px', pointerEvents: 'none' }}>
+            {lightboxContent}
+          </div>
         </div>
       )}
 
@@ -185,13 +161,16 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>01</span>
-            <img src={currentMap["intro"]} alt="Wisdom Untethered Intro" onClick={() => openLightbox(currentMap["intro"], "Wisdom Untethered Intro")} className={styles.clickableImg} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="intro" isDark={isDarkMode} />)}>
+               <Q2Infographic type="intro" isDark={isDarkMode} />
+            </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The Question</span>
             <h2 className={styles.slideHeading}>The Endless <em>Narrator</em></h2>
             <p className={styles.slideBody}>You know that moment when you're lying in bed, trying to sleep, and a thought arrives out of nowhere. Something you said three days ago. A decision you haven't made yet. A version of a conversation that hasn't happened.</p>
-            <p className={styles.slideBody}>Within seconds — the mind is off. Guilt about the past. Worry about the future. A low hum of "what if I'm getting this wrong?" You didn't ask for any of it. You were just trying to sleep.</p>
+            <p className={styles.slideBody}>And within seconds — the mind is off. Guilt about the past. Worry about the future. A low hum of "what if I'm getting this wrong?"</p>
+            <p className={styles.slideBody}>Here's the question Singer wants you to sit with. Why does the mind do this? Where does all that doubt and fear and guilt actually come from? And more importantly — why does it have so much power over you?</p>
           </div>
         </div>
       </section>
@@ -201,12 +180,16 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>02</span>
-            <img src={currentMap["claustro"]} alt="The Root Cause" onClick={() => openLightbox(currentMap["claustro"], "The Root Cause")} className={styles.clickableImg} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="root_cause" isDark={isDarkMode} />)}>
+               <Q2Infographic type="root_cause" isDark={isDarkMode} />
+            </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Root Cause</span>
+            <span className={styles.slideLabel}>Deconstructing Anxiety</span>
             <h2 className={styles.slideHeading}>Deep down, you're <em>afraid</em></h2>
-            <p className={styles.slideBody}>The reason the mind won't stop talking is this: deep down, you're afraid you won't be okay. That's the whole engine.</p>
+            <p className={styles.slideBody}>The reason the mind won't stop talking is this: deep down, you're afraid you won't be okay. That's it. That's the whole engine.</p>
+            <p className={styles.slideBody}>You believe — and most of us believe this without ever examining it — that if you make the wrong decision, if you say the wrong thing, if things don't go exactly the way you need them to go — your well-being is at risk. And so the mind talks. Constantly. Trying to figure out how to make sure you'll be okay.</p>
+            <p className={styles.slideBody}>It's not malicious. It's not broken. It's genuinely trying to protect you. But here's what Singer points to — and this takes a moment to really land.</p>
           </div>
         </div>
       </section>
@@ -216,204 +199,129 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>03</span>
-            <img src={currentMap["deconstruct"]} alt="The Engine" onClick={() => openLightbox(currentMap["deconstruct"], "The Engine")} className={styles.clickableImg} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="flawed_advisor" isDark={isDarkMode} />)}>
+               <Q2Infographic type="flawed_advisor" isDark={isDarkMode} />
+            </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Engine</span>
+            <span className={styles.slideLabel}>The Deception</span>
             <h2 className={styles.slideHeading}>A <em>Flawed</em> Advisor</h2>
             <p className={styles.slideBody}>The mind that is trying to solve the problem of doubt and fear — is the same mind that is generating the doubt and fear in the first place.</p>
+            <p className={styles.slideBody}>Think about that. You're asking a mind filled with anxiety to give you advice about how to feel at peace. You're asking the thing that's creating the noise to tell you how to find quiet.</p>
+            <p className={styles.slideBody}>It can't do it. Not because it doesn't want to. Because it is the problem.</p>
           </div>
         </div>
       </section>
 
-      {/* ── SECTION 4: DIAGRAM ── */}
+      {/* ── SECTION 4: ONE ROOT ── */}
       <section className={styles.slideSection} data-section="4">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>04</span>
-            <img src={currentMap["futility"]} alt="The Space of Freedom" onClick={() => openLightbox(currentMap["futility"], "The Space of Freedom")} className={styles.clickableImg} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="one_root" isDark={isDarkMode} />)}>
+               <Q2Infographic type="one_root" isDark={isDarkMode} />
+            </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Diagram</span>
-            <h2 className={styles.slideHeading}>The Space of <em>Freedom</em></h2>
-            <p className={styles.slideBody}>You are the core. The thoughts are the waves on the periphery. The space between the core and the periphery is the space of freedom.</p>
+            <span className={styles.slideLabel}>The Mechanics</span>
+            <h2 className={styles.slideHeading}>One Root,<br/><em>Ten Thousand</em> Faces</h2>
+            <p className={styles.slideBody}>Here's what that actually looks like in daily life. You get a message at work that's slightly ambiguous. Could mean nothing. Could mean something. And immediately the mind starts working the case. What did they mean? Should I reply now or wait? What if they're upset with me?</p>
+            <p className={styles.slideBody}>You try to reason your way through it. You talk to someone about it. You go back and re-read the message four times. And every time you engage — the mind gets louder. More urgent. More convinced that this matters.</p>
+            <p className={styles.slideBody}>Because that's what the mind does when you engage with it. It takes the engagement as confirmation that the situation is real and serious. The more you try to solve it, the more it grows.</p>
+            <p className={styles.slideBody}>Singer says: stop trying to silence the mind. That doesn't work either. What works is something different — stepping back and watching it. Not fighting it. Not agreeing with it. Just watching.</p>
           </div>
         </div>
       </section>
 
-      {/* ── SECTION 5: THE SHIFT ── */}
-      <section className={styles.slideSection} data-section="5">
+      {/* ── SECTION 5: YOU CANNOT FIX THE MIND ── */}
+      <section className={`${styles.slideSection} ${styles.matrixBand}`} data-section="5">
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>05</span>
-            <img src={currentMap["watcher"]} alt="Participant vs Observer" onClick={() => openLightbox(currentMap["watcher"], "Participant vs Observer")} className={styles.clickableImg} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="shift" isDark={isDarkMode} />)}>
+               <Q2Infographic type="shift" isDark={isDarkMode} />
+            </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The Shift</span>
-            <h2 className={styles.slideHeading}>Stop Silencing.<br />Start <em>Watching</em>.</h2>
-            <p className={styles.slideBody}>Singer says: stop trying to silence the mind. That doesn't work. What works is stepping back and watching it.</p>
+            <h2 className={styles.slideHeading}>You Cannot Use the Mind<br />to Fix <em>the Mind</em></h2>
+            <p className={styles.slideBody}>This is the shift Singer is pointing to — and it's not a small one.</p>
+            <p className={styles.slideBody}>When you step back and watch the mind instead of being inside it, something changes. You start to see the patterns. The same fear showing up in different clothes. The same doubt cycling through different situations. The same story — "I might not be okay" — playing out in a hundred different variations.</p>
+            <p className={styles.slideBody}>And when you truly see it — when you see the pattern clearly enough — you stop taking it so seriously.</p>
+            <p className={styles.slideBody}>You stop believing that the endless narration holds the key to your wellbeing. Because you can see — it's just the mind doing what minds do. You are not your mind. And the moment that actually lands — not as an idea, but as something felt — you're free. Not because the thoughts stop. But because they stop running the show.</p>
           </div>
         </div>
       </section>
 
-      {/* ── SECTION 6: THE DIAGNOSTIC MATRIX (MAIN FLOW) ── */}
-      <section className={`${styles.slideSection} ${styles.matrixBand}`} data-section="6">
+      {/* ── SECTION 6: THE LISTENER ── */}
+      <section className={`${styles.slideSection} ${styles.gripBand}`} data-section="6">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>06</span>
-            <img src={currentMap["matrix"]} alt="Diagnostic Matrix" onClick={() => openLightbox(currentMap["matrix"], "Diagnostic Matrix")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Diagnostic</span>
-            <h2 className={styles.slideHeading}>The Diagnostic <em>Matrix</em></h2>
-            <p className={styles.slideBody}>Singer draws a clear line: In the engaged mind, "I am my thoughts." In witness consciousness, "I am the one noticing my thoughts."</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 7: THE GRIP LOOSENS ── */}
-      <section className={`${styles.slideSection} ${styles.gripBand}`} data-section="7">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>07</span>
-            <img src={currentMap["grip"]} alt="The Grip Loosens" onClick={() => openLightbox(currentMap["grip"], "The Grip Loosens")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <h2 className={styles.slideHeading}>The <em>Grip</em> Loosens</h2>
-            <p className={styles.slideBody}>The grip is what engagement looks like in the body: Tension. Resistance. By softening, you transmute the energy.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 8: SUMMARY ── */}
-      <div className={styles.practiceCard} data-section="8">
-        <p className={styles.practiceCardEyebrow}>Summary</p>
-        <h2 className={styles.practiceCardTitle}>Notice. Loosen.<br />Become the Watcher.</h2>
-        <div className={styles.practiceMantra}>"I am the one who is aware."</div>
-      </div>
-
-      {/* ── SECTION 9: EXTRA WISE HEADER ── */}
-      <div className={styles.chapterIntro} data-section="9">
-        <div className={styles.chapterIntroInner}>
-           <h2 className={styles.slideHeading}>Extra Wisdom</h2>
-           <p className={styles.slideBody}>Dive deeper into the technical mechanics after the session.</p>
-        </div>
-      </div>
-
-      {/* ── SECTION 10: PATTERNS (EXTRA) ── */}
-      <section className={styles.slideSection} data-section="10">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>Extra</span>
-            <img src={currentMap["escalating"]} alt="Patterns" onClick={() => openLightbox(currentMap["escalating"], "Patterns")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>Patterns</span>
-            <h2 className={styles.slideHeading}>Same Fear,<br /><em>Different Clothes</em></h2>
-            <p className={styles.slideBody}>When you watch, you see the patterns. The same fear showing up in different situations.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 11: PRACTICE (EXTRA) ── */}
-      <section className={styles.slideSection} data-section="11">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>Extra</span>
-            <img src={currentMap["meditation"]} alt="The Practice" onClick={() => openLightbox(currentMap["meditation"], "The Practice")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Practice</span>
-            <h2 className={styles.slideHeading}>Notice. Name.<br /><em>Detach</em>.</h2>
-            <p className={styles.slideBody}>When the voice starts up, try naming it. "There's the worry voice."</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 12: ANALOGY (EXTRA) ── */}
-      <section className={styles.slideSection} data-section="12">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>Extra</span>
-            <img src={currentMap["listener"]} alt="The Radio Analogy" onClick={() => openLightbox(currentMap["listener"], "The Radio Analogy")} className={styles.clickableImg} />
+            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="listener" isDark={isDarkMode} />)}>
+               <Q2Infographic type="listener" isDark={isDarkMode} />
+            </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideLabel}>The Analogy</span>
             <h2 className={styles.slideHeading}>You Are the <em>Listener</em>.<br />Not the Radio.</h2>
-            <p className={styles.slideBody}>The space between the listener and the radio is the space of freedom.</p>
+            <p className={styles.slideBody}>Here's what this looks like as a practice.</p>
+            <p className={styles.slideBody}>When the voice starts up with guilt, doubt, or fear, try this instead of engaging with it. Just notice it. Name it, even, if that helps. "There's the worry voice." "There's the guilt loop."</p>
+            <p className={styles.slideBody}>Don't try to answer it. Don't try to fix what it's pointing at. Just see it as the mind doing its thing — the same way you'd notice a radio playing in another room. You're not the radio. You're the one who can hear it.</p>
           </div>
         </div>
       </section>
 
-      {/* ── SECTION 13: RIVERBANK (EXTRA) ── */}
-      <section className={styles.slideSection} data-section="13">
+      {/* ── SECTION 7: THE RELEASE ── */}
+      <section className={styles.slideSection} data-section="7">
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>Extra</span>
-            <img src={currentMap["riverbank"]} alt="The Riverbank" onClick={() => openLightbox(currentMap["riverbank"], "The Riverbank")} className={styles.clickableImg} />
+            <span className={styles.slideNumber}>07</span>
+            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="grip" isDark={isDarkMode} />)}>
+               <Q2Infographic type="grip" isDark={isDarkMode} />
+            </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>Visualization</span>
-            <h2 className={styles.slideHeading}>You Are <em>the Riverbank</em></h2>
-            <p className={styles.slideBody}>You are the bank — the unmoving observer on the shore.</p>
+            <span className={styles.slideLabel}>The Release</span>
+            <h2 className={styles.slideHeading}>The <em>Grip</em> Loosens</h2>
+            <p className={styles.slideBody}>Over time, Singer says, the mind naturally quiets. Not because you forced it — but because you stopped feeding it. Every time you step back instead of engage, you withdraw a little of the energy that keeps the narration alive.</p>
+            <p className={styles.slideBody}>The voice doesn't disappear. But its grip loosens. And one day — you realise the thing that used to spiral you for hours barely moved you at all.</p>
+            <p className={styles.slideBody}>That's not distance from life. That's freedom inside it.</p>
           </div>
         </div>
       </section>
 
-      {/* ── SECTION 14: MEDITATION INTRO (EXTRA) ── */}
-      <div className={styles.chapterIntro} data-section="14">
-        <div className={styles.chapterIntroInner}>
-           <h2 className={styles.slideHeading}>Restoring the <em>Watcher</em></h2>
-           <p className={styles.slideBody}>A 90-second journey.</p>
-        </div>
+      {/* ── SECTION 8: PRACTICE (MANTRA) ── */}
+      <div className={styles.practiceCard} data-section="8">
+        <p className={styles.practiceCardEyebrow}>The Practice</p>
+        <h2 className={styles.practiceCardTitle}>Notice the Noise. Loosen the Grip.<br />Become the Watcher.</h2>
+        <div className={styles.practiceMantra}>"I am the one who is aware."</div>
       </div>
 
-      {/* ── SECTION 15: MEDITATION STEPS (EXTRA) ── */}
-      <section className={styles.slideSection} data-section="15">
+      {/* ── SECTION 9: GUIDED MEDITATION ── */}
+      <section className={styles.slideSection} data-section="9">
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
-             <span className={styles.slideNumber}>Extra</span>
-             <img src={currentMap["watcher"]} alt="Guided Meditation" onClick={() => openLightbox(currentMap["watcher"], "Guided Meditation")} className={styles.clickableImg} />
+            <span className={styles.slideNumber}>08</span>
+            <div className={styles.clickableImg} onClick={() => openLightbox(<Q2Infographic type="meditation" isDark={isDarkMode} />)}>
+               <Q2Infographic type="meditation" isDark={isDarkMode} />
+            </div>
           </div>
           <div className={styles.slideContent}>
-            <h2 className={styles.slideHeading}>Step Away From Noise</h2>
-            <p className={styles.slideBody}>Close your eyes... Ask yourself: <strong>Who is noticing this?</strong></p>
+            <span className={styles.slideLabel}>Guided Meditation (~90 seconds)</span>
+            <h2 className={styles.slideHeading}>Restoring the <em>Watcher</em></h2>
+            <p className={styles.slideBody}>Close your eyes if you're somewhere you can. Take one slow breath in. And let it go.</p>
+            <p className={styles.slideBody}>Now just notice — what is the mind currently saying? What thought is waiting for your attention right now?</p>
+            <p className={styles.slideBody}>Don't answer it. Don't follow it. Just see it — the way you'd see a cloud from a window.</p>
+            <p className={styles.slideBody}>Now ask yourself: who is noticing this? There is something in you that is watching. That has always been watching. Not the voice. Not the doubt. Not the fear. The one noticing all of it.</p>
+            <p className={styles.slideBody}>Rest there for a moment.</p>
+            <p className={styles.slideBody}>The voice may keep talking. That's fine. You don't have to go with it. You are the one who is aware. And that one — has always been perfectly still.</p>
           </div>
         </div>
       </section>
 
-      {/* ── SECTION 16: STILLNESS (EXTRA) ── */}
-      <section className={styles.slideSection} data-section="16">
-        <div className={styles.slideWrapper}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>Extra</span>
-            <img src={currentMap["stillness"]} alt="Internal Stillness" onClick={() => openLightbox(currentMap["stillness"], "Internal Stillness")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>The Promise</span>
-            <h2 className={styles.slideHeading}>Stillness in <em>Chaos</em></h2>
-            <p className={styles.slideBody}>The witness consciousness remains at the centre.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 17: ONE ROOT (EXTRA) ── */}
-      <section className={styles.slideSection} data-section="17">
-        <div className={`${styles.slideWrapper} ${styles.reverse}`}>
-          <div className={styles.slideImageWrap}>
-            <span className={styles.slideNumber}>Extra</span>
-            <img src={currentMap["oneroot"]} alt="One Root" onClick={() => openLightbox(currentMap["oneroot"], "One Root")} className={styles.clickableImg} />
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideLabel}>Foundation</span>
-            <h2 className={styles.slideHeading}>One Root, Many Faces</h2>
-            <p className={styles.slideBody}>Solve the root, and the costumes lose their power.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 18: CLOSING (EXTRA) ── */}
-      <section className={styles.closing} data-section="18">
+      {/* ── SECTION 10: CLOSING ── */}
+      <section className={styles.closing} data-section="10">
         <div className={styles.closingInner}>
           <p className={styles.closingEyebrow}>End of Chapter 1 · Question 2</p>
           <h2 className={styles.closingTitle}>You Are Not<br />the Radio</h2>
