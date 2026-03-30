@@ -13,7 +13,8 @@ export const isAdminEmail = (email: string | null | undefined) => {
 
 export const WISDOM_ALLOWED_EMAILS = [
     'shrutikhungar@gmail.com',
-    'simkatyal1@gmail.com'
+    'simkatyal1@gmail.com',
+    'rashmi.purbey@gmail.com'
 ];
 
 export const hasWisdomAccess = (email: string | null | undefined) => {
