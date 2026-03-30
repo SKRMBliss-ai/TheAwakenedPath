@@ -222,7 +222,6 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
             <span className={styles.slideNum}>01</span>
             <div className={styles.imageContainer}>
               <img src={imageMap["slide1"]} alt="The hook" onClick={() => openLightbox(imageMap["slide1"], "The hook")} className={styles.clickableImg} />
-              <div className={styles.watermarkOverlay} />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -386,7 +385,6 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
             <span className={styles.slideNum}>07</span>
             <div className={styles.imageContainer}>
               <img src={imageMap["slide7"]} alt="The real teaching" onClick={() => openLightbox(imageMap["slide7"], "The real teaching")} className={styles.clickableImg} />
-              <div className={styles.watermarkOverlay} />
             </div>
           </div>
           <div className={styles.slideContent}>
