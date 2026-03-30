@@ -124,7 +124,11 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
   const dots = Array.from({ length: TOTAL_SLIDES });
 
   return (
-    <div className={`${styles.container} ${isPresenting ? styles.isPresenting : ''}`} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
+    <div
+      className={styles.container}
+      ref={containerRef}
+      style={{ height: '100%', overflowY: 'auto' }}
+    >
       <div className={styles.progressBar} style={{ width: `${scrollProgress}%` }} />
 
       {/* --- Nav & Controls --- */}
@@ -415,6 +419,28 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
           </div>
         </div>
       </section>
+
+      {/* --- SLIDESHOW CONTROLS --- */}
+      <div className={styles.slideshowControl}>
+        {!isPresenting ? (
+          <button className={styles.slideshowPlayBtn} onClick={() => setIsPresenting(true)}>
+             <div className={styles.slideshowSvg}>
+               <svg viewBox="0 0 100 100">
+                 <circle className={styles.svgTrack} cx="50" cy="50" r="45" />
+                 <path className={styles.svgPlay} d="M40,30 L70,50 L40,70 Z" />
+               </svg>
+             </div>
+             <span className={styles.slideshowLabel}>Present</span>
+          </button>
+        ) : (
+          <div className={styles.slideshowPlayer}>
+            <button className={styles.slideshowNavBtn} onClick={goPrev} disabled={currentSlide === 0}>←</button>
+            <span className={styles.slideCounter}>{currentSlide + 1} / {TOTAL_SLIDES}</span>
+            <button className={styles.slideshowNavBtn} onClick={goNext} disabled={currentSlide === TOTAL_SLIDES - 1}>→</button>
+            <button className={`${styles.slideshowNavBtn} ${styles.stopBtn}`} onClick={stopPresentation}>Exit</button>
+          </div>
+        )}
+      </div>
 
       {/* ── SECTION 10: CLOSING ── */}
       <section className={styles.closing} data-section="10">
