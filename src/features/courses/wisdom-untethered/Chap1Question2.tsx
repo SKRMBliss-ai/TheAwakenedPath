@@ -143,7 +143,7 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
           <button className={styles.lightboxClose} onClick={() => setLightboxIndex(null)} aria-label="Close image">✕</button>
           <div className={styles.lightboxImg} onClick={e => e.stopPropagation()} style={{ width: '90vw', maxWidth: '800px' }}>
             <img 
-               src={`/WisdomUntethered/Chap1/Question2/${slideImagePaths[ALL_SLIDES[lightboxIndex]]}${isDarkMode ? 'Dark' : 'Light'}${ ( (slideImagePaths[ALL_SLIDES[lightboxIndex]] === "Deep down, you're afraid" || slideImagePaths[ALL_SLIDES[lightboxIndex]] === "OneRoot") && isDarkMode ) ? '.jpg' : '.png'}`}
+               src={`/WisdomUntethered/Chap1/Question2/${slideImagePaths[ALL_SLIDES[lightboxIndex]]}${isDarkMode ? 'Dark' : 'Light'}${ (slideImagePaths[ALL_SLIDES[lightboxIndex]] === "OneRoot") ? '.jpg' : (slideImagePaths[ALL_SLIDES[lightboxIndex]] === "Deep down, you're afraid" && isDarkMode) ? '.jpg' : '.png' }`}
                alt={ALL_SLIDES[lightboxIndex]}
                style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '4px' }}
             />
@@ -248,7 +248,7 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
             <span className={styles.slideNumber}>04</span>
                 <div className={styles.clickableImg} onClick={() => openLightbox(3)}>
                  <img 
-                     src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/OneRootDark.jpg" : "/WisdomUntethered/Chap1/Question2/OneRootLight.png"} 
+                     src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/OneRootDark.jpg" : "/WisdomUntethered/Chap1/Question2/OneRootLight.jpg"} 
                      alt="One Root" 
                      className={styles.slideImage}
                    />
