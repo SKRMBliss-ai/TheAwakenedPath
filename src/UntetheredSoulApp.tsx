@@ -605,10 +605,13 @@ export default function UntetheredApp() {
         remindersEnabled: false,
         statsViewed: 0,
       });
-
     };
     fetchStats();
   }, [currentUser, checkAndUnlock, points, watchedParts.length]);
+
+  useEffect(() => {
+    document.title = "Awakened Path";
+  }, []);
 
   useEffect(() => {
     if (!currentUser) return;
