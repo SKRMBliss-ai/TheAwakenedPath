@@ -284,8 +284,8 @@
 /* --- LIGHTBOX --- */
 .lightboxOverlay {
   position: fixed; inset: 0; 
-  background: rgba(247, 242, 236, 0.95);
-  backdrop-filter: blur(12px);
+  background: rgba(253, 250, 244, 0.98);
+  backdrop-filter: blur(20px);
   z-index: 1000; display: flex; align-items: center; justify-content: center;
   padding: 2rem; cursor: zoom-out;
 }
