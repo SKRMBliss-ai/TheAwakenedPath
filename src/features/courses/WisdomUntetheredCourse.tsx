@@ -25,8 +25,8 @@ const CHAPTERS: Chapter[] = [
 
 interface CourseProps {
   activeQuestionId: string;
-  viewMode: 'explanation' | 'video' | 'presentation';
-  setViewMode: (mode: 'explanation' | 'video' | 'presentation') => void;
+  viewMode: 'explanation' | 'video';
+  setViewMode: (mode: 'explanation' | 'video') => void;
   onOpenJournal?: () => void;
 }
 
@@ -83,21 +83,14 @@ export function WisdomUntetheredCourse({
           ))}
         </div>
         
-        <button
-          onClick={() => setViewMode('presentation')}
-          className="flex items-center gap-2 px-5 py-2 rounded-full border border-[var(--brand-primary)] text-[var(--brand-primary)] text-[10px] uppercase tracking-[0.2em] font-bold shadow-sm hover:bg-[var(--brand-primary)] hover:text-white transition-all ml-4"
-        >
-          <Play className="w-3.5 h-3.5 fill-current" />
-          <span>Present</span>
-        </button>
-      </div>
+        </div>
 
       {/* ── Main Content Area ── */}
       <div className="flex-1 min-h-0 overflow-hidden relative">
         <AnimatePresence mode="wait">
-          {(viewMode === 'explanation' || viewMode === 'presentation') && activeChapter && (
+          {(viewMode === 'explanation') && activeChapter && (
             <motion.div
-              key={activeQuestionId + (viewMode === 'presentation' ? '_present' : '_expl')}
+              key={activeQuestionId + '_expl'}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -106,8 +99,8 @@ export function WisdomUntetheredCourse({
             >
               {activeChapter.id === 1 ? (
                 activeQuestionId === 'question1' 
-                  ? <Chap1Question1 isPresenting={viewMode === 'presentation'} onExitPresentation={() => setViewMode('explanation')} onOpenJournal={onOpenJournal} /> 
-                  : <Chap1Question2 isPresenting={viewMode === 'presentation'} onExitPresentation={() => setViewMode('explanation')} onOpenJournal={onOpenJournal} />
+                  ? <Chap1Question1 onOpenJournal={onOpenJournal} /> 
+                  : <Chap1Question2 onOpenJournal={onOpenJournal} />
               ) : (
                 <div className="p-12 overflow-y-auto h-full">
                   <p className="text-[16px] leading-[2.2] font-sans text-[var(--text-secondary)] tracking-wide max-w-2xl">

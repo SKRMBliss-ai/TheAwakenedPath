@@ -1,16 +1,34 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import styles from './Chap1Question2.module.css';
 
 const TOTAL_SLIDES = 11;
 
+const ALL_SLIDES = [
+  "A Flawed Advisor",
+  "Deep down, you're afraid",
+  "A Flawed Advisor",
+  "One Root",
+  "Youcannotuseurmindtofixyourmind",
+  "Radio",
+  "The Release",
+  "Gm"
+];
+
+const slideImagePaths: Record<string, string> = {
+  "A Flawed Advisor": "A Flawed Advisor",
+  "Deep down, you're afraid": "Deep down, you're afraid",
+  "One Root": "OneRoot",
+  "Youcannotuseurmindtofixyourmind": "Youcannotuseurmindtofixyourmind",
+  "Radio": "Radio",
+  "The Release": "The Release",
+  "Gm": "Gm"
+};
+
 interface Chap1Question2Props {
-  isPresenting?: boolean;
-  onExitPresentation?: () => void;
   onOpenJournal?: () => void;
 }
 
-export function Chap1Question2({ isPresenting: propPresenting = false, onExitPresentation, onOpenJournal }: Chap1Question2Props) {
+export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
@@ -30,19 +48,8 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
     return () => observer.disconnect();
   }, []);
 
-  // ── Presentation mode state ──
-  const [isPresenting, setIsPresenting] = useState(propPresenting);
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    setIsPresenting(propPresenting);
-    if (propPresenting) {
-      setCurrentSlide(0);
-    }
-  }, [propPresenting]);
-
   // ── Lightbox state ──
-  const [lightboxContent, setLightboxContent] = useState<ReactNode | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Track scroll for progress bar
   useEffect(() => {
@@ -89,37 +96,30 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
     if (section) section.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const goNext = () => {
-    const next = Math.min(currentSlide + 1, TOTAL_SLIDES - 1);
-    setCurrentSlide(next);
-    scrollToSection(next);
+  const goLightboxNext = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((prev) => (prev === null ? 0 : (prev + 1) % ALL_SLIDES.length));
   };
-  const goPrev = () => {
-    const prev = Math.max(currentSlide - 1, 0);
-    setCurrentSlide(prev);
-    scrollToSection(prev);
-  };
-  const stopPresentation = () => {
-    setIsPresenting(false);
-    setCurrentSlide(0);
-    scrollToSection(0);
-    onExitPresentation?.();
+  const goLightboxPrev = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((prev) => (prev === null ? 0 : (prev - 1 + ALL_SLIDES.length) % ALL_SLIDES.length));
   };
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxContent(null);
-      if (isPresenting && !lightboxContent) {
-        if (e.key === 'ArrowRight') goNext();
-        if (e.key === 'ArrowLeft') goPrev();
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (lightboxIndex !== null) {
+        if (e.key === 'ArrowRight') goLightboxNext();
+        if (e.key === 'ArrowLeft') goLightboxPrev();
+        return;
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPresenting, currentSlide, lightboxContent]);
+  }, [lightboxIndex]);
 
-  const openLightbox = (content: ReactNode) => { setLightboxContent(content); };
+  const openLightbox = (index: number) => { setLightboxIndex(index); };
 
   const dots = Array.from({ length: TOTAL_SLIDES });
 
@@ -131,10 +131,6 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
     >
       <div className={styles.progressBar} style={{ width: `${scrollProgress}%` }} />
 
-      {/* --- Nav & Controls --- */}
-      {isPresenting && (
-        <button className={styles.fullscreenReturnBtn} onClick={stopPresentation} aria-label="Exit presentation"><ArrowLeft size={18} /><span>Exit Slideshow</span></button>
-      )}
       <nav className={styles.navDots}>
         {dots.map((_, i) => (
           <button key={i} className={`${styles.navDot} ${activeSection === i ? styles.active : ''}`} aria-label={`Go to section ${i + 1}`} onClick={() => scrollToSection(i)} />
@@ -142,11 +138,19 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
       </nav>
 
       {/* --- Lightbox --- */}
-      {lightboxContent && (
-        <div className={styles.lightboxOverlay} onClick={() => setLightboxContent(null)} role="dialog" aria-modal="true" aria-label="Image lightbox">
-          <button className={styles.lightboxClose} onClick={() => setLightboxContent(null)} aria-label="Close image">✕</button>
-          <div className={styles.lightboxImg} onClick={e => e.stopPropagation()} style={{ width: '90vw', maxWidth: '800px', pointerEvents: 'none' }}>
-            {lightboxContent}
+      {lightboxIndex !== null && (
+        <div className={styles.lightboxOverlay} onClick={() => setLightboxIndex(null)} role="dialog" aria-modal="true" aria-label="Image lightbox">
+          <button className={styles.lightboxClose} onClick={() => setLightboxIndex(null)} aria-label="Close image">✕</button>
+          <div className={styles.lightboxImg} onClick={e => e.stopPropagation()} style={{ width: '90vw', maxWidth: '800px' }}>
+            <img 
+               src={`/WisdomUntethered/Chap1/Question2/${slideImagePaths[ALL_SLIDES[lightboxIndex]]}${isDarkMode ? 'Dark' : 'Light'}.png`}
+               alt={ALL_SLIDES[lightboxIndex]}
+               style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '4px' }}
+            />
+          </div>
+          <div className={styles.lightboxNav} onClick={e => e.stopPropagation()}>
+            <button className={styles.lightboxNavBtn} onClick={goLightboxPrev} aria-label="Previous image">←</button>
+            <button className={styles.lightboxNavBtn} onClick={goLightboxNext} aria-label="Next image">→</button>
           </div>
         </div>
       )}
@@ -165,14 +169,8 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>01</span>
-                <div className={styles.clickableImg} onClick={() => openLightbox(
+                <div className={styles.clickableImg} onClick={() => openLightbox(0)}>
                   <img 
-                    src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorDark.png" : "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorLight.png"} 
-                    alt="The Endless Narrator" 
-                    className={styles.slideImage}
-                  />
-                )}>
-                   <img 
                      src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorDark.png" : "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorLight.png"} 
                      alt="The Endless Narrator" 
                      className={styles.slideImage}
@@ -197,14 +195,8 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>02</span>
-                <div className={styles.clickableImg} onClick={() => openLightbox(
+                <div className={styles.clickableImg} onClick={() => openLightbox(1)}>
                   <img 
-                    src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/Deep down, you're afraidDark.png" : "/WisdomUntethered/Chap1/Question2/Deep down, you're afraidLight.png"} 
-                    alt="Deep down, you're afraid" 
-                    className={styles.slideImage}
-                  />
-                )}>
-                   <img 
                      src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/Deep down, you're afraidDark.png" : "/WisdomUntethered/Chap1/Question2/Deep down, you're afraidLight.png"} 
                      alt="Deep down, you're afraid" 
                      className={styles.slideImage}
@@ -229,14 +221,8 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>03</span>
-                <div className={styles.clickableImg} onClick={() => openLightbox(
+                <div className={styles.clickableImg} onClick={() => openLightbox(2)}>
                   <img 
-                    src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorDark.png" : "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorLight.png"} 
-                    alt="A Flawed Advisor" 
-                    className={styles.slideImage}
-                  />
-                )}>
-                   <img 
                      src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorDark.png" : "/WisdomUntethered/Chap1/Question2/A Flawed AdvisorLight.png"} 
                      alt="A Flawed Advisor" 
                      className={styles.slideImage}
@@ -260,14 +246,8 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>04</span>
-                <div className={styles.clickableImg} onClick={() => openLightbox(
-                  <img 
-                    src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/OneRootDark.png" : "/WisdomUntethered/Chap1/Question2/OneRootLight.png"} 
-                    alt="One Root" 
-                    className={styles.slideImage}
-                  />
-                )}>
-                   <img 
+                <div className={styles.clickableImg} onClick={() => openLightbox(3)}>
+                 <img 
                      src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/OneRootDark.png" : "/WisdomUntethered/Chap1/Question2/OneRootLight.png"} 
                      alt="One Root" 
                      className={styles.slideImage}
@@ -292,14 +272,8 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>05</span>
-                <div className={styles.clickableImg} onClick={() => openLightbox(
+                <div className={styles.clickableImg} onClick={() => openLightbox(4)}>
                   <img 
-                    src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/YoucannotuseurmindtofixyourmindDark.png" : "/WisdomUntethered/Chap1/Question2/YoucannotuseurmindtofixyourmindLight.png"} 
-                    alt="The Shift" 
-                    className={styles.slideImage}
-                  />
-                )}>
-                   <img 
                      src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/YoucannotuseurmindtofixyourmindDark.png" : "/WisdomUntethered/Chap1/Question2/YoucannotuseurmindtofixyourmindLight.png"} 
                      alt="The Shift" 
                      className={styles.slideImage}
@@ -323,14 +297,8 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>06</span>
-                <div className={styles.clickableImg} onClick={() => openLightbox(
+                <div className={styles.clickableImg} onClick={() => openLightbox(5)}>
                   <img 
-                    src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/RadioDark.png" : "/WisdomUntethered/Chap1/Question2/RadioLight.png"} 
-                    alt="The Listener" 
-                    className={styles.slideImage}
-                  />
-                )}>
-                   <img 
                      src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/RadioDark.png" : "/WisdomUntethered/Chap1/Question2/RadioLight.png"} 
                      alt="The Listener" 
                      className={styles.slideImage}
@@ -354,14 +322,8 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={styles.slideWrapper}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>07</span>
-                <div className={styles.clickableImg} onClick={() => openLightbox(
+                <div className={styles.clickableImg} onClick={() => openLightbox(6)}>
                   <img 
-                    src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/The ReleaseDark.png" : "/WisdomUntethered/Chap1/Question2/The ReleaseLight.png"} 
-                    alt="The Release" 
-                    className={styles.slideImage}
-                  />
-                )}>
-                   <img 
                      src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/The ReleaseDark.png" : "/WisdomUntethered/Chap1/Question2/The ReleaseLight.png"} 
                      alt="The Release" 
                      className={styles.slideImage}
@@ -393,14 +355,8 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         <div className={`${styles.slideWrapper} ${styles.reverse}`}>
           <div className={styles.slideImageWrap}>
             <span className={styles.slideNumber}>08</span>
-                <div className={styles.clickableImg} onClick={() => openLightbox(
+                <div className={styles.clickableImg} onClick={() => openLightbox(7)}>
                   <img 
-                    src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/GmDark.png" : "/WisdomUntethered/Chap1/Question2/GmLight.png"} 
-                    alt="Meditation" 
-                    className={styles.slideImage}
-                  />
-                )}>
-                   <img 
                      src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/GmDark.png" : "/WisdomUntethered/Chap1/Question2/GmLight.png"} 
                      alt="Meditation" 
                      className={styles.slideImage}
@@ -420,27 +376,6 @@ export function Chap1Question2({ isPresenting: propPresenting = false, onExitPre
         </div>
       </section>
 
-      {/* --- SLIDESHOW CONTROLS --- */}
-      <div className={styles.slideshowControl}>
-        {!isPresenting ? (
-          <button className={styles.slideshowPlayBtn} onClick={() => setIsPresenting(true)}>
-             <div className={styles.slideshowSvg}>
-               <svg viewBox="0 0 100 100">
-                 <circle className={styles.svgTrack} cx="50" cy="50" r="45" />
-                 <path className={styles.svgPlay} d="M40,30 L70,50 L40,70 Z" />
-               </svg>
-             </div>
-             <span className={styles.slideshowLabel}>Present</span>
-          </button>
-        ) : (
-          <div className={styles.slideshowPlayer}>
-            <button className={styles.slideshowNavBtn} onClick={goPrev} disabled={currentSlide === 0}>←</button>
-            <span className={styles.slideCounter}>{currentSlide + 1} / {TOTAL_SLIDES}</span>
-            <button className={styles.slideshowNavBtn} onClick={goNext} disabled={currentSlide === TOTAL_SLIDES - 1}>→</button>
-            <button className={`${styles.slideshowNavBtn} ${styles.stopBtn}`} onClick={stopPresentation}>Exit</button>
-          </div>
-        )}
-      </div>
 
       {/* ── SECTION 10: CLOSING ── */}
       <section className={styles.closing} data-section="10">

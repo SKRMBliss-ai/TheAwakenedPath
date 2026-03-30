@@ -464,7 +464,10 @@ export default function UntetheredApp() {
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
 
   const [activeQuestionId, setActiveQuestionId] = useState(() => localStorage.getItem('awakened-path-active-question') || 'question1');
-  const [viewMode, setViewMode] = useState<'explanation' | 'video' | 'presentation'>(() => (localStorage.getItem('awakened-path-view-mode') as any) || 'explanation');
+  const [viewMode, setViewMode] = useState<'explanation' | 'video'>(() => {
+    const saved = localStorage.getItem('awakened-path-view-mode');
+    return (saved === 'explanation' || saved === 'video') ? saved : 'explanation';
+  });
   const [expandedChapter1, setExpandedChapter1] = useState(true);
 
   const timeOfDayGradient = useMemo(() => {

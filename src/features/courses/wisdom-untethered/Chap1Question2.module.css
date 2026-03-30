@@ -283,87 +283,59 @@
 
 /* --- LIGHTBOX --- */
 .lightboxOverlay {
-  position: fixed; inset: 0; background: rgba(10,8,6,0.96);
+  position: fixed; inset: 0; 
+  background: rgba(247, 242, 236, 0.95);
+  backdrop-filter: blur(12px);
   z-index: 1000; display: flex; align-items: center; justify-content: center;
   padding: 2rem; cursor: zoom-out;
+}
+:global(.dark) .lightboxOverlay {
+  background: rgba(12, 9, 16, 0.95);
 }
 .lightboxImg {
   max-width: 90%; max-height: 90vh; border-radius: 4px;
   box-shadow: 0 30px 100px rgba(0,0,0,0.8);
 }
+:global(.dark) .lightboxImg {
+  box-shadow: 0 30px 100px rgba(0,0,0,0.5);
+}
 .lightboxClose {
   position: absolute; top: 2rem; right: 2rem;
-  background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;
+  background: none; border: none; color: var(--text-primary); font-size: 1.5rem; cursor: pointer;
+}
+.lightboxNav {
+  position: absolute; bottom: 2rem; left: 50%;
+  transform: translateX(-50%); display: flex; gap: 1rem;
+  z-index: 1010;
+}
+.lightboxNavBtn {
+  background: var(--gold); color: white; border: none;
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1.2rem; font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+.lightboxNavBtn:hover { transform: scale(1.1); background: var(--gold-light); }
+.lightboxNavBtn:active { transform: scale(0.9); }
+
+:global(.dark) .lightboxNavBtn {
+  background: var(--bg-surface); color: var(--gold);
+  border: 1px solid var(--gold);
 }
 
-/* --- PRESENTATION CONTROLS --- */
-.slideshowControl { position: fixed; bottom: 2rem; right: 2rem; z-index: 500; }
-.slideshowPlayBtn {
-  background: var(--bg-surface); border: 1px solid var(--gold); border-radius: 40px;
-  padding: 0.6rem 1.6rem 0.6rem 0.8rem; display: flex; align-items: center; gap: 0.8rem;
-  cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-.slideshowSvg { width: 34px; height: 34px; transform: rotate(-90deg); }
-.svgTrack { fill: none; stroke: rgba(184,151,58,0.1); stroke-width: 3; }
-.svgRing { fill: none; stroke: var(--gold); stroke-width: 3; stroke-linecap: round; }
-.svgPlay { fill: var(--gold); transform: rotate(90deg) translate(0, -60px); }
-.svgCountText { transform: rotate(90deg) translate(0, -60px); fill: var(--gold); font-weight: bold; font-size: 14px; }
-.slideshowLabel { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); font-weight: 500; }
-
-.slideshowPlayer {
-  background: var(--bg-surface); border: 1px solid var(--gold); border-radius: 40px;
-  display: flex; align-items: center; padding: 0.4rem 0.6rem; gap: 0.4rem;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-}
-.slideshowNavBtn {
-  width: 32px; height: 32px; border: none; background: none; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--gold);
-}
-.nextBtn { background: var(--gold); color: white; width: 44px; height: 32px; border-radius: 16px; font-weight: bold; }
-.stopBtn { color: #8C7E6A; font-size: 0.8rem; }
-.slideCounter { font-size: 0.75rem; color: var(--muted); padding: 0 0.8rem 0 0.4rem; }
-
-.fullscreenReturnBtn {
-  position: fixed; top: 2rem; left: 2rem;
-  background: var(--gold);
-  color: white; border: none;
-  padding: 0.8rem 1.6rem; border-radius: 2rem;
-  display: flex; align-items: center; gap: 0.8rem;
-  font-size: 0.75rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.18em;
-  z-index: 2000; 
-  box-shadow: 0 10px 30px rgba(184, 151, 58, 0.3);
-  backdrop-filter: blur(8px);
-  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.fullscreenReturnBtn:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 12px 35px rgba(184, 151, 58, 0.45);
-}
-.fullscreenReturnBtn:active { transform: scale(0.96); }
-
-:global(.dark) .fullscreenReturnBtn {
-  background: #1C1814;
-  color: var(--gold-light);
-  border: 1px solid rgba(184, 151, 58, 0.4);
-}
-:global(.dark) .fullscreenReturnBtn:hover {
-  background: #26221E;
-  border-color: var(--gold-light);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 15px rgba(184, 151, 58, 0.2);
-}
 
 .clickableImg { cursor: zoom-in; transition: transform 0.3s; }
 .clickableImg:hover { transform: scale(1.02); }
 
 /* ── DARK MODE OVERRIDES ── */
 :global(.dark) .container {
-  --gold: #E6C57D; /* Brighter gold for dark mode */
+  --gold: #E6C57D;
   --gold-light: #F0E4C0;
-  --bg-primary: #1C1814;
-  --bg-surface: #26221E;
+  --bg-primary: #0c0910;
+  --bg-surface: #110e16;
   --text-primary: #FDFAF4;
-  --text-secondary: rgba(253,250,244,0.8); /* Increased contrast */
+  --text-secondary: rgba(253,250,244,0.8);
   background: var(--bg-primary);
   color: var(--text-primary);
 }
@@ -373,7 +345,7 @@
 }
 
 :global(.dark) .hero {
-  background: radial-gradient(circle at center, #2C2620 0%, #1C1814 100%);
+  background: radial-gradient(circle at center, #110e16 0%, #0c0910 100%);
 }
 
 :global(.dark) .slideSection:nth-child(even) {
@@ -381,29 +353,23 @@
 }
 
 :global(.dark) .slideSection.matrixBand {
-  background: #26221E;
+  background: #110e16;
 }
 
 :global(.dark) .slideSection.gripBand {
-  background: #2C2620;
+  background: #0c0910;
 }
 
 :global(.dark) .chapterIntro {
-  background: #26221E;
+  background: #110e16;
 }
 
 :global(.dark) .practiceCard {
-  background: #26221E;
+  background: #110e16;
 }
 
 :global(.dark) .closing {
-  background: #1C1814;
-}
-
-:global(.dark) .slideshowPlayBtn,
-:global(.dark) .slideshowPlayer,
-:global(.dark) .fullscreenReturnBtn {
-  background: #26221E;
+  background: #0c0910;
 }
 
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

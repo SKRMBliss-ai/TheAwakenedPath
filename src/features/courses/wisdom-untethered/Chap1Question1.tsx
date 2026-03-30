@@ -1,6 +1,5 @@
 /* Chap1Question1.tsx */
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
 import styles from './Chap1Question1.module.css';
 
 const darkImages: Record<string, string> = {
@@ -21,20 +20,19 @@ const lightImages: Record<string, string> = {
   "slide4": "/WisdomUntethered/Chap1/Question1/04_Relax_light.png",
   "slide5": "/WisdomUntethered/Chap1/Question1/05_Transmutation_light.png",
   "slide6": "/WisdomUntethered/Chap1/Question1/06_MindAsTool_light.png",
-  // slide7 light version pending quota reset — falls back to dark
   "slide7": "/WisdomUntethered/Chap1/Question1/07_Meditation_light.jpeg",
   "placeholder_alive": "/WisdomUntethered/Chap1/Question1/01_BadMood_light.png",
 };
 
+const ALL_SLIDES = ["slide1", "slide2", "slide3", "slide4", "slide5", "slide6", "slide7"];
+
 const TOTAL_SLIDES = 13; // sections data-section="0" ... "12"
 
 interface Chap1Question1Props {
-  isPresenting?: boolean;
-  onExitPresentation?: () => void;
   onOpenJournal?: () => void;
 }
 
-export function Chap1Question1({ isPresenting: propPresenting = false, onExitPresentation, onOpenJournal }: Chap1Question1Props) {
+export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
@@ -56,21 +54,8 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
   }, []);
   const imageMap = isDark ? darkImages : lightImages;
 
-  // ── Presentation mode ──
-  const [isPresenting, setIsPresenting] = useState(propPresenting);
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    setIsPresenting(propPresenting);
-    if (propPresenting) {
-      setCurrentSlide(0);
-      scrollToSection(0);
-    }
-  }, [propPresenting]);
-
   // ── Lightbox ──
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
-  const [lightboxAlt, setLightboxAlt] = useState('');
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // ── Scroll progress bar ──
   useEffect(() => {
@@ -119,44 +104,34 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
     if (section) section.scrollIntoView({ behavior: 'smooth' });
   };
 
-
-
-  const goNext = () => {
-    const next = Math.min(currentSlide + 1, TOTAL_SLIDES - 1);
-    setCurrentSlide(next);
-    scrollToSection(next);
+  const goLightboxNext = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((prev) => (prev === null ? 0 : (prev + 1) % ALL_SLIDES.length));
+  };
+  const goLightboxPrev = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((prev) => (prev === null ? 0 : (prev - 1 + ALL_SLIDES.length) % ALL_SLIDES.length));
   };
 
-  const goPrev = () => {
-    const prev = Math.max(currentSlide - 1, 0);
-    setCurrentSlide(prev);
-    scrollToSection(prev);
-  };
-
-  const stopPresentation = () => {
-    setIsPresenting(false);
-    setCurrentSlide(0);
-    scrollToSection(0);
-    onExitPresentation?.();
-  };
 
   // ── Keyboard shortcuts ──
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxSrc(null);
-      if (isPresenting && !lightboxSrc) {
-        if (e.key === 'ArrowRight') goNext();
-        if (e.key === 'ArrowLeft') goPrev();
+      if (e.key === 'Escape') setLightboxIndex(null);
+      
+      if (lightboxIndex !== null) {
+        if (e.key === 'ArrowRight') goLightboxNext();
+        if (e.key === 'ArrowLeft') goLightboxPrev();
+        return;
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPresenting, currentSlide, lightboxSrc]);
+  }, [lightboxIndex]);
 
-  const openLightbox = (src: string, alt: string) => {
-    setLightboxSrc(src);
-    setLightboxAlt(alt);
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
   };
 
   const dots = Array.from({ length: TOTAL_SLIDES });
@@ -169,16 +144,6 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
     >
       <div className={styles.progressBar} style={{ width: `${scrollProgress}%` }} />
 
-      {/* --- Fullscreen Exit --- */}
-      {isPresenting && (
-        <button
-          className={styles.fullscreenReturnBtn}
-          onClick={stopPresentation}
-        >
-          <ArrowLeft size={18} />
-          <span>Exit Slideshow</span>
-        </button>
-      )}
 
       {/* --- Nav Dots --- */}
       <nav className={styles.navDots}>
@@ -193,10 +158,19 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
 
 
       {/* --- Lightbox --- */}
-      {lightboxSrc && (
-        <div className={styles.lightboxOverlay} onClick={() => setLightboxSrc(null)}>
+      {lightboxIndex !== null && (
+        <div className={styles.lightboxOverlay} onClick={() => setLightboxIndex(null)}>
           <button className={styles.lightboxClose}>✕</button>
-          <img src={lightboxSrc} alt={lightboxAlt} className={styles.lightboxImg} onClick={e => e.stopPropagation()} />
+          <img 
+            src={imageMap[ALL_SLIDES[lightboxIndex]]} 
+            alt="Enlarged view" 
+            className={styles.lightboxImg} 
+            onClick={e => e.stopPropagation()} 
+          />
+          <div className={styles.lightboxNav}>
+            <button className={styles.lightboxNavBtn} onClick={(e) => { e.stopPropagation(); goLightboxPrev(); }}>←</button>
+            <button className={styles.lightboxNavBtn} onClick={(e) => { e.stopPropagation(); goLightboxNext(); }}>→</button>
+          </div>
         </div>
       )}
 
@@ -220,7 +194,7 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>01</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide1"]} alt="The hook" onClick={() => openLightbox(imageMap["slide1"], "The hook")} className={styles.clickableImg} />
+              <img src={imageMap["slide1"]} alt="The hook" onClick={() => openLightbox(0)} className={styles.clickableImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -241,7 +215,7 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>02</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide2"]} alt="The question" onClick={() => openLightbox(imageMap["slide2"], "The question")} className={styles.clickableImg} />
+              <img src={imageMap["slide2"]} alt="The question" onClick={() => openLightbox(1)} className={styles.clickableImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -261,7 +235,7 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>03</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide3"]} alt="Singer's model" onClick={() => openLightbox(imageMap["slide3"], "Singer's model")} className={styles.clickableImg} />
+              <img src={imageMap["slide3"]} alt="Singer's model" onClick={() => openLightbox(2)} className={styles.clickableImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -295,7 +269,7 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>04</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide4"]} alt="Step one" onClick={() => openLightbox(imageMap["slide4"], "Step one")} className={styles.clickableImg} />
+              <img src={imageMap["slide4"]} alt="Step one" onClick={() => openLightbox(3)} className={styles.clickableImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -320,7 +294,7 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>05</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide5"]} alt="Step two" onClick={() => openLightbox(imageMap["slide5"], "Step two")} className={styles.clickableImg} />
+              <img src={imageMap["slide5"]} alt="Step two" onClick={() => openLightbox(4)} className={styles.clickableImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -339,7 +313,7 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>06</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide6"]} alt="The third option" onClick={() => openLightbox(imageMap["slide6"], "The third option")} className={styles.clickableImg} />
+              <img src={imageMap["slide6"]} alt="The third option" onClick={() => openLightbox(5)} className={styles.clickableImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -383,7 +357,7 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>07</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide7"]} alt="The real teaching" onClick={() => openLightbox(imageMap["slide7"], "The real teaching")} className={styles.clickableImg} />
+              <img src={imageMap["slide7"]} alt="The real teaching" onClick={() => openLightbox(6)} className={styles.clickableImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -408,27 +382,6 @@ export function Chap1Question1({ isPresenting: propPresenting = false, onExitPre
         </div>
       </div>
 
-      {/* --- SLIDESHOW CONTROLS --- */}
-      <div className={styles.slideshowControl}>
-        {!isPresenting ? (
-          <button className={styles.slideshowPlayBtn} onClick={() => setIsPresenting(true)}>
-            <div className={styles.slideshowSvg}>
-              <svg viewBox="0 0 100 100">
-                <circle className={styles.svgTrack} cx="50" cy="50" r="45" />
-                <path className={styles.svgPlay} d="M40,30 L70,50 L40,70 Z" />
-              </svg>
-            </div>
-            <span className={styles.slideshowLabel}>Present</span>
-          </button>
-        ) : (
-          <div className={styles.slideshowPlayer}>
-            <button className={styles.slideshowNavBtn} onClick={goPrev} disabled={currentSlide === 0}>←</button>
-            <span className={styles.slideCounter}>{currentSlide + 1} / {TOTAL_SLIDES}</span>
-            <button className={styles.slideshowNavBtn} onClick={goNext} disabled={currentSlide === TOTAL_SLIDES - 1}>→</button>
-            <button className={`${styles.slideshowNavBtn} ${styles.stopBtn}`} onClick={stopPresentation}>Exit</button>
-          </div>
-        )}
-      </div>
 
       {/* --- CLOSING --- */}
       <section className={styles.closing} data-section="12">
