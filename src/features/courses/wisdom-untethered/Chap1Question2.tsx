@@ -145,7 +145,9 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
             <img 
                src={`/WisdomUntethered/Chap1/Question2/${slideImagePaths[ALL_SLIDES[lightboxIndex]]}${isDarkMode ? 'Dark' : 'Light'}${ 
                  (slideImagePaths[ALL_SLIDES[lightboxIndex]] === "OneRoot") ? '.jpg' : 
-                 ((slideImagePaths[ALL_SLIDES[lightboxIndex]] === "Deep down, you're afraid" || slideImagePaths[ALL_SLIDES[lightboxIndex]] === "Youcannotuseurmindtofixyourmind") && isDarkMode) ? '.jpg' : '.png' 
+                 ((slideImagePaths[ALL_SLIDES[lightboxIndex]] === "Deep down, you're afraid" || 
+                   slideImagePaths[ALL_SLIDES[lightboxIndex]] === "Youcannotuseurmindtofixyourmind" ||
+                   slideImagePaths[ALL_SLIDES[lightboxIndex]] === "The Release") && isDarkMode) ? '.jpg' : '.png' 
                }`}
                alt={ALL_SLIDES[lightboxIndex]}
                style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '4px' }}
@@ -327,7 +329,7 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
             <span className={styles.slideNumber}>07</span>
                 <div className={styles.clickableImg} onClick={() => openLightbox(6)}>
                   <img 
-                     src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/The ReleaseDark.png" : "/WisdomUntethered/Chap1/Question2/The ReleaseLight.png"} 
+                     src={isDarkMode ? "/WisdomUntethered/Chap1/Question2/The ReleaseDark.jpg" : "/WisdomUntethered/Chap1/Question2/The ReleaseLight.png"} 
                      alt="The Release" 
                      className={styles.slideImage}
                    />
