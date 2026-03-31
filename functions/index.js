@@ -2,12 +2,110 @@ const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const textToSpeech = require("@google-cloud/text-to-speech");
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
+const admin = require("firebase-admin");
 
-// Define the secret created in Google Cloud Secret Manager
+if (admin.apps.length === 0) {
+    admin.initializeApp();
+}
+
+const db = admin.firestore();
+
+// Define the secrets created in Google Cloud Secret Manager
 const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
+const razorpayKeyId = defineSecret("RAZORPAY_KEY_ID");
+const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
 
 // Text-to-Speech Client
 const ttsClient = new textToSpeech.TextToSpeechClient();
+
+/**
+ * Creates a Razorpay Order
+ */
+exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret], cors: true }, async (req, res) => {
+    const { amount, currency = "USD", courseId } = req.body;
+
+    if (!amount || !courseId) {
+        return res.status(400).send("Missing amount or courseId");
+    }
+
+    try {
+        const razorpay = new Razorpay({
+            key_id: razorpayKeyId.value(),
+            key_secret: razorpayKeySecret.value(),
+        });
+
+        const options = {
+            amount: Math.round(amount * 100), // Razorpay expects amount in subunits (cents/paise)
+            currency: currency,
+            receipt: `receipt_${courseId}_${Date.now()}`,
+            notes: {
+                courseId: courseId,
+                userId: req.body.userId || "anonymous"
+            }
+        };
+
+        const order = await razorpay.orders.create(options);
+        res.json(order);
+    } catch (error) {
+        console.error("Razorpay Order Error:", error);
+        res.status(500).send("Failed to create payment order");
+    }
+});
+
+/**
+ * Verifies Razorpay Payment Signature and grants access
+ */
+exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret], cors: true }, async (req, res) => {
+    const { 
+        razorpay_order_id, 
+        razorpay_payment_id, 
+        razorpay_signature,
+        userId,
+        courseId
+    } = req.body;
+
+    if (!userId || !courseId || !razorpay_signature) {
+        return res.status(400).send("Missing verification parameters");
+    }
+
+    try {
+        // 1. Verify Signature
+        const body = razorpay_order_id + "|" + razorpay_payment_id;
+        const expectedSignature = crypto
+            .createHmac("sha256", razorpayKeySecret.value())
+            .update(body.toString())
+            .digest("hex");
+
+        if (expectedSignature !== razorpay_signature) {
+            return res.status(400).send("Invalid payment signature");
+        }
+
+        // 2. Grant Access in Firestore
+        const userRef = db.collection("users").doc(userId);
+        await userRef.set({
+            purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // 3. Log the transaction
+        await db.collection("transactions").add({
+            userId,
+            courseId,
+            razorpayOrderId: razorpay_order_id,
+            razorpayPaymentId: razorpay_payment_id,
+            amount: 9, // Since we hardcoded it for now, or get from req
+            status: "SUCCESS",
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        res.json({ success: true, message: "Access granted" });
+    } catch (error) {
+        console.error("Verification Error:", error);
+        res.status(500).send("Verification failed");
+    }
+});
 
 exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
     let { text, promptContext, gender = 'FEMALE', voice = 'Enceladus' } = req.body;
@@ -58,7 +156,7 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
 
 exports.witnessPresence = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
     const { thought } = req.body;
-    // ... (rest of the file follows)
+    
     if (!thought) {
         console.warn("No thought provided in request.");
         return res.status(400).send("No thought shared.");
@@ -166,3 +264,4 @@ exports.analyzeEmotion = onRequest({ secrets: [geminiKey], cors: true }, async (
 });
 
 exports.pingDaily = onRequest((req, res) => res.send("Zen Ping Successful"));
+

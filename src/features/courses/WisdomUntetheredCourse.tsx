@@ -4,6 +4,7 @@ import { BookOpen, Play } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
 import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
+import { Chap1Question3 } from './wisdom-untethered/Chap1Question3';
 
 interface Chapter {
   id: number;
@@ -98,9 +99,10 @@ export function WisdomUntetheredCourse({
               className="w-full h-full"
             >
               {activeChapter.id === 1 ? (
-                activeQuestionId === 'question1' 
-                  ? <Chap1Question1 onOpenJournal={onOpenJournal} /> 
-                  : <Chap1Question2 onOpenJournal={onOpenJournal} />
+                activeQuestionId === 'question1' ? <Chap1Question1 onOpenJournal={onOpenJournal} /> :
+                activeQuestionId === 'question2' ? <Chap1Question2 onOpenJournal={onOpenJournal} /> :
+                activeQuestionId === 'question3' ? <Chap1Question3 onOpenJournal={onOpenJournal} /> :
+                <Chap1Question1 onOpenJournal={onOpenJournal} />
               ) : (
                 <div className="p-12 overflow-y-auto h-full">
                   <p className="text-[16px] leading-[2.2] font-sans text-[var(--text-secondary)] tracking-wide max-w-2xl">

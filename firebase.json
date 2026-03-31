@@ -61,6 +61,20 @@
         }
       },
       {
+        "source": "/api/razorpay-order",
+        "function": {
+          "functionId": "createRazorpayOrder",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/razorpay-verify",
+        "function": {
+          "functionId": "verifyRazorpayPayment",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

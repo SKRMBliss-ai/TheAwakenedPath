@@ -4,7 +4,8 @@ import { PowerOfNow } from '../soul-intelligence/components/PowerOfNow';
 import { useAuth } from '../auth/AuthContext';
 import { hasWisdomAccess } from '../../config/admin';
 import { AnchorButton } from '../../components/ui/SacredUI';
-import { Lock } from 'lucide-react';
+import { Lock, Sparkles } from 'lucide-react';
+import { useRazorpay } from '../../hooks/useRazorpay';
 
 interface CoursesHubProps {
     initialChapter?: string;
@@ -12,9 +13,33 @@ interface CoursesHubProps {
 }
 
 export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourseSelect }) => {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
+    const { checkOut, isProcessing } = useRazorpay();
     const [activeCourseId, setActiveCourseId] = useState<'power-of-now' | 'untethered'>('power-of-now');
-    const isWisdomAuthorized = hasWisdomAccess(user?.email);
+    
+    // Authorization check (Admin OR Purchased)
+    const isWisdomAuthorized = hasWisdomAccess(user?.email) || 
+                               profile?.purchasedCourses?.includes('wisdom_untethered');
+
+    const handleUnlock = async () => {
+        if (!user) {
+            alert("Please sign in first to unlock this journey.");
+            return;
+        }
+
+        await checkOut(
+            user.uid,
+            user.email || '',
+            user.displayName || 'Seeker',
+            'wisdom_untethered',
+            9, // $9 as requested
+            () => {
+                // Success callback: Firestore is updated by the cloud function
+                alert("Success! The path of Wisdom Untethered is now open for you.");
+                // The profile state will automatically refresh once Firestore updates (onAuthStateChanged handles it)
+            }
+        );
+    };
 
     return (
         <div className="w-full flex flex-col min-h-screen">
@@ -98,14 +123,18 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
                                         <div className="w-4 h-4 rounded-full bg-[var(--accent-primary)]" />
                                     </motion.div>
                                 ) : (
-                                    <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                                        className="w-12 h-12 rounded-full border border-dashed border-[var(--text-muted)] opacity-50"
-                                    />
+                                    <div className="relative">
+                                        <motion.div
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                            className="w-12 h-12 rounded-full border border-dashed border-[var(--text-muted)] opacity-50"
+                                        />
+                                        <Lock size={16} className="absolute inset-0 m-auto text-[var(--text-muted)] opacity-50" />
+                                    </div>
                                 )}
                             </div>
                             <h2 className="text-4xl font-serif font-light text-[var(--text-primary)] mb-4 tracking-tight">Wisdom Untethered</h2>
+                            
                             {isWisdomAuthorized ? (
                                 <>
                                     <p className="text-lg font-serif italic text-[var(--accent-primary)] mb-10 opacity-90 tracking-wide">The path is open for you.</p>
@@ -118,13 +147,32 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
                                     </AnchorButton>
                                 </>
                             ) : (
-                                <>
-                                    <p className="text-lg font-serif italic text-[var(--accent-primary)] mb-6 opacity-90 tracking-wide">Coming Soon</p>
-                                    <p className="text-sm text-[var(--text-muted)] text-center max-w-sm leading-relaxed">
-                                        A journey into the depths of your inner world is being prepared. 
-                                        In the meantime, continue anchoring your presence in the Power of Now.
+                                <div className="text-center flex flex-col items-center">
+                                    <p className="text-lg font-serif italic text-[var(--accent-primary)] mb-6 opacity-90 tracking-wide">A Deep Exploration of Being</p>
+                                    <p className="text-sm text-[var(--text-muted)] text-center max-w-sm leading-relaxed mb-10">
+                                        Join us for an advanced journey into the depths of your inner world. 
+                                        Unlock full access to all Michael Singer inspired meditations and wisdom chapters.
                                     </p>
-                                </>
+                                    
+                                    <div className="flex flex-col items-center gap-4">
+                                        <AnchorButton 
+                                            variant="glow"
+                                            onClick={handleUnlock}
+                                            disabled={isProcessing}
+                                            className="!px-14 !py-5 flex items-center gap-2"
+                                        >
+                                            {isProcessing ? "Opening Gateway..." : (
+                                                <>
+                                                    <Sparkles size={16} />
+                                                    Unlock Full Journey · $9
+                                                </>
+                                            )}
+                                        </AnchorButton>
+                                        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] opacity-50 font-medium">
+                                            Lifetime Access · One-time Contribution
+                                        </p>
+                                    </div>
+                                </div>
                             )}
                         </motion.div>
                     )}
@@ -133,3 +181,4 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
         </div>
     );
 };
+

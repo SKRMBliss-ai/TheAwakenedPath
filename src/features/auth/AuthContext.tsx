@@ -4,8 +4,20 @@ import type { User } from 'firebase/auth';
 import { auth, db } from '../../firebase';
 import { doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
+interface UserProfile {
+    uid: string;
+    email: string | null;
+    displayName: string | null;
+    photoURL: string | null;
+    level: number;
+    xp: number;
+    streak: number;
+    purchasedCourses: string[];
+}
+
 interface AuthContextType {
     user: User | null;
+    profile: UserProfile | null;
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
     signInWithEmail: (email: string, pass: string) => Promise<void>;
@@ -15,6 +27,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
+    profile: null,
     loading: true,
     signInWithGoogle: async () => { },
     signInWithEmail: async () => { },
@@ -26,6 +39,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -33,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
                 if (currentUser) {
                     const userRef = doc(db, 'users', currentUser.uid);
-                    const userSnap = await getDoc(userRef);
+                    let userSnap = await getDoc(userRef);
 
                     const userData = {
                         uid: currentUser.uid,
@@ -42,25 +56,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         photoURL: currentUser.photoURL,
                         lastLogin: serverTimestamp()
                     };
-                    console.log("Auth User Authenticated:", currentUser.email);
 
                     if (!userSnap.exists()) {
-                        await setDoc(userRef, {
+                        const newProfile = {
                             ...userData,
                             createdAt: serverTimestamp(),
                             level: 1,
                             xp: 0,
-                            streak: 0
-                        });
+                            streak: 0,
+                            purchasedCourses: []
+                        };
+                        await setDoc(userRef, newProfile);
+                        setProfile({
+                            ...userData,
+                            level: 1,
+                            xp: 0,
+                            streak: 0,
+                            purchasedCourses: []
+                        } as UserProfile);
                     } else {
                         await updateDoc(userRef, {
                             lastLogin: serverTimestamp()
                         });
+                        const data = userSnap.data();
+                        setProfile({
+                            uid: currentUser.uid,
+                            email: currentUser.email,
+                            displayName: currentUser.displayName,
+                            photoURL: currentUser.photoURL,
+                            level: data?.level || 1,
+                            xp: data?.xp || 0,
+                            streak: data?.streak || 0,
+                            purchasedCourses: data?.purchasedCourses || []
+                        } as UserProfile);
                     }
 
                     // Log Activity
                     try {
-                        console.log("Logging Activity...");
                         await addDoc(collection(db, 'activity_logs'), {
                             userId: currentUser.uid,
                             userEmail: currentUser.email,
@@ -68,12 +100,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             details: 'User logged in',
                             timestamp: serverTimestamp()
                         });
-                        console.log("Activity Logged.");
                     } catch (error) {
                         console.error("Error logging activity:", error);
                     }
                 } else {
-                    console.log("No authenticated user.");
+                    setProfile(null);
                 }
             } catch (error) {
                 console.error("Auth initialization error:", error);
@@ -123,8 +154,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
+        <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
             {children}
         </AuthContext.Provider>
     );
 };
+

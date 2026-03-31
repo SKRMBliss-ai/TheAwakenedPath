@@ -992,7 +992,7 @@ export default function UntetheredApp() {
                                     {[
                                       { id: 'question1', label: 'Question 1', locked: false },
                                       { id: 'question2', label: 'Question 2', locked: false },
-                                      { id: 'question3', label: 'Question 3', locked: true },
+                                      { id: 'question3', label: 'Question 3', locked: false },
                                       { id: 'question4', label: 'Question 4', locked: true },
                                     ].map((q) => (
                                       <button
