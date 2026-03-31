@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '../../../lib/utils';
 import styles from './Chap1Question3.module.css';
 
@@ -13,6 +13,41 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
   const [activeSection, setActiveSection] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isDark, setIsDark] = useState(true);
+
+  // ── Lightbox ──
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const ALL_SLIDES = [
+    "Slide1.jpeg", "Slide2.jpeg", "Slide3.jpeg", 
+    "Slide4.jpeg", "Slide5.jpeg", "Slide6.jpeg", 
+    "Slide7.jpeg", "Slide8.jpeg", "Slide9.jpeg"
+  ];
+
+  const goLightboxNext = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((prev) => (prev === null ? 0 : (prev + 1) % ALL_SLIDES.length));
+  };
+
+  const goLightboxPrev = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((prev) => (prev === null ? 0 : (prev - 1 + ALL_SLIDES.length) % ALL_SLIDES.length));
+  };
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (lightboxIndex !== null) {
+        if (e.key === 'ArrowRight') goLightboxNext();
+        if (e.key === 'ArrowLeft') goLightboxPrev();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightboxIndex]);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+  };
 
   // Theme Detection
   useEffect(() => {
@@ -107,6 +142,23 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
     <div className={styles.container} ref={containerRef}>
       <div className={styles.progressBar} style={{ width: `${scrollProgress}%` }} />
       
+      {/* Lightbox Overlay */}
+      {lightboxIndex !== null && (
+        <div className={styles.lightboxOverlay} onClick={() => setLightboxIndex(null)}>
+          <button className={styles.lightboxClose}>✕</button>
+          <div className={styles.lightboxImg} onClick={e => e.stopPropagation()}>
+             <img src={getImgPath(ALL_SLIDES[lightboxIndex])} alt={`Slide ${lightboxIndex + 1}`} />
+          </div>
+          <div className={styles.lightboxNav}>
+            <button className={styles.lightboxNavBtn} onClick={(e) => { e.stopPropagation(); goLightboxPrev(); }}>←</button>
+            <div className={styles.lightboxCounter}>
+              {lightboxIndex + 1} / {ALL_SLIDES.length}
+            </div>
+            <button className={styles.lightboxNavBtn} onClick={(e) => { e.stopPropagation(); goLightboxNext(); }}>→</button>
+          </div>
+        </div>
+      )}
+
       <nav className={styles.navDots}>
         {Array.from({ length: totalSections }).map((_, i) => (
           <button
@@ -133,9 +185,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
 
       <section className={styles.slide} data-section="1">
         <div className={styles.slideGrid}>
-          <div className={styles.imgWrap}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(0)}>
             <span className={styles.slideNum}>01</span>
-            <img src={getImgPath('Slide1.jpeg')} alt="The narrow personal frame" />
+            <img src={getImgPath('Slide1.jpeg')} alt="The narrow personal frame" className={styles.clickableImg} />
           </div>
           <div>
             <span className={styles.slideTag}>The hook</span>
@@ -151,9 +203,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
 
       <section className={styles.slide} data-section="2">
         <div className={cn(styles.slideGrid, styles.flip)}>
-          <div className={styles.imgWrap}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(1)}>
             <span className={styles.slideNum}>02</span>
-            <img src={getImgPath('Slide2.jpeg')} alt="You are on a planet" />
+            <img src={getImgPath('Slide2.jpeg')} alt="You are on a planet" className={styles.clickableImg} />
           </div>
           <div>
             <span className={styles.slideTag}>Reality check</span>
@@ -168,9 +220,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
 
       <section className={styles.slide} data-section="3">
         <div className={styles.slideGrid}>
-          <div className={styles.imgWrap}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(2)}>
             <span className={styles.slideNum}>03</span>
-            <img src={getImgPath('Slide3.jpeg')} alt="Personal vs impersonal mind" />
+            <img src={getImgPath('Slide3.jpeg')} alt="Personal vs impersonal mind" className={styles.clickableImg} />
           </div>
           <div>
             <span className={styles.slideTag}>Singer's model</span>
@@ -194,9 +246,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
 
       <section className={styles.slide} data-section="5">
         <div className={cn(styles.slideGrid, styles.flip)}>
-          <div className={styles.imgWrap}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(3)}>
             <span className={styles.slideNum}>04</span>
-            <img src={getImgPath('Slide4.jpeg')} alt="The car practice" />
+            <img src={getImgPath('Slide4.jpeg')} alt="The car practice" className={styles.clickableImg} />
           </div>
           <div>
             <span className={styles.slideTag}>The car practice</span>
@@ -212,9 +264,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
 
       <section className={styles.slide} data-section="6">
         <div className={styles.slideGrid}>
-          <div className={styles.imgWrap}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(4)}>
             <span className={styles.slideNum}>05</span>
-            <img src={getImgPath('Slide5.jpeg')} alt="Every doorway is a practice moment" />
+            <img src={getImgPath('Slide5.jpeg')} alt="Every doorway is a practice moment" className={styles.clickableImg} />
           </div>
           <div>
             <span className={styles.slideTag}>Every threshold</span>
@@ -229,9 +281,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
 
       <section className={styles.slide} data-section="7">
         <div className={cn(styles.slideGrid, styles.flip)}>
-          <div className={styles.imgWrap}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(5)}>
             <span className={styles.slideNum}>06</span>
-            <img src={getImgPath('Slide6.jpeg')} alt="The untrained mind" />
+            <img src={getImgPath('Slide6.jpeg')} alt="The untrained mind" className={styles.clickableImg} />
           </div>
           <div>
             <span className={styles.slideTag}>Without practice</span>
@@ -246,9 +298,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
 
       <section className={styles.slide} data-section="8">
         <div className={styles.slideGrid}>
-          <div className={styles.imgWrap}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(6)}>
             <span className={styles.slideNum}>07</span>
-            <img src={getImgPath('Slide7.jpeg')} alt="The mind can be trained" />
+            <img src={getImgPath('Slide7.jpeg')} alt="The mind can be trained" className={styles.clickableImg} />
           </div>
           <div>
             <span className={styles.slideTag}>The dog analogy</span>
@@ -291,9 +343,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
 
       <section className={styles.slide} data-section="10">
         <div className={cn(styles.slideGrid, styles.flip)}>
-          <div className={styles.imgWrap}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(7)}>
             <span className={styles.slideNum}>08</span>
-            <img src={getImgPath('Slide8.jpeg')} alt="In the wider frame" />
+            <img src={getImgPath('Slide8.jpeg')} alt="In the wider frame" className={styles.clickableImg} />
           </div>
           <div>
             <span className={styles.slideTag}>The guided meditation</span>
@@ -337,9 +389,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
 
       <section className={styles.slide} data-section="12">
         <div className={styles.slideGrid}>
-          <div className={styles.imgWrap}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(8)}>
             <span className={styles.slideNum}>09</span>
-            <img src={getImgPath('Slide9.jpeg')} alt="In that reality, there is peace" />
+            <img src={getImgPath('Slide9.jpeg')} alt="In that reality, there is peace" className={styles.clickableImg} />
           </div>
           <div>
             <span className={styles.slideTag}>The result</span>

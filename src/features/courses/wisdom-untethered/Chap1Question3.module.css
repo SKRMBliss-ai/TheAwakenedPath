@@ -324,3 +324,100 @@
     .heroTitle { font-size: 3rem; }
     .navDots { display: none; }
 }
+
+/* Lightbox */
+.clickableImg {
+    cursor: zoom-in;
+    transition: transform 0.3s ease;
+}
+
+.clickableImg:hover {
+    transform: scale(1.02);
+}
+
+.lightboxOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(253, 250, 244, 0.98);
+    backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    cursor: pointer;
+    padding: 2rem;
+}
+
+:global(.dark) .lightboxOverlay {
+    background: rgba(12, 9, 16, 0.95);
+}
+
+.lightboxClose {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    background: none;
+    border: none;
+    color: var(--ink);
+    font-size: 2rem;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.lightboxClose:hover {
+    opacity: 1;
+}
+
+.lightboxImg {
+    max-width: 90vw;
+    max-height: 80vh;
+    z-index: 2001;
+}
+
+.lightboxImg img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+}
+
+.lightboxNav {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    z-index: 2002;
+}
+
+.lightboxNavBtn {
+    background: var(--gold);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: transform 0.3s, background 0.3s;
+}
+
+.lightboxNavBtn:hover {
+    transform: scale(1.1);
+    background: var(--gold-light);
+}
+
+.lightboxCounter {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    min-width: 80px;
+    text-align: center;
+}
