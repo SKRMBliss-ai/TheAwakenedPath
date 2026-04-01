@@ -25,7 +25,7 @@ import EngagementReport from './features/admin/EngagementReport';
 import { useAchievements } from './features/achievements/useAchievements';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
-import { isAdminEmail, hasWisdomAccess } from './config/admin';
+import { isAdminEmail, hasWisdomAccess, isUnlockedUser } from './config/admin';
 
 interface PracticeStep {
   title: string;
@@ -1157,7 +1157,7 @@ export default function UntetheredApp() {
 
         {/* SPATIAL AUDIO TOGGLE */}
         <div className="fixed top-6 right-4 sm:top-8 sm:right-8 z-[60] flex items-center gap-3 sm:gap-4 scale-[0.85] sm:scale-100 origin-top-right">
-          {currentUser?.email === 'shrutikhungar@gmail.com' && (
+          {isUnlockedUser(currentUser?.email) && (
             <button
               onClick={() => setIsReportOpen(true)}
               className="p-4 rounded-full backdrop-blur-3xl border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-white hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center group shadow-xl"

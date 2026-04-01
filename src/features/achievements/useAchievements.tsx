@@ -8,6 +8,7 @@ import {
     type UserStats,
     type Achievement
 } from './achievementsDefs';
+import { isUnlockedUser } from '../../config/admin';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface AchievementsState {
@@ -40,17 +41,25 @@ export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (!user) return;
         const ref = doc(db, 'users', user.uid, 'meta', 'achievements');
         getDoc(ref).then((snap) => {
+            const isAlwaysUnlocked = isUnlockedUser(user.email);
+            const allAchIds = ACHIEVEMENTS.map(a => a.id);
+
             if (snap.exists()) {
                 const data = snap.data();
                 setState(prev => ({
                     ...prev,
-                    unlocked: data.unlocked ?? [],
+                    unlocked: isAlwaysUnlocked ? allAchIds : (data.unlocked ?? []),
                     points: data.points ?? 0,
                     loading: false,
                 }));
             } else {
                 setDoc(ref, { unlocked: [], points: 0, pointsLog: [] });
-                setState(prev => ({ ...prev, unlocked: [], points: 0, loading: false }));
+                setState(prev => ({ 
+                    ...prev, 
+                    unlocked: isAlwaysUnlocked ? allAchIds : [], 
+                    points: 0, 
+                    loading: false 
+                }));
             }
         });
     }, [user]);
