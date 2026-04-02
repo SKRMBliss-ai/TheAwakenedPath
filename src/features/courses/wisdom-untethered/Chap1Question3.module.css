@@ -380,12 +380,18 @@
 
 .lightboxImg {
     max-width: min(1000px, 95vw);
-    max-height: 55vh;
+    max-height: 80vh; /* Match Question 1 standard */
     margin-top: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 205;
+    transition: max-height 0.3s ease;
+}
+
+/* Explicitly keep Slide 3 (and complex infographics) slightly smaller to prevent cutting while maximizing visibility */
+.lightboxImg.smallScale {
+    max-height: 75vh;
 }
 
 .lightboxImg img {

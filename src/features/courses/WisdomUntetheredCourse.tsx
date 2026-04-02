@@ -5,6 +5,7 @@ import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
 import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
 import { Chap1Question3 } from './wisdom-untethered/Chap1Question3';
+import { Chap1Question4 } from './wisdom-untethered/Chap1Question4';
 
 interface Chapter {
   id: number;
@@ -20,9 +21,16 @@ const CHAPTERS: Chapter[] = [
     title: "The Mind",
     subtitle: "Chapter 1",
     explanation: "Chapter 1 of Wisdom Untethered explores one of the most fundamental insights in Singer's teachings: you are not your mind. The mind has a lower layer that reacts automatically based on past experiences, and a higher layer that can consciously redirect itself toward steadier ground. Singer teaches that you don't need to fight negative thoughts — you can use the mind as a tool, through affirmations and deliberate redirection, to lift yourself out of spiraling patterns. At the deepest level, the practice is even simpler: learn to relax in the face of whatever the mind is doing. When you stop feeding the reaction, the negativity gradually loses its grip. Freedom isn't about fixing the mind. It's about stopping the habit of letting it run your life.",
-    videoId: "PLACEHOLDER"
+    videoId: "3oAQijy87rs" // Defaulting to Q1
   }
 ];
+
+const QUESTION_VIDEOS: Record<string, string> = {
+  'question1': '3oAQijy87rs',
+  'question2': 'rlRi9eCyZuU',
+  'question3': '',
+  'question4': '',
+};
 
 interface CourseProps {
   activeQuestionId: string;
@@ -102,6 +110,7 @@ export function WisdomUntetheredCourse({
                 activeQuestionId === 'question1' ? <Chap1Question1 onOpenJournal={onOpenJournal} /> :
                 activeQuestionId === 'question2' ? <Chap1Question2 onOpenJournal={onOpenJournal} /> :
                 activeQuestionId === 'question3' ? <Chap1Question3 onOpenJournal={onOpenJournal} /> :
+                activeQuestionId === 'question4' ? <Chap1Question4 onOpenJournal={onOpenJournal} /> :
                 <Chap1Question1 onOpenJournal={onOpenJournal} />
               ) : (
                 <div className="p-12 overflow-y-auto h-full">
@@ -127,7 +136,7 @@ export function WisdomUntetheredCourse({
                   <div className="absolute inset-0 bg-[var(--accent-primary)]/5 blur-3xl pointer-events-none" />
                   <iframe
                     className="w-full h-full relative z-10"
-                    src={`https://www.youtube.com/embed/${activeChapter.videoId}?rel=0`}
+                    src={`https://www.youtube.com/embed/${QUESTION_VIDEOS[activeQuestionId] || activeChapter.videoId}?rel=0`}
                     title={activeChapter.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen

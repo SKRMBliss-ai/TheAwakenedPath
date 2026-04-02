@@ -20,12 +20,13 @@ import { GlobalSparkles } from './components/ui/GlobalSparkles';
 import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
 import { ThemeToggle, useTheme } from './theme/ThemeSystem';
 import { collection, query, orderBy, limit, onSnapshot, getDocs, doc } from 'firebase/firestore';
-import appLogo from './assets/logo.png';
+import { AwakenedPathLogo } from './components/ui/AwakenedPathLogo';
 import EngagementReport from './features/admin/EngagementReport';
 import { useAchievements } from './features/achievements/useAchievements';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
 import { isAdminEmail, hasWisdomAccess, isUnlockedUser } from './config/admin';
+import { DailyPresenceCheck } from './features/practices/DailyPresenceCheck';
 
 interface PracticeStep {
   title: string;
@@ -117,8 +118,9 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
           </button>
 
           <div className="flex flex-col items-center">
-            <p className="text-[8px] font-serif italic text-[var(--text-secondary)] tracking-widest uppercase mb-0.5 text-center">{greeting},</p>
-            <h1 className="text-[14px] font-serif font-bold text-[var(--text-primary)] text-center">{user.displayName || 'Traveler'}</h1>
+            <AwakenedPathLogo variant="icon" size="sm" animated={false} className="mb-1 opacity-80" />
+            <p className="text-[7px] font-serif italic text-[var(--accent-primary)] tracking-[0.3em] uppercase mb-0.5">{greeting},</p>
+            <h1 className="text-[12px] font-serif font-bold text-[var(--text-primary)] uppercase tracking-widest">{user.displayName || 'Traveler'}</h1>
           </div>
 
           {/* Empty div for flex-between balance */}
@@ -219,6 +221,11 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
         </motion.div>
       )}
 
+      {/* Daily Practice Checklist */}
+      <section className="px-2">
+        <DailyPresenceCheck userId={user?.uid} />
+      </section>
+
       {/* Main Practices Grid */}
       <section className="space-y-6 pb-20">
         <h4 className="text-[12px] font-bold uppercase tracking-[0.4em] text-[var(--text-primary)] pl-4">Sacred Practices</h4>
@@ -276,14 +283,20 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
       className="space-y-8 max-w-5xl mx-auto"
     >
       {/* Desktop Optimized Header — Floating Greeting */}
-      <header className="flex justify-between items-center p-6 border-b border-[var(--border-default)]/30">
-        <div className="text-left">
-          <p className="text-xs text-[var(--text-muted)] font-serif italic mb-1">
-            {greeting},
-          </p>
-          <h1 className="text-2xl font-serif font-light text-[var(--text-primary)] tracking-tight">
-            {user.displayName}
-          </h1>
+      <header className="flex justify-between items-center p-8 border-b border-[var(--border-default)]/30 bg-[var(--bg-surface)]/10 backdrop-blur-sm">
+        <div className="flex items-center gap-6">
+            <AwakenedPathLogo variant="icon" size="md" animated={true} />
+          <div className="text-left">
+            <p className="text-xs text-[var(--accent-primary)] font-serif italic mb-1 uppercase tracking-widest">
+              {greeting},
+            </p>
+            <h1 className="text-3xl font-serif font-light text-[var(--text-primary)] tracking-tight">
+              {user.displayName}
+            </h1>
+          </div>
+        </div>
+        <div className="flex flex-col items-end opacity-40">
+          <span className="text-[10px] font-serif italic text-[var(--text-muted)] tracking-[0.3em] uppercase">The Presence Study</span>
         </div>
       </header>
 
@@ -373,6 +386,11 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
           </div>
         </section>
       )}
+
+      {/* Daily Practice Checklist */}
+      <section className="px-4">
+        <DailyPresenceCheck userId={user?.uid} />
+      </section>
 
       {/* Practices Grid - Desktop Balanced */}
       <section className="space-y-8">
@@ -882,16 +900,14 @@ export default function UntetheredApp() {
         "lg:flex lg:translate-x-0",
         isSidebarOpen ? "translate-x-0 flex" : "-translate-x-full lg:flex"
       )}>
-        <div className="flex items-center justify-between mb-6 px-2">
-          <div className="flex items-center gap-3 cursor-pointer group">
-            <div className="w-10 h-10 rounded-full bg-[var(--bg-surface)] flex items-center justify-center shadow-lg group-hover:shadow-[0_0_15px_var(--accent-secondary)] transition-all duration-300">
-              <img src={appLogo} alt="Awakened Path Logo" className="w-full h-full rounded-full object-cover" />
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-lg font-serif font-bold text-[var(--text-primary)] tracking-wide group-hover:text-[var(--accent-secondary)] transition-colors">The Awakened Path</h1>
-              <span className="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-widest">The Presence Study</span>
-            </div>
-          </div>
+        <div className="flex items-center justify-between mb-10 px-2">
+          <AwakenedPathLogo
+            variant="full"
+            size="md"
+            animated={true}
+            onClick={() => setActiveTab('home')}
+            className="group"
+          />
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-[var(--text-muted)]">
             <X className="w-6 h-6" />
           </button>
@@ -993,7 +1009,7 @@ export default function UntetheredApp() {
                                       { id: 'question1', label: 'Question 1', locked: false },
                                       { id: 'question2', label: 'Question 2', locked: false },
                                       { id: 'question3', label: 'Question 3', locked: false },
-                                      { id: 'question4', label: 'Question 4', locked: true },
+                                      { id: 'question4', label: 'Question 4', locked: !isAdminEmail(currentUser?.email) },
                                     ].map((q) => (
                                       <button
                                         key={q.id}

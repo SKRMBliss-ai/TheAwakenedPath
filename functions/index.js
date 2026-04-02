@@ -1,10 +1,12 @@
-const { onRequest } = require("firebase-functions/v2/https");
+const { onRequest, onCall } = require("firebase-functions/v2/https");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { defineSecret } = require("firebase-functions/params");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const textToSpeech = require("@google-cloud/text-to-speech");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const admin = require("firebase-admin");
+const nodemailer = require("nodemailer");
 
 if (admin.apps.length === 0) {
     admin.initializeApp();
@@ -16,6 +18,8 @@ const db = admin.firestore();
 const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
 const razorpayKeyId = defineSecret("RAZORPAY_KEY_ID");
 const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
+const emailUser = defineSecret("EMAIL_USER");
+const emailPass = defineSecret("EMAIL_PASS");
 
 // Text-to-Speech Client
 const ttsClient = new textToSpeech.TextToSpeechClient();
@@ -330,4 +334,124 @@ exports.analyzeEmotion = onRequest({ secrets: [geminiKey], cors: true }, async (
 });
 
 exports.pingDaily = onRequest((req, res) => res.send("Zen Ping Successful"));
+
+/**
+ * Helper to get nodemailer transporter
+ */
+const getTransporter = () => {
+    return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: emailUser.value(),
+            pass: emailPass.value(),
+        },
+    });
+};
+
+/**
+ * Scheduled Reminder: India Evening (8:30 PM IST = 3:00 PM UTC)
+ */
+exports.sendDailyReminderIN = onSchedule({
+    schedule: "30 15 * * *",
+    secrets: [emailUser, emailPass],
+    timeZone: "Asia/Kolkata"
+}, async (event) => {
+    return runReminderLogic('IN');
+});
+
+/**
+ * Scheduled Reminder: US Evening (8:30 PM EST = 1:30 AM UTC)
+ */
+exports.sendDailyReminderUS = onSchedule({
+    schedule: "30 1 * * *",
+    secrets: [emailUser, emailPass],
+    timeZone: "America/New_York"
+}, async (event) => {
+    return runReminderLogic('US');
+});
+
+async function runReminderLogic(region) {
+    const today = new Date().toISOString().split('T')[0];
+    const usersSnap = await db.collection("users").get();
+    const transporter = getTransporter();
+
+    const emailTemplate = `
+        <div style="font-family: 'Georgia', serif; padding: 40px; background: #FDFAF4; color: #1C1814; border: 1px solid #E6C57D;">
+            <h2 style="color: #B8973A;">Peace is Choice. Not a State.</h2>
+            <p>The day is winding down. Before the mind begins its final preparations for rest, return to the seat of the Watcher.</p>
+            <div style="font-style: italic; border-left: 2px solid #E6C57D; padding-left: 20px; margin: 30px 0; color: #555;">
+                "You are the listener. Not the radio."
+            </div>
+            <a href="https://awakened-path-2026.web.app" style="display: inline-block; padding: 12px 30px; background: #1C1814; color: #E6C57D; text-decoration: none; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">Record Your Journey →</a>
+        </div>
+    `;
+
+    for (const userDoc of usersSnap.docs) {
+        const userData = userDoc.data();
+        if (!userData.email) continue;
+
+        // Check if user has already practiced today
+        const practiceSnap = await userDoc.ref.collection("dailyPractices").doc(today).get();
+        if (!practiceSnap.exists() || !practiceSnap.data().completed) {
+            console.log(`Sending reminder to ${userData.email}`);
+            await transporter.sendMail({
+                from: '"The Awakened Path" <bliss@awakened-path.com>',
+                to: userData.email,
+                subject: "🌙 An Invitation to Return to Source",
+                html: emailTemplate
+            });
+        }
+    }
+}
+
+/**
+ * Admin: Blast Update Email
+ */
+exports.blastUpdateEmail = onCall({
+    secrets: [emailUser, emailPass]
+}, async (request) => {
+    // Only allow for admin emails
+    const adminEmails = [
+        'shrutikhungar@gmail.com',
+        'simkatyal1@gmail.com',
+        'rashmi.purbey@gmail.com',
+        'smriti.duggal@gmail.com'
+    ];
+
+    if (!adminEmails.includes(request.auth.token.email)) {
+        throw new Error("Unauthorized");
+    }
+
+    const { chapterTitle, chapterSubtitle, youtubeId } = request.data;
+    const usersSnap = await db.collection("users").get();
+    const transporter = getTransporter();
+
+    const updateTemplate = `
+        <div style="font-family: 'Georgia', serif; padding: 40px; background: #0C0910; color: #FDFAF4; border: 1px solid rgba(184,151,58,0.2);">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <span style="font-size: 0.7rem; letter-spacing: 4px; uppercase; opacity: 0.6;">COURSE UPDATE</span>
+                <h1 style="color: #E6C57D; margin-top: 10px;">The Journey Continues.</h1>
+            </div>
+            <p>New guidance has been added: <strong>${chapterTitle}</strong></p>
+            <p>${chapterSubtitle}</p>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="https://awakened-path-2026.web.app/courses/wisdom-untethered" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 2px; font-weight: bold;">Watch the Lesson →</a>
+            </div>
+        </div>
+    `;
+
+    for (const userDoc of usersSnap.docs) {
+        const userData = userDoc.data();
+        if (!userData.email) continue;
+        
+        await transporter.sendMail({
+            from: '"The Awakened Path" <bliss@awakened-path.com>',
+            to: userData.email,
+            subject: `✨ New Guidance Added: ${chapterTitle}`,
+            html: updateTemplate
+        });
+    }
+
+    return { success: true, count: usersSnap.size };
+});
 

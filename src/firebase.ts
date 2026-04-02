@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getFunctions } from "firebase/functions";
 const firebaseConfig = {
     apiKey: "AIzaSyDau-Q6HiBlp2NJ5H1u1GMyfLnUIoLd9aQ",
     authDomain: "awakened-path-2026.firebaseapp.com",
@@ -13,5 +14,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const functions = getFunctions(app);
 
 export default app;

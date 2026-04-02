@@ -168,7 +168,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
       {lightboxIndex !== null && (
         <div className={styles.lightboxOverlay} onClick={() => setLightboxIndex(null)}>
           <button className={styles.lightboxClose}>✕</button>
-          <div className={styles.lightboxImg} onClick={e => e.stopPropagation()}>
+          <div className={cn(
+            styles.lightboxImg 
+          )} onClick={e => e.stopPropagation()}>
              <img src={getImgPath(ALL_SLIDES[lightboxIndex])} alt={`Slide ${lightboxIndex + 1}`} />
           </div>
           <div className={styles.lightboxNav}>
