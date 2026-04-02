@@ -27,7 +27,6 @@ const lightImages: Record<string, string> = {
 };
 
 const ALL_SLIDES = ["slide1", "slide2", "slide3", "slide4", "slide5", "slide6", "slide7", "slide8", "slide9"];
-const TOTAL_SECTION_COUNT = 16;
 
 const slidesContent = [
   {
@@ -169,8 +168,6 @@ interface Chap1Question4Props {
 
 export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollPct, setScrollPct] = useState(0);
-  const [activeSection, setActiveSection] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const [isDark, setIsDark] = useState(
@@ -191,16 +188,6 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
 
   const imageMap = isDark ? darkImages : lightImages;
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const onScroll = () => {
-      const pct = (container.scrollTop / (container.scrollHeight - container.clientHeight)) * 100;
-      setScrollPct(Math.min(pct, 100));
-    };
-    container.addEventListener("scroll", onScroll, { passive: true });
-    return () => container.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -212,8 +199,6 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add(styles.visible);
-            const idx = parseInt(entry.target.getAttribute("data-section") || "0");
-            setActiveSection(idx);
           }
         });
       },
@@ -229,28 +214,13 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
   const nextLightbox = () => setLightboxIndex(prev => (prev === null ? 0 : (prev + 1) % ALL_SLIDES.length));
   const prevLightbox = () => setLightboxIndex(prev => (prev === null ? 0 : (prev - 1 + ALL_SLIDES.length) % ALL_SLIDES.length));
 
-  const scrollToSection = (i: number) => {
-    const container = containerRef.current;
-    if (!container) return;
-    const target = container.querySelector(`[data-section="${i}"]`);
-    if (target) target.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
-    <div className={styles.container} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
-      <div className={styles.progressBar} style={{ width: `${scrollPct}%` }} />
-
-      <nav className={styles.navDots}>
-        {Array.from({ length: TOTAL_SECTION_COUNT }).map((_, i) => (
-          <button
-            key={i}
-            className={cn(styles.navDot, activeSection === i && styles.active)}
-            onClick={() => scrollToSection(i)}
-          />
-        ))}
-      </nav>
-
-      {/* LIGHTBOX */}
+    <div
+      className={styles.container}
+      ref={containerRef}
+      style={{ height: '100%', overflowY: 'auto' }}
+    >
+      {/* Lightbox */}
       {lightboxIndex !== null && (
         <div className={styles.lightboxOverlay} onClick={(e) => { if(e.target === e.currentTarget) closeLightbox(); }}>
           <button className={styles.lightboxClose} onClick={closeLightbox}>✕</button>

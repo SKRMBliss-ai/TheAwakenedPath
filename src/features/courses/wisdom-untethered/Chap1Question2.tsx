@@ -130,35 +130,14 @@ interface Chap1Question2Props {
 
 export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
 
   // ── Lightbox state ──
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Track scroll for progress bar
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const handleScroll = () => {
-      const scrollY = container.scrollTop;
-      const height = container.scrollHeight - container.clientHeight;
-      setScrollProgress(height > 0 ? (scrollY / height) * 100 : 0);
-    };
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Intersection observers for animations and dot navigation
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const fadeObserver = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add(styles.visible); });
-    }, { root: container, threshold: 0.12 });
-
-    container.querySelectorAll(`.${styles.slideSection}, .${styles.practiceCard}`).forEach(s => fadeObserver.observe(s));
 
     const sections = container.querySelectorAll('[data-section]');
     const dotObserver = new IntersectionObserver((entries) => {
@@ -171,7 +150,12 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
     }, { root: container, threshold: 0.5 });
     sections.forEach(s => dotObserver.observe(s));
 
-    return () => { fadeObserver.disconnect(); dotObserver.disconnect(); };
+    const fadeObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add(styles.visible); });
+    }, { root: container, threshold: 0.12 });
+    container.querySelectorAll(`.${styles.slideSection}, .${styles.practiceCard}`).forEach(s => fadeObserver.observe(s));
+
+    return () => { dotObserver.disconnect(); fadeObserver.disconnect(); };
   }, []);
 
   const scrollToSection = (index: number) => {
@@ -214,8 +198,6 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
       ref={containerRef}
       style={{ height: '100%', overflowY: 'auto' }}
     >
-      <div className={styles.progressBar} style={{ width: `${scrollProgress}%` }} />
-
       <nav className={styles.navDots}>
         {dots.map((_, i) => (
           <button key={i} className={`${styles.navDot} ${activeSection === i ? styles.active : ''}`} aria-label={`Go to section ${i + 1}`} onClick={() => scrollToSection(i)} />

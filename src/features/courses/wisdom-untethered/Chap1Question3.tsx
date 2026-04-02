@@ -11,7 +11,6 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
   const heroStarsRef = useRef<HTMLDivElement>(null);
   const bandStarsRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [isDark, setIsDark] = useState(true);
 
   // ── Lightbox ──
@@ -32,18 +31,6 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
     if (lightboxIndex === null) return;
     setLightboxIndex((prev) => (prev === null ? 0 : (prev - 1 + ALL_SLIDES.length) % ALL_SLIDES.length));
   };
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxIndex(null);
-      if (lightboxIndex !== null) {
-        if (e.key === 'ArrowRight') goLightboxNext();
-        if (e.key === 'ArrowLeft') goLightboxPrev();
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [lightboxIndex]);
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
@@ -66,18 +53,6 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const p = (container.scrollTop / (container.scrollHeight - container.clientHeight)) * 100;
-      setScrollProgress(p);
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     const makeStars = (c: HTMLDivElement | null, n: number) => {
@@ -161,8 +136,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
   };
 
   return (
-    <div className={styles.container} ref={containerRef}>
-      <div className={styles.progressBar} style={{ width: `${scrollProgress}%` }} />
+    <div className={styles.container} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
       
       {/* Lightbox Overlay */}
       {lightboxIndex !== null && (

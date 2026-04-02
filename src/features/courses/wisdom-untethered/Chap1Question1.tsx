@@ -1,5 +1,6 @@
 /* Chap1Question1.tsx */
 import { useEffect, useRef, useState } from 'react';
+import { cn } from '../../../lib/utils';
 import styles from './Chap1Question1.module.css';
 
 const darkImages: Record<string, string> = {
@@ -34,7 +35,6 @@ interface Chap1Question1Props {
 
 export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
 
   // ── Theme detection ──
@@ -56,19 +56,6 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
 
   // ── Lightbox ──
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-  // ── Scroll progress bar ──
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const handleScroll = () => {
-      const scrollY = container.scrollTop;
-      const height = container.scrollHeight - container.clientHeight;
-      setScrollProgress(height > 0 ? (scrollY / height) * 100 : 0);
-    };
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // ── Intersection observers ──
   useEffect(() => {
@@ -142,20 +129,16 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
       ref={containerRef}
       style={{ height: '100%', overflowY: 'auto' }}
     >
-      <div className={styles.progressBar} style={{ width: `${scrollProgress}%` }} />
-
-
       {/* --- Nav Dots --- */}
       <nav className={styles.navDots}>
         {dots.map((_, i) => (
           <button
             key={i}
-            className={`${styles.navDot} ${activeSection === i ? styles.active : ''}`}
+            className={cn(styles.navDot, activeSection === i && styles.active)}
             onClick={() => scrollToSection(i)}
           />
         ))}
       </nav>
-
 
       {/* --- Lightbox --- */}
       {lightboxIndex !== null && (

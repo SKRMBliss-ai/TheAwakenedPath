@@ -482,9 +482,9 @@ export default function UntetheredApp() {
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
 
   const [activeQuestionId, setActiveQuestionId] = useState(() => localStorage.getItem('awakened-path-active-question') || 'question1');
-  const [viewMode, setViewMode] = useState<'explanation' | 'video'>(() => {
+  const [viewMode, setViewMode] = useState<'explanation' | 'practice' | 'video'>(() => {
     const saved = localStorage.getItem('awakened-path-view-mode');
-    return (saved === 'explanation' || saved === 'video') ? saved : 'explanation';
+    return (saved === 'explanation' || saved === 'practice' || saved === 'video') ? saved : 'explanation';
   });
   const [expandedChapter1, setExpandedChapter1] = useState(true);
 
@@ -1290,6 +1290,7 @@ export default function UntetheredApp() {
                   viewMode={viewMode}
                   setViewMode={setViewMode}
                   onOpenJournal={() => setActiveTab('chapters')}
+                  onNavigateToPractice={() => setActiveTab('situations')}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center p-12 space-y-8 bg-[var(--bg-base)]">

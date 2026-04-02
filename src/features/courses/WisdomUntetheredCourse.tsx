@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Play } from 'lucide-react';
+import { BookOpen, Play, Sparkles, Flame } from 'lucide-react';
+import styles from './CourseTabs.module.css';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
 import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
@@ -21,135 +22,159 @@ const CHAPTERS: Chapter[] = [
     title: "The Mind",
     subtitle: "Chapter 1",
     explanation: "Chapter 1 of Wisdom Untethered explores one of the most fundamental insights in Singer's teachings: you are not your mind. The mind has a lower layer that reacts automatically based on past experiences, and a higher layer that can consciously redirect itself toward steadier ground. Singer teaches that you don't need to fight negative thoughts — you can use the mind as a tool, through affirmations and deliberate redirection, to lift yourself out of spiraling patterns. At the deepest level, the practice is even simpler: learn to relax in the face of whatever the mind is doing. When you stop feeding the reaction, the negativity gradually loses its grip. Freedom isn't about fixing the mind. It's about stopping the habit of letting it run your life.",
-    videoId: "3oAQijy87rs" // Defaulting to Q1
+    videoId: "3oAQijy87rs"
   }
 ];
 
 const QUESTION_VIDEOS: Record<string, string> = {
   'question1': '3oAQijy87rs',
   'question2': 'rlRi9eCyZuU',
-  'question3': '',
-  'question4': '',
+  'question3': 'hNImvYFpx00', // Placeholder or real ID
+  'question4': 'mIscD_Yd48E', // Placeholder or real ID
 };
 
 interface CourseProps {
   activeQuestionId: string;
-  viewMode: 'explanation' | 'video';
-  setViewMode: (mode: 'explanation' | 'video') => void;
+  viewMode: 'explanation' | 'practice' | 'video';
+  setViewMode: (mode: 'explanation' | 'practice' | 'video') => void;
   onOpenJournal?: () => void;
+  onNavigateToPractice?: () => void;
 }
 
 export function WisdomUntetheredCourse({ 
   activeQuestionId, 
   viewMode, 
   setViewMode,
-  onOpenJournal
+  onOpenJournal,
+  onNavigateToPractice
 }: CourseProps) {
-  const [activeChapterId] = useState<number>(1);
-  const activeChapter = CHAPTERS.find(c => c.id === activeChapterId);
-
+  // Always Chapter 1 for this coarse for now
+  const activeChapter = useMemo(() => CHAPTERS[0], []);
+  const tabs = [
+    { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" /> },
+    { id: 'video' as const,       label: 'Video',       icon: <Play className="w-3.5 h-3.5" /> },
+    { id: 'practice' as const,    label: 'Practice',    icon: <BookOpen className="w-3.5 h-3.5" /> },
+  ];
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden bg-[var(--bg-base)]">
-      {/* ── Top Bar ── */}
-      <div className="flex-shrink-0 h-[46px] flex items-center justify-between px-4 border-b border-[var(--border-default)] bg-[var(--bg-surface)]/80 backdrop-blur-md">
-        {/* Chapter Title */}
-        {activeChapter && (
-          <div className="flex flex-col justify-center">
-            <span className="text-[8px] uppercase tracking-[0.25em] font-bold text-[var(--accent-primary)] mb-0">
-              {activeChapter.subtitle}
-            </span>
-            <span className="text-[13px] font-serif text-[var(--text-primary)] leading-none line-clamp-1">
-              {activeChapter.title}
-            </span>
-          </div>
-        )}
+    <div className={styles.container}>
+      {/* ── Top Navigation Bar ── */}
+      <header className={styles.topBar}>
+        <div className={styles.chapterInfo}>
+          <span className={styles.chapterSubtitle}>{activeChapter.subtitle}</span>
+          <h2 className={styles.chapterTitle}>{activeChapter.title}</h2>
+        </div>
 
-        {/* View Mode Switching Tabs */}
-        <div className="flex items-center gap-1 h-full">
-          {[
-            { id: 'explanation' as const, label: 'Explanation', icon: <BookOpen className="w-3.5 h-3.5" /> },
-            { id: 'video' as const,       label: 'Video',       icon: <Play className="w-3.5 h-3.5" /> },
-          ].map(tab => (
+        <nav className={styles.tabGroup}>
+          {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setViewMode(tab.id)}
               className={cn(
-                "relative flex items-center gap-2 px-3 h-full text-[10px] uppercase tracking-[0.2em] font-bold transition-all",
-                viewMode === tab.id
-                  ? "text-[var(--accent-primary)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] opacity-60 hover:opacity-100"
+                styles.tab,
+                viewMode === tab.id && styles.tabActive
               )}
             >
               {tab.icon}
               <span className="hidden sm:inline">{tab.label}</span>
               {viewMode === tab.id && (
                 <motion.div
-                  layoutId="tabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent-primary)] rounded-t-full shadow-[0_-1px_8px_var(--accent-primary)]"
+                  layoutId="activeTabUnderline"
+                  className={styles.tabUnderline}
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
             </button>
           ))}
-        </div>
-        
-        </div>
+        </nav>
+      </header>
 
-      {/* ── Main Content Area ── */}
-      <div className="flex-1 min-h-0 overflow-hidden relative">
-        <AnimatePresence mode="wait">
-          {(viewMode === 'explanation') && activeChapter && (
+      {/* ── Dynamic Content Area ── */}
+      <main className={styles.contentArea}>
+        <AnimatePresence mode="wait" initial={false}>
+          {/* EXPLANATION VIEW (Slides & Interactive content) */}
+          {viewMode === 'explanation' && (
             <motion.div
-              key={activeQuestionId + '_expl'}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25, ease: "easeInOut" }}
+              key={activeQuestionId}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="w-full h-full"
             >
-              {activeChapter.id === 1 ? (
-                activeQuestionId === 'question1' ? <Chap1Question1 onOpenJournal={onOpenJournal} /> :
-                activeQuestionId === 'question2' ? <Chap1Question2 onOpenJournal={onOpenJournal} /> :
-                activeQuestionId === 'question3' ? <Chap1Question3 onOpenJournal={onOpenJournal} /> :
-                activeQuestionId === 'question4' ? <Chap1Question4 onOpenJournal={onOpenJournal} /> :
-                <Chap1Question1 onOpenJournal={onOpenJournal} />
-              ) : (
-                <div className="p-12 overflow-y-auto h-full">
-                  <p className="text-[16px] leading-[2.2] font-sans text-[var(--text-secondary)] tracking-wide max-w-2xl">
-                    {activeChapter.explanation}
-                  </p>
-                </div>
-              )}
+              {activeQuestionId === 'question1' && <Chap1Question1 onOpenJournal={onOpenJournal} />}
+              {activeQuestionId === 'question2' && <Chap1Question2 onOpenJournal={onOpenJournal} />}
+              {activeQuestionId === 'question3' && <Chap1Question3 onOpenJournal={onOpenJournal} />}
+              {activeQuestionId === 'question4' && <Chap1Question4 onOpenJournal={onOpenJournal} />}
             </motion.div>
           )}
 
-          {viewMode === 'video' && activeChapter && (
+          {/* PRACTICE VIEW (Core Insights Text) */}
+          {viewMode === 'practice' && (
+            <motion.div
+              key="practice"
+              initial={{ opacity: 0, scale: 0.98, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, scale: 1.02, filter: 'blur(8px)' }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className={styles.explanationView}
+            >
+              <div className={styles.explanationInner}>
+                <span className={styles.explanationTag}>Initial Inquiry</span>
+                <h3 className={styles.explanationHeading}>
+                  Deconstructing the {activeQuestionId === 'question1' ? 'Mind' : 'Voice'}
+                </h3>
+                <p className={styles.explanationText}>
+                  {activeChapter.explanation}
+                </p>
+
+                <div className={styles.explanationAction}>
+                  <button 
+                    onClick={onNavigateToPractice}
+                    className={styles.practiceBtn}
+                  >
+                    <Flame size={16} />
+                    Transform a Situation
+                  </button>
+                  <button 
+                    onClick={() => setViewMode('explanation')}
+                    className={cn(styles.practiceBtn, "opacity-60 bg-transparent border-white/10 hover:bg-white/5")}
+                  >
+                    <Sparkles size={16} />
+                    Review Lesson Slides
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* VIDEO VIEW */}
+          {viewMode === 'video' && (
             <motion.div
               key="video"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="flex flex-col items-center justify-center gap-8 h-full p-6 sm:p-10 overflow-y-auto"
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className={styles.videoView}
             >
-              <div className="w-full max-w-4xl">
-                <div className="aspect-video w-full rounded-[24px] overflow-hidden border border-[var(--border-default)] shadow-2xl relative bg-black">
-                  <div className="absolute inset-0 bg-[var(--accent-primary)]/5 blur-3xl pointer-events-none" />
-                  <iframe
-                    className="w-full h-full relative z-10"
-                    src={`https://www.youtube.com/embed/${QUESTION_VIDEOS[activeQuestionId] || activeChapter.videoId}?rel=0`}
-                    title={activeChapter.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-                <p className="text-center text-[11px] uppercase tracking-[0.22em] text-[var(--accent-primary)] font-bold mt-6 opacity-70">
-                  Full lesson — {activeChapter.subtitle}: {activeChapter.title}
-                </p>
+              <div className={styles.videoPlayerContainer}>
+                <iframe
+                  className={styles.videoIframe}
+                  src={`https://www.youtube.com/embed/${QUESTION_VIDEOS[activeQuestionId] || activeChapter.videoId}?rel=0&modestbranding=1&autohide=1&showinfo=0`}
+                  title="Lesson Video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+              <div className={styles.videoInfo}>
+                <span className={styles.videoLabel}>
+                  Deep Dive Teaching • {activeChapter.subtitle}
+                </span>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </main>
     </div>
   );
 }
