@@ -368,10 +368,10 @@ const getTransporter = () => {
 };
 
 /**
- * Scheduled Reminder: India Evening (8:30 PM IST = 3:00 PM UTC)
+ * Scheduled Reminder: India Evening (8:00 PM IST)
  */
 exports.sendDailyReminderIN = onSchedule({
-    schedule: "30 15 * * *",
+    schedule: "0 20 * * *",
     secrets: [emailUser, emailPass],
     timeZone: "Asia/Kolkata"
 }, async (event) => {
@@ -379,10 +379,10 @@ exports.sendDailyReminderIN = onSchedule({
 });
 
 /**
- * Scheduled Reminder: US Evening (8:30 PM EST = 1:30 AM UTC)
+ * Scheduled Reminder: US Evening (8:00 PM EST)
  */
 exports.sendDailyReminderUS = onSchedule({
-    schedule: "30 1 * * *",
+    schedule: "0 20 * * *",
     secrets: [emailUser, emailPass],
     timeZone: "America/New_York"
 }, async (event) => {
@@ -405,6 +405,10 @@ async function runReminderLogic(region) {
     <title>The Awakened Path</title>
 </head>
 <body style="margin:0;padding:0;background:#f0ece4;">
+    <!-- Preheader Text -->
+    <div style="display:none;font-size:1px;color:#f0ece4;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+        The day is winding down. Return to the seat of the Watcher before you sleep.
+    </div>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
         <tr>
             <td align="center" style="padding:24px 16px;">
@@ -445,7 +449,7 @@ async function runReminderLogic(region) {
                     </tr>
                     <tr>
                         <td style="padding:0 40px 36px;text-align:center;">
-                            <a href="https://awakened-path-2026.web.app" style="display:inline-block;padding:13px 32px;background:#1C1814;color:#E6C57D;text-decoration:none;font-family:Georgia,serif;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;">Record Your Journey &rarr;</a>
+                            <a href="https://www.skrmblissai.in/awakenedpath" style="display:inline-block;padding:13px 32px;background:#1C1814;color:#E6C57D;text-decoration:none;font-family:Georgia,serif;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;">Record Your Journey &rarr;</a>
                         </td>
                     </tr>
                     <tr>
@@ -460,7 +464,7 @@ async function runReminderLogic(region) {
                             </p>
                             <p style="font-family:Georgia,serif;font-size:10px;color:#B0A090;margin:20px 0 0;line-height:1.6;opacity:0.6;">
                                 You received this because you are walking the Awakened Path.<br>
-                                <a href="https://awakened-path-2026.web.app/api/unsubscribe?userId={{USER_ID}}" style="color:#B8973A;text-decoration:none;">Unsubscribe</a> &middot; <a href="#" style="color:#B8973A;text-decoration:none;">Peace is the way.</a>
+                                <a href="https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId={{USER_ID}}" style="color:#B8973A;text-decoration:none;">Unsubscribe</a> &middot; <a href="#" style="color:#B8973A;text-decoration:none;">Peace is the way.</a>
                             </p>
                         </td>
                     </tr>
@@ -512,7 +516,7 @@ exports.unsubscribe = onRequest({ cors: true }, async (req, res) => {
             <body style="font-family: Georgia, serif; text-align: center; padding: 80px 20px; background: #FDFAF4; color: #1C1814;">
                 <h1 style="font-weight: 300; font-style: italic;">You have successfully unsubscribed.</h1>
                 <p style="color: #3A342C; margin: 20px 0 40px;">Your notifications have been turned off. We wish you peace on your continued journey.</p>
-                <a href="https://awakened-path-2026.web.app" style="display: inline-block; padding: 12px 30px; background: #1C1814; color: #E6C57D; text-decoration: none; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Return to Presence</a>
+                <a href="https://www.skrmblissai.in/awakenedpath" style="display: inline-block; padding: 12px 30px; background: #1C1814; color: #E6C57D; text-decoration: none; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Return to Presence</a>
             </body>
             </html>
         `);

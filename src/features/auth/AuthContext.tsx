@@ -3,7 +3,7 @@ import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as fir
 import type { User } from 'firebase/auth';
 import { auth, db } from '../../firebase';
 import { doc, setDoc, updateDoc, collection, addDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
-
+import { hasWisdomAccess } from '../../config/admin';
 interface UserProfile {
     uid: string;
     email: string | null;
@@ -13,6 +13,7 @@ interface UserProfile {
     xp: number;
     streak: number;
     purchasedCourses: string[];
+    createdAt?: any;
 }
 
 interface AuthContextType {
@@ -23,6 +24,7 @@ interface AuthContextType {
     signInWithEmail: (email: string, pass: string) => Promise<void>;
     signUpWithEmail: (email: string, pass: string) => Promise<void>;
     signOut: () => Promise<void>;
+    isAccessValid: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -33,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
     signInWithEmail: async () => { },
     signUpWithEmail: async () => { },
     signOut: async () => { },
+    isAccessValid: false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -67,7 +70,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 level: data?.level || 1,
                                 xp: data?.xp || 0,
                                 streak: data?.streak || 0,
-                                purchasedCourses: data?.purchasedCourses || []
+                                purchasedCourses: data?.purchasedCourses || [],
+                                createdAt: data?.createdAt,
                             } as UserProfile);
                         } else {
                             // Initialize profile if it doesn't exist
@@ -158,8 +162,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const isAccessValid = React.useMemo(() => {
+        if (!user || !profile) return false;
+        if (hasWisdomAccess(user.email)) return true;
+        if (profile.purchasedCourses?.includes('all_access')) return true;
+        
+        if (profile.createdAt) {
+            let createdDate;
+            if (profile.createdAt?.toDate) {
+                createdDate = profile.createdAt.toDate();
+            } else if (typeof profile.createdAt === 'string' || typeof profile.createdAt === 'number') {
+                createdDate = new Date(profile.createdAt);
+            } else {
+                return false;
+            }
+            const trialLimit = 7 * 24 * 60 * 60 * 1000;
+            if (Date.now() - createdDate.getTime() <= trialLimit) {
+                return true;
+            }
+        }
+        return false;
+    }, [user, profile]);
+
     return (
-        <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
+        <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut, isAccessValid }}>
             {children}
         </AuthContext.Provider>
     );

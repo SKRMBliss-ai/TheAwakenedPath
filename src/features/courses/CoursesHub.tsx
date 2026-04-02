@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PowerOfNow } from '../soul-intelligence/components/PowerOfNow';
 import { useAuth } from '../auth/AuthContext';
-import { hasWisdomAccess } from '../../config/admin';
 import { AnchorButton } from '../../components/ui/SacredUI';
 import { Lock, Sparkles } from 'lucide-react';
 import { useRazorpay } from '../../hooks/useRazorpay';
@@ -13,13 +12,11 @@ interface CoursesHubProps {
 }
 
 export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourseSelect }) => {
-    const { user, profile } = useAuth();
+    const { user, isAccessValid } = useAuth();
     const { checkOut, isProcessing } = useRazorpay();
     const [activeCourseId, setActiveCourseId] = useState<'power-of-now' | 'untethered'>('power-of-now');
     
-    // Authorization check (Admin OR Purchased)
-    const isWisdomAuthorized = hasWisdomAccess(user?.email) || 
-                               profile?.purchasedCourses?.includes('wisdom_untethered');
+    const isWisdomAuthorized = isAccessValid;
 
     const handleUnlock = async () => {
         if (!user) {

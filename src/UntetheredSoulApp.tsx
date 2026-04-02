@@ -462,7 +462,7 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
 // --- Main App Component ---
 
 export default function UntetheredApp() {
-  const { user: currentUser, loading, signOut } = useAuth();
+  const { user: currentUser, loading, signOut, isAccessValid } = useAuth();
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('awakened-path-active-tab') || 'home');
   const [activePractice, setActivePractice] = useState<Practice | null>(null);
@@ -499,6 +499,13 @@ export default function UntetheredApp() {
   const emotionColor = useMemo(() => {
     return getDominantEmotionColor(lastEntry?.emotions);
   }, [lastEntry]);
+
+  // Global Access Control Redirect
+  useEffect(() => {
+    if (!loading && !isAccessValid && activeTab !== 'home' && activeTab !== 'profile' && activeTab !== 'intelligence') {
+      setActiveTab('intelligence');
+    }
+  }, [isAccessValid, activeTab, loading]);
 
   // Persist Navigation State
   useEffect(() => {
