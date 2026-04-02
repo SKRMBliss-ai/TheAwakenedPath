@@ -21,7 +21,7 @@ const lightImages: Record<string, string> = {
   "slide4": "/WisdomUntethered/Chap1/Question4/04_light.png",
   "slide5": "/WisdomUntethered/Chap1/Question4/05_light.png",
   "slide6": "/WisdomUntethered/Chap1/Question4/06_light.png",
-  "slide7": "/WisdomUntethered/Chap1/Question4/07_light.jpeg",
+  "slide7": "/WisdomUntethered/Chap1/Question4/07_light.jpg",
   "slide8": "/WisdomUntethered/Chap1/Question4/08_light.png",
   "slide9": "/WisdomUntethered/Chap1/Question4/09_light.png",
 };
