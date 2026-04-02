@@ -1192,10 +1192,11 @@ export default function UntetheredApp() {
             href="https://www.youtube.com/@SoulfulIntelligenceStudio"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-3 rounded-full backdrop-blur-3xl border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[#FF0000] hover:border-[#FF0000]/40 hover:bg-[#FF0000]/5 transition-all flex items-center justify-center group shadow-xl"
+            className="flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-3xl border border-[#FF0000]/30 bg-[#FF0000]/5 text-[#FF0000] hover:bg-[#FF0000]/10 transition-all group shadow-[0_0_15px_rgba(255,0,0,0.1)] hover:shadow-[0_0_20px_rgba(255,0,0,0.2)]"
             title="YouTube Channel"
           >
             <Youtube className="w-4 h-4 transition-transform group-hover:scale-110" />
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold hidden sm:inline-block">Studio</span>
           </a>
           <ThemeToggle />
           <button
