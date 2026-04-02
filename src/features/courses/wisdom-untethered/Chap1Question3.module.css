@@ -346,14 +346,15 @@
 .lightboxOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(253, 250, 244, 0.98);
-    backdrop-filter: blur(20px);
+    background: rgba(12, 9, 16, 0.98);
     display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
-    justify-content: center;
-    z-index: 200;
-    cursor: pointer;
-    padding: 4rem;
+    padding: 2rem 1rem;
+    z-index: 500;
+    backdrop-filter: blur(10px);
+    overflow-y: auto;
 }
 
 :global(.dark) .lightboxOverlay {
@@ -378,8 +379,9 @@
 }
 
 .lightboxImg {
-    max-width: min(850px, 90vw);
-    max-height: 58vh; /* Lowered from 68vh to ensure no cutting/overlap */
+    max-width: min(1000px, 95vw);
+    max-height: 55vh;
+    margin-top: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -395,13 +397,10 @@
 }
 
 .lightboxNav {
-    position: absolute;
-    bottom: 2.5rem;
-    left: 50%;
-    transform: translateX(-50%);
+    margin-top: 3rem;
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 3rem;
     z-index: 210;
 }
 
