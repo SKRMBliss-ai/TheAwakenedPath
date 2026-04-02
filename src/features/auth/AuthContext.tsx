@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth, db } from '../../firebase';
-import { doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, addDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 
 interface UserProfile {
     uid: string;
@@ -43,53 +43,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        let unsubscribeProfile: (() => void) | null = null;
+        
+        const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+            if (unsubscribeProfile) {
+                unsubscribeProfile();
+                unsubscribeProfile = null;
+            }
+
             try {
                 if (currentUser) {
                     const userRef = doc(db, 'users', currentUser.uid);
-                    let userSnap = await getDoc(userRef);
+                    
+                    // Use onSnapshot for real-time profile updates (e.g. course purchases)
+                    unsubscribeProfile = onSnapshot(userRef, async (snapshot) => {
+                        if (snapshot.exists()) {
+                            const data = snapshot.data();
+                            setProfile({
+                                uid: currentUser.uid,
+                                email: currentUser.email,
+                                displayName: currentUser.displayName,
+                                photoURL: currentUser.photoURL,
+                                level: data?.level || 1,
+                                xp: data?.xp || 0,
+                                streak: data?.streak || 0,
+                                purchasedCourses: data?.purchasedCourses || []
+                            } as UserProfile);
+                        } else {
+                            // Initialize profile if it doesn't exist
+                            const userData = {
+                                uid: currentUser.uid,
+                                email: currentUser.email,
+                                displayName: currentUser.displayName,
+                                photoURL: currentUser.photoURL,
+                                createdAt: serverTimestamp(),
+                                lastLogin: serverTimestamp(),
+                                level: 1,
+                                xp: 0,
+                                streak: 0,
+                                purchasedCourses: []
+                            };
+                            await setDoc(userRef, userData);
+                            // snapshot will fire again after this
+                        }
+                    });
 
-                    const userData = {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        displayName: currentUser.displayName,
-                        photoURL: currentUser.photoURL,
+                    // Update last login
+                    await updateDoc(userRef, {
                         lastLogin: serverTimestamp()
-                    };
-
-                    if (!userSnap.exists()) {
-                        const newProfile = {
-                            ...userData,
-                            createdAt: serverTimestamp(),
-                            level: 1,
-                            xp: 0,
-                            streak: 0,
-                            purchasedCourses: []
-                        };
-                        await setDoc(userRef, newProfile);
-                        setProfile({
-                            ...userData,
-                            level: 1,
-                            xp: 0,
-                            streak: 0,
-                            purchasedCourses: []
-                        } as UserProfile);
-                    } else {
-                        await updateDoc(userRef, {
-                            lastLogin: serverTimestamp()
-                        });
-                        const data = userSnap.data();
-                        setProfile({
-                            uid: currentUser.uid,
-                            email: currentUser.email,
-                            displayName: currentUser.displayName,
-                            photoURL: currentUser.photoURL,
-                            level: data?.level || 1,
-                            xp: data?.xp || 0,
-                            streak: data?.streak || 0,
-                            purchasedCourses: data?.purchasedCourses || []
-                        } as UserProfile);
-                    }
+                    }).catch(() => {}); // Ignore error if doc just created
 
                     // Log Activity
                     try {
@@ -114,7 +116,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeProfile) unsubscribeProfile();
+        };
     }, []);
 
     const signInWithGoogle = async () => {

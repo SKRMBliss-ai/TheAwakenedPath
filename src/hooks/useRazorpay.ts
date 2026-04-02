@@ -15,6 +15,9 @@ interface RazorpayOptions {
     theme: {
         color: string;
     };
+    modal?: {
+        ondismiss: () => void;
+    };
 }
 
 declare global {
@@ -31,7 +34,6 @@ export const useRazorpay = () => {
         userEmail: string,
         userName: string,
         courseId: string,
-        amount: number,
         onSuccess: () => void
     ) => {
         setIsProcessing(true);
@@ -40,8 +42,13 @@ export const useRazorpay = () => {
             const orderRes = await fetch('/api/razorpay-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount, currency: 'USD', courseId, userId })
+                body: JSON.stringify({ courseId, userId })
             });
+
+            if (!orderRes.ok) {
+                const errorText = await orderRes.text();
+                throw new Error(errorText || "Failed to create order");
+            }
             
             const order = await orderRes.json();
 
@@ -78,6 +85,11 @@ export const useRazorpay = () => {
                 },
                 theme: {
                     color: "#B8973A"
+                },
+                modal: {
+                    ondismiss: () => {
+                        setIsProcessing(false);
+                    }
                 }
             };
 

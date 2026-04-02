@@ -20,14 +20,21 @@ const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
 // Text-to-Speech Client
 const ttsClient = new textToSpeech.TextToSpeechClient();
 
+// Pricing Configuration (Keep in sync with frontend)
+const COURSE_PRICES = {
+    "wisdom_untethered": 9, // $9 in USD
+};
+
 /**
  * Creates a Razorpay Order
  */
 exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret], cors: true }, async (req, res) => {
-    const { amount, currency = "USD", courseId } = req.body;
+    const { courseId, userId } = req.body;
 
-    if (!amount || !courseId) {
-        return res.status(400).send("Missing amount or courseId");
+    // 1. Get official price from server-side map
+    const amount = COURSE_PRICES[courseId];
+    if (!amount) {
+        return res.status(400).send("Invalid or missing courseId");
     }
 
     try {
@@ -37,12 +44,12 @@ exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySe
         });
 
         const options = {
-            amount: Math.round(amount * 100), // Razorpay expects amount in subunits (cents/paise)
-            currency: currency,
+            amount: Math.round(amount * 100), // In cents/paise
+            currency: "USD",
             receipt: `receipt_${courseId}_${Date.now()}`,
             notes: {
                 courseId: courseId,
-                userId: req.body.userId || "anonymous"
+                userId: userId || "anonymous"
             }
         };
 
@@ -82,20 +89,33 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
             return res.status(400).send("Invalid payment signature");
         }
 
-        // 2. Grant Access in Firestore
+        // 2. Fetch order to verify details haven't been tampered with
+        const razorpay = new Razorpay({
+            key_id: razorpayKeyId.value(),
+            key_secret: razorpayKeySecret.value(),
+        });
+        
+        const rzpOrder = await razorpay.orders.fetch(razorpay_order_id);
+        
+        // Ensure the paid order was indeed for this user and this course
+        if (rzpOrder.notes.userId !== userId || rzpOrder.notes.courseId !== courseId) {
+            return res.status(400).send("Order data mismatch. Discrepancy detected.");
+        }
+
+        // 3. Grant Access in Firestore
         const userRef = db.collection("users").doc(userId);
         await userRef.set({
             purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        // 3. Log the transaction
-        await db.collection("transactions").add({
+        // 4. Log the transaction (Atomic/Secure)
+        await db.collection("transactions").doc(razorpay_payment_id).set({
             userId,
             courseId,
             razorpayOrderId: razorpay_order_id,
             razorpayPaymentId: razorpay_payment_id,
-            amount: 9, // Since we hardcoded it for now, or get from req
+            amount: COURSE_PRICES[courseId],
             status: "SUCCESS",
             timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
@@ -105,6 +125,52 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
         console.error("Verification Error:", error);
         res.status(500).send("Verification failed");
     }
+});
+
+/**
+ * Optional: Razorpay Webhook for async capture (Robustness)
+ * You would point https://your-app.web.app/api/razorpay-webhook to this in Razorpay Dashboard
+ */
+exports.razorpayWebhook = onRequest({ secrets: [razorpayKeySecret], cors: true }, async (req, res) => {
+    const secret = "YOUR_WEBHOOK_SECRET"; // Should be a Secret Manager secret
+    const signature = req.headers["x-razorpay-signature"];
+
+    // 1. Verify Webhook Signature
+    const shasum = crypto.createHmac("sha256", secret);
+    shasum.update(JSON.stringify(req.body));
+    const digest = shasum.digest("hex");
+
+    if (signature !== digest) {
+        return res.status(400).send("Invalid signature");
+    }
+
+    const event = req.body.event;
+    const payment = req.body.payload.payment.entity;
+
+    if (event === "payment.captured") {
+        const { userId, courseId } = payment.notes;
+        
+        if (userId && courseId) {
+            // Grant access if not already granted
+            const userRef = db.collection("users").doc(userId);
+            await userRef.set({
+                purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            await db.collection("transactions").doc(payment.id).set({
+                userId,
+                courseId,
+                razorpayOrderId: payment.order_id,
+                razorpayPaymentId: payment.id,
+                amount: payment.amount / 100,
+                status: "SUCCESS_WEBHOOK",
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+    }
+
+    res.json({ status: "ok" });
 });
 
 exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {

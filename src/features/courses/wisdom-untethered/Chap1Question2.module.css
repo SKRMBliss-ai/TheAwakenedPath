@@ -195,21 +195,22 @@
   font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8; font-weight: 300;
   margin-bottom: 1.2rem;
 }
-.slideList {
-  list-style: none; padding: 0; margin: 0 0 1.5rem 0;
+.visualText {
+  font-family: var(--serif);
+  font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-weight: 300;
+  margin-top: 1.5rem;
+  border-left: 2px solid var(--gold);
+  padding-left: 1.5rem;
 }
-.slideList li {
-  position: relative; padding-left: 1.5rem; margin-bottom: 0.8rem;
-  font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6;
-}
-.slideList li::before {
-  content: "✦"; position: absolute; left: 0; color: var(--gold);
-  font-size: 0.8rem; top: 0.2rem;
-}
+
 .slideBodySmall {
   font-size: 0.85rem; font-style: italic; color: var(--muted);
   border-top: 1px solid rgba(184,151,58,0.1); padding-top: 1rem; margin-top: 1.5rem;
 }
+
 .pullQuote {
   border-left: 2px solid var(--gold);
   padding: 1rem 0 1rem 1.8rem; margin: 2rem 0;

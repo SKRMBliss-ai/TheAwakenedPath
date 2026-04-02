@@ -32,7 +32,6 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
             user.email || '',
             user.displayName || 'Seeker',
             'wisdom_untethered',
-            9, // $9 as requested
             () => {
                 // Success callback: Firestore is updated by the cloud function
                 alert("Success! The path of Wisdom Untethered is now open for you.");
