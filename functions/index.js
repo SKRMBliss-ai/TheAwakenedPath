@@ -335,6 +335,25 @@ exports.analyzeEmotion = onRequest({ secrets: [geminiKey], cors: true }, async (
 
 exports.pingDaily = onRequest((req, res) => res.send("Zen Ping Successful"));
 
+exports.testEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, async (req, res) => {
+    const { to } = req.query;
+    if (!to) return res.status(400).send("Provide 'to' email address.");
+
+    try {
+        const transporter = getTransporter();
+        await transporter.sendMail({
+            from: '"The Awakened Path Test" <bliss@awakened-path.com>',
+            to: to,
+            subject: "Verification: The Path is Open",
+            html: "<b>Success.</b> This email confirms that the automated reminder system is correctly configured."
+        });
+        res.send(`Test email sent to ${to}`);
+    } catch (error) {
+        console.error("Test Email Error:", error);
+        res.status(500).send(`Failed: ${error.message}`);
+    }
+});
+
 /**
  * Helper to get nodemailer transporter
  */
@@ -376,33 +395,132 @@ async function runReminderLogic(region) {
     const transporter = getTransporter();
 
     const emailTemplate = `
-        <div style="font-family: 'Georgia', serif; padding: 40px; background: #FDFAF4; color: #1C1814; border: 1px solid #E6C57D;">
-            <h2 style="color: #B8973A;">Peace is Choice. Not a State.</h2>
-            <p>The day is winding down. Before the mind begins its final preparations for rest, return to the seat of the Watcher.</p>
-            <div style="font-style: italic; border-left: 2px solid #E6C57D; padding-left: 20px; margin: 30px 0; color: #555;">
-                "You are the listener. Not the radio."
-            </div>
-            <a href="https://awakened-path-2026.web.app" style="display: inline-block; padding: 12px 30px; background: #1C1814; color: #E6C57D; text-decoration: none; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">Record Your Journey →</a>
-        </div>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <title>The Awakened Path</title>
+</head>
+<body style="margin:0;padding:0;background:#f0ece4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
+        <tr>
+            <td align="center" style="padding:24px 16px;">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#FDFAF4;border:1px solid #E6C57D;">
+                    <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+                    <tr>
+                        <td style="padding:32px 40px 20px;text-align:center;">
+                            <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Awakened Path &middot; Evening Practice</p>
+                            <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:300;font-style:italic;color:#1C1814;margin:0;line-height:1.3;">Peace is a Choice.<br>Not a State.</h1>
+                            <div style="width:40px;height:1px;background:#B8973A;margin:16px auto;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:0 40px 24px;">
+                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 20px;">The day is winding down. Before the mind begins its final preparations for rest — return to the seat of the Watcher.</p>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;">
+                                <tr>
+                                    <td width="3" style="background:#E6C57D;font-size:0;">&nbsp;</td>
+                                    <td style="padding:12px 0 12px 20px;">
+                                        <p style="font-family:Georgia,serif;font-size:16px;font-style:italic;color:#5C544E;margin:0;line-height:1.6;">"You are the listener.<br>Not the radio."</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0;">The voice in your head has been talking all day. You don't have to answer it. You don't have to silence it. Just — step back. Notice it is there. And rest in the one who is noticing.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:0 40px 28px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5EDD8;border:1px solid #E0D0A8;">
+                                <tr>
+                                    <td style="padding:20px 24px;">
+                                        <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 10px;">Tonight's Practice</p>
+                                        <p style="font-family:Georgia,serif;font-size:14px;line-height:1.75;color:#3A342C;margin:0;">Before you sleep — notice one thought that ran today without your permission. Don't judge it. Don't follow it. Just see it for what it is: the mind doing what minds do. You are the one who noticed. That one is always still.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:0 40px 36px;text-align:center;">
+                            <a href="https://awakened-path-2026.web.app" style="display:inline-block;padding:13px 32px;background:#1C1814;color:#E6C57D;text-decoration:none;font-family:Georgia,serif;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;">Record Your Journey &rarr;</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background:#F5EDD8;padding:24px 40px;border-top:1px solid #E0D0A8;text-align:center;">
+                            <p style="font-family:Georgia,serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8B7A5E;margin:0 0 10px;">Journey Shared by Soulful Intelligence Studio</p>
+                            <p style="font-family:Georgia,serif;font-size:11px;color:#B0A090;margin:0 0 12px;line-height:1.6;">
+                                Explore: <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" style="color:#B8973A;text-decoration:none;">YouTube Channel</a> &middot; <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a>
+                            </p>
+                            <div style="background:#E0D0A8;height:1px;width:30px;margin:12px auto;"></div>
+                            <p style="font-family:Georgia,serif;font-size:10px;color:#8B7A5E;margin:0;line-height:1.6;">
+                                WhatsApp: <a href="https://wa.me/918217581238" style="color:#3A342C;text-decoration:none;">+91-8217581238</a> &middot; Email: <a href="mailto:connect@skrmblissai.in" style="color:#3A342C;text-decoration:none;">connect@skrmblissai.in</a>
+                            </p>
+                            <p style="font-family:Georgia,serif;font-size:10px;color:#B0A090;margin:20px 0 0;line-height:1.6;opacity:0.6;">
+                                You received this because you are walking the Awakened Path.<br>
+                                <a href="https://awakened-path-2026.web.app/api/unsubscribe?userId={{USER_ID}}" style="color:#B8973A;text-decoration:none;">Unsubscribe</a> &middot; <a href="#" style="color:#B8973A;text-decoration:none;">Peace is the way.</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
     `;
 
     for (const userDoc of usersSnap.docs) {
         const userData = userDoc.data();
-        if (!userData.email) continue;
+        if (!userData.email || userData.notificationsEnabled === false) continue;
 
         // Check if user has already practiced today
         const practiceSnap = await userDoc.ref.collection("dailyPractices").doc(today).get();
         if (!practiceSnap.exists() || !practiceSnap.data().completed) {
             console.log(`Sending reminder to ${userData.email}`);
+            
+            // Personalize unsubscribe link
+            const personalizedHtml = emailTemplate.replace('{{USER_ID}}', userDoc.id);
+
             await transporter.sendMail({
-                from: '"The Awakened Path" <bliss@awakened-path.com>',
+                from: '"The Awakened Path" <connect@skrmblissai.in>',
                 to: userData.email,
                 subject: "🌙 An Invitation to Return to Source",
-                html: emailTemplate
+                html: personalizedHtml
             });
         }
     }
 }
+
+/**
+ * Unsubscribe Handler
+ */
+exports.unsubscribe = onRequest({ cors: true }, async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).send("Invalid request.");
+
+    try {
+        await db.collection("users").doc(userId).set({
+            notificationsEnabled: false
+        }, { merge: true });
+        
+        res.send(`
+            <html>
+            <head><title>Unsubscribed</title></head>
+            <body style="font-family: Georgia, serif; text-align: center; padding: 80px 20px; background: #FDFAF4; color: #1C1814;">
+                <h1 style="font-weight: 300; font-style: italic;">You have successfully unsubscribed.</h1>
+                <p style="color: #3A342C; margin: 20px 0 40px;">Your notifications have been turned off. We wish you peace on your continued journey.</p>
+                <a href="https://awakened-path-2026.web.app" style="display: inline-block; padding: 12px 30px; background: #1C1814; color: #E6C57D; text-decoration: none; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Return to Presence</a>
+            </body>
+            </html>
+        `);
+    } catch (e) {
+        console.error("Unsubscribe Error:", e);
+        res.status(500).send("There was an error processing your request. Please try again later.");
+    }
+});
 
 /**
  * Admin: Blast Update Email
@@ -445,7 +563,7 @@ exports.blastUpdateEmail = onCall({
         if (!userData.email) continue;
         
         await transporter.sendMail({
-            from: '"The Awakened Path" <bliss@awakened-path.com>',
+            from: '"The Awakened Path" <connect@skrmblissai.in>',
             to: userData.email,
             subject: `✨ New Guidance Added: ${chapterTitle}`,
             html: updateTemplate

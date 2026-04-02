@@ -211,9 +211,9 @@ export function ThemeToggle({ style = {} }: { style?: React.CSSProperties }) {
             aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
             style={{
                 position: "relative",
-                width: 64,
-                height: 34,
-                borderRadius: 17,
+                width: 48,
+                height: 26,
+                borderRadius: 13,
                 border: `1.5px solid ${theme.borderDefault}`,
                 background: theme.toggleTrack,
                 cursor: "pointer",
@@ -228,16 +228,16 @@ export function ThemeToggle({ style = {} }: { style?: React.CSSProperties }) {
             {/* Track icons */}
             <span style={{
                 position: "absolute",
-                left: 8,
-                fontSize: 14,
+                left: 6,
+                fontSize: 11,
                 opacity: mode === "light" ? 1 : 0.3,
                 transition: "opacity 0.3s",
                 lineHeight: 1,
             }}>☀️</span>
             <span style={{
                 position: "absolute",
-                right: 8,
-                fontSize: 14,
+                right: 6,
+                fontSize: 11,
                 opacity: mode === "dark" ? 1 : 0.9,
                 filter: mode === "light" ? "drop-shadow(0px 1px 1px rgba(0,0,0,0.2)) saturate(1.2)" : "none",
                 transition: "all 0.3s",
@@ -247,13 +247,13 @@ export function ThemeToggle({ style = {} }: { style?: React.CSSProperties }) {
             {/* Thumb */}
             <motion.div
                 animate={{
-                    x: mode === "dark" ? 32 : 2,
+                    x: mode === "dark" ? 22 : 2,
                     rotate: mode === "dark" ? 360 : 0
                 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 style={{
-                    width: 28,
-                    height: 28,
+                    width: 20,
+                    height: 20,
                     borderRadius: "50%",
                     background: mode === "dark"
                         ? "linear-gradient(135deg, #0B0014, #050008)"

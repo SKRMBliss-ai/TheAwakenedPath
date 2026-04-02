@@ -252,8 +252,8 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
 
       {/* LIGHTBOX */}
       {lightboxIndex !== null && (
-        <div className={styles.lightboxOverlay} onClick={closeLightbox}>
-          <button className={styles.lightboxClose}>✕</button>
+        <div className={styles.lightboxOverlay} onClick={(e) => { if(e.target === e.currentTarget) closeLightbox(); }}>
+          <button className={styles.lightboxClose} onClick={closeLightbox}>✕</button>
           <div className={styles.lightboxImg} onClick={e => e.stopPropagation()}>
             <img src={imageMap[ALL_SLIDES[lightboxIndex]]} alt="Enlarged" />
           </div>
@@ -352,7 +352,10 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         <div className={styles.layersBandInner}>
           {threeTypes.map((t) => (
             <div key={t.type} className={cn(styles.layerCol, t.type === "third" ? styles.higher : styles.lower)}>
-              <span className={styles.layerLabel}>{t.result}</span>
+              <div className={styles.layerHeader}>
+                <span className={styles.layerIcon}>{t.icon}</span>
+                <span className={styles.layerLabel}>{t.result}</span>
+              </div>
               <div className={styles.layerName}>{t.name}</div>
               <p className={styles.layerDesc}>{t.body}</p>
             </div>

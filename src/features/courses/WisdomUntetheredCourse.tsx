@@ -51,14 +51,14 @@ export function WisdomUntetheredCourse({
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-[var(--bg-base)]">
       {/* ── Top Bar ── */}
-      <div className="flex-shrink-0 h-[60px] flex items-center justify-between px-6 border-b border-[var(--border-default)] bg-[var(--bg-surface)]/80 backdrop-blur-md">
+      <div className="flex-shrink-0 h-[46px] flex items-center justify-between px-4 border-b border-[var(--border-default)] bg-[var(--bg-surface)]/80 backdrop-blur-md">
         {/* Chapter Title */}
         {activeChapter && (
           <div className="flex flex-col justify-center">
-            <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-[var(--accent-primary)] mb-0.5">
+            <span className="text-[8px] uppercase tracking-[0.25em] font-bold text-[var(--accent-primary)] mb-0">
               {activeChapter.subtitle}
             </span>
-            <span className="text-[14px] font-serif text-[var(--text-primary)] leading-none line-clamp-1">
+            <span className="text-[13px] font-serif text-[var(--text-primary)] leading-none line-clamp-1">
               {activeChapter.title}
             </span>
           </div>
@@ -74,7 +74,7 @@ export function WisdomUntetheredCourse({
               key={tab.id}
               onClick={() => setViewMode(tab.id)}
               className={cn(
-                "relative flex items-center gap-2 px-4 h-full text-[11px] uppercase tracking-[0.2em] font-bold transition-all",
+                "relative flex items-center gap-2 px-3 h-full text-[10px] uppercase tracking-[0.2em] font-bold transition-all",
                 viewMode === tab.id
                   ? "text-[var(--accent-primary)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] opacity-60 hover:opacity-100"

@@ -42,6 +42,8 @@ export default defineConfig({
           if (path.startsWith('/api/grounding')) return '/getGrounding';
           if (path.startsWith('/api/emotion')) return '/analyzeEmotion';
           if (path.startsWith('/api/daily-meditation')) return '/getDailyMeditation';
+          if (path.startsWith('/api/razorpay-order')) return '/createRazorpayOrder';
+          if (path.startsWith('/api/razorpay-verify')) return '/verifyRazorpayPayment';
           return path.replace(/^\/api/, '');
         }
       }

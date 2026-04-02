@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Flame, Sparkles, Sun, Play, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail, MessageCircle } from 'lucide-react';
+import { Flame, Sparkles, Sun, Play, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail, MessageCircle, Youtube } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
@@ -1130,11 +1130,17 @@ export default function UntetheredApp() {
           </button>
 
           <div className="mt-4 pt-4 border-t border-[var(--border-default)]">
-            <p className="text-[9px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex items-center flex-wrap gap-1">
-              Designed and thought by
-              <a href="https://www.skrmblissai.in/twinsouls" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-bold font-sans tracking-[0.2em] transition-colors group">
-                www.skrmblissai.in/twinsouls
-              </a>
+            <p className="text-[9px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex flex-col gap-2">
+              <span className="opacity-60">Journey Shared by</span>
+              <span className="text-[var(--text-primary)] font-bold font-sans tracking-[0.1em] uppercase">Soulful Intelligence Studio</span>
+              <div className="flex flex-wrap gap-3 mt-1">
+                <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1.5 no-underline border-b border-transparent hover:border-[var(--accent-primary)]/30 pb-0.5">
+                  <Youtube size={10} /> youtube
+                </a>
+                <a href="https://www.skrmblissai.in/twinsouls" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1.5 no-underline border-b border-transparent hover:border-[var(--accent-primary)]/30 pb-0.5">
+                  <Heart size={10} /> twin souls
+                </a>
+              </div>
             </p>
           </div>
         </div>
@@ -1153,7 +1159,7 @@ export default function UntetheredApp() {
         <AnimatePresence>
           {/* Back Action - Integrated into the page flow */}
           {activeTab !== 'home' && (
-            <div className="w-full px-6 md:px-12 pt-12 -mb-8 relative z-50 flex justify-start">
+            <div className="w-full px-6 md:px-12 pt-4 -mb-4 relative z-50 flex justify-start">
               <motion.button
                 initial={{ opacity: 0, x: -14 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -1162,7 +1168,7 @@ export default function UntetheredApp() {
                 onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
                 className="flex items-center gap-3 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all group"
               >
-                <div className="p-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-3xl group-hover:scale-110 group-hover:bg-[var(--bg-surface-hover)] group-hover:border-[var(--border-default)] transition-all duration-300 shadow-sm">
+                <div className="p-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-3xl group-hover:scale-110 group-hover:bg-[var(--bg-surface-hover)] group-hover:border-[var(--border-default)] transition-all duration-300 shadow-sm">
                   <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 duration-300" />
                 </div>
                 <span className="text-[9px] font-bold uppercase tracking-[0.45em] opacity-60 group-hover:opacity-100 transition-opacity duration-300">Return</span>
@@ -1172,21 +1178,30 @@ export default function UntetheredApp() {
         </AnimatePresence>
 
         {/* SPATIAL AUDIO TOGGLE */}
-        <div className="fixed top-6 right-4 sm:top-8 sm:right-8 z-[60] flex items-center gap-3 sm:gap-4 scale-[0.85] sm:scale-100 origin-top-right">
+        <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[60] flex items-center gap-2 sm:gap-3 scale-[0.8] sm:scale-90 origin-top-right">
           {isUnlockedUser(currentUser?.email) && (
             <button
               onClick={() => setIsReportOpen(true)}
-              className="p-4 rounded-full backdrop-blur-3xl border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-white hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center group shadow-xl"
+              className="p-3 rounded-full backdrop-blur-3xl border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-white hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center group shadow-xl"
               title="Engagement Report"
             >
-              <Mail className="w-5 h-5 transition-transform group-hover:scale-110 group-hover:text-[#D4AF37]" />
+              <Mail className="w-4 h-4 transition-transform group-hover:scale-110 group-hover:text-[#D4AF37]" />
             </button>
           )}
+          <a
+            href="https://www.youtube.com/@SoulfulIntelligenceStudio"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-3 rounded-full backdrop-blur-3xl border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[#FF0000] hover:border-[#FF0000]/40 hover:bg-[#FF0000]/5 transition-all flex items-center justify-center group shadow-xl"
+            title="YouTube Channel"
+          >
+            <Youtube className="w-4 h-4 transition-transform group-hover:scale-110" />
+          </a>
           <ThemeToggle />
           <button
             onClick={toggleAudio}
             className={cn(
-              "p-4 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center group overflow-hidden shadow-2xl",
+              "p-3 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center group overflow-hidden shadow-2xl",
               isAudioEnabled
                 ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/30 text-[var(--accent-primary)] shadow-[0_0_20px_var(--glow-primary)]"
                 : "bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
@@ -1199,11 +1214,11 @@ export default function UntetheredApp() {
                 className="absolute inset-0 bg-[#D16BA5]/20 blur-xl"
               />
             )}
-            <Headphones className={cn("w-5 h-5 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
+            <Headphones className={cn("w-4 h-4 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
           </button>
         </div>
 
-        <div className="max-w-7xl mx-auto p-6 md:p-12 space-y-12">
+        <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
           <AnimatePresence mode="wait">
             {activeTab === 'home' && (
               <>
