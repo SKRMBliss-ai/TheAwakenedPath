@@ -29,7 +29,7 @@ const lightImages: Record<string, string> = {
 
 const ALL_SLIDES = ["slide1", "slide2", "slide3", "slide4", "slide5", "slide6", "slide7"];
 
-const TOTAL_SLIDES = 10; // sections data-section="0" ... "9"
+const TOTAL_SLIDES = 12; // 0 to 11
 
 interface Chap1Question1Props {
   onOpenJournal?: () => void;
@@ -142,7 +142,6 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
     setLightboxIndex(index);
   };
 
-  const dots = Array.from({ length: TOTAL_SLIDES });
 
   return (
     <div
@@ -152,7 +151,7 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
     >
       {/* --- Nav Dots --- */}
       <nav className={styles.navDots}>
-        {dots.map((_, i) => (
+        {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
@@ -376,8 +375,8 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
         </div>
       </section>
 
-      {/* --- SECTION 8: DAILY PRACTICE --- */}
-      <section className={styles.slide} data-section="8">
+      {/* --- SECTION 10: DAILY PRACTICE --- */}
+      <section className={styles.slide} data-section="10">
         <div className={styles.slideGrid}>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>Daily Practice</span>
@@ -398,8 +397,8 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
       <div className={styles.rule}><span>✦</span></div>
 
 
-      {/* --- SECTION 9: CLOSING --- */}
-      <section className={styles.closing} data-section="9">
+      {/* --- SECTION 11: CLOSING --- */}
+      <section className={styles.closing} data-section="11">
         <div className={styles.closingInner}>
           <span className={styles.closingTag}>End of Chapter 1 · Question 1</span>
           <h2 className={styles.closingTitle}>Both Paths Are<br /><em>Available Right Now</em></h2>

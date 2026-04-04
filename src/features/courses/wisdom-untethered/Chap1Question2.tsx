@@ -4,7 +4,7 @@ import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import styles from './Chap1Question2.module.css';
 import { useCourseTracking } from '../../../hooks/useCourseTracking';
 
-const TOTAL_SLIDES = 10; // Total navigable sections
+const TOTAL_SLIDES = 11; // 0 to 10
 
 // --- Neon Banana SVG Components ---
 

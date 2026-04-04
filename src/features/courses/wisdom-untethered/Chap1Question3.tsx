@@ -124,7 +124,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
     return () => observer.disconnect();
   }, []);
 
-  const totalSections = 10; 
+  const totalSections = 12; 
 
   const scrollToSection = (index: number) => {
     const section = containerRef.current?.querySelector(`[data-section="${index}"]`);
@@ -253,8 +253,110 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         </div>
       </section>
 
-      {/* --- SECTION 8: COSMIC PAUSE PRACTICE --- */}
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* --- SLIDE 4 --- */}
+      <section className={styles.slide} data-section="4">
+        <div className={cn(styles.slideGrid, styles.flip)}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(3)}>
+            <span className={styles.slideNum}>04</span>
+            <img src={getImgPath('Slide4.jpeg')} alt="The Car Analogy" className={styles.clickableImg} />
+          </div>
+          <div>
+            <span className={styles.slideTag}>The Car Analogy</span>
+            <h2 className={styles.slideH}>You Are the <em>Driver</em></h2>
+            <p className={styles.slideP}>Most people are like passengers in the backseat of their own car, screaming as the mind drives wherever it wants. But you can climb into the driver's seat.</p>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* --- SLIDE 5 --- */}
+      <section className={styles.slide} data-section="5">
+        <div className={styles.slideGrid}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(4)}>
+            <span className={styles.slideNum}>05</span>
+            <img src={getImgPath('Slide5.jpeg')} alt="The Universe" className={styles.clickableImg} />
+          </div>
+          <div>
+            <span className={styles.slideTag}>The Universe</span>
+            <h2 className={styles.slideH}>Resting in the <em>Vastness</em></h2>
+            <p className={styles.slideP}>When you shift to the impersonal mind, the drama of your day feels much less significant. You aren't ignoring it; you're just seeing it in its true context.</p>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* --- SLIDE 6 --- */}
+      <section className={styles.slide} data-section="6">
+        <div className={cn(styles.slideGrid, styles.flip)}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(5)}>
+            <span className={styles.slideNum}>06</span>
+            <img src={getImgPath('Slide6.jpeg')} alt="The Witness" className={styles.clickableImg} />
+          </div>
+          <div>
+            <span className={styles.slideTag}>The Witness</span>
+            <h2 className={styles.slideH}>Step <em>Entirely</em> Back</h2>
+            <p className={styles.slideP}>The goal isn't to fix the personal mind, but to step entirely back into the one who sees the personal mind.</p>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* --- SLIDE 7 --- */}
+      <section className={styles.slide} data-section="7">
+        <div className={styles.slideGrid}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(6)}>
+            <span className={styles.slideNum}>07</span>
+            <img src={getImgPath('Slide7.png')} alt="The Ocean" className={styles.clickableImg} />
+          </div>
+          <div>
+            <span className={styles.slideTag}>The Ocean</span>
+            <h2 className={styles.slideH}>Waves vs <em>Depths</em></h2>
+            <p className={styles.slideP}>The personal mind is the choppy surface of the ocean. The impersonal mind is the deep, silent water beneath.</p>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* --- SLIDE 8 --- */}
       <section className={styles.slide} data-section="8">
+        <div className={cn(styles.slideGrid, styles.flip)}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(7)}>
+            <span className={styles.slideNum}>08</span>
+            <img src={getImgPath('Slide8.png')} alt="The Sky" className={styles.clickableImg} />
+          </div>
+          <div>
+            <span className={styles.slideTag}>The Sky</span>
+            <h2 className={styles.slideH}>Passing <em>Clouds</em></h2>
+            <p className={styles.slideP}>Thoughts are just clouds drifting through the sky of your awareness. The sky is never affected by what drifts through it.</p>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* --- SLIDE 9 --- */}
+      <section className={styles.slide} data-section="9">
+        <div className={styles.slideGrid}>
+          <div className={styles.imgWrap} onClick={() => openLightbox(8)}>
+            <span className={styles.slideNum}>09</span>
+            <img src={getImgPath('Slide9.jpeg')} alt="The Discovery" className={styles.clickableImg} />
+          </div>
+          <div>
+            <span className={styles.slideTag}>The Discovery</span>
+            <h2 className={styles.slideH}>Freedom is <em>Here</em></h2>
+            <p className={styles.slideP}>You don't have to find freedom; you have to find the part of you that is already free.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* --- SECTION 10: COSMIC PAUSE PRACTICE --- */}
+      <section className={styles.slide} data-section="10">
         <div className={styles.slideGrid}>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The Practice</span>
@@ -272,8 +374,8 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         </div>
       </section>
 
-      {/* ── SECTION 9: CLOSING ── */}
-      <section className={styles.closing} data-section="9">
+      {/* ── SECTION 11: CLOSING ── */}
+      <section className={styles.closing} data-section="11">
         <div className={styles.closingInner}>
           <span className={styles.closingTag}>Chapter 1 · Question 3</span>
           <h2 className={styles.closingTitle}>A Little Planet.<br />A Vast Universe.</h2>

@@ -331,7 +331,7 @@ const StatsDashboard: React.FC = () => {
                         {/* Inline Metrics Row - Glass Pill Style */}
                         <div className="flex items-center gap-6 px-5 py-2.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-sm w-fit">
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Witnessed</span>
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Presence</span>
                                 <span className="text-sm font-serif text-[var(--text-primary)]">{totalEntries}</span>
                             </div>
                             <div className="w-px h-3 bg-[var(--border-subtle)]" />
@@ -341,7 +341,7 @@ const StatsDashboard: React.FC = () => {
                             </div>
                             <div className="w-px h-3 bg-[var(--border-subtle)]" />
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Teaching</span>
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Lessons Done</span>
                                 <span className="text-sm font-serif text-[var(--text-primary)]">{powerWatched}/{MAIN_PARTS_COUNT}</span>
                             </div>
                         </div>

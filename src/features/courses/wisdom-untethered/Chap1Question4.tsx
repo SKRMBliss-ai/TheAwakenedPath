@@ -238,7 +238,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
       )}
 
       <nav className={styles.navDots}>
-        {Array.from({ length: 10 }).map((_, i) => (
+        {Array.from({ length: 13 }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
@@ -330,8 +330,128 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         </div>
       </section>
 
-      {/* --- SECTION 8: DAILY PRACTICE --- */}
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* SLIDE 4 */}
+      <section className={styles.slide} data-section="5">
+        <div className={cn(styles.slideGrid, styles.flip)}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>04</span>
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide4"]} alt={slidesContent[3].tag} onClick={() => openLightbox(3)} className={styles.clickableImg} />
+            </div>
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>{slidesContent[3].tag}</span>
+            <h2 className={styles.slideH}>{slidesContent[3].heading}</h2>
+            {slidesContent[3].body.map((p, j) => <p key={j} className={styles.slideP}>{p}</p>)}
+            <blockquote className={styles.pull}>{slidesContent[3].pull}</blockquote>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* SLIDE 5 */}
+      <section className={styles.slide} data-section="6">
+        <div className={styles.slideGrid}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>05</span>
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide5"]} alt={slidesContent[4].tag} onClick={() => openLightbox(4)} className={styles.clickableImg} />
+            </div>
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>{slidesContent[4].tag}</span>
+            <h2 className={styles.slideH}>{slidesContent[4].heading}</h2>
+            {slidesContent[4].body.map((p, j) => <p key={j} className={styles.slideP}>{p}</p>)}
+            <blockquote className={styles.pull}>{slidesContent[4].pull}</blockquote>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* SLIDE 6 */}
+      <section className={styles.slide} data-section="7">
+        <div className={cn(styles.slideGrid, styles.flip)}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>06</span>
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide6"]} alt={slidesContent[5].tag} onClick={() => openLightbox(5)} className={styles.clickableImg} />
+            </div>
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>{slidesContent[5].tag}</span>
+            <h2 className={styles.slideH}>{slidesContent[5].heading}</h2>
+            {slidesContent[5].body.map((p, j) => <p key={j} className={styles.slideP}>{p}</p>)}
+            <blockquote className={styles.pull}>{slidesContent[5].pull}</blockquote>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* SLIDE 7 */}
       <section className={styles.slide} data-section="8">
+        <div className={styles.slideGrid}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>07</span>
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide7"]} alt={slidesContent[6].tag} onClick={() => openLightbox(6)} className={styles.clickableImg} />
+            </div>
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>{slidesContent[6].tag}</span>
+            <h2 className={styles.slideH}>{slidesContent[6].heading}</h2>
+            {slidesContent[6].body.map((p, j) => <p key={j} className={styles.slideP}>{p}</p>)}
+            <blockquote className={styles.pull}>{slidesContent[6].pull}</blockquote>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* SLIDE 8 */}
+      <section className={styles.slide} data-section="9">
+        <div className={cn(styles.slideGrid, styles.flip)}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>08</span>
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide8"]} alt={slidesContent[7].tag} onClick={() => openLightbox(7)} className={styles.clickableImg} />
+            </div>
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>{slidesContent[7].tag}</span>
+            <h2 className={styles.slideH}>{slidesContent[7].heading}</h2>
+            {slidesContent[7].body.map((p, j) => <p key={j} className={styles.slideP}>{p}</p>)}
+            <blockquote className={styles.pull}>{slidesContent[7].pull}</blockquote>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* SLIDE 9 */}
+      <section className={styles.slide} data-section="10">
+        <div className={styles.slideGrid}>
+          <div className={styles.imgWrap}>
+            <span className={styles.slideNum}>09</span>
+            <div className={styles.imageContainer}>
+              <img src={imageMap["slide9"]} alt={slidesContent[8].tag} onClick={() => openLightbox(8)} className={styles.clickableImg} />
+            </div>
+          </div>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>{slidesContent[8].tag}</span>
+            <h2 className={styles.slideH}>{slidesContent[8].heading}</h2>
+            {slidesContent[8].body.map((p, j) => <p key={j} className={styles.slideP}>{p}</p>)}
+            <blockquote className={styles.pull}>{slidesContent[8].pull}</blockquote>
+          </div>
+        </div>
+      </section>
+
+      {/* --- SECTION 11: DAILY PRACTICE --- */}
+      <section className={styles.slide} data-section="11">
         <div className={styles.slideGrid}>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The Practice</span>
@@ -349,8 +469,8 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         </div>
       </section>
 
-      {/* ── SECTION 9: CLOSING ── */}
-      <section className={styles.closing} data-section="9">
+      {/* ── SECTION 12: CLOSING ── */}
+      <section className={styles.closing} data-section="12">
         <div className={styles.closingInner}>
           <span className={styles.closingTag}>The Lucid State</span>
           <h2 className={styles.closingTitle}>Go to the One Who Hears</h2>

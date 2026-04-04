@@ -1,65 +1,27 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Flame, Sparkles, Sun, Play, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail, MessageCircle, Youtube, Moon, Zap, Target } from 'lucide-react';
-import { db } from './firebase';
+import { useState } from 'react';
+
+import { Flame, Sun, BookOpen, BarChart2, X, Lock, MessageCircle, Target, Sparkles, Heart, Volume2, Youtube, User, LogOut, Clock, Eye, Wind, ArrowLeft } from 'lucide-react';
+import { TodayPath } from './features/practices/TodayPath';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
 import { WisdomUntetheredCourse } from './features/courses/WisdomUntetheredCourse';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from './lib/utils';
 import Journal from './features/journal/components/Journal';
-import { BreathPractice } from './features/breath/components/BreathPractice';
 import StatsDashboard from './features/stats/StatsDashboard';
 import { SituationalPractices } from './features/practices/SituationalPractices';
 import { useAuth } from './features/auth/AuthContext';
-import { MeditationPortal } from './components/ui/MeditationPortal';
-import { AwakenStage, SacredCircle } from './components/ui/SacredCircle';
-import { GlassShape } from './components/ui/GlassShape';
+import { AwakenStage } from './components/ui/SacredCircle';
 import { SignInScreen } from './features/auth/SignInScreen';
-import { AnchorButton, NoiseOverlay } from './components/ui/SacredUI';
+import { NoiseOverlay } from './components/ui/SacredUI';
 import { GlobalSparkles } from './components/ui/GlobalSparkles';
-import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
-import { ThemeToggle, useTheme } from './theme/ThemeSystem';
-import { collection, query, orderBy, limit, onSnapshot, getDocs, doc } from 'firebase/firestore';
-import { AwakenedPathLogo } from './components/ui/AwakenedPathLogo';
-import EngagementReport from './features/admin/EngagementReport';
+import { ThemeToggle } from './theme/ThemeSystem';
+import { isAdminEmail, hasWisdomAccess } from './config/admin';
 import { useAchievements } from './features/achievements/useAchievements';
-import { AchievementToast } from './features/achievements/AchievementsPanel';
-import { MedalGrid } from './components/domain/MedalGrid';
-import { isAdminEmail, hasWisdomAccess, isUnlockedUser } from './config/admin';
-import { DailyPresenceCheck } from './features/practices/DailyPresenceCheck';
-
-interface PracticeStep {
-  title: string;
-  instruction: string;
-  duration: number;
-  visual: string;
-  guidance: string;
-}
-
-interface Practice {
-  id: number;
-  title: string;
-  icon: string;
-  xp: number;
-  duration: number;
-  type: string;
-  book: string;
-  level: string;
-  breathPattern?: number[];
-  steps: PracticeStep[];
-}
-
-interface Reward {
-  xp: number;
-  title: string;
-}
-
-const themeColors: any = {
-  inhale: { text: 'INHALE', scale: 1.3, glow: '0 0 100px rgba(171, 206, 201, 0.4)', duration: 4 },
-  hold: { text: 'HOLD', scale: 1.0, glow: '0 0 60px rgba(198, 95, 157, 0.3)', duration: 2 },
-  exhale: { text: 'EXHALE', scale: 0.6, glow: '0 0 40px rgba(171, 206, 201, 0.2)', duration: 4 },
-  rest: { text: 'REST', scale: 0.5, glow: 'none', duration: 2 }
-};
+import { GlassShape } from './components/ui/GlassShape';
+import { VoiceService } from './services/voiceService';
+import { useEffect } from 'react';
+import { AwakenedPathLogo } from './components/ui/AwakenedPathLogo';
 
 const EMOTION_MAP: Record<string, string> = {
   ANXIETY: '#FF7043',
@@ -87,57 +49,110 @@ const TodayScreen = ({ user, stats, lastEntry, onNavigate }: {
     user: any;
     stats: any;
     lastEntry: any;
-    onNavigate: (tab: string) => void;
+    onNavigate: (tab: string, questionId?: string, view?: string) => void;
 }) => {
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
     return (
-        <div className="max-w-2xl mx-auto space-y-8 pb-20">
-            {/* Compact greeting + streak */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm font-serif italic text-[var(--text-muted)]">
+        <div className="max-w-4xl mx-auto space-y-12 pb-20 px-6">
+            {/* TOP EXPERIENCE: Branding + Sacred Circle + Status Bar */}
+            <div className="flex flex-col items-center justify-center pt-12 text-center space-y-10">
+                <div className="space-y-4">
+                    <h2 className="text-[12px] font-medium uppercase tracking-[0.6em] text-[var(--text-muted)] animate-fade-in opacity-80">
                         {greeting},
-                    </p>
-                    <h1 className="text-2xl font-serif font-light text-[var(--text-primary)]">
-                        {user.displayName}
+                    </h2>
+                    <h1 className="text-[28px] font-light tracking-[0.4em] text-[var(--text-primary)] uppercase">
+                        skrmbliss <span className="text-[var(--accent-primary)] font-bold">ai</span>
                     </h1>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                    <Flame size={14} className="text-amber-400" />
-                    <span className="text-[11px] font-bold text-[var(--text-secondary)]">
-                        {stats.streak} days
-                    </span>
+
+                <div className="relative">
+                    <AwakenStage size="xl" variant="A" isAnimating />
                 </div>
+
+                {/* Status Bar: Flow & Streak */}
+                <div className="flex items-center gap-0 px-8 py-3.5 rounded-full bg-[var(--bg-surface)]/30 border border-[var(--border-subtle)] backdrop-blur-2xl transition-all hover:bg-[var(--bg-surface)]/50">
+                    <div className="flex items-center gap-3 pr-8 border-r border-[var(--border-subtle)]">
+                        <Heart size={16} className="text-[#C65F9D] fill-[#C65F9D]/20 animate-pulse" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-primary)]">
+                            Presence
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-3 px-8 border-r border-[var(--border-subtle)]">
+                        <Flame size={16} className="text-amber-400 fill-amber-400/20" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-primary)]">
+                            {stats.streak} {stats.streak === 1 ? 'Day' : 'Days'}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-3 pl-8">
+                        <Sparkles size={16} className="text-[#ABCEC9] fill-[#ABCEC9]/20" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-primary)]">
+                            {stats.points} Points
+                        </span>
+                    </div>
+                </div>
+
             </div>
 
-            {/* DAILY PRACTICE */}
-            <DailyPresenceCheck 
-                userId={user.uid} 
-                onNavigateToCourse={() => onNavigate('learn')} 
-            />
+            {/* YOUR PATH TODAY */}
+            <div className="max-w-2xl mx-auto w-full">
+                <TodayPath
+                    userId={user?.uid}
+                    onNavigate={(tab, questionId, view) => {
+                        onNavigate(tab, questionId, view);
+                    }}
+                />
+            </div>
 
-            {/* QUICK ACTIONS ROW */}
-            <div className="grid grid-cols-3 gap-3">
-                <button onClick={() => onNavigate('learn')}
-                    className="p-4 rounded-xl text-center transition-all hover:scale-[1.02] bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                    <BookOpen size={20} className="mx-auto mb-2 text-[#ABCEC9]" />
-                    <p className="text-[11px] font-bold text-[var(--text-primary)]">Learn</p>
-                    <p className="text-[8px] uppercase tracking-wider mt-0.5 text-[var(--text-muted)]">Courses</p>
-                </button>
-                <button onClick={() => onNavigate('practice')}
-                    className="p-4 rounded-xl text-center transition-all hover:scale-[1.02] bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                    <Flame size={20} className="mx-auto mb-2 text-[#C65F9D]" />
-                    <p className="text-[11px] font-bold text-[var(--text-primary)]">Practice</p>
-                    <p className="text-[8px] uppercase tracking-wider mt-0.5 text-[var(--text-muted)]">Meditate</p>
-                </button>
-                <button onClick={() => onNavigate('journey')}
-                    className="p-4 rounded-xl text-center transition-all hover:scale-[1.02] bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                    <BarChart2 size={20} className="mx-auto mb-2 text-[#9575CD]" />
-                    <p className="text-[11px] font-bold text-[var(--text-primary)]">Progress</p>
-                    <p className="text-[8px] uppercase tracking-wider mt-0.5 text-[var(--text-muted)]">History</p>
-                </button>
+            {/* SACRED PATHS GRID */}
+            <div className="grid grid-cols-1 gap-6 mb-12">
+                {[
+                    { id: 'learn', label: 'Learn', sub: 'WISDOM', icon: Sparkles, color: '#ABCEC9', delay: 0, variant: 'orb' },
+                    { id: 'practice', label: 'Practice', sub: 'PRESENCE', icon: Flame, color: '#C65F9D', delay: 0.1, variant: 'pulse' },
+                    { id: 'progress', label: 'Progress', sub: 'GROWTH', icon: BarChart2, color: '#9575CD', delay: 0.2, variant: 'chart' }
+                ].map((item: any) => (
+                    <motion.button
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: item.delay, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        onClick={() => onNavigate(item.id)}
+                        className="group relative flex items-center gap-8 p-8 rounded-[2.5rem] bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--accent-primary)]/30 transition-all duration-700 hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] overflow-hidden active:scale-[0.98]"
+                    >
+                        {/* Animated Glow Backdrop */}
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 bg-gradient-to-br from-[var(--accent-primary)] via-transparent to-transparent" />
+                        
+                        <div className="relative w-28 h-28 flex-shrink-0">
+                            <GlassShape
+                                variant={item.variant as any}
+                                icon={item.icon}
+                                color={item.color}
+                                className="w-full h-full transform transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6"
+                            />
+                        </div>
+
+                        <div className="flex-1 text-left">
+                            <div className="flex items-center gap-2 mb-2">
+                                <item.icon size={12} className="text-[var(--text-muted)] opacity-50" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--accent-primary)] opacity-70 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                    {item.sub}
+                                </span>
+                            </div>
+                            <h3 className="text-3xl font-serif font-light text-[var(--text-primary)] group-hover:translate-x-1 transition-transform duration-500">
+                                {item.label}
+                            </h3>
+                            <div className="mt-4 flex items-center gap-3">
+                                <div className="h-px w-8 bg-[var(--border-subtle)] group-hover:w-16 transition-all duration-700" />
+                                <span className="text-[11px] font-sans font-medium text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">Begin Journey</span>
+                            </div>
+                        </div>
+
+                        <div className="opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-4 group-hover:translate-x-0">
+                            <ArrowLeft size={24} className="rotate-180 text-[var(--text-muted)]" />
+                        </div>
+                    </motion.button>
+                ))}
             </div>
 
             {/* LAST REFLECTION */}
@@ -189,16 +204,153 @@ const PracticeScreen = () => {
     );
 };
 
+const ProfileScreen = ({ user, stats }: { user: any; stats: any }) => {
+    return (
+        <div className="max-w-4xl mx-auto pt-8 pb-24 space-y-8 px-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Identity & Level Header */}
+            <div className="relative p-10 rounded-[3rem] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-3xl shadow-2xl">
+                <div className="absolute top-0 right-0 p-8">
+                    <div className="px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
+                        <Flame size={14} className="text-amber-500 fill-amber-500/20" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">{stats.streak} DAY STREAK</span>
+                    </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[var(--accent-primary)] to-[#ABCEC9] p-[1px] shadow-[0_0_30px_rgba(171,206,201,0.2)]">
+                        <div className="w-full h-full rounded-full bg-[var(--bg-surface)] flex items-center justify-center overflow-hidden">
+                             <User size={40} className="text-[var(--accent-primary)] opacity-40" />
+                        </div>
+                    </div>
+                    
+                    <div className="flex-1 text-center md:text-left space-y-2">
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--accent-primary)] mb-2">Sacred Identity</h2>
+                        <h1 className="text-4xl font-serif font-light text-[var(--text-primary)] leading-tight italic">
+                            The Awakened {user?.displayName?.split(' ')[0] || 'Seeker'}
+                        </h1>
+                        <p className="text-[var(--text-muted)] text-sm font-medium opacity-60 tracking-wide">{user?.email}</p>
+                    </div>
+                </div>
+
+                {/* Level Progress */}
+                <div className="mt-12 space-y-4">
+                    <div className="flex justify-between items-end">
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]">Journey Level</p>
+                            <p className="text-2xl font-serif text-[var(--text-primary)]">Level 5 <span className="text-xs text-[var(--text-muted)] font-sans uppercase tracking-[0.2em] ml-2 opacity-50">/ Awakener</span></p>
+                        </div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{stats.points} / 1000 Presence XP</p>
+                    </div>
+                    <div className="h-3 bg-[var(--border-subtle)]/50 rounded-full overflow-hidden p-[1px]">
+                        <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, (stats.points / 1000) * 100)}%` }}
+                            transition={{ duration: 1.5, ease: "circOut" }}
+                            className="h-full rounded-full bg-gradient-to-r from-[var(--accent-primary)] to-[#ABCEC9] relative"
+                        >
+                            <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                        </motion.div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Core Metrics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                    { label: "Moments in Now", val: 42, icon: Clock, color: "#ABCEC9" },
+                    { label: "Seeing My Thoughts", val: 145, icon: Eye, color: "#C65F9D" },
+                    { label: "Inner Stillness", val: 87, icon: Wind, color: "#9575CD" },
+                ].map(stat => (
+                    <div key={stat.label} className="p-8 rounded-[2rem] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col items-center justify-center gap-4 group hover:border-[var(--accent-primary)]/30 transition-all duration-500">
+                        <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] flex items-center justify-center group-hover:scale-110 transition-transform duration-500" style={{ color: stat.color }}>
+                            <stat.icon size={20} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <div className="text-center">
+                            <div className="text-3xl font-serif text-[var(--text-primary)] mb-1">{stat.val}</div>
+                            <div className="text-[9px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]">{stat.label}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Energy Alignment Card */}
+            <div className="relative p-10 rounded-[3rem] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+                <div className="flex items-center gap-6 mb-8">
+                    <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 border border-rose-500/20">
+                        <Heart className="w-6 h-6 fill-rose-500/20" />
+                    </div>
+                    <div>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)] mb-1">Energy Alignment</h3>
+                        <p className="text-xl font-serif text-[var(--text-primary)] italic">Heart • Mind • Body Balance</p>
+                    </div>
+                </div>
+                
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-[#ABCEC9]">
+                        <span>Aligned Resonance</span>
+                        <span>72%</span>
+                    </div>
+                    <div className="h-2 bg-[#ABCEC9]/5 rounded-full overflow-hidden">
+                        <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: "72%" }}
+                            className="h-full bg-gradient-to-r from-[#ABCEC9]/40 to-[#ABCEC9] shadow-[0_0_15px_rgba(171,206,201,0.3)]"
+                        />
+                    </div>
+                    <p className="text-[11px] text-[var(--text-muted)] opacity-60 leading-relaxed font-medium">
+                        Your inner energies are finding harmony. Continue your daily witnessing to deepen the alignment between your thoughts and the space of your heart.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const UntetheredApp = () => {
-    const { user, loading } = useAuth();
+    const { user, loading, signOut } = useAuth();
+    const { points } = useAchievements();
+
     const [activeTab, setActiveTab] = useState('today');
     const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
     const [activeQuestionId, setActiveQuestionId] = useState('question1');
-    const [viewMode, setViewMode] = useState<'explanation' | 'practice' | 'video' | 'progress'>('explanation');
+    const [viewMode, setViewMode] = useState<'explanation' | 'video' | 'practice' | 'progress'>('explanation');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    const stats = { streak: 0 };
+    const stats = { 
+        streak: 3, 
+        points: points || 0
+    };
     const lastEntry = null;
+
+    useEffect(() => {
+        VoiceService.init();
+    }, []);
+
+    const onNavigate = (id: string, questionId?: string, view?: string) => {
+        if (id === 'learn') {
+             setActiveTab('learn');
+             setActiveCourseId(null);
+             return;
+        }
+        if (id === 'journey' || id === 'stats' || id === 'progress') {
+            setActiveTab('journey');
+            return;
+        }
+        if (id === 'situations' || id === 'practice') {
+            setActiveTab('practice');
+            return;
+        }
+        if (id === 'reflect' || id === 'journal') {
+            setActiveTab('journal');
+            return;
+        }
+        setActiveTab(id);
+        if (questionId) setActiveQuestionId(questionId);
+        if (view) setViewMode(view as any);
+        if (window.innerWidth < 1024) setIsSidebarOpen(false);
+    };
+
+    const [expandedChapter1, setExpandedChapter1] = useState(true);
 
     if (loading) return null;
     if (!user) return <SignInScreen />;
@@ -210,82 +362,219 @@ const UntetheredApp = () => {
             <GlobalSparkles />
             <NoiseOverlay />
             <LivingBlobs />
-            <ThemeToggle className="fixed top-6 right-6 z-[60]" />
-            
-            {/* Sidebar toggle for courses */}
-            {activeTab === 'learn' && activeCourseId === 'wisdom_untethered' && (
-                <button 
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="fixed top-6 left-6 z-[60] p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xl hover:scale-105 transition-all text-[var(--text-primary)]"
-                >
-                  <Menu size={20} />
-                </button>
-            )}
-
-            {/* Sidebar Overlay */}
-            <AnimatePresence>
-                {isSidebarOpen && (
-                    <>
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsSidebarOpen(false)}
-                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
-                        />
-                        <motion.aside
-                            initial={{ x: -300 }}
-                            animate={{ x: 0 }}
-                            exit={{ x: -2300 }}
-                            className="fixed top-0 left-0 h-full w-80 bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] z-[101] p-8 shadow-2xl"
-                        >
-                            <div className="flex justify-between items-center mb-12">
-                                <span className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-40">The Journey</span>
-                                <button onClick={() => setIsSidebarOpen(false)}><X size={18} /></button>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                {[
-                                    { id: 'question1', label: '1. Mind as a Tool' },
-                                    { id: 'question2', label: '2. The Witness' },
-                                    { id: 'question3', label: '3. Cosmic Pause' },
-                                    { id: 'question4', label: '4. Achieving Clarity' }
-                                ].map((q) => {
-                                    const isLocked = !isAdmin && q.id === 'question4'; // Explicitly check for admin for Q4 if needed
-                                    return (
-                                        <button 
-                                            key={q.id}
-                                            disabled={isLocked}
-                                            onClick={() => { setActiveQuestionId(q.id); setViewMode('explanation'); setIsSidebarOpen(false); }}
-                                            className={cn(
-                                                "w-full p-4 rounded-2xl text-left border transition-all flex items-center justify-between",
-                                                activeQuestionId === q.id 
-                                                    ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/40 text-[var(--accent-primary)]" 
-                                                    : "bg-transparent border-transparent hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-subtle)] text-[var(--text-secondary)]",
-                                                isLocked && "opacity-40 cursor-not-allowed"
-                                            )}
-                                        >
-                                            <span className="text-[13px] font-medium">{q.label}</span>
-                                            {isLocked && <Lock size={12} />}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </motion.aside>
-                    </>
+            <div className="hidden lg:flex fixed top-0 right-0 left-64 h-20 items-center justify-end px-10 gap-6 z-[60] backdrop-blur-xl bg-[var(--bg-primary)]/50 border-b border-[var(--border-subtle)]">
+                {/* Studio Button */}
+                {isAdmin && (
+                    <button className="flex items-center gap-2.5 px-6 py-2 rounded-full border border-red-500/50 bg-red-500/5 text-red-500 transition-all hover:bg-red-500/10">
+                        <Youtube size={14} className="fill-current" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] mt-[1px]">Studio</span>
+                    </button>
                 )}
-            </AnimatePresence>
 
-            <main className="pt-24 pb-32">
+                {/* Theme Toggle */}
+                <ThemeToggle />
+
+                {/* Voice Guidance Icon */}
+                <button className="w-10 h-10 rounded-full border border-[var(--border-default)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-secondary)] transition-all">
+                    <Volume2 size={18} />
+                </button>
+            </div>
+            
+            <ThemeToggle className="lg:hidden fixed top-6 right-6 z-[60]" />
+            
+            {/* SIDEBAR */}
+            <aside className={cn(
+                "fixed left-0 top-0 bottom-0 w-64 flex-col z-[60] bg-[var(--bg-secondary)] backdrop-blur-3xl border-r border-[var(--border-default)] p-8 pt-10 transition-transform duration-500 ease-fluid",
+                "lg:flex lg:translate-x-0",
+                isSidebarOpen ? "translate-x-0 flex" : "-translate-x-full lg:flex"
+            )}>
+                <div className="flex items-center justify-between mb-8 px-2">
+                    <AwakenedPathLogo
+                        variant="full"
+                        size="sm"
+                        animated={true}
+                        onClick={() => { setActiveTab('today'); setActiveCourseId(null); }}
+                        className="group"
+                    />
+                    <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-[var(--text-muted)]">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <nav className="flex flex-col gap-0.5">
+                    {[
+                        { id: 'today', icon: Sun, label: 'Dashboard' },
+                        { id: 'courses_group', icon: Sparkles, label: 'Courses', isGroup: true, subItems: [
+                            { id: 'learn', label: 'THE POWER OF NOW', courseId: null },
+                            { id: 'learn', label: 'WISDOM UNTETHERED', courseId: 'wisdom_untethered', locked: !hasWisdomAccess(user?.email) },
+                        ]},
+                        { id: 'journal', icon: BookOpen, label: 'Journal' },
+                        { id: 'practice', icon: Flame, label: 'Situations' },
+                        { id: 'journey', icon: BarChart2, label: 'Progress' },
+                        { id: 'profile', icon: User, label: 'Profile' },
+                    ].map((item: any) => {
+                        if (item.isGroup) {
+                            const Icon = item.icon;
+                            return (
+                                <div key={item.id} className="flex flex-col gap-0.5 my-0.5">
+                                    <div className="flex items-center gap-3 px-5 py-1.5 opacity-60">
+                                        <Icon size={14} className="text-[var(--text-muted)]" />
+                                        <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-[var(--text-muted)]">
+                                            {item.label}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col ml-[2.75rem] gap-0 relative before:content-[''] before:absolute before:left-[-1.25rem] before:top-2 before:bottom-2 before:w-px before:bg-[var(--border-subtle)]/30">
+                                        {item.subItems.map((sub: any) => {
+                                            const isActive = activeTab === sub.id && activeCourseId === sub.courseId;
+                                            return (
+                                                <div key={sub.label} className="flex flex-col">
+                                                    <button
+                                                        onClick={() => {
+                                                            if (sub.locked) return;
+                                                            setActiveTab(sub.id);
+                                                            setActiveCourseId(sub.courseId);
+                                                            if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                                                        }}
+                                                        className={cn(
+                                                            "w-full flex items-center gap-3 px-3 py-1 transition-all duration-300 relative group rounded-l-xl text-left",
+                                                        )}
+                                                    >
+                                                        {isActive && (
+                                                            <motion.div
+                                                                layoutId="sidebar-accent"
+                                                                className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/10 to-transparent pointer-events-none rounded-l-xl"
+                                                            />
+                                                        )}
+                                                        <span className={cn(
+                                                            "text-[9px] uppercase tracking-[0.25em] transition-colors duration-300 font-sans font-bold relative z-10 w-full",
+                                                            isActive ? "text-[var(--text-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)]"
+                                                        )}>
+                                                            {sub.label}
+                                                            {sub.locked && <Lock size={8} className="inline-block ml-2 opacity-50" />}
+                                                        </span>
+                                                    </button>
+
+                                                    {/* Wisdom Untethered Questions */}
+                                                    {isActive && sub.courseId === 'wisdom_untethered' && (
+                                                        <div className="flex flex-col mt-0 ml-1 border-l border-[var(--border-subtle)]/30 overflow-hidden">
+                                                            <button
+                                                                onClick={() => setExpandedChapter1(!expandedChapter1)}
+                                                                className="flex justify-between items-center w-full px-4 py-0.5 text-[8px] uppercase tracking-widest text-[var(--text-primary)] font-bold transition-all"
+                                                            >
+                                                                <span>Chapter 1: The Mind</span>
+                                                                <span className={cn(
+                                                                    "text-[8px] text-[var(--accent-primary)] transition-transform duration-300 mr-2",
+                                                                    expandedChapter1 ? "rotate-90" : "rotate-0"
+                                                                )}>▶</span>
+                                                            </button>
+
+                                                            <AnimatePresence>
+                                                                {expandedChapter1 && (
+                                                                    <motion.div
+                                                                        initial={{ height: 0, opacity: 0 }}
+                                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                                        exit={{ height: 0, opacity: 0 }}
+                                                                        className="flex flex-col overflow-hidden"
+                                                                    >
+                                                                        {[
+                                                                            { id: 'question1', label: '1. Mind as tool' },
+                                                                            { id: 'question2', label: '2. Narration' },
+                                                                            { id: 'question3', label: '3. Cosmic pause' },
+                                                                            { id: 'question4', label: '4. Clarity' }
+                                                                        ].map((q) => (
+                                                                            <button
+                                                                                key={q.id}
+                                                                                onClick={() => setActiveQuestionId(q.id)}
+                                                                                className={cn(
+                                                                                    "flex items-center gap-2 pl-6 pr-4 py-0.5 text-[8px] uppercase tracking-widest transition-all text-left",
+                                                                                    activeQuestionId === q.id
+                                                                                        ? "text-[var(--accent-primary)] font-bold"
+                                                                                        : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                                                                )}
+                                                                            >
+                                                                                <div className={cn(
+                                                                                    "w-1 h-1 rounded-full",
+                                                                                    activeQuestionId === q.id ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" : "bg-transparent"
+                                                                                )} />
+                                                                                <span className="flex-1">{q.label}</span>
+                                                                            </button>
+                                                                        ))}
+                                                                    </motion.div>
+                                                                )}
+                                                            </AnimatePresence>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        const isActive = (activeTab === item.id && (item.id !== 'learn' || !activeCourseId));
+                        const Icon = item.icon;
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => {
+                                    setActiveTab(item.id);
+                                    setActiveCourseId(null);
+                                    if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                                }}
+                                className={cn(
+                                    "w-full flex items-center gap-4 px-5 py-2.5 transition-all duration-300 relative group rounded-xl",
+                                    isActive ? "bg-[var(--accent-primary)]/5" : "hover:bg-[var(--bg-surface-hover)]"
+                                )}
+                            >
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="nav-active-pill"
+                                        className="absolute inset-0 bg-[var(--accent-primary)]/5 rounded-xl border border-[var(--accent-primary)]/20"
+                                    />
+                                )}
+                                <Icon
+                                    size={16}
+                                    className={cn(
+                                        "transition-all duration-300 relative z-10",
+                                        isActive ? "text-[var(--accent-primary)] fill-[var(--accent-primary)]/20" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)]"
+                                    )}
+                                />
+                                <span className={cn(
+                                    "text-[10px] uppercase tracking-[0.3em] transition-colors duration-300 font-bold relative z-10 mt-0.5",
+                                    isActive ? "text-[var(--text-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)]"
+                                )}>
+                                    {item.label}
+                                </span>
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="nav-active-dot-main"
+                                        className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)] z-10"
+                                    />
+                                )}
+                            </button>
+                        );
+                    })}
+                </nav>
+
+                {/* Sidebar Footer */}
+                <div className="mt-auto pt-8 border-t border-[var(--border-subtle)] space-y-4">
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]/50">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse shadow-[0_0_8px_var(--accent-primary)]" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] truncate">{user?.email}</span>
+                    </div>
+                    <button onClick={() => signOut()} className="flex items-center gap-4 px-5 py-3 text-[var(--text-muted)] hover:text-red-400 transition-all w-full group rounded-xl hover:bg-red-400/5">
+                        <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
+                    </button>
+                </div>
+            </aside>
+
+            <main className="lg:ml-64 pt-24 pb-32 min-h-screen">
                 <AnimatePresence mode="wait">
                     {activeTab === 'today' && (
                         <motion.div key="today" initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}}>
-                            <TodayScreen user={user} stats={stats} lastEntry={lastEntry} onNavigate={(t) => {
-                                if (t === 'learn') setActiveTab('learn');
-                                else if (t === 'practice') setActiveTab('practice');
-                                else if (t === 'journey') setActiveTab('journey');
-                                else if (t === 'journal') setActiveTab('journal');
-                            }} />
+                            <TodayScreen user={user} stats={stats} lastEntry={lastEntry} onNavigate={onNavigate} />
                         </motion.div>
                     )}
                     {activeTab === 'learn' && (
@@ -305,7 +594,9 @@ const UntetheredApp = () => {
                     )}
                     {activeTab === 'practice' && (
                         <motion.div key="practice" initial={{opacity:0, x:20}} animate={{opacity:1, x:0}} exit={{opacity:0, x:-20}}>
-                            <PracticeScreen />
+                            <div className="max-w-5xl mx-auto px-6">
+                                <PracticeScreen />
+                            </div>
                         </motion.div>
                     )}
                     {activeTab === 'journal' && (
@@ -317,21 +608,29 @@ const UntetheredApp = () => {
                     )}
                     {activeTab === 'journey' && (
                         <motion.div key="journey" initial={{opacity:0, filter:'blur(10px)'}} animate={{opacity:1, filter:'blur(0px)'}} exit={{opacity:0}}>
-                            <StatsDashboard />
+                            <div className="max-w-5xl mx-auto px-6">
+                                <StatsDashboard />
+                            </div>
+                        </motion.div>
+                    )}
+                    {activeTab === 'profile' && (
+                        <motion.div key="profile" initial={{opacity:0, scale:0.98}} animate={{opacity:1, scale:1}} exit={{opacity:0, scale:1.02}}>
+                            <ProfileScreen user={user} stats={stats} />
                         </motion.div>
                     )}
                 </AnimatePresence>
             </main>
 
-            {/* Navigation Bar */}
-            <nav className="fixed bottom-0 left-0 w-full h-20 bg-[var(--bg-surface)] backdrop-blur-2xl border-t border-[var(--border-subtle)] flex items-center justify-center p-2 z-50">
+            {/* Mobile Navigation Bar */}
+            <nav className="lg:hidden fixed bottom-0 left-0 w-full h-20 bg-[var(--bg-surface)] backdrop-blur-2xl border-t border-[var(--border-subtle)] flex items-center justify-center p-2 z-50">
                 <div className="flex w-full max-w-lg gap-1">
                     {[
-                        { id: 'today', icon: Sun, label: 'Today' },
-                        { id: 'learn', icon: BookOpen, label: 'Learn' },
-                        { id: 'practice', icon: Flame, label: 'Practice' },
+                        { id: 'today', icon: Sun, label: 'Dashboard' },
+                        { id: 'learn', icon: BookOpen, label: 'Courses' },
+                        { id: 'practice', icon: Flame, label: 'Situations' },
                         { id: 'journal', icon: MessageCircle, label: 'Journal' },
-                        { id: 'journey', icon: Target, label: 'Journey' }
+                        { id: 'journey', icon: Target, label: 'Progress' },
+                        { id: 'profile', icon: User, label: 'Profile' }
                     ].map(item => (
                         <button
                             key={item.id}

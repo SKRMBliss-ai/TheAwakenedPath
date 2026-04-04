@@ -3,6 +3,7 @@ import React, { useState, useEffect, createContext, useContext } from "react";
 import { motion } from "framer-motion";
 import { themes } from "./constants";
 import type { Theme, ThemeMode } from "./constants";
+import { cn } from "../lib/utils";
 
 /*
   ═══════════════════════════════════════════════════════════════════
@@ -108,6 +109,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         root.style.setProperty("--border-default", theme.borderDefault);
         root.style.setProperty("--border-subtle", theme.borderSubtle);
 
+        // Sync dark class for Tailwind and global CSS
+        if (mode === "dark") {
+            root.classList.add("dark");
+        } else {
+            root.classList.remove("dark");
+        }
+
         // Glow System (Adapts based on mode)
         if (mode === "dark") {
             root.style.setProperty("--card-glow-base", "rgba(240, 160, 170, 0.25)");
@@ -115,7 +123,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             root.style.setProperty("--card-glow-surge", "rgba(240, 160, 170, 0.75)");
             root.style.setProperty("--glow-primary", "rgba(240, 160, 170, 0.3)");
             root.style.setProperty("--accent-primary-dim", "rgba(240, 160, 170, 0.08)");
-            root.style.setProperty("--accent-secondary-dim", "rgba(240, 160, 170, 0.06)");
+            root.style.setProperty("--video-shadow", "0 30px 100px rgba(0,0,0,0.9), 0 0 40px rgba(240, 160, 170, 0.15)");
+            root.style.setProperty("--video-border", "rgba(255, 255, 255, 0.12)");
         } else {
             // Subtle shadows for light mode — No strong glows
             root.style.setProperty("--card-glow-base", "rgba(184, 112, 110, 0.04)");
@@ -123,7 +132,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             root.style.setProperty("--card-glow-surge", "rgba(184, 112, 110, 0.12)");
             root.style.setProperty("--glow-primary", "rgba(184, 112, 110, 0.06)");
             root.style.setProperty("--accent-primary-dim", "rgba(184, 112, 110, 0.03)");
-            root.style.setProperty("--accent-secondary-dim", "rgba(90, 134, 121, 0.03)");
+            root.style.setProperty("--video-shadow", "0 20px 60px rgba(0,0,0,0.8)");
+            root.style.setProperty("--video-border", "rgba(0, 0, 0, 0.05)");
         }
 
         // Orb Tokens
@@ -201,7 +211,7 @@ function MouseGlow() {
 
 // ─── THEME TOGGLE SWITCH ─────────────────────────────────────
 
-export function ThemeToggle({ style = {} }: { style?: React.CSSProperties }) {
+export function ThemeToggle({ style = {}, className = "" }: { style?: React.CSSProperties, className?: string }) {
     const { theme, mode, toggle } = useTheme();
 
     return (
@@ -209,19 +219,11 @@ export function ThemeToggle({ style = {} }: { style?: React.CSSProperties }) {
             onClick={toggle}
             whileTap={{ scale: 0.94 }}
             aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
+            className={cn("relative w-[48px] h-[26px] rounded-[13px] border-[1.5px] p-0 flex items-center transition-colors duration-500 backdrop-blur-sm", className)}
             style={{
-                position: "relative",
-                width: 48,
-                height: 26,
-                borderRadius: 13,
-                border: `1.5px solid ${theme.borderDefault}`,
+                borderColor: theme.borderDefault,
                 background: theme.toggleTrack,
                 cursor: "pointer",
-                padding: 0,
-                display: "flex",
-                alignItems: "center",
-                backdropFilter: theme.blur,
-                transition: "background 0.5s ease, border-color 0.5s ease",
                 ...style,
             }}
         >

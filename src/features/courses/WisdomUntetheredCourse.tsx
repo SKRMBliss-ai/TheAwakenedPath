@@ -1,7 +1,8 @@
 import { useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Play, Sparkles, Flame } from 'lucide-react';
+import { BookOpen, Play, Sparkles, Flame, Youtube } from 'lucide-react';
 import styles from './CourseTabs.module.css';
+import { WisdomUntetheredPracticeTab } from './WisdomUntetheredPracticeTab';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
 import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
@@ -49,13 +50,12 @@ export function WisdomUntetheredCourse({
   viewMode, 
   setViewMode,
   onOpenJournal,
-  onNavigateToPractice
 }: CourseProps) {
   // Always Chapter 1 for this coarse for now
   const activeChapter = useMemo(() => CHAPTERS[0], []);
   const tabs = [
     { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" /> },
-    { id: 'video' as const,       label: 'Video',       icon: <Play className="w-3.5 h-3.5" /> },
+    { id: 'video' as const,       label: 'Video',       icon: <Youtube className="w-3.5 h-3.5" /> },
     { id: 'practice' as const,    label: 'Practice',    icon: <BookOpen className="w-3.5 h-3.5" /> },
     { id: 'progress' as const,    label: 'Progress',    icon: <Target className="w-3.5 h-3.5" /> },
   ];
@@ -69,6 +69,14 @@ export function WisdomUntetheredCourse({
       updateProgress(activeQuestionId, { video: true });
     }
   }, [viewMode, activeQuestionId, updateProgress]);
+
+  // Mark "learn" as done when user visits explanation tab.
+  useEffect(() => {
+    if (viewMode === 'explanation') {
+      const key = `awakened-learn-done-${activeQuestionId}-${new Date().toISOString().split('T')[0]}`;
+      localStorage.setItem(key, '1');
+    }
+  }, [viewMode, activeQuestionId]);
   return (
     <div className={styles.container}>
       {/* ── Top Navigation Bar ── */}
@@ -122,42 +130,25 @@ export function WisdomUntetheredCourse({
             </motion.div>
           )}
 
-          {/* PRACTICE VIEW (Core Insights Text) */}
+          {/* PRACTICE VIEW (Practice Tab Content) */}
           {viewMode === 'practice' && (
             <motion.div
               key="practice"
-              initial={{ opacity: 0, scale: 0.98, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, scale: 1.02, filter: 'blur(8px)' }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
               transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className={styles.explanationView}
+              className="w-full h-full overflow-y-auto"
             >
-              <div className={styles.explanationInner}>
-                <span className={styles.explanationTag}>Initial Inquiry</span>
-                <h3 className={styles.explanationHeading}>
-                  Deconstructing the {activeQuestionId === 'question1' ? 'Mind' : 'Voice'}
-                </h3>
-                <p className={styles.explanationText}>
-                  {activeChapter.explanation}
-                </p>
-
-                <div className={styles.explanationAction}>
-                  <button 
-                    onClick={onNavigateToPractice}
-                    className={styles.practiceBtn}
-                  >
-                    <Flame size={16} />
-                    Transform a Situation
-                  </button>
-                  <button 
-                    onClick={() => setViewMode('explanation')}
-                    className={cn(styles.practiceBtn, "opacity-60 bg-transparent border-white/10 hover:bg-white/5")}
-                  >
-                    <Sparkles size={16} />
-                    Review Lesson Slides
-                  </button>
-                </div>
-              </div>
+              <WisdomUntetheredPracticeTab
+                activeQuestionId={activeQuestionId}
+                userId={currentUser?.uid}
+                onSelectQuestion={(_id) => {
+                  // If WisdomUntetheredCourse has a way to change activeQuestionId from parent, use it
+                  // In this component, activeQuestionId comes from props.
+                  // Usually, the parent handles this.
+                }}
+              />
             </motion.div>
           )}
 

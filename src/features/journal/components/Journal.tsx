@@ -107,6 +107,7 @@ const Journal: React.FC = () => {
     const [dynamicSteps, setDynamicSteps] = useState<any[]>([]);
     const [practiceStep, setPracticeStep] = useState(0);
     const [journeyTitle, setJourneyTitle] = useState("Daily Presence");
+    const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
     const lastSpokenRef = useRef<string | null>(null);
 
     const bellRef = useRef<HTMLAudioElement | null>(null);
@@ -171,6 +172,16 @@ const Journal: React.FC = () => {
             });
         }
     }, [isPaused]);
+
+    useEffect(() => {
+        const prompt = localStorage.getItem('awakened-journal-prompt');
+        if (prompt) {
+            setInitialPrompt(prompt);
+            setShowLogForm(true);
+            // We'll clear it after use or here
+            localStorage.removeItem('awakened-journal-prompt');
+        }
+    }, []);
 
     useEffect(() => {
         if (!user) return;
@@ -483,6 +494,7 @@ const Journal: React.FC = () => {
                         ═══════════════════════════════════════════════════════════════ */
                         <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-6xl mx-auto w-full">
                             <GentleJournalForm
+                                initialData={initialPrompt ? { reflections: initialPrompt } : undefined}
                                 onSave={async (entryData) => {
                                     if (!user) return;
                                     try {
