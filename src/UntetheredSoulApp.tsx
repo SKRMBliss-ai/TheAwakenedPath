@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Flame, Sun, BookOpen, BarChart2, X, Lock, MessageCircle, Target, Sparkles, Heart, Volume2, Youtube, User, LogOut, Clock, Eye, Wind, ArrowLeft } from 'lucide-react';
+import { Flame, Sun, BookOpen, BarChart2, X, Lock, MessageCircle, Target, Sparkles, Heart, Volume2, Youtube, User, LogOut, Clock, Eye, Wind } from 'lucide-react';
 import { TodayPath } from './features/practices/TodayPath';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
@@ -445,7 +445,7 @@ const UntetheredApp = () => {
 
                                                     {/* Wisdom Untethered Questions */}
                                                     {isActive && sub.courseId === 'wisdom_untethered' && (
-                                                        <div className="flex flex-col mt-0 ml-1 border-l border-[var(--border-subtle)]/30 overflow-hidden">
+                                                        <div className="flex flex-col mt-4 ml-1 border-l border-[var(--border-subtle)]/30 overflow-hidden">
                                                             <button
                                                                 onClick={() => setExpandedChapter1(!expandedChapter1)}
                                                                 className="flex justify-between items-center w-full px-4 py-0.5 text-[8px] uppercase tracking-widest text-[var(--text-primary)] font-bold transition-all"
