@@ -341,6 +341,14 @@ const UntetheredApp = () => {
              setActiveCourseId(null);
              return;
         }
+        if (id === 'wisdom_untethered') {
+            setActiveTab('learn');
+            setActiveCourseId('wisdom_untethered');
+            if (questionId) setActiveQuestionId(questionId);
+            if (view) setViewMode(view as any);
+            if (window.innerWidth < 1024) setIsSidebarOpen(false);
+            return;
+        }
         if (id === 'journey' || id === 'stats' || id === 'progress') {
             setActiveTab('journey');
             return;

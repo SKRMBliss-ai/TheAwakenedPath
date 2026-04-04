@@ -174,7 +174,7 @@ export function TodayPath({ userId, onNavigate }: TodayPathProps) {
       })
     );
     localStorage.setItem(reflectKey, '1');
-    onNavigate('chapters');
+    onNavigate('journal');
   };
 
   // Progress pill count
