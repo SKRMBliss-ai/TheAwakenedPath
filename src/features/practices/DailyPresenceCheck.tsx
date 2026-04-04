@@ -97,17 +97,21 @@ export const DailyPresenceCheck = ({ userId, className }: DailyPresenceCheckProp
   ];
 
   return (
-    <div className={cn("space-y-8", className)}>
-      <div className="flex items-center justify-between px-4">
-        <h4 className="text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)] flex items-center gap-3">
-          <Sparkles className="w-3 h-3" />
-          Daily Presence Check
-        </h4>
-        {entry?.completed && (
-          <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest animate-pulse">
-            Centered for Today
-          </span>
-        )}
+    <div className={cn("space-y-6", className)}>
+      <div className="px-5">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-[14px] font-serif font-bold text-[var(--accent-primary)] flex items-center gap-2">
+            Start Your Day in Presence
+          </h4>
+          {entry?.completed && (
+            <span className="text-[9px] font-bold text-emerald-400/80 uppercase tracking-widest px-2 py-1 rounded-full bg-emerald-400/10 border border-emerald-400/20">
+              Today's Witness
+            </span>
+          )}
+        </div>
+        <p className="text-[11px] text-[var(--text-muted)] font-medium leading-relaxed max-w-sm">
+          Complete your daily check-in to anchor your awareness. These practices are the foundation of your untethered journey.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 px-2">

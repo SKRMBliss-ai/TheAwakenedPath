@@ -156,6 +156,11 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
         </section>
       </div>
 
+      {/* Daily Practice Checklist - Prioritized */}
+      <section className="px-2 mt-4">
+        <DailyPresenceCheck userId={user?.uid} />
+      </section>
+
       {/* Primary Action Card - Situational Practice */}
       <section className="relative px-2">
         {/* Backlit Magenta Glow - Matching Soul Stats */}
@@ -221,10 +226,6 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
         </motion.div>
       )}
 
-      {/* Daily Practice Checklist */}
-      <section className="px-2">
-        <DailyPresenceCheck userId={user?.uid} />
-      </section>
 
       {/* Main Practices Grid */}
       <section className="space-y-6 pb-20">
@@ -330,6 +331,11 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
         </div>
       </section>
 
+      {/* Daily Practice Checklist - Desktop Prioritized */}
+      <section className="px-4 mt-4">
+        <DailyPresenceCheck userId={user?.uid} />
+      </section>
+
       {/* Main Action Call - Situational Practice */}
       <section className="relative">
         {/* Backlit Magenta Glow - Matching Soul Stats */}
@@ -387,10 +393,6 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
         </section>
       )}
 
-      {/* Daily Practice Checklist */}
-      <section className="px-4">
-        <DailyPresenceCheck userId={user?.uid} />
-      </section>
 
       {/* Practices Grid - Desktop Balanced */}
       <section className="space-y-8">
