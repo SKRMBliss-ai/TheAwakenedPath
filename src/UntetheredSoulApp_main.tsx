@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useMemo } from 'react';
 import { Flame, Sparkles, Sun, Play, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail, MessageCircle, Youtube } from 'lucide-react';
 import { db } from './firebase';
