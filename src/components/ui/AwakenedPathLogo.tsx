@@ -194,8 +194,8 @@ function LogoMark({ size, animated }: { size: number; animated: boolean }) {
 // Wordmark — "Awakened Path" with sub-label
 // ─────────────────────────────────────────────
 function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
-  const titleSize = { sm: 'text-sm', md: 'text-base', lg: 'text-xl' }[size];
-  const subSize   = { sm: 'text-[6px]', md: 'text-[7px]', lg: 'text-[9px]' }[size];
+  const titleSize = { sm: 'text-[10px]', md: 'text-base', lg: 'text-xl' }[size];
+  const subSize   = { sm: 'text-[5px]', md: 'text-[7px]', lg: 'text-[9px]' }[size];
 
   return (
     <div className="flex flex-col leading-none gap-0.5">

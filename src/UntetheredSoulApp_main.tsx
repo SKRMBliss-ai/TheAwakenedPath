@@ -801,8 +801,7 @@ export default function UntetheredApp() {
                             }}
                           >
                             <span className={cn(
-                              "text-[10px] uppercase transition-colors duration-400 font-sans relative z-10 w-full whitespace-nowrap",
-                              sub.label.length > 10 ? "tracking-[0.1em]" : "tracking-[0.25em]",
+                              "text-[10px] uppercase tracking-[0.25em] transition-colors duration-400 font-sans relative z-10 w-full",
                               isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
                             )}>
                               {sub.label}
@@ -913,7 +912,7 @@ export default function UntetheredApp() {
                 />
                 <span className={cn(
                   "text-[10px] uppercase transition-all duration-400 relative z-10 font-['Outfit'] whitespace-nowrap",
-                  item.label.length > 12 ? "tracking-[0.05em]" : "tracking-[0.3em]",
+                  item.label.length > 12 ? "tracking-[0.1em]" : "tracking-[0.4em]",
                   isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)] font-semibold"
                 )}>
                   {item.label}
@@ -959,6 +958,14 @@ export default function UntetheredApp() {
             <p className="text-[9px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex flex-col gap-2">
               <span className="opacity-60">Journey Shared by</span>
               <span className="text-[var(--text-primary)] font-bold font-sans tracking-[0.1em] uppercase">Soulful Intelligence Studio</span>
+              <div className="flex flex-wrap gap-3 mt-1">
+                <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1.5 no-underline border-b border-transparent hover:border-[var(--accent-primary)]/30 pb-0.5">
+                  <Youtube size={10} /> youtube
+                </a>
+                <a href="https://www.skrmblissai.in/twinsouls" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1.5 no-underline border-b border-transparent hover:border-[var(--accent-primary)]/30 pb-0.5">
+                  <Heart size={10} /> twin souls
+                </a>
+              </div>
             </p>
           </div>
         </div>
@@ -1077,12 +1084,7 @@ export default function UntetheredApp() {
 
             {activeTab === 'situations' && (
               <motion.div key="situations" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: -10 }} exit={{ opacity: 0, x: -10 }}>
-                <SituationalPractices 
-                  onBack={() => setActiveTab('home')} 
-                  isAdmin={isAdmin}
-                  activeQuestionId={activeQuestionId}
-                  onQuestionSelect={setActiveQuestionId} 
-                />
+                <SituationalPractices onBack={() => setActiveTab('home')} isAdmin={isAdmin} />
               </motion.div>
             )}
 
@@ -1306,6 +1308,20 @@ export default function UntetheredApp() {
                   </div>
                 </div>
 
+                {/* Footer Credits */}
+                <div className="w-full pt-4 pb-8 flex flex-col items-center justify-center text-center opacity-60 hover:opacity-100 transition-opacity">
+                  <p className="text-[9px] font-serif tracking-[0.2em] text-[var(--text-muted)] uppercase mb-2 text-center">
+                    Designed and thought by
+                  </p>
+                  <a 
+                    href="https://www.skrmblissai.in/twinsouls" 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="text-[10px] font-bold tracking-widest text-[var(--accent-secondary)] hover:text-[var(--accent-primary)] transition-colors"
+                  >
+                    www.skrmblissai.in/twinsouls
+                  </a>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1317,6 +1333,16 @@ export default function UntetheredApp() {
         onDismiss={dismissToast}
       />
 
+      {/* Floating WhatsApp Widget */}
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3">
+        <a href="https://wa.me/+918217581238?text=I+would+like+to+request+a+feature+or+report+a+technical+issue." target="_blank" rel="noopener noreferrer"
+          className="group flex items-center justify-center w-14 h-14 bg-green-500 text-white rounded-full shadow-lg hover:shadow-[0_4px_20px_rgba(34,197,94,0.4)] transition-all duration-300 hover:scale-110">
+          <span className="absolute right-full mr-4 text-[11px] font-bold text-white bg-black/80 backdrop-blur-md px-4 py-2 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl border border-white/10">
+            Request a feature / Report technical issue
+          </span>
+          <MessageCircle className="w-6 h-6" />
+        </a>
+      </div>
     </div>
   );
 }

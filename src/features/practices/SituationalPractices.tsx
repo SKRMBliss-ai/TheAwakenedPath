@@ -15,6 +15,8 @@ import { db } from '../../firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { VoiceService } from '../../services/voiceService';
 import { createPortal } from 'react-dom';
+import { WisdomPracticeSection } from './WisdomPracticeSection';
+import { CostValueAnalysis } from './CostValueAnalysis';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Situation {
@@ -562,7 +564,12 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: boolean }> = ({ onBack, isAdmin }) => {
+export const SituationalPractices: React.FC<{ 
+    onBack: () => void; 
+    isAdmin?: boolean;
+    activeQuestionId?: string;
+    onQuestionSelect?: (id: string) => void;
+}> = ({ onBack, isAdmin, activeQuestionId, onQuestionSelect }) => {
     const { mode } = useTheme();
     const { user } = useAuth();
     const [selectedSituation, setSelectedSituation] = useState<Situation | null>(null);
@@ -1069,45 +1076,62 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                 </div>
             </div>
 
-            {/* Curated Collections — only when unfiltered */}
-            {activeCategory === 'All' && activeDuration === 0 && !query && (
+            {/* Curated Collections — only when unfiltered OR searching for Wisdom */}
+            {((activeCategory === 'All' && activeDuration === 0 && !query) || query.toLowerCase().includes('wisdom') || query.toLowerCase().includes('untethered')) && (
                 <div className="space-y-12">
-                    {COLLECTIONS.map(col => {
-                        const colItems = col.ids.map(id => SITUATIONS.find(s => s.id === id)!).filter(Boolean);
-                        const colColors: Record<string, string> = { 'start-here': '#ABCEC9', 'emotional-toolkit': '#FF7043', 'daily-anchors': '#9575CD' };
-                        const accent = colColors[col.id];
+                    <WisdomPracticeSection 
+                        userId={user?.uid} 
+                        onStart={(id) => {
+                            onQuestionSelect?.(id);
+                            localStorage.setItem('awakened-path-active-question', id);
+                        }}
+                    />
+                    
+                    {/* Only show rest of collections if NOT searching Specifically for Wisdom */}
+                    {!query.toLowerCase().includes('wisdom') && !query.toLowerCase().includes('untethered') && activeCategory === 'All' && activeDuration === 0 && (
+                        <>
+                            <div className="pt-8 border-t border-dashed border-border-default">
+                                <h3 className="text-[11px] uppercase tracking-[0.4em] font-bold opacity-40" style={{ color: 'var(--text-muted)' }}>Rest of the Practices</h3>
+                            </div>
 
-                        return (
-                            <section key={col.id} className="space-y-6">
-                                <div className="flex items-center gap-5">
-                                    <div className="p-1 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm">
-                                        <CollectionIcon type={col.id} color={accent} />
-                                    </div>
-                                    <div className="space-y-0.5">
-                                        <h3 className="text-2xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>{col.label}</h3>
-                                        <p className="text-[10px] uppercase tracking-widest font-bold opacity-50" style={{ color: 'var(--text-muted)' }}>{col.desc}</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-6 overflow-x-auto pb-8 -mx-4 px-4 scroll-x-styled scroll-smooth">
-                                    {colItems.map(sit => (
-                                        <SituationalPracticeCard
-                                            key={sit.id}
-                                            situation={sit}
-                                            onClick={() => {
-                                                setSelectedSituation(sit);
-                                                setCurrentStep(0);
-                                                setIsPaused(false);
-                                                setShowLogEntry(false);
-                                                setJournalData({});
-                                                setIsPracticing(true);
-                                            }}
-                                            mode={mode}
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        );
-                    })}
+                            {COLLECTIONS.map(col => {
+                                const colItems = col.ids.map(id => SITUATIONS.find(s => s.id === id)!).filter(Boolean);
+                                const colColors: Record<string, string> = { 'start-here': '#ABCEC9', 'emotional-toolkit': '#FF7043', 'daily-anchors': '#9575CD' };
+                                const accent = colColors[col.id];
+
+                                return (
+                                    <section key={col.id} className="space-y-6">
+                                        <div className="flex items-center gap-5">
+                                            <div className="p-1 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm">
+                                                <CollectionIcon type={col.id} color={accent} />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <h3 className="text-2xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>{col.label}</h3>
+                                                <p className="text-[10px] uppercase tracking-widest font-bold opacity-50" style={{ color: 'var(--text-muted)' }}>{col.desc}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-6 overflow-x-auto pb-8 -mx-4 px-4 scroll-x-styled scroll-smooth">
+                                            {colItems.map(sit => (
+                                                <SituationalPracticeCard
+                                                    key={sit.id}
+                                                    situation={sit}
+                                                    onClick={() => {
+                                                        setSelectedSituation(sit);
+                                                        setCurrentStep(0);
+                                                        setIsPaused(false);
+                                                        setShowLogEntry(false);
+                                                        setJournalData({});
+                                                        setIsPracticing(true);
+                                                    }}
+                                                    mode={mode}
+                                                />
+                                            ))}
+                                        </div>
+                                    </section>
+                                );
+                            })}
+                        </>
+                    )}
                     <div className="pt-8 border-t border-dashed border-border-default">
                         <h3 className="text-[11px] uppercase tracking-[0.4em] font-bold opacity-40" style={{ color: 'var(--text-muted)' }}>Discovery Library</h3>
                     </div>
@@ -1269,6 +1293,10 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <section className="pt-20">
+                <CostValueAnalysis />
+            </section>
 
         </motion.div>
     );

@@ -10,6 +10,7 @@ import { AchievementsPanel } from '../achievements/AchievementsPanel';
 import { MAIN_PARTS_COUNT } from '../soul-intelligence/teachingData';
 import { isAdminEmail } from '../../config/admin';
 import PastReflections from './PastReflections';
+import PracticeLedger from './PracticeLedger';
 
 interface ActivityLog {
     id: string;
@@ -79,10 +80,9 @@ const StreakGrid = ({ days }: { days: number[] }) => {
     );
 };
 
-const StatsDashboard: React.FC = () => {
+    const StatsDashboard: React.FC = () => {
     const { user } = useAuth();
     const [weeklyActivity, setWeeklyActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
-    const [totalEntries, setTotalEntries] = useState(0);
     const [emotionFreq, setEmotionFreq] = useState<StatMetric[]>([]);
     const [distortionFreq, setDistortionFreq] = useState<StatMetric[]>([]);
     const [bodyFreq, setBodyFreq] = useState<StatMetric[]>([]);
@@ -115,11 +115,13 @@ const StatsDashboard: React.FC = () => {
             const journalRef = collection(db, 'users', user.uid, 'journal');
             const situationalRef = collection(db, 'users', user.uid, 'situational-logs');
             const journeyRef = collection(db, 'users', user.uid, 'journey');
+            const practicesRef = collection(db, 'users', user.uid, 'dailyPractices');
 
-            const [journalSnap, situationalSnap, journeySnap] = await Promise.all([
+            const [journalSnap, situationalSnap, journeySnap, practicesSnap] = await Promise.all([
                 getDocs(journalRef),
                 getDocs(situationalRef),
-                getDocs(journeyRef)
+                getDocs(journeyRef),
+                getDocs(practicesRef)
             ]);
 
             interface ActivityData {
@@ -136,7 +138,17 @@ const StatsDashboard: React.FC = () => {
             const allActivityDocs: ActivityData[] = [
                 ...journalSnap.docs.map(d => ({ ...(d.data() as any), source: 'journal' })),
                 ...situationalSnap.docs.map(d => ({ ...(d.data() as any), source: 'situational' })),
-                ...journeySnap.docs.map(d => ({ ...(d.data() as any), source: 'journey' }))
+                ...journeySnap.docs.map(d => ({ ...(d.data() as any), source: 'journey' })),
+                ...practicesSnap.docs.flatMap(d => {
+                    const data = d.data();
+                    const date = d.id; // YYYY-MM-DD
+                    return Object.entries(data).map(([qid, rec]: [string, any]) => ({
+                        ...rec,
+                        source: 'practice',
+                        date,
+                        questionId: qid
+                    })).filter(r => r.completed);
+                })
             ];
 
             const now = new Date();
@@ -210,7 +222,6 @@ const StatsDashboard: React.FC = () => {
                 }
             });
 
-            setTotalEntries(allActivityDocs.length);
             setWeeklyActivity(activity);
             setStreakDays(streakArr);
 
@@ -298,7 +309,6 @@ const StatsDashboard: React.FC = () => {
         const script = `
             Welcome back to your journey report. 
             You have maintained a powerful ${currentStreak} day streak of presence. 
-            Your total reflections have reached ${totalEntries}.
             ${topEmotion !== "peace" ? `Lately, your most frequent resonance has been ${topEmotion}.` : ''}
             ${topTrap !== "none identified" ? `The witness has observed that your mind often wanders into ${topTrap}.` : ''}
             Continue to watch these patterns with gentle curiosity. You are doing beautiful work.
@@ -307,7 +317,7 @@ const StatsDashboard: React.FC = () => {
         speak(script, "This is a spiritual summary of the user's progress stats.", true);
     };
 
-    if (isLoading && totalEntries === 0) {
+    if (isLoading) {
         return (
             <div className="w-full h-64 flex items-center justify-center">
                 <p className="text-[var(--text-muted)] italic animate-pulse">Gathering your resonance...</p>
@@ -328,20 +338,14 @@ const StatsDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Inline Metrics Row - Glass Pill Style */}
                         <div className="flex items-center gap-6 px-5 py-2.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-sm w-fit">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Witnessed</span>
-                                <span className="text-sm font-serif text-[var(--text-primary)]">{totalEntries}</span>
-                            </div>
-                            <div className="w-px h-3 bg-[var(--border-subtle)]" />
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Streak</span>
                                 <span className="text-sm font-serif text-[var(--text-primary)]">{currentStreak}D</span>
                             </div>
                             <div className="w-px h-3 bg-[var(--border-subtle)]" />
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Teaching</span>
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Lessons Done</span>
                                 <span className="text-sm font-serif text-[var(--text-primary)]">{powerWatched}/{MAIN_PARTS_COUNT}</span>
                             </div>
                         </div>
@@ -458,6 +462,7 @@ const StatsDashboard: React.FC = () => {
             <AchievementsPanel unlocked={unlocked} points={points} />
 
             {/* Past Reflections Log */}
+            <PracticeLedger />
             <PastReflections />
 
             {/* Metrics Grid */}

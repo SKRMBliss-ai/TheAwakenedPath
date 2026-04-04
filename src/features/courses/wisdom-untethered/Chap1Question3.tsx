@@ -1,15 +1,37 @@
 import { useEffect, useRef, useState } from 'react';
+import { useAuth } from '../../auth/AuthContext';
+import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import { cn } from '../../../lib/utils';
 import styles from './Chap1Question3.module.css';
+import { useCourseTracking } from '../../../hooks/useCourseTracking';
 
 interface Chap1Question3Props {
   onOpenJournal?: () => void;
 }
 
 export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
+  const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
   const heroStarsRef = useRef<HTMLDivElement>(null);
   const bandStarsRef = useRef<HTMLDivElement>(null);
+  const { updateProgress } = useCourseTracking(user?.uid);
+
+  // ── Scroll Tracking ──
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+      if (isNearBottom) {
+        updateProgress('question3', { read: true });
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [user?.uid, updateProgress]);
+
   const [activeSection, setActiveSection] = useState(0);
   const [isDark, setIsDark] = useState(true);
 
@@ -102,7 +124,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
     return () => observer.disconnect();
   }, []);
 
-  const totalSections = 13; 
+  const totalSections = 12; 
 
   const scrollToSection = (index: number) => {
     const section = containerRef.current?.querySelector(`[data-section="${index}"]`);
@@ -231,132 +253,133 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         </div>
       </section>
 
-      <div className={styles.cosmicBand} data-section="4">
-        <div className={styles.cosmicBandStars} ref={bandStarsRef} />
-        <div className={styles.cosmicBandInner}>
-          <span className={styles.cosmicBandTag}>The core pause</span>
-          <h2 className={styles.cosmicBandTitle}>"Stop for One Second.<br />Notice Where You Are."</h2>
-          <p className={styles.cosmicBandBody}>Before you start your car or walk through a door: Stop. For one second, acknowledge you are on a spinning planet. Then proceed.</p>
-          <span className={styles.cosmicItalic}>This single second is a complete shift in frame.</span>
-        </div>
-      </div>
+      <div className={styles.rule}><span>✦</span></div>
 
-      <section className={styles.slide} data-section="5">
+      {/* --- SLIDE 4 --- */}
+      <section className={styles.slide} data-section="4">
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(3)}>
             <span className={styles.slideNum}>04</span>
-            <img src={getImgPath('Slide4.jpeg')} alt="The car practice" className={styles.clickableImg} />
+            <img src={getImgPath('Slide4.jpeg')} alt="The Car Analogy" className={styles.clickableImg} />
           </div>
           <div>
-            <span className={styles.slideTag}>The car practice</span>
-            <h2 className={styles.slideH}>Before You<br /><em>Start the Engine</em></h2>
-            <p className={styles.slideP}>A moment of genuine noticing interruptions the spiral of daily worries with the weight of actual reality.</p>
-            <div className={styles.pull}>One second of genuine perspective is worth an hour of anxious thinking.</div>
+            <span className={styles.slideTag}>The Car Analogy</span>
+            <h2 className={styles.slideH}>You Are the <em>Driver</em></h2>
+            <p className={styles.slideP}>Most people are like passengers in the backseat of their own car, screaming as the mind drives wherever it wants. But you can climb into the driver's seat.</p>
           </div>
         </div>
       </section>
 
       <div className={styles.rule}><span>✦</span></div>
 
-      <section className={styles.slide} data-section="6">
+      {/* --- SLIDE 5 --- */}
+      <section className={styles.slide} data-section="5">
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(4)}>
             <span className={styles.slideNum}>05</span>
-            <img src={getImgPath('Slide5.jpeg')} alt="Every doorway is a practice moment" className={styles.clickableImg} />
+            <img src={getImgPath('Slide5.jpeg')} alt="The Universe" className={styles.clickableImg} />
           </div>
           <div>
-            <span className={styles.slideTag}>Every threshold</span>
-            <h2 className={styles.slideH}>Every Doorway<br /><em>is a Transition</em></h2>
-            <p className={styles.slideP}>Every time you walk through a door, pick up the phone, or engage with the world, you have a chance to arrive from the impersonal rather than the reactive.</p>
+            <span className={styles.slideTag}>The Universe</span>
+            <h2 className={styles.slideH}>Resting in the <em>Vastness</em></h2>
+            <p className={styles.slideP}>When you shift to the impersonal mind, the drama of your day feels much less significant. You aren't ignoring it; you're just seeing it in its true context.</p>
           </div>
         </div>
       </section>
 
       <div className={styles.rule}><span>✦</span></div>
 
-      <section className={styles.slide} data-section="7">
+      {/* --- SLIDE 6 --- */}
+      <section className={styles.slide} data-section="6">
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(5)}>
             <span className={styles.slideNum}>06</span>
-            <img src={getImgPath('Slide6.jpeg')} alt="The untrained mind" className={styles.clickableImg} />
+            <img src={getImgPath('Slide6.jpeg')} alt="The Witness" className={styles.clickableImg} />
           </div>
           <div>
-            <span className={styles.slideTag}>The Untrained State</span>
-            <h2 className={styles.slideH}>What the Untrained<br /><em>Mind Does</em></h2>
-            <p className={styles.slideP}>Left unchecked, the untethered mind orbits the self endlessly — replaying the past and rehearsing the future instead of resting in the present peace.</p>
+            <span className={styles.slideTag}>The Witness</span>
+            <h2 className={styles.slideH}>Step <em>Entirely</em> Back</h2>
+            <p className={styles.slideP}>The goal isn't to fix the personal mind, but to step entirely back into the one who sees the personal mind.</p>
           </div>
         </div>
       </section>
 
       <div className={styles.rule}><span>✦</span></div>
 
-      <section className={styles.slide} data-section="8">
+      {/* --- SLIDE 7 --- */}
+      <section className={styles.slide} data-section="7">
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(6)}>
             <span className={styles.slideNum}>07</span>
-            <img src={getImgPath('Slide7.jpeg')} alt="The mind can be trained" className={styles.clickableImg} />
+            <img src={getImgPath('Slide7.png')} alt="The Ocean" className={styles.clickableImg} />
           </div>
           <div>
-            <span className={styles.slideTag}>The dog analogy</span>
-            <h2 className={styles.slideH}>The Mind<br /><em>Can Be Trained</em></h2>
-            <p className={styles.slideP}>Train the mind with consistency and firmness. Like training a dog to sit, you gently redirect it back to the impersonal frame every time it pulls toward habitual worry.</p>
-            <div className={styles.pull}>Instead of being lost in thought, you start to recognise the deeper reality of every moment.</div>
+            <span className={styles.slideTag}>The Ocean</span>
+            <h2 className={styles.slideH}>Waves vs <em>Depths</em></h2>
+            <p className={styles.slideP}>The personal mind is the choppy surface of the ocean. The impersonal mind is the deep, silent water beneath.</p>
           </div>
         </div>
       </section>
 
-      <section className={styles.slide} data-section="9">
+      <div className={styles.rule}><span>✦</span></div>
+
+      {/* --- SLIDE 8 --- */}
+      <section className={styles.slide} data-section="8">
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(7)}>
             <span className={styles.slideNum}>08</span>
-            <img src={getImgPath('Slide8.jpeg')} alt="In the wider frame" className={styles.clickableImg} />
+            <img src={getImgPath('Slide8.png')} alt="The Sky" className={styles.clickableImg} />
           </div>
           <div>
-            <span className={styles.slideTag}>Final expansion</span>
-            <h2 className={styles.slideH}>Let Your Awareness<br /><em>Expand</em></h2>
-            <p className={styles.slideP}>Move your awareness past this room, this city, this planet. As you expand, your personal concerns become proportionate and manageable.</p>
+            <span className={styles.slideTag}>The Sky</span>
+            <h2 className={styles.slideH}>Passing <em>Clouds</em></h2>
+            <p className={styles.slideP}>Thoughts are just clouds drifting through the sky of your awareness. The sky is never affected by what drifts through it.</p>
           </div>
         </div>
       </section>
 
-      <div className={styles.meditationBand} data-section="10">
-        <div className={styles.meditationInner}>
-          <span className={styles.meditationEyebrow}>The Expansion Practice</span>
-          <h2 className={styles.meditationTitle}>Resting in the<br />Impersonal</h2>
-          <div className={styles.medStep}>
-            <p>Close your eyes. Let your awareness move past this room, past this city, to the vast, spinning planet we all share.</p>
-          </div>
-          <span className={styles.medPause}>— pause —</span>
-          <div className={styles.medStep}>
-            <p>From this vast frame, notice what your mind is currently holding. A worry, a plan, a concern. How large does it actually seem from here?</p>
-          </div>
-          <span className={styles.medPause}>— pause —</span>
-          <div className={styles.medStep}>
-            <p>Carry this wider frame back with you. You are larger than any single concern. This peace is always available.</p>
-          </div>
-        </div>
-      </div>
+      <div className={styles.rule}><span>✦</span></div>
 
-      <section className={styles.slide} data-section="11">
+      {/* --- SLIDE 9 --- */}
+      <section className={styles.slide} data-section="9">
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(8)}>
             <span className={styles.slideNum}>09</span>
-            <img src={getImgPath('Slide9.jpeg')} alt="In that reality, there is peace" className={styles.clickableImg} />
+            <img src={getImgPath('Slide9.jpeg')} alt="The Discovery" className={styles.clickableImg} />
           </div>
           <div>
-            <span className={styles.slideTag}>The result</span>
-            <h2 className={styles.slideH}><em>In That Reality,</em><br />There Is Peace</h2>
-            <p className={styles.slideP}>Instead of being lost in thought, you recognise the deeper reality of every moment. In that reality, there is peace.</p>
-            <div className={styles.pull}>That peace is not a destination. It is available in the next second.</div>
+            <span className={styles.slideTag}>The Discovery</span>
+            <h2 className={styles.slideH}>Freedom is <em>Here</em></h2>
+            <p className={styles.slideP}>You don't have to find freedom; you have to find the part of you that is already free.</p>
           </div>
         </div>
       </section>
 
-      <section className={styles.closing} data-section="12">
+      {/* --- SECTION 10: COSMIC PAUSE PRACTICE --- */}
+      <section className={styles.slide} data-section="10">
+        <div className={styles.slideGrid}>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>The Practice</span>
+            <h2 className={styles.slideH}>The <em>One-Second</em><br />Cosmic Pause</h2>
+            <p className={styles.slideP}>
+              Before you start your car, walk through a door, or pick up your phone: Stop. For one second, acknowledge you are on a spinning planet.
+            </p>
+          </div>
+          <div className="flex flex-col justify-center">
+            <DailyPracticeCard 
+              questionId="question3" 
+              userId={user?.uid} 
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 11: CLOSING ── */}
+      <section className={styles.closing} data-section="11">
         <div className={styles.closingInner}>
           <span className={styles.closingTag}>Chapter 1 · Question 3</span>
           <h2 className={styles.closingTitle}>A Little Planet.<br />A Vast Universe.</h2>
-          <p className={styles.closingBody}>The impersonal mind is available in the next pause — the breath before you walk through the door or start the ignition. Try it once today. Notice what shifts.</p>
+          <p className={styles.closingBody}>The impersonal mind is available in the next pause. Try it once today. Notice what shifts.</p>
           <button className={styles.closingBtn} onClick={onOpenJournal}>Open Journal →</button>
         </div>
       </section>

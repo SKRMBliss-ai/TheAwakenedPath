@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { useAuth } from '../../auth/AuthContext';
+import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import styles from './Chap1Question2.module.css';
+import { useCourseTracking } from '../../../hooks/useCourseTracking';
 
-const TOTAL_SLIDES = 9; // Removed the practice card from the counter if not clickable
+const TOTAL_SLIDES = 11; // 0 to 10
 
 // --- Neon Banana SVG Components ---
 
@@ -129,7 +132,25 @@ interface Chap1Question2Props {
 }
 
 export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
+  const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
+  const { updateProgress } = useCourseTracking(user?.uid);
+
+  // ── Scroll Tracking ──
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+      if (isNearBottom) {
+        updateProgress('question2', { read: true });
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [user?.uid, updateProgress]);
   const [activeSection, setActiveSection] = useState(0);
 
   // ── Lightbox state ──
@@ -367,12 +388,24 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
         </div>
       </section>
 
-      {/* ── SECTION 8: PRACTICE (MANTRA) ── */}
-      <div className={styles.practiceCard} data-section="8">
-        <p className={styles.practiceCardEyebrow}>The Practice</p>
-        <h2 className={styles.practiceCardTitle}>Notice the Noise. Loosen the Grip.<br />Become the Watcher.</h2>
-        <div className={styles.practiceMantra}>"I am the one who is aware."</div>
-      </div>
+      {/* --- SECTION 8: DAILY PRACTICE --- */}
+      <section className={styles.slideSection} data-section="8">
+        <div className={styles.slideWrapper}>
+          <div className={styles.slideContent}>
+            <span className={styles.slideLabel}>The Practice</span>
+            <h2 className={styles.slideHeading}>Notice the Noise.<br /><em>Become the Watcher.</em></h2>
+            <p className={styles.visualText}>
+              Commit to this 2-minute "Radio Check" to distance yourself from the internal monologue.
+            </p>
+          </div>
+          <div className="flex flex-col justify-center">
+            <DailyPracticeCard 
+              questionId="question2" 
+              userId={user?.uid} 
+            />
+          </div>
+        </div>
+      </section>
 
       {/* ── SECTION 9: GUIDED MEDITATION ── */}
       <section className={styles.slideSection} data-section="9">

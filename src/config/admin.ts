@@ -11,6 +11,7 @@ export const ADMIN_EMAILS = [
     'skrmblissai@gmail.com'
 ];
 
+
 export const isAdminEmail = (email: string | null | undefined) => {
     if (!email) return false;
     const lowerEmail = email.toLowerCase();

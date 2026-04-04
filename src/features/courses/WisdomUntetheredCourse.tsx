@@ -1,12 +1,16 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Play, Sparkles, Flame } from 'lucide-react';
+import { BookOpen, Play, Sparkles, Flame, Youtube } from 'lucide-react';
 import styles from './CourseTabs.module.css';
+import { WisdomUntetheredPracticeTab } from './WisdomUntetheredPracticeTab';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
 import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
 import { Chap1Question3 } from './wisdom-untethered/Chap1Question3';
 import { Chap1Question4 } from './wisdom-untethered/Chap1Question4';
+import { CheckCircle2, Circle } from 'lucide-react';
+import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
+import { useAuth } from '../auth/AuthContext';
 
 interface Chapter {
   id: number;
@@ -54,8 +58,8 @@ const QUESTION_CONTENT: Record<string, { heading: string, text: string }> = {
 
 interface CourseProps {
   activeQuestionId: string;
-  viewMode: 'explanation' | 'practice' | 'video';
-  setViewMode: (mode: 'explanation' | 'practice' | 'video') => void;
+  viewMode: string;
+  setViewMode: (mode: any) => void;
   onOpenJournal?: () => void;
   onNavigateToPractice?: () => void;
 }
@@ -65,20 +69,39 @@ export function WisdomUntetheredCourse({
   viewMode, 
   setViewMode,
   onOpenJournal,
-  onNavigateToPractice
 }: CourseProps) {
-  // Always Chapter 1 for this coarse for now
+  // Always Chapter 1 for this course for now
   const activeChapter = useMemo(() => CHAPTERS[0], []);
   const currentContent = useMemo(() => 
     QUESTION_CONTENT[activeQuestionId] || { heading: "Deconstructing the Mind", text: activeChapter.explanation }, 
   [activeQuestionId, activeChapter.explanation]);
 
   const tabs = [
-    { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" /> },
-    { id: 'video' as const,       label: 'Video',       icon: <Play className="w-3.5 h-3.5" /> },
-    { id: 'practice' as const,    label: 'Practice',    icon: <BookOpen className="w-3.5 h-3.5" /> },
+    { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" />, field: 'read' },
+    { id: 'video' as const,       label: 'Video',       icon: <Youtube className="w-3.5 h-3.5" /> , field: 'video' },
+    { id: 'practice' as const,    label: 'Practice',    icon: <BookOpen className="w-3.5 h-3.5" /> , field: 'practice' },
   ];
 
+<<<<<<< HEAD
+=======
+  const { user: currentUser } = useAuth();
+  const { progress, updateProgress } = useCourseTracking(currentUser?.uid);
+
+  // Auto-mark video as watched when tab is selected
+  useEffect(() => {
+    if (viewMode === 'video' && activeQuestionId) {
+      updateProgress(activeQuestionId, { video: true });
+    }
+  }, [viewMode, activeQuestionId, updateProgress]);
+
+  // Mark "learn" as done when user visits explanation tab.
+  useEffect(() => {
+    if (viewMode === 'explanation') {
+      const key = `awakened-learn-done-${activeQuestionId}-${new Date().toISOString().split('T')[0]}`;
+      localStorage.setItem(key, '1');
+    }
+  }, [viewMode, activeQuestionId]);
+>>>>>>> newUI
   return (
     <div className={styles.container}>
       {/* ── Top Navigation Bar ── */}
@@ -98,8 +121,23 @@ export function WisdomUntetheredCourse({
                 viewMode === tab.id && styles.tabActive
               )}
             >
-              {tab.icon}
-              <span className="hidden sm:inline">{tab.label}</span>
+              <div className="flex items-center gap-1.5 relative z-10">
+                {tab.icon}
+                <span className="hidden sm:inline">{tab.label}</span>
+                {progress[activeQuestionId]?.[tab.field as keyof QuestionProgress] ? (
+                    <div className="flex items-center justify-center w-3 h-3 rounded-full bg-emerald-500 border border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]">
+                        <CheckCircle2 size={8} className="text-white" />
+                    </div>
+                ) : (tab.field === 'read' || tab.field === 'video' || tab.field === 'practice') && (
+                    <div className="relative flex items-center justify-center">
+                        <span className="absolute w-2.5 h-2.5 bg-amber-400/20 rounded-full animate-ping" />
+                        <Circle size={6} className={cn(
+                            "transition-all duration-500",
+                            progress[activeQuestionId]?.[tab.field as keyof QuestionProgress] ? "fill-amber-400 text-amber-500" : "fill-transparent text-[var(--border-subtle)]"
+                        )} />
+                    </div>
+                )}
+              </div>
               {viewMode === tab.id && (
                 <motion.div
                   layoutId="activeTabUnderline"
@@ -132,16 +170,17 @@ export function WisdomUntetheredCourse({
             </motion.div>
           )}
 
-          {/* PRACTICE VIEW (Core Insights Text) */}
+          {/* PRACTICE VIEW (Practice Tab Content) */}
           {viewMode === 'practice' && (
             <motion.div
               key="practice"
-              initial={{ opacity: 0, scale: 0.98, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, scale: 1.02, filter: 'blur(8px)' }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
               transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className={styles.explanationView}
+              className="w-full h-full overflow-y-auto"
             >
+<<<<<<< HEAD
               <div className={styles.explanationInner}>
                 <span className={styles.explanationTag}>Initial Inquiry</span>
                 <h3 className={styles.explanationHeading}>
@@ -168,6 +207,17 @@ export function WisdomUntetheredCourse({
                   </button>
                 </div>
               </div>
+=======
+              <WisdomUntetheredPracticeTab
+                activeQuestionId={activeQuestionId}
+                userId={currentUser?.uid}
+                onSelectQuestion={(_id) => {
+                  // If WisdomUntetheredCourse has a way to change activeQuestionId from parent, use it
+                  // In this component, activeQuestionId comes from props.
+                  // Usually, the parent handles this.
+                }}
+              />
+>>>>>>> newUI
             </motion.div>
           )}
 
@@ -189,6 +239,81 @@ export function WisdomUntetheredCourse({
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
+              </div>
+            </motion.div>
+          )}
+
+          {/* PROGRESS DASHBOARD VIEW */}
+          {viewMode === 'progress' && (
+            <motion.div
+              key="progress"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              className="w-full h-full overflow-y-auto p-8 lg:p-16 flex flex-col items-center bg-[var(--bg-primary)]"
+            >
+              <div className="max-w-4xl w-full">
+                <div className="mb-12 text-center">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] opacity-70 font-sans">Curriculum Mastery</span>
+                  <h2 className="text-4xl font-serif font-light text-[var(--text-primary)] mt-4">Journey of Presence</h2>
+                  <p className="text-[var(--text-secondary)] mt-4 font-light italic">Your evolution through the chapters of the soul.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { id: 'question1', label: 'Q1: Mind as a Tool' },
+                    { id: 'question2', label: 'Q2: The Witness' },
+                    { id: 'question3', label: 'Q3: Cosmic Pause' },
+                    { id: 'question4', label: 'Q4: Achieving Clarity' },
+                  ].map((q) => {
+                    const prog = progress[q.id] || { read: false, video: false, practice: false };
+                    const isAllDone = prog.read && prog.video && prog.practice;
+
+                    return (
+                      <div key={q.id} className={cn(
+                        "p-8 rounded-[32px] border transition-all duration-500 bg-[var(--bg-surface)]",
+                        isAllDone ? "border-[var(--accent-primary)]/40 shadow-[0_0_30px_rgba(var(--accent-primary-rgb),0.05)]" : "border-[var(--border-default)]"
+                      )}>
+                        <h4 className="text-sm font-bold uppercase tracking-widest text-[var(--text-primary)] mb-6 flex items-center justify-between font-sans">
+                          {q.label}
+                          {isAllDone && <CheckCircle2 className="text-[var(--accent-primary)] w-5 h-5" />}
+                        </h4>
+                        
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="flex flex-col items-center gap-2">
+                            <div className={cn(
+                              "w-10 h-10 rounded-2xl flex items-center justify-center border transition-all duration-500",
+                              prog.read ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/30 text-[var(--accent-primary)]" : "bg-[var(--bg-surface-hover)] border-[var(--border-subtle)] text-[var(--text-muted)]"
+                            )}>
+                              <BookOpen size={18} />
+                            </div>
+                            <span className="text-[8px] uppercase tracking-widest font-bold font-sans">Content</span>
+                          </div>
+
+                          <div className="flex flex-col items-center gap-2">
+                            <div className={cn(
+                              "w-10 h-10 rounded-2xl flex items-center justify-center border transition-all duration-500",
+                              prog.video ? "bg-[var(--accent-secondary)]/10 border-[var(--accent-secondary)]/30 text-[var(--accent-secondary)]" : "bg-[var(--bg-surface-hover)] border-[var(--border-subtle)] text-[var(--text-muted)]"
+                            )}>
+                              <Play size={18} />
+                            </div>
+                            <span className="text-[8px] uppercase tracking-widest font-bold font-sans">Video</span>
+                          </div>
+
+                          <div className="flex flex-col items-center gap-2">
+                            <div className={cn(
+                              "w-10 h-10 rounded-2xl flex items-center justify-center border transition-all duration-500",
+                              prog.practice ? "bg-orange-400/10 border-orange-400/30 text-orange-400/70" : "bg-[var(--bg-surface-hover)] border-[var(--border-subtle)] text-[var(--text-muted)]"
+                            )}>
+                              <Flame size={18} />
+                            </div>
+                            <span className="text-[8px] uppercase tracking-widest font-bold font-sans">Practice</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </motion.div>
           )}
