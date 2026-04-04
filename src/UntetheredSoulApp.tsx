@@ -384,7 +384,7 @@ const UntetheredApp = () => {
             
             {/* SIDEBAR */}
             <aside className={cn(
-                "fixed left-0 top-0 bottom-0 w-64 flex-col z-[60] bg-[var(--bg-secondary)] backdrop-blur-3xl border-r border-[var(--border-default)] p-8 pt-10 transition-transform duration-500 ease-fluid",
+                "fixed left-0 top-0 bottom-0 w-[280px] flex-col z-[60] bg-[var(--bg-secondary)] backdrop-blur-3xl border-r border-[var(--border-default)] p-8 pt-10 transition-transform duration-500 ease-fluid",
                 "lg:flex lg:translate-x-0",
                 isSidebarOpen ? "translate-x-0 flex" : "-translate-x-full lg:flex"
             )}>
@@ -646,6 +646,20 @@ const UntetheredApp = () => {
                     ))}
                 </div>
             </nav>
+            {/* Floating WhatsApp Widget */}
+            <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3">
+                <a 
+                    href="https://wa.me/+918217581238?text=I+would+like+to+request+a+feature+or+report+a+technical+issue." 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group flex items-center justify-center w-14 h-14 bg-green-600 text-white rounded-full shadow-lg hover:shadow-[0_4px_20px_rgba(22,163,74,0.4)] transition-all duration-300 hover:scale-110"
+                >
+                    <span className="absolute right-full mr-4 text-[11px] font-bold text-white bg-black/80 backdrop-blur-md px-4 py-2 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl border border-white/10">
+                        Request a feature / Report technical issue
+                    </span>
+                    <MessageCircle className="w-6 h-6" />
+                </a>
+            </div>
         </div>
     );
 };
