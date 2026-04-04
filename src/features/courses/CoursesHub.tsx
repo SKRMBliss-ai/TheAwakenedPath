@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PowerOfNow } from '../soul-intelligence/components/PowerOfNow';
 import { useAuth } from '../auth/AuthContext';
 import { AnchorButton } from '../../components/ui/SacredUI';
-import { Lock, Sparkles } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { useRazorpay } from '../../hooks/useRazorpay';
+import { isAdminEmail, isUnlockedUser } from '../../config/admin';
 
 interface CoursesHubProps {
     initialChapter?: string;
@@ -16,7 +17,8 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
     const { checkOut, isProcessing } = useRazorpay();
     const [activeCourseId, setActiveCourseId] = useState<'power-of-now' | 'untethered'>('power-of-now');
     
-    const isWisdomAuthorized = isAccessValid;
+    // Check for admin/unlocked status
+    const isWisdomAuthorized = isAccessValid || (user && (isAdminEmail(user.email) || isUnlockedUser(user.email)));
 
     const handleUnlock = async () => {
         if (!user) {
@@ -32,7 +34,6 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
             () => {
                 // Success callback: Firestore is updated by the cloud function
                 alert("Success! The path of Wisdom Untethered is now open for you.");
-                // The profile state will automatically refresh once Firestore updates (onAuthStateChanged handles it)
             }
         );
     };
@@ -62,7 +63,7 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
                         <span className="relative z-10 w-full text-center">Power of Now</span>
                     </button>
 
-                    {/* The Untethered Soul Tab */}
+                    {/* Wisdom Untethered Tab */}
                     <button
                         onClick={() => setActiveCourseId('untethered')}
                         className={`relative px-8 py-3 rounded-xl text-xs font-serif tracking-wide transition-all duration-300 font-medium z-10 ${
@@ -79,10 +80,7 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             />
                         )}
-                        <span className="relative z-10 w-full text-center flex items-center justify-center gap-2">
-                            Wisdom Untethered
-                            {!isWisdomAuthorized && <Lock size={10} className="opacity-40" />}
-                        </span>
+                        <span className="relative z-10 w-full text-center">Wisdom Untethered</span>
                     </button>
                 </div>
             </div>
@@ -107,7 +105,7 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 1.02 }}
                             transition={{ duration: 0.4 }}
-                            className="flex flex-col items-center justify-center py-32 px-6"
+                            className="flex flex-col items-center justify-center py-32 px-6 text-center"
                         >
                             <div className="w-24 h-24 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface-hover)] shadow-inner flex items-center justify-center mb-8 relative">
                                 {isWisdomAuthorized ? (
@@ -159,7 +157,7 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
                                         >
                                             {isProcessing ? "Opening Gateway..." : (
                                                 <>
-                                                    <Sparkles size={16} />
+                                                    <Lock size={16} />
                                                     Unlock Full Journey · $9
                                                 </>
                                             )}

@@ -1,7 +1,9 @@
-/* Chap1Question1.tsx */
 import { useEffect, useRef, useState } from 'react';
+import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
+import { useAuth } from '../../auth/AuthContext';
 import { cn } from '../../../lib/utils';
 import styles from './Chap1Question1.module.css';
+import { useCourseTracking } from '../../../hooks/useCourseTracking';
 
 const darkImages: Record<string, string> = {
   "slide1": "/WisdomUntethered/Chap1/Question1/01_BadMood.png",
@@ -27,15 +29,34 @@ const lightImages: Record<string, string> = {
 
 const ALL_SLIDES = ["slide1", "slide2", "slide3", "slide4", "slide5", "slide6", "slide7"];
 
-const TOTAL_SLIDES = 13; // sections data-section="0" ... "12"
+const TOTAL_SLIDES = 10; // sections data-section="0" ... "9"
 
 interface Chap1Question1Props {
   onOpenJournal?: () => void;
 }
 
 export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
+  const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
+  const { updateProgress } = useCourseTracking(user?.uid);
+
+  // ── Scroll Tracking for "Read" status ──
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      // Mark as read if user scrolls near the bottom of this specific container
+      const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+      if (isNearBottom) {
+        updateProgress('question1', { read: true });
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [user?.uid, updateProgress]);
 
   // ── Theme detection ──
   const [isDark, setIsDark] = useState(
@@ -135,6 +156,7 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
+            aria-label={`Go to section ${i + 1}`}
             onClick={() => scrollToSection(i)}
           />
         ))}
@@ -354,23 +376,30 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
         </div>
       </section>
 
-      <div className={styles.rule}><span>✦</span></div>
-
-      {/* --- MEDITATION BAND --- */}
-      <div className={styles.meditationBand} data-section="11">
-        <div className={styles.meditationInner}>
-          <span className={styles.meditationEyebrow}>Guided meditation</span>
-          <h2 className={styles.meditationTitle}>Soften Around It</h2>
-          <div className={styles.meditationStep}>
-            <span className={styles.meditationStepLabel}>Steps</span>
-            <p>Settle. Notice. Watch. Soften. Transmute. Return.</p>
+      {/* --- SECTION 8: DAILY PRACTICE --- */}
+      <section className={styles.slide} data-section="8">
+        <div className={styles.slideGrid}>
+          <div className={styles.slideContent}>
+            <span className={styles.slideTag}>Daily Practice</span>
+            <h2 className={styles.slideH}>Commit to the <em>Redirection</em></h2>
+            <p className={styles.slideP}>
+              The mind is a tool, not who you are. This daily practice helps you reclaim the higher mind by choosing a deliberate anchor when the reactivity starts.
+            </p>
+          </div>
+          <div className="flex flex-col justify-center">
+            <DailyPracticeCard 
+              questionId="question1" 
+              userId={user?.uid} 
+            />
           </div>
         </div>
-      </div>
+      </section>
+
+      <div className={styles.rule}><span>✦</span></div>
 
 
-      {/* --- CLOSING --- */}
-      <section className={styles.closing} data-section="12">
+      {/* --- SECTION 9: CLOSING --- */}
+      <section className={styles.closing} data-section="9">
         <div className={styles.closingInner}>
           <span className={styles.closingTag}>End of Chapter 1 · Question 1</span>
           <h2 className={styles.closingTitle}>Both Paths Are<br /><em>Available Right Now</em></h2>
