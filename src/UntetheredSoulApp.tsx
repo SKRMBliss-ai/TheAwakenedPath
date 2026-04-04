@@ -22,6 +22,7 @@ import { GlassShape } from './components/ui/GlassShape';
 import { VoiceService } from './services/voiceService';
 import { useEffect } from 'react';
 import { AwakenedPathLogo } from './components/ui/AwakenedPathLogo';
+import { useVoiceActive } from './services/voiceService';
 
 const EMOTION_MAP: Record<string, string> = {
   ANXIETY: '#FF7043',
@@ -311,6 +312,25 @@ const UntetheredApp = () => {
     };
     const lastEntry = null;
 
+    const isSpeaking = useVoiceActive();
+
+    const handleVoiceGuidance = () => {
+        if (isSpeaking) {
+            VoiceService.stop();
+            return;
+        }
+
+        const welcomeText = `Welcome back seeker to your Awakened Path. I am your guide for this journey. 
+        As you look at your dashboard, you will find three Sacred Paths. 
+        Select LEARN to continue your Wisdom Untethered course — modern insights into the soul. 
+        Select PRACTICE for situational stillness when life feels overwhelming. 
+        And select PROGRESS to witness your growth and energy alignment. 
+        You are currently on ${activeQuestionId.replace('question', 'Question ')}. 
+        Whenever you need my guidance, just tap this icon again. Let us begin.`;
+        
+        VoiceService.speak(welcomeText, { gender: 'FEMALE' });
+    };
+
     useEffect(() => {
         VoiceService.init();
     }, []);
@@ -364,7 +384,15 @@ const UntetheredApp = () => {
                 <ThemeToggle />
 
                 {/* Voice Guidance Icon */}
-                <button className="w-10 h-10 rounded-full border border-[var(--border-default)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-secondary)] transition-all">
+                <button 
+                    onClick={handleVoiceGuidance}
+                    className={cn(
+                        "w-10 h-10 rounded-full border flex items-center justify-center transition-all",
+                        isSpeaking 
+                            ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] text-[var(--accent-primary)] animate-pulse" 
+                            : "border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-secondary)]"
+                    )}
+                >
                     <Volume2 size={18} />
                 </button>
             </div>
