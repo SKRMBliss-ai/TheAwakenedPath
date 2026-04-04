@@ -125,7 +125,15 @@ function usePracticeRecord(userId: string | undefined, questionId: string) {
 
 // ── Single practice card ──────────────────────────────────────────────────────
 
-function WisdomCard({ practice, userId }: { practice: typeof WISDOM_PRACTICES[0]; userId: string | undefined }) {
+function WisdomCard({ 
+    practice, 
+    userId, 
+    onStart 
+}: { 
+    practice: typeof WISDOM_PRACTICES[0]; 
+    userId: string | undefined; 
+    onStart?: () => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const [stepIndex, setStepIndex] = useState(-1); // -1 = not started
   const { completed, triggers, markDone, markTrigger } = usePracticeRecord(userId, practice.id);
@@ -136,6 +144,7 @@ function WisdomCard({ practice, userId }: { practice: typeof WISDOM_PRACTICES[0]
 
   const handleStart = () => {
     if (isLocked || completed) return;
+    onStart?.();
     setStepIndex(0);
     setExpanded(true);
   };
@@ -171,7 +180,12 @@ function WisdomCard({ practice, userId }: { practice: typeof WISDOM_PRACTICES[0]
       {/* Card header — always visible */}
       <button
         disabled={isLocked}
-        onClick={() => isLocked ? null : setExpanded(e => !e)}
+        onClick={() => {
+          if (!isLocked) {
+            setExpanded(e => !e);
+            if (!expanded) onStart?.();
+          }
+        }}
         className="w-full flex items-center gap-4 p-4 text-left"
         style={{ cursor: isLocked ? 'default' : 'pointer' }}
       >
@@ -351,7 +365,13 @@ function WisdomCard({ practice, userId }: { practice: typeof WISDOM_PRACTICES[0]
 
 // ── Main section export ───────────────────────────────────────────────────────
 
-export function WisdomPracticeSection({ userId }: { userId: string | undefined }) {
+export function WisdomPracticeSection({ 
+    userId, 
+    onStart 
+}: { 
+    userId: string | undefined;
+    onStart?: (id: string) => void;
+}) {
   // Get current active question from localStorage
   const activeId = useMemo(
     () => localStorage.getItem('awakened-path-active-question') || 'question1',
@@ -389,6 +409,7 @@ export function WisdomPracticeSection({ userId }: { userId: string | undefined }
             key={practice.id}
             practice={practice}
             userId={userId}
+            onStart={() => onStart?.(practice.id)}
           />
         ))}
       </div>

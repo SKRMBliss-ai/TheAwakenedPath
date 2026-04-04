@@ -563,7 +563,12 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: boolean }> = ({ onBack, isAdmin }) => {
+export const SituationalPractices: React.FC<{ 
+    onBack: () => void; 
+    isAdmin?: boolean;
+    activeQuestionId?: string;
+    onQuestionSelect?: (id: string) => void;
+}> = ({ onBack, isAdmin, activeQuestionId, onQuestionSelect }) => {
     const { mode } = useTheme();
     const { user } = useAuth();
     const [selectedSituation, setSelectedSituation] = useState<Situation | null>(null);
@@ -1073,7 +1078,13 @@ export const SituationalPractices: React.FC<{ onBack: () => void; isAdmin?: bool
             {/* Curated Collections — only when unfiltered OR searching for Wisdom */}
             {((activeCategory === 'All' && activeDuration === 0 && !query) || query.toLowerCase().includes('wisdom') || query.toLowerCase().includes('untethered')) && (
                 <div className="space-y-12">
-                    <WisdomPracticeSection userId={user?.uid} />
+                    <WisdomPracticeSection 
+                        userId={user?.uid} 
+                        onStart={(id) => {
+                            onQuestionSelect?.(id);
+                            localStorage.setItem('awakened-path-active-question', id);
+                        }}
+                    />
                     
                     {/* Only show rest of collections if NOT searching Specifically for Wisdom */}
                     {!query.toLowerCase().includes('wisdom') && !query.toLowerCase().includes('untethered') && activeCategory === 'All' && activeDuration === 0 && (
