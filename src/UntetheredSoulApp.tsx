@@ -556,6 +556,21 @@ const UntetheredApp = () => {
                         <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" />
                         <span className="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
                     </button>
+
+                    <div className="mt-4 pt-4 border-t border-[var(--border-subtle)]/30">
+                        <p className="text-[9px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex flex-col gap-2 px-2">
+                            <span className="opacity-60 uppercase tracking-[0.2em]">Journey Shared by</span>
+                            <span className="text-[var(--text-primary)] font-bold font-sans tracking-[0.1em] uppercase">Soulful Intelligence Studio</span>
+                            <div className="flex flex-wrap gap-4 mt-1">
+                                <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1.5 no-underline border-b border-transparent hover:border-[var(--accent-primary)]/30 pb-0.5">
+                                    <Youtube size={10} /> youtube
+                                </a>
+                                <a href="https://www.skrmblissai.in/twinsouls" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1.5 no-underline border-b border-transparent hover:border-[var(--accent-primary)]/30 pb-0.5">
+                                    <Heart size={10} /> twin souls
+                                </a>
+                            </div>
+                        </p>
+                    </div>
                 </div>
             </aside>
 
