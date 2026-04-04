@@ -29,8 +29,27 @@ const CHAPTERS: Chapter[] = [
 const QUESTION_VIDEOS: Record<string, string> = {
   'question1': '3oAQijy87rs',
   'question2': 'rlRi9eCyZuU',
-  'question3': 'hNImvYFpx00', // Placeholder or real ID
-  'question4': 'mIscD_Yd48E', // Placeholder or real ID
+  'question3': 'hNImvYFpx00',
+  'question4': 'mIscD_Yd48E',
+};
+
+const QUESTION_CONTENT: Record<string, { heading: string, text: string }> = {
+  'question1': {
+    heading: "Deconstructing the Voice",
+    text: "Chapter 1 of Wisdom Untethered explores one of the most fundamental insights in Singer's teachings: you are not your mind. The mind has a lower layer that reacts automatically based on past experiences, and a higher layer that can consciously redirect itself toward steadier ground. Singer teaches that you don't need to fight negative thoughts — you can use the mind as a tool, through affirmations and deliberate redirection, to lift yourself out of spiraling patterns. At the deepest level, the practice is even simpler: learn to relax in the face of whatever the mind is doing. Freedom isn't about fixing the mind. It's about stopping the habit of letting it run your life."
+  },
+  'question2': {
+    heading: "Witnessing the Narrator",
+    text: "In Question 2, we dive into the nature of the constant internal narrator. Michael Singer explains that the voice in your head is not trying to help you; it is simply generating noise to create an illusion of control over a world it cannot actually manage. The practice here is not to silence the voice, but to step back into the seat of the Witness—the one who is aware of the noise without being consumed by it. Once you recognize that you are the listener, not the radio, the grip of the mind naturally begins to loosen through simple awareness."
+  },
+  'question3': {
+    heading: "The Wider Frame",
+    text: "Question 3 explores the shift from our narrow, personal frame to the vast, impersonal one. The personal mind is absorbed in individual desires and fears, filtering everything through the question: 'How does this affect me?' Singer teaches that there is a much larger frame available—the perspective of being a conscious awareness on a spinning planet in a vast universe. This shift isn't a spiritual achievement, but a practical redirection of attention that brings immediate perspective. One second of genuine cosmic perspective is often worth an hour of anxious thinking."
+  },
+  'question4': {
+    heading: "Residing in the Center",
+    text: "In Question 4, we explore the culmination of the teaching: living from the stable center of your being. This stage moves beyond managing the mind to residing as the one who witnesses everything. By consistently choosing to stay 'behind' the voice rather than following it into the world of form, you discover a Clarity that remains untouched by internal or external storms. The ultimate goal is not to have better thoughts, but to realize the presence of the one who is witnessing the thoughts. Standing in this center is where true, untethered freedom actually resides."
+  }
 };
 
 interface CourseProps {
@@ -50,11 +69,16 @@ export function WisdomUntetheredCourse({
 }: CourseProps) {
   // Always Chapter 1 for this coarse for now
   const activeChapter = useMemo(() => CHAPTERS[0], []);
+  const currentContent = useMemo(() => 
+    QUESTION_CONTENT[activeQuestionId] || { heading: "Deconstructing the Mind", text: activeChapter.explanation }, 
+  [activeQuestionId, activeChapter.explanation]);
+
   const tabs = [
     { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" /> },
     { id: 'video' as const,       label: 'Video',       icon: <Play className="w-3.5 h-3.5" /> },
     { id: 'practice' as const,    label: 'Practice',    icon: <BookOpen className="w-3.5 h-3.5" /> },
   ];
+
   return (
     <div className={styles.container}>
       {/* ── Top Navigation Bar ── */}
@@ -121,10 +145,10 @@ export function WisdomUntetheredCourse({
               <div className={styles.explanationInner}>
                 <span className={styles.explanationTag}>Initial Inquiry</span>
                 <h3 className={styles.explanationHeading}>
-                  Deconstructing the {activeQuestionId === 'question1' ? 'Mind' : 'Voice'}
+                  {currentContent.heading}
                 </h3>
                 <p className={styles.explanationText}>
-                  {activeChapter.explanation}
+                  {currentContent.text}
                 </p>
 
                 <div className={styles.explanationAction}>
@@ -140,7 +164,7 @@ export function WisdomUntetheredCourse({
                     className={cn(styles.practiceBtn, "opacity-60 bg-transparent border-white/10 hover:bg-white/5")}
                   >
                     <Sparkles size={16} />
-                    Review Lesson Slides
+                    View Slides
                   </button>
                 </div>
               </div>
@@ -151,25 +175,20 @@ export function WisdomUntetheredCourse({
           {viewMode === 'video' && (
             <motion.div
               key="video"
-              initial={{ opacity: 0, scale: 1.05 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               className={styles.videoView}
             >
-              <div className={styles.videoPlayerContainer}>
+              <div className={styles.videoContainer}>
                 <iframe
                   className={styles.videoIframe}
-                  src={`https://www.youtube.com/embed/${QUESTION_VIDEOS[activeQuestionId] || activeChapter.videoId}?rel=0&modestbranding=1&autohide=1&showinfo=0`}
-                  title="Lesson Video"
+                  src={`https://www.youtube.com/embed/${QUESTION_VIDEOS[activeQuestionId] || activeChapter.videoId}?autoplay=1&modestbranding=1&rel=0`}
+                  title="Wisdom Video"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
-              </div>
-              <div className={styles.videoInfo}>
-                <span className={styles.videoLabel}>
-                  Deep Dive Teaching • {activeChapter.subtitle}
-                </span>
               </div>
             </motion.div>
           )}

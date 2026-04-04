@@ -6,6 +6,8 @@ import { AnchorButton } from '../../components/ui/SacredUI';
 import { Lock, Sparkles } from 'lucide-react';
 import { useRazorpay } from '../../hooks/useRazorpay';
 
+import { isAdminEmail, isUnlockedUser } from '../../config/admin';
+
 interface CoursesHubProps {
     initialChapter?: string;
     onCourseSelect?: (courseId: string) => void;
@@ -16,7 +18,8 @@ export const CoursesHub: React.FC<CoursesHubProps> = ({ initialChapter, onCourse
     const { checkOut, isProcessing } = useRazorpay();
     const [activeCourseId, setActiveCourseId] = useState<'power-of-now' | 'untethered'>('power-of-now');
     
-    const isWisdomAuthorized = isAccessValid;
+    // Admin / Unlocked bypass for Wisdom Untethered
+    const isWisdomAuthorized = isAccessValid || (user && (isAdminEmail(user.email) || isUnlockedUser(user.email)));
 
     const handleUnlock = async () => {
         if (!user) {
