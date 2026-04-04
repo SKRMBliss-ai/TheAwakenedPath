@@ -39,8 +39,8 @@ const QUESTION_VIDEOS: Record<string, string> = {
 
 interface CourseProps {
   activeQuestionId: string;
-  viewMode: 'explanation' | 'practice' | 'video' | 'progress';
-  setViewMode: (mode: 'explanation' | 'practice' | 'video' | 'progress') => void;
+  viewMode: string;
+  setViewMode: (mode: any) => void;
   onOpenJournal?: () => void;
   onNavigateToPractice?: () => void;
 }

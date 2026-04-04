@@ -486,7 +486,7 @@ const UntetheredApp = () => {
                                                                                 key={q.id}
                                                                                 onClick={() => setActiveQuestionId(q.id)}
                                                                                 className={cn(
-                                                                                    "flex items-center gap-2 pl-6 pr-4 py-0.5 text-[8px] uppercase tracking-widest transition-all text-left",
+                                                                                    "flex items-center gap-2 pl-6 pr-4 py-1.5 text-[8px] uppercase tracking-widest transition-all text-left",
                                                                                     activeQuestionId === q.id
                                                                                         ? "text-[var(--accent-primary)] font-bold"
                                                                                         : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
