@@ -106,7 +106,7 @@ const TodayScreen = ({ user, stats, lastEntry, onNavigate }: {
             </div>
 
             {/* SACRED PATHS GRID */}
-            <div className="grid grid-cols-1 gap-6 mb-12">
+            <div className="grid grid-cols-3 gap-4 mb-12">
                 {[
                     { id: 'learn', label: 'Learn', sub: 'WISDOM', icon: Sparkles, color: '#ABCEC9', delay: 0, variant: 'orb' },
                     { id: 'practice', label: 'Practice', sub: 'PRESENCE', icon: Flame, color: '#C65F9D', delay: 0.1, variant: 'pulse' },
@@ -118,12 +118,12 @@ const TodayScreen = ({ user, stats, lastEntry, onNavigate }: {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: item.delay, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                         onClick={() => onNavigate(item.id)}
-                        className="group relative flex items-center gap-8 p-8 rounded-[2.5rem] bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--accent-primary)]/30 transition-all duration-700 hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] overflow-hidden active:scale-[0.98]"
+                        className="group relative flex flex-col items-center gap-3 p-5 rounded-[2.5rem] bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--accent-primary)]/30 transition-all duration-700 hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] overflow-hidden active:scale-[0.98]"
                     >
                         {/* Animated Glow Backdrop */}
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 bg-gradient-to-br from-[var(--accent-primary)] via-transparent to-transparent" />
                         
-                        <div className="relative w-28 h-28 flex-shrink-0">
+                        <div className="relative w-16 h-16 flex-shrink-0">
                             <GlassShape
                                 variant={item.variant as any}
                                 icon={item.icon}
@@ -132,24 +132,13 @@ const TodayScreen = ({ user, stats, lastEntry, onNavigate }: {
                             />
                         </div>
 
-                        <div className="flex-1 text-left">
-                            <div className="flex items-center gap-2 mb-2">
-                                <item.icon size={12} className="text-[var(--text-muted)] opacity-50" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--accent-primary)] opacity-70 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                    {item.sub}
-                                </span>
-                            </div>
-                            <h3 className="text-3xl font-serif font-light text-[var(--text-primary)] group-hover:translate-x-1 transition-transform duration-500">
+                        <div className="text-center">
+                            <span className="text-[8px] font-black uppercase tracking-[0.3em] text-[var(--accent-primary)] opacity-60 mb-1 block">
+                                {item.sub}
+                            </span>
+                            <h3 className="text-lg font-serif font-light text-[var(--text-primary)] transition-transform duration-500">
                                 {item.label}
                             </h3>
-                            <div className="mt-4 flex items-center gap-3">
-                                <div className="h-px w-8 bg-[var(--border-subtle)] group-hover:w-16 transition-all duration-700" />
-                                <span className="text-[11px] font-sans font-medium text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">Begin Journey</span>
-                            </div>
-                        </div>
-
-                        <div className="opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-4 group-hover:translate-x-0">
-                            <ArrowLeft size={24} className="rotate-180 text-[var(--text-muted)]" />
                         </div>
                     </motion.button>
                 ))}
