@@ -28,6 +28,29 @@ import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
 import { isAdminEmail, hasWisdomAccess, isUnlockedUser } from './config/admin';
 import { DailyPresenceCheck } from './features/practices/DailyPresenceCheck';
+import { TodayPath } from './features/practices/TodayPath';
+import { useCourseTracking } from './hooks/useCourseTracking';
+
+const DashboardActions = ({ setActiveTab, user, progress, activeQuestionId, onNavigate }: any) => {
+  return (
+    <div className="max-w-2xl mx-auto w-full px-4 mb-12">
+      <TodayPath
+        userId={user?.uid}
+        progress={progress}
+        activeQuestionId={activeQuestionId}
+        onNavigate={(tab, qId, view) => {
+          if (tab === 'wisdom_untethered') {
+            onNavigate('wisdom_untethered', qId, view);
+          } else if (tab === 'journal') {
+            onNavigate('journal');
+          } else {
+            setActiveTab(tab);
+          }
+        }}
+      />
+    </div>
+  );
+};
 
 interface PracticeStep {
   title: string;
@@ -91,7 +114,7 @@ function getDominantEmotionColor(emotionsStr?: string) {
 
 // --- Sub-components moved outside for stability ---
 
-const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, rotateY, lastEntry }: any) => {
+const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, rotateY, progress, activeQuestionId, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -106,10 +129,8 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
     >
       {/* Hero Container — Floating, no card box */}
       <div className="relative pt-6 pb-12 mx-2 mt-2">
-        {/* Decorative background glow — subtle, no box edge */}
         <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(198,95,157,0.08),transparent_60%)] pointer-events-none" />
 
-        {/* Header — minimal, floating */}
         <header className="relative flex justify-between items-center z-10 mb-8 px-4">
           <button
             onClick={onOpenSidebar}
@@ -124,12 +145,9 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
             <h1 className="text-[12px] font-serif font-bold text-[var(--text-primary)] uppercase tracking-widest">{user.displayName || 'Traveler'}</h1>
           </div>
 
-          {/* Empty div for flex-between balance */}
           <div className="w-12 h-12 flex-shrink-0"></div>
         </header>
 
-
-        {/* Hero Content Area — pure transparency */}
         <section className="relative flex flex-col items-center justify-center space-y-12 mt-12 z-10">
           <div className="transform scale-90 sm:scale-100">
             <AwakenStage
@@ -141,7 +159,6 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
           </div>
 
           <div className="text-center space-y-6">
-            {/* Minimal Metrics Row — no pill container needed if we want full float */}
             <div className="inline-flex items-center gap-6 px-6 py-2.5 rounded-full bg-[var(--bg-surface)]/50 border border-[var(--border-subtle)]/50 backdrop-blur-md shadow-lg">
               <div className="flex items-center gap-2">
                 <Heart className="w-3 h-3 text-rose-300" />
@@ -157,122 +174,20 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
         </section>
       </div>
 
-      {/* Daily Practice Checklist - Prioritized */}
-      <section className="px-2 mt-4">
-        <DailyPresenceCheck userId={user?.uid} />
-      </section>
-
-      {/* Primary Action Card - Situational Practice */}
-      <section className="relative px-2">
-        {/* Backlit Magenta Glow - Matching Soul Stats */}
-        {isAdmin && (
-          <motion.div
-            animate={{
-              scale: [1, 1.02, 1],
-              opacity: [0.3, 0.5, 0.3]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-[-15px] rounded-[40px] blur-[35px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
-          />
-        )}
-        <button
-          onClick={() => isAdmin ? setActiveTab('situations') : null}
-          className={cn(
-            "w-full group relative overflow-hidden rounded-[40px] bg-[var(--bg-surface)] text-[var(--text-primary)] p-8 flex items-center justify-between transition-all shadow-xl border border-[var(--border-default)]",
-            isAdmin ? "hover:scale-[1.02] active:scale-98" : "opacity-50 cursor-not-allowed grayscale"
-          )}
-        >
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 rounded-2xl bg-[var(--accent-primary)]/10 flex items-center justify-center shadow-inner">
-              {isAdmin ? <Flame className="w-8 h-8 text-[var(--accent-primary)]" /> : <Lock className="w-8 h-8 text-[var(--text-muted)]" />}
-            </div>
-            <div className="text-left">
-              <h3 className="text-xl font-serif font-bold text-[var(--text-primary)]">Transform a Situation</h3>
-              <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-1">Shift from challenge to peace</p>
-            </div>
-          </div>
-
-          <div className="w-12 h-12 rounded-full bg-[var(--accent-primary)] text-[var(--bg-primary)] flex items-center justify-center shadow-lg">
-            {isAdmin ? <Play className="w-5 h-5 fill-current ml-1" /> : <Lock className="w-5 h-5" />}
-          </div>
-        </button>
-      </section>
-
-      {/* Last Reflection One-Liner */}
-      {lastEntry && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="px-6 py-6 border-b border-[var(--border-subtle)]/30 mb-4"
-        >
-          <div className="flex items-center gap-5">
-            <div className="w-2.5 h-2.5 rounded-full"
-              style={{
-                backgroundColor: getDominantEmotionColor(lastEntry.emotions) || 'var(--accent-primary)',
-                boxShadow: `0 0 12px ${getDominantEmotionColor(lastEntry.emotions) || 'var(--accent-primary)'}80`
-              }}
-            />
-            <div className="flex-1">
-              <p className="text-sm font-serif italic text-[var(--text-secondary)] line-clamp-1 opacity-90">
-                "{lastEntry.thoughts}"
-              </p>
-              <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mt-1 font-bold">
-                Latest Reflection · {lastEntry.emotions}
-              </p>
-            </div>
-            <button onClick={() => setActiveTab('chapters')} className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent-primary)] font-bold">
-              View →
-            </button>
-          </div>
-        </motion.div>
-      )}
-
-
-      {/* Main Practices Grid */}
-      <section className="space-y-6 pb-20">
-        <h4 className="text-[12px] font-bold uppercase tracking-[0.4em] text-[var(--text-primary)] pl-4">Sacred Practices</h4>
-        <div className="grid grid-cols-2 gap-4">
-          {[
-            { id: 'intelligence', label: 'Courses', sub: 'VIDEOS', icon: Sparkles, color: '#ABCEC9', variant: 'orb' },
-            { id: 'chapters', label: 'Journal', sub: 'GUIDED', icon: BookOpen, color: '#C65F9D', variant: 'book' },
-            { id: 'stats', label: 'Progress', sub: 'HISTORY', icon: BarChart2, color: '#9575CD', variant: 'chart' }
-          ].map((item: any) => {
-            const isLocked = !isAdmin && ['panic'].includes(item.id);
-            return (
-              <div key={item.id} className="relative group/card">
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => !isLocked && setActiveTab(item.id)}
-                  disabled={isLocked}
-                  className={cn(
-                    "w-full aspect-square relative overflow-hidden rounded-[32px] bg-[var(--bg-surface)] border border-[var(--border-default)] flex flex-col items-center justify-center gap-3 transition-all",
-                    !isLocked ? "hover:scale-[1.02] hover:bg-[var(--bg-surface-hover)] shadow-md" : "opacity-35 cursor-not-allowed"
-                  )}
-                >
-                  {/* Category-specific Ambient Gradient */}
-                  {!isLocked && (
-                    <div className="absolute inset-0 opacity-15 pointer-events-none"
-                      style={{ background: `radial-gradient(circle at 30% 30%, ${item.color}35, transparent 70%)` }} />
-                  )}
-
-                  <div className="relative w-12 h-12 flex items-center justify-center">
-                    <GlassShape icon={item.icon} color={item.color} variant={item.variant} className="w-full h-full" />
-                  </div>
-                  <div className="text-center px-2">
-                    <p className="text-xs font-serif font-bold text-[var(--text-primary)]">{item.label}</p>
-                    <p className="text-[7px] font-bold text-[var(--text-muted)] uppercase tracking-widest mt-0.5">{item.sub}</p>
-                  </div>
-                </motion.button>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      <div className="px-4">
+        <DashboardActions 
+          setActiveTab={setActiveTab} 
+          user={user} 
+          progress={progress} 
+          activeQuestionId={activeQuestionId} 
+          onNavigate={onNavigate} 
+        />
+      </div>
     </motion.div>
   );
 };
 
-const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEntry }: any) => {
+const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, progress, activeQuestionId, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -284,7 +199,6 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
       animate={{ opacity: 1 }}
       className="space-y-8 max-w-5xl mx-auto"
     >
-      {/* Desktop Optimized Header — Floating Greeting */}
       <header className="flex justify-between items-center p-8 border-b border-[var(--border-default)]/30 bg-[var(--bg-surface)]/10 backdrop-blur-sm">
         <div className="flex items-center gap-6">
             <AwakenedPathLogo variant="icon" size="md" animated={true} />
@@ -302,7 +216,6 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
         </div>
       </header>
 
-      {/* Hero Guided Area - Optimized height */}
       <section className="relative py-8 flex flex-col items-center justify-center min-h-[360px]">
         <div className="relative z-10 flex flex-col items-center text-center space-y-8">
           <div className="relative group">
@@ -314,9 +227,7 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
             />
           </div>
 
-          {/* Stats Glass Pill */}
           <div className="inline-flex items-center gap-10 px-10 py-4 rounded-full bg-[var(--bg-surface)]/40 border border-[var(--border-subtle)]/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
-            {/* Inner Sheen */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
             <div className="flex items-center gap-3">
@@ -332,132 +243,15 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, lastEnt
         </div>
       </section>
 
-      {/* Daily Practice Checklist - Desktop Prioritized */}
-      <section className="px-4 mt-4">
-        <DailyPresenceCheck userId={user?.uid} />
-      </section>
-
-      {/* Main Action Call - Situational Practice */}
-      <section className="relative">
-        {/* Backlit Magenta Glow - Matching Soul Stats */}
-        <motion.div
-          animate={{
-            scale: [1, 1.02, 1],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-[-20px] rounded-[24px] blur-[50px] bg-[#D16BA5] pointer-events-none mix-blend-plus-lighter"
+      <div className="max-w-4xl mx-auto w-full">
+        <DashboardActions 
+          setActiveTab={setActiveTab} 
+          user={user} 
+          progress={progress} 
+          activeQuestionId={activeQuestionId} 
+          onNavigate={onNavigate} 
         />
-        <button
-          onClick={() => setActiveTab('situations')}
-          className={cn(
-            "w-full group relative overflow-hidden rounded-[24px] bg-[var(--bg-surface)] border border-[var(--border-default)] p-8 flex items-center justify-between transition-all shadow-2xl hover:bg-[var(--bg-surface-hover)] hover:scale-[1.01] active:scale-[0.99]"
-          )}
-        >
-          <div className="flex items-center gap-10">
-            <div className="w-16 h-16 rounded-[20px] bg-[var(--accent-primary)] flex items-center justify-center shadow-xl transition-transform duration-500">
-              <Flame className="w-8 h-8 text-[var(--bg-primary)]" />
-            </div>
-            <div className="text-left">
-              <h3 className="text-2xl font-serif font-bold text-[var(--text-primary)]">Transform a Situation</h3>
-              <p className="text-[12px] text-[var(--text-secondary)] font-bold uppercase tracking-[0.2em] mt-1.5">Shift from challenge to peace</p>
-            </div>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center text-[var(--text-primary)] shadow-lg transition-all duration-500">
-            <Play className="w-5 h-5 fill-current ml-1 group-hover:rotate-90" />
-          </div>
-        </button>
-      </section>
-
-      {/* Last Reflection One-Liner */}
-      {lastEntry && (
-        <section className="px-4">
-          <div className="flex items-center gap-6 py-8 border-b border-[var(--border-subtle)]/30 group/reflection">
-            <div className="w-3 h-3 rounded-full transition-all duration-500 group-hover/reflection:scale-125"
-              style={{
-                backgroundColor: getDominantEmotionColor(lastEntry.emotions) || 'var(--accent-primary)',
-                boxShadow: `0 0 20px ${getDominantEmotionColor(lastEntry.emotions) || 'var(--accent-primary)'}90`
-              }}
-            />
-            <div className="flex-1">
-              <p className="text-base font-serif italic text-[var(--text-secondary)] line-clamp-1 opacity-90 group-hover/reflection:opacity-100 transition-opacity">
-                "{lastEntry.thoughts}"
-              </p>
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest mt-1.5 font-bold">
-                Latest Reflection · {lastEntry.emotions}
-              </p>
-            </div>
-            <button onClick={() => setActiveTab('chapters')} className="px-6 py-2 rounded-full border border-[var(--border-subtle)] text-[10px] uppercase tracking-[0.2em] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/5 font-bold transition-all">
-              Journal →
-            </button>
-          </div>
-        </section>
-      )}
-
-
-      {/* Practices Grid - Desktop Balanced */}
-      <section className="space-y-8">
-        <div className="flex items-center justify-between px-4">
-          <h4 className="text-[13px] font-bold uppercase tracking-[0.4em] text-[var(--text-primary)]">Sacred Practices</h4>
-          <div className="h-px flex-1 bg-[var(--border-subtle)]/70 mx-8" />
-        </div>
-        <div className="grid grid-cols-3 gap-6">
-          {[
-            { id: 'intelligence', label: 'Courses', sub: 'VIDEOS', icon: Sparkles, color: '#ABCEC9', delay: 0, variant: 'orb' },
-            { id: 'chapters', label: 'Journal', sub: 'JOURNEY', icon: BookOpen, color: '#C65F9D', delay: 0.1, variant: 'book' },
-            { id: 'stats', label: 'Progress', sub: 'STATS', icon: BarChart2, color: '#9575CD', delay: 0.2, variant: 'chart' }
-          ].map((item: any) => {
-            const isLocked = !isAdmin && ['panic'].includes(item.id);
-            return (
-              <div key={item.id} className="relative group/card">
-                {/* Individual Glow Colors - Dark Mode Only */}
-                {!isLocked && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{
-                      opacity: [0.15, 0.3, 0.15],
-                      scale: [1, 1.05, 1]
-                    }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: item.delay }}
-                    className="absolute inset-[-10px] rounded-[24px] blur-[30px] pointer-events-none mix-blend-plus-lighter hidden dark:block"
-                    style={{ backgroundColor: item.color }}
-                  />
-                )}
-                <motion.button
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: item.delay }}
-                  onClick={() => !isLocked && setActiveTab(item.id)}
-                  disabled={isLocked}
-                  className={cn(
-                    "w-full h-full group relative overflow-hidden bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[24px] p-8 flex flex-col items-center justify-center gap-6 transition-all",
-                    !isLocked ? "hover:border-[var(--border-glass)] hover:bg-[var(--bg-surface-hover)] shadow-lg hover:shadow-2xl" : "opacity-35 cursor-not-allowed grayscale"
-                  )}
-                >
-                  {/* Category-specific Ambient Gradient */}
-                  {!isLocked && (
-                    <div className="absolute inset-0 opacity-20 pointer-events-none group-hover:opacity-30 transition-opacity duration-700"
-                      style={{ background: `radial-gradient(circle at 30% 30%, ${item.color}25, transparent 75%)` }} />
-                  )}
-
-                  {!isLocked && <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,var(--item-color),transparent_70%)]" style={{ '--item-color': item.color + '15' } as any} />}
-
-                  <div className="relative w-28 h-28 flex items-center justify-center">
-                    <GlassShape icon={item.icon} color={item.color} variant={item.variant} className={cn("w-full h-full transition-transform duration-500", !isLocked && "group-hover:scale-110")} />
-                  </div>
-
-                  <div className="text-center relative z-10">
-                    <div className="text-xl font-serif font-bold text-[var(--text-primary)] mb-1">{item.label}</div>
-                    <div className="text-[8px] font-bold text-[var(--text-muted)] tracking-[0.3em] uppercase">
-                      {isLocked ? 'COMING SOON' : item.sub}
-                    </div>
-                  </div>
-                </motion.button>
-              </div>
-            )
-          })}
-        </div>
-      </section>
+      </div>
     </motion.div>
   );
 };
@@ -482,13 +276,48 @@ export default function UntetheredApp() {
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [watchedParts, setWatchedParts] = useState<string[]>([]);
+  const { progress } = useCourseTracking(currentUser?.uid);
 
   const [activeQuestionId, setActiveQuestionId] = useState(() => localStorage.getItem('awakened-path-active-question') || 'question1');
   const [viewMode, setViewMode] = useState<'explanation' | 'practice' | 'video'>(() => {
     const saved = localStorage.getItem('awakened-path-view-mode');
     return (saved === 'explanation' || saved === 'practice' || saved === 'video') ? saved : 'explanation';
   });
+  const [activeCourseId, setActiveCourseId] = useState<string | null>(() => localStorage.getItem('awakened-path-active-course') || null);
+  const [watchedParts, setWatchedParts] = useState<string[]>([]);
+
+  const onNavigate = (id: string, questionId?: string, view?: string) => {
+      if (id === 'learn') {
+          setActiveTab('intelligence');
+          if (questionId) setActiveQuestionId(questionId);
+          if (view) setViewMode(view as any);
+          return;
+      }
+      if (id === 'wisdom_untethered') {
+          setActiveTab('wisdom_untethered');
+          setActiveCourseId('wisdom_untethered');
+          if (questionId) setActiveQuestionId(questionId);
+          if (view) setViewMode(view as any);
+          if (window.innerWidth < 1024) setIsSidebarOpen(false);
+          return;
+      }
+      if (id === 'journal') {
+          setActiveTab('chapters');
+          return;
+      }
+      if (id === 'practice' || id === 'situations') {
+          setActiveTab('situations');
+          return;
+      }
+      setActiveTab(id);
+      if (questionId) setActiveQuestionId(questionId);
+      if (view) setViewMode(view as any);
+      if (window.innerWidth < 1024) setIsSidebarOpen(false);
+  };
+
+  useEffect(() => {
+    localStorage.setItem('awakened-path-active-course', activeCourseId || '');
+  }, [activeCourseId]);
   const [expandedChapter1, setExpandedChapter1] = useState(true);
 
   const timeOfDayGradient = useMemo(() => {
@@ -931,7 +760,7 @@ export default function UntetheredApp() {
               { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: !hasWisdomAccess(currentUser?.email) },
             ]},
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
-            { id: 'situations', icon: Flame, label: 'Situations', fullLabel: 'Situational Practice', locked: false },
+            { id: 'situations', icon: Flame, label: 'The Practice Room', fullLabel: 'Situational Practice', locked: false },
             { id: 'stats', icon: BarChart2, label: 'Progress', fullLabel: 'Your Progress', locked: false },
             { id: 'profile', icon: User, label: 'Profile', locked: false },
           ].map((item: any) => {
@@ -940,9 +769,9 @@ export default function UntetheredApp() {
               const Icon = item.icon;
               return (
                 <div key={item.id} className="space-y-0.5 my-1">
-                  <div className="flex items-center gap-3 px-6 py-1.5">
-                    <Icon size={16} strokeWidth={anySubActive ? 2 : 1.2} className={cn("transition-colors", anySubActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
-                    <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-[var(--text-muted)] font-sans">
+                  <div className="flex items-center gap-3 px-6 py-2 mb-1">
+                    <Icon size={18} strokeWidth={anySubActive ? 2 : 1} className={cn("transition-colors", anySubActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
+                    <span className="text-[11px] uppercase tracking-[0.5em] font-bold text-[var(--text-muted)] font-sans">
                       {item.label}
                     </span>
                   </div>
@@ -965,30 +794,21 @@ export default function UntetheredApp() {
                               }
                             }}
                             className={cn(
-                              "w-full flex items-center gap-3 px-3 py-1.5 transition-all duration-400 relative group rounded-l-xl text-left",
+                              "w-full flex items-center gap-3 px-4 py-2 transition-all duration-400 relative group rounded-2xl text-left",
                             )}
                             style={{
-                              background: isActive ? 'var(--bg-surface-hover)' : 'none',
+                              background: isActive ? 'var(--accent-primary-muted)' : 'none',
                             }}
                           >
-                            {isActive && (
-                              <motion.div
-                                layoutId="sidebar-accent"
-                                className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/10 to-transparent pointer-events-none rounded-l-xl"
-                              />
-                            )}
                             <span className={cn(
-                              "text-[9px] uppercase tracking-[0.25em] transition-colors duration-400 font-sans relative z-10 w-full",
+                              "text-[10px] uppercase tracking-[0.25em] transition-colors duration-400 font-sans relative z-10 w-full",
                               isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
                             )}>
                               {sub.label}
                               {sub.locked && <Lock size={8} className="inline-block ml-2 text-[var(--accent-secondary)]" />}
                             </span>
                             {isActive && (
-                              <motion.div
-                                layoutId="nav-active-dot"
-                                className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_12px_var(--accent-primary)] z-10"
-                              />
+                              <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)] z-10" />
                             )}
                           </button>
 
@@ -1029,18 +849,16 @@ export default function UntetheredApp() {
                                           if (window.innerWidth < 1024) setIsSidebarOpen(false);
                                         }}
                                         className={cn(
-                                          "flex items-center gap-2 pl-6 pr-4 py-1.5 text-[8px] uppercase tracking-widest transition-all text-left",
+                                          "flex items-center gap-3 pl-6 pr-4 py-2 text-[10px] uppercase tracking-widest transition-all text-left relative",
                                           activeQuestionId === q.id
                                             ? "text-[var(--accent-primary)] font-bold"
                                             : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
                                           q.locked && "opacity-40 cursor-not-allowed"
                                         )}
                                       >
-                                        <div className={cn(
-                                          "w-1 h-1 rounded-full",
-                                          activeQuestionId === q.id ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" : "bg-transparent",
-                                          q.locked && "bg-[var(--text-muted)]"
-                                        )} />
+                                        {activeQuestionId === q.id && (
+                                          <div className="absolute left-2 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" />
+                                        )}
                                         <span className="flex-1">{q.label}</span>
                                         {q.locked && <Lock size={8} className="ml-2 text-[var(--accent-secondary)]" />}
                                       </button>
@@ -1069,33 +887,33 @@ export default function UntetheredApp() {
                     return;
                   }
                   setActiveTab(item.id);
-                  setIsSidebarOpen(false);
+                  if (window.innerWidth < 1024) setIsSidebarOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-6 py-1.5 transition-all duration-400 relative group",
+                  "w-full flex items-center gap-4 px-6 py-2.5 transition-all duration-400 relative group rounded-2xl mb-1",
+                  isActive 
+                    ? "bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]" 
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]"
                 )}
-                style={{
-                  background: isActive ? 'var(--bg-surface-hover)' : 'none',
-                  borderRight: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
-                }}
               >
                 {isActive && (
                   <motion.div
                     layoutId="sidebar-accent"
-                    className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/5 to-transparent pointer-events-none"
+                    className="absolute inset-0 bg-[var(--accent-primary)] opacity-10 rounded-2xl pointer-events-none"
                   />
                 )}
                 <Icon
                   size={16}
-                  strokeWidth={isActive ? 2 : 1.2}
+                  strokeWidth={isActive ? 2.5 : 1.5}
                   className={cn(
                     "transition-all duration-400 relative z-10",
-                    isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"
+                    isActive ? "text-[var(--accent-primary)] scale-110" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)]"
                   )}
                 />
                 <span className={cn(
-                  "text-[10px] uppercase tracking-[0.35em] transition-colors duration-400 font-sans relative z-10",
-                  isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
+                  "text-[10px] uppercase transition-all duration-400 relative z-10 font-['Outfit'] whitespace-nowrap",
+                  item.label.length > 12 ? "tracking-[0.1em]" : "tracking-[0.4em]",
+                  isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)] font-semibold"
                 )}>
                   {item.label}
                 </span>
@@ -1103,16 +921,13 @@ export default function UntetheredApp() {
                 {isActive && (
                   <motion.div
                     layoutId="nav-active-dot"
-                    className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_12px_var(--accent-primary)] relative z-10"
+                    className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-primary)] relative z-10"
                   />
-                )}
-                {/* Locked Indicator */}
-                {item.locked && (
-                  <span className="ml-auto text-[7px] uppercase tracking-widest text-[var(--accent-secondary)] font-bold relative z-10">Soon</span>
                 )}
               </button>
             );
           })}
+          
         </nav>
 
         {/* LOGOUT BUTTON */}
@@ -1205,7 +1020,7 @@ export default function UntetheredApp() {
             className="flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-3xl border border-[#FF0000]/30 bg-[#FF0000]/5 text-[#FF0000] hover:bg-[#FF0000]/10 transition-all group shadow-[0_0_15px_rgba(255,0,0,0.1)] hover:shadow-[0_0_20px_rgba(255,0,0,0.2)]"
             title="YouTube Channel"
           >
-            <Youtube className="w-4 h-4 transition-transform group-hover:scale-110" />
+            <Youtube size={16} className="fill-current" />
             <span className="text-[10px] uppercase tracking-[0.2em] font-bold hidden sm:inline-block">Studio</span>
           </a>
           <ThemeToggle />
@@ -1241,7 +1056,9 @@ export default function UntetheredApp() {
                     isAdmin={isAdmin}
                     rotateX={rotateX}
                     rotateY={rotateY}
-                    lastEntry={lastEntry}
+                    progress={progress}
+                    activeQuestionId={activeQuestionId}
+                    onNavigate={onNavigate}
                   />
                 </div>
                 <div className="hidden lg:block">
@@ -1251,7 +1068,9 @@ export default function UntetheredApp() {
                     isAdmin={isAdmin}
                     rotateX={rotateX}
                     rotateY={rotateY}
-                    lastEntry={lastEntry}
+                    progress={progress}
+                    activeQuestionId={activeQuestionId}
+                    onNavigate={onNavigate}
                   />
                 </div>
               </>

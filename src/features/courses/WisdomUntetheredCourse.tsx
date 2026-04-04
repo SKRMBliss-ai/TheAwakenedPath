@@ -8,8 +8,8 @@ import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
 import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
 import { Chap1Question3 } from './wisdom-untethered/Chap1Question3';
 import { Chap1Question4 } from './wisdom-untethered/Chap1Question4';
-import { Target, CheckCircle2 } from 'lucide-react';
-import { useCourseTracking } from '../../hooks/useCourseTracking';
+import { CheckCircle2, Circle } from 'lucide-react';
+import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
 import { useAuth } from '../auth/AuthContext';
 
 interface Chapter {
@@ -51,13 +51,12 @@ export function WisdomUntetheredCourse({
   setViewMode,
   onOpenJournal,
 }: CourseProps) {
-  // Always Chapter 1 for this coarse for now
+  // Always Chapter 1 for this course for now
   const activeChapter = useMemo(() => CHAPTERS[0], []);
   const tabs = [
-    { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" /> },
-    { id: 'video' as const,       label: 'Video',       icon: <Youtube className="w-3.5 h-3.5" /> },
-    { id: 'practice' as const,    label: 'Practice',    icon: <BookOpen className="w-3.5 h-3.5" /> },
-    { id: 'progress' as const,    label: 'Progress',    icon: <Target className="w-3.5 h-3.5" /> },
+    { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" />, field: 'read' },
+    { id: 'video' as const,       label: 'Video',       icon: <Youtube className="w-3.5 h-3.5" /> , field: 'video' },
+    { id: 'practice' as const,    label: 'Practice',    icon: <BookOpen className="w-3.5 h-3.5" /> , field: 'practice' },
   ];
 
   const { user: currentUser } = useAuth();
@@ -96,8 +95,23 @@ export function WisdomUntetheredCourse({
                 viewMode === tab.id && styles.tabActive
               )}
             >
-              {tab.icon}
-              <span className="hidden sm:inline">{tab.label}</span>
+              <div className="flex items-center gap-1.5 relative z-10">
+                {tab.icon}
+                <span className="hidden sm:inline">{tab.label}</span>
+                {progress[activeQuestionId]?.[tab.field as keyof QuestionProgress] ? (
+                    <div className="flex items-center justify-center w-3 h-3 rounded-full bg-emerald-500 border border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]">
+                        <CheckCircle2 size={8} className="text-white" />
+                    </div>
+                ) : (tab.field === 'read' || tab.field === 'video' || tab.field === 'practice') && (
+                    <div className="relative flex items-center justify-center">
+                        <span className="absolute w-2.5 h-2.5 bg-amber-400/20 rounded-full animate-ping" />
+                        <Circle size={6} className={cn(
+                            "transition-all duration-500",
+                            progress[activeQuestionId]?.[tab.field as keyof QuestionProgress] ? "fill-amber-400 text-amber-500" : "fill-transparent text-[var(--border-subtle)]"
+                        )} />
+                    </div>
+                )}
+              </div>
               {viewMode === tab.id && (
                 <motion.div
                   layoutId="activeTabUnderline"

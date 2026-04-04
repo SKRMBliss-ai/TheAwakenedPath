@@ -18,10 +18,12 @@ import { db } from '../../firebase';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface PracticeRecord {
-  completed: boolean;
+  completed: boolean;           // specifically for the 'Practice' step
   completedAt?: any;           // Firestore Timestamp
   triggersCompleted?: number;  // for Q3's three-pause system
   note?: string;
+  learnCompleted?: boolean;    // for the 'Learn' step
+  reflectCompleted?: boolean;  // for the 'Reflect' step
 }
 
 export interface UseDailyPracticeReturn {
@@ -37,6 +39,9 @@ export interface UseDailyPracticeReturn {
   markUndone: () => Promise<void>;
   // Save a journal note alongside the practice
   saveNote: (note: string) => Promise<void>;
+  // Mark the Learn or Reflect pillars
+  markLearn: () => Promise<void>;
+  markReflect: () => Promise<void>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -131,6 +136,14 @@ export function useDailyPractice(
     await write({ note });
   }, [write]);
 
+  const markLearn = useCallback(async () => {
+    await write({ learnCompleted: true });
+  }, [write]);
+
+  const markReflect = useCallback(async () => {
+    await write({ reflectCompleted: true });
+  }, [write]);
+
   // ── Derived ───────────────────────────────────────────────────────────────
 
   const isCompleted = record?.completed === true;
@@ -145,6 +158,8 @@ export function useDailyPractice(
     markTrigger,
     markUndone,
     saveNote,
+    markLearn,
+    markReflect,
   };
 }
 

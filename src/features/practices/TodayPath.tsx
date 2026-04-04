@@ -1,10 +1,9 @@
-// @ts-nocheck
-import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Zap, PenLine, CheckCircle2, ChevronRight, Lock } from 'lucide-react';
+import { BookOpen, Zap, PenLine, CheckCircle2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { PRACTICE_LIBRARY } from '../practices/practiceLibrary';
 import { useDailyPractice } from '../practices/useDailyPractice';
+import type { CourseProgress } from '../../hooks/useCourseTracking';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Question display names + journal prompts
@@ -53,7 +52,7 @@ function Pillar({
   color,
   onClick,
 }: {
-  icon: React.ElementType;
+  icon: any;
   label: string;
   sub: string;
   status: PillarStatus;
@@ -97,7 +96,7 @@ function Pillar({
       <div className="flex-1 min-w-0">
         <p className={cn(
           'text-[13px] font-serif leading-tight',
-          status === 'done' ? 'text-[var(--text-secondary)] line-through opacity-60' : 'text-[var(--text-primary)]'
+          status === 'done' ? 'text-[var(--text-secondary)] line-through opacity-80' : 'text-[var(--text-primary)]'
         )}>
           {label}
         </p>
@@ -121,6 +120,8 @@ function Pillar({
 
 interface TodayPathProps {
   userId: string | undefined | null;
+  progress?: CourseProgress;
+  activeQuestionId: string;
   onNavigate: (
     tab: string,
     questionId?: string,
@@ -128,35 +129,38 @@ interface TodayPathProps {
   ) => void;
 }
 
-export function TodayPath({ userId, onNavigate }: TodayPathProps) {
-  // Read active question from localStorage (already tracked by UntetheredApp)
-  const activeQuestionId = useMemo(
-    () => localStorage.getItem('awakened-path-active-question') || 'question1',
-    []
-  );
-
-  const questionData = QUESTION_DATA[activeQuestionId];
+export function TodayPath({ userId, onNavigate, progress, activeQuestionId }: TodayPathProps) {
+  const questionData = QUESTION_DATA[activeQuestionId] || QUESTION_DATA['question1'];
   const practice = PRACTICE_LIBRARY[activeQuestionId];
   const color = practice?.color ?? '#B8973A';
   const requiredTriggers = activeQuestionId === 'question3' ? 3 : 1;
 
-  const { isCompleted: practiceCompleted } = useDailyPractice(userId, activeQuestionId, requiredTriggers);
+  const { 
+    isCompleted: practiceCompleted, 
+    record,
+    markLearn,
+    markReflect 
+  } = useDailyPractice(userId, activeQuestionId, requiredTriggers);
 
-  // "Learn" is considered done if they've navigated to explanation before
-  // We use localStorage to track this — set it when viewMode === 'explanation' is visited
-  const learnKey = `awakened-learn-done-${activeQuestionId}-${new Date().toISOString().split('T')[0]}`;
-  const learnDone = !!localStorage.getItem(learnKey);
-
-  // "Reflect" is available only after practice, and considered done if
-  // a journal entry exists for today — we keep it simple: check localStorage
-  const reflectKey = `awakened-reflect-done-${activeQuestionId}-${new Date().toISOString().split('T')[0]}`;
-  const reflectDone = !!localStorage.getItem(reflectKey);
+  const learnDone = record?.learnCompleted === true;
+  const reflectDone = record?.reflectCompleted === true;
 
   if (!questionData || !practice) return null;
 
   const handleLearn = () => {
-    localStorage.setItem(learnKey, '1');
-    onNavigate('wisdom_untethered', activeQuestionId, 'explanation');
+    markLearn();
+    
+    // Smart deep-linking based on progress from useCourseTracking
+    const qProgress = progress?.[activeQuestionId];
+    let targetView: 'explanation' | 'video' | 'practice' = 'explanation';
+    
+    if (qProgress?.read && !qProgress?.video) {
+        targetView = 'video';
+    } else if (qProgress?.read && qProgress?.video) {
+        targetView = 'practice';
+    }
+
+    onNavigate('wisdom_untethered', activeQuestionId, targetView);
   };
 
   const handlePractice = () => {
@@ -173,7 +177,7 @@ export function TodayPath({ userId, onNavigate }: TodayPathProps) {
         date: new Date().toISOString().split('T')[0],
       })
     );
-    localStorage.setItem(reflectKey, '1');
+    markReflect();
     onNavigate('journal');
   };
 
