@@ -238,7 +238,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
       )}
 
       <nav className={styles.navDots}>
-        {Array.from({ length: 13 }).map((_, i) => (
+        {Array.from({ length: 14 }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
@@ -469,8 +469,82 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         </div>
       </section>
 
-      {/* ── SECTION 12: CLOSING ── */}
-      <section className={styles.closing} data-section="12">
+      {/* --- SECTION 12: COST-VALUE ANALYSIS --- */}
+      <section className={cn(styles.slide, "bg-[var(--accent-primary)]/5 p-8 rounded-3xl border border-[var(--accent-primary)]/10 my-12 mx-4")} data-section="12">
+        <div className="max-w-3xl mx-auto space-y-8">
+          <div className="text-center space-y-2">
+            <span className={styles.slideTag}>The Logic of Freedom</span>
+            <h2 className="text-3xl font-serif font-light text-[var(--text-primary)]">Cost-Value <em>Analysis</em></h2>
+            <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto">
+              Before you keep a thought, ask: what is it costing you, and what is its actual value?
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* The Thought */}
+            <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xl relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1 h-full bg-rose-400/50" />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-rose-400 mb-4 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                The Burden
+              </h3>
+              <p className="text-lg font-serif italic text-[var(--text-primary)] leading-relaxed">
+                "I'm not doing enough. I'm falling behind everything and everyone."
+              </p>
+            </div>
+
+            {/* The Reality Check */}
+            <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xl relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1 h-full bg-emerald-400/50" />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-4 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                The Wisdom
+              </h3>
+              <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
+                Notice the one who is watching this stress. Is the watcher behind? Is thewatcher falling? No. The watcher is simply present.
+              </p>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 backdrop-blur-md">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[var(--border-subtle)] bg-[var(--accent-primary)]/5">
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Metric</th>
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-rose-400">The Cost</th>
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-emerald-400">The Value</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-subtle)]/30">
+                <tr>
+                  <td className="p-4 text-xs font-medium text-[var(--text-secondary)]">Inner State</td>
+                  <td className="p-4 text-xs text-rose-300">Anxiety, Tightness, Chronic Stress</td>
+                  <td className="p-4 text-xs text-[var(--text-muted)]">Zero</td>
+                </tr>
+                <tr>
+                  <td className="p-4 text-xs font-medium text-[var(--text-secondary)]">Performance</td>
+                  <td className="p-4 text-xs text-rose-300">Reduced Focus, Decision Fatigue</td>
+                  <td className="p-4 text-xs text-[var(--text-muted)]">Zero</td>
+                </tr>
+                <tr>
+                  <td className="p-4 text-xs font-medium text-[var(--text-secondary)]">Presence</td>
+                  <td className="p-4 text-xs text-rose-300">Total Loss of the 'Now'</td>
+                  <td className="p-4 text-xs text-[var(--text-muted)]">Zero</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+            <p className="text-emerald-400 text-sm font-medium tracking-wide">
+              Verdict: This thought is a bad investment. Release it.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 13: CLOSING ── */}
+      <section className={styles.closing} data-section="13">
         <div className={styles.closingInner}>
           <span className={styles.closingTag}>The Lucid State</span>
           <h2 className={styles.closingTitle}>Go to the One Who Hears</h2>

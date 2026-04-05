@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { useState, useEffect, useMemo } from 'react';
-import { Flame, Sparkles, Sun, Play, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail, MessageCircle, Youtube } from 'lucide-react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail, Youtube } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
@@ -14,7 +13,6 @@ import { SituationalPractices } from './features/practices/SituationalPractices'
 import { useAuth } from './features/auth/AuthContext';
 import { MeditationPortal } from './components/ui/MeditationPortal';
 import { AwakenStage, SacredCircle } from './components/ui/SacredCircle';
-import { GlassShape } from './components/ui/GlassShape';
 import { SignInScreen } from './features/auth/SignInScreen';
 import { AnchorButton, NoiseOverlay } from './components/ui/SacredUI';
 import { GlobalSparkles } from './components/ui/GlobalSparkles';
@@ -27,7 +25,6 @@ import { useAchievements } from './features/achievements/useAchievements';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
 import { isAdminEmail, hasWisdomAccess, isUnlockedUser } from './config/admin';
-import { DailyPresenceCheck } from './features/practices/DailyPresenceCheck';
 import { TodayPath } from './features/practices/TodayPath';
 import { useCourseTracking } from './hooks/useCourseTracking';
 
@@ -114,7 +111,7 @@ function getDominantEmotionColor(emotionsStr?: string) {
 
 // --- Sub-components moved outside for stability ---
 
-const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, rotateY, progress, activeQuestionId, onNavigate }: any) => {
+const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, rotateX, rotateY, progress, activeQuestionId, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -175,19 +172,19 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, isAdmin, rotateX, 
       </div>
 
       <div className="px-4">
-        <DashboardActions 
-          setActiveTab={setActiveTab} 
-          user={user} 
-          progress={progress} 
-          activeQuestionId={activeQuestionId} 
-          onNavigate={onNavigate} 
+        <DashboardActions
+          setActiveTab={setActiveTab}
+          user={user}
+          progress={progress}
+          activeQuestionId={activeQuestionId}
+          onNavigate={onNavigate}
         />
       </div>
     </motion.div>
   );
 };
 
-const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, progress, activeQuestionId, onNavigate }: any) => {
+const BreadthDesktop = ({ user, setActiveTab, rotateX, rotateY, progress, activeQuestionId, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -201,7 +198,7 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, progres
     >
       <header className="flex justify-between items-center p-8 border-b border-[var(--border-default)]/30 bg-[var(--bg-surface)]/10 backdrop-blur-sm">
         <div className="flex items-center gap-6">
-            <AwakenedPathLogo variant="icon" size="md" animated={true} />
+          <AwakenedPathLogo variant="icon" size="md" animated={true} />
           <div className="text-left">
             <p className="text-xs text-[var(--accent-primary)] font-serif italic mb-1 uppercase tracking-widest">
               {greeting},
@@ -244,12 +241,12 @@ const BreadthDesktop = ({ user, setActiveTab, isAdmin, rotateX, rotateY, progres
       </section>
 
       <div className="max-w-4xl mx-auto w-full">
-        <DashboardActions 
-          setActiveTab={setActiveTab} 
-          user={user} 
-          progress={progress} 
-          activeQuestionId={activeQuestionId} 
-          onNavigate={onNavigate} 
+        <DashboardActions
+          setActiveTab={setActiveTab}
+          user={user}
+          progress={progress}
+          activeQuestionId={activeQuestionId}
+          onNavigate={onNavigate}
         />
       </div>
     </motion.div>
@@ -287,32 +284,32 @@ export default function UntetheredApp() {
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
 
   const onNavigate = (id: string, questionId?: string, view?: string) => {
-      if (id === 'learn') {
-          setActiveTab('intelligence');
-          if (questionId) setActiveQuestionId(questionId);
-          if (view) setViewMode(view as any);
-          return;
-      }
-      if (id === 'wisdom_untethered') {
-          setActiveTab('wisdom_untethered');
-          setActiveCourseId('wisdom_untethered');
-          if (questionId) setActiveQuestionId(questionId);
-          if (view) setViewMode(view as any);
-          if (window.innerWidth < 1024) setIsSidebarOpen(false);
-          return;
-      }
-      if (id === 'journal') {
-          setActiveTab('chapters');
-          return;
-      }
-      if (id === 'practice' || id === 'situations') {
-          setActiveTab('situations');
-          return;
-      }
-      setActiveTab(id);
+    if (id === 'learn') {
+      setActiveTab('intelligence');
+      if (questionId) setActiveQuestionId(questionId);
+      if (view) setViewMode(view as any);
+      return;
+    }
+    if (id === 'wisdom_untethered') {
+      setActiveTab('wisdom_untethered');
+      setActiveCourseId('wisdom_untethered');
       if (questionId) setActiveQuestionId(questionId);
       if (view) setViewMode(view as any);
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
+      return;
+    }
+    if (id === 'journal') {
+      setActiveTab('chapters');
+      return;
+    }
+    if (id === 'practice' || id === 'situations') {
+      setActiveTab('situations');
+      return;
+    }
+    setActiveTab(id);
+    if (questionId) setActiveQuestionId(questionId);
+    if (view) setViewMode(view as any);
+    if (window.innerWidth < 1024) setIsSidebarOpen(false);
   };
 
   useEffect(() => {
@@ -755,10 +752,12 @@ export default function UntetheredApp() {
         <nav className="space-y-0.5">
           {[
             { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
-            { id: 'courses_group', icon: Sparkles, label: 'Courses', locked: false, isGroup: true, subItems: [
-              { id: 'intelligence', label: 'The Power of Now' },
-              { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: !hasWisdomAccess(currentUser?.email) },
-            ]},
+            {
+              id: 'courses_group', icon: Sparkles, label: 'Courses', locked: false, isGroup: true, subItems: [
+                { id: 'intelligence', label: 'The Power of Now' },
+                { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: !hasWisdomAccess(currentUser?.email) },
+              ]
+            },
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
             { id: 'situations', icon: Flame, label: 'The Practice Room', fullLabel: 'Situational Practice', locked: false },
             { id: 'stats', icon: BarChart2, label: 'Progress', fullLabel: 'Your Progress', locked: false },
@@ -826,7 +825,7 @@ export default function UntetheredApp() {
                                   expandedChapter1 ? "rotate-90" : "rotate-0"
                                 )}>▶</span>
                               </button>
-                              
+
                               <AnimatePresence>
                                 {expandedChapter1 && (
                                   <motion.div
@@ -892,8 +891,8 @@ export default function UntetheredApp() {
                 }}
                 className={cn(
                   "w-full flex items-center gap-4 px-6 py-2.5 transition-all duration-400 relative group rounded-2xl mb-1",
-                  isActive 
-                    ? "bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]" 
+                  isActive
+                    ? "bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]"
                     : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]"
                 )}
               >
@@ -928,7 +927,7 @@ export default function UntetheredApp() {
               </button>
             );
           })}
-          
+
         </nav>
 
         {/* LOGOUT BUTTON */}
@@ -1046,7 +1045,6 @@ export default function UntetheredApp() {
                     user={user}
                     setActiveTab={setActiveTab}
                     onOpenSidebar={() => setIsSidebarOpen(true)}
-                    isAdmin={isAdmin}
                     rotateX={rotateX}
                     rotateY={rotateY}
                     progress={progress}
@@ -1058,7 +1056,6 @@ export default function UntetheredApp() {
                   <BreadthDesktop
                     user={user}
                     setActiveTab={setActiveTab}
-                    isAdmin={isAdmin}
                     rotateX={rotateX}
                     rotateY={rotateY}
                     progress={progress}
@@ -1077,18 +1074,18 @@ export default function UntetheredApp() {
 
             {activeTab === 'situations' && (
               <motion.div key="situations" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: -10 }} exit={{ opacity: 0, x: -10 }}>
-                <SituationalPractices 
-                  onBack={() => setActiveTab('home')} 
+                <SituationalPractices
+                  onBack={() => setActiveTab('home')}
                   isAdmin={isAdmin}
                   activeQuestionId={activeQuestionId}
-                  onQuestionSelect={setActiveQuestionId} 
+                  onQuestionSelect={setActiveQuestionId}
                 />
               </motion.div>
             )}
 
             {activeTab === 'intelligence' && (
               <motion.div key="intelligence" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }}>
-                <CoursesHub onCourseSelect={(id) => setActiveTab(id)} />
+                <CoursesHub onCourseSelect={(id) => { if (id) setActiveTab(id); }} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -1105,7 +1102,7 @@ export default function UntetheredApp() {
               className="flex-1 min-h-0 h-[calc(100vh-5rem)] overflow-hidden"
             >
               {hasWisdomAccess(currentUser?.email) ? (
-                <WisdomUntetheredCourse 
+                <WisdomUntetheredCourse
                   activeQuestionId={activeQuestionId}
                   viewMode={viewMode}
                   setViewMode={setViewMode}
@@ -1127,7 +1124,7 @@ export default function UntetheredApp() {
                   <div className="space-y-4 max-w-sm">
                     <h2 className="text-4xl font-serif font-light text-[var(--text-primary)] tracking-tight">Access Restricted</h2>
                     <p className="text-[15px] font-serif italic text-[var(--text-secondary)] leading-relaxed opacity-80">
-                      This sacred passage is currently undergoing final refinements for a select group of travelers. 
+                      This sacred passage is currently undergoing final refinements for a select group of travelers.
                       Your patience is a form of presence.
                     </p>
                   </div>
@@ -1306,6 +1303,20 @@ export default function UntetheredApp() {
                   </div>
                 </div>
 
+                {/* Footer Credits */}
+                <div className="w-full pt-4 pb-8 flex flex-col items-center justify-center text-center opacity-60 hover:opacity-100 transition-opacity">
+                  <p className="text-[9px] font-serif tracking-[0.2em] text-[var(--text-muted)] uppercase mb-2 text-center">
+                    Designed and thought by
+                  </p>
+                  <a
+                    href="https://www.skrmblissai.in/twinsouls"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] font-bold tracking-widest text-[var(--accent-secondary)] hover:text-[var(--accent-primary)] transition-colors"
+                  >
+                    www.skrmblissai.in/twinsouls
+                  </a>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

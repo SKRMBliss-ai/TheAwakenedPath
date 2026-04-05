@@ -60,8 +60,8 @@ function Pillar({
   onClick: () => void;
 }) {
   const statusConfig = {
-    done:    { text: '✓ Done',   bg: color + '18', textColor: color },
-    active:  { text: 'Start →', bg: color + '22', textColor: color },
+    done: { text: '✓ Done', bg: color + '18', textColor: color },
+    active: { text: 'Start →', bg: color + '22', textColor: color },
     waiting: { text: 'After practice', bg: 'var(--bg-secondary)', textColor: 'var(--text-muted)' },
   }[status];
 
@@ -135,11 +135,11 @@ export function TodayPath({ userId, onNavigate, progress, activeQuestionId }: To
   const color = practice?.color ?? '#B8973A';
   const requiredTriggers = activeQuestionId === 'question3' ? 3 : 1;
 
-  const { 
-    isCompleted: practiceCompleted, 
+  const {
+    isCompleted: practiceCompleted,
     record,
     markLearn,
-    markReflect 
+    markReflect
   } = useDailyPractice(userId, activeQuestionId, requiredTriggers);
 
   const learnDone = record?.learnCompleted === true;
@@ -149,15 +149,15 @@ export function TodayPath({ userId, onNavigate, progress, activeQuestionId }: To
 
   const handleLearn = () => {
     markLearn();
-    
+
     // Smart deep-linking based on progress from useCourseTracking
     const qProgress = progress?.[activeQuestionId];
     let targetView: 'explanation' | 'video' | 'practice' = 'explanation';
-    
+
     if (qProgress?.read && !qProgress?.video) {
-        targetView = 'video';
+      targetView = 'video';
     } else if (qProgress?.read && qProgress?.video) {
-        targetView = 'practice';
+      targetView = 'practice';
     }
 
     onNavigate('wisdom_untethered', activeQuestionId, targetView);
@@ -195,16 +195,13 @@ export function TodayPath({ userId, onNavigate, progress, activeQuestionId }: To
       <div className="flex items-center justify-between px-5 pt-5 pb-3">
         <div>
           <p
-            className={cn(
-              "text-[9px] font-bold uppercase tracking-[0.3em] mb-0.5",
-              doneCount === 3 ? "text-emerald-400" : ""
-            )}
-            style={{ color: doneCount === 3 ? undefined : color }}
+            className="text-[9px] font-bold uppercase tracking-[0.3em] mb-0.5"
+            style={{ color }}
           >
-            {doneCount === 3 ? "Your Path is Anchored" : "Your Path Today"}
+            Your Path Today
           </p>
           <h3 className="text-[15px] font-serif font-light text-[var(--text-primary)] leading-tight">
-            {doneCount === 3 ? "Morning Awareness Complete" : questionData.shortTitle}
+            {questionData.shortTitle}
           </h3>
         </div>
 
