@@ -391,15 +391,15 @@ export default function UntetheredApp() {
         </AnimatePresence>
       </div>
 
-      {/* WhatsApp FAB */}
+      {/* WhatsApp FAB - Sticky Side Tab */}
       <a 
         href="https://wa.me/919910008888" 
         target="_blank" 
         rel="noopener noreferrer"
-        className="fixed bottom-26 right-4 z-[60] bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center justify-center animate-bounce"
+        className="fixed right-0 top-1/2 -translate-y-1/2 z-[60] bg-[#25D366] text-white p-3 pl-4 rounded-l-2xl shadow-2xl hover:translate-x--1 transition-transform flex items-center justify-center"
         aria-label="Contact Support"
       >
-        <MessageCircle size={24} fill="currentColor" />
+        <MessageCircle size={28} fill="currentColor" />
       </a>
 
       {/* Bottom Nav */}
