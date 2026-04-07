@@ -97,10 +97,16 @@
   justify-content: center;
   align-items: center;
   text-align: center;
-  background: #0c0910;
+  background: #0C0910;
   color: #FDFAF4;
   padding: 2rem;
   overflow: hidden;
+  transition: background 0.6s ease, color 0.6s ease;
+}
+
+:global(:not(.dark)) .hero {
+  background: #FDFAF4; 
+  color: #1C1814;
 }
 
 .heroContent {
@@ -158,6 +164,10 @@
   color: #D4AE5C;
 }
 
+:global(:not(.dark)) .heroTitle strong {
+  color: #B8973A;
+}
+
 .heroRule {
   width: 60px;
   height: 1px;
@@ -173,6 +183,10 @@
   margin: 0 auto;
 }
 
+:global(:not(.dark)) .heroSub {
+  color: #3A342C;
+}
+
 .heroScroll {
   position: absolute;
   bottom: 3rem;
@@ -183,6 +197,10 @@
   letter-spacing: 0.4em;
   color: rgba(253, 250, 244, 0.3);
   animation: bounce 2s infinite;
+}
+
+:global(:not(.dark)) .heroScroll {
+  color: #1C1814;
 }
 
 @keyframes bounce {
@@ -207,8 +225,7 @@
   border-color: #D4AE5C;
 }
 
-/* For light theme in future, we'll need to know if the container is light */
-.lightTheme .pull {
+:global(:not(.dark)) .pull {
   color: #1C1814;
   border-color: #B8973A;
 }
