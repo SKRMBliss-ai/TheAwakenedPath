@@ -1,8 +1,7 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Sparkles, Youtube, CheckCircle2, Circle } from 'lucide-react';
+import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink } from 'lucide-react';
 import styles from './CourseTabs.module.css';
-import { WisdomUntetheredPracticeTab } from './WisdomUntetheredPracticeTab';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
 import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
@@ -44,11 +43,69 @@ interface CourseProps {
   onNavigateToPractice?: () => void;
 }
 
+function VideoPlayerView({ videoId }: { videoId: string }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  return (
+    <motion.div
+      key="video"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -30 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className={styles.videoView}
+    >
+      <div className={styles.videoPlayerContainer}>
+        {!isPlaying ? (
+          <div className="relative w-full h-full flex items-center justify-center group cursor-pointer overflow-hidden rounded-[24px]">
+             {/* Thumbnail Background */}
+             <img 
+               src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`} 
+               alt="Video Preview"
+               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+             />
+             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
+             
+             {/* Play Icon */}
+             <button 
+               onClick={() => setIsPlaying(true)}
+               className="relative z-10 w-20 h-20 rounded-full bg-[var(--accent-primary)]/90 flex items-center justify-center text-white shadow-2xl transition-all duration-300 group-hover:scale-110 group-hover:bg-[var(--accent-primary)]"
+             >
+               <div className="ml-1 w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-white border-b-[12px] border-b-transparent" />
+             </button>
+
+             {/* Youtube Logo Branding — Opens in new tab as requested */}
+             <a 
+               href={`https://www.youtube.com/watch?v=${videoId}`}
+               target="_blank"
+               rel="noopener noreferrer"
+               className="absolute bottom-6 right-8 z-20 flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100"
+               onClick={(e) => e.stopPropagation()}
+             >
+               <Youtube size={16} color="#FF0000" fill="#FF0000" />
+               <span className="text-[11px] font-bold uppercase tracking-wider text-white">Watch on YouTube</span>
+             </a>
+          </div>
+        ) : (
+          <iframe
+            className={styles.videoIframe}
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0`}
+            title="Wisdom Video"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 export function WisdomUntetheredCourse({
   activeQuestionId,
   viewMode,
   setViewMode,
   onOpenJournal,
+  onNavigateToPractice,
 }: CourseProps) {
   const activeChapter = useMemo(() => CHAPTERS[0], []);
   
@@ -71,9 +128,9 @@ export function WisdomUntetheredCourse({
   }, [viewMode, activeQuestionId]);
 
   const tabs = [
-    { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" />, field: 'read' as keyof QuestionProgress },
-    { id: 'video' as const, label: 'Video', icon: <Youtube className="w-3.5 h-3.5" />, field: 'video' as keyof QuestionProgress },
-    { id: 'practice' as const, label: 'Practice', icon: <BookOpen className="w-3.5 h-3.5" />, field: 'practice' as keyof QuestionProgress },
+    { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" />, field: 'read' as keyof QuestionProgress, navigate: null },
+    { id: 'video' as const, label: 'Video', icon: <Youtube className="w-3.5 h-3.5" />, field: 'video' as keyof QuestionProgress, navigate: null },
+    { id: 'practice' as const, label: 'Practice Room', icon: <ExternalLink className="w-3.5 h-3.5" />, field: 'practice' as keyof QuestionProgress, navigate: 'practice_room' },
   ];
 
   return (
@@ -89,7 +146,13 @@ export function WisdomUntetheredCourse({
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setViewMode(tab.id)}
+              onClick={() => {
+                if (tab.navigate === 'practice_room') {
+                  onNavigateToPractice?.();
+                } else {
+                  setViewMode(tab.id);
+                }
+              }}
               className={cn(
                 styles.tab,
                 viewMode === tab.id && styles.tabActive
@@ -144,44 +207,13 @@ export function WisdomUntetheredCourse({
             </motion.div>
           )}
 
-          {/* PRACTICE VIEW (Practice Tab Content) */}
-          {viewMode === 'practice' && (
-            <motion.div
-              key="practice"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.02 }}
-              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full h-full overflow-y-auto"
-            >
-              <WisdomUntetheredPracticeTab
-                activeQuestionId={activeQuestionId}
-                userId={currentUser?.uid}
-                onSelectQuestion={() => {}} // Dummy as required by interface
-              />
-            </motion.div>
-          )}
+          {/* PRACTICE VIEW — now a redirect; this branch is a no-op placeholder */}
 
           {/* VIDEO VIEW */}
           {viewMode === 'video' && (
-            <motion.div
-              key="video"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className={styles.videoView}
-            >
-              <div className={styles.videoContainer}>
-                <iframe
-                  className={styles.videoIframe}
-                  src={`https://www.youtube.com/embed/${QUESTION_VIDEOS[activeQuestionId] || activeChapter.videoId}?autoplay=1&modestbranding=1&rel=0`}
-                  title="Wisdom Video"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            </motion.div>
+            <VideoPlayerView 
+              videoId={QUESTION_VIDEOS[activeQuestionId] || activeChapter.videoId} 
+            />
           )}
         </AnimatePresence>
       </main>

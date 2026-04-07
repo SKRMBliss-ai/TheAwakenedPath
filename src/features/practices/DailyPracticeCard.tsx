@@ -82,7 +82,7 @@ function StepTimer({
             style={{ transition: 'stroke-dashoffset 0.9s linear' }}
           />
         </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold"
+        <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold"
           style={{ color }}>
           {remaining}
         </span>
@@ -91,7 +91,7 @@ function StepTimer({
       {/* Play/pause */}
       <button
         onClick={() => setRunning((r) => !r)}
-        className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all"
+        className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all"
         style={{
           borderColor: color + '40',
           color,
@@ -158,7 +158,7 @@ function ThreeTriggerPractice({
               }}>
               {done
                 ? <CheckCircle2 size={14} style={{ color }} />
-                : <span className="text-[10px] font-bold text-[var(--text-muted)]">{i + 1}</span>
+                : <span className="text-[12px] font-bold text-[var(--text-muted)]">{i + 1}</span>
               }
             </div>
             <span className={cn(
@@ -168,7 +168,7 @@ function ThreeTriggerPractice({
               {label}
             </span>
             {!done && (
-              <span className="ml-auto text-[9px] font-bold uppercase tracking-widest"
+              <span className="ml-auto text-[11px] font-bold uppercase tracking-widest"
                 style={{ color }}>
                 Tap when done
               </span>
@@ -182,7 +182,7 @@ function ThreeTriggerPractice({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           onClick={markUndone}
-          className="text-[9px] text-[var(--text-muted)] underline underline-offset-2 mt-1 ml-1 opacity-40 hover:opacity-80 transition-opacity"
+          className="text-[11px] text-[var(--text-muted)] underline underline-offset-2 mt-1 ml-1 opacity-40 hover:opacity-80 transition-opacity"
         >
           Reset today's practice
         </motion.button>
@@ -250,7 +250,7 @@ function GuidedStepPractice({
           transition={{ duration: 0.3 }}
           className="space-y-3"
         >
-          <span className="text-[9px] font-bold uppercase tracking-[0.25em]"
+          <span className="text-[12px] font-bold uppercase tracking-[0.25em]"
             style={{ color }}>
             Step {currentStep + 1} of {practice.steps.length}
           </span>
@@ -271,7 +271,7 @@ function GuidedStepPractice({
           {!step.duration && (
             <button
               onClick={handleStepDone}
-              className="text-[9px] font-bold uppercase tracking-widest mt-2 opacity-50 hover:opacity-100 transition-opacity"
+              className="text-[12px] font-bold uppercase tracking-widest mt-2 opacity-50 hover:opacity-100 transition-opacity"
               style={{ color }}
             >
               Done with this step →
@@ -287,7 +287,7 @@ function GuidedStepPractice({
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={handleNext}
-            className="w-full py-3.5 rounded-2xl font-bold uppercase tracking-[0.15em] text-[11px] flex items-center justify-center gap-2 mt-2 transition-all active:scale-[0.98]"
+            className="w-full py-3.5 rounded-2xl font-bold uppercase tracking-[0.15em] text-[12px] flex items-center justify-center gap-2 mt-2 transition-all active:scale-[0.98]"
             style={{
               background: color,
               color: 'white',
@@ -380,7 +380,7 @@ export function DailyPracticeCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <span
-              className="text-[9px] font-bold uppercase tracking-[0.25em]"
+              className="text-[12px] font-bold uppercase tracking-[0.25em]"
               style={{ color }}
             >
               Today's Practice
@@ -389,7 +389,7 @@ export function DailyPracticeCard({
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                className="text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
                 style={{ background: color + '18', color }}
               >
                 ✓ Done

@@ -11,6 +11,8 @@ import { MAIN_PARTS_COUNT } from '../soul-intelligence/teachingData';
 import { isAdminEmail } from '../../config/admin';
 import PastReflections from './PastReflections';
 import PracticeLedger from './PracticeLedger';
+import { JourneyProgress } from './JourneyProgress';
+import { InfoTooltip } from '../../components/ui/InfoTooltip';
 
 interface ActivityLog {
     id: string;
@@ -80,7 +82,12 @@ const StreakGrid = ({ days }: { days: number[] }) => {
     );
 };
 
-    const StatsDashboard: React.FC = () => {
+interface StatsDashboardProps {
+  onNavigate?: (tab: string, questionId?: string, view?: 'explanation' | 'video' | 'practice') => void;
+  accountCreatedAt?: string | null;
+}
+
+    const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate, accountCreatedAt }) => {
     const { user } = useAuth();
     const [weeklyActivity, setWeeklyActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
     const [emotionFreq, setEmotionFreq] = useState<StatMetric[]>([]);
@@ -327,25 +334,34 @@ const StreakGrid = ({ days }: { days: number[] }) => {
 
     return (
         <div className="w-full space-y-6 pt-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+
+            {/* ─ Consolidated Journey Progress (new) ─ */}
+            <JourneyProgress
+              onNavigate={onNavigate}
+              accountCreatedAt={accountCreatedAt}
+            />
+
+            <div className="h-px bg-[var(--border-subtle)]" />
+
             {/* Header */}
             <div className="border-b border-[var(--border-subtle)] pb-6">
                 <div className="flex justify-between items-start">
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <p className="text-[10px] uppercase tracking-[0.4em] text-[var(--accent-secondary)] font-bold">Essence Report</p>
+                            <p className="text-[12px] uppercase tracking-[0.2em] text-[var(--accent-secondary)] font-bold">Insights & Progress</p>
                             <div className="flex items-center gap-4 mb-2">
-                                <h2 className="text-3xl font-serif font-light text-[var(--text-primary)]">Your Progress</h2>
+                                <h2 className="text-3xl font-serif font-light text-[var(--text-primary)]">Your Journey Report</h2>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-6 px-5 py-2.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-sm w-fit">
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Streak</span>
+                                <span className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Practice Streak</span>
                                 <span className="text-sm font-serif text-[var(--text-primary)]">{currentStreak}D</span>
                             </div>
                             <div className="w-px h-3 bg-[var(--border-subtle)]" />
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Lessons Done</span>
+                                <span className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Lessons Done</span>
                                 <span className="text-sm font-serif text-[var(--text-primary)]">{powerWatched}/{MAIN_PARTS_COUNT}</span>
                             </div>
                         </div>
@@ -364,17 +380,17 @@ const StreakGrid = ({ days }: { days: number[] }) => {
                         {isVoiceLoading ? (
                             <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-[1px]">Preparing...</span>
+                                <span className="text-[11px] font-bold uppercase tracking-widest leading-none mt-[1px]">Preparing...</span>
                             </>
                         ) : isPlaying ? (
                             <>
                                 <Square className="w-4 h-4 fill-current" />
-                                <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-[1px]">Voice Guidance</span>
+                                <span className="text-[11px] font-bold uppercase tracking-widest leading-none mt-[1px]">Voice Guidance</span>
                             </>
                         ) : (
                             <>
                                 <Volume2 className="w-4 h-4" />
-                                <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-[1px]">Voice Guidance</span>
+                                <span className="text-[11px] font-bold uppercase tracking-widest leading-none mt-[1px]">Voice Guidance</span>
                             </>
                         )}
                     </button>
@@ -388,10 +404,14 @@ const StreakGrid = ({ days }: { days: number[] }) => {
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <BarChart2 className="w-3.5 h-3.5 text-[var(--accent-secondary)]" />
-                                <h4 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Weekly Resonance</h4>
+                                <BarChart2 className="w-4 h-4 text-[var(--accent-secondary)]" />
+                                <h4 className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.15em]">Weekly Activity</h4>
+                                <InfoTooltip 
+                                    title="Weekly Activity" 
+                                    description="This shows how many times you engaged with the app each day this week." 
+                                />
                             </div>
-                            <span className="text-[9px] text-[var(--text-muted)] font-medium">
+                            <span className="text-[12px] text-[var(--text-secondary)] font-medium">
                                 {(() => {
                                     const now = new Date();
                                     const day = now.getDay();
@@ -411,7 +431,7 @@ const StreakGrid = ({ days }: { days: number[] }) => {
                                 const h = (val / maxWeekly) * 100;
                                 return (
                                     <div key={i} className="flex-1 flex flex-col items-center gap-2.5 h-full justify-end group">
-                                        <span className={`text-[10px] font-serif transition-opacity duration-300 ${val > 0 ? 'opacity-100' : 'opacity-0'}`}>
+                                        <span className="text-[12px] font-serif transition-opacity duration-300 text-[var(--text-secondary)]">
                                             {val}
                                         </span>
                                         <div className="relative w-full max-w-[28px] h-full bg-transparent rounded-md overflow-hidden">
@@ -422,7 +442,7 @@ const StreakGrid = ({ days }: { days: number[] }) => {
                                                 className={`absolute bottom-0 left-0 right-0 ${val > 0 ? 'bg-gradient-to-t from-[var(--accent-primary)] to-[var(--accent-secondary)]' : 'bg-[var(--border-subtle)] opacity-20'} rounded-t-sm`}
                                             />
                                         </div>
-                                        <span className="text-[9px] uppercase font-bold text-[var(--text-muted)]">{days[i]}</span>
+                                        <span className="text-[11px] uppercase font-bold text-[var(--text-secondary)]">{days[i]}</span>
                                     </div>
                                 );
                             })}
@@ -433,24 +453,28 @@ const StreakGrid = ({ days }: { days: number[] }) => {
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <TrendingUp className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
-                                <h4 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Presence History</h4>
+                                <TrendingUp className="w-4 h-4 text-[var(--accent-primary)]" />
+                                <h4 className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.15em]">Practice Consistency</h4>
+                                <InfoTooltip 
+                                    title="Practice Consistency" 
+                                    description="A visual look at your presence over the last 28 days. Each glowing box represents a day you checked in." 
+                                />
                             </div>
-                            <span className="text-[9px] font-bold text-[var(--accent-secondary)]">
+                            <span className="text-[12px] font-bold text-[var(--accent-secondary)]">
                                 {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                             </span>
                         </div>
 
                         <div className="flex flex-col h-40 justify-center">
                             <StreakGrid days={streakDays} />
-                            <div className="flex gap-4 mt-6 text-[8px] text-[var(--text-muted)] uppercase tracking-wider">
+                            <div className="flex gap-4 mt-6 text-[12px] font-serif text-[var(--text-secondary)] italic">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-sm bg-[var(--accent-secondary-dim)] border border-[var(--accent-secondary-border)]" />
-                                    <span>Practice</span>
+                                    <div className="w-2 h-2 rounded-sm bg-[var(--accent-secondary-dim)] border border-[var(--accent-secondary-border)]" />
+                                    <span>Practiced</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-sm bg-[var(--border-subtle)] opacity-40" />
-                                    <span>Stillness</span>
+                                    <div className="w-2 h-2 rounded-sm bg-[var(--border-subtle)]" />
+                                    <span>Rest / Stillness</span>
                                 </div>
                             </div>
                         </div>
@@ -468,59 +492,72 @@ const StreakGrid = ({ days }: { days: number[] }) => {
             {/* Metrics Grid */}
             < div className="grid grid-cols-1 md:grid-cols-3 gap-6" >
                 {/* Emotions */}
-                < div className="p-5 rounded-[16px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
+                < div className="p-5 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
                     <div className="flex items-center gap-3 mb-1">
-                        <Activity className="w-3.5 h-3.5 text-[var(--accent-secondary)]" />
-                        <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Emotion Map</h4>
+                        <Activity className="w-4 h-4 text-[var(--accent-secondary)]" />
+                        <h4 className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Emotional Resonance</h4>
+                        <InfoTooltip 
+                            title="Emotional Resonance" 
+                            description="Shows which feelings you've observed most often during your journals and reflections."
+                        />
                     </div>
                     <div className="space-y-3.5">
                         {emotionFreq.length > 0 ? emotionFreq.map((e, i) => (
                             <div key={i} className="space-y-1">
                                 <div className="flex justify-between items-end">
-                                    <span className="text-[12px] text-[var(--text-primary)] font-serif">{e.name}</span>
-                                    <span className="text-[9px] text-[var(--text-muted)]">{e.count}×</span>
+                                    <span className="text-[14px] text-[var(--text-primary)] font-serif">{e.name}</span>
+                                    <span className="text-[12px] text-[var(--text-secondary)]">{e.count}×</span>
                                 </div>
                                 <MiniBar value={e.count} max={maxEmotion} />
                             </div>
-                        )) : <p className="text-[10px] text-[var(--text-disabled)] italic">No entries yet.</p>}
+                        )) : <p className="text-[12px] text-[var(--text-disabled)] italic">No entries yet.</p>}
                     </div>
                 </div >
 
                 {/* Mind Traps */}
-                < div className="p-5 rounded-[16px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
+                < div className="p-5 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
                     <div className="flex items-center gap-3 mb-1">
-                        <Shield className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
-                        <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Mind Traps</h4>
+                        <Shield className="w-4 h-4 text-[var(--accent-primary)]" />
+                        <h4 className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Typical Mind Traps</h4>
+                        <InfoTooltip 
+                            title="Mind Traps" 
+                            description="Patterns the mind uses to create unnecessary noise. Identifying them is the first step to letting go."
+                            howCalculated="Identified through your answers in Situational Practices."
+                        />
                     </div>
                     <div className="space-y-3.5">
                         {distortionFreq.length > 0 ? distortionFreq.map((d, i) => (
                             <div key={i} className="space-y-1">
                                 <div className="flex justify-between items-end">
-                                    <span className="text-[12px] text-[var(--text-primary)] font-serif">{d.name}</span>
-                                    <span className="text-[9px] text-[var(--text-muted)]">{d.count}×</span>
+                                    <span className="text-[14px] text-[var(--text-primary)] font-serif">{d.name}</span>
+                                    <span className="text-[12px] text-[var(--text-secondary)]">{d.count}×</span>
                                 </div>
                                 <MiniBar value={d.count} max={maxDistortion} color="var(--accent-primary)" />
                             </div>
-                        )) : <p className="text-[10px] text-[var(--text-disabled)] italic">No patterns yet.</p>}
+                        )) : <p className="text-[12px] text-[var(--text-disabled)] italic">No patterns yet.</p>}
                     </div>
                 </div >
 
                 {/* Somatic Heatmap */}
-                < div className="p-5 rounded-[16px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
+                < div className="p-5 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
                     <div className="flex items-center gap-3 mb-1">
-                        <MapPin className="w-3.5 h-3.5 text-[var(--accent-secondary)]" />
-                        <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Somatic Heatmap</h4>
+                        <MapPin className="w-4 h-4 text-[var(--accent-secondary)]" />
+                        <h4 className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Mind-Body Balance</h4>
+                        <InfoTooltip 
+                            title="Mind-Body Balance" 
+                            description="Visualizes where you store your energy or tension. Awareness of the body brings you into the Now."
+                        />
                     </div>
                     <div className="space-y-3.5">
                         {bodyFreq.length > 0 ? bodyFreq.map((b, i) => (
                             <div key={i} className="space-y-1">
                                 <div className="flex justify-between items-end">
-                                    <span className="text-[12px] text-[var(--text-primary)] font-serif">{b.name}</span>
-                                    <span className="text-[9px] text-[var(--text-muted)]">{b.count}×</span>
+                                    <span className="text-[14px] text-[var(--text-primary)] font-serif">{b.name}</span>
+                                    <span className="text-[12px] text-[var(--text-secondary)]">{b.count}×</span>
                                 </div>
                                 <MiniBar value={b.count} max={maxBody} />
                             </div>
-                        )) : <p className="text-[10px] text-[var(--text-disabled)] italic">No somatic data.</p>}
+                        )) : <p className="text-[12px] text-[var(--text-disabled)] italic">No somatic data.</p>}
                     </div>
                 </div >
             </div >
@@ -531,7 +568,7 @@ const StreakGrid = ({ days }: { days: number[] }) => {
                     <div className="space-y-8 pt-10 border-t border-[var(--border-subtle)]">
                         <div className="flex items-center gap-4">
                             <div className="w-2 h-2 rounded-full bg-[var(--accent-primary)] shadow-[0_0_10px_var(--accent-primary)]" />
-                            <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] text-center">System Echoes (Admin)</h3>
+                            <h3 className="text-[12px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] text-center">System Echoes (Admin)</h3>
                         </div>
 
                         <div className="rounded-[24px] border border-[var(--border-subtle)] bg-[var(--bg-card)] overflow-hidden">
@@ -549,7 +586,7 @@ const StreakGrid = ({ days }: { days: number[] }) => {
                                         {adminLogs.map((log) => (
                                             <tr key={log.id} className="hover:bg-[var(--bg-surface)] transition-colors">
                                                 <td className="px-6 py-4">
-                                                    <span className="px-2 py-0.5 rounded-full bg-[var(--accent-secondary-dim)] text-[var(--accent-secondary)] text-[10px] font-bold">
+                                                    <span className="px-2 py-0.5 rounded-full bg-[var(--accent-secondary-dim)] text-[var(--accent-secondary)] text-[11px] font-bold">
                                                         {log.activityType}
                                                     </span>
                                                 </td>

@@ -451,9 +451,9 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
         },
         Quick: {
             gradient: isLight
-                ? `linear-gradient(135deg, rgba(198,95,157,0.1) 0%, rgba(252,228,236,0.05) 100%)`
-                : `linear-gradient(135deg, rgba(198,95,157,0.08) 0%, rgba(198,95,157,0.01) 100%)`,
-            tint: '#C65F9D'
+                ? `linear-gradient(135deg, rgba(94,196,176,0.1) 0%, rgba(60,160,140,0.05) 100%)`
+                : `linear-gradient(135deg, rgba(94,196,176,0.08) 0%, rgba(94,196,176,0.01) 100%)`,
+            tint: '#5EC4B0'
         },
         Work: {
             gradient: 'transparent',
@@ -544,7 +544,7 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
                     <p className="text-[13px] leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
                         {situation.description}
                     </p>
-                    <p className="text-[11px] font-serif italic opacity-0 group-hover:opacity-50 transition-opacity duration-300 line-clamp-1 mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-[12px] font-serif italic opacity-0 group-hover:opacity-50 transition-opacity duration-300 line-clamp-1 mt-0.5" style={{ color: 'var(--text-muted)' }}>
                         {situation.whenToUse}
                     </p>
                 </div>
@@ -552,7 +552,7 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
                 <div className="flex items-center justify-between gap-2 pt-1">
                     <div className="flex items-center gap-2">
                         <DurationPill dur={situation.duration} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-40" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-[11px] font-bold uppercase tracking-wider opacity-40" style={{ color: 'var(--text-muted)' }}>
                             {situation.steps.length} steps
                         </span>
                     </div>
@@ -762,7 +762,7 @@ export const SituationalPractices: React.FC<{
                         VoiceService.stop();
                         setLogVoicePlaying(false);
                     }}
-                    className="px-8 py-3.5 rounded-full font-bold uppercase tracking-[0.15em] text-[11px] transition-all active:scale-[0.98]"
+                    className="px-8 py-3.5 rounded-full font-bold uppercase tracking-[0.15em] text-[12px] transition-all active:scale-[0.98]"
                     style={{ 
                         background: 'transparent',
                         border: `1px solid ${selectedSituation.color}`,
@@ -794,7 +794,7 @@ export const SituationalPractices: React.FC<{
                             <CheckCircle2 size={16} />
                         </div>
                         <div>
-                            <p className="text-[9px] font-bold uppercase tracking-[0.2em]" 
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em]" 
                                 style={{ color: selectedSituation.color }}>
                                 Practice Complete
                             </p>
@@ -833,7 +833,7 @@ export const SituationalPractices: React.FC<{
                                                 />
                                             ))}
                                         </div>
-                                        <span className="text-[9px] italic font-serif hidden sm:block"
+                                        <span className="text-[10px] italic font-serif hidden sm:block"
                                             style={{ color: 'var(--accent-secondary)' }}>
                                             Guiding...
                                         </span>
@@ -867,12 +867,12 @@ export const SituationalPractices: React.FC<{
                                 {logVoiceEnabled ? (
                                     <>
                                         <Volume2 className="w-3.5 h-3.5" />
-                                        <span className="text-[8px] font-bold uppercase tracking-widest leading-none mt-[1px]">Auto Voice: On</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest leading-none mt-[1px]">Auto Voice: On</span>
                                     </>
                                 ) : (
                                     <>
                                         <VolumeX className="w-3.5 h-3.5" />
-                                        <span className="text-[8px] font-bold uppercase tracking-widest leading-none mt-[1px]">Auto Voice: Off</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest leading-none mt-[1px]">Auto Voice: Off</span>
                                     </>
                                 )}
                             </button>
@@ -886,7 +886,7 @@ export const SituationalPractices: React.FC<{
                                 VoiceService.stop();
                                 onBack(); 
                             }}
-                            className="text-[10px] font-bold uppercase tracking-wider transition-opacity hover:opacity-100"
+                            className="text-[11px] font-bold uppercase tracking-wider transition-opacity hover:opacity-100"
                             style={{ 
                                 color: 'var(--text-muted)', 
                                 background: 'none', 
@@ -900,7 +900,7 @@ export const SituationalPractices: React.FC<{
                 </div>
 
                 {/* Gentle prompt */}
-                <p className="text-[14px] font-serif italic mb-6 leading-relaxed"
+                <p className="text-[15px] font-serif italic mb-6 leading-relaxed"
                     style={{ color: 'var(--text-secondary)' }}>
                     Take a moment to notice what shifted. Even one word counts.
                 </p>
@@ -909,7 +909,7 @@ export const SituationalPractices: React.FC<{
                 <div className="space-y-4">
                     {selectedSituation.journalPrompts.map((prompt, i) => (
                         <div key={i}>
-                            <label className="block text-[11px] font-bold uppercase tracking-[0.1em] mb-1.5"
+                            <label className="block text-[12px] font-bold uppercase tracking-[0.1em] mb-1.5"
                                 style={{ color: 'var(--text-secondary)' }}>
                                 {prompt.label}
                             </label>
@@ -918,7 +918,7 @@ export const SituationalPractices: React.FC<{
                                 onChange={e => setJournalData({ ...journalData, [prompt.label]: e.target.value })}
                                 placeholder={prompt.placeholder}
                                 rows={2}
-                                className="w-full rounded-xl p-4 text-[15px] font-serif outline-none resize-none transition-all"
+                                className="w-full rounded-xl p-4 text-[16px] font-serif outline-none resize-none transition-all"
                                 style={{
                                     background: 'var(--bg-surface)',
                                     border: '1px solid var(--border-default)',
@@ -942,7 +942,7 @@ export const SituationalPractices: React.FC<{
                                 VoiceService.stop();
                                 onBack(); 
                             }}
-                            className="flex-1 py-3.5 rounded-xl font-bold uppercase tracking-[0.12em] text-[11px] transition-all"
+                            className="flex-1 py-3.5 rounded-xl font-bold uppercase tracking-[0.12em] text-[12px] transition-all"
                             style={{ 
                                 background: 'transparent',
                                 border: '1px solid var(--border-subtle)',
@@ -953,7 +953,7 @@ export const SituationalPractices: React.FC<{
                         </button>
                         <button 
                             onClick={handleSaveJournal}
-                            className="flex-[2] py-3.5 rounded-xl font-bold uppercase tracking-[0.15em] text-[11px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                            className="flex-[2] py-3.5 rounded-xl font-bold uppercase tracking-[0.15em] text-[12px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                             style={{ 
                                 background: selectedSituation.color, 
                                 color: 'white',
@@ -997,7 +997,7 @@ export const SituationalPractices: React.FC<{
                             color: 'var(--text-muted)' 
                         }}>
                         <Info size={14} />
-                        <span className="text-[9px] font-bold uppercase tracking-widest hidden sm:inline">FAQ</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">FAQ</span>
                         <ChevronDown size={12} className={`transition-transform duration-300 ${showFAQ ? 'rotate-180' : ''}`} />
                     </button>
                 </div>
@@ -1016,9 +1016,9 @@ export const SituationalPractices: React.FC<{
                                 {FAQ_ITEMS.map((item, i) => (
                                     <div key={i} className="p-3 rounded-xl space-y-0.5" 
                                         style={{ background: 'var(--bg-surface)' }}>
-                                        <p className="text-[10px] font-bold uppercase tracking-wider" 
+                                        <p className="text-[11px] font-bold uppercase tracking-wider" 
                                             style={{ color: 'var(--accent-primary)' }}>{item.q}</p>
-                                        <p className="text-[11px] leading-relaxed opacity-60" 
+                                        <p className="text-[12px] leading-relaxed opacity-60" 
                                             style={{ color: 'var(--text-secondary)' }}>{item.a}</p>
                                     </div>
                                 ))}
@@ -1048,7 +1048,7 @@ export const SituationalPractices: React.FC<{
                     <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
                         {CATEGORIES.map(cat => (
                             <button key={cat} onClick={() => setActiveCategory(cat)}
-                                className="whitespace-nowrap px-6 py-3.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all"
+                                className="whitespace-nowrap px-6 py-3.5 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all"
                                 style={{
                                     background: activeCategory === cat ? 'var(--accent-primary)' : 'var(--bg-surface)',
                                     color: activeCategory === cat ? 'var(--bg-base)' : 'var(--text-secondary)',
@@ -1064,7 +1064,7 @@ export const SituationalPractices: React.FC<{
                 <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1">
                     {DURATION_TABS.map((tab, i) => (
                         <button key={tab.label} onClick={() => setActiveDuration(i)}
-                            className="whitespace-nowrap flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all"
+                            className="whitespace-nowrap flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                             style={{
                                 color: activeDuration === i ? 'var(--text-primary)' : 'var(--text-muted)',
                                 background: activeDuration === i ? 'var(--bg-secondary)' : 'transparent',
@@ -1091,7 +1091,7 @@ export const SituationalPractices: React.FC<{
                     {!query.toLowerCase().includes('wisdom') && !query.toLowerCase().includes('untethered') && activeCategory === 'All' && activeDuration === 0 && (
                         <>
                             <div className="pt-8 border-t border-dashed border-border-default">
-                                <h3 className="text-[11px] uppercase tracking-[0.4em] font-bold opacity-40" style={{ color: 'var(--text-muted)' }}>Rest of the Practices</h3>
+                                <h3 className="text-[12px] uppercase tracking-[0.4em] font-bold opacity-40" style={{ color: 'var(--text-muted)' }}>Rest of the Practices</h3>
                             </div>
 
                             {COLLECTIONS.map(col => {
@@ -1107,7 +1107,7 @@ export const SituationalPractices: React.FC<{
                                             </div>
                                             <div className="space-y-0.5">
                                                 <h3 className="text-2xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>{col.label}</h3>
-                                                <p className="text-[10px] uppercase tracking-widest font-bold opacity-50" style={{ color: 'var(--text-muted)' }}>{col.desc}</p>
+                                                <p className="text-[11px] uppercase tracking-widest font-bold opacity-50" style={{ color: 'var(--text-muted)' }}>{col.desc}</p>
                                             </div>
                                         </div>
                                         <div className="flex gap-6 overflow-x-auto pb-8 -mx-4 px-4 scroll-x-styled scroll-smooth">
@@ -1133,7 +1133,7 @@ export const SituationalPractices: React.FC<{
                         </>
                     )}
                     <div className="pt-8 border-t border-dashed border-border-default">
-                        <h3 className="text-[11px] uppercase tracking-[0.4em] font-bold opacity-40" style={{ color: 'var(--text-muted)' }}>Discovery Library</h3>
+                        <h3 className="text-[12px] uppercase tracking-[0.4em] font-bold opacity-40" style={{ color: 'var(--text-muted)' }}>Discovery Library</h3>
                     </div>
                 </div>
             )}
@@ -1152,7 +1152,7 @@ export const SituationalPractices: React.FC<{
                                     The path is clear, but no practices match...
                                 </p>
                                 <button onClick={() => { setQuery(''); setActiveCategory('All'); setActiveDuration(0); }}
-                                    className="px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest border border-[var(--accent-primary-border)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary-muted)]/10 transition-all">
+                                    className="px-6 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-widest border border-[var(--accent-primary-border)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary-muted)]/10 transition-all">
                                     Clear all filters
                                 </button>
                             </div>
@@ -1194,7 +1194,7 @@ export const SituationalPractices: React.FC<{
                                 </div>
                                 <div className="flex-1 min-w-0 py-1">
                                     <div className="flex items-center gap-3 mb-1">
-                                        <span className="text-[15px] font-serif font-medium" style={{ color: 'var(--text-primary)' }}>{sit.title}</span>
+                                        <span className="text-[16px] font-serif font-medium" style={{ color: 'var(--text-primary)' }}>{sit.title}</span>
                                         {/* Category pill only shown if filtered results are mixed */}
                                         {activeCategory === 'All' && <CategoryPill cat={sit.category} />}
                                     </div>
@@ -1226,11 +1226,11 @@ export const SituationalPractices: React.FC<{
                             </div>
                             <div>
                                 <h2 className="text-xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>Progressive Challenges</h2>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40">Expand your horizon</p>
+                                <p className="text-[11px] font-bold uppercase tracking-[0.2em] opacity-40">Expand your horizon</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 opacity-40 group-hover/chal:opacity-100 transition-opacity">
-                            <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block">View 5 Challenges</span>
+                            <span className="text-[11px] font-bold uppercase tracking-widest hidden sm:block">View 5 Challenges</span>
                             <ChevronDown size={18} />
                         </div>
                     </div>
@@ -1262,7 +1262,7 @@ export const SituationalPractices: React.FC<{
                                             </div>
                                         )}
                                         <div className="flex justify-between items-start mb-4">
-                                            <span className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full"
+                                            <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full"
                                                 style={{
                                                     background: isUnlocked ? 'var(--accent-primary-muted)' : 'var(--bg-surface)',
                                                     color: isUnlocked ? 'var(--accent-primary)' : 'var(--text-muted)',
@@ -1277,7 +1277,7 @@ export const SituationalPractices: React.FC<{
                                         </p>
                                         {!isUnlocked && (
                                             <div className="space-y-2">
-                                                <div className="flex justify-between text-[8px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                                                <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
                                                     <span>Unlock at {challenge.xpRequired} pts</span>
                                                     <span>120 / {challenge.xpRequired} XP</span>
                                                 </div>

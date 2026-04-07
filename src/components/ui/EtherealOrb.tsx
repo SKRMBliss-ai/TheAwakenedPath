@@ -5,8 +5,8 @@ import { Sparkles } from '@react-three/drei';
 import { useTheme } from '../../theme/ThemeSystem';
 // ─── T TOKENS ────────────────────────────────────────────────────────────────
 const T = {
-    magenta: '#D16BA5',
-    lavender: '#B8A5D4',
+    teal: '#5EC4B0',
+    tealdim: '#3D8B7A',
 };
 
 // ─── CUSTOM ETHER SHADER ─────────────────────────────────────────────────────
@@ -183,8 +183,8 @@ const OrbBlob = ({ isAnimating, isLight }: { isAnimating: boolean; isLight: bool
             uTime: { value: 0 },
             uSpeed: { value: 0.8 },
             uDistort: { value: 0.3 },
-            uColorA: { value: new THREE.Color(T.magenta) },
-            uColorB: { value: new THREE.Color(T.lavender) },
+            uColorA: { value: new THREE.Color(T.teal) },
+            uColorB: { value: new THREE.Color(T.tealdim) },
         }),
         []
     );
@@ -212,7 +212,7 @@ const OrbBlob = ({ isAnimating, isLight }: { isAnimating: boolean; isLight: bool
         if (emotionColorRef.current) {
             mat.uniforms.uColorA.value.lerp(emotionColorRef.current, 0.02);
         } else {
-            mat.uniforms.uColorA.value.lerp(new THREE.Color(T.magenta), 0.02);
+            mat.uniforms.uColorA.value.lerp(new THREE.Color(T.teal), 0.02);
         }
     });
 
@@ -271,7 +271,7 @@ export const EtherealOrb: React.FC<EtherealOrbProps> = ({
                     position: 'absolute',
                     inset: -30,
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(209,107,165,0.12) 0%, rgba(171,206,201,0.08) 50%, transparent 75%)',
+                    background: 'radial-gradient(circle, rgba(94,196,176,0.12) 0%, rgba(60,160,140,0.07) 50%, transparent 75%)',
                     pointerEvents: 'none',
                     zIndex: 0,
                 }} />
@@ -292,7 +292,7 @@ export const EtherealOrb: React.FC<EtherealOrbProps> = ({
                         size={isAnimating ? 3.5 : 2}
                         speed={isAnimating ? 0.9 : 0.2}
                         opacity={isLight ? (isAnimating ? 0.4 : 0.15) : (isAnimating ? 0.6 : 0.3)}
-                        color={isLight ? '#C65F9D' : '#E1E7EF'}
+                        color={isLight ? '#3D8B7A' : '#E1E7EF'}
                         noise={3}
                     />
                 </Canvas>
@@ -311,7 +311,7 @@ export const EtherealOrb: React.FC<EtherealOrbProps> = ({
                 margin: 0,
                 userSelect: 'none',
                 textShadow: isLight
-                    ? (isAnimating ? '0 0 20px rgba(198,95,157,0.4)' : 'none')
+                    ? (isAnimating ? '0 0 20px rgba(94,196,176,0.4)' : 'none')
                     : (isAnimating
                         ? '0 0 40px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.3)'
                         : '0 0 20px rgba(255,255,255,0.2)'),

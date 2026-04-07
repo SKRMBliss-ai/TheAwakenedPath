@@ -12,7 +12,7 @@ export const CHAPTERS = [
         subtitle: 'You Are Not Your Mind',
         desc: 'Witness the voice in your head and discover the gap of awareness behind it.',
         icon: Mic,
-        color: '#B8A5D4',
+        color: '#5EC4B0',
         parts: [
             { id: '1.1', title: 'Stop Overthinking', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=S79_XZAaBII'), duration: '14:32' },
             { id: '1.2a', title: "You Are Not Your Thoughts (Here's Proof)", youtubeId: 'CyByxCxMZLk', duration: '11:45' },
@@ -29,7 +29,7 @@ export const CHAPTERS = [
         subtitle: 'The Way Out of Pain',
         desc: 'Discover how consciousness itself dissolves suffering when you stop identifying with the mind.',
         icon: Activity,
-        color: '#D16BA5',
+        color: '#3D8B7A',
         parts: [
             { id: '2.1', title: 'Stop Fighting Reality', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=hHJAoVYARqw'), duration: '12:10' },
             { id: '2.2', title: 'How to Accept an Awful Moment', youtubeId: '73WJo3-4TxE', duration: '9:45' },

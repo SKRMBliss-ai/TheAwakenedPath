@@ -1,40 +1,38 @@
-import { motion } from 'framer-motion';
-import { BookOpen, Zap, PenLine, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BookOpen, Zap, PenLine, CheckCircle2, Calendar, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { PRACTICE_LIBRARY } from '../practices/practiceLibrary';
 import { useDailyPractice } from '../practices/useDailyPractice';
+import type { WeeklyAssignment } from '../../hooks/useWeeklyAssignment';
 import type { CourseProgress } from '../../hooks/useCourseTracking';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { InfoTooltip } from '../../components/ui/InfoTooltip';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Question display names + journal prompts
+// Question display names — centralised here, sourced from practiceLibrary
 // ─────────────────────────────────────────────────────────────────────────────
 
-const QUESTION_DATA: Record<string, {
+const QUESTION_META: Record<string, {
   shortTitle: string;
-  practiceLabel: string;
   journalPrompt: string;
-  locked?: boolean;
 }> = {
   question1: {
     shortTitle: 'Q1 · Using the Mind as a Tool',
-    practiceLabel: '"I Can Handle This" Redirect',
     journalPrompt: 'When did the spiral start today, and what shifted when you redirected?',
   },
   question2: {
     shortTitle: 'Q2 · The Doubting Narrator',
-    practiceLabel: 'The Radio Check — 2 min sit',
     journalPrompt: 'What voice did you notice today? What did naming it feel like?',
   },
   question3: {
     shortTitle: 'Q3 · Personal to Impersonal',
-    practiceLabel: 'The One-Second Cosmic Pause × 3',
     journalPrompt: 'Which of the three pauses landed most? What shifted in that second?',
   },
   question4: {
-    shortTitle: 'Q4 · Which Mind to Listen To',
-    practiceLabel: 'The Clarity Sit — 3 min',
-    journalPrompt: 'What did "sitting comfortably within the noise" feel like today?',
-    locked: true,
+    shortTitle: 'Q4 · Witness Consciousness',
+    journalPrompt: 'What did sitting comfortably within the noise feel like today?',
   },
 };
 
@@ -50,6 +48,8 @@ function Pillar({
   sub,
   status,
   color,
+  done,
+  total,
   onClick,
 }: {
   icon: any;
@@ -57,12 +57,14 @@ function Pillar({
   sub: string;
   status: PillarStatus;
   color: string;
+  done?: number;
+  total?: number;
   onClick: () => void;
 }) {
-  const statusConfig = {
-    done: { text: '✓ Done', bg: color + '18', textColor: color },
-    active: { text: 'Start →', bg: color + '22', textColor: color },
-    waiting: { text: 'After practice', bg: 'var(--bg-secondary)', textColor: 'var(--text-muted)' },
+  const cfg = {
+    done: { text: 'Complete', bg: color + '18', textColor: color },
+    active: { text: 'Pending', bg: color + '22', textColor: color },
+    waiting: { text: 'Pending', bg: 'var(--bg-secondary)', textColor: 'var(--text-muted)' },
   }[status];
 
   return (
@@ -70,17 +72,14 @@ function Pillar({
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-left transition-all duration-300 group',
-        status === 'active'
-          ? 'border-[var(--border-default)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)]'
-          : status === 'done'
+        'w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-left transition-all duration-300',
+        status === 'done'
             ? 'border-[var(--border-subtle)] bg-[var(--bg-surface)]/50'
-            : 'border-[var(--border-subtle)] bg-transparent opacity-50 pointer-events-none'
+            : 'border-[var(--border-default)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] shadow-sm'
       )}
     >
-      {/* Icon */}
       <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300"
+        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
         style={{
           background: status === 'waiting' ? 'var(--bg-secondary)' : color + '15',
           border: `1.5px solid ${status === 'waiting' ? 'var(--border-subtle)' : color + '35'}`,
@@ -92,36 +91,138 @@ function Pillar({
         }
       </div>
 
-      {/* Text */}
       <div className="flex-1 min-w-0">
         <p className={cn(
           'text-[13px] font-serif leading-tight',
-          status === 'done' ? 'text-[var(--text-secondary)] line-through opacity-80' : 'text-[var(--text-primary)]'
+          status === 'done' ? 'line-through opacity-60 text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'
         )}>
           {label}
         </p>
-        <p className="text-[10px] text-[var(--text-muted)] mt-0.5 truncate opacity-70">{sub}</p>
+        <p className="text-[11px] text-[var(--text-muted)] mt-0.5 truncate">{sub}</p>
+        
+        {/* Simplified progress bar for Learn */}
+        {label === 'Learn' && done !== undefined && total !== undefined && (
+          <div className="mt-2 w-24 h-1 bg-[var(--border-subtle)] rounded-full overflow-hidden">
+             <div 
+               className="h-full transition-all duration-1000" 
+               style={{ 
+                 width: `${(done / total) * 100}%`,
+                 background: color 
+               }} 
+             />
+          </div>
+        )}
       </div>
 
-      {/* Status badge */}
       <span
-        className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0 whitespace-nowrap"
-        style={{ background: statusConfig.bg, color: statusConfig.textColor }}
+        className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0"
+        style={{ background: cfg.bg, color: cfg.textColor }}
       >
-        {statusConfig.text}
+        {cfg.text}
       </span>
     </motion.button>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Main component
+// Inline Reflect input
+// ─────────────────────────────────────────────────────────────────────────────
+
+function InlineReflect({
+  userId,
+  questionId,
+  prompt,
+  color,
+  onMarkReflect,
+  isAlreadyDone,
+}: {
+  userId: string | undefined | null;
+  questionId: string;
+  prompt: string;
+  color: string;
+  onMarkReflect: () => void;
+  isAlreadyDone: boolean;
+}) {
+  const [text, setText] = useState('');
+  const [saved, setSaved] = useState(isAlreadyDone);
+
+  const save = async () => {
+    if (!text.trim() || !userId) return;
+    const dateStr = new Date().toISOString().split('T')[0];
+    const ref = doc(db, 'users', userId, 'dailyPractices', dateStr);
+    await setDoc(ref, {
+      [questionId]: { reflectCompleted: true, reflectText: text.trim() }
+    }, { merge: true });
+    onMarkReflect();
+    setSaved(true);
+  };
+
+  if (saved) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="mx-4 mb-5 p-4 rounded-2xl text-center"
+        style={{ background: color + '10', border: `1px solid ${color}25` }}
+      >
+        <p className="text-[12px] font-serif italic text-[var(--text-secondary)]">
+          ✓ Reflection saved for today.
+        </p>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-4 mb-5 rounded-2xl overflow-hidden border border-[var(--border-default)]"
+      style={{ background: color + '08' }}
+    >
+      <div className="px-4 pt-4 pb-2">
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color }}>
+          Today's reflection
+        </p>
+        <p className="text-[12px] font-serif italic text-[var(--text-secondary)] mb-3 leading-relaxed">
+          "{prompt}"
+        </p>
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="What did you notice today? (one sentence is enough)"
+          className="w-full bg-transparent text-[13px] font-serif text-[var(--text-primary)] placeholder:text-[var(--text-muted)] resize-none outline-none leading-relaxed"
+          rows={2}
+        />
+      </div>
+      <div className="flex justify-end px-4 pb-3">
+        <button
+          onClick={save}
+          disabled={!text.trim()}
+          className="text-[11px] font-bold uppercase tracking-wider px-4 py-1.5 rounded-full transition-all disabled:opacity-30"
+          style={{
+            background: text.trim() ? color : 'transparent',
+            color: text.trim() ? '#fff' : color,
+            border: `1px solid ${color}50`,
+          }}
+        >
+          Save & Complete ✓
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main TodayPath component
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface TodayPathProps {
   userId: string | undefined | null;
   progress?: CourseProgress;
-  activeQuestionId: string;
+  /** The weekly assignment computed by useWeeklyAssignment — treated as optional for safety */
+  weeklyAssignment?: WeeklyAssignment;
+  /** Navigate to Progress tab */
+  onViewProgress?: () => void;
   onNavigate: (
     tab: string,
     questionId?: string,
@@ -129,60 +230,63 @@ interface TodayPathProps {
   ) => void;
 }
 
-export function TodayPath({ userId, onNavigate, progress, activeQuestionId }: TodayPathProps) {
-  const questionData = QUESTION_DATA[activeQuestionId] || QUESTION_DATA['question1'];
-  const practice = PRACTICE_LIBRARY[activeQuestionId];
+// Fallback assignment for when the prop isn't available yet
+const FALLBACK_ASSIGNMENT: WeeklyAssignment = {
+  questionId: 'question1',
+  questionNumber: 1,
+  weekNumber: 0,
+  daysRemaining: 7,
+  weekLabel: 'Your first week',
+  isFirstWeek: true,
+};
+
+export function TodayPath({
+  userId,
+  onNavigate,
+  progress,
+  weeklyAssignment,
+  onViewProgress,
+}: TodayPathProps) {
+  const assignment = weeklyAssignment ?? FALLBACK_ASSIGNMENT;
+  const { questionId, weekLabel, daysRemaining } = assignment;
+  const questionMeta = QUESTION_META[questionId] || QUESTION_META['question1'];
+  const practice = PRACTICE_LIBRARY[questionId];
   const color = practice?.color ?? '#B8973A';
-  const requiredTriggers = activeQuestionId === 'question3' ? 3 : 1;
+  const requiredTriggers = questionId === 'question3' ? 3 : 1;
+
+  const [showReflect, setShowReflect] = useState(false);
 
   const {
     isCompleted: practiceCompleted,
     record,
     markLearn,
-    markReflect
-  } = useDailyPractice(userId, activeQuestionId, requiredTriggers);
+    markReflect,
+  } = useDailyPractice(userId, questionId, requiredTriggers);
 
   const learnDone = record?.learnCompleted === true;
   const reflectDone = record?.reflectCompleted === true;
 
-  if (!questionData || !practice) return null;
+  if (!questionMeta || !practice) return null;
 
   const handleLearn = () => {
+    // Mark as done immediately if they click/interact
     markLearn();
-
-    // Smart deep-linking based on progress from useCourseTracking
-    const qProgress = progress?.[activeQuestionId];
+    const qProgress = progress?.[questionId];
     let targetView: 'explanation' | 'video' | 'practice' = 'explanation';
-
-    if (qProgress?.read && !qProgress?.video) {
-      targetView = 'video';
-    } else if (qProgress?.read && qProgress?.video) {
-      targetView = 'practice';
-    }
-
-    onNavigate('wisdom_untethered', activeQuestionId, targetView);
+    if (qProgress?.read && !qProgress?.video) targetView = 'video';
+    else if (qProgress?.read && qProgress?.video) targetView = 'practice';
+    onNavigate('wisdom_untethered', questionId, targetView);
   };
 
   const handlePractice = () => {
-    onNavigate('wisdom_untethered', activeQuestionId, 'practice');
+    onNavigate('situations');
   };
 
-  const handleReflect = () => {
-    // Store the prompt so Journal can pick it up
-    localStorage.setItem(
-      'awakened-journal-prompt',
-      JSON.stringify({
-        questionId: activeQuestionId,
-        prompt: questionData.journalPrompt,
-        date: new Date().toISOString().split('T')[0],
-      })
-    );
-    markReflect();
-    onNavigate('journal');
-  };
-
-  // Progress pill count
+  const wuLearntCount = Object.values(progress || {}).filter(q => q.read).length;
+  const wuTotal = 27; // Total chapters in the full curriculum
+  
   const doneCount = [learnDone, practiceCompleted, reflectDone].filter(Boolean).length;
+  const allDone = learnDone && practiceCompleted && reflectDone;
 
   return (
     <motion.div
@@ -191,20 +295,43 @@ export function TodayPath({ userId, onNavigate, progress, activeQuestionId }: To
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="rounded-[28px] border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+      {/* ── Week context banner ── */}
+      <div
+        className="flex items-center justify-between px-5 py-2.5"
+        style={{ background: color + '10', borderBottom: `1px solid ${color}20` }}
+      >
+        <div className="flex items-center gap-2">
+          <Calendar size={12} style={{ color }} />
+          <span className="text-[11px] font-bold uppercase tracking-[0.22em]" style={{ color }}>
+            {weekLabel}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] text-[var(--text-muted)] font-medium">
+            {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} remaining
+          </span>
+          {onViewProgress && (
+            <button
+              onClick={onViewProgress}
+              className="flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wider opacity-60 hover:opacity-100 transition-opacity"
+              style={{ color }}
+            >
+              View progress <ChevronRight size={11} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-3">
         <div>
-          <p
-            className="text-[9px] font-bold uppercase tracking-[0.3em] mb-0.5"
-            style={{ color }}
-          >
-            Your Path Today
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] mb-0.5 text-[var(--text-muted)]">
+            Today's Presence Focus
           </p>
           <h3 className="text-[15px] font-serif font-light text-[var(--text-primary)] leading-tight">
-            {questionData.shortTitle}
+            {questionMeta.shortTitle}
           </h3>
         </div>
-
         {/* Progress dots */}
         <div className="flex flex-col items-end gap-1.5">
           <div className="flex gap-1.5">
@@ -216,45 +343,105 @@ export function TodayPath({ userId, onNavigate, progress, activeQuestionId }: To
               />
             ))}
           </div>
-          <span className="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-wider">
-            {doneCount}/3
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider">
+              {doneCount}/3
+            </span>
+            <InfoTooltip 
+              title="Daily Acts"
+              description="Your daily journey is divided into three small acts: Learn, Practice, and Reflect."
+              howCalculated="Complete any act to see your progress update. Doing all three deepens the work."
+            />
+          </div>
         </div>
       </div>
 
-      {/* Thin colour bar */}
       <div className="mx-5 mb-4 h-px" style={{ background: color + '20' }} />
 
-      {/* Three pillars */}
-      <div className="px-4 pb-5 space-y-2">
+      {/* ── Three pillars ── */}
+      <div className="px-4 pb-4 space-y-2">
         <Pillar
           icon={BookOpen}
           label="Learn"
-          sub={`Wisdom Untethered · ${questionData.shortTitle}`}
+          sub={learnDone ? "Completed for today" : "You haven't explored today's wisdom yet"}
           status={learnDone ? 'done' : 'active'}
           color={color}
           onClick={handleLearn}
+          done={wuLearntCount}
+          total={wuTotal}
         />
         <Pillar
           icon={Zap}
           label="Practice"
-          sub={questionData.practiceLabel}
-          status={practiceCompleted ? 'done' : learnDone ? 'active' : 'waiting'}
+          sub={practiceCompleted ? "Completed for today" : `Pending: ${practice.name}`}
+          status={practiceCompleted ? 'done' : 'active'}
           color={color}
           onClick={handlePractice}
         />
-        <Pillar
-          icon={PenLine}
-          label="Reflect"
-          sub={`"${questionData.journalPrompt}"`}
-          status={reflectDone ? 'done' : practiceCompleted ? 'active' : 'waiting'}
-          color={color}
-          onClick={handleReflect}
-        />
+        {/* Reflect — opens inline, does NOT navigate away */}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => !reflectDone && setShowReflect(true)}
+          className={cn(
+            'w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-left transition-all duration-300',
+            reflectDone
+              ? 'border-[var(--border-subtle)] bg-[var(--bg-surface)]/50'
+              : practiceCompleted
+                ? 'border-[var(--border-default)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] shadow-sm'
+                : 'border-[var(--border-subtle)] bg-transparent opacity-40 pointer-events-none'
+          )}
+        >
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{
+              background: reflectDone ? color + '15' : practiceCompleted ? color + '15' : 'var(--bg-secondary)',
+              border: `1.5px solid ${reflectDone || practiceCompleted ? color + '35' : 'var(--border-subtle)'}`,
+            }}
+          >
+            {reflectDone
+              ? <CheckCircle2 size={15} style={{ color }} />
+              : <PenLine size={15} style={{ color: practiceCompleted ? color : 'var(--text-muted)' }} />
+            }
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={cn(
+              'text-[14px] font-serif leading-tight',
+              reflectDone ? 'line-through opacity-60 text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'
+            )}>
+              Reflect
+            </p>
+            <p className="text-[12px] text-[var(--text-muted)] mt-0.5 truncate">
+              {reflectDone ? 'Completed for today' : 'Pending: share what you noticed'}
+            </p>
+          </div>
+          <span
+            className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0"
+            style={{
+              background: reflectDone ? color + '18' : color + '22',
+              color: color,
+            }}
+          >
+            {reflectDone ? 'Complete' : 'Pending'}
+          </span>
+        </motion.button>
       </div>
 
-      {/* All done state */}
-      {learnDone && practiceCompleted && reflectDone && (
+      {/* ── Inline reflect box ── */}
+      <AnimatePresence>
+        {showReflect && !reflectDone && (
+          <InlineReflect
+            userId={userId}
+            questionId={questionId}
+            prompt={questionMeta.journalPrompt}
+            color={color}
+            onMarkReflect={markReflect}
+            isAlreadyDone={reflectDone}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── All done celebration ── */}
+      {allDone && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -262,7 +449,7 @@ export function TodayPath({ userId, onNavigate, progress, activeQuestionId }: To
           style={{ background: color + '10', border: `1px solid ${color}25` }}
         >
           <p className="text-[12px] font-serif italic text-[var(--text-secondary)]">
-            Beautiful. All three acts complete for today.
+            Beautiful. All three acts complete for today. 🌸
           </p>
         </motion.div>
       )}

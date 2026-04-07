@@ -27,23 +27,25 @@ import { MedalGrid } from './components/domain/MedalGrid';
 import { isAdminEmail, hasWisdomAccess, isUnlockedUser } from './config/admin';
 import { TodayPath } from './features/practices/TodayPath';
 import { useCourseTracking } from './hooks/useCourseTracking';
+import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
+import { InfoTooltip } from './components/ui/InfoTooltip';
+import { usePersistedState } from './hooks/usePersistedState';
 
-const DashboardActions = ({ setActiveTab, user, progress, activeQuestionId, onNavigate }: any) => {
+const DashboardActions = ({ user, progress, weeklyAssignment, onNavigate, onViewProgress }: any) => {
   return (
-    <div className="max-w-2xl mx-auto w-full px-4 mb-12">
+    <div className="max-w-2xl mx-auto w-full px-4 mb-4">
       <TodayPath
         userId={user?.uid}
         progress={progress}
-        activeQuestionId={activeQuestionId}
+        weeklyAssignment={weeklyAssignment}
         onNavigate={(tab, qId, view) => {
           if (tab === 'wisdom_untethered') {
             onNavigate('wisdom_untethered', qId, view);
-          } else if (tab === 'journal') {
-            onNavigate('journal');
           } else {
-            setActiveTab(tab);
+            onNavigate(tab);
           }
         }}
+        onViewProgress={onViewProgress}
       />
     </div>
   );
@@ -85,7 +87,7 @@ const themeColors: any = {
 const EMOTION_MAP: Record<string, string> = {
   ANXIETY: '#FF7043',
   SADNESS: '#5C6BC0',
-  INSECURITY: '#C65F9D',
+  INSECURITY: '#5EC4B0',
   ANGER: '#E53935',
   PEACE: '#ABCEC9',
   JOY: '#FFD54F',
@@ -111,7 +113,7 @@ function getDominantEmotionColor(emotionsStr?: string) {
 
 // --- Sub-components moved outside for stability ---
 
-const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, rotateX, rotateY, progress, activeQuestionId, onNavigate }: any) => {
+const MobileDashboard = ({ user, onOpenSidebar, rotateX, rotateY, progress, weeklyAssignment, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -126,7 +128,7 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, rotateX, rotateY, 
     >
       {/* Hero Container — Floating, no card box */}
       <div className="relative pt-6 pb-12 mx-2 mt-2">
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(198,95,157,0.08),transparent_60%)] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(94,196,176,0.07),transparent_60%)] pointer-events-none" />
 
         <header className="relative flex justify-between items-center z-10 mb-8 px-4">
           <button
@@ -138,8 +140,8 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, rotateX, rotateY, 
 
           <div className="flex flex-col items-center">
             <AwakenedPathLogo variant="icon" size="sm" animated={false} className="mb-1 opacity-80" />
-            <p className="text-[7px] font-serif italic text-[var(--accent-primary)] tracking-[0.3em] uppercase mb-0.5">{greeting},</p>
-            <h1 className="text-[12px] font-serif font-bold text-[var(--text-primary)] uppercase tracking-widest">{user.displayName || 'Traveler'}</h1>
+            <p className="text-[11px] font-serif italic text-[var(--accent-primary)] tracking-[0.3em] uppercase mb-0.5">{greeting},</p>
+            <h1 className="text-[14px] font-serif font-bold text-[var(--text-primary)] uppercase tracking-widest">{user.displayName || 'Traveler'}</h1>
           </div>
 
           <div className="w-12 h-12 flex-shrink-0"></div>
@@ -159,32 +161,31 @@ const MobileDashboard = ({ user, setActiveTab, onOpenSidebar, rotateX, rotateY, 
             <div className="inline-flex items-center gap-6 px-6 py-2.5 rounded-full bg-[var(--bg-surface)]/50 border border-[var(--border-subtle)]/50 backdrop-blur-md shadow-lg">
               <div className="flex items-center gap-2">
                 <Heart className="w-3 h-3 text-rose-300" />
-                <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Flow</span>
+                <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Flow</span>
               </div>
               <div className="w-px h-3 bg-[var(--border-subtle)]/30" />
               <div className="flex items-center gap-2">
                 <Flame className="w-3 h-3 text-orange-300" />
-                <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">{user.streak} Days</span>
+                <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">{user.streak} Days</span>
               </div>
             </div>
           </div>
         </section>
       </div>
-
       <div className="px-4">
         <DashboardActions
-          setActiveTab={setActiveTab}
           user={user}
           progress={progress}
-          activeQuestionId={activeQuestionId}
+          weeklyAssignment={weeklyAssignment}
           onNavigate={onNavigate}
+          onViewProgress={() => onNavigate('progress')}
         />
       </div>
     </motion.div>
   );
 };
 
-const BreadthDesktop = ({ user, setActiveTab, rotateX, rotateY, progress, activeQuestionId, onNavigate }: any) => {
+const BreadthDesktop = ({ user, rotateX, rotateY, progress, weeklyAssignment, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -209,7 +210,7 @@ const BreadthDesktop = ({ user, setActiveTab, rotateX, rotateY, progress, active
           </div>
         </div>
         <div className="flex flex-col items-end opacity-40">
-          <span className="text-[10px] font-serif italic text-[var(--text-muted)] tracking-[0.3em] uppercase">The Presence Study</span>
+          <span className="text-[11px] font-serif italic text-[var(--text-muted)] tracking-[0.3em] uppercase">The Presence Study</span>
         </div>
       </header>
 
@@ -242,11 +243,11 @@ const BreadthDesktop = ({ user, setActiveTab, rotateX, rotateY, progress, active
 
       <div className="max-w-4xl mx-auto w-full">
         <DashboardActions
-          setActiveTab={setActiveTab}
           user={user}
           progress={progress}
-          activeQuestionId={activeQuestionId}
+          weeklyAssignment={weeklyAssignment}
           onNavigate={onNavigate}
+          onViewProgress={() => onNavigate('progress')}
         />
       </div>
     </motion.div>
@@ -258,7 +259,22 @@ const BreadthDesktop = ({ user, setActiveTab, rotateX, rotateY, progress, active
 export default function UntetheredApp() {
   const { user: currentUser, loading, signOut, isAccessValid } = useAuth();
   const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('awakened-path-active-tab') || 'home');
+  // ── Persisted navigation state — app resumes exactly where user left off ──
+  const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'home');
+  const [activeQuestionId, setActiveQuestionId] = usePersistedState<string>('awakened-question', 'question1');
+  const [viewMode, setViewMode] = usePersistedState<'explanation' | 'practice' | 'video'>(
+    'awakened-view-mode',
+    'explanation',
+    (v) => ['explanation', 'practice', 'video'].includes(v)
+  );
+  const [activeCourseId, setActiveCourseId] = usePersistedState<string | null>('awakened-course', null);
+
+  // ── Weekly assignment — system assigns one question per week ──
+  const weeklyAssignment = useWeeklyAssignment(
+    currentUser?.metadata?.creationTime ?? null
+  );
+
+  // ── Other app state (non-persisted) ──
   const [activePractice, setActivePractice] = useState<Practice | null>(null);
   const [practiceState, setPracticeState] = useState('active');
   const [currentStep, setCurrentStep] = useState(0);
@@ -269,18 +285,10 @@ export default function UntetheredApp() {
   const [showReward, setShowReward] = useState<Reward | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
-
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const { progress } = useCourseTracking(currentUser?.uid);
-
-  const [activeQuestionId, setActiveQuestionId] = useState(() => localStorage.getItem('awakened-path-active-question') || 'question1');
-  const [viewMode, setViewMode] = useState<'explanation' | 'practice' | 'video'>(() => {
-    const saved = localStorage.getItem('awakened-path-view-mode');
-    return (saved === 'explanation' || saved === 'practice' || saved === 'video') ? saved : 'explanation';
-  });
-  const [activeCourseId, setActiveCourseId] = useState<string | null>(() => localStorage.getItem('awakened-path-active-course') || null);
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
 
   const onNavigate = (id: string, questionId?: string, view?: string) => {
@@ -770,7 +778,7 @@ export default function UntetheredApp() {
                 <div key={item.id} className="space-y-0.5 my-1">
                   <div className="flex items-center gap-3 px-6 py-2 mb-1">
                     <Icon size={18} strokeWidth={anySubActive ? 2 : 1} className={cn("transition-colors", anySubActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
-                    <span className="text-[11px] uppercase tracking-[0.5em] font-bold text-[var(--text-muted)] font-sans">
+                    <span className="text-[13px] font-bold uppercase tracking-[0.5em] text-[var(--text-muted)] font-sans">
                       {item.label}
                     </span>
                   </div>
@@ -800,12 +808,12 @@ export default function UntetheredApp() {
                             }}
                           >
                             <span className={cn(
-                              "text-[10px] uppercase transition-colors duration-400 font-sans relative z-10 w-full whitespace-nowrap",
+                              "text-[13px] uppercase transition-colors duration-400 font-sans relative z-10 w-full whitespace-nowrap",
                               sub.label.length > 10 ? "tracking-[0.1em]" : "tracking-[0.25em]",
                               isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
                             )}>
                               {sub.label}
-                              {sub.locked && <Lock size={8} className="inline-block ml-2 text-[var(--accent-secondary)]" />}
+                              {sub.locked && <Lock size={10} className="inline-block ml-2 text-[var(--accent-secondary)]" />}
                             </span>
                             {isActive && (
                               <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)] z-10" />
@@ -817,11 +825,11 @@ export default function UntetheredApp() {
                             <div className="flex flex-col mt-2 ml-1 border-l border-[var(--border-subtle)]/30 overflow-hidden">
                               <button
                                 onClick={() => setExpandedChapter1(!expandedChapter1)}
-                                className="flex justify-between items-center w-full px-4 py-2 text-[9px] uppercase tracking-widest text-[var(--text-primary)] font-bold transition-colors group"
+                                className="flex justify-between items-center w-full px-4 py-2 text-[11px] uppercase tracking-widest text-[var(--text-primary)] font-bold transition-colors group"
                               >
                                 <span>Chapter 1: The Mind</span>
                                 <span className={cn(
-                                  "text-[10px] text-[var(--accent-primary)] transition-transform duration-300",
+                                  "text-[11px] text-[var(--accent-primary)] transition-transform duration-300",
                                   expandedChapter1 ? "rotate-90" : "rotate-0"
                                 )}>▶</span>
                               </button>
@@ -849,7 +857,7 @@ export default function UntetheredApp() {
                                           if (window.innerWidth < 1024) setIsSidebarOpen(false);
                                         }}
                                         className={cn(
-                                          "flex items-center gap-3 pl-6 pr-4 py-2 text-[10px] uppercase tracking-widest transition-all text-left relative",
+                                          "flex items-center gap-3 pl-6 pr-4 py-2 text-[13px] uppercase tracking-widest transition-all text-left relative",
                                           activeQuestionId === q.id
                                             ? "text-[var(--accent-primary)] font-bold"
                                             : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
@@ -860,7 +868,7 @@ export default function UntetheredApp() {
                                           <div className="absolute left-2 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" />
                                         )}
                                         <span className="flex-1">{q.label}</span>
-                                        {q.locked && <Lock size={8} className="ml-2 text-[var(--accent-secondary)]" />}
+                                        {q.locked && <Lock size={10} className="ml-2 text-[var(--accent-secondary)]" />}
                                       </button>
                                     ))}
                                   </motion.div>
@@ -911,7 +919,7 @@ export default function UntetheredApp() {
                   )}
                 />
                 <span className={cn(
-                  "text-[10px] uppercase transition-all duration-400 relative z-10 font-['Outfit'] whitespace-nowrap",
+                  "text-[13px] uppercase transition-all duration-400 relative z-10 font-['Outfit'] whitespace-nowrap",
                   item.label.length > 12 ? "tracking-[0.05em]" : "tracking-[0.3em]",
                   isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)] font-semibold"
                 )}>
@@ -935,7 +943,7 @@ export default function UntetheredApp() {
           {currentUser?.email && (
             <div className="px-4 mb-2 flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)] animate-pulse" />
-              <span className="text-[10px] text-[var(--text-muted)] font-medium tracking-wider lowercase opacity-70 truncate">
+              <span className="text-[12px] text-[var(--text-muted)] font-medium tracking-wider lowercase opacity-70 truncate">
                 {currentUser.email}
               </span>
             </div>
@@ -949,13 +957,13 @@ export default function UntetheredApp() {
             className="w-full flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-surface)] rounded-xl transition-colors text-left group"
           >
             <LogOut size={15} className="text-[var(--text-secondary)] group-hover:text-rose-400 transition-colors" />
-            <span className="text-[9px] uppercase tracking-[0.4em] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
+            <span className="text-[13px] uppercase tracking-[0.4em] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
               Log Out
             </span>
           </button>
 
           <div className="mt-4 pt-4 border-t border-[var(--border-default)]">
-            <p className="text-[9px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex flex-col gap-2">
+            <p className="text-[12px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex flex-col gap-2">
               <span className="opacity-60">Journey Shared by</span>
               <span className="text-[var(--text-primary)] font-bold font-sans tracking-[0.1em] uppercase">Soulful Intelligence Studio</span>
             </p>
@@ -965,7 +973,7 @@ export default function UntetheredApp() {
 
       {/* MAIN CONTENT AREA */}
       <main className={cn(
-        "relative z-10 min-h-screen transition-all duration-700 pb-12 overflow-hidden",
+        "relative z-10 min-h-screen transition-all duration-700 overflow-hidden",
         "lg:pl-72"
       )}>
         {/* Time of Day Ambient Tint */}
@@ -983,12 +991,12 @@ export default function UntetheredApp() {
                 exit={{ opacity: 0, x: -14 }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
-                className="flex items-center gap-3 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all group"
+                className="flex items-center gap-3 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all group pb-4"
               >
                 <div className="p-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-3xl group-hover:scale-110 group-hover:bg-[var(--bg-surface-hover)] group-hover:border-[var(--border-default)] transition-all duration-300 shadow-sm">
-                  <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 duration-300" />
+                  <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5 duration-300" />
                 </div>
-                <span className="text-[9px] font-bold uppercase tracking-[0.45em] opacity-60 group-hover:opacity-100 transition-opacity duration-300">Return</span>
+                <span className="text-[13px] font-bold uppercase tracking-[0.45em] opacity-60 group-hover:opacity-100 transition-opacity duration-300">Return</span>
               </motion.button>
             </div>
           )}
@@ -1029,7 +1037,7 @@ export default function UntetheredApp() {
               <motion.div
                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute inset-0 bg-[#D16BA5]/20 blur-xl"
+                className="absolute inset-0 bg-[#5EC4B0]/20 blur-xl"
               />
             )}
             <Headphones className={cn("w-4 h-4 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
@@ -1043,12 +1051,11 @@ export default function UntetheredApp() {
                 <div className="lg:hidden">
                   <MobileDashboard
                     user={user}
-                    setActiveTab={setActiveTab}
                     onOpenSidebar={() => setIsSidebarOpen(true)}
                     rotateX={rotateX}
                     rotateY={rotateY}
                     progress={progress}
-                    activeQuestionId={activeQuestionId}
+                    weeklyAssignment={weeklyAssignment}
                     onNavigate={onNavigate}
                   />
                 </div>
@@ -1059,9 +1066,10 @@ export default function UntetheredApp() {
                     rotateX={rotateX}
                     rotateY={rotateY}
                     progress={progress}
-                    activeQuestionId={activeQuestionId}
+                    weeklyAssignment={weeklyAssignment}
                     onNavigate={onNavigate}
                   />
+
                 </div>
               </>
             )}
@@ -1147,7 +1155,10 @@ export default function UntetheredApp() {
 
             {activeTab === 'stats' && (
               <motion.div key="stats" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }}>
-                <StatsDashboard />
+                <StatsDashboard
+                  onNavigate={onNavigate}
+                  accountCreatedAt={currentUser?.metadata?.creationTime ?? null}
+                />
               </motion.div>
             )}
 
@@ -1188,9 +1199,16 @@ export default function UntetheredApp() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-[var(--accent-primary)]">Level {user.level} · {points} Points</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[12px] font-bold uppercase tracking-[0.5em] text-[var(--accent-primary)]">Level {user.level} · {points} Points</p>
+                          <InfoTooltip 
+                            title="Points & Level" 
+                            description="Points (XP) are earned by engaging with the course, practices, and reflections. Accumulating points increases your level."
+                            howCalculated="Every action adds value to your journey."
+                          />
+                        </div>
                         <h2 className="text-5xl font-serif font-light text-[var(--text-primary)] tracking-tight">{user.displayName}</h2>
-                        <p className="text-[11px] text-[var(--text-muted)] tracking-widest font-medium uppercase">
+                        <p className="text-[12px] text-[var(--text-muted)] tracking-widest font-medium uppercase">
                           Exploring since {user.joinedAt} · {user.nowMoments} reflections
                         </p>
                       </div>
@@ -1203,14 +1221,21 @@ export default function UntetheredApp() {
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Reflections Stats */}
+                  {/* Reflections Count */}
                   <div className="p-8 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex flex-col justify-between h-48 group hover:border-[var(--accent-secondary)]/30 transition-all">
                     <div className="w-10 h-10 rounded-xl bg-[var(--accent-secondary)]/10 border border-[var(--accent-secondary)]/10 flex items-center justify-center">
                       <Clock className="w-5 h-5 text-[var(--accent-secondary)]" />
                     </div>
                     <div>
-                      <div className="text-4xl font-serif font-light text-[var(--text-primary)] mb-1">{user.nowMoments}</div>
-                      <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)]">Now Moments</span>
+                      <div className="text-4xl font-serif font-light text-[var(--text-primary)] mb-2">{user.nowMoments}</div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Reflections</span>
+                        <InfoTooltip
+                          title="Reflections"
+                          description="The total number of times you have journalled, completed a practice, or recorded a thought in this app."
+                          howCalculated="Counts every journal entry, completed situational practice, and daily practice session."
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1220,16 +1245,30 @@ export default function UntetheredApp() {
                       <Flame className="w-5 h-5 text-orange-400/70" />
                     </div>
                     <div>
-                      <div className="text-4xl font-serif font-light text-[var(--text-primary)] mb-1">{user.streak} Days</div>
-                      <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)]">Current Streak</span>
+                      <div className="text-4xl font-serif font-light text-[var(--text-primary)] mb-2">{user.streak} Days</div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Practice Streak</span>
+                        <InfoTooltip
+                          title="Practice Streak"
+                          description="The number of days in a row that you have completed at least one practice or journal entry."
+                          howCalculated="A streak continues as long as you complete something each day. Missing a day resets it to zero."
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Consciousness Progress */}
+                  {/* XP Progress */}
                   <div className="p-8 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex flex-col justify-between h-48 md:col-span-2 lg:col-span-1 border-dashed">
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)]">Evolution</span>
-                      <span className="text-[10px] font-bold text-[var(--accent-primary)]">{stats.xp % 1000} / 1000 XP</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Your Journey</span>
+                        <InfoTooltip
+                          title="Your Journey (XP)"
+                          description="Experience Points you've earned by practising, journalling, and completing courses. Each activity adds to your total."
+                          howCalculated="Journal entries earn 10 XP. Completed practices earn 15 XP. Videos earn 20 XP. A full day earns bonus XP."
+                        />
+                      </div>
+                      <span className="text-[11px] font-bold text-[var(--accent-primary)]">{stats.xp % 1000} / 1000 XP</span>
                     </div>
                     <div className="space-y-4">
                       <div className="h-1.5 w-full bg-[var(--border-subtle)] rounded-full overflow-hidden">
@@ -1239,7 +1278,7 @@ export default function UntetheredApp() {
                           className="h-full bg-[var(--accent-primary)] shadow-[0_0_10px_var(--glow-primary)]"
                         />
                       </div>
-                      <p className="text-[9px] text-[var(--text-muted)] italic">Next layer: Consciousness Expansion</p>
+                      <p className="text-[11px] text-[var(--text-secondary)] italic">Keep going — each practice deepens your presence.</p>
                     </div>
                   </div>
                 </div>
@@ -1248,7 +1287,7 @@ export default function UntetheredApp() {
                 <div className="p-10 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] space-y-8">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-serif font-light text-[var(--text-secondary)]">Soul Medals</h3>
-                    <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{unlocked.length} of 16 Unlocked</span>
+                    <span className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{unlocked.length} of 16 Unlocked</span>
                   </div>
 
                   <MedalGrid unlocked={unlocked} />
@@ -1264,15 +1303,15 @@ export default function UntetheredApp() {
                         <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-primary)]">Interface Theme</span>
                         <ThemeToggle />
                       </div>
-                      <p className="text-[10px] text-[var(--text-secondary)] tracking-wide">Adjust the visual sanctuary to your resonance.</p>
+                      <p className="text-[11px] text-[var(--text-secondary)] tracking-wide">Adjust the visual sanctuary to your resonance.</p>
                     </div>
 
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-primary)]">Voice Guidance</span>
-                        <span className="text-[10px] font-serif italic text-[var(--accent-secondary)]">Serene Echo (Default)</span>
+                        <span className="text-[11px] font-serif italic text-[var(--accent-secondary)]">Serene Echo (Default)</span>
                       </div>
-                      <p className="text-[10px] text-[var(--text-muted)] tracking-wide">Choose the frequency of guidance during meditation.</p>
+                      <p className="text-[11px] text-[var(--text-muted)] tracking-wide">Choose the frequency of guidance during meditation.</p>
                     </div>
                   </div>
 
@@ -1290,33 +1329,19 @@ export default function UntetheredApp() {
                         a.download = `awakened-path-journal-${new Date().toISOString().split('T')[0]}.json`;
                         a.click();
                       }}
-                      className="px-6 py-2 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all"
+                      className="px-6 py-2 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all"
                     >
                       Download Journal Export
                     </button>
                     <button
                       onClick={() => alert("Archive functionality coming soon. Your data is safely persisted in the cloud.")}
-                      className="px-6 py-2 rounded-xl bg-transparent border border-rose-400/20 text-[9px] font-bold uppercase tracking-widest text-rose-400/60 hover:bg-rose-400/5 transition-all"
+                      className="px-6 py-2 rounded-xl bg-transparent border border-rose-400/20 text-[11px] font-bold uppercase tracking-widest text-rose-400/60 hover:bg-rose-400/5 transition-all"
                     >
                       Archive Session History
                     </button>
                   </div>
                 </div>
 
-                {/* Footer Credits */}
-                <div className="w-full pt-4 pb-8 flex flex-col items-center justify-center text-center opacity-60 hover:opacity-100 transition-opacity">
-                  <p className="text-[9px] font-serif tracking-[0.2em] text-[var(--text-muted)] uppercase mb-2 text-center">
-                    Designed and thought by
-                  </p>
-                  <a
-                    href="https://www.skrmblissai.in/twinsouls"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[10px] font-bold tracking-widest text-[var(--accent-secondary)] hover:text-[var(--accent-primary)] transition-colors"
-                  >
-                    www.skrmblissai.in/twinsouls
-                  </a>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>

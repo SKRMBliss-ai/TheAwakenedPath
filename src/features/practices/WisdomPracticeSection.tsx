@@ -203,7 +203,7 @@ function WisdomCard({
 
         {/* Text */}
         <div className="flex-1 min-w-0">
-          <p className="text-[9px] font-bold uppercase tracking-[0.2em] mb-0.5"
+          <p className="text-[12px] font-bold uppercase tracking-[0.2em] mb-0.5"
             style={{ color: isLocked ? 'var(--text-muted)' : color }}>
             {isLocked ? 'Locked' : `Q${practice.questionNum} · ${practice.questionTitle}`}
           </p>
@@ -218,12 +218,12 @@ function WisdomCard({
         {/* Duration + state */}
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
           {completed ? (
-            <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+            <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
               style={{ background: color + '18', color }}>
               ✓ Done
             </span>
           ) : (
-            <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
               {practice.duration}
             </span>
           )}
@@ -263,7 +263,7 @@ function WisdomCard({
                         cursor: done ? 'default' : 'pointer',
                       }}
                     >
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold"
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] font-bold"
                         style={{
                           background: done ? color + '25' : 'var(--border-subtle)',
                           color: done ? color : 'var(--text-muted)',
@@ -276,7 +276,7 @@ function WisdomCard({
                         {label}
                       </span>
                       {!done && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider"
+                        <span className="text-[11px] font-bold uppercase tracking-wider"
                           style={{ color }}>
                           Tap when done
                         </span>
@@ -307,7 +307,7 @@ function WisdomCard({
                     {practice.steps!.map((step, i) => (
                       <div key={i} className="flex gap-3 p-3 rounded-xl"
                         style={{ background: 'var(--bg-secondary)' }}>
-                        <span className="text-[10px] font-bold mt-0.5 flex-shrink-0"
+                        <span className="text-[12px] font-bold mt-0.5 flex-shrink-0"
                           style={{ color }}>
                           {i + 1}.
                         </span>
@@ -318,7 +318,7 @@ function WisdomCard({
                     ))}
                     <button
                       onClick={handleStart}
-                      className="w-full py-3 rounded-xl font-bold uppercase tracking-[0.15em] text-[11px] mt-2 transition-all active:scale-[0.98]"
+                      className="w-full py-3 rounded-xl font-bold uppercase tracking-[0.15em] text-[12px] mt-2 transition-all active:scale-[0.98]"
                       style={{ background: color, color: 'white', border: 'none', cursor: 'pointer', boxShadow: `0 6px 20px -6px ${color}80` }}>
                       Begin Practice
                     </button>
@@ -327,7 +327,7 @@ function WisdomCard({
                   /* In progress — show current step */
                   <div className="space-y-3">
                     <div className="p-4 rounded-xl" style={{ background: 'var(--bg-secondary)' }}>
-                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color }}>
+                      <p className="text-[12px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color }}>
                         Step {stepIndex + 1} of {practice.steps!.length}
                       </p>
                       <p className="text-[15px] font-serif text-[var(--text-primary)] leading-relaxed">
@@ -336,7 +336,7 @@ function WisdomCard({
                     </div>
                     <button
                       onClick={handleNextStep}
-                      className="w-full py-3 rounded-xl font-bold uppercase tracking-[0.15em] text-[11px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                      className="w-full py-3 rounded-xl font-bold uppercase tracking-[0.15em] text-[12px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                       style={{ background: color, color: 'white', border: 'none', cursor: 'pointer', boxShadow: `0 6px 20px -6px ${color}80` }}>
                       {stepIndex < practice.steps!.length - 1
                         ? <><ChevronRight size={13} /> Next Step</>
@@ -396,7 +396,7 @@ export function WisdomPracticeSection({
           <h3 className="text-2xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>
             Wisdom Untethered
           </h3>
-          <p className="text-[10px] uppercase tracking-widest font-bold opacity-50" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-[12px] uppercase tracking-widest font-bold opacity-50" style={{ color: 'var(--text-muted)' }}>
             Chapter 1 · Daily practices
           </p>
         </div>

@@ -95,6 +95,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         root.style.setProperty("--text-primary", theme.textPrimary);
         root.style.setProperty("--text-secondary", theme.textSecondary);
         root.style.setProperty("--text-muted", theme.textMuted);
+        root.style.setProperty("--text-disabled", theme.textDisabled);
+        root.style.setProperty("--bg-base", theme.bgPrimary);
+        root.style.setProperty("--bg-surface-hover", theme.bgSurfaceHover);
 
         // Accents & Brand
         root.style.setProperty("--brand-primary", theme.accentPrimary);
@@ -118,20 +121,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         // Glow System (Adapts based on mode)
         if (mode === "dark") {
-            root.style.setProperty("--card-glow-base", "rgba(240, 160, 170, 0.25)");
-            root.style.setProperty("--card-glow-pulse", "rgba(240, 160, 170, 0.45)");
-            root.style.setProperty("--card-glow-surge", "rgba(240, 160, 170, 0.75)");
-            root.style.setProperty("--glow-primary", "rgba(240, 160, 170, 0.3)");
-            root.style.setProperty("--accent-primary-dim", "rgba(240, 160, 170, 0.08)");
-            root.style.setProperty("--video-shadow", "0 30px 100px rgba(0,0,0,0.9), 0 0 40px rgba(240, 160, 170, 0.15)");
+            root.style.setProperty("--card-glow-base", "rgba(94, 196, 176, 0.20)");
+            root.style.setProperty("--card-glow-pulse", "rgba(94, 196, 176, 0.38)");
+            root.style.setProperty("--card-glow-surge", "rgba(94, 196, 176, 0.65)");
+            root.style.setProperty("--glow-primary", "rgba(94, 196, 176, 0.25)");
+            root.style.setProperty("--accent-primary-dim", "rgba(94, 196, 176, 0.08)");
+            root.style.setProperty("--video-shadow", "0 30px 100px rgba(0,0,0,0.9), 0 0 40px rgba(94, 196, 176, 0.12)");
             root.style.setProperty("--video-border", "rgba(255, 255, 255, 0.12)");
         } else {
-            // Subtle shadows for light mode — No strong glows
-            root.style.setProperty("--card-glow-base", "rgba(184, 112, 110, 0.04)");
-            root.style.setProperty("--card-glow-pulse", "rgba(184, 112, 110, 0.08)");
-            root.style.setProperty("--card-glow-surge", "rgba(184, 112, 110, 0.12)");
-            root.style.setProperty("--glow-primary", "rgba(184, 112, 110, 0.06)");
-            root.style.setProperty("--accent-primary-dim", "rgba(184, 112, 110, 0.03)");
+            root.style.setProperty("--card-glow-base", "rgba(61, 139, 122, 0.04)");
+            root.style.setProperty("--card-glow-pulse", "rgba(61, 139, 122, 0.08)");
+            root.style.setProperty("--card-glow-surge", "rgba(61, 139, 122, 0.12)");
+            root.style.setProperty("--glow-primary", "rgba(61, 139, 122, 0.06)");
+            root.style.setProperty("--accent-primary-dim", "rgba(61, 139, 122, 0.03)");
             root.style.setProperty("--video-shadow", "0 20px 60px rgba(0,0,0,0.8)");
             root.style.setProperty("--video-border", "rgba(0, 0, 0, 0.05)");
         }
@@ -261,9 +263,9 @@ export function ThemeToggle({ style = {}, className = "" }: { style?: React.CSSP
                         ? "linear-gradient(135deg, #0B0014, #050008)"
                         : "linear-gradient(135deg, #FAF6F1, #F0EAE2)",
                     boxShadow: mode === "dark"
-                        ? "0 0 8px rgba(198,95,157,0.3), 0 2px 4px rgba(0,0,0,0.3)"
+                        ? "0 0 8px rgba(94,196,176,0.3), 0 2px 4px rgba(0,0,0,0.3)"
                         : "0 2px 8px rgba(61,46,64,0.15), 0 1px 2px rgba(61,46,64,0.08)",
-                    border: `1.5px solid ${mode === "dark" ? "rgba(198,95,157,0.3)" : "rgba(176,78,138,0.15)"}`,
+                    border: `1.5px solid ${mode === "dark" ? "rgba(94,196,176,0.3)" : "rgba(61,139,122,0.15)"}`,
                     transition: "background 0.5s, box-shadow 0.5s, border-color 0.5s",
                 }}
             />
