@@ -544,7 +544,7 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
                     <p className="text-[13px] leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
                         {situation.description}
                     </p>
-                    <p className="text-[12px] font-serif italic opacity-0 group-hover:opacity-50 transition-opacity duration-300 line-clamp-1 mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-[12px] font-serif italic opacity-0 group-hover:opacity-80 transition-opacity duration-300 line-clamp-1 mt-0.5" style={{ color: 'var(--text-muted)' }}>
                         {situation.whenToUse}
                     </p>
                 </div>
@@ -552,7 +552,7 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
                 <div className="flex items-center justify-between gap-2 pt-1">
                     <div className="flex items-center gap-2">
                         <DurationPill dur={situation.duration} />
-                        <span className="text-[11px] font-bold uppercase tracking-wider opacity-40" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-[11px] font-bold uppercase tracking-wider opacity-60" style={{ color: 'var(--text-muted)' }}>
                             {situation.steps.length} steps
                         </span>
                     </div>
@@ -1018,7 +1018,7 @@ export const SituationalPractices: React.FC<{
                                         style={{ background: 'var(--bg-surface)' }}>
                                         <p className="text-[11px] font-bold uppercase tracking-wider" 
                                             style={{ color: 'var(--accent-primary)' }}>{item.q}</p>
-                                        <p className="text-[12px] leading-relaxed opacity-60" 
+                                        <p className="text-[12px] leading-relaxed opacity-80" 
                                             style={{ color: 'var(--text-secondary)' }}>{item.a}</p>
                                     </div>
                                 ))}
@@ -1032,7 +1032,7 @@ export const SituationalPractices: React.FC<{
             <div className="sticky top-0 z-20 py-3 -mx-4 px-4 space-y-3 backdrop-blur-md" style={{ background: 'color-mix(in srgb, var(--bg-primary) 85%, transparent)' }}>
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
-                        <Search size={14} className="absolute left-5 top-1/2 -translate-y-1/2 opacity-40" />
+                        <Search size={14} className="absolute left-5 top-1/2 -translate-y-1/2 opacity-70" />
                         <input
                             value={query}
                             onChange={e => setQuery(e.target.value)}
@@ -1091,7 +1091,7 @@ export const SituationalPractices: React.FC<{
                     {!query.toLowerCase().includes('wisdom') && !query.toLowerCase().includes('untethered') && activeCategory === 'All' && activeDuration === 0 && (
                         <>
                             <div className="pt-8 border-t border-dashed border-border-default">
-                                <h3 className="text-[12px] uppercase tracking-[0.4em] font-bold opacity-40" style={{ color: 'var(--text-muted)' }}>Rest of the Practices</h3>
+                                <h3 className="text-[13px] uppercase tracking-[0.4em] font-bold opacity-70" style={{ color: 'var(--accent-primary)' }}>Rest of the Practices</h3>
                             </div>
 
                             {COLLECTIONS.map(col => {

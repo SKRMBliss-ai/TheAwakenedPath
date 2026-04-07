@@ -63,7 +63,7 @@ const WISDOM_PRACTICES = [
     practiceDesc: 'Sit for 3 minutes. Don\'t silence the mind — just stay settled beneath it.',
     duration: '3 min',
     color: '#2E9E7A',
-    locked: true,
+
     steps: [
       'Sit comfortably. Take two slow breaths.',
       'The mind will talk. Let it. You are not trying to stop it.',

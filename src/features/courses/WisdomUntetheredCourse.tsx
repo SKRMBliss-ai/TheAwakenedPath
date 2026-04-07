@@ -163,7 +163,14 @@ export function WisdomUntetheredCourse({
 
   const tabs = [
     { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" />, field: 'read' as keyof QuestionProgress, navigate: null },
-    { id: 'video' as const, label: 'Video', icon: <Youtube className="w-3.5 h-3.5" />, field: 'video' as keyof QuestionProgress, navigate: null },
+    { 
+      id: 'video' as const, 
+      label: 'Video', 
+      icon: <Youtube className="w-3.5 h-3.5" />, 
+      field: 'video' as keyof QuestionProgress, 
+      navigate: null,
+      comingSoon: !QUESTION_VIDEOS[activeQuestionId]
+    },
     { id: 'practice' as const, label: 'Practice Room', icon: <ExternalLink className="w-3.5 h-3.5" />, field: 'practice' as keyof QuestionProgress, navigate: 'practice_room' },
   ];
 
@@ -195,6 +202,11 @@ export function WisdomUntetheredCourse({
               <div className="flex items-center gap-1.5 relative z-10">
                 {tab.icon}
                 <span className="hidden sm:inline">{tab.label}</span>
+                {tab.comingSoon && (
+                  <span className="bg-amber-400/20 text-amber-500 text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-amber-400/20 uppercase tracking-tighter">
+                    Soon
+                  </span>
+                )}
                 {progress[activeQuestionId]?.[tab.field] ? (
                   <div className="flex items-center justify-center w-3 h-3 rounded-full bg-emerald-500 border border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]">
                     <CheckCircle2 size={8} className="text-white" />

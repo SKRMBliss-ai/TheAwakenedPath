@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { BookOpen, Zap, PenLine, CheckCircle2, Calendar, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { PRACTICE_LIBRARY } from '../practices/practiceLibrary';
@@ -124,93 +124,7 @@ function Pillar({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Inline Reflect input
-// ─────────────────────────────────────────────────────────────────────────────
 
-function InlineReflect({
-  userId,
-  questionId,
-  prompt,
-  color,
-  onMarkReflect,
-  isAlreadyDone,
-}: {
-  userId: string | undefined | null;
-  questionId: string;
-  prompt: string;
-  color: string;
-  onMarkReflect: () => void;
-  isAlreadyDone: boolean;
-}) {
-  const [text, setText] = useState('');
-  const [saved, setSaved] = useState(isAlreadyDone);
-
-  const save = async () => {
-    if (!text.trim() || !userId) return;
-    const dateStr = new Date().toISOString().split('T')[0];
-    const ref = doc(db, 'users', userId, 'dailyPractices', dateStr);
-    await setDoc(ref, {
-      [questionId]: { reflectCompleted: true, reflectText: text.trim() }
-    }, { merge: true });
-    onMarkReflect();
-    setSaved(true);
-  };
-
-  if (saved) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="mx-4 mb-5 p-4 rounded-2xl text-center"
-        style={{ background: color + '10', border: `1px solid ${color}25` }}
-      >
-        <p className="text-[12px] font-serif italic text-[var(--text-secondary)]">
-          ✓ Reflection saved for today.
-        </p>
-      </motion.div>
-    );
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mx-4 mb-5 rounded-2xl overflow-hidden border border-[var(--border-default)]"
-      style={{ background: color + '08' }}
-    >
-      <div className="px-4 pt-4 pb-2">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color }}>
-          Today's reflection
-        </p>
-        <p className="text-[12px] font-serif italic text-[var(--text-secondary)] mb-3 leading-relaxed">
-          "{prompt}"
-        </p>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="What did you notice today? (one sentence is enough)"
-          className="w-full bg-transparent text-[13px] font-serif text-[var(--text-primary)] placeholder:text-[var(--text-muted)] resize-none outline-none leading-relaxed"
-          rows={2}
-        />
-      </div>
-      <div className="flex justify-end px-4 pb-3">
-        <button
-          onClick={save}
-          disabled={!text.trim()}
-          className="text-[11px] font-bold uppercase tracking-wider px-4 py-1.5 rounded-full transition-all disabled:opacity-30"
-          style={{
-            background: text.trim() ? color : 'transparent',
-            color: text.trim() ? '#fff' : color,
-            border: `1px solid ${color}50`,
-          }}
-        >
-          Save & Complete ✓
-        </button>
-      </div>
-    </motion.div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main TodayPath component
@@ -254,13 +168,12 @@ export function TodayPath({
   const color = practice?.color ?? '#B8973A';
   const requiredTriggers = questionId === 'question3' ? 3 : 1;
 
-  const [showReflect, setShowReflect] = useState(false);
+
 
   const {
     isCompleted: practiceCompleted,
     record,
     markLearn,
-    markReflect,
   } = useDailyPractice(userId, questionId, requiredTriggers);
 
   const learnDone = record?.learnCompleted === true;
@@ -360,7 +273,7 @@ export function TodayPath({
         <Pillar
           icon={BookOpen}
           label="Learn"
-          sub={learnDone ? "Completed for today" : "You haven't explored today's wisdom yet"}
+          sub={learnDone ? "The wisdom has been absorbed" : "Today's teaching awaits your presence"}
           status={learnDone ? 'done' : 'active'}
           color={color}
           onClick={handleLearn}
@@ -370,7 +283,7 @@ export function TodayPath({
         <Pillar
           icon={Zap}
           label="Practice"
-          sub={practiceCompleted ? "Completed for today" : `Pending: ${practice.name}`}
+          sub={practiceCompleted ? "Your presence is grounded" : `Pending: ${practice.name}`}
           status={practiceCompleted ? 'done' : 'active'}
           color={color}
           onClick={handlePractice}
@@ -378,14 +291,12 @@ export function TodayPath({
         {/* Reflect — opens inline, does NOT navigate away */}
         <motion.button
           whileTap={{ scale: 0.98 }}
-          onClick={() => !reflectDone && setShowReflect(true)}
+          onClick={() => onNavigate('chapters')}
           className={cn(
             'w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-left transition-all duration-300',
             reflectDone
               ? 'border-[var(--border-subtle)] bg-[var(--bg-surface)]/50'
-              : practiceCompleted
-                ? 'border-[var(--border-default)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] shadow-sm'
-                : 'border-[var(--border-subtle)] bg-transparent opacity-40 pointer-events-none'
+              : 'border-[var(--border-default)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] shadow-sm'
           )}
         >
           <div
@@ -408,7 +319,7 @@ export function TodayPath({
               Reflect
             </p>
             <p className="text-[12px] text-[var(--text-muted)] mt-0.5 truncate">
-              {reflectDone ? 'Completed for today' : 'Pending: share what you noticed'}
+              {reflectDone ? 'Your essence is recorded' : "No reflections shared today yet"}
             </p>
           </div>
           <span
@@ -423,19 +334,7 @@ export function TodayPath({
         </motion.button>
       </div>
 
-      {/* ── Inline reflect box ── */}
-      <AnimatePresence>
-        {showReflect && !reflectDone && (
-          <InlineReflect
-            userId={userId}
-            questionId={questionId}
-            prompt={questionMeta.journalPrompt}
-            color={color}
-            onMarkReflect={markReflect}
-            isAlreadyDone={reflectDone}
-          />
-        )}
-      </AnimatePresence>
+
 
       {/* ── All done celebration ── */}
       {allDone && (
