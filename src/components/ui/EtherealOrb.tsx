@@ -6,7 +6,7 @@ import { useTheme } from '../../theme/ThemeSystem';
 // ─── T TOKENS ────────────────────────────────────────────────────────────────
 const T = {
     teal: '#5EC4B0',
-    tealdim: '#3D8B7A',
+    tealdim: '#36ABA3',
 };
 
 // ─── CUSTOM ETHER SHADER ─────────────────────────────────────────────────────
@@ -292,7 +292,7 @@ export const EtherealOrb: React.FC<EtherealOrbProps> = ({
                         size={isAnimating ? 3.5 : 2}
                         speed={isAnimating ? 0.9 : 0.2}
                         opacity={isLight ? (isAnimating ? 0.4 : 0.15) : (isAnimating ? 0.6 : 0.3)}
-                        color={isLight ? '#3D8B7A' : '#E1E7EF'}
+                        color={isLight ? '#36ABA3' : '#E1E7EF'}
                         noise={3}
                     />
                 </Canvas>

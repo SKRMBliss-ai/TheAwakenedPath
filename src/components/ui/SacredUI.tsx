@@ -144,8 +144,8 @@ export const AnchorButton = ({ children, variant = "ghost", onClick, loading, cl
                     position: "relative", overflow: "hidden",
                     padding: "20px 56px",
                     background: hovered
-                        ? `linear-gradient(135deg, ${tokens.teal}, #8AB5B0)`
-                        : `linear-gradient(135deg, ${tokens.teal}, #7EB8B3)`,
+                        ? `linear-gradient(135deg, ${tokens.teal}, #6BBFB7)`
+                        : `linear-gradient(135deg, ${tokens.teal}, #5BB2AB)`,
                     borderRadius: 100,
                     border: `1.5px solid ${hovered ? tokens.teal : tokens.teal + 'CC'}`,
                     cursor: disabled ? "not-allowed" : "pointer",

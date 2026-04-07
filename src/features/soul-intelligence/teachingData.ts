@@ -29,7 +29,7 @@ export const CHAPTERS = [
         subtitle: 'The Way Out of Pain',
         desc: 'Discover how consciousness itself dissolves suffering when you stop identifying with the mind.',
         icon: Activity,
-        color: '#3D8B7A',
+        color: '#36ABA3',
         parts: [
             { id: '2.1', title: 'Stop Fighting Reality', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=hHJAoVYARqw'), duration: '12:10' },
             { id: '2.2', title: 'How to Accept an Awful Moment', youtubeId: '73WJo3-4TxE', duration: '9:45' },

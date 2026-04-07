@@ -129,11 +129,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             root.style.setProperty("--video-shadow", "0 30px 100px rgba(0,0,0,0.9), 0 0 40px rgba(94, 196, 176, 0.12)");
             root.style.setProperty("--video-border", "rgba(255, 255, 255, 0.12)");
         } else {
-            root.style.setProperty("--card-glow-base", "rgba(61, 139, 122, 0.04)");
-            root.style.setProperty("--card-glow-pulse", "rgba(61, 139, 122, 0.08)");
-            root.style.setProperty("--card-glow-surge", "rgba(61, 139, 122, 0.12)");
-            root.style.setProperty("--glow-primary", "rgba(61, 139, 122, 0.06)");
-            root.style.setProperty("--accent-primary-dim", "rgba(61, 139, 122, 0.03)");
+            root.style.setProperty("--card-glow-base", "rgba(54, 171, 163, 0.04)");
+            root.style.setProperty("--card-glow-pulse", "rgba(54, 171, 163, 0.08)");
+            root.style.setProperty("--card-glow-surge", "rgba(54, 171, 163, 0.12)");
+            root.style.setProperty("--glow-primary", "rgba(54, 171, 163, 0.06)");
+            root.style.setProperty("--accent-primary-dim", "rgba(54, 171, 163, 0.03)");
             root.style.setProperty("--video-shadow", "0 20px 60px rgba(0,0,0,0.8)");
             root.style.setProperty("--video-border", "rgba(0, 0, 0, 0.05)");
         }
