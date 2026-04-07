@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Heart, Flame, Book, Target, Clock, Eye, Wind, Sun, Moon, Play, Zap, User, Brain, MessageCircle } from 'lucide-react';
+import { Heart, Flame, Book, Target, Clock, Eye, Wind, Sun, Moon, Play, Zap, User, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { BreathingVisual } from './components/BreathingVisual';
 import { ReframingVisual } from './components/domain/ReframingVisual';
+import { WhatsAppButton } from './components/ui/WhatsAppButton';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
@@ -391,16 +392,7 @@ export default function UntetheredApp() {
         </AnimatePresence>
       </div>
 
-      {/* WhatsApp FAB - Sticky Side Tab */}
-      <a 
-        href="https://wa.me/919910008888" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="fixed right-0 top-1/2 -translate-y-1/2 z-[60] bg-[#25D366] text-white p-3 pl-4 rounded-l-2xl shadow-2xl hover:translate-x--1 transition-transform flex items-center justify-center"
-        aria-label="Contact Support"
-      >
-        <MessageCircle size={28} fill="currentColor" />
-      </a>
+      <WhatsAppButton />
 
       {/* Bottom Nav */}
       <div className={cn("h-20 border-t flex justify-around items-center z-50", darkMode ? "bg-[#0f172a] border-white/5" : "bg-white border-slate-100")}>
