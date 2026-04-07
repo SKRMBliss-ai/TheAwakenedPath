@@ -45,6 +45,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const logActivity = async (currentUser: User, type: string = 'SESSION_START') => {
+        try {
+            let location = 'Unknown';
+            try {
+                const locRes = await fetch('https://ipapi.co/json/');
+                if (locRes.ok) {
+                    const locData = await locRes.json();
+                    location = `${locData.city || ''}, ${locData.region || ''}, ${locData.country_name || ''}`.trim() || 'Unknown';
+                }
+            } catch (e) {
+                console.warn("Location fetch failed:", e);
+            }
+
+            await addDoc(collection(db, 'activity_logs'), {
+                userId: currentUser.uid,
+                userEmail: currentUser.email,
+                activityType: type,
+                details: type === 'LOGIN' ? 'User logged in' : 'Session started / App opened',
+                location: location,
+                timestamp: serverTimestamp()
+            });
+        } catch (error) {
+            console.error("Error logging activity:", error);
+        }
+    };
+
     useEffect(() => {
         let unsubscribeProfile: (() => void) | null = null;
         
@@ -58,7 +84,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (currentUser) {
                     const userRef = doc(db, 'users', currentUser.uid);
                     
-                    // Use onSnapshot for real-time profile updates (e.g. course purchases)
                     unsubscribeProfile = onSnapshot(userRef, async (snapshot) => {
                         if (snapshot.exists()) {
                             const data = snapshot.data();
@@ -74,7 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 createdAt: data?.createdAt,
                             } as UserProfile);
                         } else {
-                            // Initialize profile if it doesn't exist
                             const userData = {
                                 uid: currentUser.uid,
                                 email: currentUser.email,
@@ -88,27 +112,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 purchasedCourses: []
                             };
                             await setDoc(userRef, userData);
-                            // snapshot will fire again after this
                         }
                     });
 
-                    // Update last login
                     await updateDoc(userRef, {
                         lastLogin: serverTimestamp()
-                    }).catch(() => {}); // Ignore error if doc just created
+                    }).catch(() => {});
 
-                    // Log Activity
-                    try {
-                        await addDoc(collection(db, 'activity_logs'), {
-                            userId: currentUser.uid,
-                            userEmail: currentUser.email,
-                            activityType: 'LOGIN',
-                            details: 'User logged in',
-                            timestamp: serverTimestamp()
-                        });
-                    } catch (error) {
-                        console.error("Error logging activity:", error);
-                    }
+                    await logActivity(currentUser, 'SESSION_START');
                 } else {
                     setProfile(null);
                 }

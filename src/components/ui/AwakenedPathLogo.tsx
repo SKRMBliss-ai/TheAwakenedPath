@@ -201,7 +201,7 @@ function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
     <div className="flex flex-col leading-none gap-0.5">
       {/* Pre-label */}
       <span
-        className={cn(subSize, 'font-serif italic text-[var(--accent-primary)] tracking-[0.35em] uppercase opacity-75')}
+        className={cn(subSize, 'font-serif italic text-[var(--accent-primary)] tracking-[0.35em] uppercase opacity-90')}
       >
         the
       </span>
@@ -219,7 +219,7 @@ function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
 
       {/* Sub-label */}
       <span
-        className={cn(subSize, 'font-sans font-bold text-[var(--text-muted)] uppercase tracking-[0.38em] opacity-55 mt-0.5')}
+        className={cn(subSize, 'font-sans font-bold text-[var(--text-primary)] uppercase tracking-[0.38em] opacity-80 mt-0.5')}
       >
         The Presence Study
       </span>

@@ -210,8 +210,8 @@ const BreadthDesktop = ({ user, rotateX, rotateY, progress, weeklyAssignment, on
             </h1>
           </div>
         </div>
-        <div className="flex flex-col items-end opacity-40">
-          <span className="text-[11px] font-serif italic text-[var(--text-muted)] tracking-[0.3em] uppercase">The Presence Study</span>
+        <div className="flex flex-col items-end opacity-90">
+          <span className="text-[11px] font-serif italic text-[var(--text-secondary)] tracking-[0.3em] uppercase">The Presence Study</span>
         </div>
       </header>
 
@@ -966,7 +966,7 @@ export default function UntetheredApp() {
 
           <div className="mt-4 pt-4 border-t border-[var(--border-default)]">
             <p className="text-[12px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex flex-col gap-2">
-              <span className="opacity-60">Journey Shared by</span>
+              <span className="opacity-100 font-medium">Journey Shared by</span>
               <span className="text-[var(--text-primary)] font-bold font-sans tracking-[0.1em] uppercase">Soulful Intelligence Studio</span>
             </p>
           </div>

@@ -10,6 +10,7 @@ service cloud.firestore {
       allow read: if request.auth != null && 
         (request.auth.token.email == 'shrutikhungar@gmail.com' || 
          request.auth.token.email == 'smriti.duggal@gmail.com' || 
+         request.auth.token.email == 'skrmblissai@gmail.com' ||
          request.auth.token.email == 'test@example.com');
     }
   }

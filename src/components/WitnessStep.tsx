@@ -156,27 +156,27 @@ export function WitnessStep({
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-8 rounded-[32px] bg-[#1a141f] border border-white/5 shadow-2xl space-y-8 relative overflow-hidden"
+                className="p-8 rounded-[32px] bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-2xl space-y-8 relative overflow-hidden"
             >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 blur-[80px] -mr-32 -mt-32" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-primary)]/5 blur-[80px] -mr-32 -mt-32" />
 
                 <div className="space-y-6 relative z-10 text-left">
                     <div>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-[#8b858f] font-bold mb-6">A PATTERN AROSE</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-bold mb-6 opacity-80">A PATTERN AROSE</p>
 
                         <div className="space-y-4">
-                            <p className="text-[11px] uppercase tracking-[0.15em] text-[#8b858f] font-bold">A THOUGHT AROSE...</p>
-                            <p className="font-serif text-2xl italic text-[#e8e4df] pl-2 border-l border-purple-500/30 line-clamp-2">
+                            <p className="text-[10px] uppercase tracking-[0.15em] text-[var(--text-muted)] font-bold opacity-100 italic">A THOUGHT AROSE...</p>
+                            <p className="font-serif text-2xl italic text-[var(--text-primary)] pl-4 border-l-2 border-[var(--accent-primary-border)] line-clamp-2">
                                 "{mainThought}"
                             </p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <p className="text-[11px] uppercase tracking-[0.15em] text-[#8b858f] font-bold">IT CREATED...</p>
+                        <p className="text-[10px] uppercase tracking-[0.15em] text-[var(--text-muted)] font-bold opacity-100 italic">IT CREATED...</p>
                         <div className="flex flex-wrap gap-2">
                             {selectedEmotions.map(e => (
-                                <span key={e} className="px-5 py-2 rounded-full bg-[#2d1b33] border border-purple-500/20 text-[#d1b3d1] text-sm font-serif italic">
+                                <span key={e} className="px-5 py-2 rounded-full bg-[var(--accent-primary-muted)] border border-[var(--accent-primary-border)] text-[var(--accent-primary)] text-sm font-serif italic">
                                     {e}
                                 </span>
                             ))}
@@ -184,19 +184,19 @@ export function WitnessStep({
                     </div>
 
                     <div className="space-y-3">
-                        <p className="text-[11px] uppercase tracking-[0.15em] text-[#8b858f] font-bold">YOU FELT IT IN YOUR...</p>
-                        <div className="flex items-center gap-2 text-[#e8e4df] font-serif text-lg">
+                        <p className="text-[10px] uppercase tracking-[0.15em] text-[var(--text-muted)] font-bold opacity-100 italic">YOU FELT IT IN YOUR...</p>
+                        <div className="flex items-center gap-2 text-[var(--text-primary)] font-serif text-lg">
                             <span className="text-xl">🌿</span>
                             <span>{selectedBodyArea}</span>
                         </div>
                     </div>
 
                     {/* Witness Insight Box */}
-                    <div className="mt-8 p-6 rounded-2xl bg-[#2a1a2e] border border-pink-500/10 shadow-inner">
-                        <p className="font-serif text-lg leading-relaxed text-[#cbb6ce]">
-                            But notice... <span className="text-pink-400 italic">you are the one who was watching.</span>
+                    <div className="mt-8 p-6 rounded-2xl bg-[var(--accent-secondary-muted)] border border-[var(--accent-secondary-border)]/20 shadow-inner">
+                        <p className="font-serif text-lg leading-relaxed text-[var(--text-secondary)]">
+                            But notice... <span className="text-[var(--accent-secondary)] italic font-bold">you are the one who was watching.</span>
                         </p>
-                        <p className="font-serif text-lg leading-relaxed text-[#a691a9] mt-1">
+                        <p className="font-serif text-lg leading-relaxed text-[var(--text-muted)] mt-1">
                             You are not the thought. You are the awareness in which the thought arose.
                         </p>
                     </div>
@@ -236,23 +236,23 @@ export function WitnessStep({
                     <h3 className="font-serif text-2xl text-[var(--text-primary)]">Where is this thought coming from?</h3>
                 </div>
 
-                <div className="flex border border-[var(--border-subtle)] rounded-3xl overflow-hidden shadow-xl">
-                    <div className="flex-1 p-8 bg-rose-500/5 border-r border-[var(--border-subtle)] text-center flex flex-col items-center">
-                        <span className="text-4xl mb-4 opacity-50">🌑</span>
-                        <h4 className="font-serif text-lg text-rose-300 mb-6 underline decoration-rose-500/30 underline-offset-8">Fear / Ego</h4>
-                        <ul className="space-y-4 text-xs text-rose-200/60 leading-relaxed font-medium">
+                <div className="flex border border-[var(--border-subtle)] rounded-3xl overflow-hidden shadow-xl bg-[var(--bg-surface)] backdrop-blur-md">
+                    <div className="flex-1 p-8 bg-rose-500/[0.05] dark:bg-rose-500/[0.12] border-r border-[var(--border-subtle)] text-center flex flex-col items-center">
+                        <span className="text-4xl mb-4 opacity-100">🌑</span>
+                        <h4 className="font-serif text-xl font-bold text-rose-800 dark:text-rose-300 mb-6 underline decoration-rose-500/30 underline-offset-8">Fear / Ego</h4>
+                        <ul className="space-y-4 text-sm text-rose-950 dark:text-rose-100/70 leading-relaxed font-medium">
                             {fearTraits.map(t => <li key={t}>{t}</li>)}
                         </ul>
                     </div>
                     <div className="flex-1 p-8 bg-[var(--accent-secondary-muted)] text-center flex flex-col items-center">
-                        <span className="text-4xl mb-4 opacity-70">✦</span>
-                        <h4 className="font-serif text-lg text-[var(--accent-secondary)] mb-6 underline decoration-[var(--accent-secondary)]/30 underline-offset-8">Being / Love</h4>
-                        <ul className="space-y-4 text-xs text-[var(--accent-secondary)] opacity-70 leading-relaxed font-medium">
+                        <span className="text-4xl mb-4 opacity-100">✦</span>
+                        <h4 className="font-serif text-xl font-bold text-[var(--accent-secondary)] mb-6 underline decoration-[var(--accent-secondary)]/30 underline-offset-8">Being / Love</h4>
+                        <ul className="space-y-4 text-sm text-[var(--text-primary)] dark:text-[var(--accent-secondary)] dark:opacity-90 leading-relaxed font-bold">
                             {loveTraits.map(t => <li key={t}>{t}</li>)}
                         </ul>
                     </div>
                 </div>
-                <p className="text-center font-serif text-sm italic text-[var(--text-muted)] opacity-60">"You are not the fear. You are the awareness witnessing it."</p>
+                <p className="text-center font-serif text-base italic text-[var(--text-muted)] opacity-80">"You are not the fear. You are the awareness witnessing it."</p>
             </div>
 
             {/* 4. Ho'oponopono (Optional) */}

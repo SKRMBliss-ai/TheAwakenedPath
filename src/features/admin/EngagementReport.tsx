@@ -12,6 +12,7 @@ interface ActivityLog {
     userEmail: string;
     activityType: string;
     details: string;
+    location?: string;
     timestamp: any;
 }
 
@@ -88,12 +89,13 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
     };
 
     const getSourceIcon = (type: string) => {
-        if (type === 'LOGIN') return <Monitor className="w-4 h-4 text-[#A0A0A0]" />;
+        if (type === 'LOGIN' || type === 'SESSION_START') return <Monitor className="w-4 h-4 text-[#D4AF37]" />;
         return <Mail className="w-4 h-4 text-[#E67E22]" />;
     };
 
     const getSourceLabel = (type: string) => {
-        if (type === 'LOGIN') return 'VISITOR';
+        if (type === 'LOGIN') return 'SIGN IN';
+        if (type === 'SESSION_START') return 'PRESENCE';
         return 'EMAIL';
     };
 
@@ -155,9 +157,10 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                         {activeTab === 'logs' ? (
                             <>
                                 {/* Table Header */}
-                                <div className="px-10 py-6 grid grid-cols-[2fr_1.5fr_1fr_1fr_0.5fr] text-[11px] font-bold text-[#666] uppercase tracking-[0.2em]">
-                                    <div>User</div>
-                                    <div>Source</div>
+                                <div className="px-10 py-6 grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] text-[11px] font-bold text-[#666] uppercase tracking-[0.2em] items-center">
+                                    <div>Soul</div>
+                                    <div>Action</div>
+                                    <div>Location</div>
                                     <div>Date</div>
                                     <div>Time</div>
                                     <div className="text-right">
@@ -180,26 +183,30 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                     key={log.id}
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
-                                                    className="grid grid-cols-[2fr_1.5fr_1fr_1fr_0.5fr] items-center px-4 py-4 rounded-xl hover:bg-[#1A1A1A] transition-colors border-b border-[#1A1A1A] last:border-0 group"
+                                                    className="grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[#1A1A1A] transition-colors border-b border-[#1A1A1A] last:border-0 group"
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] border border-[#333] flex items-center justify-center overflow-hidden">
-                                                            <span className="text-[14px] font-bold text-[#888]">{displayName.charAt(0)}</span>
+                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] border border-[#333] flex items-center justify-center overflow-hidden shrink-0">
+                                                            <span className="text-[12px] font-bold text-[#888]">{displayName.charAt(0)}</span>
                                                         </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[14px] font-medium text-[#D0D0D0] group-hover:text-white transition-colors">{displayName}</span>
-                                                            <span className="text-[9px] text-[#555] font-bold uppercase tracking-widest">{log.userEmail}</span>
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className="text-[13px] font-medium text-[#D0D0D0] group-hover:text-white transition-colors truncate">{displayName}</span>
+                                                            <span className="text-[8px] text-[#555] font-bold uppercase tracking-widest truncate">{log.userEmail}</span>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-center gap-3">
+                                                    <div className="flex items-center gap-2">
                                                         {getSourceIcon(log.activityType)}
-                                                        <span className="text-[12px] font-bold text-[#A0A0A0] tracking-tight">{getSourceLabel(log.activityType)}</span>
+                                                        <span className="text-[11px] font-bold text-[#A0A0A0] tracking-tight">{getSourceLabel(log.activityType)}</span>
                                                     </div>
 
-                                                    <div className="text-[13px] text-[#A0A0A0]">{date}</div>
+                                                    <div className="text-[12px] text-[#888] italic pr-2 truncate" title={log.location || 'Unknown'}>
+                                                        {log.location || 'Unknown'}
+                                                    </div>
 
-                                                    <div className="text-[13px] font-bold text-[#D4AF37]">{time}</div>
+                                                    <div className="text-[12px] text-[#A0A0A0]">{date}</div>
+
+                                                    <div className="text-[12px] font-bold text-[#D4AF37]">{time}</div>
 
                                                     <div className="flex justify-end">
                                                         <button className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#2A2A2A] text-[#666] hover:text-[#D4AF37]">

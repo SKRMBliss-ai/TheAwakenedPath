@@ -19,6 +19,7 @@ interface ActivityLog {
     userEmail: string;
     activityType: string;
     details: string;
+    location?: string;
     timestamp: any;
 }
 
@@ -578,7 +579,7 @@ interface StatsDashboardProps {
                                         <tr>
                                             <th className="px-6 py-4 font-bold text-[var(--text-muted)] uppercase tracking-wider">Type</th>
                                             <th className="px-6 py-4 font-bold text-[var(--text-muted)] uppercase tracking-wider">User</th>
-                                            <th className="px-6 py-4 font-bold text-[var(--text-muted)] uppercase tracking-wider">Details</th>
+                                            <th className="px-6 py-4 font-bold text-[var(--text-muted)] uppercase tracking-wider">Location</th>
                                             <th className="px-6 py-4 font-bold text-[var(--text-muted)] uppercase tracking-wider text-right">Moment</th>
                                         </tr>
                                     </thead>
@@ -586,12 +587,16 @@ interface StatsDashboardProps {
                                         {adminLogs.map((log) => (
                                             <tr key={log.id} className="hover:bg-[var(--bg-surface)] transition-colors">
                                                 <td className="px-6 py-4">
-                                                    <span className="px-2 py-0.5 rounded-full bg-[var(--accent-secondary-dim)] text-[var(--accent-secondary)] text-[11px] font-bold">
-                                                        {log.activityType}
+                                                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                                                        log.activityType === 'SESSION_START' 
+                                                            ? 'bg-[var(--accent-primary-dim)] text-[var(--accent-primary)]'
+                                                            : 'bg-[var(--accent-secondary-dim)] text-[var(--accent-secondary)]'
+                                                    }`}>
+                                                        {log.activityType === 'SESSION_START' ? 'PRESENCE' : log.activityType}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-[var(--text-secondary)]">{log.userEmail.split('@')[0]}</td>
-                                                <td className="px-6 py-4 text-[var(--text-primary)]">{log.details}</td>
+                                                <td className="px-6 py-4 text-[var(--text-primary)] italic text-[11px]">{log.location || 'Unknown'}</td>
                                                 <td className="px-6 py-4 text-right text-[var(--text-muted)]">
                                                     {log.timestamp?.toDate ? log.timestamp.toDate().toLocaleDateString() : 'Now'}
                                                 </td>

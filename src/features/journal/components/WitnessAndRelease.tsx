@@ -176,10 +176,10 @@ export function WitnessAndRelease({ data, onComplete, onTabChange, onHoopComplet
                         >
                             {tab === "witness" && (
                                 <div className="space-y-6">
-                                    <div className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">A pattern arose</div>
+                                    <div className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold opacity-100">A pattern arose</div>
 
                                     <div className="space-y-2">
-                                        <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] opacity-70">A thought arose…</div>
+                                        <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold opacity-80">A thought arose…</div>
                                         <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-[var(--shadow-elevated)] min-h-[100px] flex items-center w-full">
                                             <p className="font-serif italic text-2xl text-[var(--text-primary)] leading-tight w-full" style={{ fontFamily: "var(--font-serif)" }}>
                                                 "{data.thought}"
@@ -210,8 +210,8 @@ export function WitnessAndRelease({ data, onComplete, onTabChange, onHoopComplet
 
                                     <div className="p-6 rounded-2xl bg-[var(--accent-secondary-muted)] border border-[var(--accent-secondary-border)]/20 mt-8">
                                         <p className="font-serif text-lg leading-relaxed text-[var(--text-secondary)]" style={{ fontFamily: "var(--font-serif)" }}>
-                                            But notice… <span className="text-[var(--accent-secondary)] italic">you are the one who was watching.</span><br />
-                                            <span className="opacity-70">You are not the thought. You are the awareness in which the thought arose.</span>
+                                            But notice… <span className="text-[var(--accent-secondary)] italic font-bold">you are the one who was watching.</span><br />
+                                            <span className="opacity-90 font-medium">You are not the thought. You are the awareness in which the thought arose.</span>
                                         </p>
                                     </div>
                                 </div>
@@ -258,28 +258,28 @@ export function WitnessAndRelease({ data, onComplete, onTabChange, onHoopComplet
                                         </h3>
                                     </div>
 
-                                    <div className="flex border border-[var(--border-subtle)] rounded-3xl overflow-hidden shadow-lg bg-[var(--bg-surface)]">
-                                        <div className="flex-1 p-6 border-r border-[var(--border-subtle)]/30 text-center bg-[var(--accent-primary-dim)]/20">
-                                            <div className="text-2xl mb-3">🌑</div>
-                                            <div className="font-serif text-md text-[var(--accent-primary)] font-bold mb-4" style={{ fontFamily: "var(--font-serif)" }}>Fear / Ego</div>
-                                            <ul className="space-y-3">
+                                    <div className="flex border border-[var(--border-subtle)] rounded-3xl overflow-hidden shadow-lg bg-[var(--bg-surface)] backdrop-blur-md">
+                                        <div className="flex-1 p-6 border-r border-[var(--border-subtle)]/30 text-center bg-rose-500/[0.03] dark:bg-rose-500/[0.12]">
+                                            <div className="text-2xl mb-3 opacity-100">🌑</div>
+                                            <div className="font-serif text-lg text-rose-800 dark:text-rose-300 font-bold mb-4 underline decoration-rose-500/20 underline-offset-8" style={{ fontFamily: "var(--font-serif)" }}>Fear / Ego</div>
+                                            <ul className="space-y-4">
                                                 {FEAR_TRAITS.map(t => (
-                                                    <li key={t} className="text-[11px] text-rose-200/50 leading-snug">{t}</li>
+                                                    <li key={t} className="text-xs text-rose-950/80 dark:text-rose-100/70 leading-snug font-medium">{t}</li>
                                                 ))}
                                             </ul>
                                         </div>
-                                        <div className="flex-1 p-6 text-center bg-[var(--accent-secondary-muted)]/10">
-                                            <div className="text-2xl mb-3 text-[var(--accent-secondary)]">✦</div>
-                                            <div className="font-serif text-md text-[var(--accent-secondary)] font-bold mb-4" style={{ fontFamily: "var(--font-serif)" }}>Being / Love</div>
-                                            <ul className="space-y-3">
+                                        <div className="flex-1 p-6 text-center bg-[var(--accent-secondary-muted)] dark:bg-[var(--accent-secondary-muted)]">
+                                            <div className="text-2xl mb-3 text-[var(--accent-secondary)] opacity-100">✦</div>
+                                            <div className="font-serif text-lg text-[var(--accent-secondary)] font-bold mb-4 underline decoration-[var(--accent-secondary)]/20 underline-offset-8" style={{ fontFamily: "var(--font-serif)" }}>Being / Love</div>
+                                            <ul className="space-y-4">
                                                 {LOVE_TRAITS.map(t => (
-                                                    <li key={t} className="text-[11px] text-[var(--accent-secondary)] opacity-60 leading-snug">{t}</li>
+                                                    <li key={t} className="text-xs text-[var(--text-primary)] dark:text-[var(--accent-secondary)] dark:opacity-90 leading-snug font-bold">{t}</li>
                                                 ))}
                                             </ul>
                                         </div>
                                     </div>
 
-                                    <p className="text-center font-serif text-sm italic text-[var(--text-muted)] opacity-60 mt-4" style={{ fontFamily: "var(--font-serif)" }}>
+                                    <p className="text-center font-serif text-base italic text-[var(--text-muted)] opacity-80 mt-4" style={{ fontFamily: "var(--font-serif)" }}>
                                         "You are not the fear. You are the awareness witnessing it."
                                     </p>
                                 </div>
