@@ -396,7 +396,7 @@ export default function UntetheredApp() {
         href="https://wa.me/919910008888" 
         target="_blank" 
         rel="noopener noreferrer"
-        className="fixed bottom-24 right-6 z-[60] bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center justify-center animate-bounce"
+        className="fixed bottom-26 right-4 z-[60] bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center justify-center animate-bounce"
         aria-label="Contact Support"
       >
         <MessageCircle size={24} fill="currentColor" />
