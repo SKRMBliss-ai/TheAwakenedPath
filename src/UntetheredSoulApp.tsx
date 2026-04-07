@@ -847,7 +847,7 @@ export default function UntetheredApp() {
                                       { id: 'question1', label: 'Question 1', locked: false },
                                       { id: 'question2', label: 'Question 2', locked: false },
                                       { id: 'question3', label: 'Question 3', locked: false },
-                                      { id: 'question4', label: 'Question 4', locked: !isAdminEmail(currentUser?.email) },
+                                      { id: 'question4', label: 'Question 4', locked: false, comingSoon: true },
                                     ].map((q) => (
                                       <button
                                         key={q.id}
@@ -869,6 +869,11 @@ export default function UntetheredApp() {
                                         )}
                                         <span className="flex-1">{q.label}</span>
                                         {q.locked && <Lock size={10} className="ml-2 text-[var(--accent-secondary)]" />}
+                                        {q.comingSoon && (
+                                          <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20 text-[8px] font-bold text-amber-500 uppercase tracking-tighter shadow-[0_0_8px_rgba(251,191,36,0.1)]">
+                                            Soon
+                                          </span>
+                                        )}
                                       </button>
                                     ))}
                                   </motion.div>

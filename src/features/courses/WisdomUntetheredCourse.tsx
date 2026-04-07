@@ -28,11 +28,11 @@ const CHAPTERS: Chapter[] = [
   }
 ];
 
-const QUESTION_VIDEOS: Record<string, string> = {
+const QUESTION_VIDEOS: Record<string, string | null> = {
   'question1': '3oAQijy87rs',
   'question2': 'rlRi9eCyZuU',
   'question3': '_tyTb6hpGW8',
-  'question4': 'mIscD_Yd48E',
+  'question4': null, // Coming Soon
 };
 
 interface CourseProps {
@@ -43,8 +43,42 @@ interface CourseProps {
   onNavigateToPractice?: () => void;
 }
 
-function VideoPlayerView({ videoId }: { videoId: string }) {
+function VideoPlayerView({ videoId }: { videoId: string | null }) {
   const [isPlaying, setIsPlaying] = useState(false);
+
+  if (!videoId) {
+    return (
+      <motion.div
+        key="coming-soon"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className={styles.videoView}
+      >
+        <div className="flex flex-col items-center justify-center space-y-8 p-12 text-center">
+          <div className="relative group">
+            <motion.div
+              animate={{ 
+                scale: [1, 1.2, 1], 
+                opacity: [0.1, 0.3, 0.1] 
+              }}
+              transition={{ duration: 4, repeat: Infinity }}
+              className="absolute inset-[-40px] bg-[var(--accent-primary)] blur-[60px] rounded-full"
+            />
+            <div className="w-24 h-24 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center relative z-10 shadow-2xl">
+              <Sparkles className="w-10 h-10 text-[var(--accent-primary)] opacity-40" />
+            </div>
+          </div>
+          <div className="space-y-4 max-w-sm">
+            <h2 className="text-3xl font-serif font-light text-[var(--text-primary)] tracking-tight">Wisdom Arriving Soon</h2>
+            <p className="text-[14px] font-serif italic text-[var(--text-secondary)] leading-relaxed opacity-60">
+              The sacred insights for this reflection are currently being prepared.
+              Patience is part of the path.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
