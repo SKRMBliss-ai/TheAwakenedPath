@@ -271,11 +271,8 @@ export function TodayPath({
   const handleLearn = () => {
     // Mark as done immediately if they click/interact
     markLearn();
-    const qProgress = progress?.[questionId];
-    let targetView: 'explanation' | 'video' | 'practice' = 'explanation';
-    if (qProgress?.read && !qProgress?.video) targetView = 'video';
-    else if (qProgress?.read && qProgress?.video) targetView = 'practice';
-    onNavigate('wisdom_untethered', questionId, targetView);
+    // Always navigate to explanation as requested for consistency
+    onNavigate('wisdom_untethered', questionId, 'explanation');
   };
 
   const handlePractice = () => {
