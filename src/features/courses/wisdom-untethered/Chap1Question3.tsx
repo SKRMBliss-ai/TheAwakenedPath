@@ -3,7 +3,10 @@ import { useAuth } from '../../auth/AuthContext';
 import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import { cn } from '../../../lib/utils';
 import styles from './Chap1Question3.module.css';
+import commonStyles from './CourseCommon.module.css';
 import { useCourseTracking } from '../../../hooks/useCourseTracking';
+import { CourseHero } from './CourseHero';
+import { CourseLightbox } from './CourseLightbox';
 
 interface Chap1Question3Props {
   onOpenJournal?: () => void;
@@ -12,8 +15,6 @@ interface Chap1Question3Props {
 export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
   const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
-  const heroStarsRef = useRef<HTMLDivElement>(null);
-  const bandStarsRef = useRef<HTMLDivElement>(null);
   const { updateProgress } = useCourseTracking(user?.uid);
 
   // ── Scroll Tracking ──
@@ -76,32 +77,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
   }, []);
 
 
-  useEffect(() => {
-    const makeStars = (c: HTMLDivElement | null, n: number) => {
-      if (!c) return;
-      c.innerHTML = '';
-      for (let i = 0; i < n; i++) {
-        const s = document.createElement('div');
-        s.className = styles.star;
-        const sz = Math.random() * 2 + 0.5;
-        s.style.cssText = `
-          width: ${sz}px;
-          height: ${sz}px;
-          left: ${Math.random() * 100}%;
-          top: ${Math.random() * 100}%;
-          background: ${isDark ? 'white' : 'var(--gold)'};
-          --min-op: ${(Math.random() * 0.2 + 0.1).toFixed(2)};
-          --max-op: ${(Math.random() * 0.5 + 0.4).toFixed(2)};
-          --d: ${(Math.random() * 3 + 2).toFixed(1)}s;
-          --delay: ${(Math.random() * 4).toFixed(1)}s;
-        `;
-        c.appendChild(s);
-      }
-    };
-
-    makeStars(heroStarsRef.current, isDark ? 120 : 40);
-    makeStars(bandStarsRef.current, isDark ? 60 : 30);
-  }, [isDark]);
+  // Stars logic moved to CourseHero
 
   useEffect(() => {
     const sections = containerRef.current?.querySelectorAll('[data-section]');
@@ -160,24 +136,22 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
   return (
     <div className={styles.container} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
       
-      {/* Lightbox Overlay */}
-      {lightboxIndex !== null && (
-        <div className={styles.lightboxOverlay} onClick={() => setLightboxIndex(null)}>
-          <button className={styles.lightboxClose}>✕</button>
-          <div className={cn(
-            styles.lightboxImg 
-          )} onClick={e => e.stopPropagation()}>
-             <img src={getImgPath(ALL_SLIDES[lightboxIndex])} alt={`Slide ${lightboxIndex + 1}`} />
-          </div>
-          <div className={styles.lightboxNav}>
-            <button className={styles.lightboxNavBtn} onClick={(e) => { e.stopPropagation(); goLightboxPrev(); }}>←</button>
-            <div className={styles.lightboxCounter}>
-              {lightboxIndex + 1} / {ALL_SLIDES.length}
-            </div>
-            <button className={styles.lightboxNavBtn} onClick={(e) => { e.stopPropagation(); goLightboxNext(); }}>→</button>
-          </div>
-        </div>
-      )}
+      <CourseHero 
+        chapter={1}
+        question={3}
+        title={<>The Mind That Thinks<br />It Is the <strong>Centre of the Universe</strong></>}
+        subtitle="How to shift from the narrow personal frame — to the vast, peaceful, impersonal one"
+      />
+
+      <CourseLightbox 
+        isOpen={lightboxIndex !== null}
+        onClose={() => setLightboxIndex(null)}
+        onNext={goLightboxNext}
+        onPrev={goLightboxPrev}
+        currentIndex={lightboxIndex ?? 0}
+        total={ALL_SLIDES.length}
+        imgSrc={lightboxIndex !== null ? getImgPath(ALL_SLIDES[lightboxIndex]) : ''}
+      />
 
       <nav className={styles.navDots}>
         {Array.from({ length: totalSections }).map((_, i) => (
@@ -190,14 +164,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         ))}
       </nav>
 
-      <section className={styles.hero} data-section="0">
-        <div className={styles.heroStars} ref={heroStarsRef} />
-        <div className={styles.heroChapter}>Wisdom Untethered · Chapter 1 · Question 3</div>
-        <h1 className={styles.heroTitle}>The Mind That Thinks<br />It Is the <strong>Centre of the Universe</strong></h1>
-        <div className={styles.heroRule} />
-        <p className={styles.heroSub}>How to shift from the narrow personal frame — to the vast, peaceful, impersonal one</p>
-        <div className={styles.heroScroll}>Scroll</div>
-      </section>
+      {/* Hero section was here, now replaced by CourseHero above */}
 
       <div className={styles.openingBand}>
         <p>"The personal mind has a very small frame of reference. Singer says there is a much larger frame available — and it takes only one second to access it."</p>
@@ -231,7 +198,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
             <h2 className={styles.slideH}>The Mind's<br /><em>Very Small Frame</em></h2>
             <p className={styles.slideP}>The personal mind has a narrow field of vision. It filters everything through a single question: "How does this affect me?"</p>
             <p className={styles.slideP}>This self-focused frame generates constant worry about reputation, plans, and yesterday's words, consuming virtually all of your mental energy.</p>
-            <div className={styles.pull}>The mind is not broken; it is simply addicted to thinking about itself.</div>
+            <div className={commonStyles.pull}>The mind is not broken; it is simply addicted to thinking about itself.</div>
           </div>
         </div>
       </section>

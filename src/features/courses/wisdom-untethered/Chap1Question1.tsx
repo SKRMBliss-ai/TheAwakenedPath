@@ -3,7 +3,10 @@ import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import { useAuth } from '../../auth/AuthContext';
 import { cn } from '../../../lib/utils';
 import styles from './Chap1Question1.module.css';
+import commonStyles from './CourseCommon.module.css';
 import { useCourseTracking } from '../../../hooks/useCourseTracking';
+import { CourseHero } from './CourseHero';
+import { CourseLightbox } from './CourseLightbox';
 
 const darkImages: Record<string, string> = {
   "slide1": "/WisdomUntethered/Chap1/Question1/01_BadMood.png",
@@ -58,21 +61,8 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
     return () => container.removeEventListener('scroll', handleScroll);
   }, [user?.uid, updateProgress]);
 
-  // ── Theme detection ──
-  const [isDark, setIsDark] = useState(
-    () => document.documentElement.classList.contains('dark') ||
-          document.documentElement.getAttribute('data-theme') === 'dark'
-  );
-  useEffect(() => {
-    const obs = new MutationObserver(() => {
-      setIsDark(
-        document.documentElement.classList.contains('dark') ||
-        document.documentElement.getAttribute('data-theme') === 'dark'
-      );
-    });
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
-    return () => obs.disconnect();
-  }, []);
+  // Theme detection moved to common components or simplified
+  const isDark = true; // Defaulting for visual consistency in this view or use global theme
   const imageMap = isDark ? darkImages : lightImages;
 
   // ── Lightbox ──
@@ -112,35 +102,10 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
     if (section) section.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const goLightboxNext = () => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => (prev === null ? 0 : (prev + 1) % ALL_SLIDES.length));
-  };
-  const goLightboxPrev = () => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => (prev === null ? 0 : (prev - 1 + ALL_SLIDES.length) % ALL_SLIDES.length));
-  };
-
-
-  // ── Keyboard shortcuts ──
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxIndex(null);
-      
-      if (lightboxIndex !== null) {
-        if (e.key === 'ArrowRight') goLightboxNext();
-        if (e.key === 'ArrowLeft') goLightboxPrev();
-        return;
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightboxIndex]);
-
-  const openLightbox = (index: number) => {
-    setLightboxIndex(index);
-  };
+  const openLightbox = (index: number) => setLightboxIndex(index);
+  const closeLightbox = () => setLightboxIndex(null);
+  const nextLightbox = () => setLightboxIndex(prev => (prev === null ? 0 : (prev + 1) % ALL_SLIDES.length));
+  const prevLightbox = () => setLightboxIndex(prev => (prev === null ? 0 : (prev - 1 + ALL_SLIDES.length) % ALL_SLIDES.length));
 
 
   return (
@@ -151,7 +116,8 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
     >
       {/* --- Nav Dots --- */}
       <nav className={styles.navDots}>
-        {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
+        {/* +1 for CourseHero */}
+        {Array.from({ length: TOTAL_SLIDES + 1 }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
@@ -161,34 +127,23 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
         ))}
       </nav>
 
-      {/* --- Lightbox --- */}
-      {lightboxIndex !== null && (
-        <div className={styles.lightboxOverlay} onClick={() => setLightboxIndex(null)}>
-          <button className={styles.lightboxClose}>✕</button>
-          <img 
-            src={imageMap[ALL_SLIDES[lightboxIndex]]} 
-            alt="Enlarged view" 
-            className={styles.lightboxImg} 
-            onClick={e => e.stopPropagation()} 
-          />
-          <div className={styles.lightboxNav}>
-            <button className={styles.lightboxNavBtn} onClick={(e) => { e.stopPropagation(); goLightboxPrev(); }}>←</button>
-            <div className={styles.lightboxCounter}>
-              {lightboxIndex + 1} / {ALL_SLIDES.length}
-            </div>
-            <button className={styles.lightboxNavBtn} onClick={(e) => { e.stopPropagation(); goLightboxNext(); }}>→</button>
-          </div>
-        </div>
-      )}
+      <CourseHero 
+        chapter={1}
+        question={1}
+        title={<>How to Use the Mind<br />as a <strong>Tool</strong></>}
+        subtitle="When a bad mood hits and the spiral begins — Singer's two honest answers for what to actually do"
+      />
 
-      {/* --- HERO --- */}
-      <section className={styles.hero} data-section="0">
-        <div className={styles.heroEyebrow}>Wisdom Untethered · Chapter 1 · Question 1</div>
-        <h1 className={styles.heroTitle}>How to Use the Mind<br />as a <strong>Tool</strong></h1>
-        <div className={styles.heroRule}></div>
-        <p className={styles.heroSub}>When a bad mood hits and the spiral begins — Singer's two honest answers for what to actually do</p>
-        <div className={styles.heroScroll}>Scroll</div>
-      </section>
+      <CourseLightbox 
+        isOpen={lightboxIndex !== null}
+        onClose={closeLightbox}
+        onNext={nextLightbox}
+        onPrev={prevLightbox}
+        currentIndex={lightboxIndex ?? 0}
+        total={ALL_SLIDES.length}
+        imgSrc={lightboxIndex !== null ? imageMap[ALL_SLIDES[lightboxIndex]] : ''}
+      />
+
 
       {/* --- OPENING BAND --- */}
       <div className={styles.openingBand}>
@@ -228,8 +183,10 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The question</span>
             <h2 className={styles.slideH}>The Question<br /><em>Most of Us Have Asked</em></h2>
-            <p className={styles.slideP}>This lesson is based on the very first question in Wisdom Untethered — from the opening chapter called The Mind, in the section called The Foundation.</p>
-            <p className={styles.slideP}>Someone asked Michael Singer: "How can I use the mind as a tool to escape negative thoughts or feelings?" Most of us have already asked this in some form.</p>
+            <div className={commonStyles.pull}>
+              <p className={styles.slideP}>This lesson is based on the very first question in Wisdom Untethered — from the opening chapter called The Mind, in the section called The Foundation.</p>
+              <p className={styles.slideP}>Someone asked Michael Singer: "How can I use the mind as a tool to escape negative thoughts or feelings?" Most of us have already asked this in some form.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -248,7 +205,9 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>Singer's model</span>
             <h2 className={styles.slideH}>The Mind Has<br /><em>Two Layers</em></h2>
-            <p className={styles.slideP}>The lower mind is the reactive layer — trained by every hurt, every fear, every difficult experience. The higher mind is the layer that can redirect.</p>
+            <div className={commonStyles.pull}>
+              <p className={styles.slideP}>The lower mind is the reactive layer — trained by every hurt, every fear, every difficult experience. The higher mind is the layer that can redirect.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -282,7 +241,9 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>Step one</span>
             <h2 className={styles.slideH}>Use the Higher Mind.<br /><em>"I Can Handle This."</em></h2>
-            <p className={styles.slideP}>Singer's first practical answer: use an affirmation. "I can handle this." Not as a magic formula, but as a way to redirect energy upward.</p>
+            <div className={commonStyles.pull}>
+              <p className={styles.slideP}>Singer's first practical answer: use an affirmation. "I can handle this." Not as a magic formula, but as a way to redirect energy upward.</p>
+            </div>
           </div>
         </div>
       </section>

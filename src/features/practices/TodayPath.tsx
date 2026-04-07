@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Zap, PenLine, CheckCircle2, Calendar, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -6,8 +6,7 @@ import { PRACTICE_LIBRARY } from '../practices/practiceLibrary';
 import { useDailyPractice } from '../practices/useDailyPractice';
 import type { WeeklyAssignment } from '../../hooks/useWeeklyAssignment';
 import type { CourseProgress } from '../../hooks/useCourseTracking';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
+
 import { InfoTooltip } from '../../components/ui/InfoTooltip';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,7 +30,11 @@ const QUESTION_META: Record<string, {
     journalPrompt: 'Which of the three pauses landed most? What shifted in that second?',
   },
   question4: {
-    shortTitle: 'Q4 · Witness Consciousness',
+    shortTitle: 'Q4 · Finding the Silent Space',
+    journalPrompt: 'What did the space behind the noise feel like today?',
+  },
+  question5: {
+    shortTitle: 'Q5 · Witness Consciousness',
     journalPrompt: 'What did sitting comfortably within the noise feel like today?',
   },
 };

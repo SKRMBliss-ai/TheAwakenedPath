@@ -168,9 +168,32 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
     triggerCount: 3,
   },
 
-  // ── Q4: Isn't the mind helpful sometimes? Which part do I listen to? ───────
+  // ── Q4: Finding the Silent Space ──────────────────────────────────────────
   question4: {
     questionId: 'question4',
+    name: 'The Silent Observation',
+    tagline: 'Notice the stillness behind the movement.',
+    singerSource:
+      'Singer: "There is a silent space behind all of it. To find it, you simply have to notice that it is there."',
+    howItWorks:
+      'Pause for 1 minute. Notice the sounds, thoughts, and sensations present. ' +
+      'Now, notice the space in which they all occur. ' +
+      'Rest in that space, even for just a few seconds.',
+    steps: [
+      { instruction: 'Find a quiet moment. Sit or stand comfortably.' },
+      { instruction: 'Notice the sounds, thoughts, and sensations present.', duration: 20 },
+      { instruction: 'Now, notice the space in which they all occur.', duration: 20 },
+      { instruction: 'Rest in that space, even for just a few seconds.', duration: 20 },
+    ],
+    completionCriteria: 'Paused for 1 minute to observe the silent space.',
+    durationLabel: '1 min',
+    color: '#FF6F61',
+    icon: 'clarity',
+  },
+
+  // ── Q5: Isn't the mind helpful sometimes? Which part do I listen to? ───────
+  question5: {
+    questionId: 'question5',
     name: 'The Clarity Sit',
     tagline: 'Sit comfortably within — despite any noise the mind is making.',
     singerSource:
@@ -184,8 +207,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
       'When you notice you\'ve been pulled in — simply notice, and settle again.',
     steps: [
       {
-        instruction:
-          'Sit comfortably. Close your eyes. Take two slow breaths.',
+        instruction: 'Sit comfortably. Close your eyes. Take two slow breaths.',
         duration: 16,
       },
       {
@@ -207,8 +229,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
         duration: 24,
       },
     ],
-    completionCriteria:
-      'Completed the 3-minute clarity sit today.',
+    completionCriteria: 'Completed the 3-minute clarity sit today.',
     durationLabel: '3 minutes',
     color: '#2E9E7A',
     icon: 'clarity',
@@ -221,4 +242,4 @@ export function getPractice(questionId: string): QuestionPractice | null {
 }
 
 // All question IDs in order
-export const QUESTION_IDS = ['question1', 'question2', 'question3', 'question4'];
+export const QUESTION_IDS = ['question1', 'question2', 'question3', 'question4', 'question5'];

@@ -29,6 +29,7 @@ import { TodayPath } from './features/practices/TodayPath';
 import { useCourseTracking } from './hooks/useCourseTracking';
 import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
 import { InfoTooltip } from './components/ui/InfoTooltip';
+import { WhatsAppButton } from './components/ui/WhatsAppButton';
 import { usePersistedState } from './hooks/usePersistedState';
 
 const DashboardActions = ({ user, progress, weeklyAssignment, onNavigate, onViewProgress }: any) => {
@@ -848,6 +849,7 @@ export default function UntetheredApp() {
                                       { id: 'question2', label: 'Question 2', locked: false },
                                       { id: 'question3', label: 'Question 3', locked: false },
                                       { id: 'question4', label: 'Question 4', locked: false },
+                                      { id: 'question5', label: 'Question 5', locked: false },
                                     ].map((q) => (
                                       <button
                                         key={q.id}
@@ -1352,6 +1354,7 @@ export default function UntetheredApp() {
         achievement={toastQueue[0] || null}
         onDismiss={dismissToast}
       />
+      <WhatsAppButton />
 
     </div>
   );

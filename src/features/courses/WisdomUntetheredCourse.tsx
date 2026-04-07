@@ -7,6 +7,7 @@ import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
 import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
 import { Chap1Question3 } from './wisdom-untethered/Chap1Question3';
 import { Chap1Question4 } from './wisdom-untethered/Chap1Question4';
+import { Chap1Question5 } from './wisdom-untethered/Chap1Question5';
 import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
 import { useAuth } from '../auth/AuthContext';
 
@@ -32,7 +33,8 @@ const QUESTION_VIDEOS: Record<string, string | null> = {
   'question1': '3oAQijy87rs',
   'question2': 'rlRi9eCyZuU',
   'question3': '_tyTb6hpGW8',
-  'question4': null, // Coming Soon
+  'question4': null, // New
+  'question5': null, // Renamed from 4
 };
 
 interface CourseProps {
@@ -250,6 +252,7 @@ export function WisdomUntetheredCourse({
               {activeQuestionId === 'question2' && <Chap1Question2 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question3' && <Chap1Question3 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question4' && <Chap1Question4 onOpenJournal={onOpenJournal} />}
+              {activeQuestionId === 'question5' && <Chap1Question5 onOpenJournal={onOpenJournal} />}
             </motion.div>
           )}
 

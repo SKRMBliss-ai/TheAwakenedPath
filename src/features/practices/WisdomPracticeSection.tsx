@@ -58,12 +58,26 @@ const WISDOM_PRACTICES = [
   {
     id: 'question4',
     questionNum: 4,
+    questionTitle: 'Finding the Silent Space',
+    practiceName: 'The Silent Observation',
+    practiceDesc: 'Pause for 1 minute. Notice the stillness behind the movement.',
+    duration: '1 min',
+    color: '#FF6F61',
+    steps: [
+      'Find a quiet moment. Sit or stand comfortably.',
+      'Notice the sounds, thoughts, and sensations present.',
+      'Now, notice the space in which they all occur.',
+      'Rest in that space, even for just a few seconds.',
+    ],
+  },
+  {
+    id: 'question5',
+    questionNum: 5,
     questionTitle: 'Which Mind to Listen To',
     practiceName: 'The Clarity Sit',
     practiceDesc: 'Sit for 3 minutes. Don\'t silence the mind — just stay settled beneath it.',
     duration: '3 min',
     color: '#2E9E7A',
-
     steps: [
       'Sit comfortably. Take two slow breaths.',
       'The mind will talk. Let it. You are not trying to stop it.',

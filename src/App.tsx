@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, Flame, Book, Target, Clock, Eye, Wind, Sun, Moon, Play, Zap, User, Brain } from 'lucide-react';
+import { Heart, Flame, Book, Target, Clock, Eye, Wind, Sun, Moon, Play, Zap, User, Brain, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -390,6 +390,17 @@ export default function UntetheredApp() {
           {activeTab === 'profile' && <motion.div key="p" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full"><ProfileScreen /></motion.div>}
         </AnimatePresence>
       </div>
+
+      {/* WhatsApp FAB */}
+      <a 
+        href="https://wa.me/919910008888" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="fixed bottom-24 right-6 z-[60] bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center justify-center animate-bounce"
+        aria-label="Contact Support"
+      >
+        <MessageCircle size={24} fill="currentColor" />
+      </a>
 
       {/* Bottom Nav */}
       <div className={cn("h-20 border-t flex justify-around items-center z-50", darkMode ? "bg-[#0f172a] border-white/5" : "bg-white border-slate-100")}>
