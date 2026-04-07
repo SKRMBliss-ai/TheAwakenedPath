@@ -3,6 +3,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import styles from './Chap1Question2.module.css';
 import { useCourseTracking } from '../../../hooks/useCourseTracking';
+import { CourseHero } from './CourseHero';
 
 const TOTAL_SLIDES = 11; // 0 to 10
 
@@ -242,14 +243,12 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
         </div>
       )}
 
-      {/* ── SECTION 0: HERO ── */}
-      <section className={styles.hero} data-section="0">
-        <div className={styles.heroEyebrow}>Wisdom Untethered · Chapter 1 · Question 2</div>
-        <h1 className={styles.heroTitle}>The Voice in Your Head<br /><strong>Is Not Trying to Help You</strong></h1>
-        <div className={styles.heroDivider}></div>
-        <p className={styles.heroSubtitle}>Why your mind keeps talking — and how to stop letting it run your life</p>
-        <div className={styles.heroScroll}>Scroll to Begin</div>
-      </section>
+      <CourseHero 
+        chapter={1}
+        question={2}
+        title={<>The Voice in Your Head<br /><strong>Is Not Trying to Help You</strong></>}
+        subtitle="Why your mind keeps talking — and how to stop letting it run your life"
+      />
 
       {/* ── SECTION 1: INTRO ── */}
       <section className={styles.slideSection} data-section="1">
