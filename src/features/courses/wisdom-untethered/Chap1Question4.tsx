@@ -24,100 +24,114 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
     {
       id: 0,
       num: '01',
-      title: 'THE OPENING QUESTION',
-      text: 'Isn’t the mind helpful sometimes? Which part of my mind do I listen to?',
+      title: 'WHICH PART DO I LISTEN TO?',
+      text: 'Your mind is extraordinary, but most of us never learn to tell the difference between thoughts worth using and those worth ignoring.',
       img: 'Slide1.jpg'
     },
     {
       id: 1,
       num: '02',
-      title: 'SITTING QUIETLY WITHIN',
-      text: 'It is not a matter of choosing which voice to listen to; it is about sitting quietly deep inside and not being distracted by the noise the mind is creating.',
+      title: 'THE CORE DISTINCTION',
+      text: 'You are not your thoughts. You are the one noticing them. There are thoughts in your mind—and there is you, the quiet awareness observing them.',
       img: 'Slide2.jpg'
     },
     {
       id: 2,
       num: '03',
-      title: 'PERSONAL CHATTER',
-      text: 'You have made great progress if you realize that your personal mind does not always give good advice. You must be comfortable not listening to all the personal chatter it’s creating.',
+      title: 'THE DUALITY OF MIND',
+      text: 'The Analytical Mind solves problems and builds worlds. The Personal Mind replays fear, judgment, and guilt. Use one, but do not follow the other.',
       img: 'Slide3.jpg'
     },
     {
       id: 3,
       num: '04',
-      title: 'ACHIEVING CLARITY',
-      text: 'Once you can sit comfortably within, despite any noise the personal thoughts and emotions are creating, you will have achieved clarity.',
+      title: 'THE NARROW FRAME',
+      text: 'The personal mind thinks it is the center of the universe. Inside this tiny orbit, every slight and worry feels incredibly urgent and heavy.',
       img: 'Slide4.jpg'
     },
     {
       id: 4,
       num: '05',
-      title: 'THE UNINTERRUPTED VIEW',
-      text: 'In this state, you can see what is going on at all levels of your being without being distracted by it. You will know which thoughts are actually helpful.',
+      title: 'VALUE VS. COST',
+      text: 'Before following a thought in, ask one question: Does this have value, or only cost? Replaying a past conversation teaches nothing new. It only has cost.',
       img: 'Slide5.jpg'
     },
     {
       id: 5,
       num: '06',
-      title: 'TEMPORARY EXPRESSIONS',
-      text: 'You don’t have to listen to every thought. You are perfectly capable of seeing a thought for what it is: a temporary expression passing through your mind.',
+      title: 'THE AMPLIFICATION TRAP',
+      text: 'Engaging with internal noise only gives it more power. You cannot ask a mind filled with fear to give you advice on how to be at peace.',
       img: 'Slide6.jpg'
     },
     {
       id: 6,
       num: '07',
-      title: 'THE ANALYTICAL TOOL',
-      text: 'Especially your purely intellectual thoughts. The analytical mind can be very good in that realm—you can choose to listen to these if they are of assistance.',
+      title: 'THE WIDER FRAME',
+      text: 'Scaling back reveals that most disturbances simply stop mattering. You are on a small ball of rock spinning in a vast universe. Relax.',
       img: 'Slide7.jpg'
     },
     {
       id: 7,
       num: '08',
-      title: 'THE IDENTITY TRAP',
-      text: 'But if you think that you are your thoughts, and you react to every thought you have—you’ll be in big trouble!',
+      title: 'THE ONE-SECOND PAUSE',
+      text: 'Perspective is a daily practice. Before you start the engine, open a door, or pick up your phone—stop for one second in awareness.',
       img: 'Slide8.jpg'
     },
     {
       id: 8,
       num: '09',
-      title: 'THE VALUE TEST',
-      text: 'Start with the thoughts that have no value and rob you of your joy. You’ll be surprised to see how many fall into this category.',
+      title: 'TRAINING THE NOISE',
+      text: 'An untrained mind will always orbit itself. Be firm but gentle. Just as you train a dog to sit, command the mind to "Be still."',
       img: 'Slide9.jpg'
     },
     {
       id: 9,
       num: '10',
-      title: 'RELEASING THE PAST',
-      text: 'What is the advantage of being bothered by thoughts of the past? The past is over; it had its day. If it wasn’t pleasant, thank God it’s over.',
+      title: 'THE ONLY REAL CHOICE',
+      text: 'You cannot control what arises, only whether you open or close. Fighting discomfort creates blockages. Relaxing allows it to pass through.',
       img: 'Slide10.jpg'
     },
     {
       id: 10,
       num: '11',
-      title: 'VALUE VS. COST',
-      text: 'Why keep hanging out with thoughts that bring back the disturbance? That has no value, only cost. These thoughts ruin lives.',
+      title: 'LOOSENING THE GRIP',
+      text: 'Lean away from the disturbance, not into it. When triggered, relax your shoulders, belly, and heart. Let the energy rise and release.',
       img: 'Slide11.jpg'
     },
     {
       id: 11,
       num: '12',
-      title: 'CONSTRUCTIVE FOCUS',
-      text: 'Focus on constructive thoughts that rise you up. Since you are not your thoughts, you can learn to release the ones that tear you down.',
+      title: 'THE SOUND OF INTUITION',
+      text: 'The mind is loud and frantic; intuition is quiet and still. Intuition does not argue or invent fear. It emerges effortlessly when the noise clears.',
       img: 'Slide12.jpg'
     },
     {
       id: 12,
       num: '13',
-      title: 'THE JOY OF BEING ALIVE',
-      text: 'What if we could always appreciate that we are alive and able to experience reality as it passes before us, without self-judgement or haunting memories?',
-      img: 'Slide13.jpg'
+      title: 'A MOMENT OF STILLNESS',
+      text: 'Close your eyes. Notice a thought with no value. Don’t fight it, don’t follow it. Just see it as a temporary expression passing through.',
+      img: 'Slide14.jpg'
     },
     {
       id: 13,
       num: '14',
-      title: 'DEEPER WISDOM',
-      text: 'Centering in the awareness of being reveals an intuitive, thought-free wisdom. Your thoughts may not figure it out, but YOU will still know what to do.',
-      img: 'Slide14.jpg'
+      title: 'THE SEAT OF THE WITNESS',
+      text: 'Feel the one noticing the silence. That quiet awareness is YOU—the part of you that has always known exactly what to do.',
+      img: 'Slide13.jpg'
+    },
+    {
+      id: 14,
+      num: '15',
+      title: 'VALUABLE VS. COSTLY THOUGHTS',
+      text: 'Solving a problem has value. Judging yourself, replaying the past, or worrying about "what if" only has cost. Learn to see the difference.',
+      img: 'Slide15.jpg'
+    },
+    {
+      id: 15,
+      num: '16',
+      title: 'AWAKENING...',
+      text: 'Carry this quiet into your day. You are the observer, standing one step back from it all.',
+      img: 'Slide16.jpg'
     }
   ];
 
@@ -141,7 +155,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
       const scrollPos = container.scrollTop;
       const height = container.clientHeight;
       const index = Math.round(scrollPos / height);
-      if (index !== activeSection && index <= 14) {
+      if (index !== activeSection && index <= slides.length) {
         setActiveSection(index);
       }
 
@@ -244,7 +258,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
                 </motion.p>
               </div>
 
-              {i === 13 && (
+              {i === slides.length - 1 && (
                 <motion.div 
                    initial={{ opacity: 0 }}
                    whileInView={{ opacity: 1 }}
