@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink } from 'lucide-react';
+import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Clock } from 'lucide-react';
 import styles from './CourseTabs.module.css';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
@@ -8,6 +8,7 @@ import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
 import { Chap1Question3 } from './wisdom-untethered/Chap1Question3';
 import { Chap1Question4 } from './wisdom-untethered/Chap1Question4';
 import { Chap1Question5 } from './wisdom-untethered/Chap1Question5';
+import { ThoughtJournal } from './wisdom-untethered/components/ThoughtJournal';
 import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
 import { useAuth } from '../auth/AuthContext';
 
@@ -33,8 +34,8 @@ const QUESTION_VIDEOS: Record<string, string | null> = {
   'question1': '3oAQijy87rs',
   'question2': 'rlRi9eCyZuU',
   'question3': '_tyTb6hpGW8',
-  'question4': null, // New
-  'question5': null, // Renamed from 4
+  'question4': null, 
+  'question5': null, 
 };
 
 interface CourseProps {
@@ -110,7 +111,7 @@ function VideoPlayerView({ videoId }: { videoId: string | null }) {
                <div className="ml-1 w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-white border-b-[12px] border-b-transparent" />
              </button>
 
-             {/* Youtube Logo Branding — Opens in new tab as requested */}
+             {/* Youtube Logo Branding */}
              <a 
                href={`https://www.youtube.com/watch?v=${videoId}`}
                target="_blank"
@@ -136,12 +137,19 @@ function VideoPlayerView({ videoId }: { videoId: string | null }) {
   );
 }
 
+const QUESTION_THEMES: Record<string, string> = {
+  'question1': 'rgba(56, 189, 248, 0.05)', 
+  'question2': 'rgba(168, 85, 247, 0.05)', 
+  'question3': 'rgba(16, 185, 129, 0.05)', 
+  'question4': 'rgba(184, 151, 58, 0.12)',  
+  'question5': 'rgba(255, 255, 255, 0.05)', 
+};
+
 export function WisdomUntetheredCourse({
   activeQuestionId,
   viewMode,
   setViewMode,
   onOpenJournal,
-  onNavigateToPractice,
 }: CourseProps) {
   const activeChapter = useMemo(() => CHAPTERS[0], []);
   
@@ -155,31 +163,42 @@ export function WisdomUntetheredCourse({
     }
   }, [viewMode, activeQuestionId, updateProgress]);
 
-  // Mark "learn" as done when user visits explanation tab.
+  const [selectedPractice, setSelectedPractice] = useState<'example' | 'journal' | null>(null);
+
+  // Reset selection when question changes
   useEffect(() => {
-    if (viewMode === 'explanation') {
-      const key = `awakened-learn-done-${activeQuestionId}-${new Date().toISOString().split('T')[0]}`;
-      localStorage.setItem(key, '1');
-    }
-  }, [viewMode, activeQuestionId]);
+    setSelectedPractice(null);
+  }, [activeQuestionId]);
 
   const tabs = [
-    { id: 'explanation' as const, label: 'Explanation', icon: <Sparkles className="w-3.5 h-3.5" />, field: 'read' as keyof QuestionProgress, navigate: null },
     { 
       id: 'video' as const, 
-      label: 'Video', 
+      label: 'Watch Guidance', 
       icon: <Youtube className="w-3.5 h-3.5" />, 
-      field: 'video' as keyof QuestionProgress, 
-      navigate: null,
+      field: 'video' as keyof QuestionProgress,
       comingSoon: !QUESTION_VIDEOS[activeQuestionId]
     },
-    { id: 'practice' as const, label: 'Practice Room', icon: <ExternalLink className="w-3.5 h-3.5" />, field: 'practice' as keyof QuestionProgress, navigate: 'practice_room' },
+    { 
+      id: 'explanation' as const, 
+      label: 'Soul Lessons', 
+      icon: <Sparkles className="w-3.5 h-3.5" />, 
+      field: 'read' as keyof QuestionProgress 
+    },
+    { 
+      id: 'practice' as const, 
+      label: 'Practice Room', 
+      icon: <ExternalLink className="w-3.5 h-3.5" />, 
+      field: 'practice' as keyof QuestionProgress 
+    },
   ];
 
   return (
     <div className={styles.container}>
       {/* ── Top Navigation Bar ── */}
-      <header className={styles.topBar}>
+      <header 
+        className={styles.topBar}
+        style={{ backgroundColor: QUESTION_THEMES[activeQuestionId] || 'var(--bg-surface)' }}
+      >
         <div className={styles.chapterInfo}>
           <span className={styles.chapterSubtitle}>{activeChapter.subtitle}</span>
           <h2 className={styles.chapterTitle}>{activeChapter.title}</h2>
@@ -190,11 +209,8 @@ export function WisdomUntetheredCourse({
             <button
               key={tab.id}
               onClick={() => {
-                if (tab.navigate === 'practice_room') {
-                  onNavigateToPractice?.();
-                } else {
-                  setViewMode(tab.id);
-                }
+                setViewMode(tab.id);
+                if (tab.id === 'practice') setSelectedPractice(null);
               }}
               className={cn(
                 styles.tab,
@@ -241,7 +257,7 @@ export function WisdomUntetheredCourse({
           {/* EXPLANATION VIEW (Slides & Interactive content) */}
           {viewMode === 'explanation' && (
             <motion.div
-              key={activeQuestionId}
+              key={`exp-${activeQuestionId}`}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
@@ -251,12 +267,66 @@ export function WisdomUntetheredCourse({
               {activeQuestionId === 'question1' && <Chap1Question1 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question2' && <Chap1Question2 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question3' && <Chap1Question3 onOpenJournal={onOpenJournal} />}
-              {activeQuestionId === 'question4' && <Chap1Question4 onOpenJournal={onOpenJournal} />}
+              {activeQuestionId === 'question4' && <Chap1Question4 />}
               {activeQuestionId === 'question5' && <Chap1Question5 onOpenJournal={onOpenJournal} />}
             </motion.div>
           )}
 
-          {/* PRACTICE VIEW — now a redirect; this branch is a no-op placeholder */}
+          {/* PRACTICE VIEW — Selection or Journal */}
+          {viewMode === 'practice' && (
+            <motion.div
+              key={`prac-${activeQuestionId}`}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              className="w-full h-[calc(100vh-56px)] overflow-hidden bg-[var(--bg-main)]"
+            >
+              {activeQuestionId === 'question4' && !selectedPractice ? (
+                <div className="h-full flex flex-col items-center justify-center p-8 space-y-12">
+                  <div className="text-center space-y-4">
+                    <h3 className="text-4xl font-serif font-light text-[var(--text-primary)]">Cultivating The Observer</h3>
+                    <p className="text-sm text-[var(--text-secondary)] italic font-serif">Two paths to deepen your presence.</p>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
+                    <button 
+                      onClick={() => setSelectedPractice('example')}
+                      className="group relative p-10 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)] transition-all duration-500 overflow-hidden text-left"
+                    >
+                      <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Sparkles size={120} />
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-primary)] mb-4 block">Practice 01</span>
+                      <h4 className="text-2xl font-serif font-light mb-4 group-hover:translate-x-1 transition-transform">Relational Witnessing</h4>
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed opacity-70">
+                        Explore how the mind weaves stories during social friction and learn to watch the tightness rather than being it.
+                      </p>
+                    </button>
+
+                    <button 
+                      onClick={() => setSelectedPractice('journal')}
+                      className="group relative p-10 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)] transition-all duration-500 overflow-hidden text-left"
+                    >
+                      <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Clock size={120} />
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-primary)] mb-4 block">Practice 02</span>
+                      <h4 className="text-2xl font-serif font-light mb-4 group-hover:translate-x-1 transition-transform">5-Min Thought Journal</h4>
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed opacity-70">
+                        A timed stream-of-consciousness capture to classify thoughts as Value, Cost, or simply Witnessed.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <ThoughtJournal 
+                  inline 
+                  defaultTab={selectedPractice || 'example'} 
+                  onClose={() => setSelectedPractice(null)} 
+                />
+              )}
+            </motion.div>
+          )}
 
           {/* VIDEO VIEW */}
           {viewMode === 'video' && (

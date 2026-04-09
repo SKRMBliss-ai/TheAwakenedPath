@@ -30,6 +30,7 @@ import { useCourseTracking } from './hooks/useCourseTracking';
 import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
 import { InfoTooltip } from './components/ui/InfoTooltip';
 import { WhatsAppButton } from './components/ui/WhatsAppButton';
+import { VoiceGuidance } from './components/ui/VoiceGuidance';
 import { usePersistedState } from './hooks/usePersistedState';
 import { useRazorpay } from './hooks/useRazorpay';
 
@@ -1113,6 +1114,7 @@ export default function UntetheredApp() {
                                       disabled={q.locked}
                                       onClick={() => {
                                         setActiveQuestionId(q.id);
+                                        setViewMode('explanation');
                                         if (window.innerWidth < 1024) setIsSidebarOpen(false);
                                       }}
                                       className={cn(
@@ -1622,6 +1624,7 @@ export default function UntetheredApp() {
         onDismiss={dismissToast}
       />
       <WhatsAppButton />
+      <VoiceGuidance />
 
     </div>
   );

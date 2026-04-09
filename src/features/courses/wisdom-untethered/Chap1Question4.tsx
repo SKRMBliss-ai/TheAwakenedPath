@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 import styles from "./Chap1Question4.module.css";
 import commonStyles from "./CourseCommon.module.css";
 import { cn } from "../../../lib/utils";
@@ -7,17 +7,19 @@ import { useAuth } from "../../auth/AuthContext";
 import { useCourseTracking } from "../../../hooks/useCourseTracking";
 import { CourseHero } from "./CourseHero";
 import { CourseLightbox } from "./CourseLightbox";
+import { ThoughtJournal } from "./components/ThoughtJournal";
 
 interface Chap1Question4Props {
-  onOpenJournal?: () => void;
+  // onOpenJournal?: () => void; // Replaced by internal ThoughtJournal
 }
 
-export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
+export function Chap1Question4({ }: Chap1Question4Props) {
   const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
   const { updateProgress } = useCourseTracking(user?.uid);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [showThoughtJournal, setShowThoughtJournal] = useState(false);
 
   // 14 slides tracking with images
   const slides = [
@@ -53,7 +55,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
       id: 4,
       num: '05',
       title: 'VALUE VS. COST',
-      text: 'Before following a thought in, ask one question: Does this have value, or only cost? Replaying a past conversation teaches nothing new. It only has cost.',
+      text: 'Your partner says something slightly cold at dinner and your mind builds a case. By the time you get in bed, you are frantic and isolated. But nothing happened—they were just tired. You paid for a problem that didn\'t exist with your peace.',
       img: 'Slide5.jpg'
     },
     {
@@ -196,13 +198,13 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
       />
       
       <nav className={styles.navDots}>
-        {/* +1 for the Hero section */}
-        {Array.from({ length: slides.length + 1 }).map((_, i) => (
+        {/* +1 for the Hero section, +1 for Overview */}
+        {Array.from({ length: slides.length + 2 }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
             onClick={() => scrollToSection(i)}
-            aria-label={`Go to section ${i + 1}`}
+            aria-label={`Go to section ${i}`}
           />
         ))}
       </nav>
@@ -212,20 +214,47 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         question={4}
         title={<>Finding the <strong>Silent Space</strong><br />The Art of <strong>Observation</strong></>}
         subtitle="A journey through 14 lessons on untethering yourself from the mind's constant noise."
+        className="bg-[var(--bg-primary)] dark:bg-[#0A0908]"
       />
 
+      <AnimatePresence>
+        {showThoughtJournal && (
+          <ThoughtJournal onClose={() => setShowThoughtJournal(false)} />
+        )}
+      </AnimatePresence>
+
       <CourseLightbox 
-        isOpen={lightboxIndex !== null}
+        isOpen={lightboxIndex !== null && lightboxIndex !== -1}
         onClose={closeLightbox}
         onNext={goNext}
         onPrev={goPrev}
         currentIndex={lightboxIndex ?? 0}
         total={slides.length}
-        imgSrc={lightboxIndex !== null ? `/WisdomUntethered/Chap1/Question4/${slides[lightboxIndex].img}` : ''}
+        imgSrc={lightboxIndex !== null && lightboxIndex !== -1 ? `/WisdomUntethered/Chap1/Question4/${slides[lightboxIndex].img}` : (lightboxIndex === -1 ? '/WisdomUntethered/Chap1/Question4/overview.jpg' : '')}
       />
 
+      {/* OVERVIEW SECTION */}
+      <section className={styles.slide} id="slide-0" data-section="1">
+        <div className="max-w-6xl mx-auto w-full px-6">
+          <div className="text-center mb-16 space-y-4">
+            <span className="text-xs font-bold uppercase tracking-[0.4em] text-[#B8973A]">Fundamental Framework</span>
+            <h2 className="text-4xl md:text-5xl font-serif font-light text-[var(--text-primary)]">The Map of Stillness</h2>
+            <div className="w-20 h-[1px] bg-[#B8973A]/40 mx-auto" />
+          </div>
+          
+          <div className="relative group cursor-zoom-in" onClick={() => setLightboxIndex(-1)}>
+            <div className="absolute -inset-4 bg-[#B8973A]/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+            <img 
+              src="/WisdomUntethered/Chap1/Question4/overview.jpg" 
+              alt="The Power of Witness Consciousness Overview" 
+              className="w-full h-auto rounded-3xl border border-[var(--border-subtle)] shadow-2xl relative z-10"
+            />
+          </div>
+        </div>
+      </section>
+
       {slides.map((slide, i) => (
-        <section key={i} className={styles.slide} id={`slide-${i + 1}`} data-section={i + 1}>
+        <section key={i} className={styles.slide} id={`slide-${i + 2}`} data-section={i + 2}>
           <div className={cn(styles.slideGrid, i % 2 !== 0 && styles.flip)}>
             <div className={styles.imgWrap} onClick={() => openLightbox(i)}>
               <img src={`/WisdomUntethered/Chap1/Question4/${slide.img}`} alt={slide.title} className={styles.clickableImg} />
@@ -265,10 +294,10 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
                    className="mt-12"
                 >
                   <button 
-                    onClick={onOpenJournal}
-                    className="px-8 py-3 border border-black hover:bg-black hover:text-white transition-all duration-300 tracking-widest text-xs uppercase"
+                    onClick={() => setShowThoughtJournal(true)}
+                    className="px-8 py-3 border border-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-all duration-300 tracking-widest text-xs uppercase"
                   >
-                    Open Reflection Journal →
+                    Open Thought Journal & Examples →
                   </button>
                 </motion.div>
               )}

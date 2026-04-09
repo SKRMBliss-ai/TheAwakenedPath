@@ -1,15 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import styles from './CourseCommon.module.css';
+import { cn } from '../../../lib/utils';
 
 interface CourseHeroProps {
   chapter: number;
   question: number;
   title: React.ReactNode;
   subtitle: string;
+  className?: string;
 }
 
-export const CourseHero: React.FC<CourseHeroProps> = ({ chapter, question, title, subtitle }) => {
+export const CourseHero: React.FC<CourseHeroProps> = ({ chapter, question, title, subtitle, className }) => {
   const starsRef = useRef<HTMLDivElement>(null);
   const [isDark, setIsDark] = useState(
     () => document.documentElement.classList.contains('dark')
@@ -51,7 +53,7 @@ export const CourseHero: React.FC<CourseHeroProps> = ({ chapter, question, title
   }, [isDark]);
 
   return (
-    <section className={styles.hero} data-section="0">
+    <section className={cn(styles.hero, className)} data-section="0">
       <div className={styles.heroStars} ref={starsRef} />
       <motion.div 
         initial={{ opacity: 0, y: 30 }}

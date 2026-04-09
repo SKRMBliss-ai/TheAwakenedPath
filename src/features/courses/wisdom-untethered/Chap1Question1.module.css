@@ -156,7 +156,7 @@
 
 /* --- SLIDES --- */
 .slide {
-  padding: 4.5rem 2rem;
+  padding: 10rem 2rem;
   max-width: 1400px; margin: 0 auto;
   opacity: 0; transform: translateY(28px);
   transition: opacity 0.72s ease, transform 0.72s ease;
@@ -242,11 +242,11 @@
 
 /* --- DIVIDER --- */
 .rule {
-  max-width: 1200px; margin: 0 auto; padding: 0 2rem;
-  display: flex; align-items: center; gap: 1.4rem; opacity: 0.35;
+  max-width: 200px; margin: 6rem auto; padding: 0;
+  display: flex; align-items: center; gap: 1rem; opacity: 0.25;
 }
 .rule::before, .rule::after { content: ''; flex: 1; height: 1px; background: var(--gold); }
-.rule span { font-family: var(--serif); font-size: 0.9rem; font-style: italic; color: var(--gold); }
+.rule span { font-family: var(--serif); font-size: 0.8rem; font-style: italic; color: var(--gold); }
 
 /* --- TWO LAYERS BAND --- */
 .layersBand {
