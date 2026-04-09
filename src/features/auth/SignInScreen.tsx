@@ -267,8 +267,6 @@ export const SignInScreen = () => {
                 </div>
                 <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-20" style={{ color: theme.textPrimary }}>
                     <span>Presence Study</span>
-                    <span className="w-1 h-1 rounded-full bg-current" />
-                    <span>Powered by Anthropic</span>
                 </div>
             </motion.div>
         </div>

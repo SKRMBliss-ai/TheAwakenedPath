@@ -13,6 +13,9 @@ interface UserProfile {
     xp: number;
     streak: number;
     purchasedCourses: string[];
+    subscriptionStatus?: 'ACTIVE' | 'INACTIVE';
+    subscriptionId?: string;
+    trialUntil?: any;
     createdAt?: any;
 }
 
@@ -24,6 +27,7 @@ interface AuthContextType {
     signInWithEmail: (email: string, pass: string) => Promise<void>;
     signUpWithEmail: (email: string, pass: string) => Promise<void>;
     signOut: () => Promise<void>;
+    activateTrial: () => Promise<void>;
     isAccessValid: boolean;
 }
 
@@ -35,6 +39,7 @@ const AuthContext = createContext<AuthContextType>({
     signInWithEmail: async () => { },
     signUpWithEmail: async () => { },
     signOut: async () => { },
+    activateTrial: async () => { },
     isAccessValid: false,
 });
 
@@ -96,6 +101,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 xp: data?.xp || 0,
                                 streak: data?.streak || 0,
                                 purchasedCourses: data?.purchasedCourses || [],
+                                subscriptionStatus: data?.subscriptionStatus,
+                                subscriptionId: data?.subscriptionId,
+                                trialUntil: data?.trialUntil,
                                 createdAt: data?.createdAt,
                             } as UserProfile);
                         } else {
@@ -109,7 +117,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 level: 1,
                                 xp: 0,
                                 streak: 0,
-                                purchasedCourses: []
+                                purchasedCourses: [],
+                                subscriptionStatus: 'INACTIVE'
                             };
                             await setDoc(userRef, userData);
                         }
@@ -173,30 +182,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const activateTrial = async () => {
+        if (!user) return;
+        const userRef = doc(db, 'users', user.uid);
+        const trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + 3);
+        await updateDoc(userRef, {
+            trialUntil: trialEndDate
+        });
+    };
+
     const isAccessValid = React.useMemo(() => {
         if (!user || !profile) return false;
         if (hasWisdomAccess(user.email)) return true;
         if (profile.purchasedCourses?.includes('all_access')) return true;
+        if (profile.subscriptionStatus === 'ACTIVE') return true;
         
-        if (profile.createdAt) {
-            let createdDate;
-            if (profile.createdAt?.toDate) {
-                createdDate = profile.createdAt.toDate();
-            } else if (typeof profile.createdAt === 'string' || typeof profile.createdAt === 'number') {
-                createdDate = new Date(profile.createdAt);
-            } else {
-                return false;
-            }
-            const trialLimit = 7 * 24 * 60 * 60 * 1000;
-            if (Date.now() - createdDate.getTime() <= trialLimit) {
-                return true;
-            }
+        if (profile.trialUntil) {
+            const trialEnd = typeof profile.trialUntil.toDate === 'function' ? profile.trialUntil.toDate().getTime() : profile.trialUntil;
+            if (trialEnd > Date.now()) return true;
         }
+
         return false;
     }, [user, profile]);
 
     return (
-        <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut, isAccessValid }}>
+        <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut, activateTrial, isAccessValid }}>
             {children}
         </AuthContext.Provider>
     );

@@ -350,7 +350,7 @@
 
 /* ── DARK MODE OVERRIDES ── */
 :global(.dark) .container {
-  --gold: #E6C57D;
+  --gold: #B8973A;
   --gold-light: #F0E4C0;
   --bg-primary: #0c0910;
   --bg-surface: #110e16;
@@ -359,6 +359,20 @@
   background: var(--bg-primary);
   color: var(--text-primary);
 }
+
+:global(.dark) .slideSection {
+  border-bottom: 2px solid var(--gold) !important;
+  box-shadow: 0 4px 15px rgba(184, 151, 58, 0.1);
+}
+
+
+:global(.dark) .slideImageWrap,
+:global(.dark) .clickableImg {
+  border: 1.5px solid var(--gold);
+  box-shadow: 0 0 30px rgba(184, 151, 58, 0.3);
+  border-radius: 4px;
+}
+
 :global(.dark) .slideHeading em {
   color: #E6C57D; /* Brighter gold for pop in dark mode */
   text-shadow: 0 0 10px rgba(230, 197, 125, 0.2);

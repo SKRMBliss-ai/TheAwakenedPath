@@ -26,17 +26,63 @@ const ttsClient = new textToSpeech.TextToSpeechClient();
 
 // Pricing Configuration (Keep in sync with frontend)
 const COURSE_PRICES = {
-    "wisdom_untethered": 9, // $9 in USD
+    "wisdom_untethered": 9,
+    "all_access": 199.99,
+};
+
+const COURSE_PRICES_INR = {
+    "wisdom_untethered": 799,
+    "all_access": 14999,
+};
+
+const SUBSCRIPTION_PLANS = {
+    "premium_monthly": {
+        name: "Awakened Path Premium",
+        description: "Monthly recurring subscription for full application access",
+        amount: 9.99, // USD
+        period: "monthly",
+        interval: 1,
+        total_count: 120 // 10 years max
+    },
+    "premium_yearly": {
+        name: "Awakened Path Premium (Annual)",
+        description: "Yearly recurring subscription for full application access",
+        amount: 99.90, // USD
+        period: "yearly",
+        interval: 1,
+        total_count: 10 // 10 years max
+    }
+};
+
+const SUBSCRIPTION_PLANS_INR = {
+    "premium_monthly": {
+        name: "Awakened Path Premium (INR)",
+        description: "Monthly recurring subscription for full application access",
+        amount: 799, // INR
+        period: "monthly",
+        interval: 1,
+        total_count: 120
+    },
+    "premium_yearly": {
+        name: "Awakened Path Premium Annual (INR)",
+        description: "Yearly recurring subscription for full application access",
+        amount: 7999, // INR
+        period: "yearly",
+        interval: 1,
+        total_count: 10
+    }
 };
 
 /**
  * Creates a Razorpay Order
  */
 exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret], cors: true }, async (req, res) => {
-    const { courseId, userId } = req.body;
+    const { courseId, userId, currency = "USD" } = req.body;
 
-    // 1. Get official price from server-side map
-    const amount = COURSE_PRICES[courseId];
+    // 1. Get official price from server-side map based on currency
+    const priceMap = currency === "INR" ? COURSE_PRICES_INR : COURSE_PRICES;
+    const amount = priceMap[courseId];
+    
     if (!amount) {
         return res.status(400).send("Invalid or missing courseId");
     }
@@ -49,11 +95,12 @@ exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySe
 
         const options = {
             amount: Math.round(amount * 100), // In cents/paise
-            currency: "USD",
+            currency: currency,
             receipt: `receipt_${courseId}_${Date.now()}`,
             notes: {
                 courseId: courseId,
-                userId: userId || "anonymous"
+                userId: userId || "anonymous",
+                currency: currency
             }
         };
 
@@ -68,7 +115,7 @@ exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySe
 /**
  * Verifies Razorpay Payment Signature and grants access
  */
-exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret], cors: true }, async (req, res) => {
+exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret, emailUser, emailPass], cors: true }, async (req, res) => {
     const { 
         razorpay_order_id, 
         razorpay_payment_id, 
@@ -108,10 +155,26 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
 
         // 3. Grant Access in Firestore
         const userRef = db.collection("users").doc(userId);
+        
+        // Fetch user to get email for welcome notification
+        const userDoc = await userRef.get();
+        const userEmail = userDoc.exists ? userDoc.data().email : null;
+
         await userRef.set({
             purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
+
+        // Send Welcome Email
+        if (userEmail) {
+            try {
+                // If the courseId is all_access we consider it a Premium Lifetime mapping
+                const planName = courseId === 'all_access' ? 'Premium (Lifetime)' : courseId;
+                await sendWelcomeEmail(userEmail, planName);
+            } catch (emailErr) {
+                console.error("Failed to send welcome email:", emailErr);
+            }
+        }
 
         // 4. Log the transaction (Atomic/Secure)
         await db.collection("transactions").doc(razorpay_payment_id).set({
@@ -127,6 +190,142 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
         res.json({ success: true, message: "Access granted" });
     } catch (error) {
         console.error("Verification Error:", error);
+        res.status(500).send("Verification failed");
+    }
+});
+
+/**
+ * Creates a Razorpay Subscription
+ */
+exports.createRazorpaySubscription = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret], cors: true }, async (req, res) => {
+    const { userId, planId = "premium_monthly", currency = "USD" } = req.body;
+
+    if (!userId) {
+        return res.status(400).send("Missing userId");
+    }
+
+    const plansMap = currency === "INR" ? SUBSCRIPTION_PLANS_INR : SUBSCRIPTION_PLANS;
+    const planConfig = plansMap[planId];
+    if (!planConfig) {
+        return res.status(400).send("Invalid planId or currency");
+    }
+
+    try {
+        const razorpay = new Razorpay({
+            key_id: razorpayKeyId.value(),
+            key_secret: razorpayKeySecret.value(),
+        });
+
+        const backendPlanId = `${planId}_${currency}`;
+
+        // 1. Get or Create Plan
+        let rzpPlanId;
+        const plans = await razorpay.plans.all();
+        const existingPlan = plans.items.find(p => p.notes?.internal_id === backendPlanId);
+
+        if (existingPlan) {
+            rzpPlanId = existingPlan.id;
+        } else {
+            const newPlan = await razorpay.plans.create({
+                period: planConfig.period,
+                interval: planConfig.interval,
+                item: {
+                    name: planConfig.name,
+                    amount: Math.round(planConfig.amount * 100),
+                    currency: currency,
+                    description: planConfig.description
+                },
+                notes: {
+                    internal_id: backendPlanId
+                }
+            });
+            rzpPlanId = newPlan.id;
+        }
+
+        // 2. Create Subscription
+        const subscription = await razorpay.subscriptions.create({
+            plan_id: rzpPlanId,
+            customer_notify: 1,
+            total_count: planConfig.total_count,
+            notes: {
+                userId: userId,
+                planId: planId
+            }
+        });
+
+        res.json(subscription);
+    } catch (error) {
+        console.error("Razorpay Subscription Error:", error);
+        res.status(500).send("Failed to create subscription");
+    }
+});
+
+/**
+ * Verifies Razorpay Subscription Payment
+ */
+exports.verifyRazorpaySubscription = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret, emailUser, emailPass], cors: true }, async (req, res) => {
+    const { 
+        razorpay_payment_id, 
+        razorpay_subscription_id, 
+        razorpay_signature,
+        userId
+    } = req.body;
+
+    if (!userId || !razorpay_signature || !razorpay_subscription_id) {
+        return res.status(400).send("Missing verification parameters");
+    }
+
+    try {
+        // 1. Verify Signature
+        const body = razorpay_payment_id + "|" + razorpay_subscription_id;
+        const expectedSignature = crypto
+            .createHmac("sha256", razorpayKeySecret.value())
+            .update(body.toString())
+            .digest("hex");
+
+        if (expectedSignature !== razorpay_signature) {
+            return res.status(400).send("Invalid subscription signature");
+        }
+
+        // 2. Grant Access in Firestore
+        const userRef = db.collection("users").doc(userId);
+
+        // Fetch user to get email for welcome notification
+        const userDoc = await userRef.get();
+        const userEmail = userDoc.exists ? userDoc.data().email : null;
+
+        await userRef.set({
+            subscriptionStatus: "ACTIVE",
+            subscriptionId: razorpay_subscription_id,
+            purchasedCourses: admin.firestore.FieldValue.arrayUnion("all_access"),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // Send Welcome Email (Only if this is the start of a new subscription)
+        // Note: For recurring webhook events we wouldn't want to send this every month. 
+        // But verifyRazorpaySubscription is only called from Frontend explicitly upon STARTING the subscription.
+        if (userEmail) {
+            try {
+                await sendWelcomeEmail(userEmail, "Premium Subscription");
+            } catch (emailErr) {
+                console.error("Failed to send welcome subscription email:", emailErr);
+            }
+        }
+
+        // 3. Log transaction
+        await db.collection("transactions").doc(razorpay_payment_id).set({
+            userId,
+            razorpayPaymentId: razorpay_payment_id,
+            razorpaySubscriptionId: razorpay_subscription_id,
+            amount: 9.99,
+            type: "SUBSCRIPTION_START",
+            status: "SUCCESS",
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        res.json({ success: true, message: "Subscription activated" });
+    } catch (error) {
+        console.error("Subscription Verification Error:", error);
         res.status(500).send("Verification failed");
     }
 });
@@ -149,9 +348,10 @@ exports.razorpayWebhook = onRequest({ secrets: [razorpayKeySecret], cors: true }
     }
 
     const event = req.body.event;
-    const payment = req.body.payload.payment.entity;
+    const payload = req.body.payload;
 
     if (event === "payment.captured") {
+        const payment = payload.payment.entity;
         const { userId, courseId } = payment.notes;
         
         if (userId && courseId) {
@@ -170,6 +370,40 @@ exports.razorpayWebhook = onRequest({ secrets: [razorpayKeySecret], cors: true }
                 amount: payment.amount / 100,
                 status: "SUCCESS_WEBHOOK",
                 timestamp: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+    } else if (event === "subscription.charged") {
+        const subscription = payload.subscription.entity;
+        const payment = payload.payment.entity;
+        const userId = subscription.notes?.userId;
+
+        if (userId) {
+            const userRef = db.collection("users").doc(userId);
+            await userRef.set({
+                subscriptionStatus: "ACTIVE",
+                subscriptionId: subscription.id,
+                purchasedCourses: admin.firestore.FieldValue.arrayUnion("all_access"),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            await db.collection("transactions").doc(payment.id).set({
+                userId,
+                razorpaySubscriptionId: subscription.id,
+                razorpayPaymentId: payment.id,
+                amount: payment.amount / 100,
+                status: "SUCCESS_RENEWAL",
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+    } else if (event === "subscription.cancelled" || event === "subscription.halted") {
+        const subscription = payload.subscription.entity;
+        const userId = subscription.notes?.userId;
+
+        if (userId) {
+            const userRef = db.collection("users").doc(userId);
+            await userRef.set({
+                subscriptionStatus: "INACTIVE",
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
         }
     }
@@ -366,6 +600,62 @@ const getTransporter = () => {
         },
     });
 };
+
+/**
+ * Helper to send Welcome Email upon Payment/Subscription
+ */
+async function sendWelcomeEmail(toEmail, planName) {
+    const transporter = getTransporter();
+    
+    // Using existing clean design token stylings mapped to inline-HTML
+    const emailTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <title>The Awakened Path</title>
+</head>
+<body style="margin:0;padding:0;background:#f0ece4;">
+    <!-- Preheader Text -->
+    <div style="display:none;font-size:1px;color:#f0ece4;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+        Welcome to The Awakened Path. The journey begins now.
+    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
+        <tr>
+            <td align="center" style="padding:24px 16px;">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#FDFAF4;border:1px solid #E6C57D;">
+                    <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+                    <tr>
+                        <td style="padding:32px 40px 20px;text-align:center;">
+                            <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Awakened Path &middot; Access Granted</p>
+                            <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:300;font-style:italic;color:#1C1814;margin:0;line-height:1.3;">Welcome to the<br>Deepest Journey.</h1>
+                            <div style="width:40px;height:1px;background:#B8973A;margin:16px auto;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:0 40px 32px;text-align:center;">
+                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 20px;">Your gateway for <b>\${planName}</b> was successful.</p>
+                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 0;">Step beyond the noise. You now possess full access to the intelligence course, the practice room, and interactive journaling. As a premium member, remember that you also hold the key to <b>2 complimentary personal consultations</b>. Email us whenever you are ready.<br><br>Return to the app to begin.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+`;
+
+    await transporter.sendMail({
+        from: '"The Awakened Path" <bliss@awakened-path.com>',
+        to: toEmail,
+        subject: "Welcome: The Path is Open",
+        html: emailTemplate
+    });
+}
 
 /**
  * Scheduled Reminder: India Evening (8:00 PM IST)

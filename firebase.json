@@ -89,6 +89,20 @@
         }
       },
       {
+        "source": "/api/razorpay-subscription",
+        "function": {
+          "functionId": "createRazorpaySubscription",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/razorpay-subscription-verify",
+        "function": {
+          "functionId": "verifyRazorpaySubscription",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

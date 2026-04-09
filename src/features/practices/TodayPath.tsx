@@ -1,6 +1,6 @@
 import { } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Zap, PenLine, CheckCircle2, Calendar, ChevronRight } from 'lucide-react';
+import { BookOpen, Zap, PenLine, CheckCircle2, Calendar, ChevronRight, Lock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { PRACTICE_LIBRARY } from '../practices/practiceLibrary';
 import { useDailyPractice } from '../practices/useDailyPractice';
@@ -53,6 +53,7 @@ function Pillar({
   color,
   done,
   total,
+  isAccessValid,
   onClick,
 }: {
   icon: any;
@@ -62,6 +63,7 @@ function Pillar({
   color: string;
   done?: number;
   total?: number;
+  isAccessValid?: boolean;
   onClick: () => void;
 }) {
   const cfg = {
@@ -118,9 +120,10 @@ function Pillar({
       </div>
 
       <span
-        className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0"
+        className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0 flex items-center gap-1.5"
         style={{ background: cfg.bg, color: cfg.textColor }}
       >
+        {(status === 'active' || status === 'waiting') && !isAccessValid && <Lock size={10} className="opacity-70" />}
         {cfg.text}
       </span>
     </motion.button>
@@ -145,6 +148,7 @@ interface TodayPathProps {
     questionId?: string,
     view?: 'explanation' | 'video' | 'practice'
   ) => void;
+  isAccessValid?: boolean;
 }
 
 // Fallback assignment for when the prop isn't available yet
@@ -163,6 +167,7 @@ export function TodayPath({
   progress,
   weeklyAssignment,
   onViewProgress,
+  isAccessValid,
 }: TodayPathProps) {
   const assignment = weeklyAssignment ?? FALLBACK_ASSIGNMENT;
   const { questionId, weekLabel, daysRemaining } = assignment;
@@ -185,8 +190,10 @@ export function TodayPath({
   if (!questionMeta || !practice) return null;
 
   const handleLearn = () => {
-    // Mark as done immediately if they click/interact
-    markLearn();
+    // Only mark as done if the user has full access
+    if (isAccessValid) {
+      markLearn();
+    }
     // Always navigate to explanation as requested for consistency
     onNavigate('wisdom_untethered', questionId, 'explanation');
   };
@@ -279,6 +286,7 @@ export function TodayPath({
           sub={learnDone ? "The wisdom has been absorbed" : "Today's teaching awaits your presence"}
           status={learnDone ? 'done' : 'active'}
           color={color}
+          isAccessValid={isAccessValid}
           onClick={handleLearn}
           done={wuLearntCount}
           total={wuTotal}
@@ -289,52 +297,18 @@ export function TodayPath({
           sub={practiceCompleted ? "Your presence is grounded" : `Pending: ${practice.name}`}
           status={practiceCompleted ? 'done' : 'active'}
           color={color}
+          isAccessValid={isAccessValid}
           onClick={handlePractice}
         />
-        {/* Reflect — opens inline, does NOT navigate away */}
-        <motion.button
-          whileTap={{ scale: 0.98 }}
+        <Pillar
+          icon={PenLine}
+          label="Reflect"
+          sub={reflectDone ? 'Your essence is recorded' : "No reflections shared today yet"}
+          status={reflectDone ? 'done' : (practiceCompleted ? 'active' : 'waiting')}
+          color={color}
+          isAccessValid={isAccessValid}
           onClick={() => onNavigate('chapters')}
-          className={cn(
-            'w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-left transition-all duration-300',
-            reflectDone
-              ? 'border-[var(--border-subtle)] bg-[var(--bg-surface)]/50'
-              : 'border-[var(--border-default)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] shadow-sm'
-          )}
-        >
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{
-              background: reflectDone ? color + '15' : practiceCompleted ? color + '15' : 'var(--bg-secondary)',
-              border: `1.5px solid ${reflectDone || practiceCompleted ? color + '35' : 'var(--border-subtle)'}`,
-            }}
-          >
-            {reflectDone
-              ? <CheckCircle2 size={15} style={{ color }} />
-              : <PenLine size={15} style={{ color: practiceCompleted ? color : 'var(--text-muted)' }} />
-            }
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className={cn(
-              'text-[14px] font-serif leading-tight',
-              reflectDone ? 'line-through opacity-60 text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'
-            )}>
-              Reflect
-            </p>
-            <p className="text-[12px] text-[var(--text-muted)] mt-0.5 truncate">
-              {reflectDone ? 'Your essence is recorded' : "No reflections shared today yet"}
-            </p>
-          </div>
-          <span
-            className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0"
-            style={{
-              background: reflectDone ? color + '18' : color + '22',
-              color: color,
-            }}
-          >
-            {reflectDone ? 'Complete' : 'Pending'}
-          </span>
-        </motion.button>
+        />
       </div>
 
 

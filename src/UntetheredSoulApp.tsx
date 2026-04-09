@@ -24,13 +24,14 @@ import EngagementReport from './features/admin/EngagementReport';
 import { useAchievements } from './features/achievements/useAchievements';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
-import { isAdminEmail, hasWisdomAccess, isUnlockedUser } from './config/admin';
+import { isAdminEmail, isUnlockedUser } from './config/admin';
 import { TodayPath } from './features/practices/TodayPath';
 import { useCourseTracking } from './hooks/useCourseTracking';
 import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
 import { InfoTooltip } from './components/ui/InfoTooltip';
 import { WhatsAppButton } from './components/ui/WhatsAppButton';
 import { usePersistedState } from './hooks/usePersistedState';
+import { useRazorpay } from './hooks/useRazorpay';
 
 const DashboardActions = ({ user, progress, weeklyAssignment, onNavigate, onViewProgress }: any) => {
   return (
@@ -47,6 +48,7 @@ const DashboardActions = ({ user, progress, weeklyAssignment, onNavigate, onView
           }
         }}
         onViewProgress={onViewProgress}
+        isAccessValid={user.isAccessValid}
       />
     </div>
   );
@@ -255,10 +257,213 @@ const BreadthDesktop = ({ user, rotateX, rotateY, progress, weeklyAssignment, on
   );
 };
 
+// --- Premium Paywall Component ---
+const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial }: any) => {
+  const [isTrialLoading, setIsTrialLoading] = useState(false);
+  // Determine user base currency using timezone heuristic
+  const isIndianUser = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Calcutta' || 
+                       Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Kolkata';
+  const currency = isIndianUser ? 'INR' : 'USD';
+  
+  const prices = {
+      monthly: isIndianUser ? '₹799' : '$9',
+      monthlyCents: isIndianUser ? '' : '.99',
+      annuallyStrikethrough: isIndianUser ? '₹9,588' : '$119.88',
+      annually: isIndianUser ? '₹7,999' : '$99',
+      annuallyCents: isIndianUser ? '' : '.90',
+      lifetime: isIndianUser ? '₹14,999' : '$199',
+      lifetimeCents: isIndianUser ? '' : '.99'
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] h-full text-center p-6 md:p-12 bg-[var(--bg-base)]">
+      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        {/* Left Side: Art & Description */}
+        <div className="flex flex-col items-center md:items-start text-left space-y-8">
+            <div className="relative group">
+            <motion.div
+                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute inset-[-20px] bg-[var(--accent-primary)]/10 blur-[40px] rounded-full"
+            />
+            <div className="w-20 h-20 rounded-[28px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center relative z-10 shadow-2xl">
+                <Sparkles className="w-8 h-8 text-[var(--accent-primary)] opacity-60" />
+            </div>
+            </div>
+            <div className="space-y-4">
+            <h2 className="text-4xl md:text-5xl font-serif font-light text-[var(--text-primary)] tracking-tight">Expand Your Journey</h2>
+            <p className="text-[15px] font-serif italic text-[var(--text-secondary)] leading-relaxed opacity-80 max-w-md">
+                Step beyond the gateway to unlock full access to The Awakened Path universe.
+            </p>
+            </div>
+            
+            <div className="space-y-4 w-full">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)]">What You Will Discover</h3>
+            <ul className="space-y-3 text-[13px] text-[var(--text-secondary)]">
+                <li className="flex items-center gap-3">
+                    <Sun className="w-4 h-4 text-[var(--accent-primary)]" />
+                    <span>The complete Wisdom Untethered intelligence course</span>
+                </li>
+                <li className="flex items-center gap-3">
+                    <BookOpen className="w-4 h-4 text-[var(--accent-primary)]" />
+                    <span>Interactive Journaling prompts to capture profound insights</span>
+                </li>
+                <li className="flex items-center gap-3">
+                    <Heart className="w-4 h-4 text-[var(--accent-primary)]" />
+                    <span>Unlimited access to The Practice Room guided meditations</span>
+                </li>
+                <li className="flex items-center gap-3">
+                    <BarChart2 className="w-4 h-4 text-[var(--accent-primary)]" />
+                    <span>In-depth Progress Tracking and Soul Medals collection</span>
+                </li>
+                <li className="flex items-center gap-3">
+                    <Clock className="w-4 h-4 text-[var(--accent-primary)]" />
+                    <span>Early access to upcoming courses and weekly assignments</span>
+                </li>
+                <li className="flex items-center gap-3 font-medium text-[var(--text-primary)]">
+                    <Sparkles className="w-4 h-4 text-[var(--accent-primary)]" />
+                    <span>2 Free Personal Consultations included with all plans</span>
+                </li>
+            </ul>
+            </div>
+        </div>
+
+        {/* Right Side: Pricing Options */}
+        <div className="flex flex-col gap-6 w-full max-w-sm mx-auto">
+            {/* Monthly */}
+            <div className="p-6 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/50 transition-colors shadow-xl">
+                <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <h4 className="text-[16px] font-medium text-[var(--text-primary)]">Monthly</h4>
+                        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Recurring Journey</p>
+                    </div>
+                    <div className="text-right flex flex-col justify-end">
+                        <p className="text-3xl font-bold font-sans tracking-tight text-[var(--accent-primary)]">{prices.monthly}<span className="text-lg opacity-80">{prices.monthlyCents}</span></p>
+                    </div>
+                </div>
+                <AnchorButton 
+                    variant="solid" 
+                    onClick={() => {
+                        if (user?.uid) {
+                            subscribe(user.uid, user.email || '', user.displayName || 'Traveler', 'premium_monthly', currency, () => {
+                                window.location.reload();
+                            });
+                        }
+                    }} 
+                    disabled={isProcessing}
+                    className="w-full"
+                >
+                    {isProcessing ? 'Opening Portal...' : 'Unlock Monthly'}
+                </AnchorButton>
+            </div>
+
+            {/* Yearly */}
+            <div className="relative p-6 rounded-[24px] border border-[var(--accent-primary)] bg-[var(--bg-surface)] shadow-[0_0_30px_var(--glow-primary)]">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[var(--accent-primary)] rounded-full text-[10px] font-bold uppercase tracking-widest text-black whitespace-nowrap">
+                    Most Popular (2 Months Free)
+                </div>
+                <div className="flex justify-between items-start mb-4 mt-2">
+                    <div>
+                        <h4 className="text-[16px] font-medium text-[var(--text-primary)]">Annually</h4>
+                        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Recurring Journey</p>
+                    </div>
+                    <div className="text-right flex flex-col justify-end">
+                        <p className="text-[12px] font-sans text-[var(--text-muted)] line-through block mb-[-6px] pr-1 font-medium">{prices.annuallyStrikethrough}</p>
+                        <p className="text-3xl font-bold font-sans tracking-tight text-[var(--accent-primary)]">{prices.annually}<span className="text-lg opacity-80">{prices.annuallyCents}</span></p>
+                    </div>
+                </div>
+                <AnchorButton 
+                    variant="solid" 
+                    onClick={() => {
+                        if (user?.uid) {
+                            subscribe(user.uid, user.email || '', user.displayName || 'Traveler', 'premium_yearly', currency, () => {
+                                window.location.reload();
+                            });
+                        }
+                    }} 
+                    disabled={isProcessing}
+                    className="w-full"
+                >
+                    {isProcessing ? 'Opening Portal...' : 'Unlock Annually'}
+                </AnchorButton>
+            </div>
+
+            {/* Lifetime */}
+            <div className="p-6 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/50 transition-colors shadow-xl">
+                <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <h4 className="text-[16px] font-medium text-[var(--text-primary)]">Forever</h4>
+                        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">One-Time Payment</p>
+                    </div>
+                    <div className="text-right flex flex-col justify-end">
+                        <p className="text-3xl font-bold font-sans tracking-tight text-[var(--accent-primary)]">{prices.lifetime}<span className="text-lg opacity-80">{prices.lifetimeCents}</span></p>
+                    </div>
+                </div>
+                <AnchorButton 
+                    variant="ghost" 
+                    onClick={() => {
+                        if (user?.uid) {
+                            checkOut?.(user.uid, user.email || '', user.displayName || 'Traveler', 'all_access', currency, () => {
+                                window.location.reload();
+                            });
+                        }
+                    }} 
+                    disabled={isProcessing}
+                    className="w-full"
+                >
+                    {isProcessing ? 'Opening Portal...' : 'Unlock Forever'}
+                </AnchorButton>
+            </div>
+
+            {/* Trial Option Card */}
+            <div className="p-5 rounded-[24px] border border-dashed border-[var(--accent-primary)]/40 bg-[var(--accent-primary)]/5 transition-all shadow-lg flex flex-col items-center gap-3">
+                <div className="text-center">
+                    <h4 className="text-[14px] font-bold text-[var(--accent-primary)] uppercase tracking-widest mb-1">Begin Your Trial</h4>
+                    <p className="text-[11px] text-[var(--text-secondary)] font-serif italic">Full Access • No Card Required • Instant Activation</p>
+                </div>
+                <AnchorButton 
+                  variant="solid" 
+                  onClick={async () => {
+                    setIsTrialLoading(true);
+                    try {
+                        await activateTrial();
+                        window.location.reload();
+                    } catch (e) {
+                        console.error(e);
+                    } finally {
+                        setIsTrialLoading(false);
+                    }
+                  }}
+                  disabled={isTrialLoading || isProcessing}
+                  className="w-full bg-[var(--accent-primary)] text-black font-bold uppercase tracking-widest"
+                >
+                    {isTrialLoading ? 'Initiating...' : 'Start 3-Day Experience for Free'}
+                </AnchorButton>
+                <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-[0.2em] font-medium opacity-80">Experience the Full Awakened Path Universe</p>
+
+            </div>
+
+            {/* Refund Policy */}
+            <div className="flex flex-col items-center gap-2 pt-2 px-4">
+                <div className="flex items-center gap-2 text-[var(--accent-secondary)] opacity-90">
+                    <Sparkles size={12} />
+                    <span className="text-[11px] font-bold uppercase tracking-[0.15em]">Our Sacred Promise</span>
+                </div>
+                <p className="text-[11px] text-[var(--text-secondary)] font-serif italic leading-relaxed text-center">
+                    We offer a <span className="text-[var(--text-primary)] font-bold">100% Refund</span> without asking any questions within 15 days of your purchase. Your journey is our priority.
+                </p>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 // --- Main App Component ---
 
 export default function UntetheredApp() {
-  const { user: currentUser, loading, signOut, isAccessValid } = useAuth();
+  const { user: currentUser, loading, signOut, isAccessValid, activateTrial } = useAuth();
   const { theme } = useTheme();
   // ── Persisted navigation state — app resumes exactly where user left off ──
   const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'home');
@@ -291,8 +496,16 @@ export default function UntetheredApp() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const { progress } = useCourseTracking(currentUser?.uid);
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
+  const { subscribe, checkOut, isProcessing: isRazorpayProcessing } = useRazorpay();
 
   const onNavigate = (id: string, questionId?: string, view?: string) => {
+    // If not unlocked, lock everything except home and profile
+    if (!isAccessValid && id !== 'home' && id !== 'profile' && id !== 'paywall') {
+      setActiveTab('paywall');
+      if (window.innerWidth < 1024) setIsSidebarOpen(false);
+      return;
+    }
+
     if (id === 'learn') {
       setActiveTab('intelligence');
       if (questionId) setActiveQuestionId(questionId);
@@ -338,10 +551,10 @@ export default function UntetheredApp() {
     return getDominantEmotionColor(lastEntry?.emotions);
   }, [lastEntry]);
 
-  // Global Access Control Redirect
+  // Global Access Control Redirect for first load
   useEffect(() => {
-    if (!loading && !isAccessValid && activeTab !== 'home' && activeTab !== 'profile' && activeTab !== 'intelligence') {
-      setActiveTab('intelligence');
+    if (!loading && !isAccessValid && activeTab !== 'home' && activeTab !== 'profile' && activeTab !== 'paywall') {
+      setActiveTab('paywall');
     }
   }, [isAccessValid, activeTab, loading]);
 
@@ -616,6 +829,7 @@ export default function UntetheredApp() {
   ];
 
   const user = {
+    uid: currentUser?.uid,
     displayName: currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Traveler',
     level: stats.level,
     xp: stats.xp,
@@ -623,7 +837,8 @@ export default function UntetheredApp() {
     streak: stats.streak,
     joinedAt: stats.joinedAt,
     nowMoments: stats.totalEntries,
-    email: currentUser?.email
+    email: currentUser?.email,
+    isAccessValid
   };
 
   const nextStep = () => {
@@ -741,7 +956,7 @@ export default function UntetheredApp() {
 
       {/* SIDEBAR */}
       <aside className={cn(
-        "fixed left-0 top-0 bottom-0 w-72 flex-col z-[70] bg-[var(--bg-secondary)] backdrop-blur-2xl border-r border-[var(--border-default)] p-8 transition-transform duration-500 ease-fluid",
+        "fixed left-0 top-0 bottom-0 w-[360px] flex-col z-[70] bg-[var(--bg-secondary)] backdrop-blur-2xl border-r border-[var(--border-default)] p-8 transition-transform duration-500 ease-fluid",
         "lg:flex lg:translate-x-0",
         isSidebarOpen ? "translate-x-0 flex" : "-translate-x-full lg:flex"
       )}>
@@ -762,24 +977,27 @@ export default function UntetheredApp() {
           {[
             { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
             {
-              id: 'courses_group', icon: Sparkles, label: 'Courses', locked: false, isGroup: true, subItems: [
-                { id: 'intelligence', label: 'The Power of Now' },
-                { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: !hasWisdomAccess(currentUser?.email) },
+              id: 'courses_group', icon: Sparkles, label: 'Courses', locked: !isAccessValid, isGroup: true, subItems: [
+                { id: 'intelligence', label: 'The Power of Now', locked: !isAccessValid },
+                { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: !isAccessValid },
               ]
             },
-            { id: 'chapters', icon: BookOpen, label: 'Journal', locked: false },
-            { id: 'situations', icon: Flame, label: 'The Practice Room', fullLabel: 'Situational Practice', locked: false },
-            { id: 'stats', icon: BarChart2, label: 'Progress', fullLabel: 'Your Progress', locked: false },
-            { id: 'profile', icon: User, label: 'Profile', locked: false },
+            { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
+            { id: 'situations', icon: Flame, label: 'The Practice Room', fullLabel: 'Situational Practice', locked: !isAccessValid },
+            { id: 'stats', icon: BarChart2, label: 'Progress', fullLabel: 'Your Progress', locked: !isAccessValid },
+            { id: 'profile', icon: User, label: 'Profile', locked: false }, // Keep profile unlocked so they can sign out easily
+
           ].map((item: any) => {
             if (item.isGroup) {
               const anySubActive = item.subItems.some((sub: any) => activeTab === sub.id);
               const Icon = item.icon;
               return (
                 <div key={item.id} className="space-y-0.5 my-1">
-                  <div className="flex items-center gap-3 px-6 py-2 mb-1">
-                    <Icon size={18} strokeWidth={anySubActive ? 2 : 1} className={cn("transition-colors", anySubActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
-                    <span className="text-[13px] font-bold uppercase tracking-[0.5em] text-[var(--text-muted)] font-sans">
+                  <div className="flex items-center gap-4 px-6 py-2 mb-1">
+                    <div className="w-5 flex items-center justify-center">
+                      <Icon size={16} strokeWidth={anySubActive ? 2.5 : 1.5} className={cn("transition-colors", anySubActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
+                    </div>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)] font-sans flex-1">
                       {item.label}
                     </span>
                   </div>
@@ -790,35 +1008,30 @@ export default function UntetheredApp() {
                         <div key={sub.id} className="flex flex-col">
                           <button
                             onClick={() => {
-                              if (sub.locked) {
-                                alert('This sacred path is currently undergoing refinement for a select group of travelers.');
-                                return;
-                              }
-                              setActiveTab(sub.id);
-                              if (sub.id !== 'wisdom_untethered') {
-                                setIsSidebarOpen(false);
-                              } else if (sub.id === 'wisdom_untethered' && !expandedChapter1) {
+                              onNavigate(sub.id);
+                              if (sub.id === 'wisdom_untethered' && !expandedChapter1) {
                                 setExpandedChapter1(true);
                               }
                             }}
                             className={cn(
-                              "w-full flex items-center gap-3 px-4 py-2 transition-all duration-400 relative group rounded-2xl text-left",
+                              "w-full flex items-center gap-4 pl-[3.75rem] pr-6 py-2 transition-all duration-400 relative group rounded-2xl text-left",
                             )}
                             style={{
                               background: isActive ? 'var(--accent-primary-muted)' : 'none',
                             }}
                           >
                             <span className={cn(
-                              "text-[13px] uppercase transition-colors duration-400 font-sans relative z-10 w-full whitespace-nowrap",
-                              sub.label.length > 10 ? "tracking-[0.1em]" : "tracking-[0.25em]",
+                              "text-[13px] uppercase tracking-[0.15em] transition-colors duration-400 font-sans relative z-10 flex-1 whitespace-nowrap",
                               isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
                             )}>
                               {sub.label}
-                              {sub.locked && <Lock size={10} className="inline-block ml-2 text-[var(--accent-secondary)]" />}
                             </span>
-                            {isActive && (
-                              <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)] z-10" />
-                            )}
+                            <div className="flex items-center gap-2 relative z-10">
+                              {sub.locked && <Lock size={10} className="text-[var(--accent-secondary)]" />}
+                              {isActive && (
+                                <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" />
+                              )}
+                            </div>
                           </button>
 
                           {/* Render questions if Wisdom Untethered is active */}
@@ -828,7 +1041,7 @@ export default function UntetheredApp() {
                                 onClick={() => setExpandedChapter1(!expandedChapter1)}
                                 className="flex justify-between items-center w-full px-4 py-2 text-[11px] uppercase tracking-widest text-[var(--text-primary)] font-bold transition-colors group"
                               >
-                                <span>Chapter 1: The Mind</span>
+                                <span className="whitespace-nowrap">Chapter 1: The Mind</span>
                                 <span className={cn(
                                   "text-[11px] text-[var(--accent-primary)] transition-transform duration-300",
                                   expandedChapter1 ? "rotate-90" : "rotate-0"
@@ -845,32 +1058,33 @@ export default function UntetheredApp() {
                                     className="flex flex-col overflow-hidden"
                                   >
                                     {[
-                                      { id: 'question1', label: 'Question 1', locked: false },
-                                      { id: 'question2', label: 'Question 2', locked: false },
-                                      { id: 'question3', label: 'Question 3', locked: false },
-                                      { id: 'question4', label: 'Question 4', locked: false },
-                                      { id: 'question5', label: 'Question 5', locked: false },
+                                      { id: 'question1', label: 'Question 1', locked: !isAccessValid },
+                                      { id: 'question2', label: 'Question 2', locked: !isAccessValid },
+                                      { id: 'question3', label: 'Question 3', locked: !isAccessValid },
+                                      { id: 'question4', label: 'Question 4', locked: !isAccessValid },
+                                      { id: 'question5', label: 'Question 5', locked: !isAccessValid },
                                     ].map((q) => (
                                       <button
                                         key={q.id}
                                         disabled={q.locked}
                                         onClick={() => {
-                                          setActiveQuestionId(q.id);
-                                          if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                                          onNavigate('wisdom_untethered', q.id);
                                         }}
                                         className={cn(
-                                          "flex items-center gap-3 pl-6 pr-4 py-2 text-[13px] uppercase tracking-widest transition-all text-left relative",
+                                          "flex items-center gap-4 pl-[3.75rem] pr-6 py-2 text-[12px] uppercase tracking-[0.15em] transition-all text-left relative whitespace-nowrap",
                                           activeQuestionId === q.id
                                             ? "text-[var(--accent-primary)] font-bold"
                                             : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
                                           q.locked && "opacity-40 cursor-not-allowed"
                                         )}
                                       >
-                                        {activeQuestionId === q.id && (
-                                          <div className="absolute left-2 w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" />
-                                        )}
-                                        <span className="flex-1">{q.label}</span>
-                                        {q.locked && <Lock size={10} className="ml-2 text-[var(--accent-secondary)]" />}
+                                        <span className="flex-1 opacity-80">{q.label}</span>
+                                        <div className="flex items-center gap-2 relative z-10">
+                                          {q.locked && <Lock size={10} className="text-[var(--accent-secondary)]" />}
+                                          {activeQuestionId === q.id && (
+                                            <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)] shadow-[0_0_6px_var(--accent-primary)]" />
+                                          )}
+                                        </div>
                                       </button>
                                     ))}
                                   </motion.div>
@@ -892,12 +1106,7 @@ export default function UntetheredApp() {
               <button
                 key={item.id}
                 onClick={() => {
-                  if (item.locked) {
-                    alert('Coming soon!');
-                    return;
-                  }
-                  setActiveTab(item.id);
-                  if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                  onNavigate(item.id);
                 }}
                 className={cn(
                   "w-full flex items-center gap-4 px-6 py-2.5 transition-all duration-400 relative group rounded-2xl mb-1",
@@ -912,32 +1121,31 @@ export default function UntetheredApp() {
                     className="absolute inset-0 bg-[var(--accent-primary)] opacity-10 rounded-2xl pointer-events-none"
                   />
                 )}
-                <Icon
-                  size={16}
-                  strokeWidth={isActive ? 2.5 : 1.5}
-                  className={cn(
-                    "transition-all duration-400 relative z-10",
-                    isActive ? "text-[var(--accent-primary)] scale-110" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)]"
-                  )}
-                />
+                <div className="w-5 flex items-center justify-center">
+                  <Icon
+                    size={16}
+                    strokeWidth={isActive ? 2.5 : 1.5}
+                    className={cn(
+                      "transition-all duration-400 relative z-10",
+                      isActive ? "text-[var(--accent-primary)] scale-110" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)]"
+                    )}
+                  />
+                </div>
                 <span className={cn(
-                  "text-[13px] uppercase transition-all duration-400 relative z-10 font-['Outfit'] whitespace-nowrap",
-                  item.label.length > 12 ? "tracking-[0.05em]" : "tracking-[0.3em]",
-                  isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)] font-semibold"
+                  "text-[13px] uppercase tracking-[0.15em] font-bold transition-all duration-300 font-sans whitespace-nowrap flex-1",
+                  isActive ? "text-[var(--text-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
                 )}>
                   {item.label}
                 </span>
-                {/* Active glow dot */}
-                {isActive && (
-                  <motion.div
-                    layoutId="nav-active-dot"
-                    className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-primary)] relative z-10"
-                  />
-                )}
+                <div className="flex items-center gap-2 relative z-10">
+                  {item.locked && <Lock size={10} className="text-[var(--accent-secondary)]" />}
+                  {isActive && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-primary)]" />
+                  )}
+                </div>
               </button>
             );
           })}
-
         </nav>
 
         {/* LOGOUT BUTTON */}
@@ -976,7 +1184,7 @@ export default function UntetheredApp() {
       {/* MAIN CONTENT AREA */}
       <main className={cn(
         "relative z-10 min-h-screen transition-all duration-700 overflow-hidden",
-        "lg:pl-72"
+        "lg:pl-[360px]"
       )}>
         {/* Time of Day Ambient Tint */}
         <div
@@ -985,7 +1193,7 @@ export default function UntetheredApp() {
         />
         <AnimatePresence>
           {/* Back Action - Integrated into the page flow */}
-          {activeTab !== 'home' && (
+          {activeTab !== 'home' && activeTab !== 'paywall' && (
             <div className="w-full px-6 md:px-12 pt-4 -mb-4 relative z-50 flex justify-start">
               <motion.button
                 initial={{ opacity: 0, x: -14 }}
@@ -1004,7 +1212,7 @@ export default function UntetheredApp() {
           )}
         </AnimatePresence>
 
-        {/* SPATIAL AUDIO TOGGLE */}
+        {/* ALWAYS VISIBLE TOP CONTROLS */}
         <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[60] flex items-center gap-2 sm:gap-3 scale-[0.8] sm:scale-90 origin-top-right">
           {isUnlockedUser(currentUser?.email) && (
             <button
@@ -1039,7 +1247,7 @@ export default function UntetheredApp() {
               <motion.div
                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute inset-0 bg-[#5EC4B0]/20 blur-xl"
+                className="absolute inset-0 bg-[var(--accent-primary)]/20 blur-xl"
               />
             )}
             <Headphones className={cn("w-4 h-4 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
@@ -1048,6 +1256,18 @@ export default function UntetheredApp() {
 
         <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
           <AnimatePresence mode="wait">
+            {activeTab === 'paywall' && (
+              <motion.div key="paywall-lock" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <PremiumPaywall 
+                   user={currentUser} 
+                   subscribe={subscribe} 
+                   checkOut={checkOut}
+                   isProcessing={isRazorpayProcessing} 
+                   activateTrial={activateTrial}
+                />
+              </motion.div>
+            )}
+
             {activeTab === 'home' && (
               <>
                 <div className="lg:hidden">
@@ -1083,7 +1303,7 @@ export default function UntetheredApp() {
             )}
 
             {activeTab === 'situations' && (
-              <motion.div key="situations" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: -10 }} exit={{ opacity: 0, x: -10 }}>
+              <motion.div key="situations" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
                 <SituationalPractices
                   onBack={() => setActiveTab('home')}
                   isAdmin={isAdmin}
@@ -1111,41 +1331,17 @@ export default function UntetheredApp() {
               exit={{ opacity: 0 }}
               className="flex-1 min-h-0 h-[calc(100vh-5rem)] overflow-hidden"
             >
-              {hasWisdomAccess(currentUser?.email) ? (
-                <WisdomUntetheredCourse
-                  activeQuestionId={activeQuestionId}
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                  onOpenJournal={() => setActiveTab('chapters')}
-                  onNavigateToPractice={() => setActiveTab('situations')}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-center p-12 space-y-8 bg-[var(--bg-base)]">
-                  <div className="relative group">
-                    <motion.div
-                      animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute inset-[-20px] bg-[var(--accent-primary)]/10 blur-[40px] rounded-full"
-                    />
-                    <div className="w-24 h-24 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center relative z-10 shadow-2xl">
-                      <Lock className="w-10 h-10 text-[var(--accent-primary)] opacity-60" />
-                    </div>
-                  </div>
-                  <div className="space-y-4 max-w-sm">
-                    <h2 className="text-4xl font-serif font-light text-[var(--text-primary)] tracking-tight">Access Restricted</h2>
-                    <p className="text-[15px] font-serif italic text-[var(--text-secondary)] leading-relaxed opacity-80">
-                      This sacred passage is currently undergoing final refinements for a select group of travelers.
-                      Your patience is a form of presence.
-                    </p>
-                  </div>
-                  <AnchorButton variant="secondary" onClick={() => setActiveTab('home')} className="mt-4">
-                    Return to Sanctuary
-                  </AnchorButton>
-                </div>
-              )}
+              <WisdomUntetheredCourse
+                activeQuestionId={activeQuestionId}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                onOpenJournal={() => setActiveTab('chapters')}
+                onNavigateToPractice={() => setActiveTab('situations')}
+              />
             </motion.div>
           )}
         </AnimatePresence>
+
 
         <div className="max-w-7xl mx-auto p-6 md:p-12 space-y-12">
           <AnimatePresence mode="wait">
@@ -1209,7 +1405,17 @@ export default function UntetheredApp() {
                             howCalculated="Every action adds value to your journey."
                           />
                         </div>
-                        <h2 className="text-5xl font-serif font-light text-[var(--text-primary)] tracking-tight">{user.displayName}</h2>
+                        <div className="flex items-center gap-4">
+                          <h2 className="text-4xl md:text-5xl font-serif font-light text-[var(--text-primary)] tracking-tight">{user.displayName}</h2>
+                          <div className={cn(
+                            "px-3 py-1 text-[10px] uppercase tracking-widest font-bold rounded-full border border-opacity-30",
+                            isAccessValid 
+                              ? "bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border-[var(--accent-primary)]" 
+                              : "bg-[var(--text-muted)]/10 text-[var(--text-secondary)] border-[var(--text-muted)]"
+                          )}>
+                            {isAccessValid ? 'Premium' : 'Basic Tier'}
+                          </div>
+                        </div>
                         <p className="text-[12px] text-[var(--text-muted)] tracking-widest font-medium uppercase">
                           Exploring since {user.joinedAt} · {user.nowMoments} reflections
                         </p>

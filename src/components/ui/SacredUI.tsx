@@ -185,9 +185,9 @@ export const AnchorButton = ({ children, variant = "ghost", onClick, loading, cl
             style={{
                 position: "relative", overflow: "hidden",
                 width: "100%", padding: "26px 48px", borderRadius: 32, cursor: disabled ? "not-allowed" : "pointer",
-                background: hovered ? "rgba(255,255,255,0.025)" : "transparent",
-                border: `1px solid ${hovered ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.07)"}`,
-                color: disabled ? "rgba(255,255,255,0.2)" : hovered ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.38)",
+                background: hovered ? "var(--bg-secondary)" : "transparent",
+                border: `1px solid ${hovered ? "var(--border-default)" : "var(--border-subtle)"}`,
+                color: disabled ? "var(--text-muted)" : hovered ? "var(--text-primary)" : "var(--text-secondary)",
                 fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
                 fontSize: 9, letterSpacing: "0.5em", textTransform: "uppercase",
                 boxShadow: hovered && !disabled ? `0 0 40px ${tokens.magenta}18, inset 0 0 30px ${tokens.magenta}04` : "none",
