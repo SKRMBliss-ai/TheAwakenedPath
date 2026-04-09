@@ -1100,10 +1100,11 @@ export default function UntetheredApp() {
                             >
                               <div className="py-1 space-y-0.5">
                                 {[
-                                  { num: 1, label: 'Using the mind as a tool',    id: 'question1' },
-                                  { num: 2, label: 'Handling doubt and fear',      id: 'question2' },
-                                  { num: 3, label: 'Personal to impersonal',       id: 'question3' },
-                                  { num: 4, label: 'Which part to listen to',      id: 'question4', locked: !isAdminEmail(currentUser?.email) },
+                                  { num: 1, label: 'Using the mind as a tool',    id: 'question1', locked: false },
+                                  { num: 2, label: 'Handling doubt and fear',      id: 'question2', locked: false },
+                                  { num: 3, label: 'Personal to impersonal',       id: 'question3', locked: false },
+                                  { num: 4, label: 'Which part to listen to',      id: 'question4', locked: false },
+                                  { num: 5, label: 'The Observer Discovery',       id: 'question5', locked: false },
                                 ].map(q => {
                                   const isQActive = activeQuestionId === q.id;
                                   return (

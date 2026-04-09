@@ -105,12 +105,12 @@
 }
 
 :global(.dark) .hero {
-  background: #0c0910;
+  background: var(--bg-primary, #0c0910);
 }
 
 :global(:not(.dark)) .hero {
-  background: #f7f2ec; 
-  color: #1a1714;
+  background: var(--bg-primary, #f7f2ec); 
+  color: var(--text-primary, #1a1714);
 }
 
 
@@ -161,6 +161,7 @@
   font-weight: 300;
   line-height: 1.1;
   margin-bottom: 0.5rem;
+  color: inherit;
 }
 
 .heroTitle strong {
@@ -183,13 +184,15 @@
 .heroSub {
   font-size: 1.2rem;
   font-weight: 300;
-  color: rgba(253, 250, 244, 0.7);
+  color: var(--text-primary);
+  opacity: 0.8;
   max-width: 600px;
   margin: 0 auto;
 }
 
 :global(:not(.dark)) .heroSub {
-  color: #3A342C;
+  color: var(--text-secondary);
+  opacity: 1;
 }
 
 .heroScroll {

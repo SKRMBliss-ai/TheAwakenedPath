@@ -378,9 +378,7 @@
   text-shadow: 0 0 10px rgba(230, 197, 125, 0.2);
 }
 
-:global(.dark) .hero {
-  background: radial-gradient(circle at center, #110e16 0%, #0c0910 100%);
-}
+
 
 :global(.dark) .slideSection:nth-child(even) {
   background: rgba(255,255,255,0.02);
