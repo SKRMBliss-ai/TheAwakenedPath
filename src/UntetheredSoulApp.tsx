@@ -955,12 +955,18 @@ export default function UntetheredApp() {
       </AnimatePresence>
 
       {/* SIDEBAR */}
+      {/* SIDEBAR */}
       <aside className={cn(
-        "fixed left-0 top-0 bottom-0 w-[360px] flex-col z-[70] bg-[var(--bg-secondary)] backdrop-blur-2xl border-r border-[var(--border-default)] p-8 transition-transform duration-500 ease-fluid",
-        "lg:flex lg:translate-x-0",
-        isSidebarOpen ? "translate-x-0 flex" : "-translate-x-full lg:flex"
+        "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70]",
+        "border-r border-[var(--border-default)]",
+        "bg-[var(--bg-secondary)] backdrop-blur-2xl",
+        "transition-transform duration-500 ease-fluid",
+        "lg:translate-x-0",
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
-        <div className="flex items-center justify-between mb-10 px-2">
+
+        {/* ── Logo ── */}
+        <div className="flex items-center justify-between px-6 pt-8 pb-6 flex-shrink-0">
           <AwakenedPathLogo
             variant="full"
             size="md"
@@ -968,214 +974,268 @@ export default function UntetheredApp() {
             onClick={() => setActiveTab('home')}
             className="group"
           />
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-[var(--text-muted)]">
-            <X className="w-6 h-6" />
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <nav className="space-y-0.5">
-          {[
-            { id: 'home', icon: Sun, label: 'Dashboard', locked: false },
-            {
-              id: 'courses_group', icon: Sparkles, label: 'Courses', locked: !isAccessValid, isGroup: true, subItems: [
-                { id: 'intelligence', label: 'The Power of Now', locked: !isAccessValid },
-                { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: !isAccessValid },
-              ]
-            },
-            { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
-            { id: 'situations', icon: Flame, label: 'The Practice Room', fullLabel: 'Situational Practice', locked: !isAccessValid },
-            { id: 'stats', icon: BarChart2, label: 'Progress', fullLabel: 'Your Progress', locked: !isAccessValid },
-            { id: 'profile', icon: User, label: 'Profile', locked: false }, // Keep profile unlocked so they can sign out easily
+        {/* ── Thin divider under logo ── */}
+        <div className="mx-6 mb-4 h-px bg-[var(--border-subtle)] opacity-50 flex-shrink-0" />
 
-          ].map((item: any) => {
-            if (item.isGroup) {
-              const anySubActive = item.subItems.some((sub: any) => activeTab === sub.id);
-              const Icon = item.icon;
-              return (
-                <div key={item.id} className="space-y-0.5 my-1">
-                  <div className="flex items-center gap-4 px-6 py-2 mb-1">
-                    <div className="w-5 flex items-center justify-center">
-                      <Icon size={16} strokeWidth={anySubActive ? 2.5 : 1.5} className={cn("transition-colors", anySubActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
-                    </div>
-                    <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)] font-sans flex-1">
-                      {item.label}
-                    </span>
-                  </div>
-                  <div className="flex flex-col ml-[2.75rem] space-y-0.5 relative before:content-[''] before:absolute before:left-[-1.25rem] before:top-2 before:bottom-2 before:w-px before:bg-[var(--border-subtle)]/50">
-                    {item.subItems.map((sub: any) => {
-                      const isActive = activeTab === sub.id;
-                      return (
-                        <div key={sub.id} className="flex flex-col">
-                          <button
-                            onClick={() => {
-                              onNavigate(sub.id);
-                              if (sub.id === 'wisdom_untethered' && !expandedChapter1) {
-                                setExpandedChapter1(true);
-                              }
-                            }}
-                            className={cn(
-                              "w-full flex items-center gap-4 pl-[3.75rem] pr-6 py-2 transition-all duration-400 relative group rounded-2xl text-left",
-                            )}
-                            style={{
-                              background: isActive ? 'var(--accent-primary-muted)' : 'none',
-                            }}
+        {/* ── Scrollable nav ── */}
+        <nav className="flex-1 overflow-y-auto px-4 pb-4 space-y-1 scrollbar-none">
+
+          {/* Dashboard */}
+          {(() => {
+            const isActive = activeTab === 'home';
+            return (
+              <button
+                key="home"
+                onClick={() => onNavigate('home')}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group relative",
+                  isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/50"
+                )}
+              >
+                {isActive && (
+                  <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-[var(--accent-primary)]" />
+                )}
+                <Sun
+                  size={16}
+                  strokeWidth={isActive ? 2.5 : 1.5}
+                  className={isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"}
+                />
+                <span className={cn(
+                  "text-[12px] uppercase tracking-[0.25em] font-sans transition-colors flex-1 text-left",
+                  isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
+                )}>
+                  Dashboard
+                </span>
+                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" />}
+              </button>
+            );
+          })()}
+
+          {/* ── Courses group ── */}
+          <div className="pt-2 pb-1">
+            {/* Group label */}
+            <div className="flex items-center gap-3 px-4 py-1.5 mb-1">
+              <Sparkles
+                size={14}
+                strokeWidth={1.5}
+                className={cn(
+                  "transition-colors flex-shrink-0",
+                  ['intelligence','wisdom_untethered'].includes(activeTab)
+                    ? "text-[var(--accent-primary)]"
+                    : "text-[var(--text-muted)]"
+                )}
+              />
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)]">
+                Courses
+              </span>
+            </div>
+
+            {/* Course items */}
+            <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40">
+              {[
+                { id: 'intelligence',      label: 'The Power of Now',    locked: !isAccessValid },
+                { id: 'wisdom_untethered', label: 'Wisdom Untethered',   locked: !isAccessValid },
+              ].map(sub => {
+                const isActive = activeTab === sub.id;
+                return (
+                  <div key={sub.id}>
+                    <button
+                      onClick={() => onNavigate(sub.id)}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 group relative text-left",
+                        isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/40"
+                      )}
+                    >
+                      {isActive && (
+                        <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-[var(--accent-primary)]" />
+                      )}
+                      <span className={cn(
+                        "text-[12px] tracking-[0.12em] font-sans transition-colors flex-1 whitespace-nowrap",
+                        isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
+                      )}>
+                        {sub.label}
+                      </span>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {sub.locked && <Lock size={9} className="text-[var(--text-muted)] opacity-50" />}
+                        {isActive && <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)]" />}
+                      </div>
+                    </button>
+
+                    {/* ── Wisdom Untethered: chapter/question drill-down ── */}
+                    {isActive && sub.id === 'wisdom_untethered' && (
+                      <div className="mt-1 mb-2 ml-3 pl-3 border-l border-[var(--border-subtle)]/30">
+                        {/* Chapter toggle */}
+                        <button
+                          onClick={() => setExpandedChapter1(!expandedChapter1)}
+                          className="w-full flex items-center justify-between px-2 py-2 rounded-lg group"
+                        >
+                          <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
+                            Chapter 1 · The Mind
+                          </span>
+                          <span
+                            className="text-[var(--accent-primary)] transition-transform duration-300 text-[9px]"
+                            style={{ transform: expandedChapter1 ? 'rotate(90deg)' : 'rotate(0deg)', display: 'inline-block' }}
                           >
-                            <span className={cn(
-                              "text-[13px] uppercase tracking-[0.15em] transition-colors duration-400 font-sans relative z-10 flex-1 whitespace-nowrap",
-                              isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-medium"
-                            )}>
-                              {sub.label}
-                            </span>
-                            <div className="flex items-center gap-2 relative z-10">
-                              {sub.locked && <Lock size={10} className="text-[var(--accent-secondary)]" />}
-                              {isActive && (
-                                <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" />
-                              )}
-                            </div>
-                          </button>
+                            ▶
+                          </span>
+                        </button>
 
-                          {/* Render questions if Wisdom Untethered is active */}
-                          {isActive && sub.id === 'wisdom_untethered' && (
-                            <div className="flex flex-col mt-2 ml-1 border-l border-[var(--border-subtle)]/30 overflow-hidden">
-                              <button
-                                onClick={() => setExpandedChapter1(!expandedChapter1)}
-                                className="flex justify-between items-center w-full px-4 py-2 text-[11px] uppercase tracking-widest text-[var(--text-primary)] font-bold transition-colors group"
-                              >
-                                <span className="whitespace-nowrap">Chapter 1: The Mind</span>
-                                <span className={cn(
-                                  "text-[11px] text-[var(--accent-primary)] transition-transform duration-300",
-                                  expandedChapter1 ? "rotate-90" : "rotate-0"
-                                )}>▶</span>
-                              </button>
-
-                              <AnimatePresence>
-                                {expandedChapter1 && (
-                                  <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="flex flex-col overflow-hidden"
-                                  >
-                                    {[
-                                      { id: 'question1', label: 'Question 1', locked: !isAccessValid },
-                                      { id: 'question2', label: 'Question 2', locked: !isAccessValid },
-                                      { id: 'question3', label: 'Question 3', locked: !isAccessValid },
-                                      { id: 'question4', label: 'Question 4', locked: !isAccessValid },
-                                      { id: 'question5', label: 'Question 5', locked: !isAccessValid },
-                                    ].map((q) => (
-                                      <button
-                                        key={q.id}
-                                        disabled={q.locked}
-                                        onClick={() => {
-                                          onNavigate('wisdom_untethered', q.id);
+                        {/* Questions list */}
+                        <AnimatePresence>
+                          {expandedChapter1 && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.25 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="py-1 space-y-0.5">
+                                {[
+                                  { num: 1, label: 'Using the mind as a tool',    id: 'question1' },
+                                  { num: 2, label: 'Handling doubt and fear',      id: 'question2' },
+                                  { num: 3, label: 'Personal to impersonal',       id: 'question3' },
+                                  { num: 4, label: 'Which part to listen to',      id: 'question4', locked: !isAdminEmail(currentUser?.email) },
+                                ].map(q => {
+                                  const isQActive = activeQuestionId === q.id;
+                                  return (
+                                    <button
+                                      key={q.id}
+                                      disabled={q.locked}
+                                      onClick={() => {
+                                        setActiveQuestionId(q.id);
+                                        if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                                      }}
+                                      className={cn(
+                                        "w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-left transition-all group",
+                                        isQActive
+                                          ? "bg-[var(--accent-primary)]/8"
+                                          : "hover:bg-[var(--bg-surface)]/50",
+                                        q.locked && "opacity-35 cursor-not-allowed"
+                                      )}
+                                    >
+                                      {/* Question number dot */}
+                                      <div
+                                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[8px] font-bold transition-all"
+                                        style={{
+                                          background: isQActive ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                                          color: isQActive ? 'white' : 'var(--text-muted)',
                                         }}
+                                      >
+                                        {q.locked ? <Lock size={7} /> : q.num}
+                                      </div>
+                                      <span
                                         className={cn(
-                                          "flex items-center gap-4 pl-[3.75rem] pr-6 py-2 text-[12px] uppercase tracking-[0.15em] transition-all text-left relative whitespace-nowrap",
-                                          activeQuestionId === q.id
-                                            ? "text-[var(--accent-primary)] font-bold"
-                                            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
-                                          q.locked && "opacity-40 cursor-not-allowed"
+                                          "text-[11px] font-serif leading-tight flex-1 transition-colors",
+                                          isQActive
+                                            ? "text-[var(--accent-primary)] font-medium"
+                                            : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]",
+                                          q.locked && "italic"
                                         )}
                                       >
-                                        <span className="flex-1 opacity-80">{q.label}</span>
-                                        <div className="flex items-center gap-2 relative z-10">
-                                          {q.locked && <Lock size={10} className="text-[var(--accent-secondary)]" />}
-                                          {activeQuestionId === q.id && (
-                                            <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)] shadow-[0_0_6px_var(--accent-primary)]" />
-                                          )}
-                                        </div>
-                                      </button>
-                                    ))}
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
+                                        {q.label}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
                           )}
-                        </div>
-                      );
-                    })}
+                        </AnimatePresence>
+                      </div>
+                    )}
                   </div>
-                </div>
-              );
-            }
+                );
+              })}
+            </div>
+          </div>
 
+          {/* ── Standalone nav items ── */}
+          {[
+            { id: 'chapters',   icon: BookOpen,  label: 'Journal',          locked: !isAccessValid },
+            { id: 'situations', icon: Flame,     label: 'The Practice Room', locked: !isAccessValid },
+            { id: 'stats',      icon: BarChart2, label: 'Progress',          locked: !isAccessValid },
+            { id: 'profile',    icon: User,      label: 'Profile',           locked: false },
+          ].map(item => {
             const isActive = activeTab === item.id;
             const Icon = item.icon;
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  onNavigate(item.id);
-                }}
+                onClick={() => onNavigate(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-4 px-6 py-2.5 transition-all duration-400 relative group rounded-2xl mb-1",
-                  isActive
-                    ? "bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]"
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group relative",
+                  isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/50"
                 )}
               >
                 {isActive && (
-                  <motion.div
-                    layoutId="sidebar-accent"
-                    className="absolute inset-0 bg-[var(--accent-primary)] opacity-10 rounded-2xl pointer-events-none"
-                  />
+                  <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-[var(--accent-primary)]" />
                 )}
-                <div className="w-5 flex items-center justify-center">
-                  <Icon
-                    size={16}
-                    strokeWidth={isActive ? 2.5 : 1.5}
-                    className={cn(
-                      "transition-all duration-400 relative z-10",
-                      isActive ? "text-[var(--accent-primary)] scale-110" : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)]"
-                    )}
-                  />
-                </div>
+                <Icon
+                  size={16}
+                  strokeWidth={isActive ? 2.5 : 1.5}
+                  className={isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"}
+                />
                 <span className={cn(
-                  "text-[13px] uppercase tracking-[0.15em] font-bold transition-all duration-300 font-sans whitespace-nowrap flex-1",
-                  isActive ? "text-[var(--text-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
+                  "text-[12px] uppercase tracking-[0.25em] font-sans transition-colors flex-1 text-left whitespace-nowrap",
+                  isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
                 )}>
                   {item.label}
                 </span>
-                <div className="flex items-center gap-2 relative z-10">
-                  {item.locked && <Lock size={10} className="text-[var(--accent-secondary)]" />}
-                  {isActive && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-primary)]" />
-                  )}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {item.locked && <Lock size={10} className="text-[var(--text-muted)] opacity-40" />}
+                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" />}
                 </div>
               </button>
             );
           })}
         </nav>
 
-        {/* LOGOUT BUTTON */}
-        <div className="mt-12 border-t border-[var(--border-default)] pt-4">
+        {/* ── Footer ── */}
+        <div className="flex-shrink-0 px-4 pt-3 pb-6 border-t border-[var(--border-subtle)]/50 space-y-1">
+          {/* Email */}
           {currentUser?.email && (
-            <div className="px-4 mb-2 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)] animate-pulse" />
-              <span className="text-[12px] text-[var(--text-muted)] font-medium tracking-wider lowercase opacity-70 truncate">
+            <div className="flex items-center gap-2 px-4 py-2 opacity-40">
+              <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)] flex-shrink-0" />
+              <span className="text-[10px] text-[var(--text-muted)] truncate tracking-wider">
                 {currentUser.email}
               </span>
             </div>
           )}
+
+          {/* Log out */}
           <button
             onClick={async () => {
-              if (window.confirm('Are you sure you want to sign out?')) {
-                await signOut();
-              }
+              if (window.confirm('Sign out?')) await signOut();
             }}
-            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-surface)] rounded-xl transition-colors text-left group"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl group hover:bg-[var(--bg-surface)]/60 transition-all"
           >
-            <LogOut size={15} className="text-[var(--text-secondary)] group-hover:text-rose-400 transition-colors" />
-            <span className="text-[13px] uppercase tracking-[0.4em] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
+            <LogOut size={14} className="text-[var(--text-muted)] group-hover:text-rose-400 transition-colors flex-shrink-0" />
+            <span className="text-[10px] uppercase tracking-[0.35em] text-[var(--text-muted)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
               Log Out
             </span>
           </button>
 
-          <div className="mt-4 pt-4 border-t border-[var(--border-default)]">
-            <p className="text-[12px] font-serif italic text-[var(--text-muted)] tracking-widest leading-relaxed flex flex-col gap-2">
-              <span className="opacity-100 font-medium">Journey Shared by</span>
-              <span className="text-[var(--text-primary)] font-bold font-sans tracking-[0.1em] uppercase">Soulful Intelligence Studio</span>
+          {/* Brand credit */}
+          <div className="px-4 pt-2">
+            <p className="text-[9px] font-serif italic text-[var(--text-muted)] opacity-40 leading-relaxed">
+              Designed by{' '}
+              <a
+                href="https://www.skrmblissai.in/twinsouls"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:opacity-80 transition-opacity underline underline-offset-2"
+              >
+                skrmblissai.in
+              </a>
             </p>
           </div>
         </div>
@@ -1184,7 +1244,7 @@ export default function UntetheredApp() {
       {/* MAIN CONTENT AREA */}
       <main className={cn(
         "relative z-10 min-h-screen transition-all duration-700 overflow-hidden",
-        "lg:pl-[360px]"
+        "lg:pl-[280px]"
       )}>
         {/* Time of Day Ambient Tint */}
         <div
