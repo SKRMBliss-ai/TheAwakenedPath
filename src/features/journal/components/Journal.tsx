@@ -396,9 +396,9 @@ const Journal: React.FC = () => {
                         style={{ color: 'var(--text-primary)' }}>
                         Daily Log
                     </h1>
-                    <p className="text-[11px] font-serif italic mt-0.5" 
-                        style={{ color: 'var(--text-muted)' }}>
-                        {entries.length} reflections
+                    <p className="text-[13px] font-serif italic mt-1" 
+                        style={{ color: 'var(--text-secondary)' }}>
+                        {entries.length} reflection{entries.length === 1 ? '' : 's'}
                     </p>
                 </div>
                 <a
@@ -437,7 +437,7 @@ const Journal: React.FC = () => {
                                             <h2 className="text-xl font-serif font-light tracking-wide" style={{ color: 'var(--text-primary)' }}>
                                                 Settle into the Now
                                             </h2>
-                                            <p className="text-[12px] font-serif italic mt-1 opacity-80" 
+                                            <p className="text-[14px] font-serif italic mt-1.5 opacity-90" 
                                                 style={{ color: 'var(--text-secondary)' }}>
                                                 A brief reconnection before journaling
                                             </p>

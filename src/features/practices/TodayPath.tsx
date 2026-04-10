@@ -77,7 +77,7 @@ function Pillar({
   const cfg = {
     done: { text: 'Completed', bg: color + '18', textColor: color },
     active: { text: isAccessValid ? 'Ready' : 'Locked', bg: isAccessValid ? color + '22' : 'var(--bg-secondary)', textColor: isAccessValid ? color : 'var(--text-muted)' },
-    waiting: { text: isAccessValid ? 'Soon' : 'Locked', bg: 'var(--bg-secondary)', textColor: 'var(--text-muted)' },
+    waiting: { text: isAccessValid ? 'Next' : 'Locked', bg: 'var(--bg-secondary)', textColor: 'var(--text-muted)' },
   }[status];
 
   return (

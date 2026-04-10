@@ -581,9 +581,10 @@ export default function JournalCalendar({ entries }: { entries: any[] }) {
 
                 {/* Footer */}
                 <p style={{
-                    textAlign: "center", fontSize: 10,
-                    color: "var(--text-muted)", marginTop: 40, opacity: 0.5
-                }}>Each dot is a moment of witnessing</p>
+                    textAlign: "center", fontSize: 13,
+                    color: "var(--text-secondary)", marginTop: 40, opacity: 0.8,
+                    fontStyle: "italic"
+                }}>Each colored dot marks a moment of witnessing your inner world.</p>
             </div>
         </div >
     );
