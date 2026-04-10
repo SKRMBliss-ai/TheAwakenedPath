@@ -31,10 +31,11 @@ import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
 import { InfoTooltip } from './components/ui/InfoTooltip';
 import { WhatsAppButton } from './components/ui/WhatsAppButton';
 import { VoiceGuidance } from './components/ui/VoiceGuidance';
+import { VoiceService } from './services/voiceService';
 import { usePersistedState } from './hooks/usePersistedState';
 import { useRazorpay } from './hooks/useRazorpay';
 
-const DashboardActions = ({ user, progress, weeklyAssignment, onNavigate, onViewProgress }: any) => {
+const DashboardActions = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate, onViewProgress }: any) => {
   return (
     <div className="max-w-2xl mx-auto w-full px-4 mb-4">
       <TodayPath
@@ -49,7 +50,7 @@ const DashboardActions = ({ user, progress, weeklyAssignment, onNavigate, onView
           }
         }}
         onViewProgress={onViewProgress}
-        isAccessValid={user.isAccessValid}
+        isAccessValid={isAccessValid}
       />
     </div>
   );
@@ -117,7 +118,7 @@ function getDominantEmotionColor(emotionsStr?: string) {
 
 // --- Sub-components moved outside for stability ---
 
-const MobileDashboard = ({ user, onOpenSidebar, rotateX, rotateY, progress, weeklyAssignment, onNavigate }: any) => {
+const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, rotateX, rotateY, progress, weeklyAssignment, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -179,6 +180,7 @@ const MobileDashboard = ({ user, onOpenSidebar, rotateX, rotateY, progress, week
       <div className="px-4">
         <DashboardActions
           user={user}
+          isAccessValid={isAccessValid}
           progress={progress}
           weeklyAssignment={weeklyAssignment}
           onNavigate={onNavigate}
@@ -189,7 +191,7 @@ const MobileDashboard = ({ user, onOpenSidebar, rotateX, rotateY, progress, week
   );
 };
 
-const BreadthDesktop = ({ user, rotateX, rotateY, progress, weeklyAssignment, onNavigate }: any) => {
+const BreadthDesktop = ({ user, isAccessValid, rotateX, rotateY, progress, weeklyAssignment, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -230,6 +232,13 @@ const BreadthDesktop = ({ user, rotateX, rotateY, progress, weeklyAssignment, on
             />
           </div>
 
+          <div className="py-8 text-center space-y-4 max-w-2xl mx-auto">
+              <h3 className="text-3xl font-serif font-light text-[var(--text-primary)] tracking-tight">Presence Over Progress</h3>
+              <p className="text-[15px] font-serif italic text-[var(--text-secondary)] opacity-70">
+                "Yesterday is history, tomorrow is a mystery, today is a gift. That's why it's called the present."
+              </p>
+          </div>
+
           <div className="inline-flex items-center gap-10 px-10 py-4 rounded-full bg-[var(--bg-surface)]/40 border border-[var(--border-subtle)]/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
@@ -249,6 +258,7 @@ const BreadthDesktop = ({ user, rotateX, rotateY, progress, weeklyAssignment, on
       <div className="max-w-4xl mx-auto w-full">
         <DashboardActions
           user={user}
+          isAccessValid={isAccessValid}
           progress={progress}
           weeklyAssignment={weeklyAssignment}
           onNavigate={onNavigate}
@@ -377,7 +387,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
                         }
                       }}
                       disabled={isTrialLoading || isProcessing}
-                      className="w-full bg-[var(--accent-primary)] text-black font-bold uppercase tracking-widest py-4"
+                      className="w-full bg-[var(--accent-primary)] text-black font-bold uppercase tracking-widest"
                     >
                         {isTrialLoading ? 'Initiating...' : 'Start 3-Day Trial'}
                     </AnchorButton>
@@ -407,7 +417,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
                             }
                         }} 
                         disabled={isProcessing}
-                        className="w-full py-4"
+                        className="w-full"
                     >
                         {isProcessing ? 'Opening Portal...' : 'Unlock Monthly'}
                     </AnchorButton>
@@ -442,7 +452,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
                             }
                         }} 
                         disabled={isProcessing}
-                        className="w-full py-4 shadow-[0_4px_20px_var(--glow-primary)]"
+                        className="w-full shadow-[0_4px_20px_var(--glow-primary)]"
                     >
                         {isProcessing ? 'Opening Portal...' : 'Unlock Annually'}
                     </AnchorButton>
@@ -471,7 +481,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
                             }
                         }} 
                         disabled={isProcessing}
-                        className="w-full py-4"
+                        className="w-full"
                     >
                         {isProcessing ? 'Opening Portal...' : 'Unlock Forever'}
                     </AnchorButton>
@@ -521,7 +531,8 @@ export default function UntetheredApp() {
     (v) => ['explanation', 'practice', 'video'].includes(v)
   );
   const [activeCourseId, setActiveCourseId] = usePersistedState<string | null>('awakened-course', null);
-  const [voiceGuidanceEnabled, setVoiceGuidanceEnabled] = usePersistedState<boolean>('voice-guidance-enabled', false);
+  const [voiceGuidanceEnabled] = usePersistedState<boolean>('voice-guidance-enabled', true);
+  const [preferredVoice, setPreferredVoice] = usePersistedState<string>('preferred-voice', 'en-US-Chirp3-HD-Despina');
 
   // ── Weekly assignment — system assigns one question per week ──
   const weeklyAssignment = useWeeklyAssignment(
@@ -1003,21 +1014,20 @@ export default function UntetheredApp() {
       </AnimatePresence>
 
       {/* SIDEBAR */}
-      {/* SIDEBAR */}
       <aside className={cn(
         "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70]",
         "border-r border-[var(--border-default)]",
-        "bg-[var(--bg-secondary)] backdrop-blur-2xl",
+        "bg-[var(--bg-surface)] backdrop-blur-2xl px-2",
         "transition-transform duration-500 ease-fluid",
         "lg:translate-x-0",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
 
         {/* ── Logo ── */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-[1.5vh] flex-shrink-0">
           <AwakenedPathLogo
             variant="full"
-            size="md"
+            size="sm"
             animated={true}
             onClick={() => setActiveTab('home')}
             className="group"
@@ -1031,10 +1041,10 @@ export default function UntetheredApp() {
         </div>
 
         {/* ── Thin divider under logo ── */}
-        <div className="mx-6 mb-2 h-px bg-[var(--border-subtle)] opacity-50 flex-shrink-0" />
+        <div className="mx-6 mb-0.5 h-px bg-[var(--border-subtle)] opacity-50 flex-shrink-0" />
 
         {/* ── Scrollable nav ── */}
-        <nav className="flex-1 overflow-y-auto px-4 pb-2 space-y-1 scrollbar-none">
+        <nav className="flex-1 overflow-y-auto px-4 pb-2 space-y-[0.5vh] scrollbar-none flex flex-col min-h-0">
 
           {/* Dashboard */}
           {(() => {
@@ -1044,7 +1054,7 @@ export default function UntetheredApp() {
                 key="home"
                 onClick={() => onNavigate('home')}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all duration-300 group relative",
+                  "w-full flex items-center gap-3 px-4 py-[min(8px,1vh)] rounded-2xl transition-all duration-300 group relative",
                   isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/50"
                 )}
               >
@@ -1070,7 +1080,7 @@ export default function UntetheredApp() {
           {/* ── Courses group ── */}
           <div className="pt-1 pb-0.5">
             {/* Group label */}
-            <div className="flex items-center gap-3 px-4 py-1 mb-0.5">
+            <div className="flex items-center gap-3 px-4 py-[0.5vh] mb-0">
               <Sparkles
                 size={14}
                 strokeWidth={1.5}
@@ -1098,7 +1108,7 @@ export default function UntetheredApp() {
                     <button
                       onClick={() => onNavigate(sub.id)}
                       className={cn(
-                        "w-full flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300 group relative text-left",
+                        "w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all duration-300 group relative text-left",
                         isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/40"
                       )}
                     >
@@ -1123,7 +1133,7 @@ export default function UntetheredApp() {
                         {/* Chapter toggle */}
                         <button
                           onClick={() => setExpandedChapter1(!expandedChapter1)}
-                          className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg group"
+                          className="w-full flex items-center justify-between px-2 py-[0.8vh] rounded-lg group"
                         >
                           <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
                             Chapter 1 · The Mind
@@ -1146,13 +1156,13 @@ export default function UntetheredApp() {
                               transition={{ duration: 0.25 }}
                               className="overflow-hidden"
                             >
-                              <div className="py-0.5 space-y-0.5">
+                              <div className="py-0.5 space-y-[0.2vh]">
                                 {[
-                                  { num: 1, label: 'Using the mind as a tool',    id: 'question1', locked: false },
-                                  { num: 2, label: 'Handling doubt and fear',      id: 'question2', locked: false },
-                                  { num: 3, label: 'Personal to impersonal',       id: 'question3', locked: false },
-                                  { num: 4, label: 'Which part to listen to',      id: 'question4', locked: false },
-                                  { num: 5, label: 'The Observer Discovery',       id: 'question5', locked: false },
+                                  { num: 1, label: 'Using the mind as a tool',    id: 'question1', locked: !isAccessValid },
+                                  { num: 2, label: 'Handling doubt and fear',      id: 'question2', locked: !isAccessValid },
+                                  { num: 3, label: 'Personal to impersonal',       id: 'question3', locked: !isAccessValid },
+                                  { num: 4, label: 'Which part to listen to',      id: 'question4', locked: !isAccessValid },
+                                  { num: 5, label: 'The Observer Discovery',       id: 'question5', locked: !isAccessValid },
                                 ].map(q => {
                                   const isQActive = activeQuestionId === q.id;
                                   return (
@@ -1165,7 +1175,7 @@ export default function UntetheredApp() {
                                         if (window.innerWidth < 1024) setIsSidebarOpen(false);
                                       }}
                                       className={cn(
-                                        "w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-left transition-all group",
+                                        "w-full flex items-center gap-2.5 px-2 py-[1vh] rounded-lg text-left transition-all group",
                                         isQActive
                                           ? "bg-[var(--accent-primary)]/8"
                                           : "hover:bg-[var(--bg-surface)]/50",
@@ -1213,7 +1223,6 @@ export default function UntetheredApp() {
             { id: 'chapters',   icon: BookOpen,  label: 'Journal',          locked: !isAccessValid },
             { id: 'situations', icon: Flame,     label: 'The Practice Room', locked: !isAccessValid },
             { id: 'stats',      icon: BarChart2, label: 'Progress',          locked: !isAccessValid },
-            { id: 'profile',    icon: User,      label: 'Profile',           locked: false },
           ].map(item => {
             const isActive = activeTab === item.id;
             const Icon = item.icon;
@@ -1222,7 +1231,7 @@ export default function UntetheredApp() {
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all duration-300 group relative",
+                  "w-full flex items-center gap-2.5 px-3 py-[min(8px,1vh)] rounded-xl transition-all duration-300 group relative",
                   isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/50"
                 )}
               >
@@ -1253,7 +1262,7 @@ export default function UntetheredApp() {
         <div className="flex-shrink-0 px-4 pt-2 pb-4 border-t border-[var(--border-subtle)]/50 space-y-1">
           {/* Email */}
           {currentUser?.email && (
-            <div className="flex items-center gap-2 px-4 py-2 opacity-70">
+            <div className="flex items-center gap-2 px-4 py-[0.5vh] opacity-70">
               <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)] flex-shrink-0" />
               <span className="text-[10px] text-[var(--text-secondary)] truncate tracking-wider">
                 {currentUser.email}
@@ -1262,7 +1271,7 @@ export default function UntetheredApp() {
           )}
           {/* Membership Status */}
           {membershipInfo && (
-            <div className="mx-2 mb-2 p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2 shadow-lg overflow-hidden relative group">
+            <div className="mx-2 mb-1 p-2 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1 shadow-lg overflow-hidden relative group">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={cn(
@@ -1297,7 +1306,7 @@ export default function UntetheredApp() {
               {membershipInfo.type !== 'Premium' && (
                 <button 
                   onClick={() => onNavigate('paywall')}
-                  className="w-full mt-2 py-2.5 rounded-xl bg-[var(--accent-primary)] text-black text-[9px] font-bold uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
+                  className="w-full mt-1.5 py-2 rounded-xl bg-[var(--accent-primary)] text-black text-[9px] font-bold uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
                 >
                   Upgrade Journey
                 </button>
@@ -1310,7 +1319,7 @@ export default function UntetheredApp() {
             onClick={async () => {
               if (window.confirm('Sign out?')) await signOut();
             }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl group hover:bg-[var(--bg-surface)] transition-all"
+            className="w-full flex items-center gap-3 px-4 py-[0.8vh] rounded-xl group hover:bg-[var(--bg-surface)] transition-all"
           >
             <LogOut size={14} className="text-[var(--text-secondary)] group-hover:text-rose-400 transition-colors flex-shrink-0" />
             <span className="text-[10px] uppercase tracking-[0.35em] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
@@ -1319,7 +1328,7 @@ export default function UntetheredApp() {
           </button>
 
           {/* Brand credit */}
-          <div className="px-4 pt-2">
+          <div className="px-4 pt-1">
             <p className="text-[10px] font-serif italic text-[var(--text-secondary)] opacity-90 leading-relaxed">
               Designed by{' '}
               <a
@@ -1377,6 +1386,16 @@ export default function UntetheredApp() {
               <Mail className="w-4 h-4 transition-transform group-hover:scale-110 group-hover:text-[#D4AF37]" />
             </button>
           )}
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={cn(
+              "p-3 rounded-full backdrop-blur-3xl border border-[var(--border-default)] transition-all flex items-center justify-center group shadow-xl",
+              activeTab === 'profile' ? "bg-[var(--accent-primary)] text-black border-[var(--accent-primary)]" : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+            )}
+            title="Your Journey Profile"
+          >
+            <User className="w-4 h-4" />
+          </button>
           <a
             href="https://www.youtube.com/@SoulfulIntelligenceStudio"
             target="_blank"
@@ -1426,7 +1445,8 @@ export default function UntetheredApp() {
               <>
                 <div className="lg:hidden">
                   <MobileDashboard
-                    user={user}
+                    user={currentUser}
+                    isAccessValid={isAccessValid}
                     onOpenSidebar={() => setIsSidebarOpen(true)}
                     rotateX={rotateX}
                     rotateY={rotateY}
@@ -1437,7 +1457,8 @@ export default function UntetheredApp() {
                 </div>
                 <div className="hidden lg:block">
                   <BreadthDesktop
-                    user={user}
+                    user={currentUser}
+                    isAccessValid={isAccessValid}
                     setActiveTab={setActiveTab}
                     rotateX={rotateX}
                     rotateY={rotateY}
@@ -1523,7 +1544,7 @@ export default function UntetheredApp() {
                 className="space-y-12 max-w-7xl w-full mx-auto"
               >
                 {/* Unified Header Card */}
-                <header className="relative p-12 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden group">
+                <header className="relative p-12 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-visible group">
                   <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/5 to-transparent pointer-events-none" />
 
                   <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
@@ -1648,7 +1669,7 @@ export default function UntetheredApp() {
                 {/* Ethereal Medals Rack */}
                 <div className="p-10 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] space-y-8">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-serif font-light text-[var(--text-secondary)]">Soul Medals</h3>
+                    <h3 className="text-xl font-serif font-light text-[var(--text-secondary)]">Journey Milestones</h3>
                     <span className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{unlocked.length} of 16 Unlocked</span>
                   </div>
 
@@ -1657,61 +1678,71 @@ export default function UntetheredApp() {
 
                 {/* Account Settings */}
                 <div className="p-10 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] space-y-10">
-                  <h3 className="text-xl font-serif font-light text-[var(--text-secondary)] border-b border-[var(--border-subtle)] pb-4">Preferences</h3>
+                  <h3 className="text-xl font-serif font-light text-[var(--text-secondary)] border-b border-[var(--border-subtle)] pb-4">Data & Support</h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-primary)]">Interface Theme</span>
-                        <ThemeToggle />
+                      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Guidance Voice</p>
+                      <div className="grid grid-cols-1 gap-2">
+                        {[
+                          { id: 'en-US-Chirp3-HD-Despina', label: 'Despina (Ethereal Presence)', gender: 'FEMALE' },
+                          { id: 'en-GB-Chirp3-HD-Vindemiatrix', label: 'Vindemiatrix (British Sophistication)', gender: 'FEMALE' },
+                          { id: 'en-US-Chirp3-HD-Algenib', label: 'Algenib (Cosmic Presence)', gender: 'FEMALE' },
+                          { id: 'en-US-Neural2-F', label: 'Gentle Presence (Female)', gender: 'FEMALE' },
+                          { id: 'en-US-Neural2-D', label: 'Warm Wisdom (Male)', gender: 'MALE' },
+                        ].map((v) => (
+                          <button
+                            key={v.id}
+                            onClick={() => {
+                              setPreferredVoice(v.id);
+                              // Preview voice
+                              VoiceService.speak("I am ready to guide you.", { voice: v.id, gender: v.gender as any });
+                            }}
+                            className={cn(
+                              "flex items-center justify-between px-4 py-3 rounded-xl border transition-all",
+                              preferredVoice === v.id
+                                ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] text-[var(--text-primary)]"
+                                : "bg-[var(--bg-surface-hover)] border-[var(--border-default)] text-[var(--text-muted)] hover:border-[var(--accent-primary)]/30"
+                            )}
+                          >
+                            <span className="text-xs font-medium">{v.label}</span>
+                            {preferredVoice === v.id && <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]" />}
+                          </button>
+                        ))}
                       </div>
-                      <p className="text-[11px] text-[var(--text-secondary)] tracking-wide">Adjust the visual sanctuary to your resonance.</p>
+                      <p className="text-[10px] text-[var(--text-muted)] italic leading-relaxed">
+                        Our guidance is dynamically generated using high-fidelity AI. While you can't record your own voice yet, you can choose the presence that resonates most with your spirit.
+                      </p>
                     </div>
 
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-primary)]">Voice Guidance</span>
+                    <div className="space-y-6">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Data Portability</p>
+                      <div className="flex flex-col gap-3">
                         <button
-                          onClick={() => setVoiceGuidanceEnabled(!voiceGuidanceEnabled)}
-                          className={cn(
-                            "w-12 h-6 rounded-full transition-all duration-300 relative",
-                            voiceGuidanceEnabled ? "bg-[var(--accent-primary)]" : "bg-[var(--border-subtle)]"
-                          )}
+                          onClick={async () => {
+                            if (!currentUser) return;
+                            const q = query(collection(db, 'users', currentUser.uid, 'journal'));
+                            const snap = await getDocs(q);
+                            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `awakened-path-journal-${new Date().toISOString().split('T')[0]}.json`;
+                            a.click();
+                          }}
+                          className="w-full px-6 py-4 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all flex items-center justify-center gap-3"
                         >
-                          <motion.div
-                            animate={{ x: voiceGuidanceEnabled ? 24 : 4 }}
-                            className="w-4 h-4 rounded-full bg-white absolute top-1 shadow-sm"
-                          />
+                          <Mail size={14} /> Download Journal Export
+                        </button>
+                        <button
+                          onClick={() => alert("Archive functionality coming soon. Your data is safely persisted in the cloud.")}
+                          className="w-full px-6 py-4 rounded-xl bg-transparent border border-rose-400/20 text-[11px] font-bold uppercase tracking-widest text-rose-400/60 hover:bg-rose-400/5 transition-all"
+                        >
+                          Archive Session History
                         </button>
                       </div>
-                      <p className="text-[11px] text-[var(--text-muted)] tracking-wide">Choose to have a guided frequency walk beside you.</p>
                     </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-[var(--border-subtle)]/50 flex flex-wrap gap-4">
-                    <button
-                      onClick={async () => {
-                        if (!currentUser) return;
-                        const q = query(collection(db, 'users', currentUser.uid, 'journal'));
-                        const snap = await getDocs(q);
-                        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `awakened-path-journal-${new Date().toISOString().split('T')[0]}.json`;
-                        a.click();
-                      }}
-                      className="px-6 py-2 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all"
-                    >
-                      Download Journal Export
-                    </button>
-                    <button
-                      onClick={() => alert("Archive functionality coming soon. Your data is safely persisted in the cloud.")}
-                      className="px-6 py-2 rounded-xl bg-transparent border border-rose-400/20 text-[11px] font-bold uppercase tracking-widest text-rose-400/60 hover:bg-rose-400/5 transition-all"
-                    >
-                      Archive Session History
-                    </button>
                   </div>
                 </div>
 
@@ -1726,7 +1757,7 @@ export default function UntetheredApp() {
         onDismiss={dismissToast}
       />
       <WhatsAppButton />
-      {voiceGuidanceEnabled && <VoiceGuidance />}
+      {voiceGuidanceEnabled && <VoiceGuidance preferredVoice={preferredVoice} />}
 
     </div>
   );

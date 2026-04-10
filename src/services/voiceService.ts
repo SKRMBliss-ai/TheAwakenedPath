@@ -12,23 +12,30 @@ export class VoiceService {
     private static currentAudio: HTMLAudioElement | null = null;
     private static currentUrl: string | null = null;
     private static currentRequestId: number = 0;
-    private static listeners: ((isSpeaking: boolean) => void)[] = [];
-    private static _isSpeaking: boolean = false;
+    private static listeners: ((status: 'idle' | 'playing' | 'paused' | 'buffering') => void)[] = [];
+    private static _status: 'idle' | 'playing' | 'paused' | 'buffering' = 'idle';
     private static _isEnabled: boolean = (() => {
         try {
-            const saved = localStorage.getItem('awakened-voice-enabled');
-            return saved === null ? true : saved !== 'off';
+            // Sync with usePersistedState key used in app
+            const saved = localStorage.getItem('voice-guidance-enabled');
+            if (saved === null) return true;
+            return JSON.parse(saved) === true;
         } catch { return true; }
     })();
 
     private static audioCache: Record<string, Promise<string>> = {};
+    private static segmentResolver: (() => void) | null = null;
 
     static get isSpeaking() {
-        return this._isSpeaking;
+        return this._status === 'playing';
     }
 
-    private static setSpeaking(val: boolean) {
-        this._isSpeaking = val;
+    static get status() {
+        return this._status;
+    }
+
+    private static setStatus(val: 'idle' | 'playing' | 'paused' | 'buffering') {
+        this._status = val;
         this.listeners.forEach(l => l(val));
     }
 
@@ -39,17 +46,23 @@ export class VoiceService {
     static setEnabled(val: boolean) {
         this._isEnabled = val;
         try {
-            localStorage.setItem('awakened-voice-enabled', val ? 'on' : 'off');
+            localStorage.setItem('voice-guidance-enabled', JSON.stringify(val));
         } catch { }
         if (!val) this.stop();
-        // Notify listeners if needed, or just let hooks re-render on toggle
     }
 
-    static subscribe(listener: (isSpeaking: boolean) => void) {
+    static subscribe(listener: (status: 'idle' | 'playing' | 'paused' | 'buffering') => void) {
         this.listeners.push(listener);
         return () => {
             this.listeners = this.listeners.filter(l => l !== listener);
         };
+    }
+
+    private static getCacheKey(text: string, voice?: string) {
+        // Robust unique key combining voice identity, content sample, and total length
+        const voiceId = voice || 'default';
+        const textSample = text.substring(0, 50).replace(/\s+/g, '_');
+        return `${voiceId}_${textSample}_${text.length}`;
     }
 
     static preloadText(text: string, options: {
@@ -57,8 +70,14 @@ export class VoiceService {
         voice?: string;
         promptContext?: string;
     } = {}): void {
-        if (!this._isEnabled || text in this.audioCache) return;
-        this.audioCache[text] = fetch(API_BASE_URL, {
+        const key = this.getCacheKey(text, options.voice);
+        if (!this._isEnabled || key in this.audioCache) return;
+        
+        // Append voice ID to URL to bypass any potential POST-body ignoring proxies
+        const fetchUrl = options.voice ? `${API_BASE_URL}?voice=${encodeURIComponent(options.voice)}` : API_BASE_URL;
+        
+        console.log(`[VoiceService] Preloading: ${options.voice || 'default'} via ${fetchUrl}`);
+        this.audioCache[key] = fetch(fetchUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -69,54 +88,73 @@ export class VoiceService {
             })
         })
         .then(res => {
-            if (!res.ok) throw new Error("Backend Budget Exhausted");
+            if (!res.ok) throw new Error(`Backend Error: ${res.status}`);
             return res.blob();
         })
         .then(blob => URL.createObjectURL(blob))
         .catch(err => {
-            console.warn("Preload failed for", text, err);
-            delete this.audioCache[text]; // Remove failed preload so we can retry on next speak
+            console.warn("Preload failed for", options.voice, err);
+            delete this.audioCache[key]; 
             throw err;
         });
     }
 
     /**
      * Pulls high-fidelity audio from the backend and plays it.
+     * Supports segmenting long text for faster initial response.
      */
     static async speak(text: string, options: {
         gender?: 'MALE' | 'FEMALE';
         voice?: string;
         promptContext?: string;
         onEnd?: () => void;
+        isInternal?: boolean;
     } = {}): Promise<void> {
         if (!this._isEnabled) return;
-        const requestId = ++this.currentRequestId;
-        console.log(`VOICE REQUEST [${requestId}]: Speaking with identity [${options.voice || options.gender || 'DEFAULT'}]`);
-        this.stop();
-        this.currentRequestId = requestId; // Restore after stop() increases it
+        
+        const segments = text.split(/\n\n+/).filter(s => s.trim().length > 0);
+        if (segments.length > 1 && !options.isInternal) {
+            return this.speakSegments(segments, options);
+        }
+
+        const requestId = options.isInternal ? this.currentRequestId : ++this.currentRequestId;
+        const key = this.getCacheKey(text, options.voice);
+        
+        if (!options.isInternal) {
+            console.log(`[VoiceService] speak requestId: ${requestId}, key: ${key}`);
+            this.stop();
+            this.currentRequestId = requestId;
+        }
 
         try {
-            if (!(text in this.audioCache)) {
-                // If not preloaded, start the fetch now by leveraging preloadText
+            if (!(key in this.audioCache)) {
+                console.log(`[VoiceService] cache miss for key: ${key}, calling preloadText`);
+                this.setStatus('buffering');
                 this.preloadText(text, options);
             }
 
-            // Wait for the preload fetch to finish (or the inline fetch we just started)
-            const audioUrl = await this.audioCache[text];
+            const audioUrl = await this.audioCache[key];
+            if (this.currentRequestId !== requestId) {
+                console.log(`[VoiceService] speak ${requestId} cancelled, currentRequestId is now ${this.currentRequestId}`);
+                return;
+            }
 
-            if (this.currentRequestId !== requestId) return;
-
+            console.log(`[VoiceService] playing blob: ${audioUrl.substring(0, 30)}... for key: ${key}`);
             const audio = new Audio(audioUrl);
             this.currentAudio = audio;
             this.currentUrl = "tts_blob";
 
-            // Wait until it's actually about to play before showing "Guiding..."
             audio.onplay = () => {
-                if (this.currentAudio === audio) this.setSpeaking(true);
+                if (this.currentAudio === audio) this.setStatus('playing');
             };
 
             audio.onended = () => {
-                this.setSpeaking(false);
+                if (options.isInternal) {
+                    // Internal calls don't set status to idle immediately 
+                    // unless it's the last segment (handled by speakSegments)
+                } else {
+                    this.setStatus('idle');
+                }
                 options.onEnd?.();
                 this.currentAudio = null;
                 this.currentUrl = null;
@@ -124,12 +162,48 @@ export class VoiceService {
 
             await audio.play();
         } catch (error: any) {
-            if (error.name === 'AbortError') {
-                console.log("VoiceService: audio.play() was aborted (likely by a manual stop/pause).");
-                return;
-            }
-            console.warn("Cascading to Browser Speech Synthesis.", error);
+            if (!options.isInternal) this.setStatus('idle');
+            if (error.name === 'AbortError') return;
+            console.warn("Falling back to browser TTS", error);
             this.speakFallbackBrowser(text, options);
+        }
+    }
+
+    private static async speakSegments(segments: string[], options: any): Promise<void> {
+        const requestId = ++this.currentRequestId;
+        this.stop();
+        this.currentRequestId = requestId;
+
+        // Preload all segments in background
+        segments.forEach(s => this.preloadText(s, options));
+
+        for (let i = 0; i < segments.length; i++) {
+            if (this.currentRequestId !== requestId) break;
+            
+            await new Promise<void>(async (resolve) => {
+                try {
+                    this.segmentResolver = resolve;
+                    await this.speak(segments[i], {
+                        ...options,
+                        isInternal: true,
+                        onEnd: () => {
+                            if (this.segmentResolver === resolve) {
+                                this.segmentResolver = null;
+                                resolve();
+                            }
+                        }
+                    });
+                } finally {
+                    if (this.segmentResolver === resolve) {
+                        this.segmentResolver = null;
+                        resolve();
+                    }
+                }
+            });
+        }
+        
+        if (this.currentRequestId === requestId) {
+            this.setStatus('idle');
         }
     }
 
@@ -154,10 +228,10 @@ export class VoiceService {
 
             this.currentAudio = audio;
             this.currentUrl = url;
-            this.setSpeaking(true);
+            this.setStatus('playing');
 
             audio.onended = () => {
-                this.setSpeaking(false);
+                this.setStatus('idle');
                 onEnd?.();
                 this.currentAudio = null;
                 this.currentUrl = null;
@@ -170,7 +244,12 @@ export class VoiceService {
                     code: mediaError?.code,
                     message: mediaError?.message
                 });
-                this.setSpeaking(false);
+                console.error("VoiceService Error:", {
+                    url,
+                    code: mediaError?.code,
+                    message: mediaError?.message
+                });
+                this.setStatus('idle');
             };
 
             const playPromise = audio.play();
@@ -183,7 +262,7 @@ export class VoiceService {
                 return;
             }
             console.error("VoiceService: Playback failed:", error);
-            this.setSpeaking(false);
+            this.setStatus('idle');
         }
     }
 
@@ -196,9 +275,9 @@ export class VoiceService {
         const voices = window.speechSynthesis.getVoices();
         utterance.voice = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en')) || voices[0];
 
-        this.setSpeaking(true);
+        this.setStatus('playing');
         utterance.onend = () => {
-            this.setSpeaking(false);
+            this.setStatus('idle');
             options.onEnd?.();
         };
 
@@ -208,7 +287,7 @@ export class VoiceService {
     private static savedTime: number = 0;
 
     static pause() {
-        this.setSpeaking(false);
+        this.setStatus('paused');
         if (this.currentAudio) {
             this.savedTime = this.currentAudio.currentTime;
             this.currentAudio.pause();
@@ -222,7 +301,7 @@ export class VoiceService {
         if (!this._isEnabled) return;
         
         if (this.currentAudio) {
-            this.setSpeaking(true);
+            this.setStatus('playing');
             try {
                 if (this.savedTime > 0 && this.currentAudio.readyState >= 1) {
                     this.currentAudio.currentTime = this.savedTime;
@@ -241,7 +320,7 @@ export class VoiceService {
 
     static stop() {
         this.currentRequestId++; // Invalidate any in-flight requests
-        this.setSpeaking(false);
+        this.setStatus('idle');
         this.savedTime = 0;
         if (this.currentAudio) {
             this.currentAudio.pause();
@@ -250,6 +329,10 @@ export class VoiceService {
             this.currentAudio = null;
         }
         this.currentUrl = null;
+        if (this.segmentResolver) {
+            this.segmentResolver();
+            this.segmentResolver = null;
+        }
         if (typeof window !== 'undefined' && window.speechSynthesis) {
             window.speechSynthesis.cancel();
         }
@@ -277,10 +360,15 @@ export function useVoiceEnabled() {
     return enabled;
 }
 
-export function useVoiceActive() {
-    const [isSpeaking, setIsSpeaking] = useState(VoiceService.isSpeaking);
+export function useVoiceStatus() {
+    const [status, setStatus] = useState(VoiceService.status);
     useEffect(() => {
-        return VoiceService.subscribe((val: boolean) => setIsSpeaking(val));
+        return VoiceService.subscribe((val) => setStatus(val));
     }, []);
-    return isSpeaking;
+    return status;
+}
+
+export function useVoiceActive() {
+    const status = useVoiceStatus();
+    return status === 'playing';
 }

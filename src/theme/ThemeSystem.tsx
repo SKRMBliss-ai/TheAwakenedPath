@@ -133,7 +133,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             root.style.setProperty("--card-glow-pulse", "rgba(54, 171, 163, 0.08)");
             root.style.setProperty("--card-glow-surge", "rgba(54, 171, 163, 0.12)");
             root.style.setProperty("--glow-primary", "rgba(54, 171, 163, 0.06)");
-            root.style.setProperty("--accent-primary-dim", "rgba(54, 171, 163, 0.03)");
+            root.style.setProperty("--accent-primary-dim", "rgba(54, 171, 163, 0.12)");
             root.style.setProperty("--video-shadow", "0 20px 60px rgba(0,0,0,0.8)");
             root.style.setProperty("--video-border", "rgba(0, 0, 0, 0.05)");
         }

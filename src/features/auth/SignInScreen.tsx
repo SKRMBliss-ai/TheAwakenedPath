@@ -129,7 +129,7 @@ export const SignInScreen = () => {
                         <button
                             onClick={handleGoogleSignIn}
                             disabled={loading}
-                            className="w-full group relative flex items-center justify-center gap-3 px-6 py-4 rounded-2xl transition-all active:scale-95 mb-6"
+                            className="w-full group relative flex items-center justify-center gap-3 px-6 py-3 rounded-2xl transition-all active:scale-95 mb-6"
                             style={{
                                 background: mode === 'dark' ? 'white' : '#1E1B2E',
                                 color: mode === 'dark' ? '#1E1B2E' : 'white',
@@ -217,7 +217,7 @@ export const SignInScreen = () => {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white text-xs font-bold py-4 rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 mt-4"
+                                        className="w-full bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white text-xs font-bold py-3 rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 mt-4"
                                     >
                                         {loading ? (
                                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

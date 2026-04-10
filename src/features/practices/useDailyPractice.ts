@@ -24,6 +24,7 @@ export interface PracticeRecord {
   note?: string;
   learnCompleted?: boolean;    // for the 'Learn' step
   reflectCompleted?: boolean;  // for the 'Reflect' step
+  integrateCompleted?: boolean; // for the 'Integrate' step
 }
 
 export interface UseDailyPracticeReturn {
@@ -39,9 +40,10 @@ export interface UseDailyPracticeReturn {
   markUndone: () => Promise<void>;
   // Save a journal note alongside the practice
   saveNote: (note: string) => Promise<void>;
-  // Mark the Learn or Reflect pillars
+  // Mark the Learn, Reflect, or Integrate pillars
   markLearn: () => Promise<void>;
   markReflect: () => Promise<void>;
+  markIntegrate: () => Promise<void>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -144,6 +146,10 @@ export function useDailyPractice(
     await write({ reflectCompleted: true });
   }, [write]);
 
+  const markIntegrate = useCallback(async () => {
+    await write({ integrateCompleted: true });
+  }, [write]);
+
   // ── Derived ───────────────────────────────────────────────────────────────
 
   const isCompleted = record?.completed === true;
@@ -160,6 +166,7 @@ export function useDailyPractice(
     saveNote,
     markLearn,
     markReflect,
+    markIntegrate,
   };
 }
 

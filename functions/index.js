@@ -419,9 +419,6 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
 
     if (!text && !promptContext) return res.status(400).send("No text or context provided.");
 
-    // High-Fidelity Journey Voices
-    const isMale = (voice === 'Enceladus' || voice === 'Charon' || gender === 'MALE');
-    const voiceName = isMale ? 'en-US-Journey-D' : 'en-US-Journey-F';
     // 1. Intelligent Script Generation (Step 3 or context-heavy)
     if (promptContext) {
         try {
@@ -439,14 +436,35 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
         }
     }
 
-    // 2. Synthesize with Neural Journey Engine (Fastest Path)
+    // 2. Synthesize with Neural Engine
     try {
+        // Map simplified names to official IDs if needed, otherwise use passed ID
+        let finalVoiceName = voice;
+        if (voice === 'Enceladus' || voice === 'Charon' || voice === 'Zephyr') {
+            finalVoiceName = 'en-US-Journey-D';
+        } else if (voice === 'Despina' || voice === 'Algenib') {
+            finalVoiceName = 'en-US-Journey-F';
+        }
+        
+        // If gender is explicitly MALE and we have a generic voice, ensure we use a male journey voice
+        if (gender === 'MALE' && (finalVoiceName === 'en-US-Journey-F' || !finalVoiceName)) {
+            finalVoiceName = 'en-US-Journey-D';
+        }
+
+        // Final fallback to a high-quality neural voice if nothing else is determined
+        if (!finalVoiceName) finalVoiceName = 'en-US-Journey-F';
+
+        console.log(`[TTS] Synthesizing with Voice: ${finalVoiceName}, Gender: ${gender}`);
+
         const [response] = await ttsClient.synthesizeSpeech({
             input: { text: text },
-            voice: { languageCode: 'en-US', name: voiceName },
+            voice: { 
+                languageCode: finalVoiceName.startsWith('en-GB') ? 'en-GB' : 'en-US', 
+                name: finalVoiceName 
+            },
             audioConfig: {
                 audioEncoding: 'MP3',
-                speakingRate: 0.9 // Slower for spiritual depth
+                speakingRate: 0.95 // Slightly faster than 0.9 to sound more natural but still calm
             },
         });
 

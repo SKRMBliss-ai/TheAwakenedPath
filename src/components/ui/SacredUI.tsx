@@ -142,7 +142,7 @@ export const AnchorButton = ({ children, variant = "ghost", onClick, loading, cl
                 className={className}
                 style={{
                     position: "relative", overflow: "hidden",
-                    padding: "20px 56px",
+                    padding: "12px 40px",
                     background: hovered
                         ? `linear-gradient(135deg, ${tokens.teal}, #6BBFB7)`
                         : `linear-gradient(135deg, ${tokens.teal}, #5BB2AB)`,
@@ -150,7 +150,7 @@ export const AnchorButton = ({ children, variant = "ghost", onClick, loading, cl
                     border: `1.5px solid ${hovered ? tokens.teal : tokens.teal + 'CC'}`,
                     cursor: disabled ? "not-allowed" : "pointer",
                     fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                    fontSize: 10, letterSpacing: "0.3em", textTransform: "uppercase",
+                    fontSize: 11, letterSpacing: "0.25em", textTransform: "uppercase",
                     color: "#0D1F1E",
                     opacity: disabled ? 0.3 : 1,
                     boxShadow: hovered && !disabled
@@ -184,12 +184,12 @@ export const AnchorButton = ({ children, variant = "ghost", onClick, loading, cl
             className={className}
             style={{
                 position: "relative", overflow: "hidden",
-                width: "100%", padding: "26px 48px", borderRadius: 32, cursor: disabled ? "not-allowed" : "pointer",
+                width: "100%", padding: "14px 32px", borderRadius: 32, cursor: disabled ? "not-allowed" : "pointer",
                 background: hovered ? "var(--bg-secondary)" : "transparent",
                 border: `1px solid ${hovered ? "var(--border-default)" : "var(--border-subtle)"}`,
                 color: disabled ? "var(--text-muted)" : hovered ? "var(--text-primary)" : "var(--text-secondary)",
                 fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                fontSize: 9, letterSpacing: "0.5em", textTransform: "uppercase",
+                fontSize: 11, letterSpacing: "0.25em", textTransform: "uppercase",
                 boxShadow: hovered && !disabled ? `0 0 40px ${tokens.magenta}18, inset 0 0 30px ${tokens.magenta}04` : "none",
                 transition: "all 0.6s cubic-bezier(0.16,1,0.3,1)",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 12,

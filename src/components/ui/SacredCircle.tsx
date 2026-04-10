@@ -145,7 +145,7 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                             <div className="absolute inset-0 rounded-full"
                                 style={{
                                     background: isLight
-                                        ? "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.4) 0%, transparent 50%)"
+                                        ? "radial-gradient(circle at 30% 25%, rgba(54, 171, 163, 0.35) 0%, transparent 60%)"
                                         : "radial-gradient(circle at 30% 25%, rgba(255,220,240,0.06) 0%, transparent 50%)",
                                 }}
                             />
@@ -218,7 +218,7 @@ export const SacredCircle: React.FC<SacredCircleProps> = ({
                             <div className="absolute inset-0 rounded-full"
                                 style={{
                                     background: isLight
-                                        ? "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.4) 0%, transparent 45%)"
+                                        ? "radial-gradient(circle at 35% 30%, rgba(54, 171, 163, 0.35) 0%, transparent 60%)"
                                         : "radial-gradient(circle at 35% 30%, rgba(255,220,240,0.04) 0%, transparent 45%)",
                                 }}
                             />

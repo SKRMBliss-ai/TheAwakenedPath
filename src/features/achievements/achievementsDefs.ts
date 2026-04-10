@@ -73,7 +73,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     // ── WITNESSING ────────────────────────────────────────────────────────────
     {
         id: 'first_thought',
-        name: 'First Thought',
+        name: 'First Step',
         desc: 'You witnessed your first thought.',
         icon: Sprout,
         color: '#7EC8A0',
@@ -84,7 +84,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     },
     {
         id: 'the_observer',
-        name: 'The Observer',
+        name: 'Observer',
         desc: 'You have witnessed yourself 5 times.',
         icon: Eye,
         color: '#ABCEC9',
@@ -95,7 +95,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     },
     {
         id: 'dedicated_witness',
-        name: 'Dedicated Witness',
+        name: 'Steady Mind',
         desc: '20 entries of honest witnessing.',
         icon: BookOpen,
         color: '#C65F9D',
@@ -106,7 +106,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     },
     {
         id: 'inner_scribe',
-        name: 'Inner Scribe',
+        name: 'Daily Journal',
         desc: 'A soul dedicated to 50 moments of truth.',
         icon: PenTool,
         color: '#F4A261',
@@ -119,7 +119,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     // ── PRESENCE STUDY ────────────────────────────────────────────────────────
     {
         id: 'first_lesson',
-        name: 'First Teaching',
+        name: 'New Insight',
         desc: 'You received your first teaching.',
         icon: Film,
         color: '#9B8CC9',
@@ -130,7 +130,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     },
     {
         id: 'chapter1_complete',
-        name: 'The Observer',
+        name: 'Mind Awareness',
         desc: 'You Are Not Your Mind — chapter complete.',
         icon: Brain,
         color: '#7B9FCC',
@@ -176,7 +176,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     // ── STREAKS ───────────────────────────────────────────────────────────────
     {
         id: 'streak_3',
-        name: 'Returning',
+        name: '3-Day Flow',
         desc: 'You returned for 3 days in a row.',
         icon: Moon,
         color: '#7EC8A0',
@@ -187,7 +187,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     },
     {
         id: 'streak_7',
-        name: 'Unwavering',
+        name: '7-Day Flow',
         desc: '7 days of unbroken presence.',
         icon: Flame,
         color: '#F4A261',
@@ -198,7 +198,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     },
     {
         id: 'streak_28',
-        name: 'The Presence',
+        name: 'Monthly Flow',
         desc: '28 days — a full moon cycle of awakening.',
         icon: Circle,
         color: '#FFD700',
