@@ -302,8 +302,8 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
   };
 
   const features = [
-    { name: "Full Intelligence Courses", basic: "Sample Only", premium: "Unlimited", icon: BookOpen },
-    { name: "Daily Presence Meditations", basic: "2 Portals", premium: "Complete Library", icon: Heart },
+    { name: "Deep Wisdom Courses", basic: "First 2 Lessons", premium: "All Chapters & Content", icon: BookOpen },
+    { name: "Daily Presence Practices", basic: "Trial Portal Only", premium: "Entire Practice Library", icon: Heart },
     { name: "Interactive Insight Journal", basic: "Locked", premium: "Full Access", icon: Sparkles },
     { name: "Personal Consultations", basic: "-", premium: "2 Free Sessions", icon: User },
     { name: "Progress Tracking", basic: "Basic", premium: "In-Depth Analytics", icon: BarChart2 },
