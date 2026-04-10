@@ -55,12 +55,12 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndia
   return "Welcome to your sacred space. I am here to guide your journey to inner freedom. Wherever you are, simply be here now.";
 };
 
-export const VoiceGuidance = ({ 
+export const VoiceGuidance = ({
   preferredVoice = 'en-GB-Chirp3-HD-Despina',
   activeTab = 'home',
   isAccessValid = false,
   assignment = null
-}: { 
+}: {
   preferredVoice?: string;
   activeTab?: string;
   isAccessValid?: boolean;
@@ -73,8 +73,8 @@ export const VoiceGuidance = ({
   const [isPreparing, setIsPreparing] = useState(false);
 
   // Detect location for pricing
-  const isIndianUser = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Calcutta' || 
-                       Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Kolkata';
+  const isIndianUser = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Calcutta' ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Kolkata';
 
   const currentScript = getScript(activeTab, isAccessValid, assignment, isIndianUser);
 
