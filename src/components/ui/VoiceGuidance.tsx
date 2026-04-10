@@ -29,13 +29,23 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndia
     `;
   }
 
-  // Script for Course Lists
-  if (tab === 'intelligence' || tab === 'wisdom_untethered' || tab === 'courses' || tab === 'journey') {
+  // Power of Now
+  if (tab === 'intelligence' || tab === 'journey') {
     return `
-      You have entered the Wisdom Portal. Here, you can immerse yourself in our foundational teachings.
-      'The Power of Now' will guide you to anchor your awareness in the eternal present, dissolving the illusions of time.
-      'Wisdom Untethered' invites you to explore the Observer Discovery, where you finally realize the true nature of the one who watches.
-      Listen with your heart, choose a teaching, and let the spiral of deepening begin.
+      Welcome to the Power of Now. Here, you can immerse yourself in the profound teachings of presence. 
+      You can view the video chapters one by one, and your progress will be automatically stored as you journey through. 
+      Each session you complete also grants you points towards your expansion. 
+      Listen with your heart, and let these insights guide you into the stillness of the eternal present.
+    `;
+  }
+
+  // Wisdom Untethered
+  if (tab === 'wisdom_untethered') {
+    return `
+      Welcome to Wisdom Untethered. This journey invites you to explore the depth of your awareness. 
+      You can go through the spiritual explanations, watch the guided videos, and enter the Practice Room for specific chapter-based practices. 
+      To deepen your transformation, we recommend completing at least one featured practice from your dashboard each day. 
+      You are always welcome to do more if you feel called to explore further.
     `;
   }
 
