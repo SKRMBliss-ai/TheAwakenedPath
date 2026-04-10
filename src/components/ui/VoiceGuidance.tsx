@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, X, Headphones, Pause, Square } from 'lucide-react';
+import { Play, X, Pause, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 
@@ -94,8 +94,12 @@ export const VoiceGuidance = ({ preferredVoice = 'en-US-Chirp3-HD-Despina' }: { 
 
             <div className="flex items-start gap-4 mb-6">
               <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--accent-primary)]/30 relative z-10 shadow-lg bg-[var(--bg-surface-hover)] flex items-center justify-center">
-                  <Headphones className="w-5 h-5 text-[var(--accent-primary)]" />
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--accent-primary)]/30 relative z-10 shadow-lg">
+                  <img 
+                    src="/guide-avatar.png" 
+                    alt="Voice Presence" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 {isSpeaking && (
                   <motion.div
@@ -224,8 +228,12 @@ export const VoiceGuidance = ({ preferredVoice = 'en-US-Chirp3-HD-Despina' }: { 
             onClick={() => setShowFull(true)}
             className="pointer-events-auto w-16 h-16 rounded-full bg-[var(--bg-surface)] border border-[var(--accent-primary)]/30 shadow-xl overflow-hidden hover:scale-110 active:scale-95 transition-all relative group p-0"
           >
-            <div className="absolute inset-0 rounded-full animate-pulse bg-[var(--accent-primary)]/10 z-0" />
-            <Headphones size={28} className="relative z-10 text-[var(--accent-primary)]" />
+            <img 
+              src="/guide-avatar.png" 
+              alt="Voice Presence" 
+              className="w-full h-full object-cover relative z-10"
+            />
+            <div className="absolute inset-0 rounded-full animate-pulse bg-[var(--accent-primary)]/20 z-0" />
           </motion.button>
         )}
       </AnimatePresence>
