@@ -52,7 +52,7 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndia
   if (tab === 'situations' || tab === 'practices') {
     return `
       You are in the Practice Room. Here, we translate wisdom into living experience. 
-      Choose a practice that speaks to your current state—be it a breathing exercise to ground your energy or a guided meditation to quiet the mind. 
+      Choose a practice that speaks to your current state—be it a body scan to ground your awareness or a guided meditation to quiet the mind. 
       These are the tools that will help you maintain presence in the midst of life's daily dance.
     `;
   }
