@@ -517,7 +517,9 @@ export default function UntetheredApp() {
 
   const membershipInfo = useMemo(() => {
     if (!profile) return null;
-    const isPremium = profile.purchasedCourses?.includes('all_access') || profile.subscriptionStatus === 'ACTIVE';
+    const isPremium = profile.purchasedCourses?.includes('all_access') || 
+                      profile.subscriptionStatus === 'ACTIVE' || 
+                      isAdminEmail(currentUser?.email);
     const trialDate = profile.trialUntil?.toDate ? profile.trialUntil.toDate() : (profile.trialUntil ? new Date(profile.trialUntil) : null);
     const isTrial = !!(trialDate && trialDate > new Date());
 
@@ -528,7 +530,8 @@ export default function UntetheredApp() {
 
     const plan = profile.subscriptionId?.includes('yearly') ? 'Yearly' :
       profile.subscriptionId?.includes('monthly') ? 'Monthly' :
-        (profile.purchasedCourses?.includes('all_access') ? 'Lifetime' : null);
+        (profile.purchasedCourses?.includes('all_access') ? 'Lifetime' : 
+        (isAdminEmail(currentUser?.email) ? 'All Access' : null));
 
     return {
       type: isPremium ? 'Premium' : (isTrial ? 'Trial' : 'Basic'),
@@ -537,7 +540,7 @@ export default function UntetheredApp() {
       daysLeft,
       expiresAt: trialDate
     };
-  }, [profile]);
+  }, [profile, currentUser?.email]);
   // ── Persisted navigation state — app resumes exactly where user left off ──
   const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'home');
   const [activeQuestionId, setActiveQuestionId] = usePersistedState<string>('awakened-question', 'question1');
