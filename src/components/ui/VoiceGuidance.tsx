@@ -95,10 +95,10 @@ export const VoiceGuidance = ({ preferredVoice = 'en-US-Chirp3-HD-Despina' }: { 
             <div className="flex items-start gap-4 mb-6">
               <div className="relative flex-shrink-0">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--accent-primary)]/30 relative z-10 shadow-lg">
-                  <img 
-                    src="/guide-avatar.png" 
-                    alt="Voice Presence" 
-                    className="w-full h-full object-cover"
+                  <img
+                    src="/guide-avatar.png"
+                    alt="Voice Presence"
+                    className="w-full h-full object-cover object-[center_25%]"
                   />
                 </div>
                 {isSpeaking && (
@@ -137,7 +137,7 @@ export const VoiceGuidance = ({ preferredVoice = 'en-US-Chirp3-HD-Despina' }: { 
                     )}
                   >
                     {isPreparing && (
-                      <motion.div 
+                      <motion.div
                         initial={{ left: '-100%' }}
                         animate={{ left: '100%' }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
@@ -161,7 +161,7 @@ export const VoiceGuidance = ({ preferredVoice = 'en-US-Chirp3-HD-Despina' }: { 
                     )}
                   </motion.button>
                 ) : (
-                  <motion.div 
+                  <motion.div
                     key="controls"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -187,22 +187,22 @@ export const VoiceGuidance = ({ preferredVoice = 'en-US-Chirp3-HD-Despina' }: { 
                         Stop
                       </button>
                     </div>
-                    
+
                     {(isSpeaking || isPaused) && (
                       <div className="flex gap-1 justify-center h-3">
                         {[1, 2, 3, 4, 5].map(i => (
                           <motion.div
                             key={i}
-                            animate={isSpeaking ? { 
+                            animate={isSpeaking ? {
                               height: [3, 10, 3],
                               opacity: [0.3, 0.8, 0.3]
-                            } : { 
+                            } : {
                               height: 3,
                               opacity: 0.3
                             }}
-                            transition={{ 
-                              duration: 0.6, 
-                              repeat: Infinity, 
+                            transition={{
+                              duration: 0.6,
+                              repeat: Infinity,
                               delay: i * 0.1,
                               ease: "easeInOut"
                             }}
@@ -228,9 +228,9 @@ export const VoiceGuidance = ({ preferredVoice = 'en-US-Chirp3-HD-Despina' }: { 
             onClick={() => setShowFull(true)}
             className="pointer-events-auto w-16 h-16 rounded-full bg-[var(--bg-surface)] border border-[var(--accent-primary)]/30 shadow-xl overflow-hidden hover:scale-110 active:scale-95 transition-all relative group p-0"
           >
-            <img 
-              src="/guide-avatar.png" 
-              alt="Voice Presence" 
+            <img
+              src="/guide-avatar.png"
+              alt="Voice Presence"
               className="w-full h-full object-cover relative z-10"
             />
             <div className="absolute inset-0 rounded-full animate-pulse bg-[var(--accent-primary)]/20 z-0" />

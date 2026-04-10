@@ -371,7 +371,8 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
                   <Flame size={48} className="text-[var(--accent-primary)]" />
                 </div>
                 <div className="text-center relative z-10">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Taste Awareness</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-1">Taste Awareness</p>
+                    <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mb-3 opacity-70">Experience full potential</p>
                     <h4 className="text-[20px] font-bold text-[var(--text-primary)] mb-1">Begin Trial</h4>
                     <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">Full Access • No Card Needed</p>
                 </div>
@@ -396,7 +397,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
                         {isTrialLoading ? 'Initiating...' : 'Start 3-Day Trial'}
                     </AnchorButton>
                 </div>
-                <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mt-4 opacity-70">Experience full potential</p>
+
             </div>
 
             {/* 2. Monthly */}
