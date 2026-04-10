@@ -665,7 +665,7 @@ export default function SacredUIShowcase() {
                     }}
                 />
                 <p style={{ fontSize: 8, letterSpacing: "0.6em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 16, fontFamily: "'DM Sans', sans-serif", fontWeight: 700 } as any}>
-                    The Awakened Path
+                    Journey to Inner Freedom
                 </p>
                 <h1 style={{ fontSize: 48, fontWeight: 300, letterSpacing: "-0.01em", margin: 0, color: "rgba(255,255,255,0.92)", lineHeight: 1 } as any}>
                     Sacred UI System

@@ -164,7 +164,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     {
         id: 'fully_awakened',
         name: 'Fully Awakened',
-        desc: 'You have walked the full Presence Study.',
+        desc: 'You have walked the full Journey to Inner Freedom.',
         icon: Sparkles,
         color: '#FFD700',
         category: 'presence-study',
@@ -279,7 +279,7 @@ export const ACHIEVEMENTS: Achievement[] = [
 
 export const CATEGORY_LABELS: Record<AchievementCategory, string> = {
     'witnessing': 'Witnessing',
-    'presence-study': 'The Presence Study',
+    'presence-study': 'Journey to Inner Freedom',
     'streaks': 'Streaks',
     'practices': 'Practices',
 };

@@ -214,14 +214,15 @@ function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
           'group-hover:text-[var(--accent-primary)] transition-colors duration-300'
         )}
       >
-        Awakened Path
+        Inner Freedom
       </h1>
 
       {/* Sub-label */}
       <span
-        className={cn(subSize, 'font-sans font-bold text-[var(--text-primary)] uppercase tracking-[0.38em] opacity-80 mt-0.5')}
+        className={cn(subSize, 'font-sans font-bold text-[var(--accent-primary)] uppercase tracking-[0.3em] opacity-100 mt-1')}
+        style={{ fontSize: size === 'sm' ? '6.5px' : size === 'md' ? '9px' : '11px' }}
       >
-        The Presence Study
+        The Awakened Path
       </span>
     </div>
   );

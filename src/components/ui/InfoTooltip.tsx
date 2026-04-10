@@ -57,7 +57,7 @@ export function InfoTooltip({ title, description, howCalculated, className = '' 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 8 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute z-50 bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 min-w-[240px] rounded-2xl shadow-2xl"
+            className="absolute z-50 bottom-full mb-2 right-0 w-64 min-w-[240px] rounded-2xl shadow-2xl origin-bottom-right"
             style={{
               background: 'var(--bg-surface)',
               border: '1.5px solid var(--border-default)',

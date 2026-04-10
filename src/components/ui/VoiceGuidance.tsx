@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Play, X, Headphones, Sparkles, Volume2, Info } from 'lucide-react';
+import { Play, X, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VoiceService, useVoiceActive } from '../../services/voiceService';
-import { useAuth } from '../../features/auth/AuthContext';
+
 import { cn } from '../../lib/utils';
 
 const GUIDANCE_SCRIPT = `
-Welcome to the Awakened Path environment. I am your guide, here to help you navigate our sacred space and choose the right path for your evolution.
+Welcome to your Journey to Inner Freedom. I am your guide, here to help you navigate our sacred space and choose the right path for your evolution.
 
-Currently, you are in the base experience. Here you can sample our daily meditation portals and presence tools. However, the true transformation lies within our full wisdom library.
+Currently, you are in the base experience. Here you can sample our daily meditation portals and presence tools. However, the true transformation lies within our full library of wisdom.
 
 We offer three distinct tiers for your journey:
 
@@ -24,22 +24,17 @@ Choose the path that resonates with your current depth. We are honored to walk b
 `;
 
 export const VoiceGuidance = () => {
-  const { isAccessValid, loading } = useAuth();
   const isSpeaking = useVoiceActive();
   const [showFull, setShowFull] = useState(false);
   const [hasDismissed, setHasDismissed] = useState(false);
 
-  // Auto-show nudge for basic users after a short delay
+  // Auto-show nudge after a delay
   useEffect(() => {
-    if (!loading && !isAccessValid && !hasDismissed) {
-      const timer = setTimeout(() => {
-        setShowFull(true);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isAccessValid, loading, hasDismissed]);
-
-  if (loading || isAccessValid || hasDismissed) return null;
+    const timer = setTimeout(() => {
+      if (!hasDismissed) setShowFull(true);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [hasDismissed]);
 
   const toggleGuidance = () => {
     if (isSpeaking) {
@@ -47,112 +42,84 @@ export const VoiceGuidance = () => {
     } else {
       VoiceService.speak(GUIDANCE_SCRIPT, {
         gender: 'FEMALE',
-        voice: 'en-US-Neural2-F', // Premium Google voice
+        voice: 'en-US-Neural2-F',
         promptContext: 'Spiritual, calming, encouraging guide'
       });
     }
   };
 
   return (
-    <div className="fixed bottom-24 right-6 z-[60] flex flex-col items-end gap-3 pointer-events-none">
+    <div className="fixed bottom-32 right-6 z-[100] flex flex-col items-end gap-3 pointer-events-none">
       <AnimatePresence>
         {showFull && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="pointer-events-auto w-[320px] bg-[var(--bg-surface)] backdrop-blur-xl border border-[var(--border-subtle)] rounded-2xl shadow-2xl p-5 relative overflow-hidden group"
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="pointer-events-auto w-[360px] bg-[var(--bg-surface)] border border-[var(--border-default)] backdrop-blur-3xl rounded-[32px] shadow-2xl p-8 relative overflow-hidden"
           >
-            {/* Animated Glow Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary-dim)] to-transparent opacity-30 pointer-events-none" />
-            
+            {/* Close Button */}
             <button 
-              onClick={() => {
-                setShowFull(false);
-                VoiceService.stop();
-              }}
-              className="absolute top-3 right-3 p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              onClick={() => setShowFull(false)}
+              className="absolute top-6 right-6 p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X size={20} />
             </button>
 
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[var(--accent-primary-dim)] flex items-center justify-center flex-shrink-0 border border-[var(--accent-primary)]/20">
-                <Headphones className="w-5 h-5 text-[var(--accent-primary)]" />
+            <div className="flex items-start gap-5 mb-8">
+              <div className="w-14 h-14 rounded-full bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 flex items-center justify-center flex-shrink-0">
+                <Headphones className="w-6 h-6 text-[var(--accent-primary)]" />
               </div>
-              <div>
-                <h3 className="text-sm font-serif font-bold text-[var(--text-primary)] mb-1">Audio Guide Available</h3>
-                <p className="text-[12px] text-[var(--text-muted)] leading-relaxed italic">
+              <div className="pt-1">
+                <h3 className="text-xl font-serif font-light text-[var(--text-primary)] mb-2 tracking-wide">Audio Guide Available</h3>
+                <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed italic font-serif">
                   Let me help you navigate your journey and choose the right path.
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-6">
               <button
                 onClick={toggleGuidance}
                 className={cn(
-                  "w-full py-3 px-4 rounded-xl flex items-center justify-center gap-3 transition-all duration-500 font-medium text-sm",
+                  "w-full py-5 px-6 rounded-[20px] flex items-center justify-center gap-4 transition-all duration-500 font-bold text-[14px] uppercase tracking-widest",
                   isSpeaking 
                     ? "bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30"
-                    : "bg-[var(--accent-primary)] text-white shadow-[0_0_20px_var(--card-glow-base)] hover:scale-[1.02] active:scale-[0.98]"
+                    : "bg-[var(--accent-primary)] text-black shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                 )}
               >
                 {isSpeaking ? (
-                  <>
+                  <div className="flex gap-2 items-center">
                     <div className="flex gap-1 items-center h-4">
                       {[1, 2, 3].map(i => (
                         <motion.div
                           key={i}
                           animate={{ height: [4, 12, 4] }}
                           transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.2 }}
-                          className="w-0.5 bg-[var(--accent-primary)] rounded-full"
+                          className="w-1 bg-[var(--accent-primary)] rounded-full"
                         />
                       ))}
                     </div>
-                    <span>Guiding Now...</span>
-                  </>
+                    <span>GUIDING...</span>
+                  </div>
                 ) : (
                   <>
-                    <Play className="w-4 h-4 fill-current" />
+                    <Play className="w-5 h-5 fill-current" />
                     <span>Listen to Voice Guide</span>
                   </>
                 )}
               </button>
 
-              {!isSpeaking && (
-                <button 
-                  onClick={() => setHasDismissed(true)}
-                  className="w-full py-2 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors uppercase tracking-[0.1em] font-medium"
-                >
-                  I'll explore myself
-                </button>
-              )}
-            </div>
-
-            {/* Micro-info about benefits */}
-            {isSpeaking && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mt-4 pt-4 border-t border-[var(--border-subtle)]/30"
+              <button 
+                onClick={() => {
+                   setHasDismissed(true);
+                   setShowFull(false);
+                }}
+                className="w-full text-center text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] font-bold uppercase tracking-[0.4em] transition-colors"
               >
-                <div className="grid grid-cols-2 gap-2 text-[10px] text-[var(--text-muted)]">
-                  <div className="flex items-center gap-1.5 uppercase tracking-tighter">
-                    <Sparkles className="w-3 h-3 text-[var(--accent-primary)]" />
-                    <span>Full Courses</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 uppercase tracking-tighter">
-                    <Volume2 className="w-3 h-3 text-[var(--accent-primary)]" />
-                    <span>Premium Audio</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 uppercase tracking-tighter">
-                    <Info className="w-3 h-3 text-[var(--accent-primary)]" />
-                    <span>15-Day Refund</span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
+                I'll explore myself
+              </button>
+            </div>
           </motion.div>
         )}
 
@@ -162,15 +129,10 @@ export const VoiceGuidance = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => setShowFull(true)}
-            className="pointer-events-auto p-4 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xl text-[var(--accent-primary)] hover:scale-110 active:scale-95 transition-all group relative"
+            className="pointer-events-auto p-4 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-2xl text-[var(--accent-primary)] hover:scale-110 active:scale-95 transition-all relative group"
           >
             <div className="absolute inset-0 rounded-full animate-ping bg-[var(--accent-primary)]/10" />
-            <Headphones className="w-6 h-6 relative z-10" />
-            <motion.div 
-              className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full border-2 border-[var(--bg-surface)]"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
+            <Headphones size={24} className="relative z-10" />
           </motion.button>
         )}
       </AnimatePresence>

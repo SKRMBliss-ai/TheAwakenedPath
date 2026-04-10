@@ -213,8 +213,9 @@ const BreadthDesktop = ({ user, rotateX, rotateY, progress, weeklyAssignment, on
             </h1>
           </div>
         </div>
-        <div className="flex flex-col items-end opacity-90">
-          <span className="text-[11px] font-serif italic text-[var(--text-secondary)] tracking-[0.3em] uppercase">The Presence Study</span>
+        <div className="flex flex-col items-end">
+          <span className="text-[12px] font-serif italic tracking-[0.3em] uppercase text-[var(--accent-primary)] font-bold">Journey to Inner Freedom</span>
+          <span className="text-[9px] font-sans uppercase tracking-[0.2em] text-[var(--text-muted)] mt-1 opacity-70">Presence Repository</span>
         </div>
       </header>
 
@@ -261,7 +262,6 @@ const BreadthDesktop = ({ user, rotateX, rotateY, progress, weeklyAssignment, on
 // --- Premium Paywall Component ---
 const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial }: any) => {
   const [isTrialLoading, setIsTrialLoading] = useState(false);
-  // Determine user base currency using timezone heuristic
   const isIndianUser = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Calcutta' || 
                        Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Kolkata';
   const currency = isIndianUser ? 'INR' : 'USD';
@@ -276,183 +276,206 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
       lifetimeCents: isIndianUser ? '' : '.99'
   };
 
+  const features = [
+    { name: "Full Intelligence Courses", basic: "Sample Only", premium: "Unlimited", icon: BookOpen },
+    { name: "Daily Presence Meditations", basic: "2 Portals", premium: "Complete Library", icon: Heart },
+    { name: "Interactive Insight Journal", basic: "Locked", premium: "Full Access", icon: Sparkles },
+    { name: "Personal Consultations", basic: "-", premium: "2 Free Sessions", icon: User },
+    { name: "Progress Tracking", basic: "Basic", premium: "In-Depth Analytics", icon: BarChart2 },
+    { name: "Weekly Assignments", basic: "Delayed", premium: "Instant Access", icon: Clock },
+  ];
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] h-full text-center p-6 md:p-12 bg-[var(--bg-base)]">
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        {/* Left Side: Art & Description */}
-        <div className="flex flex-col items-center md:items-start text-left space-y-8">
-            <div className="relative group">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] h-full text-center p-4 md:p-8 bg-[var(--bg-base)]">
+      <div className="max-w-6xl w-full flex flex-col items-center space-y-12">
+        {/* Hero Section */}
+        <div className="text-center space-y-4 max-w-2xl px-4">
             <motion.div
-                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute inset-[-20px] bg-[var(--accent-primary)]/10 blur-[40px] rounded-full"
-            />
-            <div className="w-20 h-20 rounded-[28px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center relative z-10 shadow-2xl">
-                <Sparkles className="w-8 h-8 text-[var(--accent-primary)] opacity-60" />
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-4"
+            >
+              <h2 className="text-4xl md:text-6xl font-serif font-light text-[var(--text-primary)] tracking-tight">Expand Your Journey</h2>
+              <p className="text-[15px] md:text-[17px] font-serif italic text-[var(--text-secondary)] leading-relaxed opacity-80">
+                  Step beyond the gateway to unlock full access to The Awakened Path universe.
+              </p>
+            </motion.div>
+        </div>
+
+        {/* Comparison Table */}
+        <div className="w-full max-w-4xl space-y-8 px-4">
+            <div className="overflow-x-auto rounded-[24px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]/30 backdrop-blur-sm">
+                <table className="w-full text-left border-collapse min-w-[500px]">
+                    <thead>
+                        <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/50">
+                            <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Feature</th>
+                            <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Traveler (Free)</th>
+                            <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-[var(--accent-primary)]">Seeker (Premium)</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--border-subtle)]/30">
+                        {features.map((f, i) => (
+                            <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                                <td className="p-5">
+                                    <div className="flex items-center gap-3">
+                                        <f.icon size={14} className="text-[var(--accent-primary)] opacity-60" />
+                                        <span className="text-[13px] font-medium text-[var(--text-primary)]">{f.name}</span>
+                                    </div>
+                                </td>
+                                <td className="p-5 text-[12px] text-[var(--text-muted)]">{f.basic}</td>
+                                <td className="p-5 text-[12px] text-[var(--text-primary)] font-bold">{f.premium}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
-            </div>
-            <div className="space-y-4">
-            <h2 className="text-4xl md:text-5xl font-serif font-light text-[var(--text-primary)] tracking-tight">Expand Your Journey</h2>
-            <p className="text-[15px] font-serif italic text-[var(--text-secondary)] leading-relaxed opacity-80 max-w-md">
-                Step beyond the gateway to unlock full access to The Awakened Path universe.
-            </p>
-            </div>
-            
-            <div className="space-y-4 w-full">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)]">What You Will Discover</h3>
-            <ul className="space-y-3 text-[13px] text-[var(--text-secondary)]">
-                <li className="flex items-center gap-3">
-                    <Sun className="w-4 h-4 text-[var(--accent-primary)]" />
-                    <span>The complete Wisdom Untethered intelligence course</span>
-                </li>
-                <li className="flex items-center gap-3">
-                    <BookOpen className="w-4 h-4 text-[var(--accent-primary)]" />
-                    <span>Interactive Journaling prompts to capture profound insights</span>
-                </li>
-                <li className="flex items-center gap-3">
-                    <Heart className="w-4 h-4 text-[var(--accent-primary)]" />
-                    <span>Unlimited access to The Practice Room guided meditations</span>
-                </li>
-                <li className="flex items-center gap-3">
-                    <BarChart2 className="w-4 h-4 text-[var(--accent-primary)]" />
-                    <span>In-depth Progress Tracking and Soul Medals collection</span>
-                </li>
-                <li className="flex items-center gap-3">
-                    <Clock className="w-4 h-4 text-[var(--accent-primary)]" />
-                    <span>Early access to upcoming courses and weekly assignments</span>
-                </li>
-                <li className="flex items-center gap-3 font-medium text-[var(--text-primary)]">
-                    <Sparkles className="w-4 h-4 text-[var(--accent-primary)]" />
-                    <span>2 Free Personal Consultations included with all plans</span>
-                </li>
-            </ul>
+
+            {/* Sacred Promise */}
+            <div className="flex flex-col items-center gap-6 py-10 px-8 rounded-[40px] bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 text-center shadow-[0_0_50px_rgba(94,196,176,0.05)]">
+                <div className="flex items-center justify-center gap-4 text-[var(--accent-primary)]">
+                    <Sparkles size={20} className="filter drop-shadow-[0_0_8px_var(--glow-primary)]" />
+                    <h5 className="text-[14px] font-bold uppercase tracking-[0.4em] text-[var(--accent-primary)] drop-shadow-sm">Our Sacred Promise</h5>
+                </div>
+                <p className="text-[15px] text-[var(--text-primary)] font-serif italic leading-relaxed text-center max-w-xl">
+                    "If these teachings do not resonate with your spirit, we offer a <span className="text-[var(--accent-primary)] font-bold not-italic underline underline-offset-4 decoration-1">Full 100% Refund</span> within 15 days."
+                </p>
+                <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold opacity-60">Your journey is ours to protect</p>
             </div>
         </div>
 
-        {/* Right Side: Pricing Options */}
-        <div className="flex flex-col gap-6 w-full max-w-sm mx-auto">
-            {/* Monthly */}
-            <div className="p-6 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/50 transition-colors shadow-xl">
-                <div className="flex justify-between items-start mb-4">
-                    <div>
-                        <h4 className="text-[16px] font-medium text-[var(--text-primary)]">Monthly</h4>
-                        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Recurring Journey</p>
-                    </div>
-                    <div className="text-right flex flex-col justify-end">
-                        <p className="text-3xl font-bold font-sans tracking-tight text-[var(--accent-primary)]">{prices.monthly}<span className="text-lg opacity-80">{prices.monthlyCents}</span></p>
-                    </div>
+        {/* Choose Your Commitment */}
+        <div className="text-center space-y-4">
+             <h3 className="text-2xl font-serif font-light text-[var(--text-primary)]">Choose Your Commmitment</h3>
+             <p className="text-sm text-[var(--text-secondary)] italic font-serif opacity-70">The path that resonates with your current depth.</p>
+        </div>
+
+        {/* Pricing Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full items-stretch">
+            {/* 1. Trial Option Card (First Now) */}
+            <div className="p-6 rounded-[32px] border border-dashed border-[var(--accent-primary)] bg-[var(--accent-primary)]/5 transition-all shadow-xl flex flex-col justify-between items-center group relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3 opacity-20 transform rotate-12">
+                  <Flame size={48} className="text-[var(--accent-primary)]" />
                 </div>
-                <AnchorButton 
-                    variant="solid" 
-                    onClick={() => {
-                        if (user?.uid) {
-                            subscribe(user.uid, user.email || '', user.displayName || 'Traveler', 'premium_monthly', currency, () => {
-                                window.location.reload();
-                            });
+                <div className="text-center relative z-10">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Taste Awareness</p>
+                    <h4 className="text-[20px] font-bold text-[var(--text-primary)] mb-1">Begin Trial</h4>
+                    <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">Full Access • No Card Needed</p>
+                </div>
+                <div className="w-full space-y-4 relative z-10">
+                    <p className="text-[28px] font-bold text-[var(--accent-primary)]">Free</p>
+                    <AnchorButton 
+                      variant="solid" 
+                      onClick={async () => {
+                        setIsTrialLoading(true);
+                        try {
+                            await activateTrial();
+                            window.location.reload();
+                        } catch (e) {
+                            console.error(e);
+                        } finally {
+                            setIsTrialLoading(false);
                         }
-                    }} 
-                    disabled={isProcessing}
-                    className="w-full"
-                >
-                    {isProcessing ? 'Opening Portal...' : 'Unlock Monthly'}
-                </AnchorButton>
+                      }}
+                      disabled={isTrialLoading || isProcessing}
+                      className="w-full bg-[var(--accent-primary)] text-black font-bold uppercase tracking-widest py-4"
+                    >
+                        {isTrialLoading ? 'Initiating...' : 'Start 3-Day Trial'}
+                    </AnchorButton>
+                </div>
+                <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mt-4 opacity-70">Experience full potential</p>
             </div>
 
-            {/* Yearly */}
-            <div className="relative p-6 rounded-[24px] border border-[var(--accent-primary)] bg-[var(--bg-surface)] shadow-[0_0_30px_var(--glow-primary)]">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[var(--accent-primary)] rounded-full text-[10px] font-bold uppercase tracking-widest text-black whitespace-nowrap">
-                    Most Popular (2 Months Free)
+            {/* 2. Monthly */}
+            <div className="p-6 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/40 transition-all shadow-lg flex flex-col justify-between">
+                <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Step by Step</p>
+                    <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Monthly Flow</h4>
+                    <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">Recurring Journey</p>
                 </div>
-                <div className="flex justify-between items-start mb-4 mt-2">
-                    <div>
-                        <h4 className="text-[16px] font-medium text-[var(--text-primary)]">Annually</h4>
-                        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Recurring Journey</p>
+                <div className="w-full space-y-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-[28px] font-bold text-[var(--text-primary)]">{prices.monthly}</span>
+                      <span className="text-xs text-[var(--text-muted)]">/ month</span>
                     </div>
-                    <div className="text-right flex flex-col justify-end">
-                        <p className="text-[12px] font-sans text-[var(--text-muted)] line-through block mb-[-6px] pr-1 font-medium">{prices.annuallyStrikethrough}</p>
-                        <p className="text-3xl font-bold font-sans tracking-tight text-[var(--accent-primary)]">{prices.annually}<span className="text-lg opacity-80">{prices.annuallyCents}</span></p>
-                    </div>
+                    <AnchorButton 
+                        variant="ghost" 
+                        onClick={() => {
+                            if (user?.uid) {
+                                subscribe(user.uid, user.email || '', user.displayName || 'Traveler', 'premium_monthly', currency, () => {
+                                    window.location.reload();
+                                });
+                            }
+                        }} 
+                        disabled={isProcessing}
+                        className="w-full py-4"
+                    >
+                        {isProcessing ? 'Opening Portal...' : 'Unlock Monthly'}
+                    </AnchorButton>
                 </div>
-                <AnchorButton 
-                    variant="solid" 
-                    onClick={() => {
-                        if (user?.uid) {
-                            subscribe(user.uid, user.email || '', user.displayName || 'Traveler', 'premium_yearly', currency, () => {
-                                window.location.reload();
-                            });
-                        }
-                    }} 
-                    disabled={isProcessing}
-                    className="w-full"
-                >
-                    {isProcessing ? 'Opening Portal...' : 'Unlock Annually'}
-                </AnchorButton>
             </div>
 
-            {/* Lifetime */}
-            <div className="p-6 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/50 transition-colors shadow-xl">
-                <div className="flex justify-between items-start mb-4">
-                    <div>
-                        <h4 className="text-[16px] font-medium text-[var(--text-primary)]">Forever</h4>
-                        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">One-Time Payment</p>
-                    </div>
-                    <div className="text-right flex flex-col justify-end">
-                        <p className="text-3xl font-bold font-sans tracking-tight text-[var(--accent-primary)]">{prices.lifetime}<span className="text-lg opacity-80">{prices.lifetimeCents}</span></p>
-                    </div>
+            {/* 3. Yearly */}
+            <div className="relative p-6 rounded-[32px] border-2 border-[var(--accent-primary)] bg-[var(--bg-surface)] shadow-[0_0_40px_rgba(94,196,176,0.15)] flex flex-col justify-between transform lg:scale-105 z-10">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-[var(--accent-primary)] rounded-full text-[10px] font-bold uppercase tracking-widest text-black whitespace-nowrap shadow-xl">
+                    Most Devoted Path
                 </div>
-                <AnchorButton 
-                    variant="ghost" 
-                    onClick={() => {
-                        if (user?.uid) {
-                            checkOut?.(user.uid, user.email || '', user.displayName || 'Traveler', 'all_access', currency, () => {
-                                window.location.reload();
-                            });
-                        }
-                    }} 
-                    disabled={isProcessing}
-                    className="w-full"
-                >
-                    {isProcessing ? 'Opening Portal...' : 'Unlock Forever'}
-                </AnchorButton>
+                <div className="text-left mt-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Annual Immersion</p>
+                    <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Sacred Commitment</h4>
+                    <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">2 Months Free Included</p>
+                </div>
+                <div className="w-full space-y-4">
+                    <div className="space-y-0">
+                      <p className="text-[11px] font-sans text-[var(--text-muted)] line-through opacity-60 ml-0.5">{prices.annuallyStrikethrough}</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-[32px] font-bold text-[var(--accent-primary)]">{prices.annually}</span>
+                        <span className="text-xs text-[var(--accent-primary)]/70">/ year</span>
+                      </div>
+                    </div>
+                    <AnchorButton 
+                        variant="solid" 
+                        onClick={() => {
+                            if (user?.uid) {
+                                subscribe(user.uid, user.email || '', user.displayName || 'Traveler', 'premium_yearly', currency, () => {
+                                    window.location.reload();
+                                });
+                            }
+                        }} 
+                        disabled={isProcessing}
+                        className="w-full py-4 shadow-[0_4px_20px_var(--glow-primary)]"
+                    >
+                        {isProcessing ? 'Opening Portal...' : 'Unlock Annually'}
+                    </AnchorButton>
+                </div>
             </div>
 
-            {/* Trial Option Card */}
-            <div className="p-5 rounded-[24px] border border-dashed border-[var(--accent-primary)]/40 bg-[var(--accent-primary)]/5 transition-all shadow-lg flex flex-col items-center gap-3">
-                <div className="text-center">
-                    <h4 className="text-[14px] font-bold text-[var(--accent-primary)] uppercase tracking-widest mb-1">Begin Your Trial</h4>
-                    <p className="text-[11px] text-[var(--text-secondary)] font-serif italic">Full Access • No Card Required • Instant Activation</p>
+            {/* 4. Lifetime */}
+            <div className="p-6 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/40 transition-all shadow-lg flex flex-col justify-between">
+                <div className="text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Everlasting</p>
+                    <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Eternal Traveler</h4>
+                    <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">One-Time Offering</p>
                 </div>
-                <AnchorButton 
-                  variant="solid" 
-                  onClick={async () => {
-                    setIsTrialLoading(true);
-                    try {
-                        await activateTrial();
-                        window.location.reload();
-                    } catch (e) {
-                        console.error(e);
-                    } finally {
-                        setIsTrialLoading(false);
-                    }
-                  }}
-                  disabled={isTrialLoading || isProcessing}
-                  className="w-full bg-[var(--accent-primary)] text-black font-bold uppercase tracking-widest"
-                >
-                    {isTrialLoading ? 'Initiating...' : 'Start 3-Day Experience for Free'}
-                </AnchorButton>
-                <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-[0.2em] font-medium opacity-80">Experience the Full Awakened Path Universe</p>
-
-            </div>
-
-            {/* Refund Policy */}
-            <div className="flex flex-col items-center gap-2 pt-2 px-4">
-                <div className="flex items-center gap-2 text-[var(--accent-secondary)] opacity-90">
-                    <Sparkles size={12} />
-                    <span className="text-[11px] font-bold uppercase tracking-[0.15em]">Our Sacred Promise</span>
+                <div className="w-full space-y-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-[28px] font-bold text-[var(--text-primary)]">{prices.lifetime}</span>
+                      <span className="text-xs text-[var(--text-muted)]">/ forever</span>
+                    </div>
+                    <AnchorButton 
+                        variant="ghost" 
+                        onClick={() => {
+                            if (user?.uid) {
+                                checkOut?.(user.uid, user.email || '', user.displayName || 'Traveler', 'all_access', currency, () => {
+                                    window.location.reload();
+                                });
+                            }
+                        }} 
+                        disabled={isProcessing}
+                        className="w-full py-4"
+                    >
+                        {isProcessing ? 'Opening Portal...' : 'Unlock Forever'}
+                    </AnchorButton>
                 </div>
-                <p className="text-[11px] text-[var(--text-secondary)] font-serif italic leading-relaxed text-center">
-                    We offer a <span className="text-[var(--text-primary)] font-bold">100% Refund</span> without asking any questions within 15 days of your purchase. Your journey is our priority.
-                </p>
             </div>
         </div>
       </div>
@@ -460,12 +483,35 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
   );
 };
 
-
 // --- Main App Component ---
 
 export default function UntetheredApp() {
-  const { user: currentUser, loading, signOut, isAccessValid, activateTrial } = useAuth();
+  const { user: currentUser, profile, loading, signOut, isAccessValid, activateTrial } = useAuth();
   const { theme } = useTheme();
+
+  const membershipInfo = useMemo(() => {
+    if (!profile) return null;
+    const isPremium = profile.purchasedCourses?.includes('all_access') || profile.subscriptionStatus === 'ACTIVE';
+    const trialDate = profile.trialUntil?.toDate ? profile.trialUntil.toDate() : (profile.trialUntil ? new Date(profile.trialUntil) : null);
+    const isTrial = !!(trialDate && trialDate > new Date());
+    
+    let daysLeft = 0;
+    if (isTrial && trialDate) {
+      daysLeft = Math.ceil((trialDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    }
+    
+    const plan = profile.subscriptionId?.includes('yearly') ? 'Yearly' : 
+                 profile.subscriptionId?.includes('monthly') ? 'Monthly' : 
+                 (profile.purchasedCourses?.includes('all_access') ? 'Lifetime' : null);
+
+    return {
+      type: isPremium ? 'Premium' : (isTrial ? 'Trial' : 'Basic'),
+      plan,
+      isTrial,
+      daysLeft,
+      expiresAt: trialDate
+    };
+  }, [profile]);
   // ── Persisted navigation state — app resumes exactly where user left off ──
   const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'home');
   const [activeQuestionId, setActiveQuestionId] = usePersistedState<string>('awakened-question', 'question1');
@@ -475,6 +521,7 @@ export default function UntetheredApp() {
     (v) => ['explanation', 'practice', 'video'].includes(v)
   );
   const [activeCourseId, setActiveCourseId] = usePersistedState<string | null>('awakened-course', null);
+  const [voiceGuidanceEnabled, setVoiceGuidanceEnabled] = usePersistedState<boolean>('voice-guidance-enabled', false);
 
   // ── Weekly assignment — system assigns one question per week ──
   const weeklyAssignment = useWeeklyAssignment(
@@ -967,7 +1014,7 @@ export default function UntetheredApp() {
       )}>
 
         {/* ── Logo ── */}
-        <div className="flex items-center justify-between px-6 pt-8 pb-6 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0">
           <AwakenedPathLogo
             variant="full"
             size="md"
@@ -984,10 +1031,10 @@ export default function UntetheredApp() {
         </div>
 
         {/* ── Thin divider under logo ── */}
-        <div className="mx-6 mb-4 h-px bg-[var(--border-subtle)] opacity-50 flex-shrink-0" />
+        <div className="mx-6 mb-2 h-px bg-[var(--border-subtle)] opacity-50 flex-shrink-0" />
 
         {/* ── Scrollable nav ── */}
-        <nav className="flex-1 overflow-y-auto px-4 pb-4 space-y-1 scrollbar-none">
+        <nav className="flex-1 overflow-y-auto px-4 pb-2 space-y-1 scrollbar-none">
 
           {/* Dashboard */}
           {(() => {
@@ -997,12 +1044,12 @@ export default function UntetheredApp() {
                 key="home"
                 onClick={() => onNavigate('home')}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group relative",
+                  "w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all duration-300 group relative",
                   isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/50"
                 )}
               >
                 {isActive && (
-                  <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-[var(--accent-primary)]" />
+                  <div className="absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full bg-[var(--accent-primary)]" />
                 )}
                 <Sun
                   size={16}
@@ -1021,9 +1068,9 @@ export default function UntetheredApp() {
           })()}
 
           {/* ── Courses group ── */}
-          <div className="pt-2 pb-1">
+          <div className="pt-1 pb-0.5">
             {/* Group label */}
-            <div className="flex items-center gap-3 px-4 py-1.5 mb-1">
+            <div className="flex items-center gap-3 px-4 py-1 mb-0.5">
               <Sparkles
                 size={14}
                 strokeWidth={1.5}
@@ -1051,7 +1098,7 @@ export default function UntetheredApp() {
                     <button
                       onClick={() => onNavigate(sub.id)}
                       className={cn(
-                        "w-full flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 group relative text-left",
+                        "w-full flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300 group relative text-left",
                         isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/40"
                       )}
                     >
@@ -1072,11 +1119,11 @@ export default function UntetheredApp() {
 
                     {/* ── Wisdom Untethered: chapter/question drill-down ── */}
                     {isActive && sub.id === 'wisdom_untethered' && (
-                      <div className="mt-1 mb-2 ml-3 pl-3 border-l border-[var(--border-subtle)]/30">
+                      <div className="mt-0.5 mb-1 ml-3 pl-3 border-l border-[var(--border-subtle)]/30">
                         {/* Chapter toggle */}
                         <button
                           onClick={() => setExpandedChapter1(!expandedChapter1)}
-                          className="w-full flex items-center justify-between px-2 py-2 rounded-lg group"
+                          className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg group"
                         >
                           <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
                             Chapter 1 · The Mind
@@ -1099,7 +1146,7 @@ export default function UntetheredApp() {
                               transition={{ duration: 0.25 }}
                               className="overflow-hidden"
                             >
-                              <div className="py-1 space-y-0.5">
+                              <div className="py-0.5 space-y-0.5">
                                 {[
                                   { num: 1, label: 'Using the mind as a tool',    id: 'question1', locked: false },
                                   { num: 2, label: 'Handling doubt and fear',      id: 'question2', locked: false },
@@ -1175,12 +1222,12 @@ export default function UntetheredApp() {
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group relative",
+                  "w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all duration-300 group relative",
                   isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/50"
                 )}
               >
                 {isActive && (
-                  <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-[var(--accent-primary)]" />
+                  <div className="absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full bg-[var(--accent-primary)]" />
                 )}
                 <Icon
                   size={16}
@@ -1203,14 +1250,58 @@ export default function UntetheredApp() {
         </nav>
 
         {/* ── Footer ── */}
-        <div className="flex-shrink-0 px-4 pt-3 pb-6 border-t border-[var(--border-subtle)]/50 space-y-1">
+        <div className="flex-shrink-0 px-4 pt-2 pb-4 border-t border-[var(--border-subtle)]/50 space-y-1">
           {/* Email */}
           {currentUser?.email && (
-            <div className="flex items-center gap-2 px-4 py-2 opacity-40">
+            <div className="flex items-center gap-2 px-4 py-2 opacity-70">
               <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)] flex-shrink-0" />
-              <span className="text-[10px] text-[var(--text-muted)] truncate tracking-wider">
+              <span className="text-[10px] text-[var(--text-secondary)] truncate tracking-wider">
                 {currentUser.email}
               </span>
+            </div>
+          )}
+          {/* Membership Status */}
+          {membershipInfo && (
+            <div className="mx-2 mb-2 p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2 shadow-lg overflow-hidden relative group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    "w-2 h-2 rounded-full",
+                    membershipInfo.type === 'Premium' ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" : 
+                    membershipInfo.type === 'Trial' ? "bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]" : "bg-[var(--text-muted)]"
+                  )} />
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[var(--text-primary)]">
+                    {membershipInfo.type} Tier
+                  </span>
+                </div>
+                {membershipInfo.type === 'Trial' && (
+                  <span className="text-[9px] font-bold text-orange-400 uppercase tracking-widest bg-orange-400/10 px-2 py-0.5 rounded-full">
+                    {membershipInfo.daysLeft}d left
+                  </span>
+                )}
+              </div>
+              
+              <div className="space-y-1.5 pt-1">
+                <p className="text-[10px] text-[var(--text-secondary)] flex justify-between items-center border-b border-[var(--border-subtle)]/30 pb-1.5">
+                  <span className="opacity-60 italic font-serif">Plan Type</span>
+                  <span className="font-bold tracking-wider">{membershipInfo.plan || 'Free Traveler'}</span>
+                </p>
+                {membershipInfo.expiresAt && (
+                   <p className="text-[10px] text-[var(--text-secondary)] flex justify-between items-center">
+                    <span className="opacity-60 italic font-serif">Expires</span>
+                    <span className="font-medium">{membershipInfo.expiresAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  </p>
+                )}
+              </div>
+
+              {membershipInfo.type !== 'Premium' && (
+                <button 
+                  onClick={() => onNavigate('paywall')}
+                  className="w-full mt-2 py-2.5 rounded-xl bg-[var(--accent-primary)] text-black text-[9px] font-bold uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
+                >
+                  Upgrade Journey
+                </button>
+              )}
             </div>
           )}
 
@@ -1219,23 +1310,23 @@ export default function UntetheredApp() {
             onClick={async () => {
               if (window.confirm('Sign out?')) await signOut();
             }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl group hover:bg-[var(--bg-surface)]/60 transition-all"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl group hover:bg-[var(--bg-surface)] transition-all"
           >
-            <LogOut size={14} className="text-[var(--text-muted)] group-hover:text-rose-400 transition-colors flex-shrink-0" />
-            <span className="text-[10px] uppercase tracking-[0.35em] text-[var(--text-muted)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
+            <LogOut size={14} className="text-[var(--text-secondary)] group-hover:text-rose-400 transition-colors flex-shrink-0" />
+            <span className="text-[10px] uppercase tracking-[0.35em] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
               Log Out
             </span>
           </button>
 
           {/* Brand credit */}
           <div className="px-4 pt-2">
-            <p className="text-[9px] font-serif italic text-[var(--text-muted)] opacity-40 leading-relaxed">
+            <p className="text-[10px] font-serif italic text-[var(--text-secondary)] opacity-90 leading-relaxed">
               Designed by{' '}
               <a
                 href="https://www.skrmblissai.in/twinsouls"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:opacity-80 transition-opacity underline underline-offset-2"
+                className="hover:opacity-80 transition-opacity underline underline-offset-2 font-medium"
               >
                 skrmblissai.in
               </a>
@@ -1580,9 +1671,20 @@ export default function UntetheredApp() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-primary)]">Voice Guidance</span>
-                        <span className="text-[11px] font-serif italic text-[var(--accent-secondary)]">Serene Echo (Default)</span>
+                        <button
+                          onClick={() => setVoiceGuidanceEnabled(!voiceGuidanceEnabled)}
+                          className={cn(
+                            "w-12 h-6 rounded-full transition-all duration-300 relative",
+                            voiceGuidanceEnabled ? "bg-[var(--accent-primary)]" : "bg-[var(--border-subtle)]"
+                          )}
+                        >
+                          <motion.div
+                            animate={{ x: voiceGuidanceEnabled ? 24 : 4 }}
+                            className="w-4 h-4 rounded-full bg-white absolute top-1 shadow-sm"
+                          />
+                        </button>
                       </div>
-                      <p className="text-[11px] text-[var(--text-muted)] tracking-wide">Choose the frequency of guidance during meditation.</p>
+                      <p className="text-[11px] text-[var(--text-muted)] tracking-wide">Choose to have a guided frequency walk beside you.</p>
                     </div>
                   </div>
 
@@ -1624,7 +1726,7 @@ export default function UntetheredApp() {
         onDismiss={dismissToast}
       />
       <WhatsAppButton />
-      <VoiceGuidance />
+      {voiceGuidanceEnabled && <VoiceGuidance />}
 
     </div>
   );

@@ -10,7 +10,7 @@ export const WhatsAppButton = () => {
             animate={{ scale: 1, opacity: 1 }}
             whileHover={{ scale: 1.1, y: -5 }}
             whileTap={{ scale: 0.9 }}
-            className="fixed bottom-24 right-6 z-[100] flex items-center justify-center w-14 h-14 bg-[#25D366] rounded-full shadow-[0_10px_30px_rgba(37,211,102,0.3)] group transition-all duration-300"
+            className="fixed bottom-8 right-6 z-[100] flex items-center justify-center w-14 h-14 bg-[#25D366] rounded-full shadow-[0_10px_30px_rgba(37,211,102,0.3)] group transition-all duration-300"
             aria-label="Contact on WhatsApp"
         >
             <svg 

@@ -69,7 +69,7 @@ function Pillar({
   const cfg = {
     done: { text: 'Complete', bg: color + '18', textColor: color },
     active: { text: 'Pending', bg: color + '22', textColor: color },
-    waiting: { text: 'Pending', bg: 'var(--bg-secondary)', textColor: 'var(--text-muted)' },
+    waiting: { text: 'Pending', bg: color + '22', textColor: color },
   }[status];
 
   return (
