@@ -180,25 +180,24 @@ export class VoiceService {
         for (let i = 0; i < segments.length; i++) {
             if (this.currentRequestId !== requestId) break;
             
-            await new Promise<void>(async (resolve) => {
-                try {
-                    this.segmentResolver = resolve;
-                    await this.speak(segments[i], {
-                        ...options,
-                        isInternal: true,
-                        onEnd: () => {
-                            if (this.segmentResolver === resolve) {
-                                this.segmentResolver = null;
-                                resolve();
-                            }
+            await new Promise<void>((resolve) => {
+                this.segmentResolver = resolve;
+                this.speak(segments[i], {
+                    ...options,
+                    isInternal: true,
+                    onEnd: () => {
+                        if (this.segmentResolver === resolve) {
+                            this.segmentResolver = null;
+                            resolve();
                         }
-                    });
-                } finally {
+                    }
+                }).catch(err => {
+                    console.error("Segment playback failed", err);
                     if (this.segmentResolver === resolve) {
                         this.segmentResolver = null;
                         resolve();
                     }
-                }
+                });
             });
         }
         

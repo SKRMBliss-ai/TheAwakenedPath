@@ -75,7 +75,7 @@ function Pillar({
   onClick: () => void;
 }) {
   const cfg = {
-    done: { text: 'Faithful', bg: color + '18', textColor: color },
+    done: { text: 'Completed', bg: color + '18', textColor: color },
     active: { text: isAccessValid ? 'Ready' : 'Locked', bg: isAccessValid ? color + '22' : 'var(--bg-secondary)', textColor: isAccessValid ? color : 'var(--text-muted)' },
     waiting: { text: isAccessValid ? 'Soon' : 'Locked', bg: 'var(--bg-secondary)', textColor: 'var(--text-muted)' },
   }[status];
@@ -211,7 +211,10 @@ export function TodayPath({
   };
 
   const handleReflect = () => {
-    if (isAccessValid) markReflect();
+    // We only navigate here. The 'markReflect' status will be triggered
+    // once the user actually saves their journal entry in the Journal view.
+    localStorage.setItem('awakened-journal-prompt', questionMeta.journalPrompt);
+    localStorage.setItem('awakened-reflect-question-id', questionId);
     onNavigate('chapters');
   };
 

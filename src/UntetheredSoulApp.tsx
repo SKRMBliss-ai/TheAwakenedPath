@@ -537,7 +537,7 @@ export default function UntetheredApp() {
   );
   const [activeCourseId, setActiveCourseId] = usePersistedState<string | null>('awakened-course', null);
   const [voiceGuidanceEnabled] = usePersistedState<boolean>('voice-guidance-enabled', true);
-  const [preferredVoice, setPreferredVoice] = usePersistedState<string>('preferred-voice', 'en-US-Chirp3-HD-Despina');
+  const [preferredVoice, setPreferredVoice] = usePersistedState<string>('preferred-voice', 'en-GB-Chirp3-HD-Vindemiatrix');
 
   // ── Weekly assignment — system assigns one question per week ──
   const weeklyAssignment = useWeeklyAssignment(
@@ -1295,16 +1295,18 @@ export default function UntetheredApp() {
                 )}
               </div>
               
-              <div className="space-y-1.5 pt-1">
-                <p className="text-[10px] text-[var(--text-secondary)] flex justify-between items-center border-b border-[var(--border-subtle)]/30 pb-1.5">
-                  <span className="opacity-60 italic font-serif">Plan Type</span>
-                  <span className="font-bold tracking-wider">{membershipInfo.plan || 'Free Traveler'}</span>
-                </p>
+              <div className="space-y-2 py-0.5">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Plan Type</span>
+                  <span className="text-[11px] font-medium text-[var(--text-primary)] tracking-tight">{membershipInfo.plan || 'Free Traveler'}</span>
+                </div>
                 {membershipInfo.expiresAt && (
-                   <p className="text-[10px] text-[var(--text-secondary)] flex justify-between items-center">
-                    <span className="opacity-60 italic font-serif">Expires</span>
-                    <span className="font-medium">{membershipInfo.expiresAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                  </p>
+                   <div className="flex justify-between items-center">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Expires</span>
+                    <span className="text-[10px] font-bold text-[var(--accent-secondary)] px-2 py-0.5 rounded-md bg-[var(--accent-secondary)]/5 border border-[var(--accent-secondary)]/10">
+                      {membershipInfo.expiresAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  </div>
                 )}
               </div>
 
