@@ -232,11 +232,15 @@ const BreadthDesktop = ({ user, isAccessValid, rotateX, rotateY, progress, weekl
             />
           </div>
 
-          <div className="py-8 text-center space-y-4 max-w-2xl mx-auto">
-              <h3 className="text-3xl font-serif font-light text-[var(--text-primary)] tracking-tight">Presence Over Progress</h3>
-              <p className="text-[15px] font-serif italic text-[var(--text-secondary)] opacity-70">
-                "Yesterday is history, tomorrow is a mystery, today is a gift. That's why it's called the present."
-              </p>
+          <div className="py-12 text-center space-y-6 max-w-3xl mx-auto relative px-4">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-30" />
+            <h3 className="text-4xl sm:text-5xl font-serif font-light text-[var(--text-primary)] tracking-wide leading-tight">
+              Presence <span className="opacity-30 italic mx-1 font-extralight text-[0.8em]">Over</span> Progress
+            </h3>
+            <p className="text-[16px] sm:text-[18px] font-serif italic text-[var(--text-secondary)] leading-relaxed max-w-xl mx-auto opacity-80">
+              "Yesterday is history, tomorrow is a mystery, today is a gift. That's why it's called the present."
+            </p>
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-30" />
           </div>
 
           <div className="inline-flex items-center gap-10 px-10 py-4 rounded-full bg-[var(--bg-surface)]/40 border border-[var(--border-subtle)]/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
