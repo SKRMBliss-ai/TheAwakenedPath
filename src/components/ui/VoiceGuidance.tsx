@@ -20,9 +20,10 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndia
 
   // Higher Priority: Dashboard script (even for trial/sample users)
   if (tab === 'home') {
+    const fullTitle = meta.shortTitle.replace(/^Q(\d+)/, 'Wisdom Untethered Question $1');
     return `
       Welcome to your Dashboard. Your presence is the greatest gift you can give yourself.
-      Today, your journey leads you to ${meta.shortTitle}. 
+      Today, your journey leads you to ${fullTitle}. 
       Your sacred intention for today is: ${meta.dailyIntent}.
       By practicing this awareness, you will learn to sit comfortably behind the mental noise, achieving a state of witness consciousness that remains undisturbed by the world.
       May your practice bring you peace.
