@@ -16,7 +16,7 @@ import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 
 import { VoiceService } from '../../services/voiceService';
 import { createPortal } from 'react-dom';
 import { WisdomPracticeSection } from './WisdomPracticeSection';
-import { CostValueAnalysis } from './CostValueAnalysis';
+import { useAchievements } from '../achievements/useAchievements';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Situation {
@@ -572,6 +572,7 @@ export const SituationalPractices: React.FC<{
 }> = ({ onBack, isAdmin, activeQuestionId, onQuestionSelect }) => {
     const { mode } = useTheme();
     const { user } = useAuth();
+    const { awardEvent } = useAchievements();
     const [selectedSituation, setSelectedSituation] = useState<Situation | null>(null);
     const [currentStep, setCurrentStep] = useState(0);
     const [isPracticing, setIsPracticing] = useState(false);
@@ -693,6 +694,10 @@ export const SituationalPractices: React.FC<{
                 date: new Date().toLocaleDateString(),
                 createdAt: serverTimestamp()
             });
+            
+            // Award points for completing practice
+            await awardEvent('practice_session');
+            
             setShowLogEntry(false);
             setShowSuccess(true);
         } catch (error) {
@@ -1294,9 +1299,6 @@ export const SituationalPractices: React.FC<{
                 )}
             </AnimatePresence>
 
-            <section className="pt-20">
-                <CostValueAnalysis />
-            </section>
 
         </motion.div>
     );

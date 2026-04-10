@@ -8,6 +8,7 @@ import { useCourseTracking } from "../../../hooks/useCourseTracking";
 import { CourseHero } from "./CourseHero";
 import { CourseLightbox } from "./CourseLightbox";
 import { ThoughtJournal } from "./components/ThoughtJournal";
+import { CostValueAnalysis } from "../../practices/CostValueAnalysis";
 
 interface Chap1Question4Props {
   // onOpenJournal?: () => void; // Replaced by internal ThoughtJournal
@@ -286,6 +287,17 @@ export function Chap1Question4({ }: Chap1Question4Props) {
                   {slide.text}
                 </motion.p>
               </div>
+
+              {i === 14 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="mt-16 w-full max-w-5xl"
+                >
+                  <CostValueAnalysis />
+                </motion.div>
+              )}
 
               {i === slides.length - 1 && (
                 <motion.div 

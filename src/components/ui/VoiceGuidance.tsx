@@ -43,8 +43,11 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndia
   if (tab === 'chapters' || tab === 'journal') {
     return `
       Welcome to your Journal. This is your intimate repository of self-discovery. 
-      Here, your reflections transform into stepping stones towards liberation. Each word you write is a witness to your growth. 
-      Revisit your past insights, and let them illuminate your path forward.
+      Here, your reflections transform into stepping stones towards liberation. 
+      You can use the Daily Log to capture your current state, and revisit the History section or your Presence Calendar to witness the beautiful arc of your growth over time. 
+      Each entry you write grants you fifteen points towards your expansion. 
+      We recommend a minimum of one entry per day to maintain your consistency, though you are welcome to reflect as often as your heart requires. 
+      Let your words illuminate your path forward.
     `;
   }
 
@@ -52,8 +55,9 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndia
   if (tab === 'situations' || tab === 'practices') {
     return `
       You are in the Practice Room. Here, we translate wisdom into living experience. 
-      Choose a practice that speaks to your current state—be it a body scan to ground your awareness or a guided meditation to quiet the mind. 
-      These are the tools that will help you maintain presence in the midst of life's daily dance.
+      You can choose to follow chapter-wise practices from Wisdom Untethered, or explore our complete library to find a practice that perfectly matches your mood and situation today. 
+      Whether it’s a body scan to ground your awareness or a guided meditation to quiet the mind, these tools are here to help you maintain presence in the midst of life's daily dance. 
+      Each practice you complete grants you thirty points towards your expansion, and stay tuned—we will soon introduce Progressive Challenges to further deepen your journey.
     `;
   }
 
