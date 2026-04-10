@@ -1773,7 +1773,14 @@ export default function UntetheredApp() {
         onDismiss={dismissToast}
       />
       <WhatsAppButton />
-      {voiceGuidanceEnabled && <VoiceGuidance preferredVoice={preferredVoice} />}
+      {voiceGuidanceEnabled && (
+        <VoiceGuidance 
+          preferredVoice={preferredVoice} 
+          activeTab={activeTab}
+          isAccessValid={isAccessValid}
+          assignment={weeklyAssignment}
+        />
+      )}
 
     </div>
   );

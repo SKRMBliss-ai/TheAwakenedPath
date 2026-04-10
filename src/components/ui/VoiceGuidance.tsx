@@ -5,35 +5,83 @@ import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 
 import { cn } from '../../lib/utils';
 
-const GUIDANCE_SCRIPT = `
-Welcome to your Journey to Inner Freedom. I am your guide, here to help you navigate our sacred space and choose the right path for your evolution.
+import { QUESTION_META } from '../../features/practices/TodayPath';
 
-Currently, you are in the base experience. Here you can sample our daily meditation portals and presence tools. However, the true transformation lies within our full library of wisdom.
+const getPricing = (isIndian: boolean) => ({
+  monthly: isIndian ? 'seven hundred and ninety-nine rupees' : 'forty-nine ninety-nine',
+  annual: isIndian ? 'seven thousand nine hundred and ninety-nine rupees' : 'three hundred and ninety-nine dollars',
+  lifetime: isIndian ? 'fourteen thousand nine hundred and ninety-nine rupees' : 'nine hundred and ninety-nine dollars',
+});
 
-We offer three distinct tiers for your journey:
+const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndian: boolean) => {
+  const pricing = getPricing(isIndian);
+  const qId = assignment?.questionId || 'question1';
+  const meta = QUESTION_META[qId] || QUESTION_META['question1'];
 
-First, our Monthly Flow. At forty-nine ninety-nine per month, it provides an accessible entry point with full access to all courses, including 'Wisdom Untethered' and 'The Power of Now'. It is ideal if you are just beginning to explore and want to see if this resonance matches your spirit.
+  // Higher Priority: Dashboard script (even for trial/sample users)
+  if (tab === 'home') {
+    return `
+      Welcome to your Dashboard. Your presence is the greatest gift you can give yourself.
+      Today, your journey leads you to ${meta.shortTitle}. 
+      Your sacred intention for today is: ${meta.dailyIntent}.
+      By practicing this awareness, you will learn to sit comfortably behind the mental noise, achieving a state of witness consciousness that remains undisturbed by the world.
+      May your practice bring you peace.
+    `;
+  }
 
-Second, our annual Sacred Commitment. Most travelers choose this path. At three hundred and ninety-nine dollars, you save thirty-three percent compared to monthly billing. It represents a deeper dedication to your self-realization, ensuring you have the time needed to truly integrate these life-changing realizations.
+  // Script for Course Lists
+  if (tab === 'intelligence' || tab === 'wisdom_untethered' || tab === 'courses' || tab === 'journey') {
+    return `
+      You have entered the Wisdom Portal. Here, you can immerse yourself in our foundational teachings.
+      'The Power of Now' will guide you to anchor your awareness in the eternal present, dissolving the illusions of time.
+      'Wisdom Untethered' invites you to explore the Observer Discovery, where you finally realize the true nature of the one who watches.
+      Listen with your heart, choose a teaching, and let the spiral of deepening begin.
+    `;
+  }
 
-Finally, we have the Eternal Traveler Lifetime pass. For a one-time investment of nine hundred and ninety-nine dollars, you gain permanent access to everything we have now, and everything we will ever create. It is a one-time choice for a lifetime of awakening.
+  // Fallback to Paywall/Upgrade script if not premium OR on paywall tab
+  if (!isAccessValid || tab === 'paywall') {
+    return `
+      Welcome to your Journey to Inner Freedom. I am your guide, here to help you navigate our sacred space and choose the right path for your evolution.
+      Currently, you are experiencing our limited portals. The true transformation lies within our full library of wisdom.
+      We offer three distinct tiers:
+      First, our Monthly Flow at ${pricing.monthly}.
+      Second, our annual Sacred Commitment at ${pricing.annual}.
+      Finally, we have the Eternal Traveler Lifetime pass at ${pricing.lifetime}.
+      Choose the path that resonates with your current depth. We are honored to walk beside you.
+    `;
+  }
 
-Why buy? Because the noise of the mind never stops on its own. These curated courses and direct practices provide the architecture for you to finally step back as the witness. Every plan comes with our fifteen-day, one hundred percent refund guarantee—a risk-free bridge to your inner peace.
+  return "Welcome to your sacred space. I am here to guide your journey to inner freedom. Wherever you are, simply be here now.";
+};
 
-Choose the path that resonates with your current depth. We are honored to walk beside you.
-`;
-
-export const VoiceGuidance = ({ preferredVoice = 'en-GB-Chirp3-HD-Vindemiatrix' }: { preferredVoice?: string }) => {
+export const VoiceGuidance = ({ 
+  preferredVoice = 'en-GB-Chirp3-HD-Despina',
+  activeTab = 'home',
+  isAccessValid = false,
+  assignment = null
+}: { 
+  preferredVoice?: string;
+  activeTab?: string;
+  isAccessValid?: boolean;
+  assignment?: any;
+}) => {
   const status = useVoiceStatus();
   const isSpeaking = status === 'playing';
   const isPaused = status === 'paused';
   const [showFull, setShowFull] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
 
-  // Auto-show nudge after a delay and Preload Voice
+  // Detect location for pricing
+  const isIndianUser = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Calcutta' || 
+                       Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Kolkata';
+
+  const currentScript = getScript(activeTab, isAccessValid, assignment, isIndianUser);
+
+  // Preload Voice
   useEffect(() => {
     // Preload segments in parallel to reduce initial delay
-    const segments = GUIDANCE_SCRIPT.split(/\n\n+/).filter(s => s.trim().length > 0);
+    const segments = currentScript.split(/\n\n+/).filter(s => s.trim().length > 0);
     segments.forEach(segment => {
       VoiceService.preloadText(segment, {
         voice: preferredVoice,
@@ -45,7 +93,7 @@ export const VoiceGuidance = ({ preferredVoice = 'en-GB-Chirp3-HD-Vindemiatrix' 
       setShowFull(true);
     }, 5000);
     return () => clearTimeout(timer);
-  }, [preferredVoice]);
+  }, [preferredVoice, currentScript]);
 
   // Sync isPreparing with service status
   useEffect(() => {
@@ -59,12 +107,12 @@ export const VoiceGuidance = ({ preferredVoice = 'en-GB-Chirp3-HD-Vindemiatrix' 
       VoiceService.stop();
     } else {
       setIsPreparing(true);
-      console.log(`[VoiceGuidance] UI triggered speak with persona: ${preferredVoice}`);
+      console.log(`[VoiceGuidance] UI triggered speak on tab '${activeTab}' with persona: ${preferredVoice}`);
       try {
-        await VoiceService.speak(GUIDANCE_SCRIPT, {
+        await VoiceService.speak(currentScript, {
           gender: preferredVoice.includes('-D') ? 'MALE' : 'FEMALE',
           voice: preferredVoice,
-          promptContext: 'Spiritual, calming, encouraging guide'
+          promptContext: `Spiritual, calming, encouraging guide for ${activeTab} context`
         });
       } catch (err) {
         console.error(`[VoiceGuidance] Speak failure:`, err);
@@ -98,7 +146,7 @@ export const VoiceGuidance = ({ preferredVoice = 'en-GB-Chirp3-HD-Vindemiatrix' 
                   <img
                     src="/guide-avatar.png"
                     alt="Voice Presence"
-                    className="w-full h-full object-cover object-[center_25%]"
+                    className="w-full h-full object-cover object-[center_30%]"
                   />
                 </div>
                 {isSpeaking && (
@@ -231,7 +279,7 @@ export const VoiceGuidance = ({ preferredVoice = 'en-GB-Chirp3-HD-Vindemiatrix' 
             <img
               src="/guide-avatar.png"
               alt="Voice Presence"
-              className="w-full h-full object-cover object-[center_25%]"
+              className="w-full h-full object-cover object-[center_30%]"
             />
             <div className="absolute inset-0 rounded-full animate-pulse bg-[var(--accent-primary)]/20 z-0" />
           </motion.button>

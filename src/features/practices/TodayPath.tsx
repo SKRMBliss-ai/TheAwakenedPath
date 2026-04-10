@@ -13,7 +13,7 @@ import { InfoTooltip } from '../../components/ui/InfoTooltip';
 // Question display names — centralised here, sourced from practiceLibrary
 // ─────────────────────────────────────────────────────────────────────────────
 
-const QUESTION_META: Record<string, {
+export const QUESTION_META: Record<string, {
   shortTitle: string;
   journalPrompt: string;
   dailyIntent: string;
