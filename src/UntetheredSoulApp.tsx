@@ -284,8 +284,70 @@ const BreadthDesktop = ({ user, isAccessValid, rotateX, rotateY, progress, weekl
   );
 };
 
+// --- Sacred Welcome Modal ---
+const SacredWelcomeModal = ({ isOpen, onClose, planName, userEmail }: any) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="relative w-full max-w-lg bg-[#FDFAF4] rounded-[32px] overflow-hidden shadow-2xl border border-[#E6C57D]"
+          >
+            {/* Top gold bar */}
+            <div className="h-1.5 bg-[#B8973A] w-full" />
+            
+            <div className="p-8 md:p-12 text-center space-y-6">
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#B8973A]">Access Granted</p>
+                <h2 className="text-3xl font-serif italic text-[#1C1814] leading-tight">Welcome to the<br />Deepest Journey.</h2>
+              </div>
+              
+              <div className="w-12 h-px bg-[#B8973A] mx-auto opacity-30" />
+              
+              <div className="space-y-4 text-[#3A342C] font-serif leading-relaxed">
+                <p className="text-sm">Your gateway for <b>{planName}</b> was successful.</p>
+                <div className="text-[13px] space-y-3 opacity-90">
+                  <p>Step beyond the noise. You now possess full access to the intelligence course, the practice room, and interactive journaling.</p>
+                  <p>As a premium member, remember that you also hold the key to <b>2 complimentary personal consultations</b>. Email us whenever you are ready.</p>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <p className="text-[10px] uppercase tracking-widest text-[#B8973A] font-bold mb-4">A confirmation email has been sent to</p>
+                <div className="px-4 py-2 rounded-full bg-[#B8973A]/5 border border-[#B8973A]/20 inline-block">
+                  <span className="text-xs font-medium text-[#1C1814]">{userEmail}</span>
+                </div>
+              </div>
+
+              <AnchorButton
+                variant="solid"
+                onClick={onClose}
+                className="w-full bg-[#1C1814] text-[#E6C57D] hover:bg-[#2C2824] uppercase tracking-widest font-bold mt-4"
+              >
+                Begin Your Journey
+              </AnchorButton>
+              
+              <p className="text-[10px] italic text-[#B0A090]">Peace is the way.</p>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 // --- Premium Paywall Component ---
-const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial }: any) => {
+const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial, hasUsedTrial, onSuccess }: any) => {
   const [isTrialLoading, setIsTrialLoading] = useState(false);
   const isIndianUser = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Calcutta' ||
     Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Kolkata';
@@ -377,38 +439,49 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
         {/* Pricing Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full items-stretch">
           {/* 1. Trial Option Card (First Now) */}
-          <div className="p-6 rounded-[32px] border border-dashed border-[var(--accent-primary)] bg-[var(--accent-primary)]/5 transition-all shadow-xl flex flex-col justify-between items-center group relative overflow-hidden">
+          <div className={cn(
+            "p-6 rounded-[32px] border transition-all shadow-xl flex flex-col justify-between items-center group relative overflow-hidden",
+            hasUsedTrial 
+              ? "border-[var(--border-subtle)] bg-[var(--bg-surface)]/20 opacity-60 grayscale-[0.5]" 
+              : "border-dashed border-[var(--accent-primary)] bg-[var(--accent-primary)]/5"
+          )}>
             <div className="absolute top-0 right-0 p-3 opacity-20 transform rotate-12">
-              <Flame size={48} className="text-[var(--accent-primary)]" />
+              <Flame size={48} className={hasUsedTrial ? "text-[var(--text-muted)]" : "text-[var(--accent-primary)]"} />
             </div>
             <div className="text-center relative z-10">
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-1">Taste Awareness</p>
+              <p className={cn("text-[10px] font-bold uppercase tracking-[0.3em] mb-1", hasUsedTrial ? "text-[var(--text-muted)]" : "text-[var(--accent-primary)]")}>Taste Awareness</p>
               <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mb-3 opacity-70">Experience full potential</p>
               <h4 className="text-[20px] font-bold text-[var(--text-primary)] mb-1">Begin Trial</h4>
-              <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">Full Access • No Card Needed</p>
+              <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">
+                {hasUsedTrial ? "Trial already used" : "Full Access • No Card Needed"}
+              </p>
             </div>
             <div className="w-full space-y-4 relative z-10">
-              <p className="text-[28px] font-bold text-[var(--accent-primary)]">Free</p>
+              <p className={cn("text-[28px] font-bold", hasUsedTrial ? "text-[var(--text-muted)]" : "text-[var(--accent-primary)]")}>Free</p>
               <AnchorButton
-                variant="solid"
+                variant={hasUsedTrial ? "ghost" : "solid"}
                 onClick={async () => {
+                  if (hasUsedTrial) return;
                   setIsTrialLoading(true);
                   try {
                     await activateTrial();
-                    window.location.reload();
+                    localStorage.setItem('show-welcome-modal', '3-Day Trial');
+                    onSuccess?.();
                   } catch (e) {
                     console.error(e);
                   } finally {
                     setIsTrialLoading(false);
                   }
                 }}
-                disabled={isTrialLoading || isProcessing}
-                className="w-full bg-[var(--accent-primary)] text-black font-bold uppercase tracking-widest"
+                disabled={isTrialLoading || isProcessing || hasUsedTrial}
+                className={cn(
+                  "w-full font-bold uppercase tracking-widest",
+                  !hasUsedTrial && "bg-[var(--accent-primary)] text-black"
+                )}
               >
-                {isTrialLoading ? 'Initiating...' : 'Start 3-Day Trial'}
+                {isTrialLoading ? 'Initiating...' : (hasUsedTrial ? 'Trial Used' : 'Start 3-Day Trial')}
               </AnchorButton>
             </div>
-
           </div>
 
           {/* 2. Monthly */}
@@ -428,7 +501,8 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
                 onClick={() => {
                   if (user?.uid) {
                     subscribe(user.uid, user.email || '', user.displayName || 'Traveler', 'premium_monthly', currency, () => {
-                      window.location.reload();
+                      localStorage.setItem('show-welcome-modal', 'Monthly Flow');
+                      onSuccess?.();
                     });
                   }
                 }}
@@ -463,7 +537,8 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
                 onClick={() => {
                   if (user?.uid) {
                     subscribe(user.uid, user.email || '', user.displayName || 'Traveler', 'premium_yearly', currency, () => {
-                      window.location.reload();
+                      localStorage.setItem('show-welcome-modal', 'Sacred Commitment (Annual)');
+                      onSuccess?.();
                     });
                   }
                 }}
@@ -492,7 +567,8 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
                 onClick={() => {
                   if (user?.uid) {
                     checkOut?.(user.uid, user.email || '', user.displayName || 'Traveler', 'all_access', currency, () => {
-                      window.location.reload();
+                      localStorage.setItem('show-welcome-modal', 'Eternal Traveler (Lifetime)');
+                      onSuccess?.();
                     });
                   }
                 }}
@@ -584,6 +660,15 @@ export default function UntetheredApp() {
   const { progress } = useCourseTracking(currentUser?.uid);
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
   const { subscribe, checkOut, isProcessing: isRazorpayProcessing } = useRazorpay();
+  const [welcomeModal, setWelcomeModal] = useState<{ isOpen: boolean; plan: string }>({ isOpen: false, plan: '' });
+
+  useEffect(() => {
+    const pendingPlan = localStorage.getItem('show-welcome-modal');
+    if (pendingPlan) {
+      setWelcomeModal({ isOpen: true, plan: pendingPlan });
+      localStorage.removeItem('show-welcome-modal');
+    }
+  }, []);
 
   const onNavigate = (id: string, questionId?: string, view?: string) => {
     // If not unlocked, lock everything except home and profile
@@ -1459,6 +1544,15 @@ export default function UntetheredApp() {
         </div>
 
         <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
+          <SacredWelcomeModal
+            isOpen={welcomeModal.isOpen}
+            onClose={() => {
+              setWelcomeModal({ isOpen: false, plan: '' });
+              window.location.reload();
+            }}
+            planName={welcomeModal.plan}
+            userEmail={currentUser?.email}
+          />
           <AnimatePresence mode="wait">
             {activeTab === 'paywall' && (
               <motion.div key="paywall-lock" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -1468,6 +1562,12 @@ export default function UntetheredApp() {
                   checkOut={checkOut}
                   isProcessing={isRazorpayProcessing}
                   activateTrial={activateTrial}
+                  hasUsedTrial={!!profile?.trialUntil}
+                  onSuccess={() => {
+                    localStorage.setItem('awakened-tab', JSON.stringify('home'));
+                    localStorage.setItem('awakened-path-active-tab', 'home');
+                    setActiveTab('home');
+                  }}
                 />
               </motion.div>
             )}

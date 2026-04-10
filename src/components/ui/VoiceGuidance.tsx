@@ -71,12 +71,17 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndia
     `;
   }
 
-  // Progress / Stats
+  // Progress / Stats / Dashboard
   if (tab === 'stats' || tab === 'progress') {
     return `
       Welcome to your Journey Reflection. Here, you can witness the expansion of your awareness through the metrics of consistency. 
-      Your level and points are merely markers of your dedication to the present moment. 
-      Celebrate how far you have come, and let your consistency be the fire that fuels your path to inner freedom.
+      At the top, your Course Progress cards show how much of the internal curriculum you have explored—from the Power of Now to the Wisdom of the Untethered Soul.
+      
+      The Practice Consistency grid represents your last 28 days. Each glowing box is a moment you chose presence over distraction. 
+      As you engage, you will earn Medals—sacred milestones that honor your dedication. These are found in the Achievement section, representing the growth of your inner fire.
+      
+      To revisit your past insights, scroll to the bottom of this screen. There, in the Practice Ledger and Past Reflections, you can witness the evolution of your own consciousness through your previous journal entries. 
+      Every step is a victory. Let these charts remind you that while the destination is here and now, the path is a beautiful unfolding.
     `;
   }
 

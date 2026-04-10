@@ -101,6 +101,25 @@ const SITUATIONS: Situation[] = [
         ]
     },
     {
+        id: 'conscious-breathing', title: 'Conscious Breathing', duration: '5-10 min',
+        durationNum: 10, category: 'Quick', tags: ['breath', 'grounding', 'calm', 'anchor'],
+        whenToUse: 'When the mind is racing or you feel disconnected from the present',
+        description: 'Use the breath as an anchor to return to the internal energy body.',
+        icon: Wind, color: '#5EC4B0',
+        intro: "Let's use the breath to return to the only moment that truly exists.",
+        steps: [
+            { title: 'The Anchor', instruction: 'Close your eyes. Feel the air entering and leaving your body.', audioScript: 'Close your eyes. Bring your full attention to your breath. Feel the cool air entering your nostrils... and the warm air leaving.' },
+            { title: 'Follow the Flow', instruction: 'Follow the breath into the body and feel the movement of the chest and abdomen.', audioScript: 'Follow the breath as it travels down into your lungs. Feel your chest expand... and your abdomen rise. Notice the gentle pause between each breath.' },
+            { title: 'Beyond the Breath', instruction: 'Notice the stillness behind the movement of the breath.', audioScript: 'Behind the movement of the breath, there is a field of stillness. Can you feel it? Allow yourself to rest in that stillness.' }
+        ],
+        realLifeExample: 'Deepak used this during a high-stakes meeting. By focusing on just three conscious breaths, he felt his racing heart slow down and regained a sense of calm authority.',
+        journalPrompts: [
+            { label: 'How did my breath feel at the start vs the end?', placeholder: 'e.g., shallow, deep, rhythmic...' },
+            { label: 'What sensations did I notice in my chest or abdomen?', placeholder: 'e.g., expansion, tightness, warmth...' },
+            { label: 'Did I feel the stillness behind the breath?', placeholder: 'Describe the silence...' }
+        ]
+    },
+    {
         id: 'difficult-conversation', title: 'Difficult Conversation Prep', duration: '3 min',
         durationNum: 3, category: 'Work', tags: ['presentation', 'grounding', 'anxiety', 'focus'],
         whenToUse: 'Before a challenging conversation, presentation, or difficult task',
