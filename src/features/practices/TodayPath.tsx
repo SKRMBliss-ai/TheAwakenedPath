@@ -189,7 +189,6 @@ export function TodayPath({
     isCompleted: practiceCompleted,
     record,
     markLearn,
-    markReflect,
     markIntegrate,
   } = useDailyPractice(userId, questionId, requiredTriggers);
 

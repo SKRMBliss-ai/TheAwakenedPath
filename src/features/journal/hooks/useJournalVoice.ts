@@ -136,8 +136,8 @@ export function useJournalVoice() {
         VoiceService.preloadText(STEP_PROMPTS[1], { voice: 'Enceladus' });
 
         // Subscribe to global speaking state
-        const unsubscribe = VoiceService.subscribe((isSpeaking) => {
-            if (isMountedRef.current) setIsPlaying(isSpeaking);
+        const unsubscribe = VoiceService.subscribe((status) => {
+            if (isMountedRef.current) setIsPlaying(status === 'playing');
         });
 
         // Polling for enabled status since it can change globally

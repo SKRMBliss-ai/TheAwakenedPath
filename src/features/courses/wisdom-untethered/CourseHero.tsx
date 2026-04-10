@@ -65,8 +65,8 @@ export const CourseHero: React.FC<CourseHeroProps> = ({ chapter, question, title
         <h1 className={styles.heroTitle}>{title}</h1>
         <div className={styles.heroRule} />
         <p className={styles.heroSub}>{subtitle}</p>
-        <div className={styles.heroScroll}>Scroll to Explore</div>
       </motion.div>
+      <div className={styles.heroScroll}>Scroll to Explore</div>
     </section>
   );
 };
