@@ -39,6 +39,33 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndia
     `;
   }
 
+  // Journal / Chapters
+  if (tab === 'chapters' || tab === 'journal') {
+    return `
+      Welcome to your Journal. This is your intimate repository of self-discovery. 
+      Here, your reflections transform into stepping stones towards liberation. Each word you write is a witness to your growth. 
+      Revisit your past insights, and let them illuminate your path forward.
+    `;
+  }
+
+  // Practice Room / Situations
+  if (tab === 'situations' || tab === 'practices') {
+    return `
+      You are in the Practice Room. Here, we translate wisdom into living experience. 
+      Choose a practice that speaks to your current state—be it a breathing exercise to ground your energy or a guided meditation to quiet the mind. 
+      These are the tools that will help you maintain presence in the midst of life's daily dance.
+    `;
+  }
+
+  // Progress / Stats
+  if (tab === 'stats' || tab === 'progress') {
+    return `
+      Welcome to your Journey Reflection. Here, you can witness the expansion of your awareness through the metrics of consistency. 
+      Your level and points are merely markers of your dedication to the present moment. 
+      Celebrate how far you have come, and let your consistency be the fire that fuels your path to inner freedom.
+    `;
+  }
+
   // Fallback to Paywall/Upgrade script if not premium OR on paywall tab
   if (!isAccessValid || tab === 'paywall') {
     return `
