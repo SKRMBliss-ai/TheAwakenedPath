@@ -538,6 +538,14 @@ export default function UntetheredApp() {
   const [activeCourseId, setActiveCourseId] = usePersistedState<string | null>('awakened-course', null);
   const [voiceGuidanceEnabled] = usePersistedState<boolean>('voice-guidance-enabled', true);
   const [preferredVoice, setPreferredVoice] = usePersistedState<string>('preferred-voice', 'en-GB-Chirp3-HD-Vindemiatrix');
+  
+  // ── Force voice migration for existing users — migration to Chirp3 Vindemiatrix ──
+  useEffect(() => {
+    if (preferredVoice !== 'en-GB-Chirp3-HD-Vindemiatrix' && preferredVoice.startsWith('en-US')) {
+      console.log(`[UntetheredSoulApp] Migrating voice from ${preferredVoice} to en-GB-Chirp3-HD-Vindemiatrix`);
+      setPreferredVoice('en-GB-Chirp3-HD-Vindemiatrix');
+    }
+  }, [preferredVoice, setPreferredVoice]);
 
   // ── Weekly assignment — system assigns one question per week ──
   const weeklyAssignment = useWeeklyAssignment(
@@ -1191,19 +1199,20 @@ export default function UntetheredApp() {
                                       <div
                                         className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[8px] font-bold transition-all"
                                         style={{
-                                          background: isQActive ? 'var(--accent-primary)' : 'var(--border-subtle)',
-                                          color: isQActive ? 'white' : 'var(--text-muted)',
+                                          background: isQActive ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
+                                          color: isQActive ? 'black' : 'var(--text-secondary)',
+                                          border: isQActive ? 'none' : '1px solid var(--border-subtle)',
                                         }}
                                       >
                                         {q.locked ? <Lock size={7} /> : q.num}
                                       </div>
                                       <span
                                         className={cn(
-                                          "text-[11px] font-serif leading-tight flex-1 transition-colors",
+                                          "text-[12px] font-sans flex-1 transition-colors tracking-wide leading-tight",
                                           isQActive
-                                            ? "text-[var(--accent-primary)] font-medium"
-                                            : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]",
-                                          q.locked && "italic"
+                                            ? "text-[var(--text-primary)] font-bold shadow-[0_0_10px_var(--accent-primary-dim)]"
+                                            : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]",
+                                          q.locked && "opacity-60 italic"
                                         )}
                                       >
                                         {q.label}
@@ -1297,13 +1306,13 @@ export default function UntetheredApp() {
               
               <div className="space-y-2 py-0.5">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Plan Type</span>
-                  <span className="text-[11px] font-medium text-[var(--text-primary)] tracking-tight">{membershipInfo.plan || 'Free Traveler'}</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--accent-primary)]/70">Plan Type</span>
+                  <span className="text-[12px] font-bold text-[var(--text-primary)] tracking-tight">{membershipInfo.plan || 'Free Traveler'}</span>
                 </div>
                 {membershipInfo.expiresAt && (
                    <div className="flex justify-between items-center">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Expires</span>
-                    <span className="text-[10px] font-bold text-[var(--accent-secondary)] px-2 py-0.5 rounded-md bg-[var(--accent-secondary)]/5 border border-[var(--accent-secondary)]/10">
+                    <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--accent-secondary)]/70">Expires</span>
+                    <span className="text-[11px] font-black text-[var(--accent-secondary)] px-2.5 py-1 rounded-lg bg-[var(--accent-secondary)]/10 border border-[var(--accent-secondary)]/20 shadow-sm">
                       {membershipInfo.expiresAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                   </div>

@@ -11,6 +11,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      workbox: {
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB to accommodate large bundles
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
+      },
       manifest: {
         name: 'Awakened Path',
         short_name: 'AwakenedPath',
@@ -31,6 +35,20 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('firebase')) return 'vendor-firebase';
+            if (id.includes('framer-motion')) return 'vendor-framer';
+            if (id.includes('lucide-react')) return 'vendor-lucide';
+            return 'vendor';
+          }
+        }
+      }
+    }
+  },
   server: {
     proxy: {
       '/api': {

@@ -23,7 +23,7 @@ Why buy? Because the noise of the mind never stops on its own. These curated cou
 Choose the path that resonates with your current depth. We are honored to walk beside you.
 `;
 
-export const VoiceGuidance = ({ preferredVoice = 'en-US-Chirp3-HD-Despina' }: { preferredVoice?: string }) => {
+export const VoiceGuidance = ({ preferredVoice = 'en-GB-Chirp3-HD-Vindemiatrix' }: { preferredVoice?: string }) => {
   const status = useVoiceStatus();
   const isSpeaking = status === 'playing';
   const isPaused = status === 'paused';
@@ -231,7 +231,7 @@ export const VoiceGuidance = ({ preferredVoice = 'en-US-Chirp3-HD-Despina' }: { 
             <img
               src="/guide-avatar.png"
               alt="Voice Presence"
-              className="w-full h-full object-cover relative z-10"
+              className="w-full h-full object-cover object-[center_25%]"
             />
             <div className="absolute inset-0 rounded-full animate-pulse bg-[var(--accent-primary)]/20 z-0" />
           </motion.button>
