@@ -349,17 +349,33 @@ const SacredWelcomeModal = ({ isOpen, onClose, planName, userEmail }: any) => {
 // --- Premium Paywall Component ---
 const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial, hasUsedTrial, onSuccess }: any) => {
   const [isTrialLoading, setIsTrialLoading] = useState(false);
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const isIndianUser = timeZone === 'Asia/Calcutta' || timeZone === 'Asia/Kolkata';
-  const isUKUser = timeZone === 'Europe/London';
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   
-  const currency = isIndianUser ? 'INR' : (isUKUser ? 'GBP' : 'USD');
+  const pricingConfig = useMemo(() => {
+    if (timezone === 'Asia/Calcutta' || timezone === 'Asia/Kolkata') {
+      return { symbol: '₹', monthly: '799', annual: '7,999', lifetime: '14,999', currency: 'INR', strike: '9,588' };
+    }
+    if (timezone === 'Europe/London') {
+      return { symbol: '£', monthly: '8.99', annual: '89.99', lifetime: '169.99', currency: 'GBP', strike: '107.88' };
+    }
+    if (timezone.startsWith('Europe/')) {
+      return { symbol: '€', monthly: '9.99', annual: '99.99', lifetime: '189.99', currency: 'EUR', strike: '119.88' };
+    }
+    if (timezone.startsWith('Australia/')) {
+      return { symbol: 'A$', monthly: '14.99', annual: '149.99', lifetime: '299.99', currency: 'AUD', strike: '179.88' };
+    }
+    if (timezone.startsWith('America/Toronto') || timezone.startsWith('America/Vancouver') || timezone.startsWith('Canada/')) {
+      return { symbol: 'C$', monthly: '13.99', annual: '139.99', lifetime: '259.99', currency: 'CAD', strike: '167.88' };
+    }
+    return { symbol: '$', monthly: '9.99', annual: '99.99', lifetime: '199.99', currency: 'USD', strike: '119.88' };
+  }, [timezone]);
 
+  const currency = pricingConfig.currency;
   const prices = {
-    monthly: isIndianUser ? '₹799' : (isUKUser ? '£8.99' : '$9.99'),
-    annuallyStrikethrough: isIndianUser ? '₹9,588' : (isUKUser ? '£107.88' : '$119.88'),
-    annually: isIndianUser ? '₹7,999' : (isUKUser ? '£89.99' : '$99.99'),
-    lifetime: isIndianUser ? '₹14,999' : (isUKUser ? '£169.99' : '$199.99'),
+    monthly: `${pricingConfig.symbol}${pricingConfig.monthly}`,
+    annuallyStrikethrough: `${pricingConfig.symbol}${pricingConfig.strike}`,
+    annually: `${pricingConfig.symbol}${pricingConfig.annual}`,
+    lifetime: `${pricingConfig.symbol}${pricingConfig.lifetime}`,
   };
 
   const features = [

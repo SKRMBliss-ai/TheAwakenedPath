@@ -7,14 +7,44 @@ import { cn } from '../../lib/utils';
 
 import { QUESTION_META } from '../../features/practices/TodayPath';
 
-const getPricing = (isIndian: boolean, isUK: boolean) => ({
-  monthly: isIndian ? 'seven hundred and ninety-nine rupees' : (isUK ? 'eight pounds ninety-nine' : 'nine ninety-nine'),
-  annual: isIndian ? 'seven thousand nine hundred and ninety-nine rupees' : (isUK ? 'eighty-nine pounds ninety-nine' : 'ninety-nine ninety-nine'),
-  lifetime: isIndian ? 'fourteen thousand nine hundred and ninety-nine rupees' : (isUK ? 'one hundred and sixty-nine pounds ninety-nine' : 'one hundred and ninety-nine ninety-nine'),
-});
+const getPricing = (timezone: string) => {
+  if (timezone === 'Asia/Calcutta' || timezone === 'Asia/Kolkata') {
+    return {
+      monthly: 'seven hundred and ninety-nine rupees',
+      annual: 'seven thousand nine hundred and ninety-nine rupees',
+      lifetime: 'fourteen thousand nine hundred and ninety-nine rupees'
+    };
+  }
+  if (timezone === 'Europe/London') {
+    return {
+      monthly: 'eight pounds ninety-nine',
+      annual: 'eighty-nine pounds ninety-nine',
+      lifetime: 'one hundred and sixty-nine pounds ninety-nine'
+    };
+  }
+  if (timezone.startsWith('Europe/')) {
+    return {
+      monthly: 'nine euros ninety-nine',
+      annual: 'ninety-nine euros ninety-nine',
+      lifetime: 'one hundred and eighty-nine euros ninety-nine'
+    };
+  }
+  if (timezone.startsWith('Australia/')) {
+    return {
+      monthly: 'fourteen dollars ninety-nine Australian',
+      annual: 'one hundred and forty-nine dollars ninety-nine Australian',
+      lifetime: 'two hundred and ninety-nine dollars ninety-nine Australian'
+    };
+  }
+  return {
+    monthly: 'nine ninety-nine',
+    annual: 'ninety-nine ninety-nine',
+    lifetime: 'one hundred and ninety-nine ninety-nine'
+  };
+};
 
-const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndian: boolean, isUK: boolean) => {
-  const pricing = getPricing(isIndian, isUK);
+const getScript = (tab: string, isAccessValid: boolean, assignment: any, timezone: string) => {
+  const pricing = getPricing(timezone);
   const qId = assignment?.questionId || 'question1';
   const meta = QUESTION_META[qId] || QUESTION_META['question1'];
 
@@ -120,11 +150,9 @@ export const VoiceGuidance = ({
   const [isPreparing, setIsPreparing] = useState(false);
 
   // Detect location for pricing
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const isIndianUser = timeZone === 'Asia/Calcutta' || timeZone === 'Asia/Kolkata';
-  const isUKUser = timeZone === 'Europe/London';
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const currentScript = getScript(activeTab, isAccessValid, assignment, isIndianUser, isUKUser);
+  const currentScript = getScript(activeTab, isAccessValid, assignment, timezone);
 
   // Preload Voice
   useEffect(() => {
