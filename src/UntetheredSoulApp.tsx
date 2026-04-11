@@ -349,18 +349,17 @@ const SacredWelcomeModal = ({ isOpen, onClose, planName, userEmail }: any) => {
 // --- Premium Paywall Component ---
 const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial, hasUsedTrial, onSuccess }: any) => {
   const [isTrialLoading, setIsTrialLoading] = useState(false);
-  const isIndianUser = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Calcutta' ||
-    Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Kolkata';
-  const currency = isIndianUser ? 'INR' : 'USD';
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const isIndianUser = timeZone === 'Asia/Calcutta' || timeZone === 'Asia/Kolkata';
+  const isUKUser = timeZone === 'Europe/London';
+  
+  const currency = isIndianUser ? 'INR' : (isUKUser ? 'GBP' : 'USD');
 
   const prices = {
-    monthly: isIndianUser ? '₹799' : '$9',
-    monthlyCents: isIndianUser ? '' : '.99',
-    annuallyStrikethrough: isIndianUser ? '₹9,588' : '$119.88',
-    annually: isIndianUser ? '₹7,999' : '$99',
-    annuallyCents: isIndianUser ? '' : '.90',
-    lifetime: isIndianUser ? '₹14,999' : '$199',
-    lifetimeCents: isIndianUser ? '' : '.99'
+    monthly: isIndianUser ? '₹799' : (isUKUser ? '£8.99' : '$9.99'),
+    annuallyStrikethrough: isIndianUser ? '₹9,588' : (isUKUser ? '£107.88' : '$119.88'),
+    annually: isIndianUser ? '₹7,999' : (isUKUser ? '£89.99' : '$99.99'),
+    lifetime: isIndianUser ? '₹14,999' : (isUKUser ? '£169.99' : '$199.99'),
   };
 
   const features = [

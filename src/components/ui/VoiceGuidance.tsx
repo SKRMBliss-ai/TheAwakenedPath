@@ -7,14 +7,14 @@ import { cn } from '../../lib/utils';
 
 import { QUESTION_META } from '../../features/practices/TodayPath';
 
-const getPricing = (isIndian: boolean) => ({
-  monthly: isIndian ? 'seven hundred and ninety-nine rupees' : 'forty-nine ninety-nine',
-  annual: isIndian ? 'seven thousand nine hundred and ninety-nine rupees' : 'three hundred and ninety-nine dollars',
-  lifetime: isIndian ? 'fourteen thousand nine hundred and ninety-nine rupees' : 'nine hundred and ninety-nine dollars',
+const getPricing = (isIndian: boolean, isUK: boolean) => ({
+  monthly: isIndian ? 'seven hundred and ninety-nine rupees' : (isUK ? 'eight pounds ninety-nine' : 'nine ninety-nine'),
+  annual: isIndian ? 'seven thousand nine hundred and ninety-nine rupees' : (isUK ? 'eighty-nine pounds ninety-nine' : 'ninety-nine ninety-nine'),
+  lifetime: isIndian ? 'fourteen thousand nine hundred and ninety-nine rupees' : (isUK ? 'one hundred and sixty-nine pounds ninety-nine' : 'one hundred and ninety-nine ninety-nine'),
 });
 
-const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndian: boolean) => {
-  const pricing = getPricing(isIndian);
+const getScript = (tab: string, isAccessValid: boolean, assignment: any, isIndian: boolean, isUK: boolean) => {
+  const pricing = getPricing(isIndian, isUK);
   const qId = assignment?.questionId || 'question1';
   const meta = QUESTION_META[qId] || QUESTION_META['question1'];
 
@@ -120,10 +120,11 @@ export const VoiceGuidance = ({
   const [isPreparing, setIsPreparing] = useState(false);
 
   // Detect location for pricing
-  const isIndianUser = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Calcutta' ||
-    Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Kolkata';
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const isIndianUser = timeZone === 'Asia/Calcutta' || timeZone === 'Asia/Kolkata';
+  const isUKUser = timeZone === 'Europe/London';
 
-  const currentScript = getScript(activeTab, isAccessValid, assignment, isIndianUser);
+  const currentScript = getScript(activeTab, isAccessValid, assignment, isIndianUser, isUKUser);
 
   // Preload Voice
   useEffect(() => {
@@ -310,8 +311,6 @@ export const VoiceGuidance = ({
                 )}
               </AnimatePresence>
             </div>
-
-            {/* Removed redundant explore button */}
           </motion.div>
         )}
 
