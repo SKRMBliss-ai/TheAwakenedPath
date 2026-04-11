@@ -680,10 +680,10 @@ async function sendWelcomeEmail(toEmail, planName) {
  */
 exports.sendDailyReminderIN = onSchedule({
     schedule: "0 20 * * *",
-    secrets: [emailUser, emailPass],
+    secrets: [emailUser, emailPass, geminiKey],
     timeZone: "Asia/Kolkata"
 }, async (event) => {
-    return runReminderLogic('IN');
+    return runReminderLogic('IN', geminiKey.value());
 });
 
 /**
@@ -691,16 +691,48 @@ exports.sendDailyReminderIN = onSchedule({
  */
 exports.sendDailyReminderUS = onSchedule({
     schedule: "0 20 * * *",
-    secrets: [emailUser, emailPass],
+    secrets: [emailUser, emailPass, geminiKey],
     timeZone: "America/New_York"
 }, async (event) => {
-    return runReminderLogic('US');
+    return runReminderLogic('US', geminiKey.value());
 });
 
-async function runReminderLogic(region) {
+async function getDailyEmailContent(apiKey) {
+    try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const prompt = `
+            Act as a Presence Coach based on 'The Untethered Soul' and 'The Power of Now'.
+            Generate a daily evening practice reminder for students.
+            Return exactly a JSON object:
+            {
+              "headline": "A short poetic headline (max 5 words)",
+              "quote": "A soul-stirring quote about being the witness (max 20 words)",
+              "explanation": "One or two sentences about observing the mind at the end of the day",
+              "practice": "A simple 1-sentence evening awareness exercise"
+            }
+        `;
+        const result = await model.generateContent(prompt);
+        const text = (await result.response).text().trim();
+        const cleanedJson = text.replace(/```json|```/gi, '').trim();
+        return JSON.parse(cleanedJson);
+    } catch (e) {
+        console.error("Gemini Content Error:", e);
+        return {
+            headline: "Peace is a Choice. Not a State.",
+            quote: "You are the listener. Not the radio.",
+            explanation: "The voice in your head has been talking all day. You don't have to answer it. You don't have to silence it. Just — step back. Notice it is there. And rest in the one who is noticing.",
+            practice: "Before you sleep — notice one thought that ran today without your permission. Don't judge it. Just see it for what it is."
+        };
+    }
+}
+
+async function runReminderLogic(region, apiKey) {
     const today = new Date().toISOString().split('T')[0];
     const usersSnap = await db.collection("users").get();
     const transporter = getTransporter();
+
+    const daily = await getDailyEmailContent(apiKey);
 
     const emailTemplate = `
 <!DOCTYPE html>
@@ -713,9 +745,8 @@ async function runReminderLogic(region) {
     <title>The Awakened Path</title>
 </head>
 <body style="margin:0;padding:0;background:#f0ece4;">
-    <!-- Preheader Text -->
     <div style="display:none;font-size:1px;color:#f0ece4;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
-        The day is winding down. Return to the seat of the Watcher before you sleep.
+        \${daily.headline} - The day is winding down. Return to the seat of the Watcher.
     </div>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
         <tr>
@@ -725,7 +756,7 @@ async function runReminderLogic(region) {
                     <tr>
                         <td style="padding:32px 40px 20px;text-align:center;">
                             <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Awakened Path &middot; Evening Practice</p>
-                            <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:300;font-style:italic;color:#1C1814;margin:0;line-height:1.3;">Peace is a Choice.<br>Not a State.</h1>
+                            <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:300;font-style:italic;color:#1C1814;margin:0;line-height:1.3;">\${daily.headline}</h1>
                             <div style="width:40px;height:1px;background:#B8973A;margin:16px auto;"></div>
                         </td>
                     </tr>
@@ -736,11 +767,11 @@ async function runReminderLogic(region) {
                                 <tr>
                                     <td width="3" style="background:#E6C57D;font-size:0;">&nbsp;</td>
                                     <td style="padding:12px 0 12px 20px;">
-                                        <p style="font-family:Georgia,serif;font-size:16px;font-style:italic;color:#5C544E;margin:0;line-height:1.6;">"You are the listener.<br>Not the radio."</p>
+                                        <p style="font-family:Georgia,serif;font-size:16px;font-style:italic;color:#5C544E;margin:0;line-height:1.6;">"\${daily.quote}"</p>
                                     </td>
                                 </tr>
                             </table>
-                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0;">The voice in your head has been talking all day. You don't have to answer it. You don't have to silence it. Just — step back. Notice it is there. And rest in the one who is noticing.</p>
+                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0;">\${daily.explanation}</p>
                         </td>
                     </tr>
                     <tr>
@@ -749,7 +780,7 @@ async function runReminderLogic(region) {
                                 <tr>
                                     <td style="padding:20px 24px;">
                                         <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 10px;">Tonight's Practice</p>
-                                        <p style="font-family:Georgia,serif;font-size:14px;line-height:1.75;color:#3A342C;margin:0;">Before you sleep — notice one thought that ran today without your permission. Don't judge it. Don't follow it. Just see it for what it is: the mind doing what minds do. You are the one who noticed. That one is always still.</p>
+                                        <p style="font-family:Georgia,serif;font-size:14px;line-height:1.75;color:#3A342C;margin:0;">\${daily.practice}</p>
                                     </td>
                                 </tr>
                             </table>
@@ -757,7 +788,7 @@ async function runReminderLogic(region) {
                     </tr>
                     <tr>
                         <td style="padding:0 40px 36px;text-align:center;">
-                            <a href="https://www.skrmblissai.in/awakenedpath" style="display:inline-block;padding:13px 32px;background:#1C1814;color:#E6C57D;text-decoration:none;font-family:Georgia,serif;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;">Record Your Journey &rarr;</a>
+                            <a href="https://awakened-path-2026.web.app" style="display:inline-block;padding:13px 32px;background:#1C1814;color:#E6C57D;text-decoration:none;font-family:Georgia,serif;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;">Record Your Journey &rarr;</a>
                         </td>
                     </tr>
                     <tr>
@@ -772,7 +803,7 @@ async function runReminderLogic(region) {
                             </p>
                             <p style="font-family:Georgia,serif;font-size:10px;color:#B0A090;margin:20px 0 0;line-height:1.6;opacity:0.6;">
                                 You received this because you are walking the Awakened Path.<br>
-                                <a href="https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId={{USER_ID}}" style="color:#B8973A;text-decoration:none;">Unsubscribe</a> &middot; <a href="#" style="color:#B8973A;text-decoration:none;">Peace is the way.</a>
+                                <a href="https://awakened-path-2026.web.app/api/unsubscribe?userId={{USER_ID}}" style="color:#B8973A;text-decoration:none;">Unsubscribe</a> &middot; <a href="#" style="color:#B8973A;text-decoration:none;">Peace is the way.</a>
                             </p>
                         </td>
                     </tr>
@@ -782,7 +813,8 @@ async function runReminderLogic(region) {
     </table>
 </body>
 </html>
-    `;
+`;
+
 
     for (const userDoc of usersSnap.docs) {
         const userData = userDoc.data();
