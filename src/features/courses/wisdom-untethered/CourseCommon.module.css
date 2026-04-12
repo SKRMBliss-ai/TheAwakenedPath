@@ -205,13 +205,13 @@
 }
 
 :global(.dark) .heroSub {
-  color: #E6C57D;
-  opacity: 1;
+  color: #E6C57D !important;
+  opacity: 1 !important;
 }
 
 :global(.dark) .heroScroll {
-  color: #E6C57D;
-  opacity: 1;
+  color: #E6C57D !important;
+  opacity: 1 !important;
 }
 
 :global(:not(.dark)) .heroSub {
@@ -262,8 +262,8 @@
   font-family: var(--font-serif);
   font-size: 1.4rem;
   font-style: italic;
-  color: #FDFAF4;
-  line-height: 1.6;
+  color: #E6C57D !important;
+  opacity: 1 !important;
 }
 
 :global(.dark) .pull {

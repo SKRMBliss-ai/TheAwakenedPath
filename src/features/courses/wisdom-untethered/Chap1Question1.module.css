@@ -125,6 +125,7 @@
   opacity: 0; animation: fadeUp 0.9s 0.6s ease forwards;
   position: relative; z-index: 1;
 }
+:global(.dark) .heroSub { color: var(--gold) !important; }
 .heroScroll {
   position: absolute; bottom: 2rem; left: 50%;
   transform: translateX(-50%);
@@ -818,12 +819,12 @@
   color: #D4AE5C;
 }
 :global(.dark) .heroSub {
-  color: #E6C57D;
-  opacity: 1;
+  color: #E6C57D !important;
+  opacity: 1 !important;
 }
 :global(.dark) .heroScroll {
-  color: #FDFAF4;
-  opacity: 0.8;
+  color: #E6C57D !important;
+  opacity: 1 !important;
 }
 :global(.dark) .openingBand {
   background: #26221E;

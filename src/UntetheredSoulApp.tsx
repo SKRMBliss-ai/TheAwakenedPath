@@ -1172,7 +1172,7 @@ export default function UntetheredApp() {
         <div className="mx-6 mb-0.5 h-px bg-[var(--border-subtle)] opacity-50 flex-shrink-0" />
 
         {/* ── Scrollable nav ── */}
-        <nav className="flex-1 overflow-y-auto px-4 pb-2 space-y-[0.5vh] scrollbar-none flex flex-col min-h-0">
+        <nav className="flex-1 overflow-y-auto px-4 pb-2 space-y-[0.5vh] no-scrollbar flex flex-col min-h-0">
 
           {/* Dashboard */}
           {(() => {
@@ -1312,27 +1312,24 @@ export default function UntetheredApp() {
                                         q.locked && "opacity-35 cursor-not-allowed"
                                       )}
                                     >
-                                      {/* Question number dot */}
                                       <div
-                                        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[8px] font-bold transition-all"
+                                        className="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all duration-500"
                                         style={{
-                                          background: isQActive ? 'var(--accent-primary)' : 'var(--bg-surface-elevated)',
-                                          color: isQActive ? 'black' : 'var(--text-secondary)',
-                                          border: isQActive ? 'none' : '1px solid var(--border-subtle)',
+                                          background: isQActive ? 'var(--accent-primary)' : 'var(--text-muted)',
+                                          opacity: isQActive ? 1 : 0.3,
+                                          boxShadow: isQActive ? '0 0 8px var(--accent-primary)' : 'none'
                                         }}
-                                      >
-                                        {q.locked ? <Lock size={7} /> : q.num}
-                                      </div>
+                                      />
                                       <span
                                         className={cn(
-                                          "text-[12px] font-sans flex-1 transition-colors tracking-wide leading-tight",
+                                          "text-[11px] font-sans flex-1 transition-all tracking-wider leading-tight",
                                           isQActive
-                                            ? "text-[var(--text-primary)] font-bold shadow-[0_0_10px_var(--accent-primary-dim)]"
-                                            : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]",
-                                          q.locked && "opacity-60 italic"
+                                            ? "text-[var(--text-primary)] font-bold opacity-100"
+                                            : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] opacity-70",
+                                          q.locked && "opacity-30 italic"
                                         )}
                                       >
-                                        {q.label}
+                                        {q.num}. {q.label}
                                       </span>
                                     </button>
                                   );
