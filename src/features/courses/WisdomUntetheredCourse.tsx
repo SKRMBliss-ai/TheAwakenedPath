@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Clock, Music } from 'lucide-react';
+import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Clock, Music, Activity, ChevronLeft } from 'lucide-react';
 import styles from './CourseTabs.module.css';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
@@ -9,6 +9,7 @@ import { Chap1Question3 } from './wisdom-untethered/Chap1Question3';
 import { Chap1Question4 } from './wisdom-untethered/Chap1Question4';
 import { Chap1Question5 } from './wisdom-untethered/Chap1Question5';
 import { ThoughtJournal } from './wisdom-untethered/components/ThoughtJournal';
+import { CostValueAnalysis } from '../practices/CostValueAnalysis';
 import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
 import { useAuth } from '../auth/AuthContext';
 import { ScrollNavigator } from '../../components/ui/ScrollNavigator';
@@ -49,6 +50,7 @@ interface CourseProps {
   setViewMode: (mode: any) => void;
   onOpenJournal?: () => void;
   onNavigateToPractice?: () => void;
+  onReturn?: () => void;
 }
 
 function VideoPlayerView({ videoId }: { videoId: string | null }) {
@@ -100,23 +102,18 @@ function VideoPlayerView({ videoId }: { videoId: string | null }) {
       <div className={styles.videoPlayerContainer}>
         {!isPlaying ? (
           <div className="relative w-full h-full flex items-center justify-center group cursor-pointer overflow-hidden rounded-[24px]">
-             {/* Thumbnail Background */}
              <img 
                src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`} 
                alt="Video Preview"
                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
              />
              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
-             
-             {/* Play Icon */}
              <button 
                onClick={() => setIsPlaying(true)}
                className="relative z-10 w-20 h-20 rounded-full bg-[var(--accent-primary)]/90 flex items-center justify-center text-white shadow-2xl transition-all duration-300 group-hover:scale-110 group-hover:bg-[var(--accent-primary)]"
              >
                <div className="ml-1 w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-white border-b-[12px] border-b-transparent" />
              </button>
-
-             {/* Youtube Logo Branding */}
              <a 
                href={`https://www.youtube.com/watch?v=${videoId}`}
                target="_blank"
@@ -150,16 +147,66 @@ const QUESTION_THEMES: Record<string, string> = {
   'question5': 'rgba(255, 255, 255, 0.05)', 
 };
 
+type PracticeType = 'example' | 'journal' | 'analysis';
+
+interface PracticeItem {
+  id: PracticeType;
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+const COMMON_PRACTICES: PracticeItem[] = [
+  {
+    id: 'example',
+    title: 'Lesson Examples',
+    subtitle: 'Practice 01',
+    description: 'Explore how these insights apply to real-world social friction and mental noise.',
+    icon: <Sparkles size={120} />
+  },
+  {
+    id: 'journal',
+    title: 'Thought Journal',
+    subtitle: 'Practice 02',
+    description: 'Record your stream-of-consciousness and classify your internal noise.',
+    icon: <Clock size={120} />
+  }
+];
+
+const QUESTION_PRACTICES: Record<string, PracticeItem[]> = {
+  'question1': COMMON_PRACTICES,
+  'question2': COMMON_PRACTICES,
+  'question3': COMMON_PRACTICES,
+  'question4': [
+    ...COMMON_PRACTICES,
+    {
+      id: 'analysis',
+      title: 'Cost-Value Analysis',
+      subtitle: 'Practice 03',
+      description: 'Witnessing how the mind spends your most precious currency: your aliveness.',
+      icon: <Activity size={120} />
+    }
+  ],
+  'question5': COMMON_PRACTICES,
+};
+
 export function WisdomUntetheredCourse({
   activeQuestionId,
   viewMode,
   setViewMode,
   onOpenJournal,
+  onReturn,
 }: CourseProps) {
   const activeChapter = useMemo(() => CHAPTERS[0], []);
-  
   const { user: currentUser } = useAuth();
   const { progress = {}, updateProgress } = useCourseTracking(currentUser?.uid);
+  const [selectedPractice, setSelectedPractice] = useState<PracticeType | null>(null);
+
+  // Reset selection when question changes
+  useEffect(() => {
+    setSelectedPractice(null);
+  }, [activeQuestionId]);
 
   // Auto-mark video or musical teaching as watched when tab is selected
   useEffect(() => {
@@ -169,13 +216,6 @@ export function WisdomUntetheredCourse({
       updateProgress(activeQuestionId, { musical: true });
     }
   }, [viewMode, activeQuestionId, updateProgress]);
-
-  const [selectedPractice, setSelectedPractice] = useState<'example' | 'journal' | null>(null);
-
-  // Reset selection when question changes
-  useEffect(() => {
-    setSelectedPractice(null);
-  }, [activeQuestionId]);
 
   const tabs = [
     { 
@@ -212,9 +252,21 @@ export function WisdomUntetheredCourse({
         className={styles.topBar}
         style={{ backgroundColor: QUESTION_THEMES[activeQuestionId] || 'var(--bg-surface)' }}
       >
-        <div className={styles.chapterInfo}>
-          <span className={styles.chapterSubtitle}>{activeChapter.subtitle}</span>
-          <h2 className={styles.chapterTitle}>{activeChapter.title}</h2>
+        <div className="flex items-center gap-6">
+          {onReturn && (
+            <button 
+              onClick={onReturn}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all group text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)]"
+            >
+              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+              Return
+            </button>
+          )}
+
+          <div className={styles.chapterInfo}>
+            <span className={styles.chapterSubtitle}>{activeChapter.subtitle}</span>
+            <h2 className={styles.chapterTitle}>{activeChapter.title}</h2>
+          </div>
         </div>
 
         <nav className={styles.tabGroup}>
@@ -269,7 +321,7 @@ export function WisdomUntetheredCourse({
       {/* ── Dynamic Content Area ── */}
       <main className={styles.contentArea}>
         <AnimatePresence mode="wait" initial={false}>
-          {/* EXPLANATION VIEW (Slides & Interactive content) */}
+          {/* EXPLANATION VIEW */}
           {viewMode === 'explanation' && (
             <motion.div
               key={`exp-${activeQuestionId}`}
@@ -287,7 +339,7 @@ export function WisdomUntetheredCourse({
             </motion.div>
           )}
 
-          {/* PRACTICE VIEW — Selection or Journal */}
+          {/* PRACTICE VIEW */}
           {viewMode === 'practice' && (
             <motion.div
               key={`prac-${activeQuestionId}`}
@@ -297,46 +349,47 @@ export function WisdomUntetheredCourse({
               className="w-full h-[calc(100vh-56px)] overflow-hidden bg-[var(--bg-main)]"
             >
               {!selectedPractice ? (
-                <div className="h-full flex flex-col items-center justify-center p-8 space-y-12">
-                  <div className="text-center space-y-4">
+                <div className="h-full flex flex-col items-center justify-center p-8 space-y-12 overflow-y-auto no-scrollbar">
+                  <div className="text-center space-y-4 pt-12">
                     <h3 className="text-4xl font-serif font-light text-[var(--text-primary)]">Sacred Practices</h3>
                     <p className="text-sm text-[var(--text-secondary)] italic font-serif">Deepen your presence through targeted reflection.</p>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl pb-12">
+                    {(QUESTION_PRACTICES[activeQuestionId] || COMMON_PRACTICES).map((practice) => (
+                      <button 
+                        key={practice.id}
+                        onClick={() => setSelectedPractice(practice.id)}
+                        className="group relative p-10 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)] transition-all duration-300 overflow-hidden text-left"
+                      >
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                          {practice.icon}
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-primary)] mb-4 block">{practice.subtitle}</span>
+                        <h4 className="text-2xl font-serif font-light mb-4 group-hover:translate-x-1 transition-transform">{practice.title}</h4>
+                        <p className="text-sm text-[var(--text-secondary)] leading-relaxed opacity-70">
+                          {practice.description}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : selectedPractice === 'analysis' ? (
+                <div className="h-full overflow-y-auto custom-scrollbar p-12">
+                  <div className="max-w-5xl mx-auto space-y-8">
                     <button 
-                      onClick={() => setSelectedPractice('example')}
-                      className="group relative p-10 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)] transition-all duration-300 overflow-hidden text-left"
+                      onClick={() => setSelectedPractice(null)}
+                      className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-2"
                     >
-                      <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Sparkles size={120} />
-                      </div>
-                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-primary)] mb-4 block">Practice 01</span>
-                      <h4 className="text-2xl font-serif font-light mb-4 group-hover:translate-x-1 transition-transform">Lesson Examples</h4>
-                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed opacity-70">
-                        Explore how these insights apply to real-world social friction and mental noise.
-                      </p>
+                      ← Back to Practices
                     </button>
-
-                    <button 
-                      onClick={() => setSelectedPractice('journal')}
-                      className="group relative p-10 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)] transition-all duration-300 overflow-hidden text-left"
-                    >
-                      <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Clock size={120} />
-                      </div>
-                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-primary)] mb-4 block">Practice 02</span>
-                      <h4 className="text-2xl font-serif font-light mb-4 group-hover:translate-x-1 transition-transform">Thought Journal</h4>
-                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed opacity-70">
-                        Record your stream-of-consciousness and classify your internal noise.
-                      </p>
-                    </button>
+                    <CostValueAnalysis />
                   </div>
                 </div>
               ) : (
                 <ThoughtJournal 
                   inline 
-                  defaultTab={selectedPractice} 
+                  defaultTab={selectedPractice === 'example' ? 'example' : 'journal'} 
                   onClose={() => setSelectedPractice(null)} 
                 />
               )}

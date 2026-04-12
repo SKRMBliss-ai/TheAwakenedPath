@@ -1663,6 +1663,7 @@ export default function UntetheredApp() {
                 setViewMode={setViewMode}
                 onOpenJournal={() => setActiveTab('chapters')}
                 onNavigateToPractice={() => setActiveTab('situations')}
+                onReturn={() => setActiveTab('dashboard')}
               />
             </motion.div>
           )}
