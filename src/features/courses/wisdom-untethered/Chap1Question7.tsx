@@ -2,36 +2,33 @@ import { useEffect, useRef, useState } from 'react';
 import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import { useAuth } from '../../auth/AuthContext';
 import { cn } from '../../../lib/utils';
-import styles from './Chap1Question6.module.css';
+import styles from './Chap1Question7.module.css';
 import { useCourseTracking } from '../../../hooks/useCourseTracking';
 import { CourseHero } from './CourseHero';
 import { CourseLightbox } from './CourseLightbox';
 
 const SLIDE_IMAGES: Record<string, string> = {
-  "overview": "/WisdomUntethered/Chap1/Question6/16.jpg",
-  "slide1": "/WisdomUntethered/Chap1/Question6/1.jpg",
-  "slide2": "/WisdomUntethered/Chap1/Question6/2.jpg",
-  "slide3": "/WisdomUntethered/Chap1/Question6/3.jpg",
-  "slide4": "/WisdomUntethered/Chap1/Question6/4.jpg",
-  "slide5": "/WisdomUntethered/Chap1/Question6/5.jpg",
-  "slide6": "/WisdomUntethered/Chap1/Question6/6.jpg",
-  "slide7": "/WisdomUntethered/Chap1/Question6/7.jpg",
-  "slide8": "/WisdomUntethered/Chap1/Question6/8.jpg",
-  "slide9": "/WisdomUntethered/Chap1/Question6/9.jpg",
-  "slide10": "/WisdomUntethered/Chap1/Question6/10.jpg",
-  "slide11": "/WisdomUntethered/Chap1/Question6/11.jpg",
-  "slide12": "/WisdomUntethered/Chap1/Question6/12.jpg",
-  "slide13": "/WisdomUntethered/Chap1/Question6/13.jpg",
-  "slide14": "/WisdomUntethered/Chap1/Question6/14.jpg",
+  "overview": "/WisdomUntethered/Chap1/Question7/12.jpg",
+  "slide1": "/WisdomUntethered/Chap1/Question7/1.jpg",
+  "slide2": "/WisdomUntethered/Chap1/Question7/2.jpg",
+  "slide3": "/WisdomUntethered/Chap1/Question7/3.jpg",
+  "slide4": "/WisdomUntethered/Chap1/Question7/4.jpg",
+  "slide5": "/WisdomUntethered/Chap1/Question7/5.jpg",
+  "slide6": "/WisdomUntethered/Chap1/Question7/6.jpg",
+  "slide7": "/WisdomUntethered/Chap1/Question7/7.jpg",
+  "slide8": "/WisdomUntethered/Chap1/Question7/8.jpg",
+  "slide9": "/WisdomUntethered/Chap1/Question7/9.jpg",
+  "slide10": "/WisdomUntethered/Chap1/Question7/10.jpg",
+  "slide11": "/WisdomUntethered/Chap1/Question7/11.jpg",
 };
 
-const ALL_SLIDES = ["overview", ...Array.from({ length: 14 }, (_, i) => `slide${i + 1}`)];
+const ALL_SLIDES = ["overview", ...Array.from({ length: 11 }, (_, i) => `slide${i + 1}`)];
 
-interface Chap1Question6Props {
+interface Chap1Question7Props {
   onOpenJournal?: () => void;
 }
 
-export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
+export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
   const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
@@ -45,7 +42,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
     const handleScroll = () => {
       const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
       if (isNearBottom) {
-        updateProgress('question6', { read: true });
+        updateProgress('question7', { read: true });
       }
     };
 
@@ -94,7 +91,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
   return (
     <div className={cn(styles.container, "scroll-container")} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
       <nav className={styles.navDots}>
-        {Array.from({ length: 18 }).map((_, i) => (
+        {Array.from({ length: 15 }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
@@ -106,9 +103,9 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
 
       <CourseHero 
         chapter={1}
-        question={6}
-        title={<>Letting Go of the <strong>Past</strong></>}
-        subtitle="When the mind replays old shame — the art of releasing the person you were to become who you are"
+        question={7}
+        title={<>Handling the <strong>Back-and-Forth</strong></>}
+        subtitle="Why we seemingly fail in our practice — and why 'failing' is the most important sign of progress there is"
       />
 
       <CourseLightbox 
@@ -128,7 +125,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
             <div className={cn(styles.imageContainer, styles.wide)}>
               <img 
                 src={SLIDE_IMAGES["overview"]} 
-                alt="Overview: Can you let go of who you were?" 
+                alt="Overview: The Art of the Swing" 
                 onClick={() => openLightbox(0)} 
                 className={styles.slideImg} 
               />
@@ -150,9 +147,9 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The Hook</span>
-            <h2 className={styles.slideH}>Thoughts That <em>Arrive Uninvited</em></h2>
-            <p className={styles.slideP}>There's a particular kind of thought that arrives without warning. Something surfaces from years ago. A moment when you were selfish, careless, or cruel.</p>
-            <div className={styles.pull}>"The mind runs it again. Reconstructing it. Sharpening the edges."</div>
+            <h2 className={styles.slideH}>The <em>Reappearing</em> Noise</h2>
+            <p className={styles.slideP}>Imagine a moment of genuine shift — real quiet, real clarity. And then, an hour later, something happens. A comment. A thought. And you're right back in the loop.</p>
+            <div className={styles.pull}>"So why does it keep slipping away?"</div>
           </div>
         </div>
       </section>
@@ -165,14 +162,13 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>02</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide2"]} alt="The process" onClick={() => openLightbox(2)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide2"]} alt="Expectation" onClick={() => openLightbox(2)} className={styles.slideImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>The Process</span>
-            <h2 className={styles.slideH}>Keeping the <em>Old You</em> Alive</h2>
-            <p className={styles.slideP}>The person you were then — that level of understanding, that level of pain or fear — is gone. Yet the guilt keeps that old version of you alive.</p>
-            <p className={styles.slideP}>It feels like accountability, but it hasn't fixed anything. It's just... still there.</p>
+            <span className={styles.slideTag}>Expectation</span>
+            <h2 className={styles.slideH}>Growth Isn't <em>Linear</em></h2>
+            <p className={styles.slideP}>Most people assume spiritual growth is a clean climb. You touch something higher, and you stay there. But real growth looks like glimpses followed by pull-backs.</p>
           </div>
         </div>
       </section>
@@ -185,13 +181,14 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>03</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide3"]} alt="The realization" onClick={() => openLightbox(3)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide3"]} alt="The analogy" onClick={() => openLightbox(3)} className={styles.slideImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>The Realization</span>
-            <h2 className={styles.slideH}>Not Who <em>You Are</em></h2>
-            <p className={styles.slideP}>Somewhere underneath is a voice saying: you don't get to just move on. But that voice isn't yours. It's just memory holding onto a ghost.</p>
+            <span className={styles.slideTag}>The Analogy</span>
+            <h2 className={styles.slideH}>Deep Cleaning <em>the Home</em></h2>
+            <p className={styles.slideP}>Think about a deep clean. You clear one room, and it feels good. But then you open a cupboard you haven't touched in years. Dust and old papers fall out.</p>
+            <div className={styles.pull}>"The more you clean, the more you find. Not because it's dirtier, but because you're reaching deeper."</div>
           </div>
         </div>
       </section>
@@ -204,13 +201,13 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>04</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide4"]} alt="The teaching" onClick={() => openLightbox(4)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide4"]} alt="The storage" onClick={() => openLightbox(4)} className={styles.slideImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>The Teaching</span>
-            <h2 className={styles.slideH}>A New <em>Understanding</em></h2>
-            <p className={styles.slideP}>By the end of this journey, you'll understand exactly what that guilt is doing and how to let the energy move through you instead of staying stuck.</p>
+            <span className={styles.slideTag}>The Storage</span>
+            <h2 className={styles.slideH}>Stored Impressions: <em>Samskaras</em></h2>
+            <p className={styles.slideP}>Throughout your life, you've stored unresolved experiences. Old hurt, old embarrassment. Singer calls these *Samskaras*. They are like bruises inside that life occasionally hits.</p>
           </div>
         </div>
       </section>
@@ -223,14 +220,13 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>05</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide5"]} alt="The analogy" onClick={() => openLightbox(5)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide5"]} alt="The choice" onClick={() => openLightbox(5)} className={styles.slideImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>The Analogy</span>
-            <h2 className={styles.slideH}>Learning the <em>Piano</em></h2>
-            <p className={styles.slideP}>Imagine learning to play the piano. In the beginning, you hit a lot of wrong notes. Terrible, discordant sounds. You don't get angry at the notes — they were just part of learning.</p>
-            <div className={styles.pull}>"Your past actions were wrong notes in the song of your life."</div>
+            <span className={styles.slideTag}>The Choice</span>
+            <h2 className={styles.slideH}>The Pull-Back is <em>the Opportunity</em></h2>
+            <p className={styles.slideP}>Stop treating the pull-back as the problem. When something activates and pulls you into your mind, that is your moment to grow.</p>
           </div>
         </div>
       </section>
@@ -243,13 +239,14 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>06</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide6"]} alt="The practice" onClick={() => openLightbox(6)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide6"]} alt="The process" onClick={() => openLightbox(6)} className={styles.slideImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>The Practice</span>
-            <h2 className={styles.slideH}>Stop <em>Hitting</em> the Note</h2>
-            <p className={styles.slideP}>Holding onto guilt is like going back to that piano every day and repeatedly hitting the same wrong note over and over, wondering why you can't hear the symphony.</p>
+            <span className={styles.slideTag}>The Process</span>
+            <h2 className={styles.slideH}>Relax <em>Into</em> the Discomfort</h2>
+            <p className={styles.slideP}>Don't suppress or fight. Just relax. Open up around the disturbance. Let it pass through you like weather passing through the sky.</p>
+            <div className={styles.pull}>"The sky doesn't fight the rain. It just allows it."</div>
           </div>
         </div>
       </section>
@@ -262,13 +259,13 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>07</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide7"]} alt="The weight" onClick={() => openLightbox(7)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide7"]} alt="The perspective" onClick={() => openLightbox(7)} className={styles.slideImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>The Weight</span>
-            <h2 className={styles.slideH}>Why We <em>Hold On</em></h2>
-            <p className={styles.slideP}>We hold on because we think it proves we've changed. We think pain is the price of redemption. But pain isn't change. Awareness is change.</p>
+            <span className={styles.slideTag}>The Perspective</span>
+            <h2 className={styles.slideH}>You Are <em>the Sky</em></h2>
+            <p className={styles.slideP}>You have always been the sky. The clouds may be dark, the wind may be loud, but the sky remains untouched behind it all.</p>
           </div>
         </div>
       </section>
@@ -281,13 +278,13 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>08</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide8"]} alt="Narrative" onClick={() => openLightbox(8)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide8"]} alt="Judgment" onClick={() => openLightbox(8)} className={styles.slideImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>Narrative</span>
-            <h2 className={styles.slideH}>Dropping the <em>Story</em></h2>
-            <p className={styles.slideP}>The story doesn't serve the future. It only shackles the present. You are not your history; you are the one witnessing it.</p>
+            <span className={styles.slideTag}>Judgment</span>
+            <h2 className={styles.slideH}>Drop the <em>Spiritual Story</em></h2>
+            <p className={styles.slideP}>The thought "I'm not doing this right" is just another pull. The mind is taking your journey and turning it into a story about adequacy.</p>
           </div>
         </div>
       </section>
@@ -305,8 +302,8 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The Shift</span>
-            <h2 className={styles.slideH}>Witness, <em>Don't Wallow</em></h2>
-            <p className={styles.slideP}>The moment you see the thought as an object in your consciousness, it loses its power to define you. It's just a ripple in the water.</p>
+            <h2 className={styles.slideH}>Speed of <em>Noticing</em></h2>
+            <p className={styles.slideP}>Stop measuring progress by how long the quiet lasts. Instead, notice how quickly you catch yourself when you've left it. That moment of noticing is the progress.</p>
           </div>
         </div>
       </section>
@@ -319,13 +316,13 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>10</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide10"]} alt="Breath" onClick={() => openLightbox(10)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide10"]} alt="The sign" onClick={() => openLightbox(10)} className={styles.slideImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>Breath</span>
-            <h2 className={styles.slideH}>The <em>Release</em> Breath</h2>
-            <p className={styles.slideP}>When the shame surfaces, breathe into it. Not to push it away, but to give it space to dissolve and return to the silence.</p>
+            <span className={styles.slideTag}>The Sign</span>
+            <h2 className={styles.slideH}>The Fact <em>You Can See It</em></h2>
+            <p className={styles.slideP}>A month ago, you might have stayed lost for days. Now you notice in minutes. The fact that you can see it happening means you are no longer lost in it.</p>
           </div>
         </div>
       </section>
@@ -338,70 +335,13 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>11</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide11"]} alt="Visualization" onClick={() => openLightbox(11)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide11"]} alt="Meditation" onClick={() => openLightbox(11)} className={styles.slideImg} />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>Visualization</span>
-            <h2 className={styles.slideH}>Flow <em>State</em></h2>
-            <p className={styles.slideP}>Imagine the past as a river. You are standing on the bank. You can watch the debris float past without jumping in to try and catch it.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.rule}><span>✦</span></div>
-
-      {/* --- SLIDE 12 --- */}
-      <section className={styles.slide} data-section="13">
-        <div className={cn(styles.slideGrid, styles.flip)}>
-          <div className={styles.imgWrap}>
-            <span className={styles.slideNum}>12</span>
-            <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide12"]} alt="Softening" onClick={() => openLightbox(12)} className={styles.slideImg} />
-            </div>
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideTag}>Softening</span>
-            <h2 className={styles.slideH}>Softening the <em>Edge</em></h2>
-            <p className={styles.slideP}>Relax your shoulders. Relax your heart. The past only feels solid because you are tensing against it.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.rule}><span>✦</span></div>
-
-      {/* --- SLIDE 13 --- */}
-      <section className={styles.slide} data-section="14">
-        <div className={styles.slideGrid}>
-          <div className={styles.imgWrap}>
-            <span className={styles.slideNum}>13</span>
-            <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide13"]} alt="The self" onClick={() => openLightbox(13)} className={styles.slideImg} />
-            </div>
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideTag}>The Self</span>
-            <h2 className={styles.slideH}>The <em>Observer</em> Returns</h2>
-            <p className={styles.slideP}>The one who is aware of the guilt is already free from it. That awareness is your true home.</p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.rule}><span>✦</span></div>
-
-      {/* --- SLIDE 14 --- */}
-      <section className={styles.slide} data-section="15">
-        <div className={cn(styles.slideGrid, styles.flip)}>
-          <div className={styles.imgWrap}>
-            <span className={styles.slideNum}>14</span>
-            <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide14"]} alt="Integration" onClick={() => openLightbox(14)} className={styles.slideImg} />
-            </div>
-          </div>
-          <div className={styles.slideContent}>
-            <span className={styles.slideTag}>Integration</span>
-            <h2 className={styles.slideH}>Walking <em>Forward</em></h2>
-            <p className={styles.slideP}>The song goes on. You've hit higher notes, more beautiful chords. Keep playing. Don't look back at the keys you already struck.</p>
+            <span className={styles.slideTag}>Meditation</span>
+            <h2 className={styles.slideH}>Witnessing <em>the Swing</em></h2>
+            <p className={styles.slideP}>Sit with the back-and-forth directly. Don't try to resolve it. Just learn to watch the movement between the noise and the silence.</p>
           </div>
         </div>
       </section>
@@ -409,27 +349,27 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* --- PRACTICE SECTION --- */}
-      <section className={styles.slide} data-section="16">
+      <section className={styles.slide} data-section="13">
         <div className={styles.slideGrid}>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>Daily Guidance</span>
-            <h2 className={styles.slideH}>Release the <em>Weight</em></h2>
+            <h2 className={styles.slideH}>Measure <em>Awareness</em></h2>
             <p className={styles.slideP}>
-              Whenever a memory of the past arrives to tighten your heart, use the release breath and return to the present. You are the awareness, not the history.
+              When you feel the pull, celebrate the noticing. Returning to awareness is the practice itself.
             </p>
           </div>
           <div className="flex flex-col justify-center">
-            <DailyPracticeCard questionId="question6" userId={user?.uid} />
+            <DailyPracticeCard questionId="question7" userId={user?.uid} />
           </div>
         </div>
       </section>
 
       {/* --- CLOSING --- */}
-      <section className={styles.closing} data-section="17">
+      <section className={styles.closing} data-section="14">
         <div className={styles.closingInner}>
-          <span className={styles.slideTag}>End of Chapter 1 · Question 6</span>
-          <h2 className={styles.closingTitle}>The Door is <em>Open</em></h2>
-          <p className={styles.slideP}>You don't need to carry the past to prove you've learned from it.</p>
+          <span className={styles.slideTag}>End of Chapter 1 · Question 7</span>
+          <h2 className={styles.closingTitle}>The House <em>Becomes Clear</em></h2>
+          <p className={styles.slideP}>Each time something surfaces and passes through, that is one less room to clean.</p>
           <button className={styles.closingButton} onClick={onOpenJournal}>Open Journal →</button>
         </div>
       </section>

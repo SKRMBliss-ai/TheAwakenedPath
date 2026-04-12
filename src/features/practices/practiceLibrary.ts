@@ -258,6 +258,47 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
     color: '#B8973A',
     icon: 'brain',
   },
+
+  // ── Q7: Handling the Back-and-Forth ─────────────────────────────────────────
+  question7: {
+    questionId: 'question7',
+    name: 'The Noticing Celebration',
+    tagline: 'Measure progress by how quickly you catch yourself, not by the years of silence.',
+    singerSource:
+      'Singer: "The swinging, the back-and-forth — this is what growth looks like. ' +
+      'Noticing you have been pulled back is the ultimate sign of progress. ' +
+      'It means you are no longer lost in the noise."',
+    howItWorks:
+      'Throughout the day, catch yourself when you\'ve been pulled into a thought loop. ' +
+      'Instead of judging yourself for "failing," genuinely celebrate the noticing. ' +
+      'The sit below helps train this "noticing muscle."',
+    steps: [
+      {
+        instruction: 'Sit comfortably and find the quiet space behind the thoughts.',
+        duration: 30,
+      },
+      {
+        instruction:
+          'Wait for a thought to pull you in. Watch it happen if you can.',
+        duration: 60,
+      },
+      {
+        instruction:
+          'The moment you notice you\'ve been "gone" — smile mentally. ' +
+          'That noticing is your awareness returning to the seat.',
+        duration: 30,
+      },
+      {
+        instruction:
+          'Settle back into the sky. Untouched by the clouds that just passed.',
+        duration: 60,
+      },
+    ],
+    completionCriteria: 'Celebrated at least one moment of noticing today.',
+    durationLabel: '3 minutes',
+    color: '#3A8BBF',
+    icon: 'clarity',
+  },
 };
 
 // Helper to get a practice by questionId
@@ -266,4 +307,4 @@ export function getPractice(questionId: string): QuestionPractice | null {
 }
 
 // All question IDs in order
-export const QUESTION_IDS = ['question1', 'question2', 'question3', 'question4', 'question5', 'question6'];
+export const QUESTION_IDS = ['question1', 'question2', 'question3', 'question4', 'question5', 'question6', 'question7'];

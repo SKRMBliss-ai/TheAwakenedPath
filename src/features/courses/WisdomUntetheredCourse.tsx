@@ -9,6 +9,7 @@ import { Chap1Question3 } from './wisdom-untethered/Chap1Question3';
 import { Chap1Question4 } from './wisdom-untethered/Chap1Question4';
 import { Chap1Question5 } from './wisdom-untethered/Chap1Question5';
 import { Chap1Question6 } from './wisdom-untethered/Chap1Question6';
+import { Chap1Question7 } from './wisdom-untethered/Chap1Question7';
 import { ThoughtJournal } from './wisdom-untethered/components/ThoughtJournal';
 import { CostValueAnalysis } from '../practices/CostValueAnalysis';
 import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
@@ -341,6 +342,7 @@ export function WisdomUntetheredCourse({
               {activeQuestionId === 'question4' && <Chap1Question4 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question5' && <Chap1Question5 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question6' && <Chap1Question6 onOpenJournal={onOpenJournal} />}
+              {activeQuestionId === 'question7' && <Chap1Question7 onOpenJournal={onOpenJournal} />}
             </motion.div>
           )}
 

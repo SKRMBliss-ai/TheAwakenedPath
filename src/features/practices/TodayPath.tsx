@@ -48,6 +48,11 @@ export const QUESTION_META: Record<string, {
     journalPrompt: 'What memory arose today, and did you release its energy through the breath?',
     dailyIntent: 'I will breathe through past memories today, refusing to feed the narratives of who I used to be.',
   },
+  question7: {
+    shortTitle: 'Q7 · Handling the Back-and-Forth',
+    journalPrompt: 'How quickly did you notice the pull-back today? Celebrate that moment.',
+    dailyIntent: 'I will celebrate every moment I notice the mind pulling me back, recognizing it as a return to awareness.',
+  },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -237,7 +242,7 @@ export function TodayPath({
   };
 
   const wuLearntCount = Object.values(progress || {}).filter(q => q.read).length;
-  const wuTotal = 6; 
+  const wuTotal = 7; 
   
   const doneCount = [learnDone, practiceCompleted, reflectDone, integrateDone].filter(Boolean).length;
   const allDone = learnDone && practiceCompleted && reflectDone && integrateDone;
