@@ -2,9 +2,10 @@
 .container {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
-  background: var(--bg-primary);
+  height: 100vh;
+  padding-top: 70px; /* NEW: Dedicated space for the Return/Medals cluster */
+  background: var(--bg-main);
+  position: relative;
   color: var(--text-primary);
   overflow: hidden;
 }

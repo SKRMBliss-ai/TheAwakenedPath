@@ -24,7 +24,7 @@ export const ScrollNavigator: React.FC<ScrollNavigatorProps> = ({ containerRef, 
     
     const handleScroll = () => {
       const scrollY = target instanceof Window ? window.scrollY : target.scrollTop;
-      setIsVisible(scrollY > 200);
+      setIsVisible(scrollY > 50); // Lowered threshold so portals appear sooner
     };
 
     target.addEventListener('scroll', handleScroll);
