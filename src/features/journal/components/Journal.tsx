@@ -20,7 +20,7 @@ import {
     NoiseOverlay,
     SacredToast,
 } from '../../../components/ui/SacredUI.tsx';
-import { useEmotionSync } from '../../soul-intelligence/hooks/useEmotionSync';
+import { useEmotionSync } from '../../presence-intelligence/hooks/useEmotionSync';
 import JournalCalendar from './JournalCalendar';
 import { GentleJournalForm } from './GentleJournalForm';
 import { PracticeHistory } from './PracticeHistory';
