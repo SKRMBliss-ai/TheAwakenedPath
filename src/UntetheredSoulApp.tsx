@@ -305,15 +305,15 @@ const SacredWelcomeModal = ({ isOpen, onClose, planName, userEmail }: any) => {
           >
             {/* Top gold bar */}
             <div className="h-1.5 bg-[#B8973A] w-full" />
-            
+
             <div className="p-8 md:p-12 text-center space-y-6">
               <div className="space-y-2">
                 <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#B8973A]">Access Granted</p>
                 <h2 className="text-3xl font-serif italic text-[#1C1814] leading-tight">Welcome to the<br />Deepest Journey.</h2>
               </div>
-              
+
               <div className="w-12 h-px bg-[#B8973A] mx-auto opacity-30" />
-              
+
               <div className="space-y-4 text-[#3A342C] font-serif leading-relaxed">
                 <p className="text-sm">Your gateway for <b>{planName}</b> was successful.</p>
                 <div className="text-[13px] space-y-3 opacity-90">
@@ -336,7 +336,7 @@ const SacredWelcomeModal = ({ isOpen, onClose, planName, userEmail }: any) => {
               >
                 Begin Your Journey
               </AnchorButton>
-              
+
               <p className="text-[10px] italic text-[#B0A090]">Peace is the way.</p>
             </div>
           </motion.div>
@@ -350,7 +350,7 @@ const SacredWelcomeModal = ({ isOpen, onClose, planName, userEmail }: any) => {
 const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial, hasUsedTrial, onSuccess }: any) => {
   const [isTrialLoading, setIsTrialLoading] = useState(false);
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  
+
   const pricingConfig = useMemo(() => {
     if (timezone === 'Asia/Calcutta' || timezone === 'Asia/Kolkata') {
       return { symbol: '₹', monthly: '799', annual: '7,999', lifetime: '14,999', currency: 'INR', strike: '9,588' };
@@ -456,8 +456,8 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
           {/* 1. Trial Option Card (First Now) */}
           <div className={cn(
             "p-6 rounded-[32px] border transition-all shadow-xl flex flex-col justify-between items-center group relative overflow-hidden",
-            hasUsedTrial 
-              ? "border-[var(--border-subtle)] bg-[var(--bg-surface)]/20 opacity-60 grayscale-[0.5]" 
+            hasUsedTrial
+              ? "border-[var(--border-subtle)] bg-[var(--bg-surface)]/20 opacity-60 grayscale-[0.5]"
               : "border-dashed border-[var(--accent-primary)] bg-[var(--accent-primary)]/5"
           )}>
             <div className="absolute top-0 right-0 p-3 opacity-20 transform rotate-12">
@@ -608,9 +608,9 @@ export default function UntetheredApp() {
 
   const membershipInfo = useMemo(() => {
     if (!profile) return null;
-    const isPremium = profile.purchasedCourses?.includes('all_access') || 
-                      profile.subscriptionStatus === 'ACTIVE' || 
-                      isAdminEmail(currentUser?.email);
+    const isPremium = profile.purchasedCourses?.includes('all_access') ||
+      profile.subscriptionStatus === 'ACTIVE' ||
+      isAdminEmail(currentUser?.email);
     const trialDate = profile.trialUntil?.toDate ? profile.trialUntil.toDate() : (profile.trialUntil ? new Date(profile.trialUntil) : null);
     const isTrial = !!(trialDate && trialDate > new Date());
 
@@ -621,8 +621,8 @@ export default function UntetheredApp() {
 
     const plan = profile.subscriptionId?.includes('yearly') ? 'Yearly' :
       profile.subscriptionId?.includes('monthly') ? 'Monthly' :
-        (profile.purchasedCourses?.includes('all_access') ? 'Lifetime' : 
-        (isAdminEmail(currentUser?.email) ? 'All Access' : null));
+        (profile.purchasedCourses?.includes('all_access') ? 'Lifetime' :
+          (isAdminEmail(currentUser?.email) ? 'All Access' : null));
 
     return {
       type: isPremium ? 'Premium' : (isTrial ? 'Trial' : 'Basic'),

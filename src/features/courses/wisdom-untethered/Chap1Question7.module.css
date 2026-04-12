@@ -11,10 +11,10 @@
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'DM Sans', sans-serif;
   
-  background: #0c0910;
-  color: #FDFAF4;
+  background: var(--warm-white);
+  color: var(--ink);
   font-family: var(--sans);
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.75;
   overflow-x: hidden;
   position: relative;
@@ -62,7 +62,7 @@
 
 /* Standard Slide Grid */
 .slide {
-  padding: 4rem 2rem;
+  padding: 2.5rem 2rem;
   max-width: 1400px;
   margin: 0 auto;
   opacity: 0;
@@ -142,7 +142,7 @@
   font-size: clamp(1.4rem, 2.5vw, 2rem);
   font-weight: 300;
   line-height: 1.22;
-  color: #FDFAF4;
+  color: var(--ink);
   margin-bottom: 1.1rem;
 }
 
@@ -154,7 +154,7 @@
 
 .slideP {
   font-size: 0.97rem;
-  color: rgba(253,250,244,0.8);
+  color: var(--ink-soft);
   line-height: 1.82;
   font-weight: 300;
   margin-bottom: 0.9rem;
@@ -168,7 +168,7 @@
   font-size: 1.2rem;
   font-style: italic;
   font-weight: 400;
-  color: #FDFAF4;
+  color: var(--ink-soft);
   line-height: 1.55;
 }
 
@@ -215,7 +215,7 @@
   font-style: italic;
   font-weight: 300;
   line-height: 1.2;
-  color: #FDFAF4;
+  color: var(--ink);
   margin-bottom: 1.4rem;
 }
 
@@ -248,4 +248,26 @@
   .navDots {
     display: none;
   }
+}
+
+/* --- DARK MODE OVERRIDES --- */
+:global(.dark) .container {
+  background: #0c0910;
+  color: #FDFAF4;
+}
+
+:global(.dark) .slideH {
+  color: #FDFAF4;
+}
+
+:global(.dark) .slideP {
+  color: rgba(253,250,244,0.8);
+}
+
+:global(.dark) .pull {
+  color: #FDFAF4;
+}
+
+:global(.dark) .closingTitle {
+  color: #FDFAF4;
 }

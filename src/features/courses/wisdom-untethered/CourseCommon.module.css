@@ -109,7 +109,7 @@
 }
 
 :global(:not(.dark)) .hero {
-  background: var(--bg-primary, #f7f2ec); 
+  background: var(--bg-primary, #f7f2ec);
   color: var(--text-primary, #1a1714);
 }
 
@@ -137,13 +137,27 @@
 }
 
 @keyframes twinkle {
-  0% { opacity: var(--min-op); transform: scale(0.8); }
-  100% { opacity: var(--max-op); transform: scale(1.2); }
+  0% {
+    opacity: var(--min-op);
+    transform: scale(0.8);
+  }
+
+  100% {
+    opacity: var(--max-op);
+    transform: scale(1.2);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .heroChapter {
@@ -151,7 +165,7 @@
   font-weight: 600;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: #B8973A;
+  color: #D4AE5C; /* Brighter gold by default */
   margin-bottom: 0.5rem;
 }
 
@@ -183,16 +197,16 @@
 
 .heroSub {
   font-size: 1.2rem;
-  font-weight: 300;
-  color: var(--text-primary);
-  opacity: 0.8;
+  font-weight: 400;
+  color: #FDFAF4; /* Cream white for primary clarity */
+  opacity: 1;
   max-width: 600px;
   margin: 0 auto;
 }
 
 :global(:not(.dark)) .heroSub {
-  color: var(--text-secondary);
-  opacity: 1;
+  color: #1C1814;
+  font-weight: 400;
 }
 
 .heroScroll {
@@ -203,7 +217,8 @@
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.4em;
-  color: rgba(253, 250, 244, 0.3);
+  color: #FDFAF4; /* Solid visibility */
+  opacity: 0.85;
   animation: bounce 2s infinite;
 }
 
@@ -212,9 +227,22 @@
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0);}
-  40% {transform: translateX(-50%) translateY(-10px);}
-  60% {transform: translateX(-50%) translateY(-5px);}
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  40% {
+    transform: translateX(-50%) translateY(-10px);
+  }
+
+  60% {
+    transform: translateX(-50%) translateY(-5px);
+  }
 }
 
 .pull {

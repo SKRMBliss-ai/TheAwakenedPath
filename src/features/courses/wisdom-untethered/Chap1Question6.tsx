@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+// Bump for TS
 import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import { useAuth } from '../../auth/AuthContext';
 import { cn } from '../../../lib/utils';
@@ -8,7 +9,7 @@ import { CourseHero } from './CourseHero';
 import { CourseLightbox } from './CourseLightbox';
 
 const SLIDE_IMAGES: Record<string, string> = {
-  "overview": "/WisdomUntethered/Chap1/Question6/16.jpg",
+  "overview": "/WisdomUntethered/Chap1/Question6/overview.jpg",
   "slide1": "/WisdomUntethered/Chap1/Question6/1.jpg",
   "slide2": "/WisdomUntethered/Chap1/Question6/2.jpg",
   "slide3": "/WisdomUntethered/Chap1/Question6/3.jpg",

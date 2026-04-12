@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Clock, Music, Activity, ChevronLeft } from 'lucide-react';
+import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Clock, Music, Activity } from 'lucide-react';
 import styles from './CourseTabs.module.css';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
@@ -41,6 +41,7 @@ const QUESTION_VIDEOS: Record<string, string | null> = {
   'question4': null, 
   'question5': null, 
   'question6': null,
+  'question7': null,
 };
 
 const QUESTION_MUSICAL_VIDEOS: Record<string, string | null> = {
@@ -201,7 +202,8 @@ export function WisdomUntetheredCourse({
   viewMode,
   setViewMode,
   onOpenJournal,
-  onReturn,
+  onNavigateToPractice,
+  onReturn
 }: CourseProps) {
   const activeChapter = useMemo(() => CHAPTERS[0], []);
   const { user: currentUser } = useAuth();
@@ -258,20 +260,7 @@ export function WisdomUntetheredCourse({
         style={{ backgroundColor: QUESTION_THEMES[activeQuestionId] || 'var(--bg-surface)' }}
       >
         <div className="flex items-center gap-6">
-          {onReturn && (
-            <button 
-              onClick={onReturn}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all group text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)]"
-            >
-              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-              Return
-            </button>
-          )}
-
-          <div className={styles.chapterInfo}>
-            <span className={styles.chapterSubtitle}>{activeChapter.subtitle}</span>
-            <h2 className={styles.chapterTitle}>{activeChapter.title}</h2>
-          </div>
+          {/* Return button removed to streamline UI */}
         </div>
 
         <nav className={styles.tabGroup}>

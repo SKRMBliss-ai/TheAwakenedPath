@@ -3,7 +3,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding-top: 80px; /* Space for the Return/Medals cluster above the bar */
+  padding-top: 80px;
+  /* Space for the Return/Medals cluster above the bar */
   background: var(--bg-main);
   position: relative;
   color: var(--text-primary);

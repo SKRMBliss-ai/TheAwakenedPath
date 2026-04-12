@@ -1,9 +1,6 @@
 export const UNLOCKED_EMAILS = [
-    'shrutikhungar@gmail.com',
-    'simkatyal1@gmail.com',
     'rashmi.purbey@gmail.com',
-    'skrmblissai@gmail.com',
-    'smriti.duggal@gmail.com'
+    'skrmblissai@gmail.com'
 ];
 
 export const ADMIN_EMAILS = [
