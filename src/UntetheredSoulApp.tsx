@@ -1490,8 +1490,8 @@ export default function UntetheredApp() {
           {/* Moved back/medals into fixed header below to prevent overlap */}
         </AnimatePresence>
 
-        {/* ALWAYS VISIBLE TOP CONTROLS */}
-        <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[60] flex items-center gap-2 sm:gap-3 scale-[0.8] sm:scale-90 origin-top-right">
+        {/* ALWAYS VISIBLE TOP CONTROLS - RE-ALIGNED TO RIGHT */}
+        <div className="fixed top-6 right-6 z-[100] flex items-center gap-2 sm:gap-3 scale-[0.85] sm:scale-100 origin-right whitespace-nowrap">
           {activeTab !== 'home' && activeTab !== 'paywall' && (
             <motion.button
               initial={{ opacity: 0, x: 20 }}

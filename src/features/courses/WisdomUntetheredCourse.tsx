@@ -296,39 +296,46 @@ export function WisdomUntetheredCourse({
               exit={{ opacity: 0, scale: 1.05 }}
               className="w-full h-[calc(100vh-56px)] overflow-hidden bg-[var(--bg-main)]"
             >
-              {activeQuestionId === 'question4' && !selectedPractice ? (
+              {activeQuestionId === 'question4' ? (
+                /* Skip selection for Q4 and go direct to Relational Witnessing */
+                <ThoughtJournal 
+                  inline 
+                  defaultTab="example" 
+                  onClose={() => setViewMode('explanation')} 
+                />
+              ) : !selectedPractice ? (
                 <div className="h-full flex flex-col items-center justify-center p-8 space-y-12">
                   <div className="text-center space-y-4">
-                    <h3 className="text-4xl font-serif font-light text-[var(--text-primary)]">Cultivating The Observer</h3>
-                    <p className="text-sm text-[var(--text-secondary)] italic font-serif">Two paths to deepen your presence.</p>
+                    <h3 className="text-4xl font-serif font-light text-[var(--text-primary)]">Sacred Practices</h3>
+                    <p className="text-sm text-[var(--text-secondary)] italic font-serif">Deepen your presence through targeted reflection.</p>
                   </div>
                   
                   <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
                     <button 
                       onClick={() => setSelectedPractice('example')}
-                      className="group relative p-10 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)] transition-all duration-500 overflow-hidden text-left"
+                      className="group relative p-10 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)] transition-all duration-300 overflow-hidden text-left"
                     >
                       <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                         <Sparkles size={120} />
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-primary)] mb-4 block">Practice 01</span>
-                      <h4 className="text-2xl font-serif font-light mb-4 group-hover:translate-x-1 transition-transform">Relational Witnessing</h4>
+                      <h4 className="text-2xl font-serif font-light mb-4 group-hover:translate-x-1 transition-transform">Lesson Examples</h4>
                       <p className="text-sm text-[var(--text-secondary)] leading-relaxed opacity-70">
-                        Explore how the mind weaves stories during social friction and learn to watch the tightness rather than being it.
+                        Explore how these insights apply to real-world social friction and mental noise.
                       </p>
                     </button>
 
                     <button 
                       onClick={() => setSelectedPractice('journal')}
-                      className="group relative p-10 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)] transition-all duration-500 overflow-hidden text-left"
+                      className="group relative p-10 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)] transition-all duration-300 overflow-hidden text-left"
                     >
                       <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                         <Clock size={120} />
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-primary)] mb-4 block">Practice 02</span>
-                      <h4 className="text-2xl font-serif font-light mb-4 group-hover:translate-x-1 transition-transform">5-Min Thought Journal</h4>
+                      <h4 className="text-2xl font-serif font-light mb-4 group-hover:translate-x-1 transition-transform">Thought Journal</h4>
                       <p className="text-sm text-[var(--text-secondary)] leading-relaxed opacity-70">
-                        A timed stream-of-consciousness capture to classify thoughts as Value, Cost, or simply Witnessed.
+                        Record your stream-of-consciousness and classify your internal noise.
                       </p>
                     </button>
                   </div>
@@ -336,7 +343,7 @@ export function WisdomUntetheredCourse({
               ) : (
                 <ThoughtJournal 
                   inline 
-                  defaultTab={selectedPractice || 'example'} 
+                  defaultTab={selectedPractice} 
                   onClose={() => setSelectedPractice(null)} 
                 />
               )}
