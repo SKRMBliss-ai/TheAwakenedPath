@@ -36,13 +36,23 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         setIsLoading(true);
         try {
             const logsRef = collection(db, 'activity_logs');
-            const q = query(logsRef, orderBy('timestamp', 'desc'), limit(50));
+            // Fetch more than needed to account for filtered admin logs
+            const q = query(logsRef, orderBy('timestamp', 'desc'), limit(150));
             const snapshot = await getDocs(q);
+            
+            const adminEmails = ['skrmblissai@gmail.com', 'shrutikhungar@gmail.com'];
+            
             const fetchedLogs = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             })) as ActivityLog[];
-            setLogs(fetchedLogs);
+
+            // Filter out logs from admin accounts to keep the dashboard clean
+            const filteredLogs = fetchedLogs
+                .filter(log => !adminEmails.includes(log.userEmail?.toLowerCase()))
+                .slice(0, 50);
+
+            setLogs(filteredLogs);
         } catch (error) {
             console.error("Error fetching admin logs:", error);
         } finally {

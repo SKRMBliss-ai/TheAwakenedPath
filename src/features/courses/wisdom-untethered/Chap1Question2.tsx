@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import styles from './Chap1Question2.module.css';
+import { cn } from '../../../lib/utils';
 import { useCourseTracking } from '../../../hooks/useCourseTracking';
 import { CourseHero } from './CourseHero';
 
@@ -216,7 +217,7 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
 
   return (
     <div
-      className={styles.container}
+      className={cn(styles.container, "scroll-container")}
       ref={containerRef}
       style={{ height: '100%', overflowY: 'auto' }}
     >

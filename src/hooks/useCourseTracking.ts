@@ -6,6 +6,7 @@ export interface QuestionProgress {
   read: boolean;
   practice: boolean;
   video: boolean;
+  musical?: boolean;
 }
 
 export interface CourseProgress {

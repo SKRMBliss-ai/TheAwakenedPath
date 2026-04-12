@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Clock } from 'lucide-react';
+import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Clock, Music } from 'lucide-react';
 import styles from './CourseTabs.module.css';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
@@ -11,6 +11,7 @@ import { Chap1Question5 } from './wisdom-untethered/Chap1Question5';
 import { ThoughtJournal } from './wisdom-untethered/components/ThoughtJournal';
 import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
 import { useAuth } from '../auth/AuthContext';
+import { ScrollNavigator } from '../../components/ui/ScrollNavigator';
 
 interface Chapter {
   id: number;
@@ -36,6 +37,10 @@ const QUESTION_VIDEOS: Record<string, string | null> = {
   'question3': '_tyTb6hpGW8',
   'question4': null, 
   'question5': null, 
+};
+
+const QUESTION_MUSICAL_VIDEOS: Record<string, string | null> = {
+  'question2': '-yxvAQs5Dgk',
 };
 
 interface CourseProps {
@@ -156,10 +161,12 @@ export function WisdomUntetheredCourse({
   const { user: currentUser } = useAuth();
   const { progress = {}, updateProgress } = useCourseTracking(currentUser?.uid);
 
-  // Auto-mark video as watched when tab is selected
+  // Auto-mark video or musical teaching as watched when tab is selected
   useEffect(() => {
     if (viewMode === 'video' && activeQuestionId) {
       updateProgress(activeQuestionId, { video: true });
+    } else if (viewMode === 'musical' && activeQuestionId) {
+      updateProgress(activeQuestionId, { musical: true });
     }
   }, [viewMode, activeQuestionId, updateProgress]);
 
@@ -178,6 +185,12 @@ export function WisdomUntetheredCourse({
       field: 'video' as keyof QuestionProgress,
       comingSoon: !QUESTION_VIDEOS[activeQuestionId]
     },
+    ...(QUESTION_MUSICAL_VIDEOS[activeQuestionId] ? [{
+      id: 'musical' as const,
+      label: 'Musical Teaching',
+      icon: <Music className="w-3.5 h-3.5" />,
+      field: 'musical' as keyof QuestionProgress
+    }] : []),
     { 
       id: 'explanation' as const, 
       label: 'Soul Lessons', 
@@ -250,6 +263,8 @@ export function WisdomUntetheredCourse({
           ))}
         </nav>
       </header>
+
+      <ScrollNavigator selector=".scroll-container" />
 
       {/* ── Dynamic Content Area ── */}
       <main className={styles.contentArea}>
@@ -332,6 +347,13 @@ export function WisdomUntetheredCourse({
           {viewMode === 'video' && (
             <VideoPlayerView 
               videoId={QUESTION_VIDEOS[activeQuestionId] || activeChapter.videoId} 
+            />
+          )}
+
+          {/* MUSICAL TEACHING VIEW */}
+          {viewMode === 'musical' && (
+            <VideoPlayerView 
+              videoId={QUESTION_MUSICAL_VIDEOS[activeQuestionId]} 
             />
           )}
         </AnimatePresence>

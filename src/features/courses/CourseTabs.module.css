@@ -11,14 +11,16 @@
 
 .topBar {
   flex-shrink: 0;
-  height: 56px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 1.5rem;
+  padding-right: 340px; /* Room for the fixed top-right cluster */
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
-  z-index: 100;
+  z-index: 50;
+  position: relative;
 }
 
 .chapterInfo {
@@ -212,6 +214,11 @@
 @media (max-width: 768px) {
   .topBar {
     padding: 0 1rem;
+    padding-right: 180px; /* Smaller cluster on mobile */
+    height: auto;
+    min-height: 64px;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
   .tab {
     padding: 0 0.75rem;

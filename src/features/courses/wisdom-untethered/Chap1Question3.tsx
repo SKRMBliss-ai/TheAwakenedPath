@@ -134,7 +134,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
   };
 
   return (
-    <div className={styles.container} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
+    <div className={cn(styles.container, "scroll-container")} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
       
       <CourseHero 
         chapter={1}

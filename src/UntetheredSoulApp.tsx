@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail, Youtube } from 'lucide-react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail, Youtube, Medal } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
@@ -1487,27 +1487,38 @@ export default function UntetheredApp() {
         />
         <AnimatePresence>
           {/* Back Action - Integrated into the page flow */}
-          {activeTab !== 'home' && activeTab !== 'paywall' && (
-            <div className="w-full px-6 md:px-12 pt-4 -mb-4 relative z-50 flex justify-start">
-              <motion.button
-                initial={{ opacity: 0, x: -14 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -14 }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
-                className="flex items-center gap-3 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all group pb-4"
-              >
-                <div className="p-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-3xl group-hover:scale-110 group-hover:bg-[var(--bg-surface-hover)] group-hover:border-[var(--border-default)] transition-all duration-300 shadow-sm">
-                  <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5 duration-300" />
-                </div>
-                <span className="text-[13px] font-bold uppercase tracking-[0.45em] opacity-60 group-hover:opacity-100 transition-opacity duration-300">Return</span>
-              </motion.button>
-            </div>
-          )}
+          {/* Moved back/medals into fixed header below to prevent overlap */}
         </AnimatePresence>
 
         {/* ALWAYS VISIBLE TOP CONTROLS */}
         <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[60] flex items-center gap-2 sm:gap-3 scale-[0.8] sm:scale-90 origin-top-right">
+          {activeTab !== 'home' && activeTab !== 'paywall' && (
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
+              className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/30 transition-all group shadow-xl"
+            >
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Return</span>
+            </motion.button>
+          )}
+
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={cn(
+              "p-3 rounded-full backdrop-blur-3xl border border-[var(--border-default)] transition-all flex items-center justify-center group shadow-xl relative overflow-hidden",
+              activeTab === 'profile' ? "bg-[var(--accent-primary)] text-black border-[var(--accent-primary)]" : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+            )}
+            title="Your Journey Profile"
+          >
+            <div className="absolute inset-0 bg-white/10 animate-pulse opacity-0 group-hover:opacity-30" />
+            <Medal className="w-4 h-4" />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--accent-primary)] text-black text-[8px] font-bold flex items-center justify-center rounded-full border border-[var(--bg-surface)]">
+              {unlocked.length}
+            </span>
+          </button>
+
           {isUnlockedUser(currentUser?.email) && (
             <button
               onClick={() => setIsReportOpen(true)}
@@ -1517,16 +1528,7 @@ export default function UntetheredApp() {
               <Mail className="w-4 h-4 transition-transform group-hover:scale-110 group-hover:text-[#D4AF37]" />
             </button>
           )}
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={cn(
-              "p-3 rounded-full backdrop-blur-3xl border border-[var(--border-default)] transition-all flex items-center justify-center group shadow-xl",
-              activeTab === 'profile' ? "bg-[var(--accent-primary)] text-black border-[var(--accent-primary)]" : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-            )}
-            title="Your Journey Profile"
-          >
-            <User className="w-4 h-4" />
-          </button>
+
           <a
             href="https://www.youtube.com/@SoulfulIntelligenceStudio"
             target="_blank"

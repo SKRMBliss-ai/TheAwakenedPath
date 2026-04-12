@@ -611,7 +611,9 @@ exports.testEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, a
  */
 const getTransporter = () => {
     return nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtpout.secureserver.net',
+        port: 465,
+        secure: true,
         auth: {
             user: emailUser.value(),
             pass: emailPass.value(),
@@ -674,6 +676,20 @@ async function sendWelcomeEmail(toEmail, planName) {
         html: emailTemplate
     });
 }
+
+exports.forceTriggerEmail = onRequest({
+    secrets: [emailUser, emailPass, geminiKey],
+    timeoutSeconds: 300
+}, async (req, res) => {
+    try {
+        console.log(`Manually triggering daily reminders...`);
+        await runReminderLogic('IN', geminiKey.value());
+        res.send("Daily reminders triggered successfully.");
+    } catch (e) {
+        console.error(`FORCETRIGGER_ERROR:`, e);
+        res.status(500).send(`Reminder trigger failed: ${e.message}`);
+    }
+});
 
 /**
  * Scheduled Reminder: India Evening (8:00 PM IST)
@@ -740,70 +756,61 @@ async function runReminderLogic(region, apiKey) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="light dark">
-    <meta name="supported-color-schemes" content="light dark">
-    <title>The Awakened Path</title>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            .body { background-color: #050406 !important; }
+            .card { background-color: #0C0910 !important; border-color: rgba(230, 197, 125, 0.2) !important; }
+        }
+    </style>
 </head>
-<body style="margin:0;padding:0;background:#f0ece4;">
-    <div style="display:none;font-size:1px;color:#f0ece4;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
-        \${daily.headline} - The day is winding down. Return to the seat of the Watcher.
-    </div>
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
+<body style="margin:0;padding:0;background-color:#050406; font-family: 'Georgia', serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050406;">
         <tr>
-            <td align="center" style="padding:24px 16px;">
-                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#FDFAF4;border:1px solid #E6C57D;">
-                    <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+            <td align="center" style="padding:40px 16px;">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#0C0910;border:1px solid rgba(230, 197, 125, 0.2); border-radius: 12px; overflow: hidden;">
+                    <!-- Glow Line -->
+                    <tr><td style="background: linear-gradient(90deg, transparent, #B8973A, transparent); height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+                    
                     <tr>
-                        <td style="padding:32px 40px 20px;text-align:center;">
-                            <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Awakened Path &middot; Evening Practice</p>
-                            <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:300;font-style:italic;color:#1C1814;margin:0;line-height:1.3;">\${daily.headline}</h1>
-                            <div style="width:40px;height:1px;background:#B8973A;margin:16px auto;"></div>
+                        <td style="padding:48px 48px 24px;text-align:center;">
+                            <p style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#B8973A;margin:0 0 16px; opacity: 0.8;">Sacred Reminder</p>
+                            <h1 style="font-size:28px;font-weight:300;font-style:italic;color:#FDFAF4;margin:0;line-height:1.3; letter-spacing: 1px;">${daily.headline}</h1>
+                            <div style="width:40px;height:1px;background:rgba(184, 151, 58, 0.3);margin:24px auto;"></div>
                         </td>
                     </tr>
+                    
                     <tr>
-                        <td style="padding:0 40px 24px;">
-                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 20px;">The day is winding down. Before the mind begins its final preparations for rest — return to the seat of the Watcher.</p>
-                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;">
-                                <tr>
-                                    <td width="3" style="background:#E6C57D;font-size:0;">&nbsp;</td>
-                                    <td style="padding:12px 0 12px 20px;">
-                                        <p style="font-family:Georgia,serif;font-size:16px;font-style:italic;color:#5C544E;margin:0;line-height:1.6;">"\${daily.quote}"</p>
-                                    </td>
-                                </tr>
-                            </table>
-                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0;">\${daily.explanation}</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding:0 40px 28px;">
-                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5EDD8;border:1px solid #E0D0A8;">
-                                <tr>
-                                    <td style="padding:20px 24px;">
-                                        <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 10px;">Tonight's Practice</p>
-                                        <p style="font-family:Georgia,serif;font-size:14px;line-height:1.75;color:#3A342C;margin:0;">\${daily.practice}</p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding:0 40px 36px;text-align:center;">
-                            <a href="https://awakened-path-2026.web.app" style="display:inline-block;padding:13px 32px;background:#1C1814;color:#E6C57D;text-decoration:none;font-family:Georgia,serif;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;">Record Your Journey &rarr;</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="background:#F5EDD8;padding:24px 40px;border-top:1px solid #E0D0A8;text-align:center;">
-                            <p style="font-family:Georgia,serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8B7A5E;margin:0 0 10px;">Journey Shared by Soulful Intelligence Studio</p>
-                            <p style="font-family:Georgia,serif;font-size:11px;color:#B0A090;margin:0 0 12px;line-height:1.6;">
-                                Explore: <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" style="color:#B8973A;text-decoration:none;">YouTube Channel</a> &middot; <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a>
+                        <td style="padding:0 48px 32px;">
+                            <p style="font-size:16px;line-height:1.8;color:rgba(253, 250, 244, 0.7);margin:0 0 24px; text-align: center; font-style: italic;">
+                                "${daily.quote}"
                             </p>
-                            <div style="background:#E0D0A8;height:1px;width:30px;margin:12px auto;"></div>
-                            <p style="font-family:Georgia,serif;font-size:10px;color:#8B7A5E;margin:0;line-height:1.6;">
-                                WhatsApp: <a href="https://wa.me/918217581238" style="color:#3A342C;text-decoration:none;">+91-8217581238</a> &middot; Email: <a href="mailto:connect@skrmblissai.in" style="color:#3A342C;text-decoration:none;">connect@skrmblissai.in</a>
-                            </p>
-                            <p style="font-family:Georgia,serif;font-size:10px;color:#B0A090;margin:20px 0 0;line-height:1.6;opacity:0.6;">
-                                You received this because you are walking the Awakened Path.<br>
-                                <a href="https://awakened-path-2026.web.app/api/unsubscribe?userId={{USER_ID}}" style="color:#B8973A;text-decoration:none;">Unsubscribe</a> &middot; <a href="#" style="color:#B8973A;text-decoration:none;">Peace is the way.</a>
+                            
+                            <p style="font-size:15px;line-height:1.8;color:#FDFAF4;margin:0; opacity: 0.9;">${daily.explanation}</p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td style="padding:0 48px 40px;">
+                            <div style="padding:24px; background: rgba(184, 151, 58, 0.05); border: 1px solid rgba(184, 151, 58, 0.1); border-radius: 12px;">
+                                <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 12px; font-weight: bold;">Tonight's Practice</p>
+                                <p style="font-size:14px;line-height:1.75;color:#FDFAF4;margin:0; opacity: 0.8;">${daily.practice}</p>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td style="padding:0 48px 56px;text-align:center;">
+                            <a href="https://www.skrmblissai.in/awakenedpath" style="display:inline-block;padding:16px 40px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Record Your Journey &rarr;</a>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color:rgba(255,255,255,0.02);padding:32px 48px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
+                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.6);margin:0 0 16px;">Soulful Intelligence Studio</p>
+                            <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:0;line-height:1.8;">
+                                <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp; 
+                                <a href="https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId={{USER_ID}}" style="color:rgba(253, 250, 244, 0.4);text-decoration:none;">Unsubscribe from the Path</a>
                             </p>
                         </td>
                     </tr>
@@ -814,6 +821,7 @@ async function runReminderLogic(region, apiKey) {
 </body>
 </html>
 `;
+;
 
 
     for (const userDoc of usersSnap.docs) {
@@ -822,7 +830,7 @@ async function runReminderLogic(region, apiKey) {
 
         // Check if user has already practiced today
         const practiceSnap = await userDoc.ref.collection("dailyPractices").doc(today).get();
-        if (!practiceSnap.exists() || !practiceSnap.data().completed) {
+        if (!practiceSnap.exists || !practiceSnap.data().completed) {
             console.log(`Sending reminder to ${userData.email}`);
             
             // Personalize unsubscribe link
@@ -832,10 +840,15 @@ async function runReminderLogic(region, apiKey) {
                 from: '"The Awakened Path" <connect@skrmblissai.in>',
                 to: userData.email,
                 subject: "🌙 An Invitation to Return to Source",
-                html: personalizedHtml
+                html: personalizedHtml,
+                headers: {
+                    'List-Unsubscribe': `<https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId=${userDoc.id}>`
+                }
             });
+            console.log(`Success: Reminder sent to ${userData.email}`);
         }
     }
+    console.log(`Finished sending all reminders.`);
 }
 
 /**
@@ -897,7 +910,7 @@ exports.blastUpdateEmail = onCall({
             <p>New guidance has been added: <strong>${chapterTitle}</strong></p>
             <p>${chapterSubtitle}</p>
             <div style="text-align: center; margin-top: 40px;">
-                <a href="https://awakened-path-2026.web.app/courses/wisdom-untethered" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 2px; font-weight: bold;">Watch the Lesson →</a>
+                <a href="https://www.skrmblissai.in/awakenedpath/courses/wisdom-untethered" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 2px; font-weight: bold;">Watch the Lesson →</a>
             </div>
         </div>
     `;
