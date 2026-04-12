@@ -569,7 +569,7 @@ interface StatsDashboardProps {
                     <div className="space-y-8 pt-10 border-t border-[var(--border-subtle)]">
                         <div className="flex items-center gap-4">
                             <div className="w-2 h-2 rounded-full bg-[var(--accent-primary)] shadow-[0_0_10px_var(--accent-primary)]" />
-                            <h3 className="text-[12px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] text-center">System Echoes (Admin)</h3>
+                            <h3 className="text-[12px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] text-center">User Activity Logs (Admin)</h3>
                         </div>
 
                         <div className="rounded-[24px] border border-[var(--border-subtle)] bg-[var(--bg-card)] overflow-hidden">

@@ -104,7 +104,7 @@ const JournalCard: React.FC<{ entry: JournalEntry; index: number }> = ({ entry, 
                             )}
                             {entry.wisdomResponse && (
                                 <div className="p-2.5 rounded-xl" style={{ background: 'var(--accent-secondary-dim)' }}>
-                                    <p className="text-[7px] uppercase tracking-widest font-bold mb-0.5 opacity-50" style={{ color: 'var(--accent-secondary)' }}>Soul Wisdom</p>
+                                    <p className="text-[7px] uppercase tracking-widest font-bold mb-0.5 opacity-50" style={{ color: 'var(--accent-secondary)' }}>Inner Wisdom</p>
                                     <p className="text-[10px] font-serif italic leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{entry.wisdomResponse}</p>
                                 </div>
                             )}

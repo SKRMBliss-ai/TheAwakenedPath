@@ -807,7 +807,7 @@ async function runReminderLogic(region, apiKey) {
                     <!-- Footer -->
                     <tr>
                         <td style="background-color:rgba(255,255,255,0.02);padding:32px 48px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
-                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.6);margin:0 0 16px;">Soulful Intelligence Studio</p>
+                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.6);margin:0 0 16px;">Awakened Path Studio</p>
                             <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:0;line-height:1.8;">
                                 <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp; 
                                 <a href="https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId={{USER_ID}}" style="color:rgba(253, 250, 244, 0.4);text-decoration:none;">Unsubscribe from the Path</a>
@@ -900,18 +900,30 @@ exports.blastUpdateEmail = onCall({
     const { chapterTitle, chapterSubtitle, youtubeId } = request.data;
     const usersSnap = await db.collection("users").get();
     const transporter = getTransporter();
+    
+    // 1. Create Blast History Record
+    const blastRef = await db.collection("email_blasts").add({
+        subject: `Course Update: ${chapterTitle}`,
+        chapterTitle,
+        chapterSubtitle,
+        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        totalRecipients: usersSnap.size,
+        adminEmail: request.auth.token.email
+    });
 
-    const updateTemplate = `
-        <div style="font-family: 'Georgia', serif; padding: 40px; background: #0C0910; color: #FDFAF4; border: 1px solid rgba(184,151,58,0.2);">
+    const updateTemplate = (recipientEmail, blastId) => `
+        <div style="font-family: Arial, sans-serif; padding: 40px; background: #0C0910; color: #FDFAF4; border: 1px solid rgba(184,151,58,0.2);">
             <div style="text-align: center; margin-bottom: 30px;">
-                <span style="font-size: 0.7rem; letter-spacing: 4px; uppercase; opacity: 0.6;">COURSE UPDATE</span>
-                <h1 style="color: #E6C57D; margin-top: 10px;">The Journey Continues.</h1>
+                <span style="font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.6;">Course Update</span>
+                <h1 style="color: #E6C57D; margin-top: 10px;">${chapterTitle}</h1>
             </div>
-            <p>New guidance has been added: <strong>${chapterTitle}</strong></p>
+            <p>A new chapter has been added to your course: <strong>${chapterTitle}</strong></p>
             <p>${chapterSubtitle}</p>
             <div style="text-align: center; margin-top: 40px;">
-                <a href="https://www.skrmblissai.in/awakenedpath/courses/wisdom-untethered" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 2px; font-weight: bold;">Watch the Lesson →</a>
+                <a href="https://www.skrmblissai.in/awakenedpath/courses/wisdom-untethered" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 1px; font-weight: bold;">View Course →</a>
             </div>
+            <!-- TRACKING PIXEL -->
+            <img src="https://us-central1-awakened-path-2026.cloudfunctions.net/emailOpenTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}" width="1" height="1" style="display:none !important;" />
         </div>
     `;
 
@@ -922,11 +934,45 @@ exports.blastUpdateEmail = onCall({
         await transporter.sendMail({
             from: '"The Awakened Path" <connect@skrmblissai.in>',
             to: userData.email,
-            subject: `✨ New Guidance Added: ${chapterTitle}`,
-            html: updateTemplate
+            subject: `Course Update: ${chapterTitle}`,
+            html: updateTemplate(userData.email, blastRef.id)
         });
     }
 
-    return { success: true, count: usersSnap.size };
+    return { success: true, count: usersSnap.size, blastId: blastRef.id };
+});
+
+/**
+ * Open Tracker: Fires when user opens email
+ */
+exports.emailOpenTracker = onRequest({ cors: true }, async (req, res) => {
+    const { blastId, email } = req.query;
+
+    if (blastId && email) {
+        try {
+            // Log the open event
+            await db.collection("email_opens").add({
+                blastId,
+                userEmail: email,
+                openedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Also log to activity_logs for real-time visibility in Engagement Report
+            await db.collection("activity_logs").add({
+                userEmail: email,
+                activityType: 'EMAIL_OPEN',
+                details: `Opened Update Blast (${blastId})`,
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
+            });
+        } catch (e) {
+            console.error("Open track failed:", e);
+        }
+    }
+
+    // Return 1x1 transparent GIF
+    const pixel = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+    res.set('Content-Type', 'image/gif');
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.send(pixel);
 });
 

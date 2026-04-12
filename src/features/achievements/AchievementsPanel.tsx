@@ -79,11 +79,11 @@ export const AchievementToast: React.FC<{
     return (
         <AnimatePresence>
             <motion.div
-                initial={{ opacity: 0, x: 100, scale: 0.9, filter: 'blur(10px)' }}
-                animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, x: 50, scale: 0.9, filter: 'blur(10px)' }}
+                initial={{ opacity: 0, y: -50, scale: 0.9, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, y: -20, scale: 0.9, filter: 'blur(10px)' }}
                 transition={{ type: "spring", stiffness: 300, damping: 25, mass: 1 }}
-                className="fixed bottom-4 right-8 md:right-190 z-[9999] cursor-pointer group"
+                className="fixed top-6 left-[150px] lg:left-[440px] z-[9999] cursor-pointer group"
                 onClick={onDismiss}
             >
                 {/* Intense Background Glow (Surge) */}
@@ -118,7 +118,7 @@ export const AchievementToast: React.FC<{
                                 className="w-1 h-1 rounded-full"
                                 style={{ background: achievement.color, boxShadow: `0 0 4px ${achievement.color}` }}
                             />
-                            <p className="text-[8px] uppercase tracking-[0.3em] font-bold" style={{ color: achievement.color }}>SOUL MEDAL UNLOCKED</p>
+                            <p className="text-[8px] uppercase tracking-[0.3em] font-bold" style={{ color: achievement.color }}>MEDAL UNLOCKED</p>
                         </div>
                         <h4 className="text-[16px] font-serif font-light text-[var(--text-primary)] tracking-tight">{achievement.name}</h4>
                         <p className="text-[10px] font-serif italic text-[var(--text-secondary)] mt-0.5 opacity-80">+{achievement.points} EXP</p>

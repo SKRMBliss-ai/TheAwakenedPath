@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding-top: 70px; /* NEW: Dedicated space for the Return/Medals cluster */
+  padding-top: 80px; /* Space for the Return/Medals cluster above the bar */
   background: var(--bg-main);
   position: relative;
   color: var(--text-primary);
@@ -17,7 +17,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 1.5rem;
-  padding-right: 340px; /* Room for the fixed top-right cluster */
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
   z-index: 50;
@@ -176,13 +175,15 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: #000; /* Cinematic focus */
+  background: #000;
+  /* Cinematic focus */
 }
 
 .videoPlayerContainer {
   width: 100%;
   height: auto;
-  max-width: calc(100vh * (16/9)); /* Don't exceed screen aspect ratio width */
+  max-width: calc(100vh * (16/9));
+  /* Don't exceed screen aspect ratio width */
   max-height: 100%;
   aspect-ratio: 16/9;
   position: relative;
@@ -215,21 +216,26 @@
 @media (max-width: 768px) {
   .topBar {
     padding: 0 1rem;
-    padding-right: 180px; /* Smaller cluster on mobile */
+    padding-right: 180px;
+    /* Smaller cluster on mobile */
     height: auto;
     min-height: 64px;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
+
   .tab {
     padding: 0 0.75rem;
   }
+
   .tab label {
     display: none;
   }
+
   .explanationView {
     padding: 2rem 1.5rem;
   }
+
   .explanationHeading {
     font-size: 2.25rem;
   }

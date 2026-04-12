@@ -1490,11 +1490,11 @@ export default function UntetheredApp() {
           {/* Moved back/medals into fixed header below to prevent overlap */}
         </AnimatePresence>
 
-        {/* ALWAYS VISIBLE TOP CONTROLS - RE-ALIGNED TO RIGHT */}
-        <div className="fixed top-6 right-6 z-[100] flex items-center gap-2 sm:gap-3 scale-[0.85] sm:scale-100 origin-right whitespace-nowrap">
-          {activeTab !== 'home' && activeTab !== 'paywall' && (
+        {/* TOP CONTROLS: LEFT (BACK) AND RIGHT (TOOLS) */}
+        {activeTab !== 'home' && activeTab !== 'paywall' && (
+          <div className="fixed top-6 left-6 lg:left-[300px] z-[100]">
             <motion.button
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
               className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/30 transition-all group shadow-xl"
@@ -1502,7 +1502,10 @@ export default function UntetheredApp() {
               <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
               <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Return</span>
             </motion.button>
-          )}
+          </div>
+        )}
+
+        <div className="fixed top-6 right-6 z-[100] flex items-center gap-2 sm:gap-3 scale-[0.85] sm:scale-100 origin-right whitespace-nowrap">
 
           <button
             onClick={() => setActiveTab('profile')}

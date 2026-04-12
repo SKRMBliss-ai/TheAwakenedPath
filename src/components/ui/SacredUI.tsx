@@ -55,7 +55,7 @@ export const WhisperInput = ({ label, placeholder, multiline, value, onChange }:
                 animate={{
                     y: focused || hasValue ? -24 : 0,
                     fontSize: focused || hasValue ? 9 : 11,
-                    opacity: focused ? 0.6 : hasValue ? 0.3 : 0.2,
+                    opacity: focused ? 1 : hasValue ? 0.7 : 0.4,
                     color: focused ? tokens.teal : "var(--text-primary)",
                     letterSpacing: focused || hasValue ? "0.5em" : "0.35em",
                 }}
