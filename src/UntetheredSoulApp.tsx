@@ -1537,7 +1537,7 @@ export default function UntetheredApp() {
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-3xl border border-[#FF0000]/30 bg-[#FF0000]/5 text-[#FF0000] hover:bg-[#FF0000]/10 transition-all group shadow-[0_0_15px_rgba(255,0,0,0.1)] hover:shadow-[0_0_20px_rgba(255,0,0,0.2)]"
-            title="YouTube Channel"
+            title="Awakened Path Studio"
           >
             <Youtube size={16} className="fill-current" />
             <span className="text-[10px] uppercase tracking-[0.2em] font-bold hidden sm:inline-block">Studio</span>

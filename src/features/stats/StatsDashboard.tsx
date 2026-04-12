@@ -7,7 +7,7 @@ import { db } from '../../firebase';
 import { collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebase/firestore';
 import { useAchievements } from '../achievements/useAchievements';
 import { AchievementsPanel } from '../achievements/AchievementsPanel';
-import { MAIN_PARTS_COUNT } from '../soul-intelligence/teachingData';
+import { MAIN_PARTS_COUNT } from '../presence-intelligence/teachingData';
 import { isAdminEmail } from '../../config/admin';
 import PastReflections from './PastReflections';
 import PracticeLedger from './PracticeLedger';

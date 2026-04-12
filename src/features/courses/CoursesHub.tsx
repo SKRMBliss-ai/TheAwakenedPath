@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PowerOfNow } from '../soul-intelligence/components/PowerOfNow';
+import { PowerOfNow } from '../presence-intelligence/components/PowerOfNow';
 
 interface CoursesHubProps {
     initialChapter?: string;
