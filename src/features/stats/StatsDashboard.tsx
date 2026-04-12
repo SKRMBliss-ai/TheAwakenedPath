@@ -283,12 +283,19 @@ interface StatsDashboardProps {
         const q = query(logsRef, orderBy('timestamp', 'desc'), limit(15));
         const snapshot = await getDocs(q);
 
+        const adminEmails = ['skrmblissai@gmail.com', 'shrutikhungar@gmail.com'];
         const logs = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         })) as ActivityLog[];
 
-        setAdminLogs(logs);
+        const filteredLogs = logs.filter(log => {
+            const email = log.userEmail?.toLowerCase() || '';
+            const isAdmin = adminEmails.includes(email) || email.includes('skrm');
+            return !isAdmin;
+        });
+
+        setAdminLogs(filteredLogs);
     };
 
     const currentStreak = (() => {

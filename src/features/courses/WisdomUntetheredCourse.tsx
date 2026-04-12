@@ -282,7 +282,7 @@ export function WisdomUntetheredCourse({
               {activeQuestionId === 'question1' && <Chap1Question1 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question2' && <Chap1Question2 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question3' && <Chap1Question3 onOpenJournal={onOpenJournal} />}
-              {activeQuestionId === 'question4' && <Chap1Question4 />}
+              {activeQuestionId === 'question4' && <Chap1Question4 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question5' && <Chap1Question5 onOpenJournal={onOpenJournal} />}
             </motion.div>
           )}
@@ -296,14 +296,7 @@ export function WisdomUntetheredCourse({
               exit={{ opacity: 0, scale: 1.05 }}
               className="w-full h-[calc(100vh-56px)] overflow-hidden bg-[var(--bg-main)]"
             >
-              {activeQuestionId === 'question4' ? (
-                /* Skip selection for Q4 and go direct to Relational Witnessing */
-                <ThoughtJournal 
-                  inline 
-                  defaultTab="example" 
-                  onClose={() => setViewMode('explanation')} 
-                />
-              ) : !selectedPractice ? (
+              {!selectedPractice ? (
                 <div className="h-full flex flex-col items-center justify-center p-8 space-y-12">
                   <div className="text-center space-y-4">
                     <h3 className="text-4xl font-serif font-light text-[var(--text-primary)]">Sacred Practices</h3>

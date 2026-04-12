@@ -25,6 +25,7 @@ interface EngagementReportProps {
 const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState<'logs' | 'blast' | 'history'>('logs');
     const [logs, setLogs] = useState<ActivityLog[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     
     // Blast Form State
@@ -79,8 +80,12 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             })) as ActivityLog[];
 
             const filteredLogs = fetchedLogs
-                .filter(log => !adminEmails.includes(log.userEmail?.toLowerCase()))
-                .slice(0, 50);
+                .filter(log => {
+                    const email = log.userEmail?.toLowerCase() || '';
+                    const isAdmin = adminEmails.includes(email) || email.includes('skrm');
+                    return !isAdmin;
+                })
+                .slice(0, 100);
 
             setLogs(filteredLogs);
         } catch (error) {
@@ -219,6 +224,31 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
 
                         {activeTab === 'logs' ? (
                             <>
+                                {activeTab === 'logs' && (
+                                    <div className="px-10 py-4 bg-[var(--bg-surface-hover)] border-b border-[var(--border-subtle)]/50">
+                                        <div className="relative">
+                                            <input 
+                                                type="text"
+                                                placeholder="Search by email, action, or location..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl py-2.5 pl-10 pr-4 text-[13px] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]/50 transition-colors"
+                                            />
+                                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+                                                <Eye className="w-4 h-4" />
+                                            </div>
+                                            {searchTerm && (
+                                                <button 
+                                                    onClick={() => setSearchTerm('')}
+                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Table Header */}
                                 <div className="px-10 py-6 grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
                                     <div>User</div>
@@ -236,7 +266,18 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                 {/* Scrollable Body */}
                                 <div className="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar">
                                     <div className="space-y-1">
-                                        {logs.map((log) => {
+                                        {logs
+                                            .filter(log => {
+                                                if (!searchTerm) return true;
+                                                const s = searchTerm.toLowerCase();
+                                                return (
+                                                    log.userEmail?.toLowerCase().includes(s) ||
+                                                    log.activityType?.toLowerCase().includes(s) ||
+                                                    log.location?.toLowerCase().includes(s) ||
+                                                    getSourceLabel(log.activityType).toLowerCase().includes(s)
+                                                );
+                                            })
+                                            .map((log) => {
                                             const { date, time } = formatTimestamp(log.timestamp);
                                             const userName = log.userEmail ? log.userEmail.split('@')[0] : 'User';
                                             const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);

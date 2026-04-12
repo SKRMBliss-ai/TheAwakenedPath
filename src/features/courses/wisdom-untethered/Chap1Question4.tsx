@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useSpring } from "framer-motion";
 import styles from "./Chap1Question4.module.css";
 import commonStyles from "./CourseCommon.module.css";
 import { cn } from "../../../lib/utils";
@@ -7,20 +7,18 @@ import { useAuth } from "../../auth/AuthContext";
 import { useCourseTracking } from "../../../hooks/useCourseTracking";
 import { CourseHero } from "./CourseHero";
 import { CourseLightbox } from "./CourseLightbox";
-import { ThoughtJournal } from "./components/ThoughtJournal";
 import { CostValueAnalysis } from "../../practices/CostValueAnalysis";
 
 interface Chap1Question4Props {
-  // onOpenJournal?: () => void; // Replaced by internal ThoughtJournal
+  onOpenJournal?: () => void;
 }
 
-export function Chap1Question4({ }: Chap1Question4Props) {
+export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
   const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
   const { updateProgress } = useCourseTracking(user?.uid);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [showThoughtJournal, setShowThoughtJournal] = useState(false);
 
   // 14 slides tracking with images
   const slides = [
@@ -218,11 +216,6 @@ export function Chap1Question4({ }: Chap1Question4Props) {
         className="bg-[var(--bg-primary)] dark:bg-[#0A0908]"
       />
 
-      <AnimatePresence>
-        {showThoughtJournal && (
-          <ThoughtJournal onClose={() => setShowThoughtJournal(false)} />
-        )}
-      </AnimatePresence>
 
       <CourseLightbox 
         isOpen={lightboxIndex !== null && lightboxIndex !== -1}
@@ -306,10 +299,10 @@ export function Chap1Question4({ }: Chap1Question4Props) {
                    className="mt-12"
                 >
                   <button 
-                    onClick={() => setShowThoughtJournal(true)}
+                    onClick={onOpenJournal}
                     className="px-8 py-3 border border-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-all duration-300 tracking-widest text-xs uppercase"
                   >
-                    Open Thought Journal & Examples →
+                    Open Journal →
                   </button>
                 </motion.div>
               )}
