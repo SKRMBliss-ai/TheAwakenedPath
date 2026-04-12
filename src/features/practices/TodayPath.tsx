@@ -43,6 +43,11 @@ export const QUESTION_META: Record<string, {
     journalPrompt: 'What did sitting comfortably within the noise feel like today?',
     dailyIntent: 'I will remain as the observer today, allowing life\'s flow to happen without losing my seat of awareness.',
   },
+  question6: {
+    shortTitle: 'Q6 · Letting Go of the Past',
+    journalPrompt: 'What memory arose today, and did you release its energy through the breath?',
+    dailyIntent: 'I will breathe through past memories today, refusing to feed the narratives of who I used to be.',
+  },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -232,7 +237,7 @@ export function TodayPath({
   };
 
   const wuLearntCount = Object.values(progress || {}).filter(q => q.read).length;
-  const wuTotal = 27; 
+  const wuTotal = 6; 
   
   const doneCount = [learnDone, practiceCompleted, reflectDone, integrateDone].filter(Boolean).length;
   const allDone = learnDone && practiceCompleted && reflectDone && integrateDone;

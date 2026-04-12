@@ -1291,6 +1291,7 @@ export default function UntetheredApp() {
                                   { num: 3, label: 'Personal to impersonal', id: 'question3', locked: !isAccessValid },
                                   { num: 4, label: 'Which part to listen to', id: 'question4', locked: !isAccessValid },
                                   { num: 5, label: 'The Observer Discovery', id: 'question5', locked: !isAccessValid },
+                                  { num: 6, label: 'Letting Go of the Past', id: 'question6', locked: !isAccessValid },
                                 ].map(q => {
                                   const isQActive = activeQuestionId === q.id;
                                   return (

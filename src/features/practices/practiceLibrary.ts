@@ -234,6 +234,30 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
     color: '#2E9E7A',
     icon: 'clarity',
   },
+
+  // ── Q6: The Art of Letting Go ─────────────────────────────────────────────
+  question6: {
+    questionId: 'question6',
+    name: 'The Guilt Witness',
+    tagline: 'The one who sees the guilt is not the one who is guilty.',
+    singerSource:
+      'Singer: "When you notice that you are feeling guilt, you are already stepping out of it. ' +
+      'You are the one who is witnessing the feeling. This shift is the beginning of release."',
+    howItWorks:
+      'When you feel the weight of past actions today, stop and say: ' +
+      '"I am noticing a feeling of guilt." Then ask yourself: "Who is the one noticing this?" ' +
+      'Feel the space between yourself and the emotion. That space is where your freedom lives.',
+    steps: [
+      { instruction: 'Notice the heavy feeling of guilt or regret.' },
+      { instruction: 'Label it clearly: "I am noticing a feeling of guilt."', duration: 10 },
+      { instruction: 'Ask: "Who is noticing this?" Search for the noticeer.', duration: 20 },
+      { instruction: 'Rest in the awareness that is watching the emotion.', duration: 30 },
+    ],
+    completionCriteria: 'Witnessed a moment of guilt or regret from the seat of awareness.',
+    durationLabel: '2 minutes',
+    color: '#B8973A',
+    icon: 'brain',
+  },
 };
 
 // Helper to get a practice by questionId
@@ -242,4 +266,4 @@ export function getPractice(questionId: string): QuestionPractice | null {
 }
 
 // All question IDs in order
-export const QUESTION_IDS = ['question1', 'question2', 'question3', 'question4', 'question5'];
+export const QUESTION_IDS = ['question1', 'question2', 'question3', 'question4', 'question5', 'question6'];

@@ -8,6 +8,7 @@ import { Chap1Question2 } from './wisdom-untethered/Chap1Question2';
 import { Chap1Question3 } from './wisdom-untethered/Chap1Question3';
 import { Chap1Question4 } from './wisdom-untethered/Chap1Question4';
 import { Chap1Question5 } from './wisdom-untethered/Chap1Question5';
+import { Chap1Question6 } from './wisdom-untethered/Chap1Question6';
 import { ThoughtJournal } from './wisdom-untethered/components/ThoughtJournal';
 import { CostValueAnalysis } from '../practices/CostValueAnalysis';
 import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
@@ -38,6 +39,7 @@ const QUESTION_VIDEOS: Record<string, string | null> = {
   'question3': '_tyTb6hpGW8',
   'question4': null, 
   'question5': null, 
+  'question6': null,
 };
 
 const QUESTION_MUSICAL_VIDEOS: Record<string, string | null> = {
@@ -145,6 +147,7 @@ const QUESTION_THEMES: Record<string, string> = {
   'question3': 'rgba(16, 185, 129, 0.05)', 
   'question4': 'rgba(184, 151, 58, 0.12)',  
   'question5': 'rgba(255, 255, 255, 0.05)', 
+  'question6': 'rgba(184, 151, 58, 0.08)',
 };
 
 type PracticeType = 'example' | 'journal' | 'analysis';
@@ -189,6 +192,7 @@ const QUESTION_PRACTICES: Record<string, PracticeItem[]> = {
     }
   ],
   'question5': COMMON_PRACTICES,
+  'question6': COMMON_PRACTICES,
 };
 
 export function WisdomUntetheredCourse({
@@ -336,6 +340,7 @@ export function WisdomUntetheredCourse({
               {activeQuestionId === 'question3' && <Chap1Question3 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question4' && <Chap1Question4 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question5' && <Chap1Question5 onOpenJournal={onOpenJournal} />}
+              {activeQuestionId === 'question6' && <Chap1Question6 onOpenJournal={onOpenJournal} />}
             </motion.div>
           )}
 
