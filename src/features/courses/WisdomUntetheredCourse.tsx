@@ -202,8 +202,8 @@ export function WisdomUntetheredCourse({
   viewMode,
   setViewMode,
   onOpenJournal,
-  onNavigateToPractice,
-  onReturn
+  onNavigateToPractice: _onNavigateToPractice,
+  onReturn: _onReturn
 }: CourseProps) {
   const activeChapter = useMemo(() => CHAPTERS[0], []);
   const { user: currentUser } = useAuth();

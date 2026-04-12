@@ -204,6 +204,16 @@
   margin: 0 auto;
 }
 
+:global(.dark) .heroSub {
+  color: #E6C57D;
+  opacity: 1;
+}
+
+:global(.dark) .heroScroll {
+  color: #E6C57D;
+  opacity: 1;
+}
+
 :global(:not(.dark)) .heroSub {
   color: #1C1814;
   font-weight: 400;
