@@ -215,7 +215,7 @@
     line-height: 1.5;
 }
 
-.slide { padding: 3rem 2rem; opacity: 0; transform: translateY(30px); transition: all 1s ease; }
+.slide { padding: 4rem 2rem; opacity: 0; transform: translateY(30px); transition: all 1s ease; }
 .slide.visible { opacity: 1; transform: translateY(0); }
 
 .slideGrid {
@@ -231,7 +231,7 @@
 .flip .imgWrap { order: 2; }
 
 .imgWrap { position: relative; }
-.imgWrap img { width: 100%; border-radius: 24px; display: block; }
+.imgWrap img { width: 100%; border-radius: 20px; display: block; }
 
 .slideNum {
     position: absolute;
@@ -274,7 +274,7 @@
     color: var(--ink);
 }
 
-.rule { text-align: center; padding: 4rem 0; color: var(--gold); opacity: .4; }
+.rule { text-align: center; padding: 2rem 0; color: var(--gold); opacity: .4; }
 
 .cosmicBand {
     background: var(--fixed-section-bg);

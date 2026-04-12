@@ -17,7 +17,7 @@ export const Q2Infographic: React.FC<InfoProps> = ({ isDark, type }) => {
     width: '100%',
     aspectRatio: '4/3',
     backgroundColor: bgSurface,
-    borderRadius: '4px',
+    borderRadius: '20px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
