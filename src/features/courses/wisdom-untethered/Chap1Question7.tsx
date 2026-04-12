@@ -9,17 +9,17 @@ import { CourseLightbox } from './CourseLightbox';
 
 const SLIDE_IMAGES: Record<string, string> = {
   "overview": "/WisdomUntethered/Chap1/Question7/12.jpg",
-  "slide1": "/WisdomUntethered/Chap1/Question7/1.jpg",
-  "slide2": "/WisdomUntethered/Chap1/Question7/2.jpg",
-  "slide3": "/WisdomUntethered/Chap1/Question7/3.jpg",
+  "slide1": "/WisdomUntethered/Chap1/Question7/1.png",
+  "slide2": "/WisdomUntethered/Chap1/Question7/2.png",
+  "slide3": "/WisdomUntethered/Chap1/Question7/3.png",
   "slide4": "/WisdomUntethered/Chap1/Question7/4.jpg",
-  "slide5": "/WisdomUntethered/Chap1/Question7/5.jpg",
-  "slide6": "/WisdomUntethered/Chap1/Question7/6.jpg",
-  "slide7": "/WisdomUntethered/Chap1/Question7/7.jpg",
-  "slide8": "/WisdomUntethered/Chap1/Question7/8.jpg",
-  "slide9": "/WisdomUntethered/Chap1/Question7/9.jpg",
-  "slide10": "/WisdomUntethered/Chap1/Question7/10.jpg",
-  "slide11": "/WisdomUntethered/Chap1/Question7/11.jpg",
+  "slide5": "/WisdomUntethered/Chap1/Question7/5.png",
+  "slide6": "/WisdomUntethered/Chap1/Question7/6.png",
+  "slide7": "/WisdomUntethered/Chap1/Question7/7.png",
+  "slide8": "/WisdomUntethered/Chap1/Question7/8.png",
+  "slide9": "/WisdomUntethered/Chap1/Question7/9.png",
+  "slide10": "/WisdomUntethered/Chap1/Question7/10.png",
+  "slide11": "/WisdomUntethered/Chap1/Question7/11.png",
 };
 
 const ALL_SLIDES = ["overview", ...Array.from({ length: 11 }, (_, i) => `slide${i + 1}`)];
