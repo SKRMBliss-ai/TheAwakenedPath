@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import { useAuth } from '../../auth/AuthContext';
 import { cn } from '../../../lib/utils';
 import styles from './Chap1Question7.module.css';
@@ -91,7 +90,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
   return (
     <div className={cn(styles.container, "scroll-container")} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
       <nav className={styles.navDots}>
-        {Array.from({ length: 15 }).map((_, i) => (
+        {Array.from({ length: 13 }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
@@ -106,6 +105,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
         question={7}
         title={<>Handling the <strong>Back-and-Forth</strong></>}
         subtitle="Why we seemingly fail in our practice — and why 'failing' is the most important sign of progress there is"
+        overviewImage={SLIDE_IMAGES["overview"]}
       />
 
       <CourseLightbox 
@@ -118,26 +118,8 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
         imgSrc={lightboxIndex !== null ? SLIDE_IMAGES[ALL_SLIDES[lightboxIndex]] : ''}
       />
 
-      {/* --- OVERVIEW SLIDE --- */}
-      <section className={styles.slide} data-section="1">
-        <div className={cn(styles.slideGrid, styles.solo)}>
-          <div className={styles.imgWrap}>
-            <div className={cn(styles.imageContainer, styles.wide)}>
-              <img 
-                src={SLIDE_IMAGES["overview"]} 
-                alt="Overview: The Art of the Swing" 
-                onClick={() => openLightbox(0)} 
-                className={styles.slideImg} 
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.rule}><span>✦</span></div>
-
       {/* --- SLIDE 1 --- */}
-      <section className={styles.slide} data-section="2">
+      <section className={styles.slide} data-section="1">
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>01</span>
@@ -157,7 +139,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* --- SLIDE 2 --- */}
-      <section className={styles.slide} data-section="3">
+      <section className={styles.slide} data-section="2">
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>02</span>
@@ -176,7 +158,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* --- SLIDE 3 --- */}
-      <section className={styles.slide} data-section="4">
+      <section className={styles.slide} data-section="3">
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>03</span>
@@ -196,7 +178,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* --- SLIDE 4 --- */}
-      <section className={styles.slide} data-section="5">
+      <section className={styles.slide} data-section="4">
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>04</span>
@@ -215,7 +197,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* --- SLIDE 5 --- */}
-      <section className={styles.slide} data-section="6">
+      <section className={styles.slide} data-section="5">
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>05</span>
@@ -234,7 +216,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* --- SLIDE 6 --- */}
-      <section className={styles.slide} data-section="7">
+      <section className={styles.slide} data-section="6">
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>06</span>
@@ -254,7 +236,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* --- SLIDE 7 --- */}
-      <section className={styles.slide} data-section="8">
+      <section className={styles.slide} data-section="7">
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>07</span>
@@ -273,7 +255,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* --- SLIDE 8 --- */}
-      <section className={styles.slide} data-section="9">
+      <section className={styles.slide} data-section="8">
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>08</span>
@@ -311,7 +293,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* --- SLIDE 10 --- */}
-      <section className={styles.slide} data-section="11">
+      <section className={styles.slide} data-section="10">
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>10</span>
@@ -330,7 +312,7 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* --- SLIDE 11 --- */}
-      <section className={styles.slide} data-section="12">
+      <section className={styles.slide} data-section="11">
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>11</span>
@@ -348,24 +330,9 @@ export function Chap1Question7({ onOpenJournal }: Chap1Question7Props) {
 
       <div className={styles.rule}><span>✦</span></div>
 
-      {/* --- PRACTICE SECTION --- */}
-      <section className={styles.slide} data-section="13">
-        <div className={styles.slideGrid}>
-          <div className={styles.slideContent}>
-            <span className={styles.slideTag}>Daily Guidance</span>
-            <h2 className={styles.slideH}>Measure <em>Awareness</em></h2>
-            <p className={styles.slideP}>
-              When you feel the pull, celebrate the noticing. Returning to awareness is the practice itself.
-            </p>
-          </div>
-          <div className="flex flex-col justify-center">
-            <DailyPracticeCard questionId="question7" userId={user?.uid} />
-          </div>
-        </div>
-      </section>
 
       {/* --- CLOSING --- */}
-      <section className={styles.closing} data-section="14">
+      <section className={styles.closing} data-section="12">
         <div className={styles.closingInner}>
           <span className={styles.slideTag}>End of Chapter 1 · Question 7</span>
           <h2 className={styles.closingTitle}>The House <em>Becomes Clear</em></h2>

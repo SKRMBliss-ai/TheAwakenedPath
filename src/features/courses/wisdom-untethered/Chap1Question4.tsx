@@ -7,7 +7,6 @@ import { useAuth } from "../../auth/AuthContext";
 import { useCourseTracking } from "../../../hooks/useCourseTracking";
 import { CourseHero } from "./CourseHero";
 import { CourseLightbox } from "./CourseLightbox";
-import { CostValueAnalysis } from "../../practices/CostValueAnalysis";
 
 interface Chap1Question4Props {
   onOpenJournal?: () => void;
@@ -198,7 +197,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
       
       <nav className={styles.navDots}>
         {/* +1 for the Hero section, +1 for Overview */}
-        {Array.from({ length: slides.length + 2 }).map((_, i) => (
+        {Array.from({ length: slides.length + 1 }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
@@ -214,6 +213,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         title={<>Finding the <strong>Silent Space</strong><br />The Art of <strong>Observation</strong></>}
         subtitle="A journey through 14 lessons on untethering yourself from the mind's constant noise."
         className="bg-[var(--bg-primary)] dark:bg-[#0A0908]"
+        overviewImage="/WisdomUntethered/Chap1/Question4/overview.jpg"
       />
 
 
@@ -227,28 +227,9 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         imgSrc={lightboxIndex !== null && lightboxIndex !== -1 ? `/WisdomUntethered/Chap1/Question4/${slides[lightboxIndex].img}` : (lightboxIndex === -1 ? '/WisdomUntethered/Chap1/Question4/overview.jpg' : '')}
       />
 
-      {/* OVERVIEW SECTION */}
-      <section className={styles.slide} id="slide-0" data-section="1">
-        <div className="max-w-6xl mx-auto w-full px-6">
-          <div className="text-center mb-16 space-y-4">
-            <span className="text-xs font-bold uppercase tracking-[0.4em] text-[#B8973A]">Fundamental Framework</span>
-            <h2 className="text-4xl md:text-5xl font-serif font-light text-[var(--text-primary)]">The Map of Stillness</h2>
-            <div className="w-20 h-[1px] bg-[#B8973A]/40 mx-auto" />
-          </div>
-          
-          <div className="relative group cursor-zoom-in" onClick={() => setLightboxIndex(-1)}>
-            <div className="absolute -inset-4 bg-[#B8973A]/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-            <img 
-              src="/WisdomUntethered/Chap1/Question4/overview.jpg" 
-              alt="The Power of Witness Consciousness Overview" 
-              className="w-full h-auto rounded-3xl border border-[var(--border-subtle)] shadow-2xl relative z-10"
-            />
-          </div>
-        </div>
-      </section>
 
       {slides.map((slide, i) => (
-        <section key={i} className={styles.slide} id={`slide-${i + 2}`} data-section={i + 2}>
+        <section key={i} className={styles.slide} id={`slide-${i + 1}`} data-section={i + 1}>
           <div className={cn(styles.slideGrid, i % 2 !== 0 && styles.flip)}>
             <div className={styles.imgWrap} onClick={() => openLightbox(i)}>
               <img src={`/WisdomUntethered/Chap1/Question4/${slide.img}`} alt={slide.title} className={styles.clickableImg} />
@@ -281,16 +262,6 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
                 </motion.p>
               </div>
 
-              {i === 14 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  className="mt-16 w-full max-w-5xl"
-                >
-                  <CostValueAnalysis />
-                </motion.div>
-              )}
 
               {i === slides.length - 1 && (
                 <motion.div 

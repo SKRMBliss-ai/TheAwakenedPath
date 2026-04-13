@@ -241,8 +241,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
     name: 'The Guilt Witness',
     tagline: 'The one who sees the guilt is not the one who is guilty.',
     singerSource:
-      'Singer: "When you notice that you are feeling guilt, you are already stepping out of it. ' +
-      'You are the one who is witnessing the feeling. This shift is the beginning of release."',
+      'Daily Guidance: Release the Weight. Whenever a memory of the past arrives to tighten your heart, use the release breath and return to the present. You are the awareness, not the history.',
     howItWorks:
       'When you feel the weight of past actions today, stop and say: ' +
       '"I am noticing a feeling of guilt." Then ask yourself: "Who is the one noticing this?" ' +
@@ -250,7 +249,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
     steps: [
       { instruction: 'Notice the heavy feeling of guilt or regret.' },
       { instruction: 'Label it clearly: "I am noticing a feeling of guilt."', duration: 10 },
-      { instruction: 'Ask: "Who is noticing this?" Search for the noticeer.', duration: 20 },
+      { instruction: 'Ask: "Who is noticing this?" Search for the noticer.', duration: 20 },
       { instruction: 'Rest in the awareness that is watching the emotion.', duration: 30 },
     ],
     completionCriteria: 'Witnessed a moment of guilt or regret from the seat of awareness.',

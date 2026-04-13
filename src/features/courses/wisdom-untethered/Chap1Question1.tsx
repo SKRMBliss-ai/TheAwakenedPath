@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { DailyPracticeCard } from '../../practices/DailyPracticeCard';
 import { useAuth } from '../../auth/AuthContext';
 import { cn } from '../../../lib/utils';
 import styles from './Chap1Question1.module.css';
@@ -32,7 +31,7 @@ const lightImages: Record<string, string> = {
 
 const ALL_SLIDES = ["slide1", "slide2", "slide3", "slide4", "slide5", "slide6", "slide7"];
 
-const TOTAL_SLIDES = 12; // 0 to 11
+const TOTAL_SLIDES = 11; // 0 to 10
 
 interface Chap1Question1Props {
   onOpenJournal?: () => void;
@@ -336,30 +335,8 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
         </div>
       </section>
 
-      {/* --- SECTION 10: DAILY PRACTICE --- */}
-      <section className={styles.slide} data-section="10">
-        <div className={styles.slideGrid}>
-          <div className={styles.slideContent}>
-            <span className={styles.slideTag}>Daily Practice</span>
-            <h2 className={styles.slideH}>Commit to the <em>Redirection</em></h2>
-            <p className={styles.slideP}>
-              The mind is a tool, not who you are. This daily practice helps you reclaim the higher mind by choosing a deliberate anchor when the reactivity starts.
-            </p>
-          </div>
-          <div className="flex flex-col justify-center">
-            <DailyPracticeCard 
-              questionId="question1" 
-              userId={user?.uid} 
-            />
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.rule}><span>✦</span></div>
-
-
-      {/* --- SECTION 11: CLOSING --- */}
-      <section className={styles.closing} data-section="11">
+      {/* --- SECTION 10: CLOSING --- */}
+      <section className={styles.closing} data-section="10">
         <div className={styles.closingInner}>
           <span className={styles.closingTag}>End of Chapter 1 · Question 1</span>
           <h2 className={styles.closingTitle}>Both Paths Are<br /><em>Available Right Now</em></h2>

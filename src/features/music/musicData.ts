@@ -16,10 +16,10 @@ export interface SacredTrack {
 export const SACRED_TRACKS: SacredTrack[] = [
   {
     id: 'track_1',
-    title: 'Mindfulness Meadow',
+    title: 'Mindful Meadows',
     artist: 'Sacred Sounds',
     duration: '15:00',
-    previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', // Example preview
+    previewUrl: '/mp3/Music/budhaTranquilRemix1.mp3',
     priceUSD: 14.99,
     description: 'A gentle ambient journey through soft winds and bird songs. Perfect for your daily presence practice.',
     mood: 'Calm',

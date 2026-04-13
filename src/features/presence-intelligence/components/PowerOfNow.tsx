@@ -15,6 +15,7 @@ import { type UserStats } from '../../achievements/achievementsDefs';
 import { isAdminEmail } from '../../../config/admin';
 
 import { CHAPTERS } from '../teachingData';
+import { VoiceService } from '../../../services/voiceService';
 
 // ─── GRAIN OVERLAY ───────────────────────────────────────────────────────────
 const GrainOverlay = () => (
@@ -141,6 +142,9 @@ const VideoPlayer: React.FC<{
     onComplete: () => void;
 }> = ({ youtubeId, onClose, onComplete }) => {
     useEffect(() => {
+        // Pause any background music when a teaching video starts
+        VoiceService.pause();
+
         // Mark watched after 15 seconds of playback
         const timer = setTimeout(onComplete, 15000);
         return () => clearTimeout(timer);

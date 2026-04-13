@@ -92,6 +92,13 @@ export class VoiceService {
         this.listeners.forEach(l => l(val, this._activeCategory, this._musicUrl));
     }
 
+    static playEffect(url: string) {
+        if (!this._isEnabled) return;
+        const effect = new Audio(url);
+        effect.volume = this._volume;
+        effect.play().catch(err => console.error("Effect playback failed:", err));
+    }
+
     static subscribe(cb: (status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null, musicUrl: string | null) => void) {
         this.listeners.push(cb);
         return () => {

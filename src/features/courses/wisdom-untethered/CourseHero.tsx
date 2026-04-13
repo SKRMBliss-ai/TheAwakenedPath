@@ -9,9 +9,10 @@ interface CourseHeroProps {
   title: React.ReactNode;
   subtitle: string;
   className?: string;
+  overviewImage?: string;
 }
 
-export const CourseHero: React.FC<CourseHeroProps> = ({ chapter, question, title, subtitle, className }) => {
+export const CourseHero: React.FC<CourseHeroProps> = ({ chapter, question, title, subtitle, className, overviewImage }) => {
   const starsRef = useRef<HTMLDivElement>(null);
   const [isDark, setIsDark] = useState(
     () => document.documentElement.classList.contains('dark')
@@ -66,6 +67,18 @@ export const CourseHero: React.FC<CourseHeroProps> = ({ chapter, question, title
         <div className={styles.heroRule} />
         <p className={styles.heroSub}>{subtitle}</p>
       </motion.div>
+      
+      {overviewImage && (
+        <motion.img 
+          src={overviewImage} 
+          alt="Course Overview"
+          className={styles.heroOverviewImg}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 1, ease: "easeOut" }}
+        />
+      )}
+
       <div className={styles.heroScroll}>Scroll to Explore</div>
     </section>
   );

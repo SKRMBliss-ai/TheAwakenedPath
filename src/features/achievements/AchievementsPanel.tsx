@@ -69,6 +69,12 @@ export const AchievementToast: React.FC<{
 }> = ({ achievement, onDismiss }) => {
     React.useEffect(() => {
         if (!achievement) return;
+        
+        // Play celebration sound
+        import('../../services/voiceService').then(({ VoiceService }) => {
+            VoiceService.playEffect('/mp3/tibetanbell.mp3');
+        });
+
         const t = setTimeout(onDismiss, 6000);
         return () => clearTimeout(t);
     }, [achievement, onDismiss]);

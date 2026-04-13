@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Clock, Music, Activity } from 'lucide-react';
+import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Clock, Music, Activity, Target } from 'lucide-react';
 import styles from './CourseTabs.module.css';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
@@ -12,9 +12,11 @@ import { Chap1Question6 } from './wisdom-untethered/Chap1Question6';
 import { Chap1Question7 } from './wisdom-untethered/Chap1Question7';
 import { ThoughtJournal } from './wisdom-untethered/components/ThoughtJournal';
 import { CostValueAnalysis } from '../practices/CostValueAnalysis';
+import { DailyPracticeCard } from '../practices/DailyPracticeCard';
 import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
 import { useAuth } from '../auth/AuthContext';
 import { ScrollNavigator } from '../../components/ui/ScrollNavigator';
+import { VoiceService } from '../../services/voiceService';
 
 interface Chapter {
   id: number;
@@ -59,6 +61,12 @@ interface CourseProps {
 
 function VideoPlayerView({ videoId }: { videoId: string | null }) {
   const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (isPlaying) {
+      VoiceService.pause();
+    }
+  }, [isPlaying]);
 
   if (!videoId) {
     return (
@@ -153,7 +161,7 @@ const QUESTION_THEMES: Record<string, string> = {
   'question7': 'rgba(20, 184, 166, 0.05)',
 };
 
-type PracticeType = 'example' | 'journal' | 'analysis';
+type PracticeType = 'example' | 'journal' | 'analysis' | 'daily';
 
 interface PracticeItem {
   id: PracticeType;
@@ -177,6 +185,13 @@ const COMMON_PRACTICES: PracticeItem[] = [
     subtitle: 'Practice 02',
     description: 'Record your stream-of-consciousness and classify your internal noise.',
     icon: <Clock size={120} />
+  },
+  {
+    id: 'daily',
+    title: 'Daily Practice',
+    subtitle: 'Practice 03',
+    description: 'Targeted interactive training to anchor the insight in your body.',
+    icon: <Activity size={120} />
   }
 ];
 
@@ -185,13 +200,20 @@ const QUESTION_PRACTICES: Record<string, PracticeItem[]> = {
   'question2': COMMON_PRACTICES,
   'question3': COMMON_PRACTICES,
   'question4': [
-    ...COMMON_PRACTICES,
+    ...COMMON_PRACTICES.filter(p => p.id !== 'daily'),
     {
       id: 'analysis',
       title: 'Cost-Value Analysis',
       subtitle: 'Practice 03',
       description: 'Witnessing how the mind spends your most precious currency: your aliveness.',
       icon: <Activity size={120} />
+    },
+    {
+      id: 'daily',
+      title: 'Daily Practice',
+      subtitle: 'Practice 04',
+      description: 'Targeted interactive training to anchor the insight in your body.',
+      icon: <Target size={120} />
     }
   ],
   'question5': COMMON_PRACTICES,
@@ -312,7 +334,7 @@ export function WisdomUntetheredCourse({
         </nav>
       </header>
 
-      <ScrollNavigator selector=".scroll-container" />
+      <ScrollNavigator key={activeQuestionId} selector=".scroll-container" />
 
       {/* ── Dynamic Content Area ── */}
       <main className={styles.contentArea}>
@@ -382,6 +404,21 @@ export function WisdomUntetheredCourse({
                       ← Back to Practices
                     </button>
                     <CostValueAnalysis />
+                  </div>
+                </div>
+              ) : selectedPractice === 'daily' ? (
+                <div className="h-full overflow-y-auto no-scrollbar p-12">
+                  <div className="max-w-2xl mx-auto space-y-8">
+                    <button 
+                      onClick={() => setSelectedPractice(null)}
+                      className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-2"
+                    >
+                      ← Back to Practices
+                    </button>
+                    <DailyPracticeCard 
+                      questionId={activeQuestionId} 
+                      userId={currentUser?.uid} 
+                    />
                   </div>
                 </div>
               ) : (

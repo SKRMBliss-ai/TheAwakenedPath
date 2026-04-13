@@ -10,7 +10,8 @@ interface ScrollNavigatorProps {
 }
 
 export const ScrollNavigator: React.FC<ScrollNavigatorProps> = ({ containerRef, selector, className }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [showUp, setShowUp] = useState(false);
+  const [showDown, setShowDown] = useState(true);
 
   useEffect(() => {
     const getTarget = () => {
@@ -24,14 +25,24 @@ export const ScrollNavigator: React.FC<ScrollNavigatorProps> = ({ containerRef, 
     
     const handleScroll = () => {
       const scrollY = target instanceof Window ? window.scrollY : target.scrollTop;
-      setIsVisible(scrollY > 50); // Lowered threshold so portals appear sooner
+      const scrollHeight = target instanceof Window ? document.documentElement.scrollHeight : target.scrollHeight;
+      const clientHeight = target instanceof Window ? window.innerHeight : target.clientHeight;
+
+      setShowUp(scrollY > 100);
+      setShowDown(scrollY + clientHeight < scrollHeight - 100);
     };
 
     target.addEventListener('scroll', handleScroll);
     // Initial check
     handleScroll();
     
-    return () => target.removeEventListener('scroll', handleScroll);
+    // Add a small delay to allow content to settle
+    const t = setTimeout(handleScroll, 500);
+    
+    return () => {
+      target.removeEventListener('scroll', handleScroll);
+      clearTimeout(t);
+    };
   }, [containerRef, selector]);
 
   const scrollTo = (direction: 'top' | 'bottom') => {
@@ -53,10 +64,9 @@ export const ScrollNavigator: React.FC<ScrollNavigatorProps> = ({ containerRef, 
   };
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <>
-          {/* UP ARROW - Parallel to Voice Guidance Avatar */}
+    <>
+      <AnimatePresence>
+        {showUp && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8, x: 20 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -74,8 +84,11 @@ export const ScrollNavigator: React.FC<ScrollNavigatorProps> = ({ containerRef, 
               <ChevronUp size={24} className="group-hover:-translate-y-0.5 transition-transform" />
             </button>
           </motion.div>
+        )}
+      </AnimatePresence>
 
-          {/* DOWN ARROW - Parallel to WhatsApp Icon */}
+      <AnimatePresence>
+        {showDown && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8, x: 20 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -93,8 +106,8 @@ export const ScrollNavigator: React.FC<ScrollNavigatorProps> = ({ containerRef, 
               <ChevronDown size={24} className="group-hover:translate-y-0.5 transition-transform" />
             </button>
           </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </>
   );
 };

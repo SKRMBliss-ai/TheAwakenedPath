@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/AuthContext";
-import { DailyPracticeCard } from "../../practices/DailyPracticeCard";
 import styles from "./Chap1Question1.module.css";
 import { cn } from "../../../lib/utils";
 import { useCourseTracking } from "../../../hooks/useCourseTracking";
@@ -243,7 +242,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
 
       <nav className={styles.navDots}>
         {/* +1 for course hero */}
-        {Array.from({ length: 14 + 1 }).map((_, i) => (
+        {Array.from({ length: 13 + 1 }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
@@ -441,27 +440,9 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
         </div>
       </section>
 
-      {/* --- SECTION 11: DAILY PRACTICE --- */}
-      <section className={styles.slide} data-section="11">
-        <div className={styles.slideGrid}>
-          <div className={styles.slideContent}>
-            <span className={styles.slideTag}>The Practice</span>
-            <h2 className={styles.slideH}>The <em>Clarity</em> Sit</h2>
-            <p className={styles.slideP}>
-              Rest in the seat of the Witness. Let everything else pass by like weather.
-            </p>
-          </div>
-          <div className="flex flex-col justify-center">
-            <DailyPracticeCard 
-              questionId="question5" 
-              userId={user?.uid} 
-            />
-          </div>
-        </div>
-      </section>
 
-      {/* --- SECTION 12: COST-VALUE ANALYSIS --- */}
-      <section className={cn(styles.slide, "bg-[var(--accent-primary)]/5 p-8 rounded-3xl border border-[var(--accent-primary)]/10 my-12 mx-4")} data-section="12">
+      {/* --- SECTION 11: COST-VALUE ANALYSIS --- */}
+      <section className={cn(styles.slide, "bg-[var(--accent-primary)]/5 p-8 rounded-3xl border border-[var(--accent-primary)]/10 my-12 mx-4")} data-section="11">
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="text-center space-y-2">
             <span className={styles.slideTag}>The Logic of Freedom</span>
@@ -534,8 +515,8 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
         </div>
       </section>
 
-      {/* ── SECTION 13: CLOSING ── */}
-      <section className={styles.closing} data-section="13">
+      {/* ── SECTION 12: CLOSING ── */}
+      <section className={styles.closing} data-section="12">
         <div className={styles.closingInner}>
           <span className={styles.closingTag}>The Lucid State</span>
           <h2 className={styles.closingTitle}>Go to the One Who Hears</h2>

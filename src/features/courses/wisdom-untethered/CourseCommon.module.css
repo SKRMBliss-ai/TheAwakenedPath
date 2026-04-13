@@ -263,6 +263,25 @@
   }
 }
 
+.heroOverviewImg {
+  position: relative;
+  z-index: 10;
+  margin-bottom: 2rem;
+  max-width: 800px;
+  width: 90%;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  opacity: 1;
+  transition: all 0.5s ease;
+  border: 1px solid rgba(184, 151, 58, 0.2);
+  cursor: pointer;
+}
+
+.heroOverviewImg:hover {
+  transform: scale(1.02);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+
 .pull {
   border-left: 2px solid #B8973A;
   padding-left: 2rem;
