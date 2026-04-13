@@ -8,7 +8,7 @@ import { collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebas
 import { useAchievements } from '../achievements/useAchievements';
 import { AchievementsPanel } from '../achievements/AchievementsPanel';
 import { MAIN_PARTS_COUNT } from '../presence-intelligence/teachingData';
-import { isAdminEmail } from '../../config/admin';
+import { isAdminEmail, isMonitoredEmail } from '../../config/admin';
 import PastReflections from './PastReflections';
 import PracticeLedger from './PracticeLedger';
 import { JourneyProgress } from './JourneyProgress';
@@ -282,18 +282,12 @@ interface StatsDashboardProps {
         const logsRef = collection(db, 'activity_logs');
         const q = query(logsRef, orderBy('timestamp', 'desc'), limit(15));
         const snapshot = await getDocs(q);
-
-        const adminEmails = ['skrmblissai@gmail.com', 'shrutikhungar@gmail.com'];
         const logs = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         })) as ActivityLog[];
 
-        const filteredLogs = logs.filter(log => {
-            const email = log.userEmail?.toLowerCase() || '';
-            const isAdmin = adminEmails.includes(email) || email.includes('skrm');
-            return !isAdmin;
-        });
+        const filteredLogs = logs.filter((log: ActivityLog) => isMonitoredEmail(log.userEmail));
 
         setAdminLogs(filteredLogs);
     };

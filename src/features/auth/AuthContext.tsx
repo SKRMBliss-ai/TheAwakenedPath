@@ -3,7 +3,7 @@ import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as fir
 import type { User } from 'firebase/auth';
 import { auth, db } from '../../firebase';
 import { doc, setDoc, updateDoc, collection, addDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
-import { hasWisdomAccess } from '../../config/admin';
+import { hasWisdomAccess, isMonitoredEmail } from '../../config/admin';
 interface UserProfile {
     uid: string;
     email: string | null;
@@ -51,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
 
     const logActivity = async (currentUser: User, type: string = 'SESSION_START') => {
+        if (!isMonitoredEmail(currentUser.email)) return;
         try {
             let location = 'Unknown';
             try {

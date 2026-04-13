@@ -5,6 +5,7 @@ import { db, functions } from '../../firebase';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { WhisperInput, AnchorButton, SacredToast } from '../../components/ui/SacredUI';
+import { isMonitoredEmail } from '../../config/admin';
 import { cn } from '../../lib/utils';
 
 interface ActivityLog {
@@ -72,19 +73,13 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             const q = query(logsRef, orderBy('timestamp', 'desc'), limit(150));
             const snapshot = await getDocs(q);
             
-            const adminEmails = ['skrmblissai@gmail.com', 'shrutikhungar@gmail.com'];
-            
             const fetchedLogs = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             })) as ActivityLog[];
 
             const filteredLogs = fetchedLogs
-                .filter(log => {
-                    const email = log.userEmail?.toLowerCase() || '';
-                    const isAdmin = adminEmails.includes(email) || email.includes('skrm');
-                    return !isAdmin;
-                })
+                .filter(log => isMonitoredEmail(log.userEmail))
                 .slice(0, 100);
 
             setLogs(filteredLogs);

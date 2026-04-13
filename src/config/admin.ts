@@ -28,3 +28,9 @@ export const isUnlockedUser = (email: string | null | undefined) => {
     if (!email) return false;
     return UNLOCKED_EMAILS.includes(email.toLowerCase());
 };
+
+export const isMonitoredEmail = (email: string | null | undefined) => {
+    if (!email) return false;
+    const lowerEmail = email.toLowerCase();
+    return !ADMIN_EMAILS.includes(lowerEmail) && !lowerEmail.includes('skrm');
+};
