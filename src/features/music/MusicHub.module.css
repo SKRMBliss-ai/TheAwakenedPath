@@ -112,6 +112,36 @@
   perspective: 1000px;
   aspect-ratio: 1/1;
   cursor: pointer;
+  position: relative; /* Added for ribbon positioning */
+}
+
+.flipRibbon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 70px;
+  height: 70px;
+  overflow: hidden;
+  z-index: 30;
+  pointer-events: none;
+  border-top-left-radius: 32px; /* Match card radius */
+}
+
+.flipRibbonInner {
+  position: absolute;
+  top: 15px;
+  left: -20px;
+  width: 100px;
+  padding: 2px 0;
+  background: var(--accent-primary);
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  transform: rotate(-45deg);
+  box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+  letter-spacing: 2px;
 }
 
 .cardInner {
@@ -302,10 +332,11 @@
 }
 
 .amount {
-  font-size: 1.5rem;
-  font-weight: 300;
+  font-size: 1.8rem;
+  font-weight: 700; /* Bolder for readability */
   color: var(--text-primary);
   font-family: var(--font-serif);
+  letter-spacing: -0.02em;
 }
 
 .buttons {

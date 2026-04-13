@@ -47,6 +47,9 @@ const MusicCard = ({ track, onDownload, isProcessing }: { track: SacredTrack, on
 
   return (
     <div className={styles.trackCard} onClick={toggleFlip}>
+      <div className={styles.flipRibbon}>
+        <div className={styles.flipRibbonInner}>Flip</div>
+      </div>
       <motion.div 
         className={styles.cardInner}
         initial={false}
