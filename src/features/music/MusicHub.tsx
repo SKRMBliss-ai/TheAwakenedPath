@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Play, Pause, Download, Volume2, MessageSquare, Music, Clock, Heart, Zap, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -16,13 +16,15 @@ const MusicCard = ({
   onDownload, 
   isProcessing, 
   isActive, 
-  status 
+  status,
+  isOwned 
 }: { 
   track: SacredTrack, 
   onDownload: (t: SacredTrack) => void, 
   isProcessing: boolean,
   isActive: boolean,
-  status: 'idle' | 'playing' | 'paused' | 'buffering'
+  status: 'idle' | 'playing' | 'paused' | 'buffering',
+  isOwned: boolean
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const isPlaying = isActive && status === 'playing';
@@ -121,6 +123,11 @@ const MusicCard = ({
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                     className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                   />
+                ) : isOwned ? (
+                  <>
+                    <Download size={16} />
+                    <span>Download</span>
+                  </>
                 ) : (
                   <>
                     <Download size={16} />
@@ -150,10 +157,19 @@ const MusicCard = ({
 
 export const MusicHub = () => {
   const [activeMood, setActiveMood] = useState<string | null>(null);
-  const { user } = useAuth();
-  const { checkOut, isProcessing } = useRazorpay();
+  const { profile } = useAuth();
+  const { checkOut, isProcessing: isCheckoutProcessing } = useRazorpay();
   const status = useVoiceStatus(); 
   const [activeTrackUrl, setActiveTrackUrl] = useState<string | null>(null);
+  const [localOwned, setLocalOwned] = useState<string[]>([]);
+  
+  // Combine Firestore profile owned with local temporary owned for immediate feedback
+  const ownedTracks = useMemo(() => {
+    return Array.from(new Set([
+      ...(profile?.purchasedCourses || []),
+      ...localOwned
+    ]));
+  }, [profile?.purchasedCourses, localOwned]);
 
   // Sync active track URL with VoiceService
   useEffect(() => {
@@ -171,7 +187,20 @@ export const MusicHub = () => {
     : SACRED_TRACKS;
 
   const handleDownload = (track: SacredTrack) => {
-    if (!user) {
+    const isOwned = ownedTracks.includes(track.id);
+
+    if (isOwned) {
+      // Direct Download for owned tracks
+      const link = document.createElement('a');
+      link.href = track.previewUrl; // Replace with high-quality URL in production
+      link.download = `${track.title}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    if (!profile) {
       alert("Please sign in to proceed with the purchase.");
       return;
     }
@@ -180,15 +209,19 @@ export const MusicHub = () => {
     
     // Trigger real Razorpay checkout
     checkOut(
-      user.uid,
-      user.email || '',
-      user.displayName || 'Traveler',
+      profile.uid,
+      profile.email || '',
+      profile.displayName || 'Traveler',
       track.id,
       price.currency,
       () => {
-        // Success handler
+        // 1. Immediate UI Feedback
+        setLocalOwned(prev => [...prev, track.id]);
+        
+        // 2. Clear Communication
         alert(`Deep Gratitude. Your purchase of "${track.title}" is confirmed. Your high-quality download will begin now.`);
-        // In a Production environment, we would trigger the actual file download here
+        
+        // 3. Trigger Download
         const link = document.createElement('a');
         link.href = track.previewUrl; // Replace with high-quality URL in production
         link.download = `${track.title}.mp3`;
@@ -242,9 +275,10 @@ export const MusicHub = () => {
               key={track.id} 
               track={track} 
               onDownload={handleDownload} 
-              isProcessing={isProcessing}
+              isProcessing={isCheckoutProcessing}
               isActive={activeTrackUrl === track.previewUrl}
               status={status}
+              isOwned={ownedTracks.includes(track.id)}
             />
           ))}
         </AnimatePresence>
