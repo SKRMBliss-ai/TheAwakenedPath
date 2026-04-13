@@ -360,15 +360,6 @@
   color: var(--text-primary);
 }
 
-:global(.dark) .heroSubtitle {
-  color: #E6C57D;
-  opacity: 1;
-}
-
-:global(.dark) .heroScroll {
-  color: #FDFAF4;
-  opacity: 0.8;
-}
 
 :global(.dark) .slideSection {
   border-bottom: 2px solid var(--gold) !important;

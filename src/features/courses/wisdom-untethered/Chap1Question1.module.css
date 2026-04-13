@@ -366,7 +366,6 @@
   font-weight: 300;
   color: var(--ink-soft);
   line-height: 1.55;
-  `
 }
 
 :global(.dark) .pull {
@@ -1481,15 +1480,6 @@
   color: #D4AE5C;
 }
 
-:global(.dark) .heroSub {
-  color: #E6C57D !important;
-  opacity: 1 !important;
-}
-
-:global(.dark) .heroScroll {
-  color: #E6C57D !important;
-  opacity: 1 !important;
-}
 
 :global(.dark) .openingBand {
   background: #26221E;
@@ -1637,4 +1627,4 @@
 
 :global(.dark) .closingTitle {
   color: #FDFAF4;
-}r3t4i6y78
+}

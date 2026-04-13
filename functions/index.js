@@ -28,11 +28,25 @@ const ttsClient = new textToSpeech.TextToSpeechClient();
 const COURSE_PRICES = {
     "wisdom_untethered": 9,
     "all_access": 199.99,
+    "track_1": 14.99,
+    "observer-echo": 14.99,
+    "gratitude-flow": 14.99,
+    "gratitude-flow-harmonic": 14.99,
+    "cellular-healing": 14.99,
+    "om-vacuum": 14.99,
+    "become-the-watcher": 19.99
 };
 
 const COURSE_PRICES_INR = {
     "wisdom_untethered": 799,
     "all_access": 14999,
+    "track_1": 899,
+    "observer-echo": 899,
+    "gratitude-flow": 899,
+    "gratitude-flow-harmonic": 899,
+    "cellular-healing": 899,
+    "om-vacuum": 899,
+    "become-the-watcher": 1199
 };
 
 const SUBSCRIPTION_PLANS = {

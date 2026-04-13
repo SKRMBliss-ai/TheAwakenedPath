@@ -116,6 +116,16 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, timezon
     `;
   }
 
+  // Music Hub
+  if (tab === 'music') {
+    return `
+      Welcome to Sacred Soundscapes. Please note that these individual journeys are not included in the standard membership. 
+      Each track can be purchased separately to become part of your permanent collection.
+      If you require a continuous experience—such as one hour, three hours, or even ten hours for deep meditation or sleep—simply reach out to us via the WhatsApp link at the bottom of the screen. 
+      Let these sacred vibrations guide you into the depth of your soul.
+    `;
+  }
+
   // Fallback to Paywall/Upgrade script if not premium OR on paywall tab
   if (!isAccessValid || tab === 'paywall') {
     return `

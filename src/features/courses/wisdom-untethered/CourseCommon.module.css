@@ -184,6 +184,14 @@
   color: #D4AE5C;
 }
 
+:global(.dark) :local(.heroTitle) {
+  color: #FDFAF4 !important;
+}
+
+:global(.dark) :local(.heroTitle) strong {
+  color: #D4AE5C !important;
+}
+
 :global(:not(.dark)) .heroTitle strong {
   color: #B8973A;
 }
@@ -204,14 +212,14 @@
   margin: 0 auto;
 }
 
-:global(.dark) .heroSub {
-  color: #E6C57D !important;
+:global(.dark) :local(.heroSub) {
+  color: #FDFAF4 !important;
   opacity: 1 !important;
 }
 
-:global(.dark) .heroScroll {
-  color: #E6C57D !important;
-  opacity: 1 !important;
+:global(.dark) :local(.heroScroll) {
+  color: #FDFAF4 !important;
+  opacity: 0.9 !important;
 }
 
 :global(:not(.dark)) .heroSub {

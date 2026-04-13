@@ -1144,7 +1144,7 @@ export default function UntetheredApp() {
 
       {/* SIDEBAR */}
       <aside className={cn(
-        "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70]",
+        "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70] overflow-hidden",
         "border-r border-[var(--border-default)]",
         "bg-[var(--bg-surface)] backdrop-blur-2xl px-2",
         "transition-transform duration-500 ease-fluid",
@@ -1285,7 +1285,7 @@ export default function UntetheredApp() {
                               transition={{ duration: 0.25 }}
                               className="overflow-hidden"
                             >
-                              <div className="py-0.5 space-y-[0.2vh]">
+                              <div className="grid grid-cols-4 gap-2 px-1 py-2">
                                 {[
                                   { num: 1, label: 'Using the mind as a tool', id: 'question1', locked: !isAccessValid },
                                   { num: 2, label: 'Handling doubt and fear', id: 'question2', locked: !isAccessValid },
@@ -1306,32 +1306,15 @@ export default function UntetheredApp() {
                                         if (window.innerWidth < 1024) setIsSidebarOpen(false);
                                       }}
                                       className={cn(
-                                        "w-full flex items-center gap-2.5 px-2 py-[1vh] rounded-lg text-left transition-all group",
-                                        isQActive
-                                          ? "bg-[var(--accent-primary)]/8"
-                                          : "hover:bg-[var(--bg-surface)]/50",
-                                        q.locked && "opacity-35 cursor-not-allowed"
+                                        "aspect-square flex items-center justify-center rounded-xl text-[11px] font-bold transition-all duration-300",
+                                        isQActive 
+                                          ? "bg-[var(--accent-primary)] text-white shadow-[0_0_15px_var(--accent-primary-dim)]" 
+                                          : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]/30",
+                                        q.locked && "opacity-30 cursor-not-allowed"
                                       )}
+                                      title={q.label}
                                     >
-                                      <div
-                                        className="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all duration-500"
-                                        style={{
-                                          background: isQActive ? 'var(--accent-primary)' : 'var(--text-muted)',
-                                          opacity: isQActive ? 1 : 0.3,
-                                          boxShadow: isQActive ? '0 0 8px var(--accent-primary)' : 'none'
-                                        }}
-                                      />
-                                      <span
-                                        className={cn(
-                                          "text-[11px] font-sans flex-1 transition-all tracking-wider leading-tight",
-                                          isQActive
-                                            ? "text-[var(--text-primary)] font-bold opacity-100"
-                                            : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] opacity-70",
-                                          q.locked && "opacity-30 italic"
-                                        )}
-                                      >
-                                        {q.num}. {q.label}
-                                      </span>
+                                      {q.num}
                                     </button>
                                   );
                                 })}
@@ -1354,7 +1337,7 @@ export default function UntetheredApp() {
                   className={activeTab === 'music' ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]"}
                 />
                 <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)]">
-                  Sanctuary
+                  Soundscapes
                 </span>
               </div>
               <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40">
