@@ -8,7 +8,6 @@ import { useTheme } from '../../theme/ThemeSystem';
 import { useAuth } from '../auth/AuthContext';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
-import { VoiceGuidance } from '../../components/ui/VoiceGuidance';
 import styles from './MusicHub.module.css';
 
 const MusicCard = ({ 
@@ -17,6 +16,7 @@ const MusicCard = ({
   isProcessing, 
   isActive, 
   status,
+  category,
   isOwned 
 }: { 
   track: SacredTrack, 
@@ -24,10 +24,11 @@ const MusicCard = ({
   isProcessing: boolean,
   isActive: boolean,
   status: 'idle' | 'playing' | 'paused' | 'buffering',
+  category: 'tts' | 'music' | null,
   isOwned: boolean
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const isPlaying = isActive && status === 'playing';
+  const isPlaying = isActive && status === 'playing' && category === 'music';
   const regionalPrice = getRegionalPrice(track.priceUSD);
   const { mode } = useTheme();
 
@@ -159,7 +160,7 @@ export const MusicHub = () => {
   const [activeMood, setActiveMood] = useState<string | null>(null);
   const { profile } = useAuth();
   const { checkOut, isProcessing: isCheckoutProcessing } = useRazorpay();
-  const { status } = useVoiceStatus(); 
+  const { status, category } = useVoiceStatus(); 
   const [activeTrackUrl, setActiveTrackUrl] = useState<string | null>(null);
   const [localOwned, setLocalOwned] = useState<string[]>([]);
   
@@ -278,6 +279,7 @@ export const MusicHub = () => {
               isProcessing={isCheckoutProcessing}
               isActive={activeTrackUrl === track.previewUrl}
               status={status}
+              category={category}
               isOwned={ownedTracks.includes(track.id)}
             />
           ))}
@@ -299,8 +301,6 @@ export const MusicHub = () => {
           </a>
         </div>
       </footer>
-
-      <VoiceGuidance activeTab="music" isAccessValid={true} />
     </div>
   );
 };

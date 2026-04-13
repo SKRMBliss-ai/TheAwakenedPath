@@ -257,7 +257,7 @@ export const VoiceGuidance = ({
 
             <div className="min-h-[70px] flex items-center mb-4">
               <AnimatePresence mode="wait">
-                {status === 'idle' ? (
+                {(status === 'idle' || category !== 'tts') ? (
                   <motion.button
                     key="listen"
                     initial={{ opacity: 0, scale: 0.95 }}

@@ -22,6 +22,7 @@ import { collection, query, orderBy, limit, onSnapshot, getDocs, doc } from 'fir
 import { AwakenedPathLogo } from './components/ui/AwakenedPathLogo';
 import EngagementReport from './features/admin/EngagementReport';
 import { useAchievements } from './features/achievements/useAchievements';
+import { MusicMiniPlayer } from './components/ui/MusicMiniPlayer';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
 import { isAdminEmail, isUnlockedUser } from './config/admin';
@@ -1953,7 +1954,7 @@ export default function UntetheredApp() {
           assignment={weeklyAssignment}
         />
       )}
-
+      <MusicMiniPlayer />
     </div>
   );
 }

@@ -12,6 +12,9 @@ export class VoiceService {
     private static ttsAudio: HTMLAudioElement | null = null;
     private static musicAudio: HTMLAudioElement | null = null;
     private static _currentUrl: string | null = null;
+    /** Persists the music URL even while TTS is playing on top */
+    private static _musicUrl: string | null = null;
+    private static _volume: number = 1;
     private static currentRequestId: number = 0;
     private static listeners: ((status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null) => void)[] = [];
     private static _status: 'idle' | 'playing' | 'paused' | 'buffering' = 'idle';
@@ -42,12 +45,46 @@ export class VoiceService {
         return this._currentUrl;
     }
 
+    /** Always returns the loaded music URL regardless of whether TTS is active */
+    static get musicUrl() {
+        return this._musicUrl;
+    }
+
     static get isPlaying() {
         return this._status === 'playing';
     }
 
     static get activeCategory() {
         return this._activeCategory;
+    }
+
+    static get volume() {
+        return this._volume;
+    }
+
+    static setVolume(vol: number) {
+        this._volume = Math.max(0, Math.min(1, vol));
+        if (this.musicAudio) this.musicAudio.volume = this._volume;
+        if (this.ttsAudio) this.ttsAudio.volume = this._volume;
+    }
+
+    /** Skip forward (positive) or rewind (negative) by `seconds` in the music channel */
+    static skipBy(seconds: number) {
+        if (!this.musicAudio) return;
+        const next = Math.max(0, Math.min(this.musicAudio.duration || 0, this.musicAudio.currentTime + seconds));
+        this.musicAudio.currentTime = next;
+        if (this._status === 'paused') this._savedMusicTime = next;
+    }
+
+    static get audioProgress() {
+        // Always prefer musicAudio for progress so the mini-player stays accurate
+        // even when TTS is temporarily playing on top of paused music.
+        const audio = this.musicAudio ?? this.ttsAudio;
+        if (!audio) return { currentTime: 0, duration: 0 };
+        return {
+            currentTime: audio.currentTime,
+            duration: audio.duration || 0
+        };
     }
 
     private static setStatus(val: 'idle' | 'playing' | 'paused' | 'buffering') {
@@ -282,9 +319,11 @@ export class VoiceService {
         try {
             const audio = new Audio(url);
             audio.preload = "auto";
+            audio.volume = this._volume;
 
             this.musicAudio = audio;
             this._currentUrl = url;
+            this._musicUrl = url;  // persist separately — never overwritten by TTS
             this._activeCategory = 'music';
             this.setStatus('playing');
 
@@ -294,6 +333,7 @@ export class VoiceService {
                 onEnd?.();
                 this.musicAudio = null;
                 this._currentUrl = null;
+                this._musicUrl = null;
                 
                 // Maybe resume TTS? Let's not auto-resume TTS after music, 
                 // but music after TTS is often desired for background.
@@ -441,6 +481,7 @@ export class VoiceService {
         }
         this._savedMusicTime = 0;
         this._currentUrl = null;
+        this._musicUrl = null;
     }
 
     static init(): Promise<void> {
@@ -449,6 +490,17 @@ export class VoiceService {
             window.addEventListener('beforeunload', () => this.stop());
         }
         return Promise.resolve();
+    }
+
+    static seek(time: number) {
+        const audio = this._activeCategory === 'music' ? this.musicAudio : this.ttsAudio;
+        if (audio) {
+            audio.currentTime = time;
+            if (this._status === 'paused') {
+                if (this._activeCategory === 'music') this._savedMusicTime = time;
+                else this._savedTtsTime = time;
+            }
+        }
     }
 }
 

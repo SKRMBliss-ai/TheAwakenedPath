@@ -66,7 +66,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
 }) => {
     const [timer, setTimer] = useState(0);
     const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1024);
-    const isVoiceActive = useVoiceActive();
+    const isVoiceActive = useVoiceActive('tts');
 
     // Magnetic orb tilt
     const mouseX = useMotionValue(0);

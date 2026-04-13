@@ -136,8 +136,11 @@ export function useJournalVoice() {
         VoiceService.preloadText(STEP_PROMPTS[1], { voice: 'Enceladus' });
 
         // Subscribe to global speaking state
-        const unsubscribe = VoiceService.subscribe((status) => {
-            if (isMountedRef.current) setIsPlaying(status === 'playing');
+        const unsubscribe = VoiceService.subscribe((status, category) => {
+            if (isMountedRef.current) {
+                // Only consider it 'playing' if it's actually TTS (voice guidance)
+                setIsPlaying(status === 'playing' && category === 'tts');
+            }
         });
 
         // Polling for enabled status since it can change globally

@@ -477,7 +477,7 @@ export function WisdomPracticeSection({
             practice={p} 
             userId={userId}
             onStart={() => onStart?.(p.id)}
-            autoExpand={p.id === activeQuestionId}
+            autoExpand={false}
           />
         ))}
       </div>
