@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart2, Activity, Shield, MapPin, TrendingUp, Volume2, Loader2, Square } from 'lucide-react';
-import { useJournalVoice } from '../journal/hooks/useJournalVoice';
+import { BarChart2, Activity, Shield, MapPin, TrendingUp } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { db } from '../../firebase';
 import { collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebase/firestore';
 import { useAchievements } from '../achievements/useAchievements';
 import { AchievementsPanel } from '../achievements/AchievementsPanel';
-import { MAIN_PARTS_COUNT } from '../presence-intelligence/teachingData';
 import { isAdminEmail, isMonitoredEmail } from '../../config/admin';
 import PastReflections from './PastReflections';
 import PracticeLedger from './PracticeLedger';
@@ -99,7 +97,6 @@ interface StatsDashboardProps {
     const [adminLogs, setAdminLogs] = useState<ActivityLog[]>([]);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const { speak, stop, isPlaying, isLoading: isVoiceLoading } = useJournalVoice();
     const { unlocked, points, awardEvent, checkAndUnlock } = useAchievements();
 
     useEffect(() => {
@@ -300,39 +297,12 @@ interface StatsDashboardProps {
         setAdminLogs(filteredLogs);
     };
 
-    const currentStreak = (() => {
-        let streak = 0;
-        for (let i = streakDays.length - 1; i >= 0; i--) {
-            if (streakDays[i]) streak++;
-            else if (i < streakDays.length - 1) break; // Allow skip if today not reached yet, but actually we start from end
-        }
-        return streak;
-    })();
 
     const maxWeekly = Math.max(...weeklyActivity, 1);
     const maxEmotion = Math.max(...emotionFreq.map(e => e.count), 1);
     const maxDistortion = Math.max(...distortionFreq.map(d => d.count), 1);
     const maxBody = Math.max(...bodyFreq.map(b => b.count), 1);
 
-    const handleListen = () => {
-        if (isPlaying) {
-            stop();
-            return;
-        }
-
-        const topEmotion = emotionFreq[0]?.name || "peace";
-        const topTrap = distortionFreq[0]?.name || "none identified";
-
-        const script = `
-            Welcome back to your journey report. 
-            You have maintained a powerful ${currentStreak} day streak of presence. 
-            ${topEmotion !== "peace" ? `Lately, your most frequent resonance has been ${topEmotion}.` : ''}
-            ${topTrap !== "none identified" ? `The witness has observed that your mind often wanders into ${topTrap}.` : ''}
-            Continue to watch these patterns with gentle curiosity. You are doing beautiful work.
-        `;
-
-        speak(script, "This is a spiritual summary of the user's progress stats.", true);
-    };
 
     if (isLoading) {
         return (
@@ -355,55 +325,10 @@ interface StatsDashboardProps {
 
             {/* Header */}
             <div className="border-b border-[var(--border-subtle)] pb-6">
-                <div className="flex justify-between items-start">
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <p className="text-[12px] uppercase tracking-[0.2em] text-[var(--accent-secondary)] font-bold">Insights & Progress</p>
-                            <div className="flex items-center gap-4 mb-2">
-                                <h2 className="text-3xl font-serif font-light text-[var(--text-primary)]">Your Journey Report</h2>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-6 px-5 py-2.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] shadow-sm w-fit">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Practice Streak</span>
-                                <span className="text-sm font-serif text-[var(--text-primary)]">{currentStreak}D</span>
-                            </div>
-                            <div className="w-px h-3 bg-[var(--border-subtle)]" />
-                            <div className="flex items-center gap-2">
-                                <span className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Lessons Done</span>
-                                <span className="text-sm font-serif text-[var(--text-primary)]">{powerWatched}/{MAIN_PARTS_COUNT}</span>
-                            </div>
-                        </div>
+                <div className="flex justify-between items-center">
+                    <div className="space-y-1">
+                        <h2 className="text-3xl font-serif font-light text-[var(--text-primary)]">Your Journey Report</h2>
                     </div>
-
-                    <button
-                        onClick={handleListen}
-                        disabled={isVoiceLoading}
-                        className={`group relative h-9 px-3.5 rounded-full flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer border ${
-                            isPlaying
-                                ? "bg-[var(--accent-secondary-dim)] border-[var(--accent-secondary-border)] text-[var(--accent-secondary)]"
-                                : "bg-[var(--bg-surface-hover)] border-[var(--border-default)] text-[var(--text-muted)] hover:border-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                        }`}
-                        title="Listen to Insights"
-                    >
-                        {isVoiceLoading ? (
-                            <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                <span className="text-[11px] font-bold uppercase tracking-widest leading-none mt-[1px]">Preparing...</span>
-                            </>
-                        ) : isPlaying ? (
-                            <>
-                                <Square className="w-4 h-4 fill-current" />
-                                <span className="text-[11px] font-bold uppercase tracking-widest leading-none mt-[1px]">Voice Guidance</span>
-                            </>
-                        ) : (
-                            <>
-                                <Volume2 className="w-4 h-4" />
-                                <span className="text-[11px] font-bold uppercase tracking-widest leading-none mt-[1px]">Voice Guidance</span>
-                            </>
-                        )}
-                    </button>
                 </div>
             </div >
 

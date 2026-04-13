@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Zap, PenLine, Heart, CheckCircle2,
   Calendar, ChevronRight, Sparkles, ArrowRight,
+  Trophy,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -368,6 +369,19 @@ export function TodayPath({
   const resolveStatus = (done: boolean, isCurrentFocus: boolean): StepStatus =>
     done ? 'done' : isCurrentFocus ? 'active' : 'next';
 
+  useEffect(() => {
+    if (allDone) {
+      const today = new Date().toDateString();
+      const celebKey = `awakened-celeb-${userId}-${today}`;
+      if (!sessionStorage.getItem(celebKey)) {
+        import('../../services/voiceService').then(({ VoiceService }) => {
+          VoiceService.playEffect('/mp3/tibetanbell.mp3');
+        });
+        sessionStorage.setItem(celebKey, 'true');
+      }
+    }
+  }, [allDone, userId]);
+
   const learnStatus = resolveStatus(learnDone, !learnDone);
   const practiceStatus = resolveStatus(practiceCompleted, learnDone && !practiceCompleted);
   const reflectStatus = resolveStatus(reflectDone, practiceCompleted && !reflectDone);
@@ -548,22 +562,35 @@ export function TodayPath({
         <AnimatePresence>
           {allDone && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mx-5 mb-5 overflow-hidden"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              className="mx-5 mb-8"
             >
-              <div
-                className="p-4 rounded-2xl text-center space-y-1"
-                style={{
-                  background: color + '10',
-                  border: `1px solid ${color}25`,
-                }}
+              <div 
+                className="p-8 rounded-[32px] bg-gradient-to-br from-[var(--bg-surface-hover)] to-[var(--bg-surface)] border border-[var(--accent-primary)]/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden group"
               >
-                <div className="text-base">🌸</div>
-                <p className="text-[12px] font-serif italic text-[var(--text-secondary)]">
-                  All four steps complete. Your presence is your gift today.
-                </p>
+                {/* Animated Background Glow */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,var(--accent-primary-dim),transparent_70%)] opacity-20 group-hover:opacity-30 transition-opacity duration-1000" />
+                
+                <div className="relative z-10 flex flex-col items-center text-center gap-6">
+                  <div className="w-14 h-14 rounded-full bg-[var(--accent-primary)] flex items-center justify-center shadow-[0_0_30px_var(--accent-primary)]">
+                    <Trophy className="w-7 h-7 text-black" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-[20px] font-serif italic text-[var(--text-primary)] leading-tight">
+                      "All four steps complete. Your presence is your gift today."
+                    </h3>
+                    <p className="text-[10px] font-bold text-[var(--accent-primary)] uppercase tracking-[0.3em]">
+                      Reward: Daily Flow Sync +50
+                    </p>
+                  </div>
+
+                  <div className="px-6 py-2 rounded-full bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 text-[9px] font-bold text-[var(--accent-primary)] uppercase tracking-widest">
+                    Presence Rewarded
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}

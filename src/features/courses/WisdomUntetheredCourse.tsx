@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Clock, Music, Activity, Target } from 'lucide-react';
+import { Sparkles, Youtube, CheckCircle2, Circle, ExternalLink, Music } from 'lucide-react';
 import styles from './CourseTabs.module.css';
 import { cn } from '../../lib/utils';
 import { Chap1Question1 } from './wisdom-untethered/Chap1Question1';
@@ -10,9 +10,6 @@ import { Chap1Question4 } from './wisdom-untethered/Chap1Question4';
 import { Chap1Question5 } from './wisdom-untethered/Chap1Question5';
 import { Chap1Question6 } from './wisdom-untethered/Chap1Question6';
 import { Chap1Question7 } from './wisdom-untethered/Chap1Question7';
-import { ThoughtJournal } from './wisdom-untethered/components/ThoughtJournal';
-import { CostValueAnalysis } from '../practices/CostValueAnalysis';
-import { DailyPracticeCard } from '../practices/DailyPracticeCard';
 import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
 import { useAuth } from '../auth/AuthContext';
 import { ScrollNavigator } from '../../components/ui/ScrollNavigator';
@@ -151,75 +148,6 @@ function VideoPlayerView({ videoId }: { videoId: string | null }) {
   );
 }
 
-const QUESTION_THEMES: Record<string, string> = {
-  'question1': 'rgba(56, 189, 248, 0.05)', 
-  'question2': 'rgba(168, 85, 247, 0.05)', 
-  'question3': 'rgba(16, 185, 129, 0.05)', 
-  'question4': 'rgba(184, 151, 58, 0.12)',  
-  'question5': 'rgba(255, 255, 255, 0.05)', 
-  'question6': 'rgba(184, 151, 58, 0.08)',
-  'question7': 'rgba(20, 184, 166, 0.05)',
-};
-
-type PracticeType = 'example' | 'journal' | 'analysis' | 'daily';
-
-interface PracticeItem {
-  id: PracticeType;
-  title: string;
-  subtitle: string;
-  description: string;
-  icon: React.ReactNode;
-}
-
-const COMMON_PRACTICES: PracticeItem[] = [
-  {
-    id: 'example',
-    title: 'Lesson Examples',
-    subtitle: 'Practice 01',
-    description: 'Explore how these insights apply to real-world social friction and mental noise.',
-    icon: <Sparkles size={120} />
-  },
-  {
-    id: 'journal',
-    title: 'Thought Journal',
-    subtitle: 'Practice 02',
-    description: 'Record your stream-of-consciousness and classify your internal noise.',
-    icon: <Clock size={120} />
-  },
-  {
-    id: 'daily',
-    title: 'Daily Practice',
-    subtitle: 'Practice 03',
-    description: 'Targeted interactive training to anchor the insight in your body.',
-    icon: <Activity size={120} />
-  }
-];
-
-const QUESTION_PRACTICES: Record<string, PracticeItem[]> = {
-  'question1': COMMON_PRACTICES,
-  'question2': COMMON_PRACTICES,
-  'question3': COMMON_PRACTICES,
-  'question4': [
-    ...COMMON_PRACTICES.filter(p => p.id !== 'daily'),
-    {
-      id: 'analysis',
-      title: 'Cost-Value Analysis',
-      subtitle: 'Practice 03',
-      description: 'Witnessing how the mind spends your most precious currency: your aliveness.',
-      icon: <Activity size={120} />
-    },
-    {
-      id: 'daily',
-      title: 'Daily Practice',
-      subtitle: 'Practice 04',
-      description: 'Targeted interactive training to anchor the insight in your body.',
-      icon: <Target size={120} />
-    }
-  ],
-  'question5': COMMON_PRACTICES,
-  'question6': COMMON_PRACTICES,
-  'question7': COMMON_PRACTICES,
-};
 
 export function WisdomUntetheredCourse({
   activeQuestionId,
@@ -232,12 +160,6 @@ export function WisdomUntetheredCourse({
   const activeChapter = useMemo(() => CHAPTERS[0], []);
   const { user: currentUser } = useAuth();
   const { progress = {}, updateProgress } = useCourseTracking(currentUser?.uid);
-  const [selectedPractice, setSelectedPractice] = useState<PracticeType | null>(null);
-
-  // Reset selection when question changes
-  useEffect(() => {
-    setSelectedPractice(null);
-  }, [activeQuestionId]);
 
   // Auto-mark video or musical teaching as watched when tab is selected
   useEffect(() => {
@@ -281,7 +203,6 @@ export function WisdomUntetheredCourse({
       {/* ── Top Navigation Bar ── */}
       <header 
         className={styles.topBar}
-        style={{ backgroundColor: QUESTION_THEMES[activeQuestionId] || 'var(--bg-surface)' }}
       >
         <div className="flex items-center gap-6">
           {/* Return button removed to streamline UI */}
@@ -292,8 +213,11 @@ export function WisdomUntetheredCourse({
             <button
               key={tab.id}
               onClick={() => {
-                setViewMode(tab.id);
-                if (tab.id === 'practice') setSelectedPractice(null);
+                if (tab.id === 'practice') {
+                  _onNavigateToPractice?.();
+                } else {
+                  setViewMode(tab.id);
+                }
               }}
               className={cn(
                 styles.tab,
@@ -356,78 +280,6 @@ export function WisdomUntetheredCourse({
               {activeQuestionId === 'question5' && <Chap1Question5 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question6' && <Chap1Question6 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question7' && <Chap1Question7 onOpenJournal={onOpenJournal} />}
-            </motion.div>
-          )}
-
-          {/* PRACTICE VIEW */}
-          {viewMode === 'practice' && (
-            <motion.div
-              key={`prac-${activeQuestionId}`}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              className="w-full h-[calc(100vh-56px)] overflow-hidden bg-[var(--bg-main)]"
-            >
-              {!selectedPractice ? (
-                <div className="h-full flex flex-col items-center justify-center p-8 space-y-12 overflow-y-auto no-scrollbar">
-                  <div className="text-center space-y-4 pt-12">
-                    <h3 className="text-4xl font-serif font-light text-[var(--text-primary)]">Sacred Practices</h3>
-                    <p className="text-sm text-[var(--text-secondary)] italic font-serif">Deepen your presence through targeted reflection.</p>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl pb-12">
-                    {(QUESTION_PRACTICES[activeQuestionId] || COMMON_PRACTICES).map((practice) => (
-                      <button 
-                        key={practice.id}
-                        onClick={() => setSelectedPractice(practice.id)}
-                        className="group relative p-10 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)] transition-all duration-300 overflow-hidden text-left"
-                      >
-                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                          {practice.icon}
-                        </div>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-primary)] mb-4 block">{practice.subtitle}</span>
-                        <h4 className="text-2xl font-serif font-light mb-4 group-hover:translate-x-1 transition-transform">{practice.title}</h4>
-                        <p className="text-sm text-[var(--text-secondary)] leading-relaxed opacity-70">
-                          {practice.description}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : selectedPractice === 'analysis' ? (
-                <div className="h-full overflow-y-auto custom-scrollbar p-12">
-                  <div className="max-w-5xl mx-auto space-y-8">
-                    <button 
-                      onClick={() => setSelectedPractice(null)}
-                      className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-2"
-                    >
-                      ← Back to Practices
-                    </button>
-                    <CostValueAnalysis />
-                  </div>
-                </div>
-              ) : selectedPractice === 'daily' ? (
-                <div className="h-full overflow-y-auto no-scrollbar p-12">
-                  <div className="max-w-2xl mx-auto space-y-8">
-                    <button 
-                      onClick={() => setSelectedPractice(null)}
-                      className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-2"
-                    >
-                      ← Back to Practices
-                    </button>
-                    <DailyPracticeCard 
-                      questionId={activeQuestionId} 
-                      userId={currentUser?.uid} 
-                    />
-                  </div>
-                </div>
-              ) : (
-                <ThoughtJournal 
-                  inline 
-                  defaultTab={selectedPractice === 'example' ? 'example' : 'journal'} 
-                  onClose={() => setSelectedPractice(null)} 
-                />
-              )}
             </motion.div>
           )}
 

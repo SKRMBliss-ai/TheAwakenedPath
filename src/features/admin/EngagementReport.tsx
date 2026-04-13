@@ -51,12 +51,17 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                 ...doc.data()
             }));
 
-            // For each blast, get open counts
+            // For each blast, get open counts and who opened
             const enrichedBlasts = await Promise.all(fetchedBlasts.map(async (blast) => {
                 const opensRef = collection(db, 'email_opens');
                 const opensQuery = query(opensRef, where('blastId', '==', blast.id));
                 const opensSnap = await getDocs(opensQuery);
-                return { ...blast, opens: opensSnap.size };
+                const openedBy = opensSnap.docs.map(d => d.data().userEmail).filter(Boolean);
+                return { 
+                    ...blast, 
+                    opens: opensSnap.size,
+                    openedBy: Array.from(new Set(openedBy)) // Unique emails
+                };
             }));
 
             setBlasts(enrichedBlasts);
@@ -71,7 +76,8 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         setIsLoading(true);
         try {
             const usersRef = collection(db, 'users');
-            const q = query(usersRef, orderBy('lastLogin', 'desc'), limit(100));
+            // Remove orderBy to ensure all users show up even if lastLogin is missing
+            const q = query(usersRef, limit(100));
             const snapshot = await getDocs(q);
             
             const fetchedUsers = snapshot.docs.map(doc => ({
@@ -79,7 +85,14 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                 ...doc.data()
             }));
 
-            setUsers(fetchedUsers);
+            // Sort manually in memory to avoid index requirements/document exclusion
+            const sorted = fetchedUsers.sort((a: any, b: any) => {
+                const aTime = a.lastLogin?.toDate ? a.lastLogin.toDate().getTime() : (a.lastLogin ? new Date(a.lastLogin).getTime() : 0);
+                const bTime = b.lastLogin?.toDate ? b.lastLogin.toDate().getTime() : (b.lastLogin ? new Date(b.lastLogin).getTime() : 0);
+                return bTime - aTime;
+            });
+
+            setUsers(sorted);
         } catch (error) {
             console.error("Error fetching admin users:", error);
         } finally {
@@ -547,9 +560,21 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         {blast.totalRecipients}
                                                     </div>
 
-                                                    <div className="flex flex-col items-center">
+                                                    <div className="flex flex-col items-center relative">
                                                         <span className="text-[13px] font-bold text-[var(--accent-primary)]">{blast.opens}</span>
                                                         <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest">{openRate}% rate</span>
+                                                        
+                                                        {/* Hover Details for Openers */}
+                                                        {blast.openedBy?.length > 0 && (
+                                                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                                                <p className="text-[8px] font-bold text-[var(--accent-primary)] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left">Opened By:</p>
+                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left">
+                                                                    {blast.openedBy.map((email: string) => (
+                                                                        <div key={email} className="text-[10px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     <div className="flex justify-end">
