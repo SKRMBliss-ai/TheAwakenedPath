@@ -36,7 +36,7 @@ const MusicCard = ({
     if (isPlaying) {
       VoiceService.pause();
     } else if (isActive && status === 'paused') {
-      VoiceService.resume();
+      VoiceService.resume('music');
     } else {
       VoiceService.playAudioURL(track.previewUrl);
     }
@@ -159,7 +159,7 @@ export const MusicHub = () => {
   const [activeMood, setActiveMood] = useState<string | null>(null);
   const { profile } = useAuth();
   const { checkOut, isProcessing: isCheckoutProcessing } = useRazorpay();
-  const status = useVoiceStatus(); 
+  const { status } = useVoiceStatus(); 
   const [activeTrackUrl, setActiveTrackUrl] = useState<string | null>(null);
   const [localOwned, setLocalOwned] = useState<string[]>([]);
   

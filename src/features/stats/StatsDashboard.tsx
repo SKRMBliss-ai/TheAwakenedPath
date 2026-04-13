@@ -157,7 +157,7 @@ interface StatsDashboardProps {
                             source: 'practice',
                             date,
                             questionId: qid
-                        })).filter(r => r.completed);
+                        })).filter(r => r.completed || r.reflectCompleted || r.learnCompleted || r.integrateCompleted);
                     
                     // If situational practice was done, add a synthetic entry to ensure this day reflects activity
                     if (data.anySituationalDone === true) {

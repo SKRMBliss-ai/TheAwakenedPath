@@ -300,7 +300,12 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
         if (result && typeof result === 'object' && 'key' in result) {
           const { key, data } = result as { key: string; data: any };
           if (data) {
-            const practiced = Object.values(data).some((r: any) => r?.completed === true);
+            const practiced = Object.values(data).some((r: any) => 
+              r?.completed === true || 
+              r?.reflectCompleted === true || 
+              r?.learnCompleted === true || 
+              r?.integrateCompleted === true
+            );
             weekMap[key] = practiced;
           } else {
             weekMap[key] = false;

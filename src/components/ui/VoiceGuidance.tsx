@@ -153,9 +153,9 @@ export const VoiceGuidance = ({
   isAccessValid?: boolean;
   assignment?: any;
 }) => {
-  const status = useVoiceStatus();
-  const isSpeaking = status === 'playing';
-  const isPaused = status === 'paused';
+  const { status, category } = useVoiceStatus();
+  const isSpeaking = status === 'playing' && category === 'tts';
+  const isPaused = status === 'paused' && category === 'tts';
   const [showFull, setShowFull] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
 
@@ -304,7 +304,7 @@ export const VoiceGuidance = ({
                   >
                     <div className="flex gap-2">
                       <button
-                        onClick={() => isPaused ? VoiceService.resume() : VoiceService.pause()}
+                        onClick={() => isPaused ? VoiceService.resume('tts') : VoiceService.pause()}
                         className="flex-1 py-3 px-4 rounded-xl bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] font-bold text-[11px] uppercase tracking-[0.1em] flex items-center justify-center gap-2 transition-all hover:bg-[var(--accent-primary)]/20 shadow-lg shadow-[var(--accent-primary)]/10"
                       >
                         {isPaused ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}

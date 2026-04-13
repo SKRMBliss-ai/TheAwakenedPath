@@ -144,8 +144,9 @@ export function useDailyPractice(
   }, [write]);
 
   const markReflect = useCallback(async () => {
+    console.log('[useDailyPractice] marking reflex done for:', questionId, 'on', dateStr);
     await write({ reflectCompleted: true });
-  }, [write]);
+  }, [write, questionId, dateStr]);
 
   const markIntegrate = useCallback(async () => {
     await write({ integrateCompleted: true });

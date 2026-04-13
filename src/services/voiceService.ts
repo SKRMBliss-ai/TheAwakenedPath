@@ -9,11 +9,15 @@ import { useState, useEffect } from 'react';
 const API_BASE_URL = "/api/voice";
 
 export class VoiceService {
-    private static currentAudio: HTMLAudioElement | null = null;
+    private static ttsAudio: HTMLAudioElement | null = null;
+    private static musicAudio: HTMLAudioElement | null = null;
     private static _currentUrl: string | null = null;
     private static currentRequestId: number = 0;
-    private static listeners: ((status: 'idle' | 'playing' | 'paused' | 'buffering') => void)[] = [];
+    private static listeners: ((status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null) => void)[] = [];
     private static _status: 'idle' | 'playing' | 'paused' | 'buffering' = 'idle';
+    private static _activeCategory: 'tts' | 'music' | null = null;
+    private static _savedTtsTime: number = 0;
+    private static _savedMusicTime: number = 0;
     private static _isEnabled: boolean = (() => {
         try {
             // Sync with usePersistedState key used in app
@@ -42,9 +46,13 @@ export class VoiceService {
         return this._status === 'playing';
     }
 
+    static get activeCategory() {
+        return this._activeCategory;
+    }
+
     private static setStatus(val: 'idle' | 'playing' | 'paused' | 'buffering') {
         this._status = val;
-        this.listeners.forEach(l => l(val));
+        this.listeners.forEach(l => l(val, this._activeCategory));
     }
 
     static get isEnabled() {
@@ -59,7 +67,7 @@ export class VoiceService {
         if (!val) this.stop();
     }
 
-    static subscribe(listener: (status: 'idle' | 'playing' | 'paused' | 'buffering') => void) {
+    static subscribe(listener: (status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null) => void) {
         this.listeners.push(listener);
         return () => {
             this.listeners = this.listeners.filter(l => l !== listener);
@@ -130,8 +138,17 @@ export class VoiceService {
         
         if (!options.isInternal) {
             console.log(`[VoiceService] speak requestId: ${requestId}, key: ${key}`);
-            this.stop();
+            
+            // Pause music if talking
+            if (this.musicAudio && !this.musicAudio.paused) {
+                this._savedMusicTime = this.musicAudio.currentTime;
+                this.musicAudio.pause();
+            }
+
+            // Stop current TTS segments
+            this.stopTTS();
             this.currentRequestId = requestId;
+            this._activeCategory = 'tts';
         }
 
         try {
@@ -149,28 +166,37 @@ export class VoiceService {
 
             console.log(`[VoiceService] playing blob: ${audioUrl.substring(0, 30)}... for key: ${key}`);
             const audio = new Audio(audioUrl);
-            this.currentAudio = audio;
+            this.ttsAudio = audio;
             this._currentUrl = "tts_blob";
 
             audio.onplay = () => {
-                if (this.currentAudio === audio) this.setStatus('playing');
+                if (this.ttsAudio === audio) {
+                    this._activeCategory = 'tts';
+                    this.setStatus('playing');
+                }
             };
 
             audio.onended = () => {
-                if (options.isInternal) {
-                    // Internal calls don't set status to idle immediately 
-                    // unless it's the last segment (handled by speakSegments)
-                } else {
+                if (!options.isInternal) {
                     this.setStatus('idle');
+                    this._activeCategory = null;
+                    this.ttsAudio = null;
+                    this._currentUrl = null;
+                    
+                    // Auto-resume music if it was paused for guidance
+                    if (this.musicAudio && this._savedMusicTime > 0) {
+                        this.resume('music');
+                    }
                 }
                 options.onEnd?.();
-                this.currentAudio = null;
-                this._currentUrl = null;
             };
 
             await audio.play();
         } catch (error: any) {
-            if (!options.isInternal) this.setStatus('idle');
+            if (!options.isInternal) {
+                this.setStatus('idle');
+                this._activeCategory = null;
+            }
             if (error.name === 'AbortError') return;
             console.warn("Falling back to browser TTS", error);
             this.speakFallbackBrowser(text, options);
@@ -179,8 +205,16 @@ export class VoiceService {
 
     private static async speakSegments(segments: string[], options: any): Promise<void> {
         const requestId = ++this.currentRequestId;
-        this.stop();
+        
+        // Pause music if talking
+        if (this.musicAudio && !this.musicAudio.paused) {
+            this._savedMusicTime = this.musicAudio.currentTime;
+            this.musicAudio.pause();
+        }
+
+        this.stopTTS();
         this.currentRequestId = requestId;
+        this._activeCategory = 'tts';
 
         // Preload all segments in background
         segments.forEach(s => this.preloadText(s, options));
@@ -211,6 +245,11 @@ export class VoiceService {
         
         if (this.currentRequestId === requestId) {
             this.setStatus('idle');
+            this._activeCategory = null;
+            // Auto-resume music?
+            if (this.musicAudio && this._savedMusicTime > 0) {
+                this.resume('music');
+            }
         }
     }
 
@@ -218,45 +257,53 @@ export class VoiceService {
      * Plays a direct audio URL (e.g., local MP3) instead of generating TTS.
      */
     static async playAudioURL(url: string, onEnd?: () => void): Promise<void> {
-        if (this._currentUrl === url && this.currentAudio && !this.currentAudio.paused) {
+        if (this._currentUrl === url && this.musicAudio && !this.musicAudio.paused) {
             console.log("VoiceService: Already playing URL.");
             return;
         }
 
+        // Pause TTS if starting music
+        if (this.ttsAudio && !this.ttsAudio.paused) {
+            this._savedTtsTime = this.ttsAudio.currentTime;
+            this.ttsAudio.pause();
+        }
+
         const requestId = ++this.currentRequestId;
         console.log(`VoiceService [${requestId}]: Triggering playback for:`, url);
-        this.stop();
+        
+        // Stop previous music, don't stop TTS
+        if (this.musicAudio) {
+            this.musicAudio.pause();
+            this.musicAudio = null;
+        }
+
         this.currentRequestId = requestId;
 
         try {
-            // Use constructor directly for better browser compatibility
             const audio = new Audio(url);
             audio.preload = "auto";
 
-            this.currentAudio = audio;
+            this.musicAudio = audio;
             this._currentUrl = url;
+            this._activeCategory = 'music';
             this.setStatus('playing');
 
             audio.onended = () => {
                 this.setStatus('idle');
+                this._activeCategory = null;
                 onEnd?.();
-                this.currentAudio = null;
+                this.musicAudio = null;
                 this._currentUrl = null;
+                
+                // Maybe resume TTS? Let's not auto-resume TTS after music, 
+                // but music after TTS is often desired for background.
             };
 
             audio.onerror = (e: any) => {
                 const mediaError = (e.target as HTMLAudioElement).error;
-                console.error("VoiceService Error:", {
-                    url,
-                    code: mediaError?.code,
-                    message: mediaError?.message
-                });
-                console.error("VoiceService Error:", {
-                    url,
-                    code: mediaError?.code,
-                    message: mediaError?.message
-                });
+                console.error("VoiceService Error:", { url, code: mediaError?.code, message: mediaError?.message });
                 this.setStatus('idle');
+                this._activeCategory = null;
             };
 
             const playPromise = audio.play();
@@ -264,12 +311,10 @@ export class VoiceService {
                 await playPromise;
             }
         } catch (error: any) {
-            if (error.name === 'AbortError') {
-                console.warn("VoiceService: Playback interrupted.");
-                return;
-            }
+            if (error.name === 'AbortError') return;
             console.error("VoiceService: Playback failed:", error);
             this.setStatus('idle');
+            this._activeCategory = null;
         }
     }
 
@@ -291,36 +336,67 @@ export class VoiceService {
         window.speechSynthesis.speak(utterance);
     }
 
-    private static savedTime: number = 0;
 
     static pause() {
         this.setStatus('paused');
-        if (this.currentAudio) {
-            this.savedTime = this.currentAudio.currentTime;
-            this.currentAudio.pause();
+        if (this.ttsAudio && !this.ttsAudio.paused) {
+            this._savedTtsTime = this.ttsAudio.currentTime;
+            this.ttsAudio.pause();
+        }
+        if (this.musicAudio && !this.musicAudio.paused) {
+            this._savedMusicTime = this.musicAudio.currentTime;
+            this.musicAudio.pause();
         }
         if (typeof window !== 'undefined' && window.speechSynthesis) {
             window.speechSynthesis.pause();
         }
     }
 
-    static resume() {
+    static resume(category?: 'tts' | 'music') {
         if (!this._isEnabled) return;
         
-        if (this.currentAudio) {
-            this.setStatus('playing');
-            try {
-                if (this.savedTime > 0 && this.currentAudio.readyState >= 1) {
-                    this.currentAudio.currentTime = this.savedTime;
-                }
-            } catch (err) {
-                console.warn("Could not set audio currentTime", err);
-            } finally {
-                this.savedTime = 0;
+        const target = category || this._activeCategory || 'tts';
+        console.log(`[VoiceService] Resuming: ${target}`);
+
+        if (target === 'tts' && this.ttsAudio) {
+            // Pause music if resuming guidance
+            if (this.musicAudio && !this.musicAudio.paused) {
+                this._savedMusicTime = this.musicAudio.currentTime;
+                this.musicAudio.pause();
             }
-            this.currentAudio.play().catch(e => console.error("Resume failed", e));
+            this._activeCategory = 'tts';
+            this.setStatus('playing');
+            this._currentUrl = 'tts_blob';
+            
+            if (this._savedTtsTime > 0) {
+                try {
+                    this.ttsAudio.currentTime = this._savedTtsTime;
+                } catch (e) {}
+                this._savedTtsTime = 0;
+            }
+            
+            this.ttsAudio.play().catch(e => console.error("TTS Resume failed", e));
+        } else if (target === 'music' && this.musicAudio) {
+            // Pause TTS if resuming music
+            if (this.ttsAudio && !this.ttsAudio.paused) {
+                this._savedTtsTime = this.ttsAudio.currentTime;
+                this.ttsAudio.pause();
+            }
+            this._activeCategory = 'music';
+            this.setStatus('playing');
+            this._currentUrl = this.musicAudio.src; // Restore correct URL
+            
+            if (this._savedMusicTime > 0) {
+                try {
+                    this.musicAudio.currentTime = this._savedMusicTime;
+                } catch (e) {}
+                this._savedMusicTime = 0;
+            }
+            
+            this.musicAudio.play().catch(e => console.error("Music Resume failed", e));
         }
-        if (typeof window !== 'undefined' && window.speechSynthesis) {
+
+        if (typeof window !== 'undefined' && window.speechSynthesis && target === 'tts') {
             window.speechSynthesis.resume();
         }
     }
@@ -328,26 +404,43 @@ export class VoiceService {
     static stop() {
         this.currentRequestId++; // Invalidate any in-flight requests
         this.setStatus('idle');
-        this.savedTime = 0;
-        if (this.currentAudio) {
-            try {
-                this.currentAudio.pause();
-                this.currentAudio.currentTime = 0;
-                this.currentAudio.removeAttribute('src');
-                this.currentAudio.load();
-            } catch (e) {
-                console.warn("Error stopping audio:", e);
-            }
-            this.currentAudio = null;
+        this.stopTTS();
+        this.stopMusic();
+        this._activeCategory = null;
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
         }
-        this._currentUrl = null;
+    }
+
+    private static stopTTS() {
+        if (this.ttsAudio) {
+            try {
+                this.ttsAudio.pause();
+                this.ttsAudio.currentTime = 0;
+                this.ttsAudio.removeAttribute('src');
+                this.ttsAudio.load();
+            } catch (e) {}
+            this.ttsAudio = null;
+        }
+        this._savedTtsTime = 0;
         if (this.segmentResolver) {
             this.segmentResolver();
             this.segmentResolver = null;
         }
-        if (typeof window !== 'undefined' && window.speechSynthesis) {
-            window.speechSynthesis.cancel();
+    }
+
+    private static stopMusic() {
+        if (this.musicAudio) {
+            try {
+                this.musicAudio.pause();
+                this.musicAudio.currentTime = 0;
+                this.musicAudio.removeAttribute('src');
+                this.musicAudio.load();
+            } catch (e) {}
+            this.musicAudio = null;
         }
+        this._savedMusicTime = 0;
+        this._currentUrl = null;
     }
 
     static init(): Promise<void> {
@@ -373,14 +466,24 @@ export function useVoiceEnabled() {
 }
 
 export function useVoiceStatus() {
-    const [status, setStatus] = useState(VoiceService.status);
+    const [state, setState] = useState({ 
+        status: VoiceService.status, 
+        category: VoiceService.activeCategory 
+    });
+    
     useEffect(() => {
-        return VoiceService.subscribe((val) => setStatus(val));
+        return VoiceService.subscribe((status, category) => {
+            setState({ status, category });
+        });
     }, []);
-    return status;
+    
+    return state;
 }
 
-export function useVoiceActive() {
-    const status = useVoiceStatus();
+export function useVoiceActive(targetCategory?: 'tts' | 'music') {
+    const { status, category } = useVoiceStatus();
+    if (targetCategory) {
+        return status === 'playing' && category === targetCategory;
+    }
     return status === 'playing';
 }
