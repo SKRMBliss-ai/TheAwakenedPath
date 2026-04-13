@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { VoiceService } from '../../services/voiceService';
 
 // Generates procedural binaural beats + atmospheric drone
 export const useGenerativeAudio = () => {
@@ -138,12 +139,26 @@ export const useGenerativeAudio = () => {
             setIsAudioEnabled(false);
         } else {
             // Fade in
+            VoiceService.stop(); // Stop any guidance or music tracks
             ctx.resume().then(() => {
                 gain.setValueAtTime(gain.value, ctx.currentTime);
                 gain.linearRampToValueAtTime(0.3, ctx.currentTime + FADE_TIME); // Cap volume to 30%
                 setIsAudioEnabled(true);
             });
         }
+    }, [isAudioEnabled]);
+
+    const stopAudio = useCallback(() => {
+        if (!isAudioEnabled || !ctxRef.current || !masterGain.current) return;
+        const ctx = ctxRef.current;
+        const gain = masterGain.current.gain;
+        
+        gain.setValueAtTime(gain.value, ctx.currentTime);
+        gain.linearRampToValueAtTime(0, ctx.currentTime + FADE_TIME);
+        setTimeout(() => {
+            if (ctx.state === 'running') ctx.suspend();
+        }, FADE_TIME * 1000 + 100);
+        setIsAudioEnabled(false);
     }, [isAudioEnabled]);
 
     // Expose a method to shift frequencies based on app state
@@ -183,5 +198,5 @@ export const useGenerativeAudio = () => {
 
     }, []);
 
-    return { isAudioEnabled, toggleAudio, setVibrationalState };
+    return { isAudioEnabled, toggleAudio, stopAudio, setVibrationalState };
 };

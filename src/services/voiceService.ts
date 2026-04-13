@@ -10,7 +10,7 @@ const API_BASE_URL = "/api/voice";
 
 export class VoiceService {
     private static currentAudio: HTMLAudioElement | null = null;
-    private static currentUrl: string | null = null;
+    private static _currentUrl: string | null = null;
     private static currentRequestId: number = 0;
     private static listeners: ((status: 'idle' | 'playing' | 'paused' | 'buffering') => void)[] = [];
     private static _status: 'idle' | 'playing' | 'paused' | 'buffering' = 'idle';
@@ -32,6 +32,14 @@ export class VoiceService {
 
     static get status() {
         return this._status;
+    }
+
+    static get currentUrl() {
+        return this._currentUrl;
+    }
+
+    static get isPlaying() {
+        return this._status === 'playing';
     }
 
     private static setStatus(val: 'idle' | 'playing' | 'paused' | 'buffering') {
@@ -142,7 +150,7 @@ export class VoiceService {
             console.log(`[VoiceService] playing blob: ${audioUrl.substring(0, 30)}... for key: ${key}`);
             const audio = new Audio(audioUrl);
             this.currentAudio = audio;
-            this.currentUrl = "tts_blob";
+            this._currentUrl = "tts_blob";
 
             audio.onplay = () => {
                 if (this.currentAudio === audio) this.setStatus('playing');
@@ -157,7 +165,7 @@ export class VoiceService {
                 }
                 options.onEnd?.();
                 this.currentAudio = null;
-                this.currentUrl = null;
+                this._currentUrl = null;
             };
 
             await audio.play();
@@ -210,7 +218,7 @@ export class VoiceService {
      * Plays a direct audio URL (e.g., local MP3) instead of generating TTS.
      */
     static async playAudioURL(url: string, onEnd?: () => void): Promise<void> {
-        if (this.currentUrl === url && this.currentAudio && !this.currentAudio.paused) {
+        if (this._currentUrl === url && this.currentAudio && !this.currentAudio.paused) {
             console.log("VoiceService: Already playing URL.");
             return;
         }
@@ -226,14 +234,14 @@ export class VoiceService {
             audio.preload = "auto";
 
             this.currentAudio = audio;
-            this.currentUrl = url;
+            this._currentUrl = url;
             this.setStatus('playing');
 
             audio.onended = () => {
                 this.setStatus('idle');
                 onEnd?.();
                 this.currentAudio = null;
-                this.currentUrl = null;
+                this._currentUrl = null;
             };
 
             audio.onerror = (e: any) => {
@@ -322,12 +330,17 @@ export class VoiceService {
         this.setStatus('idle');
         this.savedTime = 0;
         if (this.currentAudio) {
-            this.currentAudio.pause();
-            this.currentAudio.removeAttribute('src');
-            this.currentAudio.load();
+            try {
+                this.currentAudio.pause();
+                this.currentAudio.currentTime = 0;
+                this.currentAudio.removeAttribute('src');
+                this.currentAudio.load();
+            } catch (e) {
+                console.warn("Error stopping audio:", e);
+            }
             this.currentAudio = null;
         }
-        this.currentUrl = null;
+        this._currentUrl = null;
         if (this.segmentResolver) {
             this.segmentResolver();
             this.segmentResolver = null;

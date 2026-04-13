@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, Pause, Download, Volume2, MessageSquare, Music, Clock, Heart, Zap, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -7,26 +7,36 @@ import { getRegionalPrice, getWhatsAppLink } from './priceService';
 import { useTheme } from '../../theme/ThemeSystem';
 import { useAuth } from '../auth/AuthContext';
 import { useRazorpay } from '../../hooks/useRazorpay';
+import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import { VoiceGuidance } from '../../components/ui/VoiceGuidance';
 import styles from './MusicHub.module.css';
 
-const MusicCard = ({ track, onDownload, isProcessing }: { track: SacredTrack, onDownload: (t: SacredTrack) => void, isProcessing: boolean }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+const MusicCard = ({ 
+  track, 
+  onDownload, 
+  isProcessing, 
+  isActive, 
+  status 
+}: { 
+  track: SacredTrack, 
+  onDownload: (t: SacredTrack) => void, 
+  isProcessing: boolean,
+  isActive: boolean,
+  status: 'idle' | 'playing' | 'paused' | 'buffering'
+}) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement | null>(null);
-  const isVideo = track.previewUrl.endsWith('.mp4');
+  const isPlaying = isActive && status === 'playing';
   const regionalPrice = getRegionalPrice(track.priceUSD);
   const { mode } = useTheme();
 
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (mediaRef.current) {
-      if (isPlaying) {
-        mediaRef.current.pause();
-      } else {
-        mediaRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
+    if (isPlaying) {
+      VoiceService.pause();
+    } else if (isActive && status === 'paused') {
+      VoiceService.resume();
+    } else {
+      VoiceService.playAudioURL(track.previewUrl);
     }
   };
 
@@ -133,22 +143,7 @@ const MusicCard = ({ track, onDownload, isProcessing }: { track: SacredTrack, on
         </div>
       </motion.div>
 
-      {isVideo ? (
-        <video 
-          ref={mediaRef as React.RefObject<HTMLVideoElement>}
-          src={track.previewUrl}
-          loop
-          className="hidden"
-          playsInline
-        />
-      ) : (
-        <audio 
-          ref={mediaRef as React.RefObject<HTMLAudioElement>}
-          src={track.previewUrl}
-          loop
-          className="hidden"
-        />
-      )}
+      {/* Audio/Video handling is now centralized in VoiceService */}
     </div>
   );
 };
@@ -157,6 +152,19 @@ export const MusicHub = () => {
   const [activeMood, setActiveMood] = useState<string | null>(null);
   const { user } = useAuth();
   const { checkOut, isProcessing } = useRazorpay();
+  const status = useVoiceStatus(); 
+  const [activeTrackUrl, setActiveTrackUrl] = useState<string | null>(null);
+
+  // Sync active track URL with VoiceService
+  useEffect(() => {
+    // Initial sync
+    setActiveTrackUrl(VoiceService.currentUrl);
+    
+    // Subscribe to changes
+    return VoiceService.subscribe(() => {
+      setActiveTrackUrl(VoiceService.currentUrl);
+    });
+  }, []);
 
   const filteredTracks = activeMood 
     ? SACRED_TRACKS.filter(t => t.mood === activeMood)
@@ -230,7 +238,14 @@ export const MusicHub = () => {
       <div className={styles.trackGrid}>
         <AnimatePresence mode='popLayout'>
           {filteredTracks.map(track => (
-            <MusicCard key={track.id} track={track} onDownload={handleDownload} isProcessing={isProcessing} />
+            <MusicCard 
+              key={track.id} 
+              track={track} 
+              onDownload={handleDownload} 
+              isProcessing={isProcessing}
+              isActive={activeTrackUrl === track.previewUrl}
+              status={status}
+            />
           ))}
         </AnimatePresence>
       </div>

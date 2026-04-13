@@ -623,7 +623,6 @@ export const SituationalPractices: React.FC<{
     const [activeDuration, setActiveDuration] = useState(0);
     const [showFAQ, setShowFAQ] = useState(false);
     const [showChallenges, setShowChallenges] = useState(false);
-    const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
     const filtered = useMemo(() => {
         return SITUATIONS.filter(s => {
@@ -655,22 +654,11 @@ export const SituationalPractices: React.FC<{
     useEffect(() => {
         if (isPracticing && selectedSituation && !isPaused) {
             if (selectedSituation.audioFile) {
-                if (!audioRef.current) {
-                    audioRef.current = new Audio(selectedSituation.audioFile);
-                    audioRef.current.onended = handleNextStep;
-                }
-                audioRef.current.play().catch(console.warn);
+                VoiceService.playAudioURL(selectedSituation.audioFile, handleNextStep);
             } else {
                 speak(selectedSituation.steps[currentStep].audioScript, handleNextStep);
             }
         } else {
-            if (audioRef.current) {
-                audioRef.current.pause();
-                if (!isPracticing) {
-                    audioRef.current.currentTime = 0;
-                    audioRef.current = null;
-                }
-            }
             if (!showLogEntry) VoiceService.stop();
         }
     }, [currentStep, isPracticing, selectedSituation, speak, handleNextStep, isPaused, showLogEntry]);

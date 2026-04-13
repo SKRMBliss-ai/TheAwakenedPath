@@ -746,6 +746,17 @@ export default function UntetheredApp() {
     }
   }, [isAccessValid, activeTab, loading]);
 
+  // Anti-Overlap Audio Guard: Stop generative drone if music or guidance starts
+  const { stopAudio } = useGenerativeAudio();
+  useEffect(() => {
+    const unsub = VoiceService.subscribe((status) => {
+      if (status === 'playing' || status === 'buffering') {
+        stopAudio();
+      }
+    });
+    return unsub;
+  }, [stopAudio]);
+
   // Persist Navigation State
   useEffect(() => {
     localStorage.setItem('awakened-path-active-tab', activeTab);

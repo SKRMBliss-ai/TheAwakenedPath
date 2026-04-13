@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Download } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
@@ -112,27 +112,18 @@ const Journal: React.FC = () => {
     const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
     const lastSpokenRef = useRef<string | null>(null);
 
-    const bellRef = useRef<HTMLAudioElement | null>(null);
-
     const assignment = useWeeklyAssignment(user?.metadata?.creationTime);
     const [reflectQId, setReflectQId] = useState<string | null>(null);
 
-    // If reflectQId is null (user navigated manually), we fallback to the current weekly question 
-    // to ensure the dashboard can still be marked done if they are working on the current week.
-    const effectiveQId = reflectQId || assignment?.questionId || 'question1';
+    // Determine the question ID to credit this reflection to
+    const effectiveQId = useMemo(() => {
+        return reflectQId || assignment?.questionId || 'question1';
+    }, [reflectQId, assignment?.questionId]);
 
     const { markReflect } = useDailyPractice(user?.uid, effectiveQId);
 
-    useEffect(() => {
-        bellRef.current = new Audio('/mp3/tibetanbell.mp3');
-        bellRef.current.preload = 'auto';
-    }, []);
-
     const playBell = useCallback(() => {
-        if (bellRef.current) {
-            bellRef.current.currentTime = 0;
-            bellRef.current.play().catch(e => console.log('Bell play failed', e));
-        }
+        VoiceService.playAudioURL('/mp3/tibetanbell.mp3');
     }, []);
 
     // Magnetic orb tilt
@@ -527,6 +518,7 @@ const Journal: React.FC = () => {
                                         if (effectiveQId) {
                                             console.log('[Journal] Marking reflection done for:', effectiveQId);
                                             await markReflect();
+                                            // Clear the local override after successful save
                                             setReflectQId(null);
                                             localStorage.removeItem('awakened-reflect-question-id');
                                         }

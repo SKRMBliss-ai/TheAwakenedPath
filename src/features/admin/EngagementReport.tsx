@@ -376,7 +376,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <div>User</div>
                                     <div>Email</div>
                                     <div>Joined</div>
-                                    <div>Last Presence</div>
+                                    <div>Last Presence / Login</div>
                                     <div className="text-right">
                                         <button onClick={fetchUsers} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
                                             <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
@@ -417,11 +417,14 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         <div className="text-[12px] text-[var(--text-secondary)] truncate">{u.email}</div>
                                                         <div className="text-[12px] text-[var(--text-muted)]">{joinedDate}</div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-[12px] text-[var(--text-secondary)]">{loginDate}</span>
+                                                            <span className="text-[12px] text-[var(--text-secondary)]">{loginDate || 'Never'}</span>
                                                             <span className="text-[10px] font-bold text-[var(--accent-primary)]">{loginTime}</span>
                                                         </div>
 
-                                                        <div className="flex justify-end">
+                                                        <div className="flex justify-end items-center gap-2">
+                                                            {u.lastLogin && (
+                                                                <span className="text-[8px] font-black tracking-tighter text-[var(--accent-primary)] opacity-40 uppercase">Logged</span>
+                                                            )}
                                                             <div className={cn(
                                                                 "w-2 h-2 rounded-full",
                                                                 u.lastLogin ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" : "bg-neutral-800"
