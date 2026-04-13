@@ -134,7 +134,6 @@ const MusicCard = ({ track, onDownload, isProcessing }: { track: SacredTrack, on
         <video 
           ref={mediaRef as React.RefObject<HTMLVideoElement>}
           src={track.previewUrl}
-          onEnded={() => setIsPlaying(false)}
           loop
           className="hidden"
           playsInline
@@ -143,7 +142,6 @@ const MusicCard = ({ track, onDownload, isProcessing }: { track: SacredTrack, on
         <audio 
           ref={mediaRef as React.RefObject<HTMLAudioElement>}
           src={track.previewUrl}
-          onEnded={() => setIsPlaying(false)}
           loop
           className="hidden"
         />
