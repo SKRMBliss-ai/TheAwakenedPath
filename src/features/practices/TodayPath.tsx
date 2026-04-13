@@ -325,11 +325,16 @@ export function TodayPath({
   const color = practice?.color ?? '#B8973A';
   const requiredTriggers = questionId === 'question3' ? 3 : 1;
 
-  const { isCompleted: practiceCompleted, record, markLearn, markIntegrate } = useDailyPractice(
-    userId, questionId, requiredTriggers
-  );
+  const { 
+    isAnyPracticeDone,
+    record, 
+    markLearn, 
+    markIntegrate 
+  } = useDailyPractice(userId, questionId, requiredTriggers);
+
   const [showCommitment, setShowCommitment] = useState(false);
 
+  const practiceCompleted = isAnyPracticeDone;
   const learnDone       = record?.learnCompleted === true;
   const reflectDone     = record?.reflectCompleted === true;
   const integrateDone   = record?.integrateCompleted === true;

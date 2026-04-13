@@ -9,7 +9,7 @@
 // Usage:
 //   const { record, markDone, markTrigger, isLoading } = useDailyPractice(uid, 'question3');
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { doc, onSnapshot, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
 
@@ -25,22 +25,19 @@ export interface PracticeRecord {
   learnCompleted?: boolean;    // for the 'Learn' step
   reflectCompleted?: boolean;  // for the 'Reflect' step
   integrateCompleted?: boolean; // for the 'Integrate' step
+  anySituationalDone?: boolean; // NEW: global flag for the day
 }
 
 export interface UseDailyPracticeReturn {
-  record: PracticeRecord | null;
+  record: (PracticeRecord & { anySituationalDone?: boolean }) | null;
   isLoading: boolean;
-  isCompleted: boolean;
+  isCompleted: boolean;         // is the CURRENT question completed
+  isAnyPracticeDone: boolean;   // is ANY wisdom or situational practice done
   triggersCompleted: number;
-  // Mark the whole practice as done (Q1, Q2, Q4)
   markDone: () => Promise<void>;
-  // Increment trigger count (Q3 — called once per pause moment)
   markTrigger: () => Promise<void>;
-  // Unmark — allows toggling off if user tapped by mistake
   markUndone: () => Promise<void>;
-  // Save a journal note alongside the practice
   saveNote: (note: string) => Promise<void>;
-  // Mark the Learn, Reflect, or Integrate pillars
   markLearn: () => Promise<void>;
   markReflect: () => Promise<void>;
   markIntegrate: () => Promise<void>;
@@ -64,6 +61,7 @@ export function useDailyPractice(
   requiredTriggers = 1   // set to 3 for Q3
 ): UseDailyPracticeReturn {
   const [record, setRecord] = useState<PracticeRecord | null>(null);
+  const [rawSnapshot, setRawSnapshot] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const dateStr = todayString();
@@ -82,10 +80,13 @@ export function useDailyPractice(
       (snap) => {
         if (snap.exists()) {
           const data = snap.data();
+          setRawSnapshot(data);
           // Each questionId is a field on the date document
           const qRecord = data[questionId] as PracticeRecord | undefined;
-          setRecord(qRecord ?? null);
+          const anySituational = data.anySituationalDone === true;
+          setRecord(qRecord ? { ...qRecord, anySituationalDone: anySituational } : (anySituational ? { anySituationalDone: anySituational } as PracticeRecord : null));
         } else {
+          setRawSnapshot(null);
           setRecord(null);
         }
         setIsLoading(false);
@@ -151,14 +152,22 @@ export function useDailyPractice(
   }, [write]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
-
   const isCompleted = record?.completed === true;
   const triggersCompleted = record?.triggersCompleted ?? 0;
+
+  const isAnyPracticeDone = useMemo(() => {
+    if (!rawSnapshot) return false;
+    if (rawSnapshot.anySituationalDone === true) return true;
+    
+    // Check all nested question fields for a 'completed: true' flag
+    return Object.values(rawSnapshot).some((val: any) => val?.completed === true);
+  }, [rawSnapshot]);
 
   return {
     record,
     isLoading,
     isCompleted,
+    isAnyPracticeDone,
     triggersCompleted,
     markDone,
     markTrigger,

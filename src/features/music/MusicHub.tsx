@@ -239,7 +239,7 @@ export const MusicHub = () => {
         <div className={styles.customRequest}>
           <Sparkles className={styles.footerIcon} />
           <h3>Need a Longer Session?</h3>
-          <p>We can generate extended versions (1h, 3h, or 10h) of any track for your deep meditation or sleep.</p>
+          <p>We can create extended versions (1h, 3h, or 10h) of any track for your deep meditation or sleep.</p>
           <a 
             href={getWhatsAppLink('Sacred Sounds Custom', '3')}
             target="_blank"

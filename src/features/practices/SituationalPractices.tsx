@@ -713,6 +713,11 @@ export const SituationalPractices: React.FC<{
                 date: new Date().toLocaleDateString(),
                 createdAt: serverTimestamp()
             });
+
+            // ALSO mark as done for the daily dashboard
+            const dateStr = new Date().toISOString().split('T')[0];
+            const dailyRef = doc(db, 'users', user.uid, 'dailyPractices', dateStr);
+            await setDoc(dailyRef, { anySituationalDone: true }, { merge: true });
             
             // Award points for completing practice
             await awardEvent('practice_session');
@@ -1105,6 +1110,7 @@ export const SituationalPractices: React.FC<{
                 <div className="space-y-12">
                     <WisdomPracticeSection 
                         userId={user?.uid} 
+                        activeQuestionId={activeQuestionId}
                         onStart={(id) => {
                             onQuestionSelect?.(id);
                             localStorage.setItem('awakened-path-active-question', id);

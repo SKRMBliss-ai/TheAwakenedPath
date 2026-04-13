@@ -150,12 +150,20 @@ interface StatsDashboardProps {
                 ...practicesSnap.docs.flatMap(d => {
                     const data = d.data();
                     const date = d.id; // YYYY-MM-DD
-                    return Object.entries(data).map(([qid, rec]: [string, any]) => ({
-                        ...rec,
-                        source: 'practice',
-                        date,
-                        questionId: qid
-                    })).filter(r => r.completed);
+                    const entries: any[] = Object.entries(data)
+                        .filter(([key]) => key !== 'anySituationalDone')
+                        .map(([qid, rec]: [string, any]) => ({
+                            ...rec,
+                            source: 'practice',
+                            date,
+                            questionId: qid
+                        })).filter(r => r.completed);
+                    
+                    // If situational practice was done, add a synthetic entry to ensure this day reflects activity
+                    if (data.anySituationalDone === true) {
+                        entries.push({ source: 'practice', date, completed: true, type: 'situational' });
+                    }
+                    return entries;
                 })
             ];
 
