@@ -34,6 +34,7 @@ import { VoiceGuidance } from './components/ui/VoiceGuidance';
 import { VoiceService } from './services/voiceService';
 import { usePersistedState } from './hooks/usePersistedState';
 import { useRazorpay } from './hooks/useRazorpay';
+import { MusicHub } from './features/music/MusicHub';
 
 const DashboardActions = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate, onViewProgress }: any) => {
   return (
@@ -1344,6 +1345,42 @@ export default function UntetheredApp() {
                 );
               })}
             </div>
+
+            {/* ── Sanctuary group ── */}
+            <div className="pt-2 pb-0.5">
+              <div className="flex items-center gap-3 px-4 py-[0.5vh] mb-0">
+                <Sparkles
+                  size={14}
+                  className={activeTab === 'music' ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]"}
+                />
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)]">
+                  Sanctuary
+                </span>
+              </div>
+              <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40">
+                <button
+                  onClick={() => onNavigate('music')}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all duration-300 group relative text-left",
+                    activeTab === 'music' ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/40"
+                  )}
+                >
+                  {activeTab === 'music' && (
+                    <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-[var(--accent-primary)]" />
+                  )}
+                  <span className={cn(
+                    "text-[12px] tracking-[0.12em] font-sans transition-colors flex-1 whitespace-nowrap",
+                    activeTab === 'music' ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
+                  )}>
+                    Sacred Sounds
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <div className="text-[7px] border border-[var(--accent-primary)]/40 text-[var(--accent-primary)] px-1 rounded uppercase font-bold tracking-tighter">New</div>
+                    {activeTab === 'music' && <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)]" />}
+                  </div>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* ── Standalone nav items ── */}
@@ -1641,6 +1678,12 @@ export default function UntetheredApp() {
             {activeTab === 'intelligence' && (
               <motion.div key="intelligence" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }}>
                 <CoursesHub onCourseSelect={(id) => { if (id) setActiveTab(id); }} />
+              </motion.div>
+            )}
+
+            {activeTab === 'music' && (
+              <motion.div key="music" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                <MusicHub />
               </motion.div>
             )}
           </AnimatePresence>
