@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BookOpen, Zap, PenLine, CheckCircle2,
-  Calendar, ChevronRight, Lock, Sparkles, Heart,
+  BookOpen, Zap, PenLine, Heart, CheckCircle2,
+  Calendar, ChevronRight, Sparkles, ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -59,101 +59,133 @@ export const QUESTION_META: Record<string, {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step config
+// Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-type StepStatus = 'done' | 'active' | 'locked';
+// done = completed, active = recommended next, next = can do but not yet the focus
+type StepStatus = 'done' | 'active' | 'next';
 
-interface StepConfig {
+interface StepDef {
   num: number;
   label: string;
-  sub: string;
-  subDone: string;
+  noun: string;          // e.g. "today's teaching"
+  doneLine: string;
   icon: LucideIcon;
   status: StepStatus;
-  isAccessValid?: boolean;
   onClick: () => void;
   color: string;
-  practice?: string;
+  hint?: string;         // small italic below label
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Journey Node — the circle on the map path
+// Node — glowing circle with the step number
 // ─────────────────────────────────────────────────────────────────────────────
 
-function JourneyNode({
-  step, status, color, isLast,
-}: { step: number; status: StepStatus; color: string; isLast?: boolean }) {
+function StepNode({
+  num, status, color, isLast,
+}: { num: number; status: StepStatus; color: string; isLast?: boolean }) {
+  const isDone = status === 'done';
+  const isActive = status === 'active';
+
   return (
-    <div className="flex flex-col items-center flex-shrink-0" style={{ width: 48 }}>
-      {/* Circle node */}
+    <div className="flex flex-col items-center flex-shrink-0 select-none" style={{ width: 52 }}>
+      {/* ── Circle ── */}
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.7, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: step * 0.08, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ delay: num * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         className="relative flex items-center justify-center rounded-full z-10"
         style={{
-          width: 44,
-          height: 44,
-          background: status === 'done'
-            ? `linear-gradient(135deg, ${color}, ${color}cc)`
-            : status === 'active'
-              ? `${color}18`
-              : 'var(--bg-surface)',
-          border: `2px solid ${status === 'done' ? color : status === 'active' ? color + '60' : 'var(--border-subtle)'}`,
-          boxShadow: status === 'done'
-            ? `0 0 18px ${color}60, 0 0 6px ${color}40`
-            : status === 'active'
-              ? `0 0 12px ${color}30`
+          width: 48,
+          height: 48,
+          background: isDone
+            ? `linear-gradient(145deg, ${color}ee, ${color}99)`
+            : isActive
+              ? `${color}1a`
+              : 'transparent',
+          border: `2px solid ${isDone ? color : isActive ? color + '80' : 'var(--border-subtle)'}`,
+          boxShadow: isDone
+            ? `0 0 20px ${color}55, 0 2px 8px ${color}33`
+            : isActive
+              ? `0 0 14px ${color}28`
               : 'none',
         }}
       >
-        {status === 'done' && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 }}
+        <AnimatePresence mode="wait">
+          {isDone ? (
+            <motion.div
+              key="check"
+              initial={{ scale: 0, rotate: -30 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+            >
+              <CheckCircle2 size={20} color="white" strokeWidth={2.5} />
+            </motion.div>
+          ) : isActive ? (
+            <motion.div
+              key="pulse"
+              animate={{ scale: [1, 1.22, 1], opacity: [0.9, 1, 0.9] }}
+              transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+              className="w-3 h-3 rounded-full"
+              style={{ background: color }}
+            />
+          ) : (
+            <span key="num" className="text-[13px] font-black" style={{ color: 'var(--text-muted)' }}>
+              {num}
+            </span>
+          )}
+        </AnimatePresence>
+
+        {/* Outer badge for done/active */}
+        {(isDone || isActive) && (
+          <span
+            className="absolute -top-1.5 -right-1.5 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8px] font-black shadow-sm"
+            style={{
+              background: isDone ? color : 'var(--bg-surface)',
+              color: isDone ? 'white' : 'var(--text-muted)',
+              border: `1.5px solid ${isDone ? color + 'bb' : 'var(--border-default)'}`,
+            }}
           >
-            <CheckCircle2 size={18} color="white" strokeWidth={2.5} />
-          </motion.div>
+            {num}
+          </span>
         )}
-        {status === 'locked' && <Lock size={14} style={{ color: 'var(--text-muted)' }} />}
-        {status === 'active' && (
-          <motion.div
-            animate={{ scale: [1, 1.15, 1] }}
-            transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
-            className="w-2.5 h-2.5 rounded-full"
-            style={{ background: color }}
-          />
-        )}
-        {/* Step number badge */}
-        <span
-          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black"
-          style={{
-            background: status === 'done' ? color : 'var(--bg-surface)',
-            color: status === 'done' ? 'white' : 'var(--text-muted)',
-            border: `1.5px solid ${status === 'done' ? color + 'aa' : 'var(--border-subtle)'}`,
-          }}
-        >
-          {step}
-        </span>
       </motion.div>
 
-      {/* Connector trail going down */}
+      {/* ── Connector trail ── */}
       {!isLast && (
-        <div className="relative flex flex-col items-center" style={{ height: 40, width: 2 }}>
+        <div className="relative" style={{ width: 2, height: 38 }}>
+          {/* base track */}
           <div
             className="absolute inset-0 rounded-full"
-            style={{ background: 'var(--border-subtle)', width: 2 }}
+            style={{ background: 'var(--border-subtle)', opacity: 0.7 }}
           />
-          {status === 'done' && (
+          {/* fill that animates when done */}
+          {isDone && (
             <motion.div
-              initial={{ height: 0 }}
+              initial={{ height: '0%' }}
               animate={{ height: '100%' }}
-              transition={{ duration: 0.6, ease: 'easeOut', delay: step * 0.1 + 0.3 }}
-              className="absolute top-0 left-0 rounded-full"
-              style={{ width: 2, background: `linear-gradient(180deg, ${color}, ${color}50)` }}
+              transition={{ duration: 0.55, ease: 'easeOut', delay: num * 0.12 + 0.25 }}
+              className="absolute top-0 left-0 right-0 rounded-full"
+              style={{ background: `linear-gradient(180deg, ${color}dd, ${color}55)` }}
             />
+          )}
+          {/* chevron dots for active/next state */}
+          {!isDone && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-[3px]">
+              {[0, 1, 2].map(i => (
+                <motion.div
+                  key={i}
+                  animate={{
+                    opacity: isActive ? [0.2, 0.8, 0.2] : [0.15, 0.3, 0.15],
+                    y: isActive ? [0, 2, 0] : 0,
+                  }}
+                  transition={{ repeat: Infinity, duration: 1.6, delay: i * 0.2, ease: 'easeInOut' }}
+                  className="w-[3px] h-[3px] rounded-full"
+                  style={{ background: isActive ? color : 'var(--text-muted)' }}
+                />
+              ))}
+            </div>
           )}
         </div>
       )}
@@ -162,47 +194,51 @@ function JourneyNode({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Journey Step Card — the card to the right of each node
+// Step Card — the action card beside each node
 // ─────────────────────────────────────────────────────────────────────────────
 
-function JourneyStep({ cfg }: { cfg: StepConfig }) {
-  const { num, label, sub, subDone, icon: Icon, status, color, isAccessValid, onClick, practice } = cfg;
+function StepCard({ def }: { def: StepDef }) {
+  const { num, label, noun, doneLine, icon: Icon, status, color, onClick, hint } = def;
   const isDone = status === 'done';
-  const isLocked = status === 'locked';
-
-  const badgeText = isDone ? 'Done' : isLocked ? 'Locked' : 'Begin';
-  const badgeBg = isDone ? color + '20' : isLocked ? 'var(--bg-surface)' : color + '25';
-  const badgeColor = isDone ? color : isLocked ? 'var(--text-muted)' : color;
+  const isActive = status === 'active';
+  const isNext = status === 'next';
 
   return (
     <motion.button
-      initial={{ opacity: 0, x: 12 }}
+      initial={{ opacity: 0, x: 16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: num * 0.08 + 0.1, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={!isLocked ? { x: 3, transition: { duration: 0.2 } } : {}}
-      whileTap={!isLocked ? { scale: 0.98 } : {}}
-      onClick={isLocked && !isAccessValid ? undefined : onClick}
-      disabled={isLocked && !isAccessValid}
+      whileHover={!isDone ? { x: 4, transition: { duration: 0.18 } } : {}}
+      whileTap={!isDone ? { scale: 0.97 } : {}}
+      onClick={onClick}
       className={cn(
-        'flex-1 flex items-center gap-3 px-4 py-3.5 rounded-2xl border text-left transition-all duration-300',
+        'flex-1 group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-left transition-all duration-300',
         isDone
-          ? 'border-[var(--border-subtle)] bg-[var(--bg-surface)]/40 opacity-75'
-          : isLocked
-            ? 'border-[var(--border-subtle)] bg-[var(--bg-surface)]/30 cursor-not-allowed'
-            : 'border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--text-secondary)]/30 shadow-sm hover:shadow-md'
+          ? 'border-[var(--border-subtle)] bg-transparent opacity-60'
+          : isActive
+            ? 'border-[var(--border-default)] bg-[var(--bg-surface)] shadow-md hover:shadow-lg'
+            : 'border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 hover:bg-[var(--bg-surface)] hover:border-[var(--border-default)]'
       )}
+      style={
+        isActive
+          ? { borderColor: color + '50', boxShadow: `0 4px 18px ${color}18` }
+          : {}
+      }
     >
-      {/* Icon box */}
+      {/* Icon */}
       <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+        className={cn(
+          'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300',
+          isDone ? 'opacity-50' : ''
+        )}
         style={{
-          background: isLocked ? 'var(--bg-surface)' : color + '18',
-          border: `1.5px solid ${isLocked ? 'var(--border-subtle)' : color + '35'}`,
+          background: isDone ? 'var(--bg-surface)' : isActive ? color + '20' : color + '0d',
+          border: `1.5px solid ${isDone ? 'var(--border-subtle)' : isActive ? color + '55' : color + '25'}`,
         }}
       >
         {isDone
-          ? <CheckCircle2 size={15} style={{ color }} />
-          : <Icon size={15} style={{ color: isLocked ? 'var(--text-muted)' : color }} />
+          ? <CheckCircle2 size={16} style={{ color }} strokeWidth={2} />
+          : <Icon size={16} style={{ color: isNext ? color + '80' : color }} />
         }
       </div>
 
@@ -210,29 +246,41 @@ function JourneyStep({ cfg }: { cfg: StepConfig }) {
       <div className="flex-1 min-w-0">
         <p className={cn(
           'text-[13px] font-semibold leading-tight',
-          isDone ? 'line-through text-[var(--text-muted)] opacity-70' : isLocked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)]'
+          isDone
+            ? 'line-through text-[var(--text-muted)]'
+            : isActive
+              ? 'text-[var(--text-primary)]'
+              : 'text-[var(--text-secondary)]'
         )}>
           {label}
         </p>
-        <p className="text-[10px] text-[var(--text-muted)] mt-0.5 truncate">
-          {isDone ? subDone : sub}
+        <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+          {isDone ? doneLine : noun}
         </p>
-        {practice && !isDone && !isLocked && (
-          <p className="text-[9px] mt-1 font-bold uppercase tracking-wider" style={{ color: color + 'aa' }}>
-            {practice}
+        {hint && !isDone && (
+          <p className="text-[9px] mt-1 font-bold uppercase tracking-wider truncate" style={{ color: color + '90' }}>
+            {hint}
           </p>
         )}
       </div>
 
-      {/* Badge */}
-      <span
-        className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full flex-shrink-0"
-        style={{ background: badgeBg, color: badgeColor }}
-      >
-        {isLocked && !isAccessValid && <Lock size={8} />}
-        {!isDone && !isLocked && <ChevronRight size={9} />}
-        {badgeText}
-      </span>
+      {/* Action badge */}
+      {!isDone && (
+        <div
+          className={cn(
+            'flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0 transition-all duration-300',
+            isActive ? 'group-hover:gap-2' : ''
+          )}
+          style={{
+            background: isActive ? color + '22' : 'var(--bg-surface)',
+            color: isActive ? color : 'var(--text-muted)',
+            border: `1px solid ${isActive ? color + '40' : 'var(--border-subtle)'}`,
+          }}
+        >
+          {isActive ? <ArrowRight size={9} /> : null}
+          {isNext ? 'Next' : 'Begin'}
+        </div>
+      )}
     </motion.button>
   );
 }
@@ -266,7 +314,6 @@ const FALLBACK_ASSIGNMENT: WeeklyAssignment = {
 export function TodayPath({
   userId,
   onNavigate,
-  progress: _progress,
   weeklyAssignment,
   onViewProgress,
   isAccessValid,
@@ -278,34 +325,33 @@ export function TodayPath({
   const color = practice?.color ?? '#B8973A';
   const requiredTriggers = questionId === 'question3' ? 3 : 1;
 
-  const { isCompleted: practiceCompleted, record, markLearn, markIntegrate } = useDailyPractice(userId, questionId, requiredTriggers);
+  const { isCompleted: practiceCompleted, record, markLearn, markIntegrate } = useDailyPractice(
+    userId, questionId, requiredTriggers
+  );
   const [showCommitment, setShowCommitment] = useState(false);
 
-  const learnDone = record?.learnCompleted === true;
-  const reflectDone = record?.reflectCompleted === true;
-  const integrateDone = record?.integrateCompleted === true;
+  const learnDone       = record?.learnCompleted === true;
+  const reflectDone     = record?.reflectCompleted === true;
+  const integrateDone   = record?.integrateCompleted === true;
 
   if (!questionMeta || !practice) return null;
 
   const doneCount = [learnDone, practiceCompleted, reflectDone, integrateDone].filter(Boolean).length;
-  const allDone = learnDone && practiceCompleted && reflectDone && integrateDone;
+  const allDone   = learnDone && practiceCompleted && reflectDone && integrateDone;
 
+  // Handlers
   const handleLearn = () => {
     if (isAccessValid) markLearn();
     onNavigate('wisdom_untethered', questionId, 'explanation');
   };
   const handlePractice = () => onNavigate('situations');
-  const handleReflect = () => {
+  const handleReflect  = () => {
     localStorage.setItem('awakened-journal-prompt', questionMeta.journalPrompt);
     localStorage.setItem('awakened-reflect-question-id', questionId);
     onNavigate('chapters');
   };
   const handleIntegrate = () => {
     if (integrateDone) return;
-    if (!reflectDone) {
-      alert('Please complete the first three steps before making your daily commitment.');
-      return;
-    }
     setShowCommitment(true);
   };
   const confirmIntegrate = () => {
@@ -313,56 +359,55 @@ export function TodayPath({
     setShowCommitment(false);
   };
 
-  // Determine step statuses
-  const learnStatus: 'done' | 'active' | 'locked' = learnDone ? 'done' : 'active';
-  const practiceStatus: 'done' | 'active' | 'locked' = practiceCompleted ? 'done' : 'active';
-  const reflectStatus: 'done' | 'active' | 'locked' = reflectDone ? 'done' : practiceCompleted ? 'active' : 'locked';
-  const integrateStatus: 'done' | 'active' | 'locked' = integrateDone ? 'done' : reflectDone ? 'active' : 'locked';
+  // Status — NEVER locked; use 'next' instead so all steps are always tappable
+  const resolveStatus = (done: boolean, isCurrentFocus: boolean): StepStatus =>
+    done ? 'done' : isCurrentFocus ? 'active' : 'next';
 
-  const steps: StepConfig[] = [
+  const learnStatus     = resolveStatus(learnDone, !learnDone);
+  const practiceStatus  = resolveStatus(practiceCompleted, learnDone && !practiceCompleted);
+  const reflectStatus   = resolveStatus(reflectDone, practiceCompleted && !reflectDone);
+  const integrateStatus = resolveStatus(integrateDone, reflectDone && !integrateDone);
+
+  const steps: StepDef[] = [
     {
       num: 1,
       label: 'Learn',
-      sub: "Read today's teaching",
-      subDone: 'Wisdom absorbed',
+      noun: "Read today's teaching",
+      doneLine: 'Wisdom absorbed',
       icon: BookOpen,
       status: learnStatus,
       color,
-      isAccessValid,
       onClick: handleLearn,
     },
     {
       num: 2,
       label: 'Practice',
-      sub: 'Complete the technique',
-      subDone: 'Technique complete',
+      noun: 'Complete the technique',
+      doneLine: 'Technique complete',
       icon: Zap,
       status: practiceStatus,
       color,
-      isAccessValid,
       onClick: handlePractice,
-      practice: practice.name,
+      hint: practice.name,
     },
     {
       num: 3,
       label: 'Reflect',
-      sub: 'Write your thoughts',
-      subDone: 'Journal entry saved',
+      noun: 'Write your thoughts in the journal',
+      doneLine: 'Journal entry saved',
       icon: PenLine,
       status: reflectStatus,
       color,
-      isAccessValid,
       onClick: handleReflect,
     },
     {
       num: 4,
       label: 'Live It',
-      sub: 'Promise to live it today',
-      subDone: 'Sacred commitment made',
+      noun: 'Make your sacred commitment',
+      doneLine: 'Sacred commitment made',
       icon: Heart,
       status: integrateStatus,
       color,
-      isAccessValid,
       onClick: handleIntegrate,
     },
   ];
@@ -375,10 +420,13 @@ export function TodayPath({
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="rounded-[28px] border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden"
       >
-        {/* ── Top banner ── */}
+        {/* ── Top colour band ── */}
         <div
           className="flex items-center justify-between px-5 py-2.5"
-          style={{ background: color + '12', borderBottom: `1px solid ${color}22` }}
+          style={{
+            background: `linear-gradient(90deg, ${color}18, ${color}08)`,
+            borderBottom: `1px solid ${color}22`,
+          }}
         >
           <div className="flex items-center gap-2">
             <Calendar size={11} style={{ color }} />
@@ -388,7 +436,7 @@ export function TodayPath({
           </div>
           <div className="flex items-center gap-3">
             <span className="text-[10px] text-[var(--text-muted)]">
-              {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} left
+              {daysRemaining}d left
             </span>
             {onViewProgress && (
               <button
@@ -396,13 +444,13 @@ export function TodayPath({
                 className="flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wider opacity-60 hover:opacity-100 transition-opacity"
                 style={{ color }}
               >
-                Progress <ChevronRight size={10} />
+                Journey <ChevronRight size={10} />
               </button>
             )}
           </div>
         </div>
 
-        {/* ── Header row: title + status badge ── */}
+        {/* ── Card header ── */}
         <div className="flex items-start justify-between px-5 pt-4 pb-3 gap-3">
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)] mb-1">
@@ -413,75 +461,85 @@ export function TodayPath({
             </h3>
           </div>
 
-          {/* Status badge */}
-          <motion.div
-            layout
-            className="flex flex-col items-end gap-1.5 flex-shrink-0"
-          >
+          {/* Status + counter */}
+          <div className="flex flex-col items-end gap-2 flex-shrink-0">
             <motion.div
+              layout
               animate={allDone ? {
-                boxShadow: [`0 0 0px ${color}00`, `0 0 14px ${color}60`, `0 0 0px ${color}00`]
+                boxShadow: [`0 0 0px ${color}00`, `0 0 16px ${color}55`, `0 0 0px ${color}00`],
               } : {}}
-              transition={{ repeat: allDone ? Infinity : 0, duration: 2.5 }}
+              transition={{ repeat: Infinity, duration: 2.5 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider"
               style={{
-                background: allDone ? color + '20' : 'var(--bg-surface)',
-                border: `1.5px solid ${allDone ? color + '50' : 'var(--border-subtle)'}`,
-                color: allDone ? color : 'var(--text-muted)',
+                background: allDone ? color + '22' : 'var(--bg-surface)',
+                border:     `1.5px solid ${allDone ? color + '55' : 'var(--border-subtle)'}`,
+                color:      allDone ? color : 'var(--text-muted)',
               }}
             >
-              {allDone ? <Sparkles size={9} /> : null}
+              {allDone && <Sparkles size={9} />}
               {allDone ? 'Complete' : 'Pending'}
             </motion.div>
 
-            {/* Progress fraction + info */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
+              {/* 4 dots */}
+              <div className="flex gap-1">
+                {[learnDone, practiceCompleted, reflectDone, integrateDone].map((done, i) => (
+                  <motion.div
+                    key={i}
+                    animate={done ? { scale: [1, 1.3, 1] } : {}}
+                    transition={{ duration: 0.4 }}
+                    className="w-2 h-2 rounded-full transition-all duration-500"
+                    style={{ background: done ? color : 'var(--border-subtle)' }}
+                  />
+                ))}
+              </div>
               <span className="text-[11px] font-black tabular-nums" style={{ color: doneCount > 0 ? color : 'var(--text-muted)' }}>
                 {doneCount}/4
               </span>
               <InfoTooltip
                 title="Daily Journey"
-                description="Four steps each day: Learn the wisdom, Practice the technique, Reflect in your journal, then Live the teaching."
-                howCalculated="Each step unlocks the next. All 4 must be complete for today's status to update."
+                description="Four steps each day: Learn, Practice, Reflect, then commit to Live It. All 4 mark today as complete."
+                howCalculated="Steps can be done in any order, though we recommend going 1 → 4."
               />
             </div>
 
-            {/* Progress bar */}
-            <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+            {/* Slim progress bar */}
+            <div className="w-24 h-1 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${(doneCount / 4) * 100}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
+                transition={{ duration: 0.7, ease: 'easeOut' }}
                 className="h-full rounded-full"
-                style={{ background: `linear-gradient(90deg, ${color}80, ${color})` }}
+                style={{ background: `linear-gradient(90deg, ${color}70, ${color})` }}
               />
             </div>
-          </motion.div>
-        </div>
-
-        {/* ── Journey Map ── */}
-        <div className="px-4 pb-5">
-          <div className="space-y-0">
-            {steps.map((step, idx) => (
-              <div key={step.num} className="flex items-stretch gap-3">
-                {/* Node + connector on the left */}
-                <JourneyNode
-                  step={step.num}
-                  status={step.status}
-                  color={color}
-                  isLast={idx === steps.length - 1}
-                />
-
-                {/* Step card + vertical spacer */}
-                <div className="flex flex-col flex-1 min-w-0" style={{ paddingBottom: idx < steps.length - 1 ? 10 : 0 }}>
-                  <JourneyStep cfg={step} />
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 
-        {/* ── All done celebration ── */}
+        {/* ── Divider ── */}
+        <div className="mx-5 mb-3 h-px" style={{ background: color + '18' }} />
+
+        {/* ── Journey Map ── */}
+        <div className="px-4 pb-5 space-y-0">
+          {steps.map((step, idx) => (
+            <div key={step.num} className="flex items-stretch gap-3">
+              <StepNode
+                num={step.num}
+                status={step.status}
+                color={color}
+                isLast={idx === steps.length - 1}
+              />
+              <div
+                className="flex flex-col flex-1 min-w-0"
+                style={{ paddingBottom: idx < steps.length - 1 ? 8 : 0 }}
+              >
+                <StepCard def={step} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── All done banner ── */}
         <AnimatePresence>
           {allDone && (
             <motion.div
@@ -492,9 +550,12 @@ export function TodayPath({
             >
               <div
                 className="p-4 rounded-2xl text-center space-y-1"
-                style={{ background: color + '12', border: `1px solid ${color}25` }}
+                style={{
+                  background: color + '10',
+                  border: `1px solid ${color}25`,
+                }}
               >
-                <p className="text-base">🌸</p>
+                <div className="text-base">🌸</div>
                 <p className="text-[12px] font-serif italic text-[var(--text-secondary)]">
                   All four steps complete. Your presence is your gift today.
                 </p>
@@ -507,35 +568,37 @@ export function TodayPath({
       {/* ── Commitment Modal ── */}
       <AnimatePresence>
         {showCommitment && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/50 backdrop-blur-md">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/55 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.88, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.88, y: 24 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+              exit={{ opacity: 0, scale: 0.88, y: 20 }}
+              transition={{ type: 'spring', stiffness: 330, damping: 26 }}
               className="max-w-sm w-full bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[40px] p-10 text-center space-y-7 shadow-2xl relative overflow-hidden"
             >
               <div
                 className="absolute inset-0 pointer-events-none rounded-[40px]"
-                style={{ background: `radial-gradient(ellipse 80% 60% at 50% 0%, ${color}10, transparent)` }}
+                style={{ background: `radial-gradient(ellipse 80% 55% at 50% 0%, ${color}12, transparent)` }}
               />
               <div className="relative z-10 space-y-5">
                 <div
                   className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto"
-                  style={{ background: color + '15', border: `2px solid ${color}30` }}
+                  style={{ background: color + '18', border: `2px solid ${color}35` }}
                 >
                   <Heart size={28} style={{ color }} />
                 </div>
-                <h3 className="text-2xl font-serif font-light text-[var(--text-primary)]">Sacred Commitment</h3>
+                <h3 className="text-2xl font-serif font-light text-[var(--text-primary)]">
+                  Sacred Commitment
+                </h3>
                 <p className="text-[14px] text-[var(--text-secondary)] font-serif italic leading-relaxed">
                   "{questionMeta.dailyIntent}"
                 </p>
                 <div className="pt-2 flex flex-col gap-3">
                   <button
                     onClick={confirmIntegrate}
-                    className="w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl text-white"
+                    className="w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all hover:scale-[1.02] active:scale-[0.98] text-white shadow-xl"
                     style={{
-                      background: `linear-gradient(135deg, ${color}, ${color}cc)`,
+                      background: `linear-gradient(135deg, ${color}, ${color}bb)`,
                       boxShadow: `0 8px 24px ${color}40`,
                     }}
                   >
