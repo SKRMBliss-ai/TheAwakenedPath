@@ -109,7 +109,7 @@ export const SACRED_TRACKS: SacredTrack[] = [
     mood: 'Deep',
     coverImage: {
       dark: '/mp3/Music/Images/sacred-bg-dark.png',
-      light: '/mp3/Music/Images/sacred-bg-light.png'
+      light: '/mp3/Music/Images/become-watcherwithOmLight.png'
     }
   }
 ];
