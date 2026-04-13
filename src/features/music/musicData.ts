@@ -108,7 +108,7 @@ export const SACRED_TRACKS: SacredTrack[] = [
     description: 'A guided sonic portal into the presence of the Watcher. Merges the power of the long Om chant with silence to reveal the witnessing consciousness.',
     mood: 'Deep',
     coverImage: {
-      dark: '/mp3/Music/Images/sacred-bg-dark.png',
+      dark: '/mp3/Music/Images/become-become-watcherwithOmDark.png',
       light: '/mp3/Music/Images/become-watcherwithOmLight.png'
     }
   }
