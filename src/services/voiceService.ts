@@ -16,7 +16,7 @@ export class VoiceService {
     private static _musicUrl: string | null = null;
     private static _volume: number = 1;
     private static currentRequestId: number = 0;
-    private static listeners: ((status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null) => void)[] = [];
+    private static listeners: ((status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null, musicUrl: string | null) => void)[] = [];
     private static _status: 'idle' | 'playing' | 'paused' | 'buffering' = 'idle';
     private static _activeCategory: 'tts' | 'music' | null = null;
     private static _savedTtsTime: number = 0;
@@ -89,7 +89,14 @@ export class VoiceService {
 
     private static setStatus(val: 'idle' | 'playing' | 'paused' | 'buffering') {
         this._status = val;
-        this.listeners.forEach(l => l(val, this._activeCategory));
+        this.listeners.forEach(l => l(val, this._activeCategory, this._musicUrl));
+    }
+
+    static subscribe(cb: (status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null, musicUrl: string | null) => void) {
+        this.listeners.push(cb);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== cb);
+        };
     }
 
     static get isEnabled() {
@@ -104,12 +111,6 @@ export class VoiceService {
         if (!val) this.stop();
     }
 
-    static subscribe(listener: (status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null) => void) {
-        this.listeners.push(listener);
-        return () => {
-            this.listeners = this.listeners.filter(l => l !== listener);
-        };
-    }
 
     private static getCacheKey(text: string, voice?: string) {
         // Robust unique key combining voice identity, content sample, and total length
@@ -520,12 +521,13 @@ export function useVoiceEnabled() {
 export function useVoiceStatus() {
     const [state, setState] = useState({ 
         status: VoiceService.status, 
-        category: VoiceService.activeCategory 
+        category: VoiceService.activeCategory,
+        musicUrl: VoiceService.musicUrl
     });
     
     useEffect(() => {
-        return VoiceService.subscribe((status, category) => {
-            setState({ status, category });
+        return VoiceService.subscribe((status, category, musicUrl) => {
+            setState({ status, category, musicUrl });
         });
     }, []);
     

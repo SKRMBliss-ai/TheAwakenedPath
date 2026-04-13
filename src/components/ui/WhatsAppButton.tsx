@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-export const WhatsAppButton = () => {
+export const WhatsAppButton = ({ bottomOffset = 32 }: { bottomOffset?: number }) => {
     return (
         <motion.a
             href="https://wa.me/918217581238?text=Namaste!%20I'm%20exploring%20The%20Awakened%20Path%20and%20wanted%20to%20connect."
@@ -10,7 +10,8 @@ export const WhatsAppButton = () => {
             animate={{ scale: 1, opacity: 1 }}
             whileHover={{ scale: 1.1, y: -5 }}
             whileTap={{ scale: 0.9 }}
-            className="fixed bottom-8 right-6 z-[100] flex items-center justify-center w-14 h-14 bg-[#25D366] rounded-full shadow-[0_10px_30px_rgba(37,211,102,0.3)] group transition-all duration-300"
+            className="fixed right-6 z-[100] flex items-center justify-center w-14 h-14 bg-[#25D366] rounded-full shadow-[0_10px_30px_rgba(37,211,102,0.3)] group transition-all duration-300"
+            style={{ bottom: bottomOffset }}
             aria-label="Contact on WhatsApp"
         >
             <svg 

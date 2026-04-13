@@ -32,7 +32,7 @@ import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
 import { InfoTooltip } from './components/ui/InfoTooltip';
 import { WhatsAppButton } from './components/ui/WhatsAppButton';
 import { VoiceGuidance } from './components/ui/VoiceGuidance';
-import { VoiceService } from './services/voiceService';
+import { VoiceService, useVoiceStatus } from './services/voiceService';
 import { usePersistedState } from './hooks/usePersistedState';
 import { useRazorpay } from './hooks/useRazorpay';
 import { MusicHub } from './features/music/MusicHub';
@@ -607,6 +607,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
 export default function UntetheredApp() {
   const { user: currentUser, profile, loading, signOut, isAccessValid, activateTrial } = useAuth();
   const { theme } = useTheme();
+  const { musicUrl } = useVoiceStatus();
 
   const membershipInfo = useMemo(() => {
     if (!profile) return null;
@@ -1945,7 +1946,7 @@ export default function UntetheredApp() {
         achievement={toastQueue[0] || null}
         onDismiss={dismissToast}
       />
-      <WhatsAppButton />
+      <WhatsAppButton bottomOffset={musicUrl ? 110 : 32} />
       {voiceGuidanceEnabled && (
         <VoiceGuidance
           preferredVoice={preferredVoice}

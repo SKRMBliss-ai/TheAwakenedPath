@@ -23,6 +23,11 @@ import { db } from '../../firebase';
 import {
   doc,
   getDoc,
+  getDocs,
+  collection,
+  query,
+  orderBy,
+  limit,
 } from 'firebase/firestore';
 import { PRACTICE_LIBRARY, QUESTION_IDS } from '../practices/practiceLibrary';
 import { useWeeklyAssignment } from '../../hooks/useWeeklyAssignment';
@@ -282,10 +287,16 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
       ...week7.map(key =>
         getDoc(doc(db, 'users', uid, 'dailyPractices', key)).then(snap => ({
           key,
+          type: 'practice',
           data: snap.exists() ? snap.data() : null,
         }))
       ),
-    ]).then(([wuSnap, ponSnap, ...weekSnaps]) => {
+      // Last 7 days of journal entries
+      // Note: journal entries use createdAt, so we should query or check if any exist for each day
+      // For simplicity in a small "last 7 days" check, we can just fetch the recent journal and map it
+      getDocs(query(collection(db, 'users', uid, 'journal'), orderBy('createdAt', 'desc'), limit(50)))
+        .then(snap => snap.docs.map(d => ({ data: d.data(), key: d.data().createdAt?.toDate ? d.data().createdAt.toDate().toISOString().split('T')[0] : null })))
+    ]).then(([wuSnap, ponSnap, ...rest]) => {
       // WU progress
       setWuProgress(wuSnap.exists() ? (wuSnap.data() as CourseProgress) : {});
 
@@ -294,24 +305,35 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
         setPonWatched(ponSnap.data().watched?.length || 0);
       }
 
-      // Week strip — a day counts as "practiced" if ANY questionId has completed=true
       const weekMap: Record<string, boolean> = {};
-      for (const result of weekSnaps) {
-        if (result && typeof result === 'object' && 'key' in result) {
-          const { key, data } = result as { key: string; data: any };
-          if (data) {
-            const practiced = Object.values(data).some((r: any) => 
-              r?.completed === true || 
-              r?.reflectCompleted === true || 
-              r?.learnCompleted === true || 
-              r?.integrateCompleted === true
-            );
-            weekMap[key] = practiced;
-          } else {
-            weekMap[key] = false;
-          }
+      
+      // Initialize weekMap for the last 7 days
+      week7.forEach(k => { weekMap[k] = false; });
+
+      // Separate practices from journal results
+      const practices = rest.slice(0, 7) as { key: string; data: any }[];
+      const journals = rest[7] as { data: any; key: string | null }[];
+
+      // Process practices
+      for (const p of practices) {
+        if (p.data) {
+          const done = Object.values(p.data).some((r: any) => 
+            r?.completed === true || 
+            r?.reflectCompleted === true || 
+            r?.learnCompleted === true || 
+            r?.integrateCompleted === true
+          );
+          if (done) weekMap[p.key] = true;
         }
       }
+
+      // Process journals
+      for (const j of journals) {
+        if (j.key && weekMap[j.key] !== undefined) {
+          weekMap[j.key] = true;
+        }
+      }
+
       setWeekPracticed(weekMap);
     }).catch(console.error)
       .finally(() => setLoading(false));

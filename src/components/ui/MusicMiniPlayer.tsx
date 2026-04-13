@@ -6,22 +6,25 @@ import { SACRED_TRACKS } from '../../features/music/musicData';
 import { cn } from '../../lib/utils';
 
 export const MusicMiniPlayer: React.FC = () => {
-  const { status, category } = useVoiceStatus();
+  const { status, category, musicUrl } = useVoiceStatus();
   const [progress, setProgress] = useState({ currentTime: 0, duration: 0 });
   const [volume, setVolume] = useState(VoiceService.volume);
   const [showVolume, setShowVolume] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
 
-  // Reactively track the MUSIC url (persists even while TTS interrupts)
-  const [musicUrl, setMusicUrl] = useState<string | null>(VoiceService.musicUrl);
-
+  // Close volume on click away
   useEffect(() => {
-    setMusicUrl(VoiceService.musicUrl);
-    return VoiceService.subscribe(() => {
-      setMusicUrl(VoiceService.musicUrl);
-    });
-  }, []);
+    if (!showVolume) return;
+    const handleClickAway = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.volume-container')) {
+        setShowVolume(false);
+      }
+    };
+    window.addEventListener('mousedown', handleClickAway);
+    return () => window.removeEventListener('mousedown', handleClickAway);
+  }, [showVolume]);
 
   const currentTrack = SACRED_TRACKS.find(t => t.previewUrl === musicUrl);
 
@@ -221,7 +224,7 @@ export const MusicMiniPlayer: React.FC = () => {
               </div>
 
               {/* ── Volume ────────────────────────────────────────────────────────── */}
-              <div className="relative flex items-center">
+              <div className="relative flex items-center volume-container">
                 <button
                   onClick={() => setShowVolume(v => !v)}
                   className="p-1.5 rounded-full text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-all"
