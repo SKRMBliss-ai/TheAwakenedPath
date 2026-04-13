@@ -244,10 +244,10 @@ export const VoiceGuidance = ({
                 )}
               </div>
               <div className="pt-1">
-                <h3 className="text-lg font-serif font-light text-[var(--text-primary)] mb-1 tracking-wide">
+                <h3 className="text-lg font-serif font-medium text-[var(--text-primary)] mb-1 tracking-wide">
                   {isSpeaking ? "Voice Presence" : "Voice Guide"}
                 </h3>
-                <p className="text-[11px] text-[var(--text-secondary)] leading-tight italic font-serif">
+                <p className="text-[12px] text-[var(--text-primary)] leading-tight font-serif">
                   {isSpeaking
                     ? "Listen with your heart."
                     : "Guidance for your journey."}

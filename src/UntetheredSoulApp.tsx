@@ -165,10 +165,10 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, rotateX, rotateY,
 
           <div className="text-center space-y-4 px-6 relative">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-20" />
-            <h3 className="text-2xl font-serif font-light text-[var(--text-primary)] tracking-wide">
-              Presence <span className="opacity-30 italic mx-1 font-extralight text-[0.8em]">Over</span> Progress
+            <h3 className="text-2xl font-serif font-medium text-[var(--text-primary)] tracking-wide">
+              Presence <span className="opacity-60 italic mx-1 font-light text-[0.8em]">Over</span> Progress
             </h3>
-            <p className="text-[13px] font-serif italic text-[var(--text-secondary)] leading-relaxed opacity-60 max-w-[280px] mx-auto">
+            <p className="text-[14px] font-serif italic text-[var(--text-primary)] leading-relaxed max-w-[280px] mx-auto">
               "Yesterday is history, tomorrow is a mystery, today is a gift."
             </p>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-20" />
@@ -246,10 +246,10 @@ const BreadthDesktop = ({ user, isAccessValid, rotateX, rotateY, progress, weekl
 
           <div className="py-12 text-center space-y-6 max-w-3xl mx-auto relative px-4">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-30" />
-            <h3 className="text-4xl sm:text-5xl font-serif font-light text-[var(--text-primary)] tracking-wide leading-tight">
-              Presence <span className="opacity-30 italic mx-1 font-extralight text-[0.8em]">Over</span> Progress
+            <h3 className="text-4xl sm:text-5xl font-serif font-medium text-[var(--text-primary)] tracking-wide leading-tight">
+              Presence <span className="opacity-60 italic mx-1 font-light text-[0.8em]">Over</span> Progress
             </h3>
-            <p className="text-[16px] sm:text-[18px] font-serif italic text-[var(--text-secondary)] leading-relaxed max-w-xl mx-auto opacity-80">
+            <p className="text-[18px] sm:text-[20px] font-serif italic text-[var(--text-primary)] leading-relaxed max-w-xl mx-auto">
               "Yesterday is history, tomorrow is a mystery, today is a gift. That's why it's called the present."
             </p>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-30" />

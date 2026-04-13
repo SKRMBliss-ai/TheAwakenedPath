@@ -1001,7 +1001,7 @@ export const SituationalPractices: React.FC<{
 
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 pb-32 relative">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 pb-32 relative pt-20 lg:pt-16">
             {/* Ambient Time of Day Tint */}
             <div className="fixed inset-0 pointer-events-none -z-10" style={{ background: timeOfDayTint }} />
 
@@ -1009,12 +1009,12 @@ export const SituationalPractices: React.FC<{
             <header className="space-y-2 pb-2">
                 <div className="flex justify-between items-start">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-serif font-light tracking-tight" 
+                        <h1 className="text-3xl md:text-4xl font-serif font-medium tracking-tight" 
                             style={{ color: 'var(--text-primary)' }}>
                             The Practice Room
                         </h1>
-                        <p className="text-sm font-serif italic mt-1 opacity-70" 
-                            style={{ color: 'var(--text-secondary)' }}>
+                        <p className="text-[14px] font-sans font-bold uppercase tracking-widest mt-2" 
+                            style={{ color: 'var(--accent-primary)' }}>
                             {SITUATIONS.length} guided practices · 10 seconds to 10 minutes
                         </p>
                     </div>

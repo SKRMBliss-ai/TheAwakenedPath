@@ -423,11 +423,11 @@ export function TodayPath({
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-[28px] border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden"
+        className="rounded-[28px] border border-[var(--border-default)] bg-[var(--bg-surface)] relative"
       >
         {/* ── Top colour band ── */}
         <div
-          className="flex items-center justify-between px-5 py-2.5"
+          className="flex items-center justify-between px-5 py-2.5 rounded-t-[27px]"
           style={{
             background: `linear-gradient(90deg, ${color}18, ${color}08)`,
             borderBottom: `1px solid ${color}22`,
@@ -461,7 +461,7 @@ export function TodayPath({
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)] mb-1">
               Today's Practice
             </p>
-            <h3 className="text-[15px] font-serif font-light text-[var(--text-primary)] leading-snug">
+            <h3 className="text-[15px] font-serif font-medium text-[var(--text-primary)] leading-snug">
               {questionMeta.shortTitle}
             </h3>
           </div>

@@ -84,6 +84,36 @@ const WISDOM_PRACTICES = [
       'In this clarity, you\'ll naturally know which thoughts are useful.',
     ],
   },
+  {
+    id: 'question6',
+    questionNum: 6,
+    questionTitle: 'The Witnessing Consciousness',
+    practiceName: 'The Seat of the Witness',
+    practiceDesc: 'Realize you are the one witnessing both the inner and outer world.',
+    duration: '2 min',
+    color: '#EC4899',
+    steps: [
+      'Pause and notice your surroundings — colors, shapes, light.',
+      'Notice the thoughts and feelings moving within you.',
+      'Now, realize you are the one witnessing both the inner and outer world.',
+      'Rest in the seat of the witness, distinct from what is witnessed.',
+    ],
+  },
+  {
+    id: 'question7',
+    questionNum: 7,
+    questionTitle: 'Removing the Thorns',
+    practiceName: 'Letting the Thorns Be',
+    practiceDesc: 'When a "thorn" of irritation appears, simply relax and let it pass.',
+    duration: '1 min',
+    color: '#F59E0B',
+    steps: [
+      'Notice a small irritation, judgment, or "thorn" in your mind today.',
+      'Instead of trying to "fix" or "remove" it, simply relax and let it be there.',
+      'Notice how resisting the thorn causes more pain than the thorn itself.',
+      'Relax your shoulders, breathe, and let the energy pass through you.',
+    ],
+  },
 ];
 
 // ── Firestore helpers ─────────────────────────────────────────────────────────
@@ -206,12 +236,12 @@ function WisdomCard({
             if (!expanded) onStart?.();
           }
         }}
-        className="w-full text-left p-5 space-y-3.5"
+        className="w-full text-left p-4 space-y-3"
         style={{ cursor: isLocked ? 'default' : 'pointer' }}
       >
         <div className="flex justify-between items-start">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-serif transition-all duration-500"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-serif transition-all duration-500"
             style={{
               background: isDone ? color + '20' : 'var(--bg-secondary)',
               border: `1px solid ${isDone ? color + '40' : 'var(--border-subtle)'}`,
@@ -219,7 +249,7 @@ function WisdomCard({
               boxShadow: isDone ? `0 0 20px ${color}30` : 'none'
             }}
           >
-            {isDone ? <CheckCircle2 size={18} style={{ color }} /> : practice.questionNum}
+            {isDone ? <CheckCircle2 size={16} style={{ color }} /> : practice.questionNum}
           </div>
           
           <div className="flex flex-col items-end gap-1">
@@ -239,21 +269,21 @@ function WisdomCard({
           </div>
         </div>
 
-        <div className="space-y-0.5">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em]"
+        <div className="space-y-0">
+          <p className="text-[9px] font-black uppercase tracking-[0.25em]"
             style={{ color: isLocked ? 'var(--text-muted)' : color }}>
             {isLocked ? 'Locked' : `Question ${practice.questionNum}`}
           </p>
-          <h4 className="text-[17px] font-serif font-light text-[var(--text-primary)] leading-tight">
+          <h4 className="text-[15px] font-serif font-light text-[var(--text-primary)] leading-tight">
             {practice.questionTitle}
           </h4>
         </div>
 
-        <div className="pt-1.5">
-          <p className="text-[14px] font-serif italic leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+        <div className="pt-1">
+          <p className="text-[13px] font-serif italic leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             "{practice.practiceName}"
           </p>
-          <p className="text-[12px] text-[var(--text-muted)] mt-1.5 leading-relaxed opacity-80">
+          <p className="text-[11px] text-[var(--text-muted)] mt-1 leading-relaxed opacity-80">
             {practice.practiceDesc}
           </p>
         </div>
@@ -429,16 +459,18 @@ export function WisdomPracticeSection({
           </div>
         </div>
         
-        <div className="space-y-2">
-          <h2 className="text-[28px] font-serif font-light text-[var(--text-primary)]">Practice Gateway</h2>
-          <p className="text-[13px] text-[var(--text-secondary)] font-serif italic max-w-lg mx-auto opacity-70">
+        <div className="space-y-3">
+          <h2 className="text-[32px] font-serif font-medium text-[var(--text-primary)] tracking-tight">
+            Wisdom Untethered Practice Gateway
+          </h2>
+          <p className="text-[17px] text-[var(--text-primary)] font-serif italic max-w-xl mx-auto leading-relaxed">
             Small, consistent steps build the path to untethered freedom. 
             Choose a technique to ground your presence today.
           </p>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 p-4 pb-20">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pb-20">
         {WISDOM_PRACTICES.map((p) => (
           <WisdomCard 
             key={p.id} 

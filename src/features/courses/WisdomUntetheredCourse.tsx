@@ -150,6 +150,7 @@ const QUESTION_THEMES: Record<string, string> = {
   'question4': 'rgba(184, 151, 58, 0.12)',  
   'question5': 'rgba(255, 255, 255, 0.05)', 
   'question6': 'rgba(184, 151, 58, 0.08)',
+  'question7': 'rgba(20, 184, 166, 0.05)',
 };
 
 type PracticeType = 'example' | 'journal' | 'analysis';
@@ -195,6 +196,7 @@ const QUESTION_PRACTICES: Record<string, PracticeItem[]> = {
   ],
   'question5': COMMON_PRACTICES,
   'question6': COMMON_PRACTICES,
+  'question7': COMMON_PRACTICES,
 };
 
 export function WisdomUntetheredCourse({
