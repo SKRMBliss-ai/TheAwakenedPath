@@ -688,7 +688,7 @@ export default function UntetheredApp() {
 
   const onNavigate = (id: string, questionId?: string, view?: string) => {
     // If not unlocked, lock everything except home and profile
-    if (!isAccessValid && id !== 'home' && id !== 'profile' && id !== 'paywall') {
+    if (!isAccessValid && id !== 'home' && id !== 'profile' && id !== 'paywall' && id !== 'music') {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
       return;
@@ -741,7 +741,7 @@ export default function UntetheredApp() {
 
   // Global Access Control Redirect for first load
   useEffect(() => {
-    if (!loading && !isAccessValid && activeTab !== 'home' && activeTab !== 'profile' && activeTab !== 'paywall') {
+    if (!loading && !isAccessValid && activeTab !== 'home' && activeTab !== 'profile' && activeTab !== 'paywall' && activeTab !== 'music') {
       setActiveTab('paywall');
     }
   }, [isAccessValid, activeTab, loading]);
