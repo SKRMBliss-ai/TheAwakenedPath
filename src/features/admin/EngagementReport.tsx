@@ -24,8 +24,9 @@ interface EngagementReportProps {
 }
 
 const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) => {
-    const [activeTab, setActiveTab] = useState<'logs' | 'blast' | 'history'>('logs');
+    const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'blast' | 'history'>('logs');
     const [logs, setLogs] = useState<ActivityLog[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     
@@ -61,6 +62,26 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             setBlasts(enrichedBlasts);
         } catch (error) {
             console.error("Error fetching blast history:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const fetchUsers = async () => {
+        setIsLoading(true);
+        try {
+            const usersRef = collection(db, 'users');
+            const q = query(usersRef, orderBy('lastLogin', 'desc'), limit(100));
+            const snapshot = await getDocs(q);
+            
+            const fetchedUsers = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            setUsers(fetchedUsers);
+        } catch (error) {
+            console.error("Error fetching admin users:", error);
         } finally {
             setIsLoading(false);
         }
@@ -115,6 +136,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
     useEffect(() => {
         if (isOpen) {
             if (activeTab === 'logs') fetchLogs();
+            if (activeTab === 'users') fetchUsers();
             if (activeTab === 'history') fetchHistory();
         }
     }, [isOpen, activeTab]);
@@ -186,7 +208,16 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                             activeTab === 'logs' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
-                                        Logs
+                                        Activity
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveTab('users')}
+                                        className={cn(
+                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
+                                            activeTab === 'users' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                        )}
+                                    >
+                                        Users
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('blast')}
@@ -321,6 +352,84 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                 <p className="text-[var(--text-muted)] italic">No activity found yet...</p>
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+                            </>
+                        ) : activeTab === 'users' ? (
+                            <>
+                                <div className="px-10 py-4 bg-[var(--bg-surface-hover)] border-b border-[var(--border-subtle)]/50">
+                                    <div className="relative">
+                                        <input 
+                                            type="text"
+                                            placeholder="Search by name or email..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl py-2.5 pl-10 pr-4 text-[13px] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]/50 transition-colors"
+                                        />
+                                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+                                            <Eye className="w-4 h-4" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="px-10 py-6 grid grid-cols-[1.5fr_1.5fr_1fr_1fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                    <div>User</div>
+                                    <div>Email</div>
+                                    <div>Joined</div>
+                                    <div>Last Presence</div>
+                                    <div className="text-right">
+                                        <button onClick={fetchUsers} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
+                                            <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar">
+                                    <div className="space-y-1">
+                                        {users
+                                            .filter(u => {
+                                                if (!searchTerm) return true;
+                                                const s = searchTerm.toLowerCase();
+                                                return (
+                                                    u.email?.toLowerCase().includes(s) ||
+                                                    u.displayName?.toLowerCase().includes(s)
+                                                );
+                                            })
+                                            .map((u) => {
+                                                const { date: joinedDate } = formatTimestamp(u.createdAt);
+                                                const { date: loginDate, time: loginTime } = formatTimestamp(u.lastLogin);
+                                                const displayName = u.displayName || u.email?.split('@')[0] || 'Unknown';
+
+                                                return (
+                                                    <motion.div
+                                                        key={u.id}
+                                                        initial={{ opacity: 0, x: -10 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                    >
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-primary)] border border-[var(--border-default)] flex items-center justify-center overflow-hidden shrink-0">
+                                                                <span className="text-[12px] font-bold text-[var(--text-muted)]">{displayName.charAt(0).toUpperCase()}</span>
+                                                            </div>
+                                                            <span className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors truncate">{displayName}</span>
+                                                        </div>
+
+                                                        <div className="text-[12px] text-[var(--text-secondary)] truncate">{u.email}</div>
+                                                        <div className="text-[12px] text-[var(--text-muted)]">{joinedDate}</div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[12px] text-[var(--text-secondary)]">{loginDate}</span>
+                                                            <span className="text-[10px] font-bold text-[var(--accent-primary)]">{loginTime}</span>
+                                                        </div>
+
+                                                        <div className="flex justify-end">
+                                                            <div className={cn(
+                                                                "w-2 h-2 rounded-full",
+                                                                u.lastLogin ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" : "bg-neutral-800"
+                                                            )} />
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
                                     </div>
                                 </div>
                             </>

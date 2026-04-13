@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Download } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
+import { useWeeklyAssignment } from '../../../hooks/useWeeklyAssignment';
 import { MeditationPortal } from '../../../components/ui/MeditationPortal.tsx';
 import { db } from '../../../firebase';
 import { VoiceService } from '../../../services/voiceService';
@@ -22,6 +23,7 @@ import {
 } from '../../../components/ui/SacredUI.tsx';
 import { useEmotionSync } from '../../presence-intelligence/hooks/useEmotionSync';
 import JournalCalendar from './JournalCalendar';
+import { useDailyPractice } from '../../practices/useDailyPractice';
 import { GentleJournalForm } from './GentleJournalForm';
 import { PracticeHistory } from './PracticeHistory';
 
@@ -112,6 +114,15 @@ const Journal: React.FC = () => {
 
     const bellRef = useRef<HTMLAudioElement | null>(null);
 
+    const assignment = useWeeklyAssignment(user?.metadata?.creationTime);
+    const [reflectQId, setReflectQId] = useState<string | null>(null);
+
+    // If reflectQId is null (user navigated manually), we fallback to the current weekly question 
+    // to ensure the dashboard can still be marked done if they are working on the current week.
+    const effectiveQId = reflectQId || assignment?.questionId || 'question1';
+
+    const { markReflect } = useDailyPractice(user?.uid, effectiveQId);
+
     useEffect(() => {
         bellRef.current = new Audio('/mp3/tibetanbell.mp3');
         bellRef.current.preload = 'auto';
@@ -175,11 +186,15 @@ const Journal: React.FC = () => {
 
     useEffect(() => {
         const prompt = localStorage.getItem('awakened-journal-prompt');
+        const qid = localStorage.getItem('awakened-reflect-question-id');
+
         if (prompt) {
             setInitialPrompt(prompt);
             setShowLogForm(true);
-            // We'll clear it after use or here
             localStorage.removeItem('awakened-journal-prompt');
+        }
+        if (qid) {
+            setReflectQId(qid);
         }
     }, []);
 
@@ -508,6 +523,14 @@ const Journal: React.FC = () => {
                                         };
                                         await addDoc(collection(db, 'users', user.uid, 'journal'), finalData);
 
+                                        // If this reflection is tied to a specific dashboard step, mark it as done
+                                        if (effectiveQId) {
+                                            console.log('[Journal] Marking reflection done for:', effectiveQId);
+                                            await markReflect();
+                                            setReflectQId(null);
+                                            localStorage.removeItem('awakened-reflect-question-id');
+                                        }
+
                                         // Award achievement points
                                         await awardEvent('journal_entry');
                                         checkAndUnlock({
@@ -532,7 +555,11 @@ const Journal: React.FC = () => {
                                         fireToast('Error preserving moment');
                                     }
                                 }}
-                                onCancel={() => setShowLogForm(false)}
+                                onCancel={() => {
+                                    setShowLogForm(false);
+                                    setReflectQId(null);
+                                    localStorage.removeItem('awakened-reflect-question-id');
+                                }}
                             />
                         </motion.div>
                     )}

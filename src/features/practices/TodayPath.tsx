@@ -1,11 +1,10 @@
-// TodayPath.tsx
-// Winding path UI — Byju's style 4-step daily journey.
-// Drop-in replacement. Same props interface as before.
-// @ts-nocheck
-
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, ChevronRight, Heart, Sparkles } from 'lucide-react';
+import {
+  BookOpen, Zap, PenLine, Heart, CheckCircle2,
+  Calendar, ChevronRight, Sparkles, ArrowRight,
+  type LucideIcon,
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { PRACTICE_LIBRARY } from '../practices/practiceLibrary';
 import { useDailyPractice } from '../practices/useDailyPractice';
@@ -14,7 +13,7 @@ import type { CourseProgress } from '../../hooks/useCourseTracking';
 import { InfoTooltip } from '../../components/ui/InfoTooltip';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Question meta — same as original
+// Question display names
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const QUESTION_META: Record<string, {
@@ -25,7 +24,7 @@ export const QUESTION_META: Record<string, {
   question1: {
     shortTitle: 'Q1 · Using the Mind as a Tool',
     journalPrompt: 'When did the spiral start today, and what shifted when you redirected?',
-    dailyIntent: "I will notice my mind's chatter and consciously redirect it to a steady affirmation today.",
+    dailyIntent: 'I will notice my mind\'s chatter and consciously redirect it to a steady affirmation today.',
   },
   question2: {
     shortTitle: 'Q2 · The Doubting Narrator',
@@ -45,7 +44,7 @@ export const QUESTION_META: Record<string, {
   question5: {
     shortTitle: 'Q5 · Witness Consciousness',
     journalPrompt: 'What did sitting comfortably within the noise feel like today?',
-    dailyIntent: "I will remain as the observer today, allowing life's flow to happen without losing my seat of awareness.",
+    dailyIntent: 'I will remain as the observer today, allowing life\'s flow to happen without losing my seat of awareness.',
   },
   question6: {
     shortTitle: 'Q6 · Letting Go of the Past',
@@ -60,229 +59,234 @@ export const QUESTION_META: Record<string, {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step definitions
+// Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-// SVG viewBox: 340 wide × 460 tall
-// Winding path: node 1 top-right, node 2 mid-left, node 3 lower-right, node 4 bottom-left
-const STEP_POSITIONS = [
-  { x: 232, y: 56,  side: 'left'  as const },
-  { x: 108, y: 176, side: 'right' as const },
-  { x: 232, y: 296, side: 'left'  as const },
-  { x: 108, y: 416, side: 'right' as const },
-];
+// done = completed, active = recommended next, next = can do but not yet the focus
+type StepStatus = 'done' | 'active' | 'next';
 
-// The S-curve path through all 4 nodes
-const WINDING_PATH =
-  'M 232 56 C 232 96, 108 136, 108 176 C 108 216, 232 256, 232 296 C 232 336, 108 376, 108 416';
-
-// Total approximate arc length
-const PATH_LENGTH = 720;
-
-const STEP_DEFS = [
-  {
-    id: 'learn'    as const,
-    num: 1,
-    label: 'Learn',
-    sub: "Read today's teaching",
-    doneLine: 'Wisdom absorbed',
-    icon: '📖',
-  },
-  {
-    id: 'practice' as const,
-    num: 2,
-    label: 'Practice',
-    sub: 'Complete the technique',
-    doneLine: 'Technique complete',
-    icon: '⚡',
-  },
-  {
-    id: 'reflect'  as const,
-    num: 3,
-    label: 'Reflect',
-    sub: 'Write in your journal',
-    doneLine: 'Journal entry saved',
-    icon: '✍️',
-  },
-  {
-    id: 'liveit'   as const,
-    num: 4,
-    label: 'Live It',
-    sub: 'Make your sacred commitment',
-    doneLine: 'Commitment made ✦',
-    icon: '🤍',
-  },
-];
-
-type StepId = 'learn' | 'practice' | 'reflect' | 'liveit';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Node component
-// ─────────────────────────────────────────────────────────────────────────────
-
-function PathNode({
-  step,
-  pos,
-  status,
-  color,
-  onClick,
-  practiceName,
-}: {
-  step: typeof STEP_DEFS[number];
-  pos: typeof STEP_POSITIONS[number];
-  status: 'done' | 'active' | 'next';
-  color: string;
+interface StepDef {
+  num: number;
+  label: string;
+  noun: string;          // e.g. "today's teaching"
+  doneLine: string;
+  icon: LucideIcon;
+  status: StepStatus;
   onClick: () => void;
-  practiceName?: string;
-}) {
-  const isDone   = status === 'done';
+  color: string;
+  hint?: string;         // small italic below label
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Node — glowing circle with the step number
+// ─────────────────────────────────────────────────────────────────────────────
+
+function StepNode({
+  num, status, color, isLast,
+}: { num: number; status: StepStatus; color: string; isLast?: boolean }) {
+  const isDone = status === 'done';
   const isActive = status === 'active';
 
-  // Convert SVG coords to % positions over the SVG element
-  const leftPct = (pos.x / 340 * 100).toFixed(2) + '%';
-  const topPct  = (pos.y / 460 * 100).toFixed(2) + '%';
-
-  const labelLeft  = pos.side === 'left';
-
   return (
-    <>
-      {/* ── Node circle ── */}
-      <motion.button
-        initial={{ scale: 0, opacity: 0 }}
+    <div className="flex flex-col items-center flex-shrink-0 select-none" style={{ width: 52 }}>
+      {/* ── Circle ── */}
+      <motion.div
+        initial={{ scale: 0.7, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: step.num * 0.1, type: 'spring', stiffness: 320, damping: 22 }}
-        onClick={onClick}
-        className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
-        style={{ left: leftPct, top: topPct, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-      >
-        <motion.div
-          animate={isActive ? {
-            boxShadow: [
-              `0 0 14px ${color}33`,
-              `0 0 28px ${color}66`,
-              `0 0 14px ${color}33`,
-            ],
-            scale: [1, 1.07, 1],
-          } : {}}
-          transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-          className="w-[52px] h-[52px] rounded-full flex items-center justify-center"
-          style={{
-            background: isDone
-              ? `linear-gradient(145deg, ${color}ee, ${color}88)`
-              : isActive
-                ? `${color}20`
-                : 'rgba(255,255,255,0.04)',
-            border: `2px solid ${isDone ? color : isActive ? color + '80' : 'rgba(255,255,255,0.10)'}`,
-            boxShadow: isDone
-              ? `0 0 22px ${color}55, 0 4px 12px rgba(0,0,0,0.4)`
-              : 'none',
-          }}
-        >
-          <AnimatePresence mode="wait">
-            {isDone ? (
-              <motion.span
-                key="check"
-                initial={{ scale: 0, rotate: -30 }}
-                animate={{ scale: 1, rotate: 0 }}
-                exit={{ scale: 0 }}
-                transition={{ type: 'spring', stiffness: 380, damping: 22 }}
-                style={{ fontSize: 20, lineHeight: 1, color: 'white' }}
-              >
-                ✓
-              </motion.span>
-            ) : (
-              <motion.span
-                key="icon"
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: isActive ? 1 : 0.4 }}
-                style={{ fontSize: 18, lineHeight: 1 }}
-              >
-                {step.icon}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </motion.button>
-
-      {/* ── Label card ── */}
-      <motion.button
-        initial={{ opacity: 0, x: labelLeft ? -12 : 12 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: step.num * 0.12 + 0.08, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        onClick={onClick}
-        className={cn(
-          'absolute z-10 -translate-y-1/2 text-left transition-all duration-300',
-          'rounded-2xl border px-3 py-2.5',
-          isDone
-            ? 'border-[var(--border-subtle)] bg-transparent opacity-55'
-            : isActive
-              ? 'bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] shadow-lg'
-              : 'bg-[var(--bg-surface)]/50 border-[var(--border-subtle)] hover:bg-[var(--bg-surface)]'
-        )}
+        transition={{ delay: num * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className="relative flex items-center justify-center rounded-full z-10"
         style={{
-          // Place to the left or right of the node, clear of the 52px circle
-          ...(labelLeft
-            ? { right: `calc(${(1 - pos.x / 340) * 100}% + 34px)`, minWidth: 120, maxWidth: 136 }
-            : { left:  `calc(${pos.x / 340 * 100}% + 34px)`,        minWidth: 120, maxWidth: 136 }),
-          top: topPct,
-          ...(isActive ? {
-            borderColor: color + '50',
-            boxShadow: `0 4px 20px ${color}18`,
-          } : {}),
-          background: 'none', // override motion.button default
-          cursor: 'pointer',
+          width: 48,
+          height: 48,
+          background: isDone
+            ? `linear-gradient(145deg, ${color}ee, ${color}99)`
+            : isActive
+              ? `${color}1a`
+              : 'transparent',
+          border: `2px solid ${isDone ? color : isActive ? color + '80' : 'var(--border-subtle)'}`,
+          boxShadow: isDone
+            ? `0 0 20px ${color}55, 0 2px 8px ${color}33`
+            : isActive
+              ? `0 0 14px ${color}28`
+              : 'none',
         }}
       >
-        {/* Step number tag */}
-        <div
-          className="text-[8px] font-black uppercase tracking-[.22em] mb-1"
-          style={{ color: isDone ? color + '55' : isActive ? color : 'rgba(255,255,255,.2)' }}
-        >
-          Step {step.num}
-        </div>
-
-        {/* Title */}
-        <div
-          className="text-[13px] font-serif leading-tight"
-          style={{
-            color: isDone ? 'var(--text-muted)' : 'var(--text-primary)',
-            textDecoration: isDone ? 'line-through' : 'none',
-          }}
-        >
-          {step.label}
-        </div>
-
-        {/* Sub / done line */}
-        {isDone ? (
-          <div className="text-[9px] mt-1 font-serif italic" style={{ color: color + '80' }}>
-            {step.doneLine}
-          </div>
-        ) : (
-          <>
-            <div className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,.28)' }}>
-              {step.id === 'practice' && practiceName ? practiceName : step.sub}
-            </div>
-            {/* CTA pill */}
-            <div
-              className="mt-2 inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-[.16em] px-2 py-1 rounded-full transition-all"
-              style={{
-                background: isActive ? color + '22' : 'rgba(255,255,255,.04)',
-                color: isActive ? color : 'rgba(255,255,255,.25)',
-                border: `1px solid ${isActive ? color + '40' : 'rgba(255,255,255,.08)'}`,
-              }}
+        <AnimatePresence mode="wait">
+          {isDone ? (
+            <motion.div
+              key="check"
+              initial={{ scale: 0, rotate: -30 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 22 }}
             >
-              <span style={{ fontSize: 9 }}>→</span>
-              {isActive ? 'Begin' : 'Next'}
-            </div>
-          </>
+              <CheckCircle2 size={20} color="white" strokeWidth={2.5} />
+            </motion.div>
+          ) : isActive ? (
+            <motion.div
+              key="pulse"
+              animate={{ scale: [1, 1.22, 1], opacity: [0.9, 1, 0.9] }}
+              transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+              className="w-3 h-3 rounded-full"
+              style={{ background: color }}
+            />
+          ) : (
+            <span key="num" className="text-[13px] font-black" style={{ color: 'var(--text-muted)' }}>
+              {num}
+            </span>
+          )}
+        </AnimatePresence>
+
+        {/* Outer badge for done/active */}
+        {(isDone || isActive) && (
+          <span
+            className="absolute -top-1.5 -right-1.5 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8px] font-black shadow-sm"
+            style={{
+              background: isDone ? color : 'var(--bg-surface)',
+              color: isDone ? 'white' : 'var(--text-muted)',
+              border: `1.5px solid ${isDone ? color + 'bb' : 'var(--border-default)'}`,
+            }}
+          >
+            {num}
+          </span>
         )}
-      </motion.button>
-    </>
+      </motion.div>
+
+      {/* ── Connector trail ── */}
+      {!isLast && (
+        <div className="relative" style={{ width: 2, height: 38 }}>
+          {/* base track */}
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{ background: 'var(--border-subtle)', opacity: 0.7 }}
+          />
+          {/* fill that animates when done */}
+          {isDone && (
+            <motion.div
+              initial={{ height: '0%' }}
+              animate={{ height: '100%' }}
+              transition={{ duration: 0.55, ease: 'easeOut', delay: num * 0.12 + 0.25 }}
+              className="absolute top-0 left-0 right-0 rounded-full"
+              style={{ background: `linear-gradient(180deg, ${color}dd, ${color}55)` }}
+            />
+          )}
+          {/* chevron dots for active/next state */}
+          {!isDone && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-[3px]">
+              {[0, 1, 2].map(i => (
+                <motion.div
+                  key={i}
+                  animate={{
+                    opacity: isActive ? [0.2, 0.8, 0.2] : [0.15, 0.3, 0.15],
+                    y: isActive ? [0, 2, 0] : 0,
+                  }}
+                  transition={{ repeat: Infinity, duration: 1.6, delay: i * 0.2, ease: 'easeInOut' }}
+                  className="w-[3px] h-[3px] rounded-full"
+                  style={{ background: isActive ? color : 'var(--text-muted)' }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Props — identical to original
+// Step Card — the action card beside each node
+// ─────────────────────────────────────────────────────────────────────────────
+
+function StepCard({ def }: { def: StepDef }) {
+  const { num, label, noun, doneLine, icon: Icon, status, color, onClick, hint } = def;
+  const isDone = status === 'done';
+  const isActive = status === 'active';
+  const isNext = status === 'next';
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, x: 16 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: num * 0.08 + 0.1, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={!isDone ? { x: 4, transition: { duration: 0.18 } } : {}}
+      whileTap={!isDone ? { scale: 0.97 } : {}}
+      onClick={onClick}
+      className={cn(
+        'flex-1 group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-left transition-all duration-300',
+        isDone
+          ? 'border-[var(--border-subtle)] bg-transparent opacity-60'
+          : isActive
+            ? 'border-[var(--border-default)] bg-[var(--bg-surface)] shadow-md hover:shadow-lg'
+            : 'border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 hover:bg-[var(--bg-surface)] hover:border-[var(--border-default)]'
+      )}
+      style={
+        isActive
+          ? { borderColor: color + '50', boxShadow: `0 4px 18px ${color}18` }
+          : {}
+      }
+    >
+      {/* Icon */}
+      <div
+        className={cn(
+          'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300',
+          isDone ? 'opacity-50' : ''
+        )}
+        style={{
+          background: isDone ? 'var(--bg-surface)' : isActive ? color + '20' : color + '0d',
+          border: `1.5px solid ${isDone ? 'var(--border-subtle)' : isActive ? color + '55' : color + '25'}`,
+        }}
+      >
+        {isDone
+          ? <CheckCircle2 size={16} style={{ color }} strokeWidth={2} />
+          : <Icon size={16} style={{ color: isNext ? color + '80' : color }} />
+        }
+      </div>
+
+      {/* Text */}
+      <div className="flex-1 min-w-0">
+        <p className={cn(
+          'text-[13px] font-semibold leading-tight',
+          isDone
+            ? 'line-through text-[var(--text-muted)]'
+            : isActive
+              ? 'text-[var(--text-primary)]'
+              : 'text-[var(--text-secondary)]'
+        )}>
+          {label}
+        </p>
+        <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+          {isDone ? doneLine : noun}
+        </p>
+        {hint && !isDone && (
+          <p className="text-[9px] mt-1 font-bold uppercase tracking-wider truncate" style={{ color: color + '90' }}>
+            {hint}
+          </p>
+        )}
+      </div>
+
+      {/* Action badge */}
+      {!isDone && (
+        <div
+          className={cn(
+            'flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0 transition-all duration-300',
+            isActive ? 'group-hover:gap-2' : ''
+          )}
+          style={{
+            background: isActive ? color + '22' : 'var(--bg-surface)',
+            color: isActive ? color : 'var(--text-muted)',
+            border: `1px solid ${isActive ? color + '40' : 'var(--border-subtle)'}`,
+          }}
+        >
+          {isActive ? <ArrowRight size={9} /> : null}
+          {isNext ? 'Next' : 'Begin'}
+        </div>
+      )}
+    </motion.button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Props
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface TodayPathProps {
@@ -304,7 +308,7 @@ const FALLBACK_ASSIGNMENT: WeeklyAssignment = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Main
+// Main Component
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function TodayPath({
@@ -314,72 +318,104 @@ export function TodayPath({
   onViewProgress,
   isAccessValid,
 }: TodayPathProps) {
-  const assignment   = weeklyAssignment ?? FALLBACK_ASSIGNMENT;
+  const assignment = weeklyAssignment ?? FALLBACK_ASSIGNMENT;
   const { questionId, weekLabel, daysRemaining } = assignment;
   const questionMeta = QUESTION_META[questionId] || QUESTION_META['question1'];
-  const practice     = PRACTICE_LIBRARY[questionId];
-  const color        = practice?.color ?? '#B8973A';
+  const practice = PRACTICE_LIBRARY[questionId];
+  const color = practice?.color ?? '#B8973A';
   const requiredTriggers = questionId === 'question3' ? 3 : 1;
 
-  const { isAnyPracticeDone, record, markLearn, markIntegrate } =
-    useDailyPractice(userId, questionId, requiredTriggers);
+  const {
+    isAnyPracticeDone,
+    record,
+    markLearn,
+    markIntegrate
+  } = useDailyPractice(userId, questionId, requiredTriggers);
 
   const [showCommitment, setShowCommitment] = useState(false);
 
   const practiceCompleted = isAnyPracticeDone;
-  const learnDone         = record?.learnCompleted === true;
-  const reflectDone       = record?.reflectCompleted === true;
-  const integrateDone     = record?.integrateCompleted === true;
+  const learnDone = record?.learnCompleted === true;
+  const reflectDone = record?.reflectCompleted === true;
+  const integrateDone = record?.integrateCompleted === true;
 
-  const doneStates: Record<StepId, boolean> = {
-    learn:    learnDone,
-    practice: practiceCompleted,
-    reflect:  reflectDone,
-    liveit:   integrateDone,
+  if (!questionMeta || !practice) return null;
+
+  const doneCount = [learnDone, practiceCompleted, reflectDone, integrateDone].filter(Boolean).length;
+  const allDone = learnDone && practiceCompleted && reflectDone && integrateDone;
+
+  // Handlers
+  const handleLearn = () => {
+    if (isAccessValid) markLearn();
+    onNavigate('wisdom_untethered', questionId, 'explanation');
   };
-
-  const doneCount = Object.values(doneStates).filter(Boolean).length;
-  const allDone   = doneCount === 4;
-
-  // Which step is the current focus (first undone)
-  const firstUndoneIdx = STEP_DEFS.findIndex(s => !doneStates[s.id]);
-
-  const getStatus = (id: StepId, idx: number): 'done' | 'active' | 'next' => {
-    if (doneStates[id]) return 'done';
-    return idx === firstUndoneIdx ? 'active' : 'next';
+  const handlePractice = () => onNavigate('situations');
+  const handleReflect = () => {
+    localStorage.setItem('awakened-journal-prompt', questionMeta.journalPrompt);
+    localStorage.setItem('awakened-reflect-question-id', questionId);
+    onNavigate('chapters');
   };
-
-  const handleStep = (id: StepId) => {
-    if (doneStates[id]) return;
-    switch (id) {
-      case 'learn':
-        if (isAccessValid) markLearn();
-        onNavigate('wisdom_untethered', questionId, 'explanation');
-        break;
-      case 'practice':
-        onNavigate('situations');
-        break;
-      case 'reflect':
-        localStorage.setItem('awakened-journal-prompt', questionMeta.journalPrompt);
-        localStorage.setItem('awakened-reflect-question-id', questionId);
-        onNavigate('chapters');
-        break;
-      case 'liveit':
-        setShowCommitment(true);
-        break;
-    }
+  const handleIntegrate = () => {
+    if (integrateDone) return;
+    setShowCommitment(true);
   };
-
   const confirmIntegrate = () => {
     if (isAccessValid) markIntegrate();
     setShowCommitment(false);
   };
 
-  // Progress path fill — dashoffset decreases as steps complete
-  const pathOffsets = [PATH_LENGTH, PATH_LENGTH * 0.74, PATH_LENGTH * 0.49, PATH_LENGTH * 0.25, 0];
-  const pathDashOffset = pathOffsets[doneCount] ?? PATH_LENGTH;
+  // Status — NEVER locked; use 'next' instead so all steps are always tappable
+  const resolveStatus = (done: boolean, isCurrentFocus: boolean): StepStatus =>
+    done ? 'done' : isCurrentFocus ? 'active' : 'next';
 
-  if (!questionMeta || !practice) return null;
+  const learnStatus = resolveStatus(learnDone, !learnDone);
+  const practiceStatus = resolveStatus(practiceCompleted, learnDone && !practiceCompleted);
+  const reflectStatus = resolveStatus(reflectDone, practiceCompleted && !reflectDone);
+  const integrateStatus = resolveStatus(integrateDone, reflectDone && !integrateDone);
+
+  const steps: StepDef[] = [
+    {
+      num: 1,
+      label: 'Learn',
+      noun: "Read today's teaching",
+      doneLine: 'Wisdom absorbed',
+      icon: BookOpen,
+      status: learnStatus,
+      color,
+      onClick: handleLearn,
+    },
+    {
+      num: 2,
+      label: 'Practice',
+      noun: 'Complete the technique',
+      doneLine: 'Technique complete',
+      icon: Zap,
+      status: practiceStatus,
+      color,
+      onClick: handlePractice,
+      hint: practice.name,
+    },
+    {
+      num: 3,
+      label: 'Reflect',
+      noun: 'Write your thoughts in the journal',
+      doneLine: 'Journal entry saved',
+      icon: PenLine,
+      status: reflectStatus,
+      color,
+      onClick: handleReflect,
+    },
+    {
+      num: 4,
+      label: 'Live It',
+      noun: 'Make your sacred commitment',
+      doneLine: 'Sacred commitment made',
+      icon: Heart,
+      status: integrateStatus,
+      color,
+      onClick: handleIntegrate,
+    },
+  ];
 
   return (
     <>
@@ -387,14 +423,14 @@ export function TodayPath({
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-[28px] border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden"
+        className="rounded-[28px] border border-[var(--border-default)] bg-[var(--bg-surface)] relative"
       >
-        {/* ── Header band ── */}
+        {/* ── Top colour band ── */}
         <div
-          className="flex items-center justify-between px-5 py-2.5"
+          className="flex items-center justify-between px-5 py-2.5 rounded-t-[27px]"
           style={{
-            background: `linear-gradient(90deg, ${color}18, ${color}06)`,
-            borderBottom: `1px solid ${color}20`,
+            background: `linear-gradient(90deg, ${color}18, ${color}08)`,
+            borderBottom: `1px solid ${color}22`,
           }}
         >
           <div className="flex items-center gap-2">
@@ -404,7 +440,9 @@ export function TodayPath({
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[10px] text-[var(--text-muted)]">{daysRemaining}d left</span>
+            <span className="text-[10px] text-[var(--text-muted)]">
+              {daysRemaining}d left
+            </span>
             {onViewProgress && (
               <button
                 onClick={onViewProgress}
@@ -417,20 +455,21 @@ export function TodayPath({
           </div>
         </div>
 
-        {/* ── Title + status ── */}
-        <div className="flex items-start justify-between px-5 pt-4 pb-2 gap-3">
+        {/* ── Card header ── */}
+        <div className="flex items-start justify-between px-5 pt-4 pb-3 gap-3">
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)] mb-1">
               Today's Practice
             </p>
-            <h3 className="text-[15px] font-serif text-[var(--text-primary)] leading-snug">
+            <h3 className="text-[15px] font-serif font-medium text-[var(--text-primary)] leading-snug">
               {questionMeta.shortTitle}
             </h3>
           </div>
 
+          {/* Status + counter */}
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
-            {/* Status badge */}
             <motion.div
+              layout
               animate={allDone ? {
                 boxShadow: [`0 0 0px ${color}00`, `0 0 16px ${color}55`, `0 0 0px ${color}00`],
               } : {}}
@@ -446,33 +485,30 @@ export function TodayPath({
               {allDone ? 'Complete' : 'Pending'}
             </motion.div>
 
-            {/* Progress dots + counter */}
             <div className="flex items-center gap-1.5">
+              {/* 4 dots */}
               <div className="flex gap-1">
-                {STEP_DEFS.map((s, i) => (
+                {[learnDone, practiceCompleted, reflectDone, integrateDone].map((done, i) => (
                   <motion.div
                     key={i}
-                    animate={doneStates[s.id] ? { scale: [1, 1.4, 1] } : {}}
+                    animate={done ? { scale: [1, 1.3, 1] } : {}}
                     transition={{ duration: 0.4 }}
                     className="w-2 h-2 rounded-full transition-all duration-500"
-                    style={{ background: doneStates[s.id] ? color : 'var(--border-subtle)' }}
+                    style={{ background: done ? color : 'var(--border-subtle)' }}
                   />
                 ))}
               </div>
-              <span
-                className="text-[11px] font-black tabular-nums"
-                style={{ color: doneCount > 0 ? color : 'var(--text-muted)' }}
-              >
+              <span className="text-[11px] font-black tabular-nums" style={{ color: doneCount > 0 ? color : 'var(--text-muted)' }}>
                 {doneCount}/4
               </span>
               <InfoTooltip
                 title="Daily Journey"
-                description="Four steps each day: Learn, Practice, Reflect, then Live It."
-                howCalculated="Steps can be done in any order."
+                description="Four steps each day: Learn, Practice, Reflect, then commit to Live It. All 4 mark today as complete."
+                howCalculated="Steps can be done in any order, though we recommend going 1 → 4."
               />
             </div>
 
-            {/* Progress bar */}
+            {/* Slim progress bar */}
             <div className="w-24 h-1 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
               <motion.div
                 initial={{ width: 0 }}
@@ -485,70 +521,30 @@ export function TodayPath({
           </div>
         </div>
 
-        {/* ── Thin divider ── */}
-        <div className="mx-5 mb-0 h-px" style={{ background: color + '14' }} />
+        {/* ── Divider ── */}
+        <div className="mx-5 mb-3 h-px" style={{ background: color + '18' }} />
 
-        {/* ══════════════════════════════════════════════
-            WINDING PATH
-        ══════════════════════════════════════════════ */}
-        <div className="relative mx-4 mb-2" style={{ height: 460 }}>
-          {/* SVG track */}
-          <svg
-            viewBox="0 0 340 460"
-            className="absolute inset-0 w-full h-full"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {/* Ghost track */}
-            <path
-              d={WINDING_PATH}
-              stroke="rgba(255,255,255,0.07)"
-              strokeWidth="3"
-              strokeDasharray="6 10"
-            />
-            {/* Filled progress */}
-            <motion.path
-              d={WINDING_PATH}
-              stroke={color}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeDasharray={PATH_LENGTH}
-              animate={{ strokeDashoffset: pathDashOffset }}
-              initial={{ strokeDashoffset: PATH_LENGTH }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              style={{ opacity: 0.55 }}
-            />
-            {/* Animated travelling dot along path */}
-            {!allDone && (
-              <motion.circle
-                r="4"
-                fill={color}
-                style={{ filter: `drop-shadow(0 0 6px ${color})` }}
-                animate={{
-                  offsetDistance: ['0%', '100%'],
-                }}
-                // Uses CSS offset-path — framer handles via custom style
-              />
-            )}
-          </svg>
-
-          {/* Nodes + labels overlay */}
-          <div className="absolute inset-0" style={{ position: 'absolute' }}>
-            {STEP_DEFS.map((step, idx) => (
-              <PathNode
-                key={step.id}
-                step={step}
-                pos={STEP_POSITIONS[idx]}
-                status={getStatus(step.id, idx)}
+        {/* ── Journey Map ── */}
+        <div className="px-4 pb-5 space-y-0">
+          {steps.map((step, idx) => (
+            <div key={step.num} className="flex items-stretch gap-3">
+              <StepNode
+                num={step.num}
+                status={step.status}
                 color={color}
-                onClick={() => handleStep(step.id)}
-                practiceName={practice?.name}
+                isLast={idx === steps.length - 1}
               />
-            ))}
-          </div>
+              <div
+                className="flex flex-col flex-1 min-w-0"
+                style={{ paddingBottom: idx < steps.length - 1 ? 8 : 0 }}
+              >
+                <StepCard def={step} />
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* ── All done ── */}
+        {/* ── All done banner ── */}
         <AnimatePresence>
           {allDone && (
             <motion.div
@@ -559,7 +555,10 @@ export function TodayPath({
             >
               <div
                 className="p-4 rounded-2xl text-center space-y-1"
-                style={{ background: color + '10', border: `1px solid ${color}25` }}
+                style={{
+                  background: color + '10',
+                  border: `1px solid ${color}25`,
+                }}
               >
                 <div className="text-base">🌸</div>
                 <p className="text-[12px] font-serif italic text-[var(--text-secondary)]">
@@ -571,10 +570,10 @@ export function TodayPath({
         </AnimatePresence>
       </motion.div>
 
-      {/* ── Sacred commitment modal ── */}
+      {/* ── Commitment Modal ── */}
       <AnimatePresence>
         {showCommitment && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/55 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.88, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -612,7 +611,7 @@ export function TodayPath({
                   </button>
                   <button
                     onClick={() => setShowCommitment(false)}
-                    className="max-w-xs mx-auto text-xs py-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                    className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                   >
                     Not yet — I need more time
                   </button>
