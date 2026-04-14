@@ -1,9 +1,14 @@
 // @ts-nocheck
 import React, { useMemo, useState, useEffect } from 'react';
+import { useTheme } from '../../theme/ThemeSystem';
+
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, Circle, BookOpen, ChevronRight, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Circle, BookOpen, ChevronRight, ArrowRight, ArrowLeft } from 'lucide-react';
 import { doc, setDoc, onSnapshot, Timestamp } from 'firebase/firestore';
+import { VoiceService } from '../../services/voiceService';
+
 import { db } from '../../firebase';
+import { ErrorBoundary } from '../../components/ui/ErrorBoundary';
 
 // ── Practice definitions ──────────────────────────────────────────────────────
 
@@ -16,6 +21,8 @@ const WISDOM_PRACTICES = [
     practiceDesc: 'When a spiral starts today — say it slowly, three times.',
     duration: '30 sec when triggered',
     color: '#B8973A',
+    imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q1_light.png'),
+    imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q1_dark.png'),
     steps: [
       'Notice the negative thought or anxious spiral starting.',
       'Stop following it. Take one slow breath.',
@@ -31,6 +38,8 @@ const WISDOM_PRACTICES = [
     practiceDesc: 'Sit quietly for 2 minutes. Watch the voice without following it.',
     duration: '2 min',
     color: '#9575CD',
+    imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q2_light.png'),
+    imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q2_dark.png'),
     steps: [
       'Sit quietly. Close your eyes if you can. Take one slow breath.',
       'Notice what the mind is saying. Don\'t answer it. Just hear it.',
@@ -47,6 +56,8 @@ const WISDOM_PRACTICES = [
     practiceDesc: 'Three times today — car, door, phone — stop one second and notice.',
     duration: '1 sec × 3',
     color: '#3A8BBF',
+    imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q3_light.png'),
+    imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q3_dark.png'),
     triggerCount: 3,
     triggers: [
       'Before starting the car — notice you\'re on a small planet spinning in space.',
@@ -62,6 +73,8 @@ const WISDOM_PRACTICES = [
     practiceDesc: 'Pause for 1 minute. Notice the stillness behind the movement.',
     duration: '1 min',
     color: '#FF6F61',
+    imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q4_light.png'),
+    imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q4_dark.png'),
     steps: [
       'Find a quiet moment. Sit or stand comfortably.',
       'Notice the sounds, thoughts, and sensations present.',
@@ -77,6 +90,8 @@ const WISDOM_PRACTICES = [
     practiceDesc: 'Sit for 3 minutes. Don\'t silence the mind — just stay settled beneath it.',
     duration: '3 min',
     color: '#2E9E7A',
+    imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q5_light.png'),
+    imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q5_dark.png'),
     steps: [
       'Sit comfortably. Take two slow breaths.',
       'The mind will talk. Let it. You are not trying to stop it.',
@@ -92,6 +107,8 @@ const WISDOM_PRACTICES = [
     practiceDesc: 'Realize you are the one witnessing both the inner and outer world.',
     duration: '2 min',
     color: '#EC4899',
+    imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q6_light.png'),
+    imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q6_dark.png'),
     steps: [
       'Pause and notice your surroundings — colors, shapes, light.',
       'Notice the thoughts and feelings moving within you.',
@@ -107,6 +124,8 @@ const WISDOM_PRACTICES = [
     practiceDesc: 'When a "thorn" of irritation appears, simply relax and let it pass.',
     duration: '1 min',
     color: '#F59E0B',
+    imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q7_light.png'),
+    imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q7_dark.png'),
     steps: [
       'Notice a small irritation, judgment, or "thorn" in your mind today.',
       'Instead of trying to "fix" or "remove" it, simply relax and let it be there.',
@@ -115,6 +134,8 @@ const WISDOM_PRACTICES = [
     ],
   },
 ];
+
+
 
 // ── Firestore helpers ─────────────────────────────────────────────────────────
 
@@ -183,156 +204,167 @@ function WisdomCard({
     onStart?: () => void;
     autoExpand?: boolean;
 }) {
+  const { mode } = useTheme();
   const [expanded, setExpanded] = useState(autoExpand);
-  const [stepIndex, setStepIndex] = useState(-1); // -1 = not started
+  const [stepIndex, setStepIndex] = useState(-1);
   const { completed, triggers, anySituationalDone, markDone, markTrigger } = usePracticeRecord(userId, practice.id);
 
   const isQ3 = practice.triggerCount !== undefined;
   const isLocked = !!practice.locked;
   const color = practice.color;
-
-  // Final check: is this task actually done?
   const isDone = completed || anySituationalDone;
 
-  const handleStart = () => {
+  const handleStart = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (isLocked || completed) return;
     onStart?.();
     setStepIndex(0);
     setExpanded(true);
   };
 
-  const handleNextStep = async () => {
+  const handleNextStep = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     const steps = practice.steps || [];
     if (stepIndex < steps.length - 1) {
       setStepIndex(stepIndex + 1);
     } else {
       await markDone();
       setStepIndex(-1);
+      // We keep it flipped for a moment then maybe allow close or just stay
     }
   };
 
+  const image = mode === 'dark' ? practice.imageDark : practice.imageLight;
+
   return (
-    <motion.div
-      layout
-      style={{
-        '--card-glow-surge': `${color}40`,
-        '--card-glow-base': completed ? 'transparent' : `${color}10`,
-        '--card-glow-pulse': completed ? 'transparent' : `${color}20`,
-        borderColor: completed ? 'var(--border-subtle)' : expanded ? color + '60' : 'var(--border-subtle)',
-        background: completed ? 'var(--bg-surface)' : expanded ? color + '0a' : 'var(--bg-surface)',
-        opacity: isLocked ? 0.4 : 1,
-      } as React.CSSProperties}
-      className={`relative group rounded-[28px] border transition-all duration-500 overflow-hidden ${!isDone ? 'card-glow' : ''}`}
-    >
-      <div className="absolute -right-4 -top-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity duration-700 pointer-events-none">
-        <span className="text-[100px] font-serif select-none">{practice.questionNum}</span>
-      </div>
-
-      <button
-        disabled={isLocked}
-        onClick={() => {
-          if (!isLocked) {
-            setExpanded(e => !e);
-            if (!expanded) onStart?.();
-          }
-        }}
-        className="w-full text-left p-4 space-y-3"
-        style={{ cursor: isLocked ? 'default' : 'pointer' }}
+    <div className="[perspective:1500px] w-full h-[400px] min-h-[400px] group/card">
+      <motion.div
+        animate={{ rotateY: expanded ? 180 : 0 }}
+        transition={{ duration: 0.8, type: 'spring', stiffness: 90, damping: 22 }}
+        className="relative w-full h-full min-h-[400px] [transform-style:preserve-3d]"
       >
-        <div className="flex justify-between items-start">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-serif transition-all duration-500"
-            style={{
-              background: isDone ? color + '20' : 'var(--bg-secondary)',
-              border: `1px solid ${isDone ? color + '40' : 'var(--border-subtle)'}`,
-              color: isDone ? color : 'var(--text-muted)',
-              boxShadow: isDone ? `0 0 20px ${color}30` : 'none'
-            }}
-          >
-            {isDone ? <CheckCircle2 size={16} style={{ color }} /> : practice.questionNum}
-          </div>
-          
-          <div className="flex flex-col items-end gap-1">
-             {isDone ? (
-              <motion.span 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full"
-                style={{ background: color + '15', color }}>
-                ✓ Complete
-              </motion.span>
-            ) : (
-              <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.25em] bg-[var(--bg-secondary)] px-3 py-1.5 rounded-full border border-[var(--border-subtle)]">
-                {practice.duration}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.25em]"
-            style={{ color: isLocked ? 'var(--text-muted)' : color }}>
-            {isLocked ? 'Locked' : `Question ${practice.questionNum}`}
-          </p>
-          <h4 className="text-[15px] font-serif font-light text-[var(--text-primary)] leading-tight">
-            {practice.questionTitle}
-          </h4>
-        </div>
-
-        <div className="pt-1">
-          <p className="text-[13px] font-serif italic leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            "{practice.practiceName}"
-          </p>
-          <p className="text-[11px] text-[var(--text-muted)] mt-1 leading-relaxed opacity-80">
-            {practice.practiceDesc}
-          </p>
-        </div>
-
-        {!isLocked && !isDone && (
-          <div className="pt-3 flex items-center gap-2">
-            <div className="h-px flex-1" style={{ background: color + '20' }} />
-            <span className="text-[8px] font-black uppercase tracking-[0.3em] opacity-40 group-hover:opacity-100 transition-opacity" style={{ color }}>
-              {expanded ? 'Close' : 'Start Practice'}
-            </span>
-            <ChevronRight
-              size={10}
-              className="transition-transform duration-500"
-              style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', color: color + '80' }}
+        {/* FRONT FACE */}
+        <div 
+          className="absolute inset-0 [backface-visibility:hidden] rounded-[32px] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)] card-glow cursor-pointer z-10 w-full h-full min-h-[400px]"
+          style={{ '--card-glow-surge': `${color}40`, '--card-glow-base': `${color}10` } as React.CSSProperties}
+          onClick={() => !isLocked && setExpanded(true)}
+        >
+          {/* Practice Image Background */}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={image} 
+              alt="" 
+              className="w-full h-full object-cover opacity-60 group-hover/card:scale-110 transition-transform duration-1000" 
+            />
+            <div 
+              className="absolute inset-0"
+              style={{ background: `linear-gradient(to top, var(--bg-surface) 15%, transparent 70%)` }}
             />
           </div>
-        )}
-      </button>
 
-      <AnimatePresence>
-        {expanded && !isLocked && !isDone && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden bg-[var(--bg-secondary)]/30 border-t border-[var(--border-subtle)]"
-          >
-            <div className="p-5 space-y-4">
+          <div className="relative z-10 h-full">
+            {/* Technical Header - Number and Time at Top */}
+            <div className="absolute top-6 left-6 z-20">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border-2 border-white/10 bg-[var(--bg-surface)] shadow-lg" style={{ color }}>
+                {practice.questionNum}
+              </div>
+            </div>
+
+            {/* High-Contrast Duration Badge - Parallel to Title */}
+            <div className="absolute top-6 right-6 z-20">
+              <div className="px-4 py-1.5 rounded-full bg-[var(--bg-surface)] border border-white/10 text-[11px] font-black uppercase tracking-wider shadow-[0_0_20px_rgba(0,0,0,0.3)]" style={{ color }}>
+                {practice.duration}
+              </div>
+            </div>
+
+            {/* Title - Positioned below the badges to avoid any overlap */}
+            <div className="absolute top-[80px] left-0 right-0 px-8 text-center z-10">
+              <h4 className="text-[22px] font-serif font-light text-[var(--text-primary)] leading-tight drop-shadow-sm">
+                {practice.questionTitle}
+              </h4>
+            </div>
+
+            {/* Bottom Right Start Gateway */}
+            <div className="absolute bottom-6 right-8">
+              <div 
+                className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] group/btn"
+                style={{ color }}
+              >
+                Start Practice 
+                <motion.div
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                >
+                  <ChevronRight size={14} />
+                </motion.div>
+              </div>
+            </div>
+          </div>
+
+          {isDone && (
+            <div className="absolute inset-0 bg-emerald-500/5 backdrop-blur-[1px] flex items-center justify-center z-20">
+              <div className="bg-[var(--bg-surface)]/90 backdrop-blur-xl p-5 rounded-full shadow-2xl border border-emerald-500/20">
+                <CheckCircle2 size={36} className="text-emerald-500" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* BACK FACE */}
+        <div 
+          className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-[32px] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex flex-col shadow-2xl z-0 w-full h-full min-h-[400px]"
+          style={{ borderColor: expanded ? color + '40' : 'transparent' }}
+        >
+          {/* Subtle image ref in background */}
+          <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
+            <img src={image} alt="" className="w-full h-full object-cover blur-[4px]" />
+          </div>
+
+          <div className="relative z-10 flex flex-col h-full">
+            {/* Header - Clickable to flip back */}
+            <div 
+              onClick={() => setExpanded(false)}
+              className="p-6 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-secondary)]/20 cursor-pointer hover:bg-[var(--bg-secondary)]/40 transition-colors group/header"
+            >
+              <div className="flex items-center gap-3">
+                 <div className="p-2 -ml-2 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm group-hover/header:border-current transition-colors" style={{ color: expanded ? color : 'inherit' }}>
+                   <motion.div animate={{ x: [0, -2, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
+                    <ArrowLeft size={16} />
+                   </motion.div>
+                 </div>
+                 <div>
+                   <h5 className="text-[14px] font-serif italic text-[var(--text-primary)] leading-none">
+                     {practice.practiceName}
+                   </h5>
+                   <p className="text-[9px] font-black uppercase tracking-widest mt-1 opacity-40 group-hover/header:opacity-70 transition-opacity">Return to Card</p>
+                 </div>
+              </div>
+              {isDone && <CheckCircle2 size={16} className="text-emerald-500 shadow-glow" />}
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-7 space-y-6 custom-scrollbar">
               {isQ3 ? (
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   {practice.triggers!.map((label, i) => {
                     const done = i < triggers;
                     return (
                       <button
                         key={i}
                         disabled={done}
-                        onClick={() => markTrigger(practice.triggerCount!)}
-                        className="w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all duration-300"
+                        onClick={(e) => { e.stopPropagation(); markTrigger(practice.triggerCount!); }}
+                        className="w-full flex items-center gap-4 p-4.5 rounded-2xl border text-left transition-all duration-300"
                         style={{
                           borderColor: done ? color + '40' : 'var(--border-default)',
                           background: done ? color + '08' : 'var(--bg-surface)',
                           cursor: done ? 'default' : 'pointer',
                         }}
                       >
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-[12px] font-black"
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-[10px] font-black"
                           style={{
                             background: done ? color + '20' : 'var(--bg-secondary)',
                             color: done ? color : 'var(--text-muted)',
-                            border: `1.5px solid ${done ? color + '60' : 'var(--border-subtle)'}`,
+                            border: `1px solid ${done ? color + '40' : 'var(--border-subtle)'}`,
                           }}>
                           {done ? <CheckCircle2 size={14} /> : i + 1}
                         </div>
@@ -340,70 +372,59 @@ function WisdomCard({
                           style={{ color: 'var(--text-primary)' }}>
                           {label}
                         </span>
-                        {!done && (
-                          <div className="px-2.5 py-1 rounded-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] text-[9px] font-black uppercase tracking-wider" style={{ color }}>
-                            Mark
-                          </div>
-                        )}
                       </button>
                     );
                   })}
                 </div>
               ) : (
-                <div className="space-y-5">
-                  {stepIndex >= 0 && (
-                    <div className="px-1">
-                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2 opacity-60">
-                         <span>Progress</span>
-                         <span>Step {stepIndex + 1} of {practice.steps!.length}</span>
-                      </div>
-                      <div className="flex gap-1.5 h-1">
-                        {practice.steps!.map((_, i) => (
-                          <div key={i} className="flex-1 rounded-full transition-all duration-700"
-                            style={{
-                              background: i <= stepIndex ? color : 'var(--border-subtle)',
-                              opacity: i < stepIndex ? 0.3 : 1,
-                              boxShadow: i === stepIndex ? `0 0 10px ${color}40` : 'none'
-                            }} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
+                <div className="space-y-6">
                   {stepIndex === -1 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-4 pb-4">
                       {practice.steps!.map((step, i) => (
-                        <div key={i} className="flex gap-4 p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                          <span className="text-[12px] font-black mt-0.5" style={{ color }}>{i + 1}</span>
+                        <div key={i} className="flex gap-4 p-4 rounded-2xl bg-[var(--bg-secondary)]/30 border border-[var(--border-subtle)]">
+                          <span className="text-[11px] font-black mt-0.5" style={{ color }}>{i + 1}</span>
                           <p className="text-[14px] font-serif text-[var(--text-secondary)] leading-relaxed">{step}</p>
                         </div>
                       ))}
-                      <button
-                        onClick={handleStart}
-                        className="w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] mt-2 transition-all active:scale-[0.98] shadow-lg"
-                        style={{ background: color, color: 'white', border: 'none', cursor: 'pointer' }}>
-                        Begin Daily Practice
-                      </button>
+                      {!isDone && (
+                        <button
+                          onClick={handleStart}
+                          className="w-full py-4.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all active:scale-[0.98] shadow-lg bg-surface border border-[var(--border-subtle)] hover:border-current mt-4"
+                          style={{ color }}>
+                          Begin Practice
+                        </button>
+                      )}
                     </div>
                   ) : (
-                    <div className="space-y-5">
+                    <div className="space-y-8">
+                      <div className="flex justify-between text-[9px] font-black uppercase tracking-widest opacity-60">
+                         <span>Guidance {stepIndex + 1} / {practice.steps!.length}</span>
+                      </div>
                       <motion.div 
                         key={stepIndex}
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="p-8 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm min-h-[140px] flex items-center justify-center text-center relative overflow-hidden"
                       >
+                        <div className="absolute top-0 left-0 w-full h-1 bg-[var(--bg-secondary)]">
+                          <motion.div 
+                            className="h-full"
+                            style={{ background: color }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${((stepIndex + 1) / practice.steps!.length) * 100}%` }}
+                          />
+                        </div>
                         <p className="text-[17px] font-serif text-[var(--text-primary)] leading-relaxed italic">
                           "{practice.steps![stepIndex]}"
                         </p>
                       </motion.div>
                       <button
                         onClick={handleNextStep}
-                        className="w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-lg"
-                        style={{ background: color, color: 'white', border: 'none', cursor: 'pointer' }}>
+                        className="w-full py-4.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-xl"
+                        style={{ background: color, color: 'white' }}>
                         {stepIndex < practice.steps!.length - 1
-                          ? <><ArrowRight size={14} /> Next Step</>
-                          : <><CheckCircle2 size={14} /> Complete Practice</>
+                          ? <><ArrowRight size={14} /> Next Integration</>
+                          : <><CheckCircle2 size={14} /> Complete Journey</>
                         }
                       </button>
                     </div>
@@ -411,28 +432,22 @@ function WisdomCard({
                 </div>
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {isDone && expanded && (
-        <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="py-4 px-6 text-center bg-[var(--bg-secondary)]/30 border-t border-[var(--border-subtle)]"
-        >
-          <div className="flex items-center justify-center gap-2">
-             <CheckCircle2 size={14} className="text-emerald-500" />
-             <span className="text-[13px] font-serif italic text-[var(--text-secondary)]">
-               {anySituationalDone ? 'Daily practice complete.' : 'Technique complete for today.'}
-             </span>
+            {isDone && (
+              <div className="p-5 text-center bg-emerald-500/5 border-t border-[var(--border-subtle)]">
+                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-500 flex items-center justify-center gap-2">
+                   Journey Integrated
+                 </p>
+              </div>
+            )}
           </div>
-          <p className="text-[9px] font-black uppercase tracking-[0.25em] mt-1 opacity-30">Rest in awareness until tomorrow</p>
-        </motion.div>
-      )}
-    </motion.div>
+        </div>
+      </motion.div>
+    </div>
+
   );
 }
+
 
 // ── Main section export ───────────────────────────────────────────────────────
 
@@ -470,17 +485,19 @@ export function WisdomPracticeSection({
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pb-20">
-        {WISDOM_PRACTICES.map((p) => (
-          <WisdomCard 
-            key={p.id} 
-            practice={p} 
-            userId={userId}
-            onStart={() => onStart?.(p.id)}
-            autoExpand={false}
-          />
-        ))}
-      </div>
+      <ErrorBoundary featureName="Wisdom Practice Grid">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pb-20">
+          {WISDOM_PRACTICES.map((p) => (
+            <WisdomCard 
+              key={p.id} 
+              practice={p} 
+              userId={userId}
+              onStart={() => onStart?.(p.id)}
+              autoExpand={false}
+            />
+          ))}
+        </div>
+      </ErrorBoundary>
     </section>
   );
 }

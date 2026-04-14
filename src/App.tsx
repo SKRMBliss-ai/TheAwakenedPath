@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { BreathingVisual } from './components/BreathingVisual';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { ReframingVisual } from './components/domain/ReframingVisual';
 import { WhatsAppButton } from './components/ui/WhatsAppButton';
 
@@ -374,35 +375,37 @@ export default function UntetheredApp() {
   }
 
   return (
-    <div className={cn("h-screen w-full font-sans transition-colors duration-500 flex flex-col relative overflow-hidden", darkMode ? 'bg-[#0f172a] text-slate-100' : 'bg-slate-50 text-slate-900')}>
-      <PracticeModal />
+    <ErrorBoundary featureName="Global App Shell">
+      <div className={cn("h-screen w-full font-sans transition-colors duration-500 flex flex-col relative overflow-hidden", darkMode ? 'bg-[#0f172a] text-slate-100' : 'bg-slate-50 text-slate-900')}>
+        <PracticeModal />
 
-      {/* Minimal Header */}
-      <div className="absolute top-0 w-full p-6 flex justify-between z-40 pointer-events-none">
-        <div className="pointer-events-auto p-2"><div className="space-y-1"><div className="w-6 h-0.5 bg-current" /><div className="w-4 h-0.5 bg-current opacity-70" /></div></div>
-        <button onClick={() => setDarkMode(!darkMode)} className="pointer-events-auto p-2 opacity-70 hover:opacity-100">{darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}</button>
+        {/* Minimal Header */}
+        <div className="absolute top-0 w-full p-6 flex justify-between z-40 pointer-events-none">
+          <div className="pointer-events-auto p-2"><div className="space-y-1"><div className="w-6 h-0.5 bg-current" /><div className="w-4 h-0.5 bg-current opacity-70" /></div></div>
+          <button onClick={() => setDarkMode(!darkMode)} className="pointer-events-auto p-2 opacity-70 hover:opacity-100">{darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}</button>
+        </div>
+
+        {/* Dynamic Content */}
+        <div className="flex-1 overflow-hidden relative">
+          <AnimatePresence mode="wait">
+            {activeTab === 'journey' && <motion.div key="j" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full"><HomeScreen /></motion.div>}
+            {activeTab === 'library' && <motion.div key="l" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full"><LibraryScreen /></motion.div>}
+            {activeTab === 'profile' && <motion.div key="p" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full"><ProfileScreen /></motion.div>}
+          </AnimatePresence>
+        </div>
+
+        <WhatsAppButton />
+
+        {/* Bottom Nav */}
+        <div className={cn("h-20 border-t flex justify-around items-center z-50", darkMode ? "bg-[#0f172a] border-white/5" : "bg-white border-slate-100")}>
+          {[{ id: 'journey', i: Moon, l: 'Journey' }, { id: 'library', i: Book, l: 'Library' }, { id: 'profile', i: User, l: 'Profile' }].map(t => (
+            <button key={t.id} onClick={() => setActiveTab(t.id as any)} className={cn("flex-1 py-1 flex flex-col items-center gap-1 transition-colors", activeTab === t.id ? "text-indigo-500" : "opacity-40")}>
+              <t.i className={cn("w-6 h-6", activeTab === t.id && "fill-current")} />
+              <span className="text-[10px] font-bold uppercase tracking-widest">{t.l}</span>
+            </button>
+          ))}
+        </div>
       </div>
-
-      {/* Dynamic Content */}
-      <div className="flex-1 overflow-hidden relative">
-        <AnimatePresence mode="wait">
-          {activeTab === 'journey' && <motion.div key="j" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full"><HomeScreen /></motion.div>}
-          {activeTab === 'library' && <motion.div key="l" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full"><LibraryScreen /></motion.div>}
-          {activeTab === 'profile' && <motion.div key="p" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full"><ProfileScreen /></motion.div>}
-        </AnimatePresence>
-      </div>
-
-      <WhatsAppButton />
-
-      {/* Bottom Nav */}
-      <div className={cn("h-20 border-t flex justify-around items-center z-50", darkMode ? "bg-[#0f172a] border-white/5" : "bg-white border-slate-100")}>
-        {[{ id: 'journey', i: Moon, l: 'Journey' }, { id: 'library', i: Book, l: 'Library' }, { id: 'profile', i: User, l: 'Profile' }].map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id as any)} className={cn("flex-1 py-1 flex flex-col items-center gap-1 transition-colors", activeTab === t.id ? "text-indigo-500" : "opacity-40")}>
-            <t.i className={cn("w-6 h-6", activeTab === t.id && "fill-current")} />
-            <span className="text-[10px] font-bold uppercase tracking-widest">{t.l}</span>
-          </button>
-        ))}
-      </div>
-    </div>
+    </ErrorBoundary>
   );
 }
