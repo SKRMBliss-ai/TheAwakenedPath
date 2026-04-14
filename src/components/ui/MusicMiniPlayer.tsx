@@ -82,7 +82,7 @@ export const MusicMiniPlayer: React.FC = () => {
   };
 
   const handleClose = () => {
-    VoiceService.stop();
+    VoiceService.stopAll();
   };
 
   const formatTime = (seconds: number) => {

@@ -53,9 +53,9 @@ export class VoiceService {
             storagePath = cleanPath.replace('mp3/', '');
         }
 
-        const encodedPath = encodeURIComponent(storagePath);
-        // Using GCS public URL which respects public ACLs and is better for cache/anonymous access
-        return `https://storage.googleapis.com/${this.STORAGE_BUCKET}/${encodedPath}`;
+        // Using GCS public URL which respects public ACLs and is better for cache/anonymous access.
+        // We do NOT encodeURIComponent the slashes here as storage.googleapis.com expects a standard path.
+        return `https://storage.googleapis.com/${this.STORAGE_BUCKET}/${storagePath}`;
     }
 
     private static audioCache: Record<string, Promise<string>> = {};
@@ -493,8 +493,37 @@ export class VoiceService {
         }
     }
 
+    /** 
+     * Stops the current voice guidance (TTS) but keeps background music loaded/playing.
+     * This is the default 'cleanup' method used when navigating between screens.
+     */
     static stop() {
         this.currentRequestId++; // Invalidate any in-flight requests
+        
+        this.stopTTS();
+
+        // If music was paused by the TTS being stopped, resume it now
+        if (this._activeCategory === 'tts') {
+            const hasSavedMusic = this._savedMusicTime > 0;
+            this.setStatus('idle');
+            this._activeCategory = null;
+            
+            if (this.musicAudio && hasSavedMusic) {
+                this.resume('music');
+            }
+        }
+        
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+    }
+
+    /** 
+     * Completely stops all audio including background music. 
+     * Used for the 'X' close button on players or app shutdown.
+     */
+    static stopAll() {
+        this.currentRequestId++;
         this.setStatus('idle');
         this.stopTTS();
         this.stopMusic();
@@ -538,8 +567,8 @@ export class VoiceService {
 
     static init(): Promise<void> {
         if (typeof window !== 'undefined') {
-            window.addEventListener('pagehide', () => this.stop());
-            window.addEventListener('beforeunload', () => this.stop());
+            window.addEventListener('pagehide', () => this.stopAll());
+            window.addEventListener('beforeunload', () => this.stopAll());
         }
         return Promise.resolve();
     }

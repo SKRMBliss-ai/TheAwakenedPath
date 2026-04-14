@@ -154,6 +154,22 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
     setLightboxIndex(index);
   };
 
+  // ── Scroll Tracking ──
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+      if (isNearBottom) {
+        updateProgress('question5', { read: true });
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [user?.uid, updateProgress]);
+
   // Theme Detection
   useEffect(() => {
     const isCurrentlyDark = document.documentElement.classList.contains('dark');
