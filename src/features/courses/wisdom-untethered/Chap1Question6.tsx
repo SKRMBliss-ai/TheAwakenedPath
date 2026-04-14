@@ -1,28 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
-// Bump for TS
 import { useAuth } from '../../auth/AuthContext';
 import { cn } from '../../../lib/utils';
 import styles from './Chap1Question6.module.css';
 import { useCourseTracking } from '../../../hooks/useCourseTracking';
 import { CourseHero } from './CourseHero';
 import { CourseLightbox } from './CourseLightbox';
+import { VoiceService } from '../../../services/voiceService';
 
 const SLIDE_IMAGES: Record<string, string> = {
-  "overview": "/WisdomUntethered/Chap1/Question6/overview.jpg",
-  "slide1": "/WisdomUntethered/Chap1/Question6/1.jpg",
-  "slide2": "/WisdomUntethered/Chap1/Question6/2.jpg",
-  "slide3": "/WisdomUntethered/Chap1/Question6/3.jpg",
-  "slide4": "/WisdomUntethered/Chap1/Question6/4.jpg",
-  "slide5": "/WisdomUntethered/Chap1/Question6/5.jpg",
-  "slide6": "/WisdomUntethered/Chap1/Question6/6.jpg",
-  "slide7": "/WisdomUntethered/Chap1/Question6/7.jpg",
-  "slide8": "/WisdomUntethered/Chap1/Question6/8.jpg",
-  "slide9": "/WisdomUntethered/Chap1/Question6/9.jpg",
-  "slide10": "/WisdomUntethered/Chap1/Question6/10.jpg",
-  "slide11": "/WisdomUntethered/Chap1/Question6/11.jpg",
-  "slide12": "/WisdomUntethered/Chap1/Question6/12.jpg",
-  "slide13": "/WisdomUntethered/Chap1/Question6/13.jpg",
-  "slide14": "/WisdomUntethered/Chap1/Question6/14.jpg",
+  "overview": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/overview.webp"),
+  "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/1.webp"),
+  "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/2.webp"),
+  "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/3.webp"),
+  "slide4": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/4.webp"),
+  "slide5": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/5.webp"),
+  "slide6": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/6.webp"),
+  "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/7.webp"),
+  "slide8": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/8.webp"),
+  "slide9": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/9.webp"),
+  "slide10": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/10.webp"),
+  "slide11": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/11.webp"),
+  "slide12": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/12.webp"),
+  "slide13": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/13.webp"),
+  "slide14": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question6/14.webp"),
 };
 
 const ALL_SLIDES = ["overview", ...Array.from({ length: 14 }, (_, i) => `slide${i + 1}`)];
@@ -131,13 +131,13 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>01</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide1"]} alt="The hook" onClick={() => openLightbox(1)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide1"]} alt="The hook" onClick={() => openLightbox(1)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The Hook</span>
             <h2 className={styles.slideH}>Thoughts That <em>Arrive Uninvited</em></h2>
-            <p className={styles.slideP}>There's a particular kind of thought that arrives without warning. Something surfaces from years ago. A moment when you were selfish, careless, or cruel.</p>
+            <p className={styles.slideP}>There's a particular kind of thought that arrives without warning. Something surfaces from years ago. A moment when you were selfish, carefull, or cruel.</p>
             <div className={styles.pull}>"The mind runs it again. Reconstructing it. Sharpening the edges."</div>
           </div>
         </div>
@@ -151,7 +151,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>02</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide2"]} alt="The process" onClick={() => openLightbox(2)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide2"]} alt="The process" onClick={() => openLightbox(2)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -171,7 +171,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>03</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide3"]} alt="The realization" onClick={() => openLightbox(3)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide3"]} alt="The realization" onClick={() => openLightbox(3)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -190,7 +190,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>04</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide4"]} alt="The teaching" onClick={() => openLightbox(4)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide4"]} alt="The teaching" onClick={() => openLightbox(4)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -209,7 +209,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>05</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide5"]} alt="The analogy" onClick={() => openLightbox(5)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide5"]} alt="The analogy" onClick={() => openLightbox(5)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -229,7 +229,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>06</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide6"]} alt="The practice" onClick={() => openLightbox(6)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide6"]} alt="The practice" onClick={() => openLightbox(6)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -248,7 +248,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>07</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide7"]} alt="The weight" onClick={() => openLightbox(7)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide7"]} alt="The weight" onClick={() => openLightbox(7)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -267,7 +267,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>08</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide8"]} alt="Narrative" onClick={() => openLightbox(8)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide8"]} alt="Narrative" onClick={() => openLightbox(8)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -286,7 +286,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>09</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide9"]} alt="The shift" onClick={() => openLightbox(9)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide9"]} alt="The shift" onClick={() => openLightbox(9)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -305,7 +305,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>10</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide10"]} alt="Breath" onClick={() => openLightbox(10)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide10"]} alt="Breath" onClick={() => openLightbox(10)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -324,7 +324,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>11</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide11"]} alt="Visualization" onClick={() => openLightbox(11)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide11"]} alt="Visualization" onClick={() => openLightbox(11)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -343,7 +343,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>12</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide12"]} alt="Softening" onClick={() => openLightbox(12)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide12"]} alt="Softening" onClick={() => openLightbox(12)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -362,7 +362,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>13</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide13"]} alt="The self" onClick={() => openLightbox(13)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide13"]} alt="The self" onClick={() => openLightbox(13)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -381,7 +381,7 @@ export function Chap1Question6({ onOpenJournal }: Chap1Question6Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>14</span>
             <div className={styles.imageContainer}>
-              <img src={SLIDE_IMAGES["slide14"]} alt="Integration" onClick={() => openLightbox(14)} className={styles.slideImg} />
+              <img src={SLIDE_IMAGES["slide14"]} alt="Integration" onClick={() => openLightbox(14)} className={styles.slideImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>

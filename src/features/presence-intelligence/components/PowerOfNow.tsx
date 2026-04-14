@@ -261,7 +261,7 @@ const TeachingsSection: React.FC<{
                             {/* Thumbnail – full width, 16:9 */}
                             <div className="relative w-full aspect-video bg-black/40 flex-shrink-0">
                                 <img
-                                    src={`https://img.youtube.com/vi/${part.youtubeId}/mqdefault.jpg`}
+                                    src={`https://img.youtube.com/vi/${part.youtubeId}/hqdefault.jpg`}
                                     alt=""
                                     className="w-full h-full object-cover"
                                     style={{ opacity: isPlaying ? 0.9 : 0.72 }}
@@ -1040,3 +1040,4 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
         </div>
     );
 };
+

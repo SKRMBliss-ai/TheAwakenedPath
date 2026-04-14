@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './CourseCommon.module.css';
+import { VoiceService } from '../../../services/voiceService';
 
 interface CourseLightboxProps {
   isOpen: boolean;
@@ -59,7 +60,11 @@ export const CourseLightbox: React.FC<CourseLightboxProps> = ({
             className={styles.lightboxImg}
             onClick={e => e.stopPropagation()}
           >
-            <img src={imgSrc} alt="Slide View" />
+            <img 
+              src={VoiceService.getStorageUrl(imgSrc)} 
+              alt="Slide View" 
+              crossOrigin="anonymous"
+            />
           </motion.div>
 
           <div className={styles.lightboxNav} onClick={e => e.stopPropagation()}>

@@ -56,7 +56,7 @@ const MusicCard = ({
 
   const coverSrc = track.coverImage 
     ? (mode === 'dark' ? track.coverImage.dark : track.coverImage.light)
-    : (mode === 'dark' ? '/sacred-bg-dark.png' : '/sacred-bg-light.png'); // Placeholder
+    : (mode === 'dark' ? '/sacred-bg-dark.webp' : '/sacred-bg-light.webp'); // Placeholder
 
   return (
     <div className={styles.trackCard} onClick={toggleFlip}>
@@ -71,7 +71,12 @@ const MusicCard = ({
       >
         {/* FRONT SIDE */}
         <div className={styles.cardFront}>
-          <img src={coverSrc} alt={track.title} className={styles.frontImage} />
+          <img 
+            src={coverSrc} 
+            alt={track.title} 
+            className={styles.frontImage} 
+            crossOrigin="anonymous"
+          />
           <div className={styles.frontOverlay}>
             <button 
               onClick={togglePlay}
@@ -174,10 +179,28 @@ export const MusicHub = () => {
 
   // Sync active track URL with VoiceService
   useEffect(() => {
-    // Initial sync
+    // 1. Initial sync
     setActiveTrackUrl(VoiceService.currentUrl);
     
-    // Subscribe to changes
+    // 2. Preload all track covers to eliminate delay
+    SACRED_TRACKS.forEach(track => {
+      if (track.coverImage) {
+        const darkImg = new Image();
+        darkImg.crossOrigin = 'anonymous';
+        darkImg.src = track.coverImage.dark;
+        const lightImg = new Image();
+        lightImg.crossOrigin = 'anonymous';
+        lightImg.src = track.coverImage.light;
+      }
+    });
+
+    // 3. Establish early connection to Storage domain
+    const link = document.createElement('link');
+    link.rel = 'dns-prefetch';
+    link.href = 'https://firebasestorage.googleapis.com';
+    document.head.appendChild(link);
+
+    // 4. Subscribe to changes
     return VoiceService.subscribe(() => {
       setActiveTrackUrl(VoiceService.currentUrl);
     });
@@ -304,3 +327,4 @@ export const MusicHub = () => {
     </div>
   );
 };
+

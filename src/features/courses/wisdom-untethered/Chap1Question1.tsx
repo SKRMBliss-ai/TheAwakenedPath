@@ -7,26 +7,28 @@ import { useCourseTracking } from '../../../hooks/useCourseTracking';
 import { CourseHero } from './CourseHero';
 import { CourseLightbox } from './CourseLightbox';
 
+import { VoiceService } from '../../../services/voiceService';
+
 const darkImages: Record<string, string> = {
-  "slide1": "/WisdomUntethered/Chap1/Question1/01_BadMood.png",
-  "slide2": "/WisdomUntethered/Chap1/Question1/02_QuestionAsked.png",
-  "slide3": "/WisdomUntethered/Chap1/Question1/03_HigherMind.png",
-  "slide4": "/WisdomUntethered/Chap1/Question1/04_Relax.png",
-  "slide5": "/WisdomUntethered/Chap1/Question1/05_Transmutation.png",
-  "slide6": "/WisdomUntethered/Chap1/Question1/06_MindAsTool.png",
-  "slide7": "/WisdomUntethered/Chap1/Question1/07_Meditation.png",
-  "placeholder_alive": "/WisdomUntethered/Chap1/Question1/01_BadMood.png",
+  "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/01_BadMood.webp"),
+  "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/02_QuestionAsked.webp"),
+  "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/03_HigherMind.webp"),
+  "slide4": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/04_Relax.webp"),
+  "slide5": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/05_Transmutation.webp"),
+  "slide6": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/06_MindAsTool.webp"),
+  "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/07_Meditation.webp"),
+  "placeholder_alive": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/01_BadMood.webp"),
 };
 
 const lightImages: Record<string, string> = {
-  "slide1": "/WisdomUntethered/Chap1/Question1/01_BadMood_light.png",
-  "slide2": "/WisdomUntethered/Chap1/Question1/02_QuestionAsked_light.png",
-  "slide3": "/WisdomUntethered/Chap1/Question1/03_HigherMind_light.png",
-  "slide4": "/WisdomUntethered/Chap1/Question1/04_Relax_light.png",
-  "slide5": "/WisdomUntethered/Chap1/Question1/05_Transmutation_light.png",
-  "slide6": "/WisdomUntethered/Chap1/Question1/06_MindAsTool_light.png",
-  "slide7": "/WisdomUntethered/Chap1/Question1/07_Meditation_light.jpeg",
-  "placeholder_alive": "/WisdomUntethered/Chap1/Question1/01_BadMood_light.png",
+  "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/01_BadMood_light.webp"),
+  "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/02_QuestionAsked_light.webp"),
+  "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/03_HigherMind_light.webp"),
+  "slide4": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/04_Relax_light.webp"),
+  "slide5": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/05_Transmutation_light.webp"),
+  "slide6": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/06_MindAsTool_light.webp"),
+  "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/07_Meditation_light.webp"),
+  "placeholder_alive": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/01_BadMood_light.webp"),
 };
 
 const ALL_SLIDES = ["slide1", "slide2", "slide3", "slide4", "slide5", "slide6", "slide7"];
@@ -347,3 +349,4 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
     </div>
   );
 }
+

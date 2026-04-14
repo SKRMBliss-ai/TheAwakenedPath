@@ -112,7 +112,7 @@ function VideoPlayerView({ videoId }: { videoId: string | null }) {
         {!isPlaying ? (
           <div className="relative w-full h-full flex items-center justify-center group cursor-pointer overflow-hidden rounded-[24px]">
              <img 
-               src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`} 
+               src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`} 
                alt="Video Preview"
                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
              />
@@ -301,3 +301,4 @@ export function WisdomUntetheredCourse({
     </div>
   );
 }
+

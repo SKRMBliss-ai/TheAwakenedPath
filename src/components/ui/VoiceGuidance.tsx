@@ -158,15 +158,35 @@ export const VoiceGuidance = ({
   const isPaused = status === 'paused' && category === 'tts';
   const [showFull, setShowFull] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
+  const [isPulsating, setIsPulsating] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(() => {
+    return !localStorage.getItem('awakened_path_guide_familiar');
+  });
 
   // Detect location for pricing
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const currentScript = getScript(activeTab, isAccessValid, assignment, timezone);
 
+  // Manage Pulse andfamiliarity state
+  useEffect(() => {
+    // Stop any existing pulse
+    setIsPulsating(false);
+
+    // If they are familiar, do nothing
+    if (!isNewUser) return;
+
+    // Trigger pulse on screen switch for new users
+    setIsPulsating(true);
+    const pulseTimer = setTimeout(() => {
+      setIsPulsating(false);
+    }, 5000);
+
+    return () => clearTimeout(pulseTimer);
+  }, [activeTab, isNewUser]);
+
   // Preload Voice
   useEffect(() => {
-    // Preload segments in parallel to reduce initial delay
     const segments = currentScript.split(/\n\n+/).filter(s => s.trim().length > 0);
     segments.forEach(segment => {
       VoiceService.preloadText(segment, {
@@ -174,11 +194,6 @@ export const VoiceGuidance = ({
         gender: preferredVoice.includes('-D') ? 'MALE' : 'FEMALE'
       });
     });
-
-    const timer = setTimeout(() => {
-      setShowFull(true);
-    }, 5000);
-    return () => clearTimeout(timer);
   }, [preferredVoice, currentScript]);
 
   // Sync isPreparing with service status
@@ -189,6 +204,12 @@ export const VoiceGuidance = ({
   }, [status]);
 
   const toggleGuidance = async () => {
+    // Mark user as familiar
+    if (isNewUser) {
+      localStorage.setItem('awakened_path_guide_familiar', 'true');
+      setIsNewUser(false);
+    }
+
     if (isSpeaking) {
       VoiceService.stop();
     } else {
@@ -230,7 +251,7 @@ export const VoiceGuidance = ({
               <div className="relative flex-shrink-0">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--accent-primary)]/30 relative z-10 shadow-lg">
                   <img
-                    src="/guide-avatar.png"
+                    src="/guide-avatar.webp"
                     alt="Voice Presence"
                     className="w-full h-full object-cover object-[center_30%]"
                   />
@@ -361,11 +382,28 @@ export const VoiceGuidance = ({
             className="pointer-events-auto w-16 h-16 rounded-full bg-[var(--bg-surface)] border border-[var(--accent-primary)]/30 shadow-xl overflow-hidden hover:scale-110 active:scale-95 transition-all relative group p-0"
           >
             <img
-              src="/guide-avatar.png"
+              src="/guide-avatar.webp"
               alt="Voice Presence"
               className="w-full h-full object-cover object-[center_30%]"
             />
-            <div className="absolute inset-0 rounded-full animate-pulse bg-[var(--accent-primary)]/20 z-0" />
+            {isPulsating && (
+              <motion.div
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.3, 0.6, 0.3],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute inset-0 rounded-full bg-[var(--accent-primary)] z-0"
+              />
+            )}
+            {/* Hover indicator for familiar users */}
+            {!isPulsating && !isNewUser && (
+              <div className="absolute inset-0 bg-[var(--accent-primary)]/0 group-hover:bg-[var(--accent-primary)]/10 transition-colors" />
+            )}
           </motion.button>
         )}
       </AnimatePresence>

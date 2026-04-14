@@ -28,7 +28,7 @@ export function usePresenceScheduler() {
             if (Notification.permission === "granted") {
                 new Notification("Power of Now: GAP", {
                     body: `Be present with: ${randomActivity}. Feel the sense of 'being' behind the doing.`,
-                    icon: "/sparkles.png"
+                    icon: "/sparkles.webp"
                 });
             }
         }, 30 * 60 * 1000); // 30 mins
@@ -44,3 +44,4 @@ export function usePresenceScheduler() {
 
     return { lastReminder, requestPermission };
 }
+

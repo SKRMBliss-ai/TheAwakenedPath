@@ -30,6 +30,34 @@ export class VoiceService {
         } catch { return true; }
     })();
 
+    private static STORAGE_BUCKET = "awakened-path-2026.firebasestorage.app";
+
+    /**
+     * Maps local development paths to Firebase Storage Production URLs.
+     * This allows us to move large assets off Hosting without breaking code references.
+     */
+    public static getStorageUrl(path: string): string {
+        // If it's already an absolute URL or blob, leave it alone
+        if (path.startsWith('http') || path.startsWith('blob:')) return path;
+
+        // Remove leading slash
+        const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+
+        // Structure Mapping
+        let storagePath = cleanPath;
+        if (cleanPath.startsWith('mp3/Music/Images/')) {
+            storagePath = cleanPath.replace('mp3/Music/Images/', 'Soundscapes/Images/');
+        } else if (cleanPath.startsWith('mp3/Music/')) {
+            storagePath = cleanPath.replace('mp3/Music/', 'Soundscapes/');
+        } else if (cleanPath.startsWith('mp3/')) {
+            storagePath = cleanPath.replace('mp3/', '');
+        }
+
+        const encodedPath = encodeURIComponent(storagePath);
+        // Using GCS public URL which respects public ACLs and is better for cache/anonymous access
+        return `https://storage.googleapis.com/${this.STORAGE_BUCKET}/${encodedPath}`;
+    }
+
     private static audioCache: Record<string, Promise<string>> = {};
     private static segmentResolver: (() => void) | null = null;
 
@@ -94,7 +122,8 @@ export class VoiceService {
 
     static playEffect(url: string) {
         if (!this._isEnabled) return;
-        const effect = new Audio(url);
+        const storageUrl = this.getStorageUrl(url);
+        const effect = new Audio(storageUrl);
         effect.volume = this._volume;
         effect.play().catch(err => console.error("Effect playback failed:", err));
     }
@@ -325,9 +354,12 @@ export class VoiceService {
         this.currentRequestId = requestId;
 
         try {
-            const audio = new Audio(url);
+            const storageUrl = this.getStorageUrl(url);
+            const audio = new Audio();
+            audio.src = storageUrl;
             audio.preload = "auto";
-            audio.volume = this._volume;
+            audio.crossOrigin = "anonymous"; // Now safe since you set the CORS rules!
+            audio.volume = 0; // Start muted for ramp-up
 
             this.musicAudio = audio;
             this._currentUrl = url;
@@ -357,6 +389,18 @@ export class VoiceService {
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 await playPromise;
+                // Subtle volume ramp to avoid pops and feel "instant"
+                let currentVol = 0;
+                const targetVol = this._volume;
+                const ramp = setInterval(() => {
+                    currentVol += 0.1;
+                    if (currentVol >= targetVol) {
+                        audio.volume = targetVol;
+                        clearInterval(ramp);
+                    } else {
+                        audio.volume = currentVol;
+                    }
+                }, 50);
             }
         } catch (error: any) {
             if (error.name === 'AbortError') return;

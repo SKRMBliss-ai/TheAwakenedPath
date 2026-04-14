@@ -175,19 +175,6 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, rotateX, rotateY,
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-20" />
           </div>
 
-          <div className="text-center space-y-6">
-            <div className="inline-flex items-center gap-6 px-6 py-2.5 rounded-full bg-[var(--bg-surface)]/50 border border-[var(--border-subtle)]/50 backdrop-blur-md shadow-lg">
-              <div className="flex items-center gap-2">
-                <Heart className="w-3 h-3 text-rose-300" />
-                <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Flow</span>
-              </div>
-              <div className="w-px h-3 bg-[var(--border-subtle)]/30" />
-              <div className="flex items-center gap-2">
-                <Flame className="w-3 h-3 text-orange-300" />
-                <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">{user.streak} Days</span>
-              </div>
-            </div>
-          </div>
         </section>
       </div>
       <div className="px-4">
@@ -229,8 +216,6 @@ const BreadthDesktop = ({ user, isAccessValid, rotateX, rotateY, progress, weekl
           </div>
         </div>
         <div className="flex flex-col items-end">
-          <span className="text-[12px] font-serif italic tracking-[0.3em] uppercase text-[var(--accent-primary)] font-bold">Journey to Inner Freedom</span>
-          <span className="text-[9px] font-sans uppercase tracking-[0.2em] text-[var(--text-muted)] mt-1 opacity-70">Presence Repository</span>
         </div>
       </header>
 
@@ -256,19 +241,6 @@ const BreadthDesktop = ({ user, isAccessValid, rotateX, rotateY, progress, weekl
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-30" />
           </div>
 
-          <div className="inline-flex items-center gap-10 px-10 py-4 rounded-full bg-[var(--bg-surface)]/40 border border-[var(--border-subtle)]/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-            <div className="flex items-center gap-3">
-              <Heart size={16} className="text-rose-400" />
-              <span className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.25em]">Flow</span>
-            </div>
-            <div className="w-px h-5 bg-[var(--border-subtle)]/40" />
-            <div className="flex items-center gap-3">
-              <Flame size={16} className="text-amber-400" style={{ filter: `drop-shadow(0 0 ${Math.min(user.streak, 10) * 2}px #fbbf24)` }} />
-              <span className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.25em]">{user.streak} Days</span>
-            </div>
-          </div>
         </div>
       </section>
 

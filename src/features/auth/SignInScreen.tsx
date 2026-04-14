@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './AuthContext';
 import { ArrowRight, Eye, EyeOff, LayoutGrid, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTheme } from '../../theme/ThemeSystem';
-import appLogo from '../../assets/logo.png';
+import appLogo from '../../assets/logo.webp';
 
 export const SignInScreen = () => {
     const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();

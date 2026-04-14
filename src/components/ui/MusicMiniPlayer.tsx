@@ -145,7 +145,7 @@ export const MusicMiniPlayer: React.FC = () => {
               {/* Cover Art */}
               <div className="relative w-9 h-9 sm:w-11 sm:h-11 flex-shrink-0">
                 <img
-                  src={currentTrack?.coverImage?.dark || '/sacred-bg-dark.png'}
+                  src={currentTrack?.coverImage?.dark || '/sacred-bg-dark.webp'}
                   alt={currentTrack?.title}
                   className="w-full h-full rounded-md object-cover shadow-lg"
                 />
@@ -283,3 +283,4 @@ export const MusicMiniPlayer: React.FC = () => {
     </AnimatePresence>
   );
 };
+

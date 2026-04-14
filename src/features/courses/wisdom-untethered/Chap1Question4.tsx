@@ -7,6 +7,7 @@ import { useAuth } from "../../auth/AuthContext";
 import { useCourseTracking } from "../../../hooks/useCourseTracking";
 import { CourseHero } from "./CourseHero";
 import { CourseLightbox } from "./CourseLightbox";
+import { VoiceService } from "../../../services/voiceService";
 
 interface Chap1Question4Props {
   onOpenJournal?: () => void;
@@ -26,112 +27,112 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
       num: '01',
       title: 'WHICH PART DO I LISTEN TO?',
       text: 'Your mind is extraordinary, but most of us never learn to tell the difference between thoughts worth using and those worth ignoring.',
-      img: 'Slide1.jpg'
+      img: 'Slide1.webp'
     },
     {
       id: 1,
       num: '02',
       title: 'THE CORE DISTINCTION',
       text: 'You are not your thoughts. You are the one noticing them. There are thoughts in your mind—and there is you, the quiet awareness observing them.',
-      img: 'Slide2.jpg'
+      img: 'Slide2.webp'
     },
     {
       id: 2,
       num: '03',
       title: 'THE DUALITY OF MIND',
       text: 'The Analytical Mind solves problems and builds worlds. The Personal Mind replays fear, judgment, and guilt. Use one, but do not follow the other.',
-      img: 'Slide3.jpg'
+      img: 'Slide3.webp'
     },
     {
       id: 3,
       num: '04',
       title: 'THE NARROW FRAME',
       text: 'The personal mind thinks it is the center of the universe. Inside this tiny orbit, every slight and worry feels incredibly urgent and heavy.',
-      img: 'Slide4.jpg'
+      img: 'Slide4.webp'
     },
     {
       id: 4,
       num: '05',
       title: 'VALUE VS. COST',
       text: 'Your partner says something slightly cold at dinner and your mind builds a case. By the time you get in bed, you are frantic and isolated. But nothing happened—they were just tired. You paid for a problem that didn\'t exist with your peace.',
-      img: 'Slide5.jpg'
+      img: 'Slide5.webp'
     },
     {
       id: 5,
       num: '06',
       title: 'THE AMPLIFICATION TRAP',
       text: 'Engaging with internal noise only gives it more power. You cannot ask a mind filled with fear to give you advice on how to be at peace.',
-      img: 'Slide6.jpg'
+      img: 'Slide6.webp'
     },
     {
       id: 6,
       num: '07',
       title: 'THE WIDER FRAME',
       text: 'Scaling back reveals that most disturbances simply stop mattering. You are on a small ball of rock spinning in a vast universe. Relax.',
-      img: 'Slide7.jpg'
+      img: 'Slide7.webp'
     },
     {
       id: 7,
       num: '08',
       title: 'THE ONE-SECOND PAUSE',
       text: 'Perspective is a daily practice. Before you start the engine, open a door, or pick up your phone—stop for one second in awareness.',
-      img: 'Slide8.jpg'
+      img: 'Slide8.webp'
     },
     {
       id: 8,
       num: '09',
       title: 'TRAINING THE NOISE',
       text: 'An untrained mind will always orbit itself. Be firm but gentle. Just as you train a dog to sit, command the mind to "Be still."',
-      img: 'Slide9.jpg'
+      img: 'Slide9.webp'
     },
     {
       id: 9,
       num: '10',
       title: 'THE ONLY REAL CHOICE',
       text: 'You cannot control what arises, only whether you open or close. Fighting discomfort creates blockages. Relaxing allows it to pass through.',
-      img: 'Slide10.jpg'
+      img: 'Slide10.webp'
     },
     {
       id: 10,
       num: '11',
       title: 'LOOSENING THE GRIP',
       text: 'Lean away from the disturbance, not into it. When triggered, relax your shoulders, belly, and heart. Let the energy rise and release.',
-      img: 'Slide11.jpg'
+      img: 'Slide11.webp'
     },
     {
       id: 11,
       num: '12',
       title: 'THE SOUND OF INTUITION',
       text: 'The mind is loud and frantic; intuition is quiet and still. Intuition does not argue or invent fear. It emerges effortlessly when the noise clears.',
-      img: 'Slide12.jpg'
+      img: 'Slide12.webp'
     },
     {
       id: 12,
       num: '13',
       title: 'A MOMENT OF STILLNESS',
       text: 'Close your eyes. Notice a thought with no value. Don’t fight it, don’t follow it. Just see it as a temporary expression passing through.',
-      img: 'Slide14.jpg'
+      img: 'Slide14.webp'
     },
     {
       id: 13,
       num: '14',
       title: 'THE SEAT OF THE WITNESS',
       text: 'Feel the one noticing the silence. That quiet awareness is YOU—the part of you that has always known exactly what to do.',
-      img: 'Slide13.jpg'
+      img: 'Slide13.webp'
     },
     {
       id: 14,
       num: '15',
       title: 'VALUABLE VS. COSTLY THOUGHTS',
       text: 'Solving a problem has value. Judging yourself, replaying the past, or worrying about "what if" only has cost. Learn to see the difference.',
-      img: 'Slide15.jpg'
+      img: 'Slide15.webp'
     },
     {
       id: 15,
       num: '16',
       title: 'AWAKENING...',
       text: 'Carry this quiet into your day. You are the observer, standing one step back from it all.',
-      img: 'Slide16.jpg'
+      img: 'Slide16.webp'
     }
   ];
 
@@ -213,7 +214,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         title={<>Finding the <strong>Silent Space</strong><br />The Art of <strong>Observation</strong></>}
         subtitle="A journey through 14 lessons on untethering yourself from the mind's constant noise."
         className="bg-[var(--bg-primary)] dark:bg-[#0A0908]"
-        overviewImage="/WisdomUntethered/Chap1/Question4/overview.jpg"
+        overviewImage={VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/overview.webp")}
       />
 
 
@@ -224,7 +225,11 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         onPrev={goPrev}
         currentIndex={lightboxIndex ?? 0}
         total={slides.length}
-        imgSrc={lightboxIndex !== null && lightboxIndex !== -1 ? `/WisdomUntethered/Chap1/Question4/${slides[lightboxIndex].img}` : (lightboxIndex === -1 ? '/WisdomUntethered/Chap1/Question4/overview.jpg' : '')}
+        imgSrc={
+          lightboxIndex !== null && lightboxIndex !== -1 
+            ? VoiceService.getStorageUrl(`/WisdomUntethered/Chap1/Question4/${slides[lightboxIndex].img}`) 
+            : (lightboxIndex === -1 ? VoiceService.getStorageUrl('/WisdomUntethered/Chap1/Question4/overview.webp') : '')
+        }
       />
 
 
@@ -232,7 +237,12 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         <section key={i} className={styles.slide} id={`slide-${i + 1}`} data-section={i + 1}>
           <div className={cn(styles.slideGrid, i % 2 !== 0 && styles.flip)}>
             <div className={styles.imgWrap} onClick={() => openLightbox(i)}>
-              <img src={`/WisdomUntethered/Chap1/Question4/${slide.img}`} alt={slide.title} className={styles.clickableImg} />
+              <img 
+                src={VoiceService.getStorageUrl(`/WisdomUntethered/Chap1/Question4/${slide.img}`)} 
+                alt={slide.title} 
+                className={styles.clickableImg} 
+                crossOrigin="anonymous"
+              />
             </div>
             
             <div className={styles.slideContent}>

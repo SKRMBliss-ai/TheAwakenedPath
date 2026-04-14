@@ -7,6 +7,7 @@ import commonStyles from './CourseCommon.module.css';
 import { useCourseTracking } from '../../../hooks/useCourseTracking';
 import { CourseHero } from './CourseHero';
 import { CourseLightbox } from './CourseLightbox';
+import { VoiceService } from '../../../services/voiceService';
 
 interface Chap1Question3Props {
   onOpenJournal?: () => void;
@@ -40,9 +41,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const ALL_SLIDES = [
-    "Slide2.jpeg", "Slide1.jpeg", "Slide3.jpeg", 
-    "Slide4.jpeg", "Slide5.jpeg", "Slide6.jpeg", 
-    "Slide7.jpeg", "Slide8.jpeg", "Slide9.jpeg"
+    "Slide2.webp", "Slide1.webp", "Slide3.webp", 
+    "Slide4.webp", "Slide5.webp", "Slide6.webp", 
+    "Slide7.webp", "Slide8.webp", "Slide9.webp"
   ];
 
   const goLightboxNext = () => {
@@ -76,9 +77,6 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
     return () => observer.disconnect();
   }, []);
 
-
-  // Stars logic moved to CourseHero
-
   useEffect(() => {
     const sections = containerRef.current?.querySelectorAll('[data-section]');
     if (!sections) return;
@@ -110,16 +108,16 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
   };
 
   const FILE_MAP: Record<string, { dark: string, light: string }> = {
-    "Slide1": { dark: "Slide1.png", light: "Slide1.png" },
-    "Slide2": { dark: "Slide2.jpeg", light: "Slide2.png" },
-    "Slide3": { dark: "Slide3.jpg", light: "Slide3.png" },
-    "Slide4": { dark: "Slide4.jpeg", light: "Slide4Car.png" },
-    "Slide5": { dark: "Slide5.jpeg", light: "Slide5.png" },
-    "Slide6": { dark: "Slide6.jpeg", light: "Slide6.png" },
-    "Slide7": { dark: "Slide7.png", light: "Slide7.png" },
-    "Slide8": { dark: "Slide8.png", light: "Slide8.png" },
-    "Slide9": { dark: "Slide9.jpeg", light: "Slide9.png" },
-    "Practice": { dark: "Practice.jpeg", light: "Practice.jpeg" }
+    "Slide1": { dark: "Slide1.webp", light: "Slide1.webp" },
+    "Slide2": { dark: "Slide2.webp", light: "Slide2.webp" },
+    "Slide3": { dark: "Slide3.webp", light: "Slide3.webp" },
+    "Slide4": { dark: "Slide4.webp", light: "Slide4Car.webp" },
+    "Slide5": { dark: "Slide5.webp", light: "Slide5.webp" },
+    "Slide6": { dark: "Slide6.webp", light: "Slide6.webp" },
+    "Slide7": { dark: "Slide7.webp", light: "Slide7.webp" },
+    "Slide8": { dark: "Slide8.webp", light: "Slide8.webp" },
+    "Slide9": { dark: "Slide9.webp", light: "Slide9.webp" },
+    "Practice": { dark: "Practice.webp", light: "Practice.webp" }
   };
 
   const getImgPath = (name: string) => {
@@ -128,9 +126,9 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
     
     const filename = mapping 
       ? (isDark ? mapping.dark : mapping.light) 
-      : `${baseName}${isDark ? '.jpg' : '.png'}`;
+      : `${baseName}${isDark ? '.webp' : '.webp'}`;
       
-    return `/WisdomUntethered/Chap1/Question3/${isDark ? '' : 'Light/'}${filename}`;
+    return VoiceService.getStorageUrl(`/WisdomUntethered/Chap1/Question3/${isDark ? '' : 'Light/'}${filename}`);
   };
 
   return (
@@ -164,8 +162,6 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         ))}
       </nav>
 
-      {/* Hero section was here, now replaced by CourseHero above */}
-
       <div className={styles.openingBand}>
         <p>"The personal mind has a very small frame of reference. Singer says there is a much larger frame available — and it takes only one second to access it."</p>
       </div>
@@ -174,7 +170,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(0)}>
             <span className={styles.slideNum}>01</span>
-            <img src={getImgPath('Slide2.jpeg')} alt="You are on a planet" className={styles.clickableImg} />
+            <img src={getImgPath('Slide2.webp')} alt="You are on a planet" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>Reality check</span>
@@ -191,7 +187,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(1)}>
             <span className={styles.slideNum}>02</span>
-            <img src={getImgPath('Slide1.jpeg')} alt="The narrow personal frame" className={styles.clickableImg} />
+            <img src={getImgPath('Slide1.webp')} alt="The narrow personal frame" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Observation</span>
@@ -209,7 +205,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(2)}>
             <span className={styles.slideNum}>03</span>
-            <img src={getImgPath('Slide3.jpeg')} alt="Personal vs impersonal mind" className={styles.clickableImg} />
+            <img src={getImgPath('Slide3.webp')} alt="Personal vs impersonal mind" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>Singer's model</span>
@@ -227,7 +223,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(3)}>
             <span className={styles.slideNum}>04</span>
-            <img src={getImgPath('Slide4.jpeg')} alt="The Car Analogy" className={styles.clickableImg} />
+            <img src={getImgPath('Slide4.webp')} alt="The Car Analogy" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Car Analogy</span>
@@ -244,7 +240,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(4)}>
             <span className={styles.slideNum}>05</span>
-            <img src={getImgPath('Slide5.jpeg')} alt="The Universe" className={styles.clickableImg} />
+            <img src={getImgPath('Slide5.webp')} alt="The Universe" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Universe</span>
@@ -261,7 +257,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(5)}>
             <span className={styles.slideNum}>06</span>
-            <img src={getImgPath('Slide6.jpeg')} alt="The Witness" className={styles.clickableImg} />
+            <img src={getImgPath('Slide6.webp')} alt="The Witness" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Witness</span>
@@ -278,7 +274,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(6)}>
             <span className={styles.slideNum}>07</span>
-            <img src={getImgPath('Slide7.png')} alt="The Ocean" className={styles.clickableImg} />
+            <img src={getImgPath('Slide7.webp')} alt="The Ocean" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Ocean</span>
@@ -295,7 +291,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(7)}>
             <span className={styles.slideNum}>08</span>
-            <img src={getImgPath('Slide8.png')} alt="The Sky" className={styles.clickableImg} />
+            <img src={getImgPath('Slide8.webp')} alt="The Sky" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Sky</span>
@@ -312,7 +308,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(8)}>
             <span className={styles.slideNum}>09</span>
-            <img src={getImgPath('Slide9.jpeg')} alt="The Discovery" className={styles.clickableImg} />
+            <img src={getImgPath('Slide9.webp')} alt="The Discovery" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Discovery</span>

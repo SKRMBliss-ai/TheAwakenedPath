@@ -5,29 +5,30 @@ import { cn } from "../../../lib/utils";
 import { useCourseTracking } from "../../../hooks/useCourseTracking";
 import { CourseHero } from "./CourseHero";
 import { CourseLightbox } from "./CourseLightbox";
+import { VoiceService } from "../../../services/voiceService";
 
 const darkImages: Record<string, string> = {
-  "slide1": "/WisdomUntethered/Chap1/Question5/01.png",
-  "slide2": "/WisdomUntethered/Chap1/Question5/02.png",
-  "slide3": "/WisdomUntethered/Chap1/Question5/03.png",
-  "slide4": "/WisdomUntethered/Chap1/Question5/04.png",
-  "slide5": "/WisdomUntethered/Chap1/Question5/05.png",
-  "slide6": "/WisdomUntethered/Chap1/Question5/06.png",
-  "slide7": "/WisdomUntethered/Chap1/Question5/07.png",
-  "slide8": "/WisdomUntethered/Chap1/Question5/08.png",
-  "slide9": "/WisdomUntethered/Chap1/Question5/09.png",
+  "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/01.webp"),
+  "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/02.webp"),
+  "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/03.webp"),
+  "slide4": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/04.webp"),
+  "slide5": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/05.webp"),
+  "slide6": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/06.webp"),
+  "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/07.webp"),
+  "slide8": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/08.webp"),
+  "slide9": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/09.webp"),
 };
 
 const lightImages: Record<string, string> = {
-  "slide1": "/WisdomUntethered/Chap1/Question5/01_light.png",
-  "slide2": "/WisdomUntethered/Chap1/Question5/02_light.png",
-  "slide3": "/WisdomUntethered/Chap1/Question5/03_light.png",
-  "slide4": "/WisdomUntethered/Chap1/Question5/04_light.png",
-  "slide5": "/WisdomUntethered/Chap1/Question5/05_light.png",
-  "slide6": "/WisdomUntethered/Chap1/Question5/06_light.png",
-  "slide7": "/WisdomUntethered/Chap1/Question5/07_light.jpg",
-  "slide8": "/WisdomUntethered/Chap1/Question5/08_light.png",
-  "slide9": "/WisdomUntethered/Chap1/Question5/09_light.png",
+  "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/01_light.webp"),
+  "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/02_light.webp"),
+  "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/03_light.webp"),
+  "slide4": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/04_light.webp"),
+  "slide5": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/05_light.webp"),
+  "slide6": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/06_light.webp"),
+  "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/07_light.webp"),
+  "slide8": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/08_light.webp"),
+  "slide9": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/09_light.webp"),
 };
 
 const ALL_SLIDES = ["slide1", "slide2", "slide3", "slide4", "slide5", "slide6", "slide7", "slide8", "slide9"];
@@ -38,103 +39,92 @@ const slidesContent = [
     tag: "The Observer",
     heading: <>The Great Discovery: You are the <em>Observer</em></>,
     body: [
-      "Michael Singer teaches that the most important realization is that you are not your thoughts. You are the one who notices them.",
-      "Right now, there are thoughts in your mind. But there is also you — the one who is aware that the thoughts are there. These are two completely different things.",
+      "In our last session, we looked at the narrow focus of the personal mind. Now, we discover the one who is looking.",
+      "Most of us spend our lives thinking we are the voice in our heads. We are not. We are the one listening to that voice."
     ],
-    pull: "You are not the voice. You are the one who hears it.",
-    flip: false,
+    pull: "You are the silent distance between the thought—and the observing awareness."
   },
   {
     id: "theatre",
-    tag: "The Inner Theatre",
-    heading: <>The Mind as a <em>Movie Screen</em></>,
+    tag: "The Analogy",
+    heading: <>The Mind is a <em>Theatre</em></>,
     body: [
-      "Imagine your mind is a cinema screen. Thoughts, emotions, and sensations are just movies playing across it. They arrive, they peak, and they leave.",
-      "The screen itself is never affected by the movie. It remains clear and still, no matter how chaotic the film gets. That screen is your true consciousness.",
+      "Imagine your mind is a grand theatre. Thoughts are the actors on the stage. They perform dramas, tragedies, and comedies.",
+      "You are the one sitting in the quiet, darkened audience. You are not the actor. You are the witness."
     ],
-    pull: "The show may be loud, but the audience is silent.",
-    flip: true,
-  },
-  {
-    id: "steppingback",
-    tag: "Stepping Back",
-    heading: <>The Power of <em>One Step Back</em></>,
-    body: [
-      "Freedom begins when you take one step back from the mental noise. You don't have to stop the thoughts; you just have to stop being 'inside' them.",
-      "When you step back into the seat of the Witness, the thoughts lose their power to pull you into a reaction. You are simply watching them drift by.",
-    ],
-    pull: "Freedom isn't silence. It's distance.",
-    flip: false,
+    pull: "The witness is always at peace, no matter what happens on stage."
   },
   {
     id: "seat",
-    tag: "The Center",
-    heading: <>The Unchanging <em>Center</em></>,
+    tag: "Singer's Teaching",
+    heading: <>The Seat of <em>Awareness</em></>,
     body: [
-      "There is a silent center in you that has been there since you were a child. Your body changed, your thoughts changed, but the 'watcher' in you remained the same.",
-      "This is the 'Lucid Self' — the part of you that is always awake, always aware, and never disturbed by the drama of living.",
+      "The goal of untethering is to stay in your seat. When a frightening actor walks onto the stage, you don't jump up and try to fight them.",
+      "You simply notice their presence and stay in your awareness. You allow the scene to play out without becoming part of it."
     ],
-    pull: "The one who sees remains the same.",
-    flip: true,
+    pull: "Freedom is the ability to watch your mind without following it."
   },
   {
-    id: "objects",
-    tag: "Awareness",
-    heading: <>Objects vs. <em>Subject</em></>,
+    id: "perspective",
+    tag: "Perspective",
+    heading: <>A Shift in <em>Identity</em></>,
     body: [
-      "Everything you can perceive — a tree, a feeling, a memory — is an 'object' of awareness. But who is the one perceiving them? That is the 'Subject'.",
-      "Objects come and go. The Subject is always here. Freedom is resting in the Subject instead of getting lost in the objects.",
+      "This shift from 'I am my thoughts' to 'I am the one noticing my thoughts' is the root of all spiritual freedom.",
+      "Once you realize you are the observer, the mind's drama loses its power to touch you."
     ],
-    pull: "If you can see it, it is not you.",
-    flip: false,
+    pull: "Identity is not found in the noise; it is found in the silence that hears the noise."
   },
   {
-    id: "rope",
-    tag: "Letting Go",
-    heading: <>Dropping the <em>Rope</em></>,
+    id: "breath",
+    tag: "The Anchor",
+    heading: <>Resting in the <em>Gap</em></>,
     body: [
-      "To be free, you don't fight the mind. You just let go of the rope. When you stop struggling with a thought, you stop feeding it energy.",
-      "The Witness doesn't argue. The Witness simply watches. In that watching, the struggle naturally dissolves.",
+      "There is a gap between a thought arising and your reaction to it. That gap is where your freedom lives.",
+      "Practice noticing that brief moment of silence before the mind starts its commentary."
     ],
-    pull: "Stop winning the tug-of-war. Just let go.",
-    flip: true,
+    pull: "The gap is small—but it contains the entire universe of peace."
   },
   {
-    id: "storms",
-    tag: "The Sky",
-    heading: <>Watching the <em>Storms</em></>,
+    id: "discovery",
+    tag: "The Discovery",
+    heading: <>The <em>Witness</em> is Free</>,
     body: [
-      "Emotions are like weather. They arrive, they peak, and they pass. As the Witness, you are the sky that remains clear and vast behind the clouds.",
-      "A storm might be dark and loud, but it cannot touch the sky itself. You are that sky.",
+      "The witness does not judge. The witness does not fix. The witness only sees.",
+      "When you rest in the witness, you are already free. There is nothing more to do."
     ],
-    pull: "The sky is not the storm.",
-    flip: false,
+    pull: "The observer is never trapped by the observed."
   },
   {
-    id: "lucidity",
-    tag: "Practice",
-    heading: <>Daily <em>Lucidity</em></>,
+    id: "practical",
+    tag: "The Practice",
+    heading: <>Staying <em>Centered</em></>,
     body: [
-      "Witness consciousness is 'lucidity' in waking life. It means knowing you are the Observer even while the drama is happening at work or home.",
-      "Instead of 'waking up' from a dream at night, you 'wake up' to the fact that you are the Witness in your daily life.",
+      "In your daily life, when you feel triggered, ask: 'Who is noticing this?'",
+      "That question pulls you out of the drama and back into the seat of awareness."
     ],
-    pull: "Wake up within the dream of daily life.",
-    flip: true,
+    pull: "Awareness is the only tool you need for complete liberation."
   },
   {
-    id: "release",
-    tag: "Final Step",
-    heading: <>Resting in <em>Awareness</em></>,
+    id: "peace",
+    tag: "Inner Peace",
+    heading: <>The <em>Abiding</em> Quiet</>,
     body: [
-      "You are already home. You don't have to 'become' the Witness; you already are. Just relax back and see.",
-      "The more you rest in this quiet center, the more the world becomes a beautiful dance that you are simply enjoying from the best seat in the house.",
+      "Behind the loudest thought is a profound stillness. It has never been disturbed by anything that has happened to you.",
+      "This stillness is your true nature. You are simply coming home to it."
     ],
-    pull: "Relax back. You're already there.",
-    flip: false,
+    pull: "Peace is not the absence of thoughts; it is the presence of awareness."
   },
+  {
+    id: "final",
+    tag: "The Journey",
+    heading: <>Walking as the <em>Observer</em></>,
+    body: [
+      "Continue your day with this one truth: You are the one who sees.",
+      "Whatever arises, notice it, relax your heart, and remain in the seat of the witness."
+    ],
+    pull: "The journey is not about reaching a destination; it is about where you are looking from."
+  }
 ];
-
-
 
 interface Chap1Question5Props {
   onOpenJournal?: () => void;
@@ -143,51 +133,48 @@ interface Chap1Question5Props {
 export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
   const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const { updateProgress } = useCourseTracking(user?.uid);
-
-  // ── Scroll Tracking ──
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-      if (isNearBottom) {
-        updateProgress('question5', { read: true });
-      }
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [user?.uid, updateProgress]);
-
-  const [isDark, setIsDark] = useState(
-    () => document.documentElement.classList.contains('dark') ||
-          document.documentElement.getAttribute('data-theme') === 'dark'
-  );
-
   const [activeSection, setActiveSection] = useState(0);
+  const { updateProgress } = useCourseTracking(user?.uid);
+  const [isDark, setIsDark] = useState(true);
 
+  // ── Lightbox ──
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const goLightboxNext = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((prev) => (prev === null ? 0 : (prev + 1) % ALL_SLIDES.length));
+  };
+
+  const goLightboxPrev = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((prev) => (prev === null ? 0 : (prev - 1 + ALL_SLIDES.length) % ALL_SLIDES.length));
+  };
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+  };
+
+  // Theme Detection
   useEffect(() => {
-    const obs = new MutationObserver(() => {
-      setIsDark(
-        document.documentElement.classList.contains('dark') ||
-        document.documentElement.getAttribute('data-theme') === 'dark'
-      );
+    const isCurrentlyDark = document.documentElement.classList.contains('dark');
+    setIsDark(isCurrentlyDark);
+    
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
     });
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
-    return () => obs.disconnect();
+    
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+    
+    return () => observer.disconnect();
   }, []);
 
-  const imageMap = isDark ? darkImages : lightImages;
-
-
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const sections = containerRef.current?.querySelectorAll('[data-section]');
+    if (!sections) return;
 
-    const sections = container.querySelectorAll("[data-section]");
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -198,51 +185,46 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
           }
         });
       },
-      { threshold: 0.15, root: container }
+      { threshold: 0.1 }
     );
 
-    sections.forEach((el) => observer.observe(el));
+    sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
   }, []);
+
+  const totalSections = 12;
 
   const scrollToSection = (index: number) => {
     const section = containerRef.current?.querySelector(`[data-section="${index}"]`);
     if (section) {
-      section.scrollIntoView({ behavior: "smooth" });
+      section.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  const openLightbox = (index: number) => setLightboxIndex(index);
-  const closeLightbox = () => setLightboxIndex(null);
-  const nextLightbox = () => setLightboxIndex(prev => (prev === null ? 0 : (prev + 1) % ALL_SLIDES.length));
-  const prevLightbox = () => setLightboxIndex(prev => (prev === null ? 0 : (prev - 1 + ALL_SLIDES.length) % ALL_SLIDES.length));
+  const imageMap = isDark ? darkImages : lightImages;
 
   return (
-    <div
-      className={cn(styles.container, "scroll-container")}
-      ref={containerRef}
-      style={{ height: '100%', overflowY: 'auto' }}
-    >
+    <div className={cn(styles.container, "scroll-container")} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
+      
       <CourseHero 
         chapter={1}
         question={5}
-        title={<>The <strong>Observer</strong> Discovery<br />Witnessing the <strong>Inner Theatre</strong></>}
-        subtitle="Michael Singer teaches that the most important realization is that you are not your thoughts. You are the one who notices them."
+        title={<>The Great Discovery: You are the <strong>Observer</strong></>}
+        subtitle="Moving from the drama of identity — to the peace of pure awareness"
       />
 
       <CourseLightbox 
         isOpen={lightboxIndex !== null}
-        onClose={closeLightbox}
-        onNext={nextLightbox}
-        onPrev={prevLightbox}
+        onClose={() => setLightboxIndex(null)}
+        onNext={goLightboxNext}
+        onPrev={goLightboxPrev}
         currentIndex={lightboxIndex ?? 0}
         total={ALL_SLIDES.length}
         imgSrc={lightboxIndex !== null ? imageMap[ALL_SLIDES[lightboxIndex]] : ''}
       />
 
       <nav className={styles.navDots}>
-        {/* +1 for course hero */}
-        {Array.from({ length: 13 + 1 }).map((_, i) => (
+        {Array.from({ length: totalSections }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
@@ -252,23 +234,23 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
         ))}
       </nav>
 
-
-      {/* OPENING BAND */}
-      <div className={styles.openingBand} data-section="1">
-        <p>
-          "Most people spend their lives lost in the voice in their head, reacting to thoughts and emotions
-          as if they were real. But you are not that voice — you are the one who hears it."
-          <br /><em style={{ fontSize: "0.85rem", opacity: 0.7 }}>— Michael A. Singer · Wisdom Untethered</em>
-        </p>
+      <div className={styles.openingBand}>
+        <p>"The most fundamental truth of your spiritual life: there are thoughts in your head—and there is you, the one hearing them."</p>
       </div>
 
       {/* SLIDE 1 */}
-      <section className={styles.slide} data-section="2">
-        <div className={styles.slideGrid}>
+      <section className={styles.slide} data-section="1">
+        <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>01</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide1"]} alt="Observer" onClick={() => openLightbox(0)} className={styles.clickableImg} />
+              <img 
+                src={imageMap["slide1"]} 
+                alt={slidesContent[0].tag} 
+                onClick={() => openLightbox(0)} 
+                className={styles.clickableImg} 
+                crossOrigin="anonymous" 
+              />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -283,12 +265,18 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* SLIDE 2 */}
-      <section className={styles.slide} data-section="3">
-        <div className={cn(styles.slideGrid, styles.flip)}>
+      <section className={styles.slide} data-section="2">
+        <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>02</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide2"]} alt="Theatre" onClick={() => openLightbox(1)} className={styles.clickableImg} />
+              <img 
+                src={imageMap["slide2"]} 
+                alt={slidesContent[1].tag} 
+                onClick={() => openLightbox(1)} 
+                className={styles.clickableImg} 
+                crossOrigin="anonymous" 
+              />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -303,12 +291,18 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
       <div className={styles.rule}><span>✦</span></div>
 
       {/* SLIDE 3 */}
-      <section className={styles.slide} data-section="4">
-        <div className={styles.slideGrid}>
+      <section className={styles.slide} data-section="3">
+        <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>03</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide3"]} alt="Stepping Back" onClick={() => openLightbox(2)} className={styles.clickableImg} />
+              <img 
+                src={imageMap["slide3"]} 
+                alt={slidesContent[2].tag} 
+                onClick={() => openLightbox(2)} 
+                className={styles.clickableImg} 
+                crossOrigin="anonymous" 
+              />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -324,11 +318,17 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
 
       {/* SLIDE 4 */}
       <section className={styles.slide} data-section="5">
-        <div className={cn(styles.slideGrid, styles.flip)}>
+        <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>04</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide4"]} alt={slidesContent[3].tag} onClick={() => openLightbox(3)} className={styles.clickableImg} />
+              <img 
+                src={imageMap["slide4"]} 
+                alt={slidesContent[3].tag} 
+                onClick={() => openLightbox(3)} 
+                className={styles.clickableImg} 
+                crossOrigin="anonymous" 
+              />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -344,11 +344,17 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
 
       {/* SLIDE 5 */}
       <section className={styles.slide} data-section="6">
-        <div className={styles.slideGrid}>
+        <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>05</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide5"]} alt={slidesContent[4].tag} onClick={() => openLightbox(4)} className={styles.clickableImg} />
+              <img 
+                src={imageMap["slide5"]} 
+                alt={slidesContent[4].tag} 
+                onClick={() => openLightbox(4)} 
+                className={styles.clickableImg} 
+                crossOrigin="anonymous" 
+              />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -364,11 +370,17 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
 
       {/* SLIDE 6 */}
       <section className={styles.slide} data-section="7">
-        <div className={cn(styles.slideGrid, styles.flip)}>
+        <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>06</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide6"]} alt={slidesContent[5].tag} onClick={() => openLightbox(5)} className={styles.clickableImg} />
+              <img 
+                src={imageMap["slide6"]} 
+                alt={slidesContent[5].tag} 
+                onClick={() => openLightbox(5)} 
+                className={styles.clickableImg} 
+                crossOrigin="anonymous" 
+              />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -388,7 +400,13 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>07</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide7"]} alt={slidesContent[6].tag} onClick={() => openLightbox(6)} className={styles.clickableImg} />
+              <img 
+                src={imageMap["slide7"]} 
+                alt={slidesContent[6].tag} 
+                onClick={() => openLightbox(6)} 
+                className={styles.clickableImg} 
+                crossOrigin="anonymous" 
+              />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -408,7 +426,13 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>08</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide8"]} alt={slidesContent[7].tag} onClick={() => openLightbox(7)} className={styles.clickableImg} />
+              <img 
+                src={imageMap["slide8"]} 
+                alt={slidesContent[7].tag} 
+                onClick={() => openLightbox(7)} 
+                className={styles.clickableImg} 
+                crossOrigin="anonymous" 
+              />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -428,7 +452,13 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>09</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide9"]} alt={slidesContent[8].tag} onClick={() => openLightbox(8)} className={styles.clickableImg} />
+              <img 
+                src={imageMap["slide9"]} 
+                alt={slidesContent[8].tag} 
+                onClick={() => openLightbox(8)} 
+                className={styles.clickableImg} 
+                crossOrigin="anonymous" 
+              />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -441,87 +471,12 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
       </section>
 
 
-      {/* --- SECTION 11: COST-VALUE ANALYSIS --- */}
-      <section className={cn(styles.slide, "bg-[var(--accent-primary)]/5 p-8 rounded-3xl border border-[var(--accent-primary)]/10 my-12 mx-4")} data-section="11">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <div className="text-center space-y-2">
-            <span className={styles.slideTag}>The Logic of Freedom</span>
-            <h2 className="text-3xl font-serif font-light text-[var(--text-primary)]">Cost-Value <em>Analysis</em></h2>
-            <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto">
-              Before you keep a thought, ask: what is it costing you, and what is its actual value?
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* The Thought */}
-            <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xl relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-1 h-full bg-rose-400/50" />
-              <h3 className="text-xs font-bold uppercase tracking-widest text-rose-400 mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
-                The Burden
-              </h3>
-              <p className="text-lg font-serif italic text-[var(--text-primary)] leading-relaxed">
-                "I'm not doing enough. I'm falling behind everything and everyone."
-              </p>
-            </div>
-
-            {/* The Reality Check */}
-            <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xl relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-1 h-full bg-emerald-400/50" />
-              <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                The Wisdom
-              </h3>
-              <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
-                Notice the one who is watching this stress. Is the watcher behind? Is thewatcher falling? No. The watcher is simply present.
-              </p>
-            </div>
-          </div>
-
-          <div className="overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 backdrop-blur-md">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[var(--border-subtle)] bg-[var(--accent-primary)]/5">
-                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Metric</th>
-                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-rose-400">The Cost</th>
-                  <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-emerald-400">The Value</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border-subtle)]/30">
-                <tr>
-                  <td className="p-4 text-xs font-medium text-[var(--text-secondary)]">Inner State</td>
-                  <td className="p-4 text-xs text-rose-300">Anxiety, Tightness, Chronic Stress</td>
-                  <td className="p-4 text-xs text-[var(--text-muted)]">Zero</td>
-                </tr>
-                <tr>
-                  <td className="p-4 text-xs font-medium text-[var(--text-secondary)]">Performance</td>
-                  <td className="p-4 text-xs text-rose-300">Reduced Focus, Decision Fatigue</td>
-                  <td className="p-4 text-xs text-[var(--text-muted)]">Zero</td>
-                </tr>
-                <tr>
-                  <td className="p-4 text-xs font-medium text-[var(--text-secondary)]">Presence</td>
-                  <td className="p-4 text-xs text-rose-300">Total Loss of the 'Now'</td>
-                  <td className="p-4 text-xs text-[var(--text-muted)]">Zero</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-            <p className="text-emerald-400 text-sm font-medium tracking-wide">
-              Verdict: This thought is a bad investment. Release it.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 12: CLOSING ── */}
-      <section className={styles.closing} data-section="12">
+      <section className={styles.closing} data-section="11">
         <div className={styles.closingInner}>
-          <span className={styles.closingTag}>The Lucid State</span>
-          <h2 className={styles.closingTitle}>Go to the One Who Hears</h2>
-          <p className={styles.closingBody}>Relax back into the awareness. It has never been disturbed.</p>
-          <button className={styles.closingButton} onClick={onOpenJournal}>Open Journal →</button>
+          <span className={styles.closingTag}>Chapter 1 · Question 5</span>
+          <h2 className={styles.closingTitle}>The Observer is <em>Here</em></h2>
+          <p className={styles.closingBody}>Notice the one who is alive right now, behind the noise. Freedom is only one breath away.</p>
+          <button className={styles.closingBtn} onClick={onOpenJournal}>Open Journal →</button>
         </div>
       </section>
     </div>
