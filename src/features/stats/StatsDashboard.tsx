@@ -1,6 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart2, Activity, Shield, MapPin, TrendingUp } from 'lucide-react';
+import { 
+    Activity, 
+    Shield, 
+    MapPin, 
+    TrendingUp, 
+    History,
+    Zap,
+    BarChart2, 
+    Check, 
+    BookOpen, 
+    Compass, 
+    ChevronDown 
+} from 'lucide-react';
+import PracticeLedger from './PracticeLedger';
+import PastReflections from './PastReflections';
 import { useAuth } from '../auth/AuthContext';
 import { db } from '../../firebase';
 import { collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebase/firestore';
@@ -9,7 +23,7 @@ import { AchievementsPanel } from '../achievements/AchievementsPanel';
 import { isAdminEmail, isMonitoredEmail } from '../../config/admin';
 import { InfoTooltip } from '../../components/ui/InfoTooltip';
 import { QUESTION_IDS } from '../practices/practiceLibrary';
-import { BookOpen, Compass, ChevronDown } from 'lucide-react';
+
 
 interface ActivityLog {
     id: string;
@@ -143,6 +157,7 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
     const [bodyFreq, setBodyFreq] = useState<StatMetric[]>([]);
     const [streakDays, setStreakDays] = useState<number[]>(new Array(28).fill(0));
 
+
     const [adminLogs, setAdminLogs] = useState<ActivityLog[]>([]);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -201,17 +216,18 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                     Object.entries(data).forEach(([qid, rec]: [string, any]) => {
                         if (qid === 'anySituationalDone') return;
 
-                        // Granular tracking: count each completed milestone as an activity
-                        if (rec.learnCompleted) entries.push({ source: 'practice', date, milestone: 'learn', questionId: qid });
-                        if (rec.reflectCompleted) entries.push({ source: 'practice', date, milestone: 'reflect', questionId: qid });
-                        if (rec.completed) entries.push({ source: 'practice', date, milestone: 'practice', questionId: qid });
-                        if (rec.integrateCompleted) entries.push({ source: 'practice', date, milestone: 'integrate', questionId: qid });
+                        // Granular grouping for Singer's categories
+                        const isLiveId = qid === 'question1' || qid === 'question3' || qid === 'question6' || qid === 'question7';
+
+                        if (rec.learnCompleted) entries.push({ source: 'practice', date, milestone: 'learn', questionId: qid, title: 'Quest Lesson' });
+                        if (rec.reflectCompleted) entries.push({ source: 'practice', date, milestone: 'reflect', questionId: qid, title: 'Reflection' });
+                        if (rec.completed) entries.push({ source: 'practice', date, milestone: isLiveId ? 'live' : 'practice', questionId: qid, title: isLiveId ? 'Live Practice' : 'Daily Practice' });
+                        if (rec.integrateCompleted) entries.push({ source: 'practice', date, milestone: 'integrate', questionId: qid, title: 'Integration' });
                     });
                     
-                    // If situational practice was recorded on this day via the flag (and not already in logs)
-                    // we count it once as a practice engagement
-                    if (data.anySituationalDone === true && entries.length === 0) {
-                        entries.push({ source: 'practice', date, completed: true, type: 'situational' });
+                    // Record situational engagements from the summary flag
+                    if (data.anySituationalDone === true) {
+                        entries.push({ source: 'practice', date, milestone: 'live', type: 'situational', title: 'Life Practice' });
                     }
                     return entries;
                 })
@@ -401,7 +417,25 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
     }
 
     return (
-        <div className="w-full space-y-6 pt-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        <div className="space-y-12 animate-in fade-in duration-700">
+            <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] pb-8">
+                <div className="space-y-1.5">
+                    <h2 className="text-[48px] font-sans font-bold text-[var(--text-primary)] tracking-tighter leading-tight">
+                        {ponProgress.watched}/{ponProgress.total} Chapters
+                    </h2>
+                    <p className="text-[13px] font-sans font-bold text-[var(--text-muted)] opacity-40 uppercase tracking-[0.3em]">
+                        Your Collective Awakening Journey
+                    </p>
+                </div>
+            </div>
+
+            <div className="space-y-16">
+                {/* ── Intelligence / Analytics Section ── */}
+                <section className="space-y-12">
+                    <div className="flex items-center gap-3">
+                        <Zap className="w-5 h-5 text-[var(--accent-primary)]" />
+                        <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)]">Intelligence & Momentum</h3>
+                    </div>
 
 
             {/* ── Compact Mastery Overview (Expandable on Hover) ── */}
@@ -496,10 +530,10 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                         <h2 className="text-3xl font-serif font-light text-[var(--text-primary)]">Your Journey Report</h2>
                     </div>
                 </div>
-            </div >
+            </div>
 
             {/* Activity Summary Card */}
-            < div className="p-7 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg" >
+            <div className="p-7 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg" >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     {/* Weekly Chart */}
                     <div className="space-y-6">
@@ -532,26 +566,17 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                             </div>
                         </div>
 
-                        <div className="relative h-48 flex items-end justify-between px-2 gap-4 pt-8">
-                            {/* Target Line */}
-                            {(() => {
-                                const chartMax = Math.max(4.5, ...weeklyActivity.map(a => a.total));
-                                const targetHeight = (4 / chartMax) * 100;
-                                return (
-                                    <div 
-                                        className="absolute left-0 right-0 border-t border-dashed border-[var(--accent-primary)] opacity-30 z-0"
-                                        style={{ bottom: `${targetHeight}%`, height: 0 }}
-                                    >
-                                        <span className="absolute -top-5 right-0 text-[9px] font-bold text-[var(--accent-primary)] uppercase tracking-widest">Momentum Met</span>
-                                    </div>
-                                );
-                            })()}
+                        <div className="relative h-48 flex items-end justify-between px-2 gap-2 pt-8">
+                            {/* Daily Target Goal Line (4 Practices) */}
+                            <div className="absolute inset-x-0 border-b border-dashed border-white/20 z-0 pointer-events-none" 
+                                 style={{ bottom: `${(4 / Math.max(4.5, ...weeklyActivity.map(a => a.total))) * 100}%` }}>
+                                <span className="absolute right-0 -top-3.5 text-[7px] font-bold text-white/30 uppercase tracking-widest bg-[var(--bg-surface-default)] px-1">Goal: 4</span>
+                            </div>
 
                             {weeklyActivity.map((data, i) => {
                                 const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
                                 const { total, learn, practice, reflect, live } = data;
                                 const chartMax = Math.max(4.5, ...weeklyActivity.map(a => a.total));
-
 
                                 // Category Colors & Heights
                                 const learnH = (learn.length / chartMax) * 100;
@@ -561,6 +586,24 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                                 
                                 return (
                                     <div key={i} className="flex-1 flex flex-col items-center gap-2.5 h-full justify-end group z-10 relative">
+                                        {/* Target Reached Badge - Glowing Check */}
+                                        {total >= 4 && (
+                                            <motion.div 
+                                                initial={{ scale: 0, opacity: 0 }}
+                                                animate={{ 
+                                                    scale: [1, 1.15, 1],
+                                                    opacity: 1 
+                                                }}
+                                                transition={{ 
+                                                    scale: { repeat: Infinity, duration: 2.5, ease: "easeInOut" }
+                                                }}
+                                                className="absolute -top-7 left-1/2 -translate-x-1/2 z-20"
+                                            >
+                                                <div className="bg-[#f59e0b] rounded-full p-0.5 shadow-[0_0_15px_#f59e0b] border border-black/20">
+                                                    <Check className="w-2.5 h-2.5 text-black" strokeWidth={5} />
+                                                </div>
+                                            </motion.div>
+                                        )}
                                         {/* Hover Tooltip (Detailed Activity List) */}
                                         <motion.div 
                                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -569,45 +612,45 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                                         >
                                             <div className="text-[10px] space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar">
                                                 <div className="flex justify-between text-[var(--text-muted)] border-b border-[var(--border-subtle)] pb-1 mb-1">
-                                                    <span className="font-bold uppercase">{days[i]} Engagement</span>
-                                                    <span>{total} Total</span>
+                                                    <span className="font-bold uppercase tracking-widest">{days[i]} Journey</span>
+                                                    <span className="font-mono">{total} Total</span>
                                                 </div>
                                                 
                                                 {learn.length > 0 && (
                                                     <div className="space-y-0.5">
-                                                        <div className="text-[#818cf8] font-bold text-[8px] uppercase tracking-tighter">Learn</div>
-                                                        {learn.map((t, idx) => <div key={idx} className="truncate text-[var(--text-secondary)] pl-1">• {t}</div>)}
+                                                        <div className="text-[#6366f1] font-bold text-[8px] uppercase tracking-tighter">Learn</div>
+                                                        {learn.map((t, idx) => <div key={idx} className="truncate text-white/90 pl-1.5 border-l border-[#6366f1]/30">• {t}</div>)}
                                                     </div>
                                                 )}
                                                 {practice.length > 0 && (
                                                     <div className="space-y-0.5">
-                                                        <div className="text-[#34d399] font-bold text-[8px] uppercase tracking-tighter">Practice</div>
-                                                        {practice.map((t, idx) => <div key={idx} className="truncate text-[var(--text-secondary)] pl-1">• {t}</div>)}
+                                                        <div className="text-[#10b981] font-bold text-[8px] uppercase tracking-tighter">Practice</div>
+                                                        {practice.map((t, idx) => <div key={idx} className="truncate text-white/90 pl-1.5 border-l border-[#10b981]/30">• {t}</div>)}
                                                     </div>
                                                 )}
                                                 {reflect.length > 0 && (
                                                     <div className="space-y-0.5">
-                                                        <div className="text-[#c084fc] font-bold text-[8px] uppercase tracking-tighter">Reflect</div>
-                                                        {reflect.map((t, idx) => <div key={idx} className="truncate text-[var(--text-secondary)] pl-1">• {t}</div>)}
+                                                        <div className="text-[#fb7185] font-bold text-[8px] uppercase tracking-tighter">Reflect</div>
+                                                        {reflect.map((t, idx) => <div key={idx} className="truncate text-white/90 pl-1.5 border-l border-[#fb7185]/30">• {t}</div>)}
                                                     </div>
                                                 )}
                                                 {live.length > 0 && (
                                                     <div className="space-y-0.5">
-                                                        <div className="text-[#fbbf24] font-bold text-[8px] uppercase tracking-tighter">Live</div>
-                                                        {live.map((t, idx) => <div key={idx} className="truncate text-[var(--text-secondary)] pl-1">• {t}</div>)}
+                                                        <div className="text-[#f59e0b] font-bold text-[8px] uppercase tracking-tighter">Live</div>
+                                                        {live.map((t, idx) => <div key={idx} className="truncate text-white/90 pl-1.5 border-l border-[#f59e0b]/30">• {t}</div>)}
                                                     </div>
                                                 )}
                                                 
-                                                {total === 0 && <div className="text-center italic opacity-50 py-1">Still & Present</div>}
+                                                {total === 0 && <div className="text-center italic opacity-60 py-2 text-[11px]">Resting in Stillness</div>}
                                             </div>
                                             <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-[var(--bg-surface-elevated)] border-b border-r border-[var(--border-default)] rotate-45 -mt-1" />
                                         </motion.div>
 
-                                        <span className={`text-[12px] font-bold transition-all duration-300 ${total >= 4 ? 'text-[var(--accent-primary)] scale-110' : 'text-[var(--text-secondary)]'}`}>
+                                        <span className={`text-[12px] font-bold transition-all duration-300 ${total >= 4 ? 'text-[#f59e0b] scale-125 drop-shadow-[0_0_10px_rgba(245,158,11,0.6)]' : 'text-[var(--text-secondary)]'}`}>
                                             {total}
                                         </span>
 
-                                        <div className="relative w-full max-w-[32px] h-full bg-[var(--border-subtle)] bg-opacity-10 rounded-t-sm overflow-hidden flex flex-col justify-end">
+                                        <div className={`relative w-full max-w-[32px] h-full bg-[var(--border-subtle)] bg-opacity-10 rounded-t-sm overflow-hidden flex flex-col justify-end transition-all duration-500 ${total >= 4 ? 'ring-2 ring-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.2)]' : ''}`}>
                                             {/* Live Stack */}
                                             <motion.div
                                                 initial={{ height: 0 }}
@@ -691,7 +734,7 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                         </div>
                     </div>
                 </div>
-            </div >
+            </div>
 
             {/* Achievements Panel */}
             <AchievementsPanel unlocked={unlocked} points={points} />
@@ -699,9 +742,9 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
 
 
             {/* Metrics Grid */}
-            < div className="grid grid-cols-1 md:grid-cols-3 gap-6" >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6" >
                 {/* Emotions */}
-                < div className="p-5 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
+                <div className="p-5 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
                     <div className="flex items-center gap-3 mb-1">
                         <Activity className="w-4 h-4 text-[var(--accent-secondary)]" />
                         <h4 className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Emotional Resonance</h4>
@@ -721,10 +764,10 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                             </div>
                         )) : <p className="text-[12px] text-[var(--text-disabled)] italic">No entries yet.</p>}
                     </div>
-                </div >
+                </div>
 
                 {/* Mind Traps */}
-                < div className="p-5 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
+                <div className="p-5 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
                     <div className="flex items-center gap-3 mb-1">
                         <Shield className="w-4 h-4 text-[var(--accent-primary)]" />
                         <h4 className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Typical Mind Traps</h4>
@@ -745,10 +788,10 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                             </div>
                         )) : <p className="text-[12px] text-[var(--text-disabled)] italic">No patterns yet.</p>}
                     </div>
-                </div >
+                </div>
 
                 {/* Somatic Heatmap */}
-                < div className="p-5 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
+                <div className="p-5 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg space-y-5" >
                     <div className="flex items-center gap-3 mb-1">
                         <MapPin className="w-4 h-4 text-[var(--accent-secondary)]" />
                         <h4 className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Mind-Body Balance</h4>
@@ -768,8 +811,8 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                             </div>
                         )) : <p className="text-[12px] text-[var(--text-disabled)] italic">No somatic data.</p>}
                     </div>
-                </div >
-            </div >
+                </div>
+            </div>
 
             {/* Admin Logs Section */}
             {
@@ -817,7 +860,26 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                     </div>
                 )
             }
-        </div >
+                </section>
+
+                {/* ── Sacred History Section ── */}
+                <section className="space-y-10 pt-10 border-t border-[var(--border-subtle)]">
+                    <div className="flex items-center gap-3">
+                        <History className="w-5 h-5 text-[var(--accent-secondary)]" />
+                        <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)]">Sacred History</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div className="space-y-6">
+                            <PracticeLedger />
+                        </div>
+                        <div className="space-y-6">
+                            <PastReflections />
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
     );
 };
 

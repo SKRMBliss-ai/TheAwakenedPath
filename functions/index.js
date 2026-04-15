@@ -34,7 +34,9 @@ const COURSE_PRICES = {
     "gratitude-flow-harmonic": 14.99,
     "cellular-healing": 14.99,
     "om-vacuum": 14.99,
-    "become-the-watcher": 19.99
+    "become-the-watcher": 19.99,
+    "worry-small-1": 14.99,
+    "worry-small-2": 14.99
 };
 
 const COURSE_PRICES_INR = {
@@ -46,7 +48,9 @@ const COURSE_PRICES_INR = {
     "gratitude-flow-harmonic": 899,
     "cellular-healing": 899,
     "om-vacuum": 899,
-    "become-the-watcher": 1199
+    "become-the-watcher": 1199,
+    "worry-small-1": 899,
+    "worry-small-2": 899
 };
 
 const SUBSCRIPTION_PLANS = {

@@ -113,6 +113,34 @@ export const SACRED_TRACKS: SacredTrack[] = [
       dark: VoiceService.getStorageUrl('/mp3/Music/Images/become-watcherwithOmDark.webp'),
       light: VoiceService.getStorageUrl('/mp3/Music/Images/become-watcherwithOmLight.webp')
     }
+  },
+  {
+    id: 'worry-small-1',
+    title: 'Worry-Free Presence',
+    artist: 'Sacred Sounds',
+    duration: '10:00',
+    previewUrl: VoiceService.getStorageUrl('/Soundscapes/MakeEveryWorryLookSmall.mp3'),
+    priceUSD: 14.99,
+    description: "A spacious sonic landscape designed to shrink the mind's burdens and anchor you in the eternal Now.",
+    mood: 'Healing',
+    coverImage: {
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/MakeEveryWorryLookSmallDark1.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/MakeEveryWorryLookSmallLight1.webp')
+    }
+  },
+  {
+    id: 'worry-small-2',
+    title: 'Ethereal Resilience',
+    artist: 'Sacred Sounds',
+    duration: '12:00',
+    previewUrl: VoiceService.getStorageUrl('/Soundscapes/MakeEveryWorryLookSmall1.mp3'),
+    priceUSD: 14.99,
+    description: 'An enriched harmonic journey that restores inner balance and makes every obstacle feel like a small wave in a vast ocean.',
+    mood: 'Healing',
+    coverImage: {
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/MakeEveryWorryLookSmallDark2.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/MakeEveryWorryLookSmallLight2.webp')
+    }
   }
 ];
 
