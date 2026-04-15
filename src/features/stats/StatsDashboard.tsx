@@ -612,36 +612,51 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                                             <motion.div
                                                 initial={{ height: 0 }}
                                                 animate={{ height: `${liveH}%` }}
-                                                className="w-full bg-[#fbbf24] bg-opacity-80"
+                                                className="w-full bg-[#f59e0b]"
                                             />
                                             {/* Reflect Stack */}
                                             <motion.div
                                                 initial={{ height: 0 }}
                                                 animate={{ height: `${reflectH}%` }}
-                                                className="w-full bg-[#c084fc] bg-opacity-80"
+                                                className="w-full bg-[#fb7185]"
                                             />
                                             {/* Practice Stack */}
                                             <motion.div
                                                 initial={{ height: 0 }}
                                                 animate={{ height: `${practiceH}%` }}
-                                                className="w-full bg-[#34d399] bg-opacity-80"
+                                                className="w-full bg-[#10b981]"
                                             />
                                             {/* Learn Stack */}
                                             <motion.div
                                                 initial={{ height: 0 }}
                                                 animate={{ height: `${learnH}%` }}
-                                                className="w-full bg-[#818cf8] bg-opacity-80"
+                                                className="w-full bg-[#6366f1]"
                                             />
-
-                                            {/* Momentum Indicator Overlays */}
-                                            {total >= 4 && (
-                                                <div className="absolute inset-0 bg-white bg-opacity-5 animate-pulse" />
-                                            )}
                                         </div>
                                         <span className="text-[11px] uppercase font-bold text-[var(--text-secondary)]">{days[i]}</span>
                                     </div>
                                 );
                             })}
+                        </div>
+                        
+                        {/* ── Color Legend ── */}
+                        <div className="flex flex-wrap gap-4 pt-4 border-t border-[var(--border-subtle)]">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-sm bg-[#6366f1]" />
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Learn</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-sm bg-[#10b981]" />
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Practice</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-sm bg-[#fb7185]" />
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Reflect</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-sm bg-[#f59e0b]" />
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Live</span>
+                            </div>
                         </div>
                     </div>
 

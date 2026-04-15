@@ -19,11 +19,6 @@ import { db } from '../../firebase';
 import {
   doc,
   getDoc,
-  getDocs,
-  collection,
-  query,
-  orderBy,
-  limit,
 } from 'firebase/firestore';
 import { PRACTICE_LIBRARY, QUESTION_IDS } from '../practices/practiceLibrary';
 import { useWeeklyAssignment } from '../../hooks/useWeeklyAssignment';
