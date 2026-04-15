@@ -193,16 +193,16 @@ function usePracticeRecord(userId: string | undefined, questionId: string) {
 
 // ── Single practice card ──────────────────────────────────────────────────────
 
-function WisdomCard({ 
-    practice, 
-    userId, 
-    onStart,
-    autoExpand = false
-}: { 
-    practice: typeof WISDOM_PRACTICES[0]; 
-    userId: string | undefined; 
-    onStart?: () => void;
-    autoExpand?: boolean;
+function WisdomCard({
+  practice,
+  userId,
+  onStart,
+  autoExpand = false
+}: {
+  practice: typeof WISDOM_PRACTICES[0];
+  userId: string | undefined;
+  onStart?: () => void;
+  autoExpand?: boolean;
 }) {
   const { mode } = useTheme();
   const [expanded, setExpanded] = useState(autoExpand);
@@ -244,19 +244,19 @@ function WisdomCard({
         className="relative w-full h-full min-h-[400px] [transform-style:preserve-3d]"
       >
         {/* FRONT FACE */}
-        <div 
+        <div
           className="absolute inset-0 [backface-visibility:hidden] rounded-[32px] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)] card-glow cursor-pointer z-10 w-full h-full min-h-[400px]"
           style={{ '--card-glow-surge': `${color}40`, '--card-glow-base': `${color}10` } as React.CSSProperties}
           onClick={() => !isLocked && setExpanded(true)}
         >
           {/* Practice Image Background */}
           <div className="absolute inset-0 z-0">
-            <img 
-              src={image} 
-              alt="" 
-              className="w-full h-full object-cover opacity-60 group-hover/card:scale-110 transition-transform duration-1000" 
+            <img
+              src={image}
+              alt=""
+              className="w-full h-full object-cover opacity-60 group-hover/card:scale-110 transition-transform duration-1000"
             />
-            <div 
+            <div
               className="absolute inset-0"
               style={{ background: `linear-gradient(to top, var(--bg-surface) 15%, transparent 70%)` }}
             />
@@ -286,11 +286,11 @@ function WisdomCard({
 
             {/* Bottom Right Start Gateway */}
             <div className="absolute bottom-6 right-8">
-              <div 
+              <div
                 className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] group/btn"
                 style={{ color }}
               >
-                Start Practice 
+                Start Practice
                 <motion.div
                   animate={{ x: [0, 4, 0] }}
                   transition={{ repeat: Infinity, duration: 1.5 }}
@@ -311,7 +311,7 @@ function WisdomCard({
         </div>
 
         {/* BACK FACE */}
-        <div 
+        <div
           className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-[32px] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex flex-col shadow-2xl z-0 w-full h-full min-h-[400px]"
           style={{ borderColor: expanded ? color + '40' : 'transparent' }}
         >
@@ -322,22 +322,22 @@ function WisdomCard({
 
           <div className="relative z-10 flex flex-col h-full">
             {/* Header - Clickable to flip back */}
-            <div 
+            <div
               onClick={() => setExpanded(false)}
               className="p-6 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-secondary)]/20 cursor-pointer hover:bg-[var(--bg-secondary)]/40 transition-colors group/header"
             >
               <div className="flex items-center gap-3">
-                 <div className="p-2 -ml-2 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm group-hover/header:border-current transition-colors" style={{ color: expanded ? color : 'inherit' }}>
-                   <motion.div animate={{ x: [0, -2, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
+                <div className="p-2 -ml-2 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm group-hover/header:border-current transition-colors" style={{ color: expanded ? color : 'inherit' }}>
+                  <motion.div animate={{ x: [0, -2, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
                     <ArrowLeft size={16} />
-                   </motion.div>
-                 </div>
-                 <div>
-                   <h5 className="text-[14px] font-serif italic text-[var(--text-primary)] leading-none">
-                     {practice.practiceName}
-                   </h5>
-                   <p className="text-[9px] font-black uppercase tracking-widest mt-1 opacity-40 group-hover/header:opacity-70 transition-opacity">Return to Card</p>
-                 </div>
+                  </motion.div>
+                </div>
+                <div>
+                  <h5 className="text-[14px] font-serif italic text-[var(--text-primary)] leading-none">
+                    {practice.practiceName}
+                  </h5>
+                  <p className="text-[9px] font-black uppercase tracking-widest mt-1 opacity-40 group-hover/header:opacity-70 transition-opacity">Return to Card</p>
+                </div>
               </div>
               {isDone && <CheckCircle2 size={16} className="text-emerald-500 shadow-glow" />}
             </div>
@@ -398,16 +398,16 @@ function WisdomCard({
                   ) : (
                     <div className="space-y-8">
                       <div className="flex justify-between text-[9px] font-black uppercase tracking-widest opacity-60">
-                         <span>Guidance {stepIndex + 1} / {practice.steps!.length}</span>
+                        <span>Guidance {stepIndex + 1} / {practice.steps!.length}</span>
                       </div>
-                      <motion.div 
+                      <motion.div
                         key={stepIndex}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="p-8 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm min-h-[140px] flex items-center justify-center text-center relative overflow-hidden"
                       >
                         <div className="absolute top-0 left-0 w-full h-1 bg-[var(--bg-secondary)]">
-                          <motion.div 
+                          <motion.div
                             className="h-full"
                             style={{ background: color }}
                             initial={{ width: 0 }}
@@ -435,9 +435,9 @@ function WisdomCard({
 
             {isDone && (
               <div className="p-5 text-center bg-emerald-500/5 border-t border-[var(--border-subtle)]">
-                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-500 flex items-center justify-center gap-2">
-                   Journey Integrated
-                 </p>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-500 flex items-center justify-center gap-2">
+                  Journey Integrated
+                </p>
               </div>
             )}
           </div>
@@ -451,21 +451,21 @@ function WisdomCard({
 
 // ── Main section export ───────────────────────────────────────────────────────
 
-export function WisdomPracticeSection({ 
-    userId, 
-    onStart,
-    activeQuestionId
-}: { 
-    userId: string | undefined;
-    onStart?: (id: string) => void;
-    activeQuestionId?: string;
+export function WisdomPracticeSection({
+  userId,
+  onStart,
+  activeQuestionId
+}: {
+  userId: string | undefined;
+  onStart?: (id: string) => void;
+  activeQuestionId?: string;
 }) {
   return (
     <section className="space-y-12">
       <div className="flex flex-col items-center text-center space-y-6">
         <div className="relative group">
-           <div className="absolute inset-0 bg-[#B8973A]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-           <div className="relative p-1 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm">
+          <div className="absolute inset-0 bg-[#B8973A]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative p-1 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm">
             <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="28" cy="28" r="16" stroke="#B8973A" strokeWidth="1.5" fill="#B8973A" fillOpacity="0.08" />
               <circle cx="28" cy="28" r="5" fill="#B8973A" fillOpacity="0.7" />
@@ -473,13 +473,13 @@ export function WisdomPracticeSection({
             </svg>
           </div>
         </div>
-        
+
         <div className="space-y-3">
           <h2 className="text-[32px] font-serif font-medium text-[var(--text-primary)] tracking-tight">
             Wisdom Untethered Practice Gateway
           </h2>
           <p className="text-[17px] text-[var(--text-primary)] font-serif italic max-w-xl mx-auto leading-relaxed">
-            Small, consistent steps build the path to untethered freedom. 
+            Small, consistent steps build the path to untethered freedom.
             Choose a technique to ground your presence today.
           </p>
         </div>
@@ -488,9 +488,9 @@ export function WisdomPracticeSection({
       <ErrorBoundary featureName="Wisdom Practice Grid">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pb-20">
           {WISDOM_PRACTICES.map((p) => (
-            <WisdomCard 
-              key={p.id} 
-              practice={p} 
+            <WisdomCard
+              key={p.id}
+              practice={p}
               userId={userId}
               onStart={() => onStart?.(p.id)}
               autoExpand={false}

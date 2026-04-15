@@ -7,10 +7,9 @@ import { collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebas
 import { useAchievements } from '../achievements/useAchievements';
 import { AchievementsPanel } from '../achievements/AchievementsPanel';
 import { isAdminEmail, isMonitoredEmail } from '../../config/admin';
-import PastReflections from './PastReflections';
-import PracticeLedger from './PracticeLedger';
-import { JourneyProgress } from './JourneyProgress';
 import { InfoTooltip } from '../../components/ui/InfoTooltip';
+import { QUESTION_IDS } from '../practices/practiceLibrary';
+import { BookOpen, Compass, ChevronDown } from 'lucide-react';
 
 interface ActivityLog {
     id: string;
@@ -49,34 +48,76 @@ const MiniBar = ({ value, max, color }: { value: number; max: number; color?: st
 
 const StreakGrid = ({ days }: { days: number[] }) => {
     // Group into 4 weeks of 7 days
+    const columns = 7;
     const weeks = [];
-    for (let i = 0; i < days.length; i += 7) {
-        weeks.push(days.slice(i, i + 7));
+    for (let i = 0; i < days.length; i += columns) {
+        weeks.push(days.slice(i, i + columns));
     }
 
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const dayOffset = (startOfToday.getDay() + 6) % 7;
+    const currentMonday = new Date(startOfToday);
+    currentMonday.setDate(startOfToday.getDate() - dayOffset);
+
+    const getWeekRange = (widx: number) => {
+        // widx 0 is 3 weeks ago Monday, widx 3 is current Monday
+        const weekMonday = new Date(currentMonday);
+        weekMonday.setDate(currentMonday.getDate() - ((3 - widx) * 7));
+        const weekSunday = new Date(weekMonday);
+        weekSunday.setDate(weekMonday.getDate() + 6);
+        
+        const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return `${fmt(weekMonday)} – ${fmt(weekSunday)}`;
+    };
+
     return (
-        <div className="flex flex-col gap-2.5">
-            {weeks.map((week, widx) => (
-                <div key={widx} className="flex gap-2.5">
-                    {week.map((active, i) => (
-                        <div
-                            key={i}
-                            className={`w-[18px] h-[18px] rounded-sm transition-all duration-500`}
-                            style={{
-                                background: active
-                                    ? 'var(--accent-secondary-dim)'
-                                    : 'var(--border-subtle)',
-                                border: active
-                                    ? '1.5px solid var(--accent-secondary)'
-                                    : '1.5px solid var(--border-default)',
-                                opacity: 1,
-                                boxShadow: active ? '0 0 6px var(--accent-secondary)' : 'none',
-                            }}
-                            title={`Day ${widx * 7 + i + 1}: ${active ? "Active" : "Rest"}`}
-                        />
-                    ))}
-                </div>
-            ))}
+        <div className="flex flex-col gap-3.5">
+            {weeks.map((week, widx) => {
+                const rangeLabel = getWeekRange(widx);
+                return (
+                    <div key={widx} className="flex items-center gap-4">
+                        <span className="w-24 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] text-right opacity-60">
+                            {rangeLabel}
+                        </span>
+                        <div className="flex gap-2.5">
+                            {week.map((active, i) => {
+                                // Calculate the actual date for this cell to find "Today"
+                                const cellDate = new Date(currentMonday);
+                                cellDate.setDate(currentMonday.getDate() - ((3 - widx) * 7) + i);
+                                const isToday = cellDate.getTime() === startOfToday.getTime();
+                                
+                                return (
+                                    <div
+                                        key={i}
+                                        className={`w-[18px] h-[18px] rounded-sm transition-all duration-500 relative`}
+                                        style={{
+                                            background: active
+                                                ? 'var(--accent-secondary-dim)'
+                                                : isToday 
+                                                    ? 'transparent'
+                                                    : 'var(--border-subtle)',
+                                            border: active
+                                                ? '1.5px solid var(--accent-secondary)'
+                                                : isToday
+                                                    ? '1.5px dashed var(--accent-secondary)'
+                                                    : '1.5px solid var(--border-default)',
+                                            boxShadow: active ? '0 0 8px var(--accent-secondary)40' : 'none',
+                                        }}
+                                        title={`${isToday ? "Today" : cellDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}: ${active ? "Aware" : "No Activity"}`}
+                                    >
+                                        {isToday && !active && (
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="w-1 h-1 rounded-full bg-[var(--accent-secondary)] animate-pulse" />
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            })}
         </div>
     );
 };
@@ -86,14 +127,22 @@ interface StatsDashboardProps {
   accountCreatedAt?: string | null;
 }
 
-    const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate, accountCreatedAt }) => {
+const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
     const { user } = useAuth();
-    const [weeklyActivity, setWeeklyActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+    const [ponProgress, setPonProgress] = useState({ watched: 0, total: 30 });
+    const [wuProgress, setWuProgress] = useState({ explored: 0, total: QUESTION_IDS.length });
+    const [weeklyActivity, setWeeklyActivity] = useState<{ 
+        total: number; 
+        learn: string[]; 
+        practice: string[]; 
+        reflect: string[]; 
+        live: string[]; 
+    }[]>(Array.from({ length: 7 }, () => ({ total: 0, learn: [], practice: [], reflect: [], live: [] })));
     const [emotionFreq, setEmotionFreq] = useState<StatMetric[]>([]);
     const [distortionFreq, setDistortionFreq] = useState<StatMetric[]>([]);
     const [bodyFreq, setBodyFreq] = useState<StatMetric[]>([]);
     const [streakDays, setStreakDays] = useState<number[]>(new Array(28).fill(0));
-    const [powerWatched, setPowerWatched] = useState(0);
+
     const [adminLogs, setAdminLogs] = useState<ActivityLog[]>([]);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -147,17 +196,21 @@ interface StatsDashboardProps {
                 ...practicesSnap.docs.flatMap(d => {
                     const data = d.data();
                     const date = d.id; // YYYY-MM-DD
-                    const entries: any[] = Object.entries(data)
-                        .filter(([key]) => key !== 'anySituationalDone')
-                        .map(([qid, rec]: [string, any]) => ({
-                            ...rec,
-                            source: 'practice',
-                            date,
-                            questionId: qid
-                        })).filter(r => r.completed || r.reflectCompleted || r.learnCompleted || r.integrateCompleted);
+                    const entries: any[] = [];
                     
-                    // If situational practice was done, add a synthetic entry to ensure this day reflects activity
-                    if (data.anySituationalDone === true) {
+                    Object.entries(data).forEach(([qid, rec]: [string, any]) => {
+                        if (qid === 'anySituationalDone') return;
+
+                        // Granular tracking: count each completed milestone as an activity
+                        if (rec.learnCompleted) entries.push({ source: 'practice', date, milestone: 'learn', questionId: qid });
+                        if (rec.reflectCompleted) entries.push({ source: 'practice', date, milestone: 'reflect', questionId: qid });
+                        if (rec.completed) entries.push({ source: 'practice', date, milestone: 'practice', questionId: qid });
+                        if (rec.integrateCompleted) entries.push({ source: 'practice', date, milestone: 'integrate', questionId: qid });
+                    });
+                    
+                    // If situational practice was recorded on this day via the flag (and not already in logs)
+                    // we count it once as a practice engagement
+                    if (data.anySituationalDone === true && entries.length === 0) {
                         entries.push({ source: 'practice', date, completed: true, type: 'situational' });
                     }
                     return entries;
@@ -174,73 +227,108 @@ interface StatsDashboardProps {
             const startOfWeek = new Date(startOfToday);
             startOfWeek.setDate(startOfToday.getDate() - dayOffset);
 
-            const activity = [0, 0, 0, 0, 0, 0, 0];
+            const activity = Array.from({ length: 7 }, () => ({ 
+                total: 0, 
+                learn: [] as string[], 
+                practice: [] as string[], 
+                reflect: [] as string[], 
+                live: [] as string[] 
+            }));
+            const streakArr = new Array(28).fill(0);
             const emMap: Record<string, number> = {};
             const distMap: Record<string, number> = {};
             const bodyMap: Record<string, number> = {};
-            const streakArr = new Array(28).fill(0);
 
-            allActivityDocs.forEach(data => {
+            allActivityDocs.forEach(item => {
                 let date: Date;
+                if (item.createdAt?.toDate) date = item.createdAt.toDate();
+                else if (item.timestamp?.toDate) date = item.timestamp.toDate();
+                else if (item.date) date = new Date(item.date);
+                else return;
 
-                if (data.createdAt?.toDate) {
-                    date = data.createdAt.toDate();
-                } else if (data.timestamp?.toDate) {
-                    date = data.timestamp.toDate();
-                } else if (data.date) {
-                    date = new Date(data.date);
-                } else {
-                    return;
-                }
-
-                const nowMidnight = new Date(now);
-                nowMidnight.setHours(0, 0, 0, 0);
-                const entryMidnight = new Date(date);
-                entryMidnight.setHours(0, 0, 0, 0);
-
-                const diffTime = nowMidnight.getTime() - entryMidnight.getTime();
-                const diffDays = Math.round(diffTime / oneDay);
+                const dayIndex = (date.getDay() + 6) % 7;
 
                 // Weekly activity (Current Calendar Week only)
                 const todayIndex = (now.getDay() + 6) % 7;
                 if (date >= startOfWeek && date <= now) {
-                    const dayIndex = (date.getDay() + 6) % 7; // M-S
                     if (dayIndex >= 0 && dayIndex <= todayIndex) {
-                        activity[dayIndex] += 1;
+                        const dayData = activity[dayIndex];
+                        const title = item.title || (item.activityId ? item.activityId.split('-').pop() : (item.questionId ? `Q${item.questionId.split('q').pop()}` : null)) || 'Untitled';
+                        
+                        if (item.source === 'practice') {
+                            if (item.type === 'situational' || item.milestone === 'live') {
+                                dayData.live.push(title);
+                                dayData.total++;
+                            } else if (item.milestone === 'learn') {
+                                dayData.learn.push(title);
+                                dayData.total++;
+                            } else if (item.milestone === 'practice' || item.milestone === 'integrate') {
+                                dayData.practice.push(title);
+                                dayData.total++;
+                            } else if (item.milestone === 'reflect') {
+                                dayData.reflect.push(title);
+                                dayData.total++;
+                            }
+                        } else if (item.source === 'journal') {
+                            dayData.reflect.push(item.title || 'Journal Entry');
+                            dayData.total++;
+                        } else if (item.source === 'situational' || item.type === 'situational') {
+                            dayData.live.push(item.title || 'Live Resonance');
+                            dayData.total++;
+                        } else if (item.source === 'journey') {
+                            // If it's a generic journey activity, count it based on how we want to group it
+                            dayData.total++;
+                            dayData.practice.push(item.title || 'Journey Engagement');
+                        }
                     }
                 }
 
-                // 28-day streak
-                if (diffDays >= 0 && diffDays < 28) {
-                    streakArr[27 - diffDays] = 1;
+                // 28-day calendar-aligned streak
+                const startOfTodayGrid = new Date(now);
+                startOfTodayGrid.setHours(0, 0, 0, 0);
+                const gridDayOffset = (startOfTodayGrid.getDay() + 6) % 7;
+                const gridMonday = new Date(startOfTodayGrid);
+                gridMonday.setDate(startOfTodayGrid.getDate() - gridDayOffset);
+                const gridStart = new Date(gridMonday);
+                gridStart.setDate(gridMonday.getDate() - 21);
+
+                const entryDay = new Date(date);
+                entryDay.setHours(0, 0, 0, 0);
+                const gridDiffTime = entryDay.getTime() - gridStart.getTime();
+                const gridDiffDays = Math.floor(gridDiffTime / oneDay);
+
+                if (gridDiffDays >= 0 && gridDiffDays < 28) {
+                    streakArr[gridDiffDays] = 1;
                 }
 
-                // Analytics (Primarily from journal, but could be extended)
-                if (data.emotions) {
-                    const ems = typeof data.emotions === 'string'
-                        ? data.emotions.split(', ')
-                        : Array.isArray(data.emotions) ? data.emotions : [];
-
-                    ems.forEach((e: string) => {
-                        if (e) emMap[e] = (emMap[e] || 0) + 1;
-                    });
+                // Analytics
+                if (item.emotions) {
+                    const ems = typeof item.emotions === 'string' ? item.emotions.split(', ') : Array.isArray(item.emotions) ? item.emotions : [];
+                    ems.forEach((e: string) => { if (e) emMap[e] = (emMap[e] || 0) + 1; });
                 }
-                if (data.cognitiveDistortion) {
-                    const d = data.cognitiveDistortion;
-                    distMap[d] = (distMap[d] || 0) + 1;
-                }
-                if (data.bodyArea) {
-                    const b = data.bodyArea;
-                    bodyMap[b] = (bodyMap[b] || 0) + 1;
-                }
+                if (item.cognitiveDistortion) distMap[item.cognitiveDistortion] = (distMap[item.cognitiveDistortion] || 0) + 1;
+                if (item.bodyArea) bodyMap[item.bodyArea] = (bodyMap[item.bodyArea] || 0) + 1;
             });
 
             setWeeklyActivity(activity);
             setStreakDays(streakArr);
 
+            let currentPowerWatched = 0;
             const powerSnap = await getDoc(doc(db, 'users', user.uid, 'progress', 'powerOfNow'));
             if (powerSnap.exists()) {
-                setPowerWatched(powerSnap.data().watched?.length || 0);
+                currentPowerWatched = powerSnap.data().watched?.length || 0;
+            }
+            setPonProgress({ watched: currentPowerWatched, total: 30 });
+
+            // Fetch Wisdom Untethered Progress
+            const wuSnap = await getDoc(doc(db, 'users', user.uid, 'courseProgress', 'wisdom-untethered'));
+            if (wuSnap.exists()) {
+                const data = wuSnap.data();
+                const exploredCount = QUESTION_IDS.filter(qId => {
+                    const qp = data[qId];
+                    return qp?.read || qp?.video || qp?.practice;
+                }).length;
+                setWuProgress({ explored: exploredCount, total: QUESTION_IDS.length });
             }
 
             // Sort and set analytics
@@ -268,7 +356,7 @@ interface StatsDashboardProps {
                 journalEntries: journalSnap.size,
                 situationalPractices: situationalSnap.size,
                 journeyActivities: journeySnap.size,
-                videosWatched: powerWatched,
+                videosWatched: currentPowerWatched,
                 chaptersComplete: 0, // Should calculate this properly if needed
                 currentStreak: streakCount,
                 maxStreak: streakCount,
@@ -298,7 +386,7 @@ interface StatsDashboardProps {
     };
 
 
-    const maxWeekly = Math.max(...weeklyActivity, 1);
+
     const maxEmotion = Math.max(...emotionFreq.map(e => e.count), 1);
     const maxDistortion = Math.max(...distortionFreq.map(d => d.count), 1);
     const maxBody = Math.max(...bodyFreq.map(b => b.count), 1);
@@ -315,15 +403,93 @@ interface StatsDashboardProps {
     return (
         <div className="w-full space-y-6 pt-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
 
-            {/* ─ Consolidated Journey Progress (new) ─ */}
-            <JourneyProgress
-              onNavigate={onNavigate}
-              accountCreatedAt={accountCreatedAt}
-            />
 
-            <div className="h-px bg-[var(--border-subtle)]" />
+            {/* ── Compact Mastery Overview (Expandable on Hover) ── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* PON Mastery */}
+                <motion.div 
+                    whileHover={{ scale: 1.01 }}
+                    className="group relative p-4 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] transition-all duration-300 cursor-default overflow-hidden"
+                >
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                                <BookOpen className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            <div>
+                                <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Power of Now</h4>
+                                <p className="text-lg font-serif text-[var(--text-primary)]">{ponProgress.watched}/{ponProgress.total} <span className="text-xs text-[var(--text-secondary)] font-sans">Chapters</span></p>
+                            </div>
+                        </div>
+                        <ChevronDown className="w-4 h-4 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    
+                    {/* Hover Expansion Area */}
+                    <div className="max-h-0 group-hover:max-h-40 transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 pt-0 group-hover:pt-4 overflow-hidden">
+                        <div className="space-y-3 border-t border-[var(--border-subtle)] pt-4">
+                            <div className="flex justify-between items-end text-[11px]">
+                                <span className="text-[var(--text-muted)]">Living Study Mastery</span>
+                                <span className="text-indigo-400 font-bold">{Math.round((ponProgress.watched / ponProgress.total) * 100)}% Complete</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-[var(--border-subtle)] rounded-full overflow-hidden">
+                                <motion.div 
+                                    initial={{ width: 0 }}
+                                    whileInView={{ width: `${(ponProgress.watched / ponProgress.total) * 100}%` }}
+                                    className="h-full bg-indigo-500"
+                                />
+                            </div>
+                            <button 
+                                onClick={() => onNavigate?.('power_of_now')}
+                                className="w-full py-2 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-[10px] font-bold uppercase tracking-wider text-indigo-400 transition-colors"
+                            >
+                                Continue Study
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
 
-            {/* Header */}
+                {/* WU Mastery */}
+                <motion.div 
+                    whileHover={{ scale: 1.01 }}
+                    className="group relative p-4 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-elevated)] transition-all duration-300 cursor-default overflow-hidden"
+                >
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                                <Compass className="w-5 h-5 text-amber-400" />
+                            </div>
+                            <div>
+                                <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Wisdom Untethered</h4>
+                                <p className="text-lg font-serif text-[var(--text-primary)]">{wuProgress.explored}/{wuProgress.total} <span className="text-xs text-[var(--text-secondary)] font-sans">Questions</span></p>
+                            </div>
+                        </div>
+                        <ChevronDown className="w-4 h-4 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+
+                    {/* Hover Expansion Area */}
+                    <div className="max-h-0 group-hover:max-h-40 transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 pt-0 group-hover:pt-4 overflow-hidden">
+                        <div className="space-y-3 border-t border-[var(--border-subtle)] pt-4">
+                            <div className="flex justify-between items-end text-[11px]">
+                                <span className="text-[var(--text-muted)]">Singer Study Mastery</span>
+                                <span className="text-amber-400 font-bold">{Math.round((wuProgress.explored / wuProgress.total) * 100)}% Complete</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-[var(--border-subtle)] rounded-full overflow-hidden">
+                                <motion.div 
+                                    initial={{ width: 0 }}
+                                    whileInView={{ width: `${(wuProgress.explored / wuProgress.total) * 100}%` }}
+                                    className="h-full bg-amber-500"
+                                />
+                            </div>
+                            <button 
+                                onClick={() => onNavigate?.('wisdom_untethered')}
+                                className="w-full py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-[10px] font-bold uppercase tracking-wider text-amber-400 transition-colors"
+                            >
+                                Resume Inquiry
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
             <div className="border-b border-[var(--border-subtle)] pb-6">
                 <div className="flex justify-between items-center">
                     <div className="space-y-1">
@@ -340,42 +506,137 @@ interface StatsDashboardProps {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <BarChart2 className="w-4 h-4 text-[var(--accent-secondary)]" />
-                                <h4 className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.15em]">Weekly Activity</h4>
+                                <h4 className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.15em]">Weekly Momentum</h4>
                                 <InfoTooltip 
-                                    title="Weekly Activity" 
-                                    description="This shows how many times you engaged with the app each day this week." 
+                                    title="Weekly Momentum" 
+                                    description="Each bar represents your total engagements per day. Reach 4 for a full bar; go beyond for 'Surge' energy." 
                                 />
                             </div>
-                            <span className="text-[12px] text-[var(--text-secondary)] font-medium">
-                                {(() => {
-                                    const now = new Date();
-                                    const day = now.getDay();
-                                    const monday = new Date(now);
-                                    monday.setDate(now.getDate() - ((day + 6) % 7));
-                                    const sunday = new Date(monday);
-                                    sunday.setDate(monday.getDate() + 6);
-                                    const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                    return `${fmt(monday)} – ${fmt(sunday)}`;
-                                })()}
-                            </span>
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2.5 h-0.5 bg-[var(--accent-primary)] opacity-50 border-t border-dashed" />
+                                    <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-tighter">Target (4)</span>
+                                </div>
+                                <span className="text-[12px] text-[var(--text-secondary)] font-medium">
+                                    {(() => {
+                                        const now = new Date();
+                                        const day = now.getDay();
+                                        const monday = new Date(now);
+                                        monday.setDate(now.getDate() - ((day + 6) % 7));
+                                        const sunday = new Date(monday);
+                                        sunday.setDate(monday.getDate() + 6);
+                                        const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                        return `${fmt(monday)} – ${fmt(sunday)}`;
+                                    })()}
+                                </span>
+                            </div>
                         </div>
 
-                        <div className="h-40 flex items-end justify-between px-2 gap-4">
-                            {weeklyActivity.map((val, i) => {
-                                const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                                const h = (val / maxWeekly) * 100;
+                        <div className="relative h-48 flex items-end justify-between px-2 gap-4 pt-8">
+                            {/* Target Line */}
+                            {(() => {
+                                const chartMax = Math.max(4.5, ...weeklyActivity.map(a => a.total));
+                                const targetHeight = (4 / chartMax) * 100;
                                 return (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-2.5 h-full justify-end group">
-                                        <span className="text-[12px] font-serif transition-opacity duration-300 text-[var(--text-secondary)]">
-                                            {val}
+                                    <div 
+                                        className="absolute left-0 right-0 border-t border-dashed border-[var(--accent-primary)] opacity-30 z-0"
+                                        style={{ bottom: `${targetHeight}%`, height: 0 }}
+                                    >
+                                        <span className="absolute -top-5 right-0 text-[9px] font-bold text-[var(--accent-primary)] uppercase tracking-widest">Momentum Met</span>
+                                    </div>
+                                );
+                            })()}
+
+                            {weeklyActivity.map((data, i) => {
+                                const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                                const { total, learn, practice, reflect, live } = data;
+                                const chartMax = Math.max(4.5, ...weeklyActivity.map(a => a.total));
+
+
+                                // Category Colors & Heights
+                                const learnH = (learn.length / chartMax) * 100;
+                                const practiceH = (practice.length / chartMax) * 100;
+                                const reflectH = (reflect.length / chartMax) * 100;
+                                const liveH = (live.length / chartMax) * 100;
+                                
+                                return (
+                                    <div key={i} className="flex-1 flex flex-col items-center gap-2.5 h-full justify-end group z-10 relative">
+                                        {/* Hover Tooltip (Detailed Activity List) */}
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            whileHover={{ opacity: 1, y: 0, scale: 1 }}
+                                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-40 p-2 bg-[var(--bg-surface-elevated)] border border-[var(--border-default)] rounded-lg shadow-xl pointer-events-none z-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                        >
+                                            <div className="text-[10px] space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar">
+                                                <div className="flex justify-between text-[var(--text-muted)] border-b border-[var(--border-subtle)] pb-1 mb-1">
+                                                    <span className="font-bold uppercase">{days[i]} Engagement</span>
+                                                    <span>{total} Total</span>
+                                                </div>
+                                                
+                                                {learn.length > 0 && (
+                                                    <div className="space-y-0.5">
+                                                        <div className="text-[#818cf8] font-bold text-[8px] uppercase tracking-tighter">Learn</div>
+                                                        {learn.map((t, idx) => <div key={idx} className="truncate text-[var(--text-secondary)] pl-1">• {t}</div>)}
+                                                    </div>
+                                                )}
+                                                {practice.length > 0 && (
+                                                    <div className="space-y-0.5">
+                                                        <div className="text-[#34d399] font-bold text-[8px] uppercase tracking-tighter">Practice</div>
+                                                        {practice.map((t, idx) => <div key={idx} className="truncate text-[var(--text-secondary)] pl-1">• {t}</div>)}
+                                                    </div>
+                                                )}
+                                                {reflect.length > 0 && (
+                                                    <div className="space-y-0.5">
+                                                        <div className="text-[#c084fc] font-bold text-[8px] uppercase tracking-tighter">Reflect</div>
+                                                        {reflect.map((t, idx) => <div key={idx} className="truncate text-[var(--text-secondary)] pl-1">• {t}</div>)}
+                                                    </div>
+                                                )}
+                                                {live.length > 0 && (
+                                                    <div className="space-y-0.5">
+                                                        <div className="text-[#fbbf24] font-bold text-[8px] uppercase tracking-tighter">Live</div>
+                                                        {live.map((t, idx) => <div key={idx} className="truncate text-[var(--text-secondary)] pl-1">• {t}</div>)}
+                                                    </div>
+                                                )}
+                                                
+                                                {total === 0 && <div className="text-center italic opacity-50 py-1">Still & Present</div>}
+                                            </div>
+                                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-[var(--bg-surface-elevated)] border-b border-r border-[var(--border-default)] rotate-45 -mt-1" />
+                                        </motion.div>
+
+                                        <span className={`text-[12px] font-bold transition-all duration-300 ${total >= 4 ? 'text-[var(--accent-primary)] scale-110' : 'text-[var(--text-secondary)]'}`}>
+                                            {total}
                                         </span>
-                                        <div className="relative w-full max-w-[28px] h-full bg-transparent rounded-md overflow-hidden">
+
+                                        <div className="relative w-full max-w-[32px] h-full bg-[var(--border-subtle)] bg-opacity-10 rounded-t-sm overflow-hidden flex flex-col justify-end">
+                                            {/* Live Stack */}
                                             <motion.div
                                                 initial={{ height: 0 }}
-                                                animate={{ height: `${Math.max(h, 4)}%` }}
-                                                transition={{ duration: 1, ease: "easeOut", delay: i * 0.05 }}
-                                                className={`absolute bottom-0 left-0 right-0 ${val > 0 ? 'bg-gradient-to-t from-[var(--accent-primary)] to-[var(--accent-secondary)]' : 'bg-[var(--border-subtle)] opacity-20'} rounded-t-sm`}
+                                                animate={{ height: `${liveH}%` }}
+                                                className="w-full bg-[#fbbf24] bg-opacity-80"
                                             />
+                                            {/* Reflect Stack */}
+                                            <motion.div
+                                                initial={{ height: 0 }}
+                                                animate={{ height: `${reflectH}%` }}
+                                                className="w-full bg-[#c084fc] bg-opacity-80"
+                                            />
+                                            {/* Practice Stack */}
+                                            <motion.div
+                                                initial={{ height: 0 }}
+                                                animate={{ height: `${practiceH}%` }}
+                                                className="w-full bg-[#34d399] bg-opacity-80"
+                                            />
+                                            {/* Learn Stack */}
+                                            <motion.div
+                                                initial={{ height: 0 }}
+                                                animate={{ height: `${learnH}%` }}
+                                                className="w-full bg-[#818cf8] bg-opacity-80"
+                                            />
+
+                                            {/* Momentum Indicator Overlays */}
+                                            {total >= 4 && (
+                                                <div className="absolute inset-0 bg-white bg-opacity-5 animate-pulse" />
+                                            )}
                                         </div>
                                         <span className="text-[11px] uppercase font-bold text-[var(--text-secondary)]">{days[i]}</span>
                                     </div>
@@ -420,9 +681,7 @@ interface StatsDashboardProps {
             {/* Achievements Panel */}
             <AchievementsPanel unlocked={unlocked} points={points} />
 
-            {/* Past Reflections Log */}
-            <PracticeLedger />
-            <PastReflections />
+
 
             {/* Metrics Grid */}
             < div className="grid grid-cols-1 md:grid-cols-3 gap-6" >

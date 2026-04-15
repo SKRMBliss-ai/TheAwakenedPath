@@ -13,12 +13,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  CheckCircle2,
-  Circle,
   ChevronRight,
-  Flame,
 } from 'lucide-react';
-import { InfoTooltip } from '../../components/ui/InfoTooltip';
 import { db } from '../../firebase';
 import {
   doc,
@@ -59,25 +55,7 @@ interface Props {
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function todayKey() {
-  return new Date().toISOString().split('T')[0];
-}
 
-function last7Keys(): string[] {
-  const keys: string[] = [];
-  const now = new Date();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(now.getDate() - i);
-    keys.push(d.toISOString().split('T')[0]);
-  }
-  return keys;
-}
-
-function dayLabel(isoKey: string): string {
-  const d = new Date(isoKey + 'T12:00:00');
-  return d.toLocaleDateString('en-US', { weekday: 'short' }).charAt(0);
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-components
@@ -214,45 +192,7 @@ function WUQuestionStrip({
   );
 }
 
-// 7-day strip
-function WeekStrip({ weekData }: { weekData: { key: string; practiced: boolean; assigned: boolean }[] }) {
-  return (
-    <div className="flex gap-1.5">
-      {weekData.map(({ key, practiced, assigned }) => {
-        const isToday = key === todayKey();
-        return (
-          <div key={key} className="flex-1 flex flex-col items-center gap-1.5">
-            <div
-              className="w-full h-8 rounded-xl flex items-center justify-center transition-all duration-300"
-              style={{
-                background: practiced
-                  ? '#2E9E7A20'
-                  : isToday && assigned
-                    ? 'var(--bg-secondary)'
-                    : 'transparent',
-                border: practiced
-                  ? '1.5px solid #2E9E7A40'
-                  : isToday
-                    ? '1.5px dashed var(--border-default)'
-                    : '1.5px solid var(--border-subtle)',
-              }}
-            >
-              {practiced
-                ? <CheckCircle2 size={14} color="#2E9E7A" />
-                : isToday
-                  ? <Circle size={12} style={{ color: 'var(--text-muted)' }} />
-                  : <div className="w-1 h-1 rounded-full bg-[var(--border-subtle)]" />
-              }
-            </div>
-            <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase">
-              {dayLabel(key)}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Component
@@ -265,7 +205,6 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
   // State
   const [wuProgress, setWuProgress] = useState<CourseProgress>({});
   const [ponWatched, setPonWatched] = useState(0);
-  const [weekPracticed, setWeekPracticed] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
 
   const PON_TOTAL = 30; // total PON chapters
@@ -276,27 +215,12 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
     if (!user?.uid) { setLoading(false); return; }
     const uid = user.uid;
 
-    const week7 = last7Keys();
-
     Promise.all([
       // WU course progress
       getDoc(doc(db, 'users', uid, 'courseProgress', 'wisdom-untethered')),
       // PON progress (video watches)
       getDoc(doc(db, 'users', uid, 'progress', 'powerOfNow')),
-      // Last 7 days of daily practices
-      ...week7.map(key =>
-        getDoc(doc(db, 'users', uid, 'dailyPractices', key)).then(snap => ({
-          key,
-          type: 'practice',
-          data: snap.exists() ? snap.data() : null,
-        }))
-      ),
-      // Last 7 days of journal entries
-      // Note: journal entries use createdAt, so we should query or check if any exist for each day
-      // For simplicity in a small "last 7 days" check, we can just fetch the recent journal and map it
-      getDocs(query(collection(db, 'users', uid, 'journal'), orderBy('createdAt', 'desc'), limit(50)))
-        .then(snap => snap.docs.map(d => ({ data: d.data(), key: d.data().createdAt?.toDate ? d.data().createdAt.toDate().toISOString().split('T')[0] : null })))
-    ]).then(([wuSnap, ponSnap, ...rest]) => {
+    ]).then(([wuSnap, ponSnap]) => {
       // WU progress
       setWuProgress(wuSnap.exists() ? (wuSnap.data() as CourseProgress) : {});
 
@@ -304,37 +228,6 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
       if (ponSnap.exists()) {
         setPonWatched(ponSnap.data().watched?.length || 0);
       }
-
-      const weekMap: Record<string, boolean> = {};
-      
-      // Initialize weekMap for the last 7 days
-      week7.forEach(k => { weekMap[k] = false; });
-
-      // Separate practices from journal results
-      const practices = rest.slice(0, 7) as { key: string; data: any }[];
-      const journals = rest[7] as { data: any; key: string | null }[];
-
-      // Process practices
-      for (const p of practices) {
-        if (p.data) {
-          const done = Object.values(p.data).some((r: any) => 
-            r?.completed === true || 
-            r?.reflectCompleted === true || 
-            r?.learnCompleted === true || 
-            r?.integrateCompleted === true
-          );
-          if (done) weekMap[p.key] = true;
-        }
-      }
-
-      // Process journals
-      for (const j of journals) {
-        if (j.key && weekMap[j.key] !== undefined) {
-          weekMap[j.key] = true;
-        }
-      }
-
-      setWeekPracticed(weekMap);
     }).catch(console.error)
       .finally(() => setLoading(false));
   }, [user?.uid]);
@@ -356,16 +249,7 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
   const ponPct = Math.round((ponWatched / PON_TOTAL) * 100);
   const wuPct = Math.round((wuExploredCount / QUESTION_IDS.length) * 100);
 
-  const weekData = useMemo(() =>
-    last7Keys().map(key => ({
-      key,
-      practiced: weekPracticed[key] ?? false,
-      assigned: key === todayKey(),
-    })),
-    [weekPracticed]
-  );
 
-  const weeklyDoneCount = Object.values(weekPracticed).filter(Boolean).length;
 
   if (loading) {
     return (
@@ -380,34 +264,7 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
   return (
     <div className="space-y-8">
 
-      {/* ── 1. This Week ── */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <SectionLabel>This Week</SectionLabel>
-          <div className="flex items-center gap-1.5 -mt-4">
-            <span className="text-[11px] text-[var(--text-muted)] font-bold">
-              {weeklyDoneCount}/7 days practiced
-            </span>
-            <InfoTooltip 
-              title="Weekly Practice"
-              description="A counts as 'practiced' if you complete any guided activity or reflection."
-              howCalculated="Your goal is to sustain awareness every single day, building a chain of presence."
-            />
-          </div>
-        </div>
-        <div className="rounded-[20px] border border-[var(--border-default)] bg-[var(--bg-surface)] p-5">
-          {weeklyDoneCount >= 5 && (
-            <div className="flex items-center gap-2 mb-3">
-              <Flame size={12} color="#F97316" />
-              <span className="text-[14px] font-bold text-[#F97316]">Strong week! {weeklyDoneCount} of 7 days.</span>
-            </div>
-          )}
-          <WeekStrip weekData={weekData} />
-          <p className="text-[13px] text-[var(--text-secondary)] mt-3 text-center font-serif italic">
-            ✓ = practiced &nbsp;·&nbsp; ○ = today &nbsp;·&nbsp; — = stillness day
-          </p>
-        </div>
-      </div>
+
 
       {/* ── 3. By Course cards ── */}
       <div>
