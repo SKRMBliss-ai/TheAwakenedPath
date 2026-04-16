@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send } from 'lucide-react';
+import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Trash2 } from 'lucide-react';
 import { db, functions } from '../../firebase';
-import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, where, deleteDoc, doc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { WhisperInput, AnchorButton, SacredToast } from '../../components/ui/SacredUI';
 import { isMonitoredEmail } from '../../config/admin';
@@ -121,6 +121,32 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             console.error("Error fetching admin logs:", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleDeleteLog = async (logId: string) => {
+        try {
+            await deleteDoc(doc(db, 'activity_logs', logId));
+            setLogs(prev => prev.filter(l => l.id !== logId));
+            setToast('Activity entry deleted.');
+            setTimeout(() => setToast(''), 4000);
+        } catch (error) {
+            console.error("Failed to delete log:", error);
+            setToast('Failed to delete log.');
+            setTimeout(() => setToast(''), 4000);
+        }
+    };
+
+    const handleDeleteUser = async (userId: string) => {
+        try {
+            await deleteDoc(doc(db, 'users', userId));
+            setUsers(prev => prev.filter(u => u.id !== userId));
+            setToast('User deleted.');
+            setTimeout(() => setToast(''), 4000);
+        } catch (error) {
+            console.error("Failed to delete user:", error);
+            setToast('Failed to delete user. Check permissions.');
+            setTimeout(() => setToast(''), 4000);
         }
     };
 
@@ -351,9 +377,13 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
 
                                                     <div className="text-[12px] font-bold text-[var(--accent-primary)]">{time}</div>
 
-                                                    <div className="flex justify-end">
-                                                        <button className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-[var(--accent-primary)]">
-                                                            <Eye className="w-4 h-4" />
+                                                    <div className="flex justify-end gap-2">
+                                                        <button 
+                                                            onClick={() => handleDeleteLog(log.id)}
+                                                            className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400"
+                                                            title="Delete Log"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
                                                         </button>
                                                     </div>
                                                 </motion.div>
@@ -442,6 +472,13 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                                 "w-2 h-2 rounded-full",
                                                                 u.lastLogin ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" : "bg-neutral-800"
                                                             )} />
+                                                            <button 
+                                                                onClick={() => handleDeleteUser(u.id)}
+                                                                className="ml-2 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400"
+                                                                title="Delete User"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
                                                         </div>
                                                     </motion.div>
                                                 );

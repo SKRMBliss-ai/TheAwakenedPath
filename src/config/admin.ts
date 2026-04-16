@@ -29,8 +29,17 @@ export const isUnlockedUser = (email: string | null | undefined) => {
     return UNLOCKED_EMAILS.includes(email.toLowerCase());
 };
 
+export const IGNORED_EMAILS = [
+    'simkatyal1@gmail.com',
+    'smriti.duggal@gmail.com',
+    'jetski@test.com',
+    'skrmblissai@gmail.com'
+];
+
 export const isMonitoredEmail = (email: string | null | undefined) => {
     if (!email) return false;
     const lowerEmail = email.toLowerCase();
-    return !ADMIN_EMAILS.includes(lowerEmail) && !lowerEmail.includes('skrm');
+    return !ADMIN_EMAILS.includes(lowerEmail) && 
+           !lowerEmail.includes('skrm') && 
+           !IGNORED_EMAILS.includes(lowerEmail);
 };

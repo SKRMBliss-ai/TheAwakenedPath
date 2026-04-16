@@ -115,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 photoURL: currentUser.photoURL,
                                 createdAt: serverTimestamp(),
                                 lastLogin: serverTimestamp(),
+                                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
                                 level: 1,
                                 xp: 0,
                                 streak: 0,
@@ -125,8 +126,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         }
                     });
 
+                    // Save the user's current timezone
+                    let timezone = 'America/New_York';
+                    try {
+                        timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    } catch (e) {
+                        console.warn("Timezone fetch failed", e);
+                    }
+
                     await updateDoc(userRef, {
-                        lastLogin: serverTimestamp()
+                        lastLogin: serverTimestamp(),
+                        timezone: timezone
                     }).catch(() => {});
 
                     await logActivity(currentUser, 'SESSION_START');

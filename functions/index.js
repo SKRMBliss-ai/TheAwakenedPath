@@ -701,7 +701,10 @@ exports.forceTriggerEmail = onRequest({
 }, async (req, res) => {
     try {
         console.log(`Manually triggering daily reminders...`);
-        await runReminderLogic('IN', geminiKey.value());
+        // We override the time limit or just run the reminder logic. 
+        // Note: It will still only send if the user's hour is 20 unless we bypass.
+        // For testing, we might want to bypass the timezone check, but we'll stick to actual cron logic for now.
+        await runReminderLogic(geminiKey.value());
         res.send("Daily reminders triggered successfully.");
     } catch (e) {
         console.error(`FORCETRIGGER_ERROR:`, e);
@@ -710,25 +713,13 @@ exports.forceTriggerEmail = onRequest({
 });
 
 /**
- * Scheduled Reminder: India Evening (8:00 PM IST)
+ * Scheduled Reminder: Hourly Check for 8:00 PM Local Time
  */
-exports.sendDailyReminderIN = onSchedule({
-    schedule: "0 20 * * *",
-    secrets: [emailUser, emailPass, geminiKey],
-    timeZone: "Asia/Kolkata"
+exports.sendDailyReminder = onSchedule({
+    schedule: "0 * * * *", // Runs every hour
+    secrets: [emailUser, emailPass, geminiKey]
 }, async (event) => {
-    return runReminderLogic('IN', geminiKey.value());
-});
-
-/**
- * Scheduled Reminder: US Evening (8:00 PM EST)
- */
-exports.sendDailyReminderUS = onSchedule({
-    schedule: "0 20 * * *",
-    secrets: [emailUser, emailPass, geminiKey],
-    timeZone: "America/New_York"
-}, async (event) => {
-    return runReminderLogic('US', geminiKey.value());
+    return runReminderLogic(geminiKey.value());
 });
 
 async function getDailyEmailContent(apiKey) {
@@ -761,7 +752,7 @@ async function getDailyEmailContent(apiKey) {
     }
 }
 
-async function runReminderLogic(region, apiKey) {
+async function runReminderLogic(apiKey) {
     const today = new Date().toISOString().split('T')[0];
     const usersSnap = await db.collection("users").get();
     const transporter = getTransporter();
@@ -833,26 +824,52 @@ async function runReminderLogic(region, apiKey) {
                         </td>
                     </tr>
                 </table>
+                <!-- TRACKING PIXEL -->
+                <img src="https://us-central1-awakened-path-2026.cloudfunctions.net/emailOpenTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}" width="1" height="1" style="display:none !important;" />
             </td>
         </tr>
     </table>
 </body>
 </html>
 `;
-;
-
 
     for (const userDoc of usersSnap.docs) {
         const userData = userDoc.data();
+
+        // Exclude specific emails
+        const blockedEmails = ['simkatyal1@gmail.com', 'smriti.duggal@gmail.com', 'jetski@test.com', 'shrutikhungar@gmail.com'];
+        if (userData.email && blockedEmails.includes(userData.email.toLowerCase())) {
+            continue;
+        }
+
         if (!userData.email || userData.notificationsEnabled === false) continue;
+
+        // Calculate User's current local hour
+        const userTimezone = userData.timezone || 'Asia/Kolkata'; // Default to India if not specified
+        let userHour;
+        try {
+            const userDateStr = new Date().toLocaleString("en-US", { timeZone: userTimezone, hour12: false });
+            const timePart = userDateStr.split(', ')[1];
+            userHour = parseInt(timePart.split(':')[0], 10);
+        } catch (e) {
+            // Fallback if timezone is invalid
+            userHour = new Date().getHours();
+        }
+
+        // Only send reminder if it is 8 PM (20:00 - 20:59) in their local time zone
+        if (userHour !== 20) {
+            continue;
+        }
 
         // Check if user has already practiced today
         const practiceSnap = await userDoc.ref.collection("dailyPractices").doc(today).get();
         if (!practiceSnap.exists || !practiceSnap.data().completed) {
             console.log(`Sending reminder to ${userData.email}`);
             
-            // Personalize unsubscribe link
-            const personalizedHtml = emailTemplate.replace('{{USER_ID}}', userDoc.id);
+            // Personalize unsubscribe link and tracking pixel
+            const personalizedHtml = emailTemplate
+                .replace('{{USER_ID}}', userDoc.id)
+                .replace('{{USER_EMAIL_TRACK}}', encodeURIComponent(userData.email));
 
             await transporter.sendMail({
                 from: '"The Awakened Path" <connect@skrmblissai.in>',
