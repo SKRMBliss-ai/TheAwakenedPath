@@ -32,5 +32,13 @@ service cloud.firestore {
       allow create: if true; // Allows anonymous tracking pixel
       allow read: if isAdmin();
     }
+    
+    match /email_clicks/{id} {
+      allow read: if isAdmin();
+    }
+    
+    match /email_unsubscribes/{id} {
+      allow read: if isAdmin();
+    }
   }
 }

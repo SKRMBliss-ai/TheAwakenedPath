@@ -80,7 +80,7 @@ export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // Check criteria and unlock (+ enqueue toasts)
     const checkAndUnlock = useCallback(async (stats: UserStats): Promise<string[]> => {
-        if (!user) return [];
+        if (!user || state.loading) return [];
 
         const newlyUnlockedIds: string[] = [];
         const newlyUnlockedToasts: Achievement[] = [];
@@ -111,7 +111,7 @@ export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         return newlyUnlockedIds;
-    }, [user, state.unlocked]);
+    }, [user, state.unlocked, state.loading]);
 
     const dismissToast = useCallback(() => {
         setState(prev => ({ ...prev, toastQueue: prev.toastQueue.slice(1) }));

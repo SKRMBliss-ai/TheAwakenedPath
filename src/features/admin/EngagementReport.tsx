@@ -51,22 +51,68 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                 ...doc.data()
             }));
 
-            // For each blast, get open counts and who opened
+            // For each blast, get open, click, and unsubscribe counts
             const enrichedBlasts = await Promise.all(fetchedBlasts.map(async (blast) => {
-                const opensRef = collection(db, 'email_opens');
-                const opensQuery = query(opensRef, where('blastId', '==', blast.id));
-                const opensSnap = await getDocs(opensQuery);
-                const openedBy = opensSnap.docs.map(d => d.data().userEmail).filter(Boolean);
-                return { 
-                    ...blast, 
-                    opens: opensSnap.size,
-                    openedBy: Array.from(new Set(openedBy)) // Unique emails
-                };
+                try {
+                    const [opensSnap, clicksSnap, unsubscribesSnap] = await Promise.all([
+                        getDocs(query(collection(db, 'email_opens'), where('blastId', '==', blast.id))),
+                        getDocs(query(collection(db, 'email_clicks'), where('blastId', '==', blast.id))),
+                        getDocs(query(collection(db, 'email_unsubscribes'), where('blastId', '==', blast.id)))
+                    ]);
+
+                    const opens = opensSnap.docs.map(d => d.data());
+                    const clicks = clicksSnap.docs.map(d => d.data());
+
+                    // Calculate average "dwell" time (Open to Click)
+                    let totalDwell = 0;
+                    let dwellCount = 0;
+
+                    const openTimes = new Map(opens.map(o => [o.userEmail, o.timestamp?.toMillis()]));
+                    clicks.forEach(c => {
+                        const email = c.userEmail;
+                        const clickTime = c.timestamp?.toMillis();
+                        const openTime = openTimes.get(email);
+                        if (openTime && clickTime && clickTime > openTime) {
+                            totalDwell += (clickTime - openTime);
+                            dwellCount++;
+                        }
+                    });
+
+                    const avgDwell = dwellCount > 0 ? totalDwell / dwellCount : 0;
+
+                    const openedBy = opens.map(o => o.userEmail).filter(Boolean);
+                    const clickedBy = clicks.map(c => c.userEmail).filter(Boolean);
+                    const unsubscribedBy = unsubscribesSnap.docs.map(d => d.data().userEmail).filter(Boolean);
+
+                    return { 
+                        ...blast, 
+                        opens: opensSnap.size,
+                        openedBy: Array.from(new Set(openedBy)),
+                        clicks: clicksSnap.size,
+                        clickedBy: Array.from(new Set(clickedBy)),
+                        unsubscribes: unsubscribesSnap.size,
+                        unsubscribedBy: Array.from(new Set(unsubscribedBy)),
+                        avgDwell: avgDwell // in ms
+                    };
+                } catch (e) {
+                    console.error(`Error enriching blast ${blast.id}:`, e);
+                    return { 
+                        ...blast, 
+                        opens: 0, 
+                        openedBy: [], 
+                        clicks: 0, 
+                        clickedBy: [], 
+                        unsubscribes: 0, 
+                        unsubscribedBy: [], 
+                        avgDwell: 0 
+                    };
+                }
             }));
 
             setBlasts(enrichedBlasts);
         } catch (error) {
             console.error("Error fetching blast history:", error);
+            setToast("⚠️ Failed to load history. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -193,6 +239,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
     const getSourceIcon = (type: string) => {
         if (type === 'LOGIN' || type === 'SESSION_START') return <Monitor className="w-4 h-4 text-[var(--accent-primary)]" />;
         if (type === 'EMAIL_OPEN') return <Eye className="w-4 h-4 text-[var(--accent-primary)]" />;
+        if (type === 'EMAIL_UNSUBSCRIBED') return <Mail className="w-4 h-4 text-[#FF4B4B]" />;
         return <Mail className="w-4 h-4 text-[#E67E22]" />;
     };
 
@@ -200,6 +247,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         if (type === 'LOGIN') return 'SIGN IN';
         if (type === 'SESSION_START') return 'PRESENCE';
         if (type === 'EMAIL_OPEN') return 'OPENED';
+        if (type === 'EMAIL_UNSUBSCRIBED') return 'UNSUBSCRIBED';
         return 'EMAIL';
     };
 
@@ -557,12 +605,14 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                             </div>
                         ) : (
                             <>
-                                {/* History View */}
-                                <div className="px-10 py-6 grid grid-cols-[2fr_1fr_0.8fr_0.8fr_0.5fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                <div className="px-10 py-6 grid grid-cols-[1.8fr_1fr_0.6fr_0.8fr_0.8fr_0.8fr_0.8fr_0.2fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
                                     <div>Subject / Guidance</div>
                                     <div>Date Sent</div>
-                                    <div className="text-center">Sent To</div>
+                                    <div className="text-center">Sent</div>
                                     <div className="text-center">Opened</div>
+                                    <div className="text-center">Clicked</div>
+                                    <div className="text-center">Engage</div>
+                                    <div className="text-center">Opt-Out</div>
                                     <div className="text-right">
                                         <button onClick={fetchHistory} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
                                             <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
@@ -571,7 +621,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                 </div>
 
                                 <div className="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar">
-                                    <div className="space-y-1">
+                                    <div className="space-y-1 pt-20">
                                         {blasts.map((blast) => {
                                             const { date, time } = formatTimestamp(blast.sentAt);
                                             const openRate = blast.totalRecipients > 0 ? Math.round((blast.opens / blast.totalRecipients) * 100) : 0;
@@ -581,10 +631,10 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                     key={blast.id}
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
-                                                    className="grid grid-cols-[2fr_1fr_0.8fr_0.8fr_0.5fr] items-center px-4 py-6 rounded-xl hover:bg-[var(--bg-surface)] transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                    className="grid grid-cols-[1.8fr_1fr_0.6fr_0.8fr_0.8fr_0.8fr_0.8fr_0.2fr] items-center px-4 py-6 rounded-xl hover:bg-[var(--bg-surface)] transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
                                                 >
                                                     <div className="flex flex-col gap-1 pr-4">
-                                                        <span className="text-[14px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">{blast.chapterTitle}</span>
+                                                        <span className="text-[14px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1">{blast.chapterTitle}</span>
                                                         <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest truncate">{blast.subject}</span>
                                                     </div>
 
@@ -597,17 +647,63 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         {blast.totalRecipients}
                                                     </div>
 
-                                                    <div className="flex flex-col items-center relative">
+                                                    {/* Opened */}
+                                                    <div className="flex flex-col items-center relative group/details">
                                                         <span className="text-[13px] font-bold text-[var(--accent-primary)]">{blast.opens}</span>
-                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest">{openRate}% rate</span>
+                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest text-center">{openRate}%</span>
                                                         
-                                                        {/* Hover Details for Openers */}
                                                         {blast.openedBy?.length > 0 && (
-                                                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                                                <p className="text-[8px] font-bold text-[var(--accent-primary)] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left">Opened By:</p>
-                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left">
+                                                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[#1C1814] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover/details:opacity-100 transition-opacity pointer-events-none z-50">
+                                                                <p className="text-[8px] font-bold text-[var(--accent-primary)] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left flex justify-between">Opened By: <span>{blast.opens}</span></p>
+                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left font-mono">
                                                                     {blast.openedBy.map((email: string) => (
-                                                                        <div key={email} className="text-[10px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
+                                                                        <div key={email} className="text-[9px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Clicked */}
+                                                    <div className="flex flex-col items-center relative group/details">
+                                                        <span className="text-[13px] font-bold text-[#E67E22]">{blast.clicks || 0}</span>
+                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest text-center">
+                                                            {blast.totalRecipients > 0 ? Math.round(((blast.clicks || 0) / blast.totalRecipients) * 100) : 0}%
+                                                        </span>
+                                                        
+                                                        {blast.clickedBy?.length > 0 && (
+                                                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[#1C1814] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover/details:opacity-100 transition-opacity pointer-events-none z-50">
+                                                                <p className="text-[8px] font-bold text-[#E67E22] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left flex justify-between">Clicked By: <span>{blast.clicks}</span></p>
+                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left font-mono">
+                                                                    {blast.clickedBy.map((email: string) => (
+                                                                        <div key={email} className="text-[9px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Engagement Time */}
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-[13px] font-bold text-[#9B59B6]">
+                                                            {blast.avgDwell ? (blast.avgDwell > 60000 ? `${(blast.avgDwell / 60000).toFixed(1)}m` : `${Math.round(blast.avgDwell / 1000)}s`) : '--'}
+                                                        </span>
+                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest text-center">Avg Read</span>
+                                                    </div>
+
+                                                    {/* Unsubscribed */}
+                                                    <div className="flex flex-col items-center relative group/details">
+                                                        <span className="text-[13px] font-bold text-[#FF4B4B]">{blast.unsubscribes || 0}</span>
+                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest text-center">
+                                                            {blast.totalRecipients > 0 ? ((blast.unsubscribes || 0) / blast.totalRecipients * 100).toFixed(1) : 0}%
+                                                        </span>
+                                                        
+                                                        {blast.unsubscribedBy?.length > 0 && (
+                                                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[#1C1814] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover/details:opacity-100 transition-opacity pointer-events-none z-50">
+                                                                <p className="text-[8px] font-bold text-[#FF4B4B] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left flex justify-between">Opted Out: <span>{blast.unsubscribes}</span></p>
+                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left font-mono">
+                                                                    {blast.unsubscribedBy.map((email: string) => (
+                                                                        <div key={email} className="text-[9px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
                                                                     ))}
                                                                 </div>
                                                             </div>

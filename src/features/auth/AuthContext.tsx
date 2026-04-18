@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth, db } from '../../firebase';
-import { doc, setDoc, updateDoc, collection, addDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, addDoc, serverTimestamp, onSnapshot, increment } from 'firebase/firestore';
 import { hasWisdomAccess, isMonitoredEmail } from '../../config/admin';
 interface UserProfile {
     uid: string;
@@ -17,6 +17,10 @@ interface UserProfile {
     subscriptionId?: string;
     trialUntil?: any;
     createdAt?: any;
+    visitCount?: number;
+    phoneNumber?: string;
+    phonePromptSkippedAt?: any;
+    phonePromptSkippedAtVisit?: number;
 }
 
 interface AuthContextType {
@@ -106,6 +110,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 subscriptionId: data?.subscriptionId,
                                 trialUntil: data?.trialUntil,
                                 createdAt: data?.createdAt,
+                                visitCount: data?.visitCount || 0,
+                                phoneNumber: data?.phoneNumber || '',
+                                phonePromptSkippedAt: data?.phonePromptSkippedAt,
+                                phonePromptSkippedAtVisit: data?.phonePromptSkippedAtVisit,
                             } as UserProfile);
                         } else {
                             const userData = {
@@ -119,6 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 level: 1,
                                 xp: 0,
                                 streak: 0,
+                                visitCount: 1,
                                 purchasedCourses: [],
                                 subscriptionStatus: 'INACTIVE'
                             };
@@ -136,8 +145,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                     await updateDoc(userRef, {
                         lastLogin: serverTimestamp(),
-                        timezone: timezone
-                    }).catch(() => {});
+                        timezone: timezone,
+                        visitCount: increment(1)
+                    }).catch((err) => {
+                        console.error("Failed to increment visitCount", err);
+                    });
 
                     await logActivity(currentUser, 'SESSION_START');
                 } else {

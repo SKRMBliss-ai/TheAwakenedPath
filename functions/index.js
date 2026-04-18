@@ -1,4 +1,5 @@
 const { onRequest, onCall } = require("firebase-functions/v2/https");
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { defineSecret } = require("firebase-functions/params");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -701,9 +702,6 @@ exports.forceTriggerEmail = onRequest({
 }, async (req, res) => {
     try {
         console.log(`Manually triggering daily reminders...`);
-        // We override the time limit or just run the reminder logic. 
-        // Note: It will still only send if the user's hour is 20 unless we bypass.
-        // For testing, we might want to bypass the timezone check, but we'll stick to actual cron logic for now.
         await runReminderLogic(geminiKey.value());
         res.send("Daily reminders triggered successfully.");
     } catch (e) {
@@ -809,7 +807,7 @@ async function runReminderLogic(apiKey) {
                     
                     <tr>
                         <td style="padding:0 48px 56px;text-align:center;">
-                            <a href="https://www.skrmblissai.in/awakenedpath" style="display:inline-block;padding:16px 40px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Record Your Journey &rarr;</a>
+                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath')}" style="display:inline-block;padding:16px 40px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Record Your Journey &rarr;</a>
                         </td>
                     </tr>
                     
@@ -819,7 +817,7 @@ async function runReminderLogic(apiKey) {
                             <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.6);margin:0 0 16px;">Awakened Path Studio</p>
                             <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:0;line-height:1.8;">
                                 <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp; 
-                                <a href="https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId={{USER_ID}}" style="color:rgba(253, 250, 244, 0.4);text-decoration:none;">Unsubscribe from the Path</a>
+                                <a href="https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId={{USER_ID}}&blastId=DAILY_REMINDER" style="color:rgba(253, 250, 244, 0.4);text-decoration:none;">Unsubscribe from the Path</a>
                             </p>
                         </td>
                     </tr>
@@ -832,6 +830,9 @@ async function runReminderLogic(apiKey) {
 </body>
 </html>
 `;
+
+    let sentCount = 0;
+    let blastId = null;
 
     for (const userDoc of usersSnap.docs) {
         const userData = userDoc.data();
@@ -852,24 +853,51 @@ async function runReminderLogic(apiKey) {
             const timePart = userDateStr.split(', ')[1];
             userHour = parseInt(timePart.split(':')[0], 10);
         } catch (e) {
-            // Fallback if timezone is invalid
             userHour = new Date().getHours();
         }
 
-        // Only send reminder if it is 8 PM (20:00 - 20:59) in their local time zone
         if (userHour !== 20) {
             continue;
+        }
+
+        // Check for 5-day throttle for Support@eckharttolle.com
+        if (userData.email && userData.email.toLowerCase() === 'support@eckharttolle.com') {
+            const lastSent = userData.lastReminderSentAt ? (userData.lastReminderSentAt.toDate ? userData.lastReminderSentAt.toDate() : new Date(userData.lastReminderSentAt)) : null;
+            if (lastSent) {
+                const now = new Date();
+                const diffTime = Math.abs(now - lastSent);
+                const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                if (diffDays < 4.8) { // Using 4.8 to be safe with hourly runs
+                    console.log(`Throttling Support@eckharttolle.com - last sent ${diffDays.toFixed(1)} days ago.`);
+                    continue;
+                }
+            }
         }
 
         // Check if user has already practiced today
         const practiceSnap = await userDoc.ref.collection("dailyPractices").doc(today).get();
         if (!practiceSnap.exists || !practiceSnap.data().completed) {
+            
+            // Create blast record on first real send of this run
+            if (!blastId) {
+                const blastRef = await db.collection("email_blasts").add({
+                    subject: "An Invitation to Return to Source",
+                    chapterTitle: "Daily Sacred Reminder",
+                    chapterSubtitle: daily.headline,
+                    sentAt: admin.firestore.FieldValue.serverTimestamp(),
+                    totalRecipients: 0, // Will update later
+                    adminEmail: "SYSTEM_AUTOMATED"
+                });
+                blastId = blastRef.id;
+            }
+
             console.log(`Sending reminder to ${userData.email}`);
             
             // Personalize unsubscribe link and tracking pixel
             const personalizedHtml = emailTemplate
                 .replace('{{USER_ID}}', userDoc.id)
-                .replace('{{USER_EMAIL_TRACK}}', encodeURIComponent(userData.email));
+                .replace('{{USER_EMAIL_TRACK}}', encodeURIComponent(userData.email))
+                .replace(/DAILY_REMINDER/g, blastId);
 
             await transporter.sendMail({
                 from: '"The Awakened Path" <connect@skrmblissai.in>',
@@ -880,23 +908,63 @@ async function runReminderLogic(apiKey) {
                     'List-Unsubscribe': `<https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId=${userDoc.id}>`
                 }
             });
+
+            // Update last sent timestamp
+            await userDoc.ref.update({
+                lastReminderSentAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            sentCount++;
             console.log(`Success: Reminder sent to ${userData.email}`);
         }
     }
-    console.log(`Finished sending all reminders.`);
+
+    // Update the blast record with final count
+    if (blastId && sentCount > 0) {
+        await db.collection("email_blasts").doc(blastId).update({
+            totalRecipients: sentCount
+        });
+    }
+
+    console.log(`Finished sending all reminders. Total: ${sentCount}`);
 }
 
 /**
  * Unsubscribe Handler
  */
 exports.unsubscribe = onRequest({ cors: true }, async (req, res) => {
-    const { userId } = req.query;
+    const { userId, blastId } = req.query;
     if (!userId) return res.status(400).send("Invalid request.");
 
     try {
         await db.collection("users").doc(userId).set({
             notificationsEnabled: false
         }, { merge: true });
+
+        try {
+            let unscEmail = "Unknown";
+            const userDoc = await db.collection("users").doc(userId).get();
+            if (userDoc.exists) unscEmail = userDoc.data().email || "Unknown";
+
+            await db.collection("activity_logs").add({
+                userId: userId,
+                activityType: "EMAIL_UNSUBSCRIBED",
+                userEmail: unscEmail,
+                details: blastId ? `Unsubscribed from blast ${blastId}` : 'Unsubscribed from general settings',
+                blastId: blastId || null,
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            if (blastId) {
+                await db.collection("email_unsubscribes").add({
+                    blastId,
+                    userEmail: unscEmail,
+                    timestamp: admin.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        } catch (e) {
+            console.error("Failed to log unsubscribe activity:", e);
+        }
         
         res.send(`
             <html>
@@ -943,7 +1011,8 @@ exports.blastUpdateEmail = onCall({
         chapterSubtitle,
         sentAt: admin.firestore.FieldValue.serverTimestamp(),
         totalRecipients: usersSnap.size,
-        adminEmail: request.auth.token.email
+        adminEmail: request.auth.token.email,
+        type: 'COURSE_UPDATE_BLAST'
     });
 
     const updateTemplate = (recipientEmail, blastId) => `
@@ -955,8 +1024,11 @@ exports.blastUpdateEmail = onCall({
             <p>A new chapter has been added to your course: <strong>${chapterTitle}</strong></p>
             <p>${chapterSubtitle}</p>
             <div style="text-align: center; margin-top: 40px;">
-                <a href="https://www.skrmblissai.in/awakenedpath/courses/wisdom-untethered" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 1px; font-weight: bold;">View Course →</a>
+                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath/courses/wisdom-untethered')}" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 1px; font-weight: bold;">View Course →</a>
             </div>
+            <p style="text-align: center; margin-top: 20px;">
+                <a href="https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId={{USER_ID}}&blastId=${blastId}" style="color: rgba(253, 250, 244, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from these updates</a>
+            </p>
             <!-- TRACKING PIXEL -->
             <img src="https://us-central1-awakened-path-2026.cloudfunctions.net/emailOpenTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}" width="1" height="1" style="display:none !important;" />
         </div>
@@ -970,7 +1042,7 @@ exports.blastUpdateEmail = onCall({
             from: '"The Awakened Path" <connect@skrmblissai.in>',
             to: userData.email,
             subject: `Course Update: ${chapterTitle}`,
-            html: updateTemplate(userData.email, blastRef.id)
+            html: updateTemplate(userData.email, blastRef.id).replace('{{USER_ID}}', userDoc.id)
         });
     }
 
@@ -989,7 +1061,7 @@ exports.emailOpenTracker = onRequest({ cors: true }, async (req, res) => {
             await db.collection("email_opens").add({
                 blastId,
                 userEmail: email,
-                openedAt: admin.firestore.FieldValue.serverTimestamp()
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
 
             // Also log to activity_logs for real-time visibility in Engagement Report
@@ -1011,3 +1083,88 @@ exports.emailOpenTracker = onRequest({ cors: true }, async (req, res) => {
     res.send(pixel);
 });
 
+/**
+ * Click Tracker: Fires when user clicks a link in email
+ */
+exports.emailClickTracker = onRequest({ cors: true }, async (req, res) => {
+    const { blastId, email, url } = req.query;
+    const target = url || 'https://www.skrmblissai.in/awakenedpath';
+
+    if (blastId && email) {
+        try {
+            // Log to activity_logs for visibility in Engagement Report
+            await db.collection("activity_logs").add({
+                userEmail: email,
+                activityType: 'EMAIL_CLICK',
+                details: `Clicked Button in Email (${blastId})`,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                location: 'Email'
+            });
+
+            await db.collection("email_clicks").add({
+                blastId,
+                userEmail: email,
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
+            });
+        } catch (e) {
+            console.error("Click track failed:", e);
+        }
+    }
+
+    res.redirect(target);
+});
+
+/**
+ * Presence Notifier: Alerts Admin when a user enters the app or clicks an email
+ */
+exports.notifyAdminOnPresence = onDocumentCreated({
+    document: "activity_logs/{logId}",
+    secrets: [emailUser, emailPass]
+}, async (event) => {
+    const logData = event.data.data();
+    if (!logData) return;
+
+    // We notify on app opens (SESSION_START) or email interactions (CLICK/OPEN)
+    const criticalTypes = ['SESSION_START', 'LOGIN', 'EMAIL_CLICK'];
+    
+    if (criticalTypes.includes(logData.activityType)) {
+        const adminList = ['shrutikhungar@gmail.com', 'simkatyal1@gmail.com', 'rashmi.purbey@gmail.com', 'smriti.duggal@gmail.com'];
+        
+        // Don't notify if the activity is from an admin
+        if (adminList.includes(logData.userEmail?.toLowerCase())) {
+            return;
+        }
+
+        try {
+            const transporter = getTransporter();
+            const actionLabel = logData.activityType === 'SESSION_START' ? 'Entered the Path' : 
+                               logData.activityType === 'EMAIL_CLICK' ? 'Clicked Email Link' : 'Logged In';
+
+            await transporter.sendMail({
+                from: '"Awakened Presence" <connect@skrmblissai.in>',
+                to: 'shrutikhungar@gmail.com',
+                subject: `✨ Presence: ${logData.userEmail} is ${actionLabel}`,
+                html: `
+                    <div style="font-family: Georgia, serif; padding: 40px; background: #0C0910; color: #FDFAF4; border: 1px solid rgba(184,151,58,0.2); border-radius: 12px; max-width: 500px; margin: auto;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <span style="font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: #B8973A; opacity: 0.8;">Live Notification</span>
+                            <h2 style="color: #E6C57D; font-weight: 300; font-style: italic; margin-top: 10px;">A Witness has Arrived</h2>
+                        </div>
+                        <div style="background: rgba(184, 151, 58, 0.05); padding: 25px; border-radius: 8px;">
+                            <p style="margin: 0 0 12px;"><strong>User:</strong> ${logData.userEmail}</p>
+                            <p style="margin: 0 0 12px;"><strong>Action:</strong> ${actionLabel}</p>
+                            <p style="margin: 0 0 12px;"><strong>Location:</strong> ${logData.location || 'Unknown'}</p>
+                            <p style="margin: 0;"><strong>Time:</strong> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })} IST</p>
+                        </div>
+                        <div style="text-align: center; margin-top: 40px;">
+                            <a href="https://www.skrmblissai.in/awakenedpath/admin" style="display: inline-block; padding: 14px 32px; background: #B8973A; color: #0C0910; text-decoration: none; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; border-radius: 4px;">View Live Dashboard &rarr;</a>
+                        </div>
+                    </div>
+                `
+            });
+            console.log(`Presence notification sent for ${logData.userEmail}`);
+        } catch (e) {
+            console.error("Presence Notification Error:", e);
+        }
+    }
+});

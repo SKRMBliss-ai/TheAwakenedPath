@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, Heart, X, Lock, Headphones, LogOut, Mail, Youtube, Medal } from 'lucide-react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, Mail, Youtube, Medal } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
@@ -36,6 +36,7 @@ import { VoiceService, useVoiceStatus } from './services/voiceService';
 import { usePersistedState } from './hooks/usePersistedState';
 import { useRazorpay } from './hooks/useRazorpay';
 import { MusicHub } from './features/music/MusicHub';
+import { PhonePromptModal } from './components/domain/PhonePromptModal';
 
 const DashboardActions = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate, onViewProgress }: any) => {
   return (
@@ -353,9 +354,9 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
   };
 
   const features = [
-    { name: "Deep Wisdom Courses", basic: "First 2 Lessons", premium: "All Chapters & Content", icon: BookOpen },
-    { name: "Daily Presence Practices", basic: "Trial Portal Only", premium: "Entire Practice Library", icon: Heart },
-    { name: "Interactive Insight Journal", basic: "Locked", premium: "Full Access", icon: Sparkles },
+    { name: "Deep Wisdom Courses", basic: "All lessons free for 3 days", premium: "All Chapters & Content", icon: BookOpen },
+    { name: "The Practice Room", basic: "All features free for 3 days", premium: "Entire Practice Library", icon: Flame },
+    { name: "Journal", basic: "Free for 3 days", premium: "Full Access", icon: BookOpen },
     { name: "Personal Consultations", basic: "-", premium: "2 Free Sessions", icon: User },
     { name: "Progress Tracking", basic: "Basic", premium: "In-Depth Analytics", icon: BarChart2 },
     { name: "Weekly Assignments", basic: "Delayed", premium: "Instant Access", icon: Clock },
@@ -371,8 +372,8 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            <h2 className="text-4xl md:text-6xl font-serif font-light text-[var(--text-primary)] tracking-tight">Expand Your Journey</h2>
-            <p className="text-[15px] md:text-[17px] font-serif italic text-[var(--text-secondary)] leading-relaxed opacity-80">
+            <h2 className="text-4xl md:text-6xl font-sans font-medium text-[var(--text-primary)] tracking-tight">Expand Your Journey</h2>
+            <p className="text-[15px] md:text-[17px] font-sans font-medium text-[var(--text-secondary)] leading-relaxed">
               Step beyond the gateway to unlock full access to The Awakened Path universe.
             </p>
           </motion.div>
@@ -404,6 +405,11 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
                 ))}
               </tbody>
             </table>
+            <div className="p-3 text-center bg-[var(--bg-base)]/50 border-t border-[var(--border-subtle)]/30 rounded-b-[24px]">
+              <p className="text-[12px] font-sans font-medium text-[var(--accent-primary)]">
+                * Note: Free users have access to all Premium features for 3 days completely free of cost.
+              </p>
+            </div>
           </div>
 
           {/* Sacred Promise */}
@@ -412,8 +418,8 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
               <Sparkles size={20} className="filter drop-shadow-[0_0_8px_var(--glow-primary)]" />
               <h5 className="text-[14px] font-bold uppercase tracking-[0.4em] text-[var(--accent-primary)] drop-shadow-sm">Our Sacred Promise</h5>
             </div>
-            <p className="text-[15px] text-[var(--text-primary)] font-serif italic leading-relaxed text-center max-w-xl">
-              "If these teachings do not resonate with your spirit, we offer a <span className="text-[var(--accent-primary)] font-bold not-italic underline underline-offset-4 decoration-1">Full 100% Refund</span> within 15 days."
+            <p className="text-[15px] text-[var(--text-primary)] font-sans font-medium leading-relaxed text-center max-w-xl">
+              "If these teachings do not resonate with your spirit, we offer a <span className="text-[var(--accent-primary)] font-bold underline underline-offset-4 decoration-1">Full 100% Refund</span> within 15 days."
             </p>
             <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-bold opacity-60">Your journey is ours to protect</p>
           </div>
@@ -421,8 +427,8 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
 
         {/* Choose Your Commitment */}
         <div className="text-center space-y-4">
-          <h3 className="text-2xl font-serif font-light text-[var(--text-primary)]">Choose Your Commmitment</h3>
-          <p className="text-sm text-[var(--text-secondary)] italic font-serif opacity-70">The path that resonates with your current depth.</p>
+          <h3 className="text-2xl font-sans font-medium text-[var(--text-primary)]">Choose Your Commitment</h3>
+          <p className="text-sm text-[var(--text-secondary)] font-sans font-medium">The path that resonates with your current depth.</p>
         </div>
 
         {/* Pricing Grid */}
@@ -441,7 +447,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
               <p className={cn("text-[10px] font-bold uppercase tracking-[0.3em] mb-1", hasUsedTrial ? "text-[var(--text-muted)]" : "text-[var(--accent-primary)]")}>Taste Awareness</p>
               <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mb-3 opacity-70">Experience full potential</p>
               <h4 className="text-[20px] font-bold text-[var(--text-primary)] mb-1">Begin Trial</h4>
-              <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">
+              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">
                 {hasUsedTrial ? "Trial already used" : "Full Access • No Card Needed"}
               </p>
             </div>
@@ -478,7 +484,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
             <div className="text-left">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Step by Step</p>
               <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Monthly Flow</h4>
-              <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">Recurring Journey</p>
+              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">Recurring Journey</p>
             </div>
             <div className="w-full space-y-4">
               <div className="flex items-baseline gap-1">
@@ -511,7 +517,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
             <div className="text-left mt-2">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Annual Immersion</p>
               <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Sacred Commitment</h4>
-              <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">2 Months Free Included</p>
+              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">2 Months Free Included</p>
             </div>
             <div className="w-full space-y-4">
               <div className="space-y-0">
@@ -544,7 +550,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
             <div className="text-left">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Everlasting</p>
               <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Eternal Traveler</h4>
-              <p className="text-[11px] text-[var(--text-secondary)] font-serif italic mb-6">One-Time Offering</p>
+              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">One-Time Offering</p>
             </div>
             <div className="w-full space-y-4">
               <div className="flex items-baseline gap-1">
@@ -1919,6 +1925,7 @@ export default function UntetheredApp() {
         onDismiss={dismissToast}
       />
       <WhatsAppButton bottomOffset={musicUrl ? 110 : 32} />
+      <PhonePromptModal />
       {voiceGuidanceEnabled && (
         <VoiceGuidance
           preferredVoice={preferredVoice}

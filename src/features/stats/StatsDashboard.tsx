@@ -174,7 +174,7 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
         }
 
         fetchUserStats();
-    }, [user]);
+    }, [user, checkAndUnlock]);
 
     const fetchUserStats = async () => {
         if (!user) return;

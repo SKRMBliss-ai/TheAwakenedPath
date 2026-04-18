@@ -45,6 +45,7 @@ const QUESTION_VIDEOS: Record<string, string | null> = {
 
 const QUESTION_MUSICAL_VIDEOS: Record<string, string | null> = {
   'question2': '-yxvAQs5Dgk',
+  'question3': 'i8opqcWy71A',
 };
 
 interface CourseProps {
