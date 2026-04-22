@@ -122,10 +122,10 @@ function getDominantEmotionColor(emotionsStr?: string) {
 // --- Sub-components moved outside for stability ---
 
 const BREATH_PHASES = [
-  { phase: 'inhale', label: 'Inhale', duration: 4000, color: '#5EC4B0' },
-  { phase: 'hold',   label: 'Hold',   duration: 2000, color: '#9575CD' },
-  { phase: 'exhale', label: 'Exhale', duration: 4000, color: '#B8973A' },
-  { phase: 'rest',   label: 'Rest',   duration: 2000, color: '#7986CB' },
+  { phase: 'inhale', label: 'Inhale', duration: 4000, color: '#5EC4B0', scale: 1.25, glow: 0.5 },
+  { phase: 'hold',   label: 'Hold',   duration: 2000, color: '#9575CD', scale: 1.25, glow: 0.4 },
+  { phase: 'exhale', label: 'Exhale', duration: 4000, color: '#B8973A', scale: 1.0,  glow: 0.2 },
+  { phase: 'rest',   label: 'Rest',   duration: 2000, color: '#7986CB', scale: 1.0,  glow: 0.1 },
 ] as const;
 
 const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyAssignment, onNavigate }: any) => {
@@ -217,9 +217,17 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
               boxShadow: '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.1)',
               WebkitTapHighlightColor: 'transparent',
             }}
-            animate={{ scale: [1, 1.025, 1] }}
-            transition={{ duration: breathActive ? 5 : 6, repeat: Infinity, ease: 'easeInOut' }}
-            whileHover={{ boxShadow: '0 0 0 1px rgba(184,151,58,.3), 0 0 40px rgba(184,151,58,.4), 0 0 80px rgba(184,151,58,.15)' }}
+            animate={{ 
+              scale: breathActive ? currentPhase.scale : [1, 1.025, 1],
+              boxShadow: breathActive 
+                ? `0 0 0 1px rgba(184,151,58,.15), 0 0 ${20 + currentPhase.glow * 40}px rgba(184,151,58,${0.15 + currentPhase.glow * 0.3})`
+                : '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.1)'
+            }}
+            transition={{ 
+              duration: breathActive ? currentPhase.duration / 1000 : 6, 
+              ease: breathActive ? "easeInOut" : "easeInOut",
+              repeat: breathActive ? 0 : Infinity 
+            }}
             aria-label={breathActive ? 'End breath practice' : 'Begin breath practice'}
           >
             <div
@@ -392,9 +400,17 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
                 border: '1px solid rgba(184,151,58,.35)',
                 boxShadow: '0 0 0 1px rgba(184,151,58,.15), 0 0 32px rgba(184,151,58,.28), 0 0 70px rgba(184,151,58,.12)',
               }}
-              animate={{ scale: [1, 1.025, 1] }}
-              transition={{ duration: breathActive ? 5 : 6, repeat: Infinity, ease: 'easeInOut' }}
-              whileHover={{ boxShadow: '0 0 0 1px rgba(184,151,58,.3), 0 0 44px rgba(184,151,58,.42), 0 0 90px rgba(184,151,58,.18)' }}
+              animate={{ 
+                scale: breathActive ? currentPhase.scale : [1, 1.025, 1],
+                boxShadow: breathActive 
+                  ? `0 0 0 1px rgba(184,151,58,.15), 0 0 ${30 + currentPhase.glow * 50}px rgba(184,151,58,${0.2 + currentPhase.glow * 0.4})`
+                  : '0 0 0 1px rgba(184,151,58,.15), 0 0 32px rgba(184,151,58,.28), 0 0 70px rgba(184,151,58,.12)'
+              }}
+              transition={{ 
+                duration: breathActive ? currentPhase.duration / 1000 : 6, 
+                ease: "easeInOut",
+                repeat: breathActive ? 0 : Infinity 
+              }}
               aria-label={breathActive ? 'End breath practice' : 'Begin breath practice'}
             >
               <div

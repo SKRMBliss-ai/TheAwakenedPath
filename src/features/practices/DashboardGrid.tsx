@@ -645,11 +645,61 @@ export function DashboardGrid({
   return (
     <>
       {/* ── Section label ───────────────────────────────────────────────────── */}
-      <div
-        className="font-sans text-[10px] font-black tracking-[0.25em] uppercase mb-[12px] opacity-40 ml-1"
-        style={{ color: 'var(--text-primary)' }}
-      >
-        Today's journey
+      {/* ── Path Identity Header ────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-1 mb-4">
+        <div className="flex flex-col gap-1">
+          <AnimatePresence mode="wait">
+            {allDone ? (
+              <motion.div
+                key="done-msg"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2"
+              >
+                <div className="text-[#B8973A] text-xs">✦</div>
+                <span className="font-serif italic text-sm text-[#B8973A]">
+                  Your presence is your gift today.
+                </span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="path-label"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="font-sans text-[10px] font-black tracking-[0.25em] uppercase opacity-40"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Today's path
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* Progress Pips */}
+          <div className="flex gap-[6px]">
+            {([learnDone, practiceCompleted, reflectDone, integrateDone] as boolean[]).map((d, i) => (
+              <div
+                key={i}
+                className="rounded-full transition-all duration-700"
+                style={{
+                  width: 6,
+                  height: 6,
+                  background: d ? STEP_COLORS[i] : 'var(--border-default)',
+                  boxShadow: d ? `0 0 10px ${STEP_COLORS[i]}cc` : 'none',
+                  opacity: d ? 1 : 0.3
+                }}
+              />
+            ))}
+          </div>
+          {/* Count */}
+          <span
+            className="font-sans text-[12px] font-black tabular-nums tracking-[.05em]"
+            style={{ color: doneCount > 0 ? '#B8973A' : 'var(--text-muted)' }}
+          >
+            {doneCount}<span className="text-[10px] opacity-40 mx-0.5">/</span>4
+          </span>
+        </div>
       </div>
 
       {/* ── Row 1 (Steps 1 & 2) ──────────────────────────────────────────────── */}
@@ -753,67 +803,9 @@ export function DashboardGrid({
         )}
       </AnimatePresence>
 
-      {/* ── All Done banner ─────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {allDone && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            className="mb-6 p-6 rounded-[24px] text-center relative overflow-hidden"
-            style={{
-              background: `color-mix(in srgb, ${color} 10%, var(--bg-surface))`,
-              border: `1.5px solid ${color}44`,
-              boxShadow: `0 12px 40px ${color}15`,
-            }}
-          >
-            <div 
-              className="absolute inset-0 opacity-20"
-              style={{ background: `radial-gradient(circle at 50% 50%, ${color}40, transparent 70%)` }}
-            />
-            <div className="relative z-10">
-              <div className="text-3xl mb-3 drop-shadow-lg">✦</div>
-              <p className="font-serif italic text-lg leading-snug px-4" style={{ color }}>
-                "All four complete. Your presence is your gift today."
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Large banner removed in favor of integrated top header message */}
 
-      {/* ── Progress row ────────────────────────────────────────────────────── */}
-      <div
-        className="flex items-center justify-between rounded-[22px] mb-5"
-        style={{
-          padding: '14px 20px',
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-default)',
-        }}
-      >
-        <span className="font-sans text-[10px] font-bold tracking-[.15em] uppercase opacity-60" style={{ color: 'var(--text-primary)' }}>
-          Today's path
-        </span>
-        <div className="flex gap-[8px]">
-          {([learnDone, practiceCompleted, reflectDone, integrateDone] as boolean[]).map((d, i) => (
-            <div
-              key={i}
-              className="rounded-full transition-all duration-700"
-              style={{
-                width: 8,
-                height: 8,
-                background: d ? STEP_COLORS[i] : 'var(--border-default)',
-                boxShadow: d ? `0 0 10px ${STEP_COLORS[i]}cc` : 'none',
-              }}
-            />
-          ))}
-        </div>
-        <span
-          className="font-sans text-[12px] font-black tabular-nums tracking-[.05em]"
-          style={{ color: doneCount > 0 ? '#B8973A' : 'var(--text-muted)' }}
-        >
-          {doneCount}<span className="text-[10px] opacity-40 mx-0.5">/</span>4
-        </span>
-      </div>
+      {/* Redundant progress row removed in favor of top header */}
 
       {/* ── Soundscape of the Day ───────────────────────────────────────────── */}
       <div
