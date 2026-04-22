@@ -82,117 +82,7 @@ interface StepDef {
 // Node — glowing circle with the step number
 // ─────────────────────────────────────────────────────────────────────────────
 
-function StepNode({
-  num, status, color, isLast,
-}: { num: number; status: StepStatus; color: string; isLast?: boolean }) {
-  const isDone = status === 'done';
-  const isActive = status === 'active';
-
-  return (
-    <div className="flex flex-col items-center flex-shrink-0 select-none" style={{ width: 52 }}>
-      {/* ── Circle ── */}
-      <motion.div
-        initial={{ scale: 0.7, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: num * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className="relative flex items-center justify-center rounded-full z-10"
-        style={{
-          width: 48,
-          height: 48,
-          background: isDone
-            ? `linear-gradient(145deg, ${color}ee, ${color}99)`
-            : isActive
-              ? `${color}1a`
-              : 'transparent',
-          border: `2px solid ${isDone ? color : isActive ? color + '80' : 'var(--border-subtle)'}`,
-          boxShadow: isDone
-            ? `0 0 20px ${color}55, 0 2px 8px ${color}33`
-            : isActive
-              ? `0 0 14px ${color}28`
-              : 'none',
-        }}
-      >
-        <AnimatePresence mode="wait">
-          {isDone ? (
-            <motion.div
-              key="check"
-              initial={{ scale: 0, rotate: -30 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 22 }}
-            >
-              <CheckCircle2 size={20} color="white" strokeWidth={2.5} />
-            </motion.div>
-          ) : isActive ? (
-            <motion.div
-              key="pulse"
-              animate={{ scale: [1, 1.22, 1], opacity: [0.9, 1, 0.9] }}
-              transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-              className="w-3 h-3 rounded-full"
-              style={{ background: color }}
-            />
-          ) : (
-            <span key="num" className="text-[13px] font-black" style={{ color: 'var(--text-muted)' }}>
-              {num}
-            </span>
-          )}
-        </AnimatePresence>
-
-        {/* Outer badge for done/active */}
-        {(isDone || isActive) && (
-          <span
-            className="absolute -top-1.5 -right-1.5 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8px] font-black shadow-sm"
-            style={{
-              background: isDone ? color : 'var(--bg-surface)',
-              color: isDone ? 'white' : 'var(--text-muted)',
-              border: `1.5px solid ${isDone ? color + 'bb' : 'var(--border-default)'}`,
-            }}
-          >
-            {num}
-          </span>
-        )}
-      </motion.div>
-
-      {/* ── Connector trail ── */}
-      {!isLast && (
-        <div className="relative" style={{ width: 2, height: 38 }}>
-          {/* base track */}
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{ background: 'var(--border-subtle)', opacity: 0.7 }}
-          />
-          {/* fill that animates when done */}
-          {isDone && (
-            <motion.div
-              initial={{ height: '0%' }}
-              animate={{ height: '100%' }}
-              transition={{ duration: 0.55, ease: 'easeOut', delay: num * 0.12 + 0.25 }}
-              className="absolute top-0 left-0 right-0 rounded-full"
-              style={{ background: `linear-gradient(180deg, ${color}dd, ${color}55)` }}
-            />
-          )}
-          {/* chevron dots for active/next state */}
-          {!isDone && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-[3px]">
-              {[0, 1, 2].map(i => (
-                <motion.div
-                  key={i}
-                  animate={{
-                    opacity: isActive ? [0.2, 0.8, 0.2] : [0.15, 0.3, 0.15],
-                    y: isActive ? [0, 2, 0] : 0,
-                  }}
-                  transition={{ repeat: Infinity, duration: 1.6, delay: i * 0.2, ease: 'easeInOut' }}
-                  className="w-[3px] h-[3px] rounded-full"
-                  style={{ background: isActive ? color : 'var(--text-muted)' }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+// StepNode removed for simpler UI
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Step Card — the action card beside each node
@@ -206,80 +96,78 @@ function StepCard({ def }: { def: StepDef }) {
 
   return (
     <motion.button
-      initial={{ opacity: 0, x: 16 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: num * 0.08 + 0.1, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={!isDone ? { x: 4, transition: { duration: 0.18 } } : {}}
-      whileTap={!isDone ? { scale: 0.97 } : {}}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: num * 0.05, duration: 0.4 }}
+      whileTap={!isDone ? { scale: 0.98 } : {}}
       onClick={onClick}
       className={cn(
-        'flex-1 group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-left transition-all duration-300',
+        'w-full flex items-center gap-5 p-5 sm:p-6 mb-4 rounded-3xl border text-left transition-all duration-300',
         isDone
           ? 'border-[var(--border-subtle)] bg-transparent opacity-60'
           : isActive
-            ? 'border-[var(--border-default)] bg-[var(--bg-surface)] shadow-md hover:shadow-lg'
+            ? 'border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg'
             : 'border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 hover:bg-[var(--bg-surface)] hover:border-[var(--border-default)]'
       )}
       style={
         isActive
-          ? { borderColor: color + '50', boxShadow: `0 4px 18px ${color}18` }
+          ? { borderColor: color + '50', boxShadow: `0 8px 32px ${color}15` }
           : {}
       }
     >
-      {/* Icon */}
+      {/* Huge Icon */}
       <div
         className={cn(
-          'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300',
+          'w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] flex items-center justify-center flex-shrink-0 transition-all duration-300',
           isDone ? 'opacity-50' : ''
         )}
         style={{
           background: isDone ? 'var(--bg-surface)' : isActive ? color + '20' : color + '0d',
-          border: `1.5px solid ${isDone ? 'var(--border-subtle)' : isActive ? color + '55' : color + '25'}`,
+          border: `2px solid ${isDone ? 'var(--border-subtle)' : isActive ? color + '55' : color + '25'}`,
         }}
       >
         {isDone
-          ? <CheckCircle2 size={16} style={{ color }} strokeWidth={2} />
-          : <Icon size={16} style={{ color: isNext ? color + '80' : color }} />
+          ? <CheckCircle2 size={28} style={{ color }} strokeWidth={2} />
+          : <Icon size={28} style={{ color: isNext ? color + '80' : color }} />
         }
       </div>
 
-      {/* Text */}
+      {/* Large Clear Text */}
       <div className="flex-1 min-w-0">
-        <p className={cn(
-          'text-[13px] font-semibold leading-tight',
+        <h3 className={cn(
+          'text-xl sm:text-2xl font-serif leading-tight',
           isDone
             ? 'line-through text-[var(--text-muted)]'
             : isActive
-              ? 'text-[var(--text-primary)]'
-              : 'text-[var(--text-secondary)]'
+              ? 'text-[var(--text-primary)] font-medium'
+              : 'text-[var(--text-secondary)] font-medium'
         )}>
-          {label}
-        </p>
-        <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+          {num}. {label}
+        </h3>
+        <p className="text-sm sm:text-base mt-2" style={{ color: 'var(--text-muted)' }}>
           {isDone ? doneLine : noun}
         </p>
         {hint && !isDone && (
-          <p className="text-[9px] mt-1 font-bold uppercase tracking-wider truncate" style={{ color: color + '90' }}>
+          <p className="text-xs sm:text-sm mt-2 font-bold uppercase tracking-wider" style={{ color: color + '90' }}>
             {hint}
           </p>
         )}
       </div>
 
-      {/* Action badge */}
+      {/* Massive obvious CTA if active */}
       {!isDone && (
         <div
           className={cn(
-            'flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0 transition-all duration-300',
-            isActive ? 'group-hover:gap-2' : ''
+            'flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-wider px-4 sm:px-5 py-2.5 sm:py-3 rounded-full flex-shrink-0 transition-all duration-300 shadow-sm'
           )}
           style={{
             background: isActive ? color + '22' : 'var(--bg-surface)',
             color: isActive ? color : 'var(--text-muted)',
-            border: `1px solid ${isActive ? color + '40' : 'var(--border-subtle)'}`,
+            border: `2px solid ${isActive ? color + '40' : 'var(--border-subtle)'}`,
           }}
         >
-          {isActive ? <ArrowRight size={9} /> : null}
-          {isNext ? 'Next' : 'Begin'}
+          {isActive ? <ArrowRight size={16} /> : null}
+          {isNext ? 'Next' : 'BEGIN'}
         </div>
       )}
     </motion.button>
@@ -539,22 +427,9 @@ export function TodayPath({
         <div className="mx-5 mb-3 h-px" style={{ background: color + '18' }} />
 
         {/* ── Journey Map ── */}
-        <div className="px-4 pb-5 space-y-0">
-          {steps.map((step, idx) => (
-            <div key={step.num} className="flex items-stretch gap-3">
-              <StepNode
-                num={step.num}
-                status={step.status}
-                color={color}
-                isLast={idx === steps.length - 1}
-              />
-              <div
-                className="flex flex-col flex-1 min-w-0"
-                style={{ paddingBottom: idx < steps.length - 1 ? 8 : 0 }}
-              >
-                <StepCard def={step} />
-              </div>
-            </div>
+        <div className="px-5 sm:px-6 pb-6 pt-2">
+          {steps.map((step) => (
+            <StepCard key={step.num} def={step} />
           ))}
         </div>
 

@@ -52,9 +52,9 @@ const WISDOM_PRACTICES = [
     id: 'question3',
     questionNum: 3,
     questionTitle: 'Personal to Impersonal',
-    practiceName: 'The Cosmic Pause × 3',
-    practiceDesc: 'Three times today — car, door, phone — stop one second and notice.',
-    duration: '1 sec × 3',
+    practiceName: 'The One-Second Cosmic Pause',
+    practiceDesc: 'Pause for just one second at three natural triggers today.',
+    duration: '1 sec / 3 times',
     color: '#3A8BBF',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q3_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q3_dark.png'),
@@ -460,6 +460,17 @@ export function WisdomPracticeSection({
   onStart?: (id: string) => void;
   activeQuestionId?: string;
 }) {
+  useEffect(() => {
+    if (activeQuestionId) {
+      setTimeout(() => {
+        const el = document.getElementById(`practice-${activeQuestionId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+    }
+  }, [activeQuestionId]);
+
   return (
     <section className="space-y-12">
       <div className="flex flex-col items-center text-center space-y-6">
@@ -488,13 +499,14 @@ export function WisdomPracticeSection({
       <ErrorBoundary featureName="Wisdom Practice Grid">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pb-20">
           {WISDOM_PRACTICES.map((p) => (
-            <WisdomCard
-              key={p.id}
-              practice={p}
-              userId={userId}
-              onStart={() => onStart?.(p.id)}
-              autoExpand={false}
-            />
+            <div key={p.id} id={`practice-${p.id}`} className="w-full">
+              <WisdomCard
+                practice={p}
+                userId={userId}
+                onStart={() => onStart?.(p.id)}
+                autoExpand={activeQuestionId === p.id}
+              />
+            </div>
           ))}
         </div>
       </ErrorBoundary>

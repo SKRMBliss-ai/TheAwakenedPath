@@ -179,11 +179,11 @@ export function ThoughtFeelingSelector({
                                         <span className="text-[24px] flex-shrink-0">{fe.emoji}</span>
                                         <div className="flex-1 min-w-0">
                                             <span style={{
-                                                fontSize: 13, fontWeight: 600, display: "block",
+                                                fontSize: 18, fontWeight: 600, display: "block",
                                                 color: hasSel ? fe.color : "var(--text-primary)",
                                             }}>{fe.label}</span>
                                             <span style={{
-                                                fontSize: 11, display: "block", marginTop: 2,
+                                                fontSize: 14, display: "block", marginTop: 2,
                                                 color: "var(--text-muted)", lineHeight: 1.3
                                             }}>
                                                 {HUMAN_DESCRIPTIONS[fe.label] || fe.subtitle}
@@ -254,7 +254,7 @@ export function ThoughtFeelingSelector({
                                                             transition={{ duration: 0.2 }}
                                                             onClick={() => toggleThought(thought)}
                                                             className={cn(
-                                                                "px-3 py-1.5 rounded-xl text-[13px] font-serif transition-all duration-200 border flex items-center shadow-sm text-left leading-tight",
+                                                                "px-4 py-3 rounded-xl text-base font-serif transition-all duration-200 border flex items-center shadow-sm text-left leading-tight",
                                                                 sel
                                                                     ? "font-medium"
                                                                     : "hover:border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)]"
@@ -285,12 +285,12 @@ export function ThoughtFeelingSelector({
                                                             }
                                                         }}
                                                         style={{
-                                                            width: "100%", padding: "10px 36px 10px 14px",
+                                                            width: "100%", padding: "12px 36px 12px 16px",
                                                             borderRadius: 12,
                                                             border: `1.5px dashed var(--border-subtle)`,
                                                             background: "var(--bg-surface)",
                                                             color: "var(--text-primary)",
-                                                            fontSize: 13, fontFamily: "var(--font-serif)", fontStyle: "italic",
+                                                            fontSize: 15, fontFamily: "var(--font-serif)", fontStyle: "italic",
                                                             outline: "none",
                                                             transition: "all 0.3s"
                                                         }}
@@ -357,7 +357,7 @@ export function ThoughtFeelingSelector({
                         <div style={{ marginBottom: 10 }}>
                             {selectedThoughts.map((t) => (
                                 <p key={t} style={{
-                                    fontSize: 14, fontFamily: "var(--font-serif)",
+                                    fontSize: 16, fontFamily: "var(--font-serif)",
                                     fontStyle: "italic", color: "var(--text-primary)",
                                     lineHeight: 1.5,
                                 }}>"{t}"</p>

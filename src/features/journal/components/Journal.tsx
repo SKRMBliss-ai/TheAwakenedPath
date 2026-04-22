@@ -398,11 +398,11 @@ const Journal: React.FC = () => {
 
             <nav className="flex items-center justify-between mb-12 relative z-10 w-full border-b border-[var(--border-subtle)]/30 pb-8">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-serif font-light" 
+                    <h1 className="text-3xl md:text-4xl font-serif font-light" 
                         style={{ color: 'var(--text-primary)' }}>
                         Daily Log
                     </h1>
-                    <p className="text-[13px] font-serif italic mt-1" 
+                    <p className="text-base font-serif italic mt-2" 
                         style={{ color: 'var(--text-secondary)' }}>
                         {entries.length} reflection{entries.length === 1 ? '' : 's'}
                     </p>
@@ -410,13 +410,13 @@ const Journal: React.FC = () => {
                 <a
                     href="/Journal/Journal.pdf"
                     download="Journal.pdf"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-[var(--accent-primary-muted)] hover:text-[var(--text-primary)]"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all hover:bg-[var(--accent-primary-muted)] hover:text-[var(--text-primary)]"
                     style={{ 
                         background: 'var(--bg-surface)', 
                         border: '1px solid var(--border-subtle)',
                         color: 'var(--text-muted)',
                     }}>
-                    <Download size={11} /> Export
+                    <Download size={14} /> Export
                 </a>
             </nav>
 
@@ -440,23 +440,23 @@ const Journal: React.FC = () => {
                                         </div>
 
                                         <div>
-                                            <h2 className="text-xl font-serif font-light tracking-wide" style={{ color: 'var(--text-primary)' }}>
+                                            <h2 className="text-2xl font-serif font-light tracking-wide" style={{ color: 'var(--text-primary)' }}>
                                                 Settle into the Now
                                             </h2>
-                                            <p className="text-[14px] font-serif italic mt-1.5 opacity-90" 
+                                            <p className="text-lg font-serif italic mt-1.5 opacity-90" 
                                                 style={{ color: 'var(--text-secondary)' }}>
                                                 A brief reconnection before journaling
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-2 w-full sm:w-auto mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-[var(--border-subtle)]">
-                                        <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript} className="w-full sm:w-auto justify-center">
-                                            Begin
+                                    <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-4 w-full sm:w-auto mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-[var(--border-subtle)]">
+                                        <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript} className="w-full sm:w-auto justify-center text-lg px-8 py-3">
+                                            BEGIN
                                         </AnchorButton>
                                         <button onClick={() => { resetJournalForm(); setShowLogForm(true); }}
-                                            className="text-[9px] uppercase tracking-[0.2em] font-bold transition-colors w-full sm:w-auto text-center sm:text-right hover:text-[var(--accent-primary)]"
-                                            style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                            className="text-xs uppercase tracking-[0.2em] font-black transition-colors w-full sm:w-auto text-center sm:text-right hover:text-[var(--accent-primary)]"
+                                            style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0' }}>
                                             Skip to journal →
                                         </button>
                                     </div>
@@ -465,11 +465,11 @@ const Journal: React.FC = () => {
 
                             {/* Calendar / Timeline Toggle & View */}
                             <motion.section variants={childVariant} className="space-y-6 mt-8">
-                                <div className="flex items-center justify-between mb-6 w-full mx-auto">
-                                    <div className="flex bg-[var(--bg-surface)] rounded-xl p-0.5 border border-[var(--border-subtle)]">
+                                <div className="flex flex-col sm:flex-row items-center justify-between mb-6 w-full mx-auto gap-4">
+                                    <div className="flex bg-[var(--bg-surface)] rounded-xl p-0.5 border border-[var(--border-subtle)] w-full sm:w-auto">
                                         {(['calendar', 'timeline'] as const).map(tab => (
                                             <button key={tab} onClick={() => setHistoryTab(tab)}
-                                                className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all ${
+                                                className={`flex-1 sm:flex-none px-6 py-3 text-[12px] font-black uppercase tracking-wider rounded-lg transition-all ${
                                                     historyTab === tab 
                                                         ? 'bg-[var(--accent-primary)] text-white shadow-sm' 
                                                         : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-base)]'
@@ -479,7 +479,7 @@ const Journal: React.FC = () => {
                                         ))}
                                     </div>
                                     {/* Entry count */}
-                                    <span className="text-[10px] font-bold uppercase tracking-wider"
+                                    <span className="text-xs font-bold uppercase tracking-wider"
                                         style={{ color: 'var(--text-muted)' }}>
                                         {entries.length} journal entries
                                     </span>

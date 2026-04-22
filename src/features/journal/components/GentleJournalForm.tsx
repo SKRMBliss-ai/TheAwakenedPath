@@ -302,7 +302,7 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: {
         <motion.div variants={fadeUp} className="space-y-2">
             {label && (
                 <label style={{ 
-                    display: "block", fontSize: 16, color: "var(--text-primary)", 
+                    display: "block", fontSize: 20, color: "var(--text-primary)", 
                     fontFamily: "var(--font-serif)", lineHeight: 1.4 
                 }}>
                     {label}
@@ -310,7 +310,7 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: {
             )}
             {hint && (
                 <p style={{ 
-                    fontSize: 13, color: "var(--text-secondary)", fontStyle: "italic", 
+                    fontSize: 16, color: "var(--text-secondary)", fontStyle: "italic", 
                     lineHeight: 1.5, fontWeight: 400 
                 }}>
                     {hint}
@@ -320,7 +320,7 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: {
                 ref={ref} value={value} onChange={(e) => onChange(e.target.value)} 
                 placeholder={placeholder} rows={3}
                 style={{
-                    width: "100%", minHeight: 100, padding: "16px 20px", fontSize: 16, lineHeight: 1.7,
+                    width: "100%", minHeight: 120, padding: "18px 24px", fontSize: 18, lineHeight: 1.7,
                     fontFamily: "var(--font-serif)", color: "var(--text-primary)", 
                     background: "var(--bg-input, var(--bg-surface))",
                     border: "1.5px solid var(--border-default)", borderRadius: 16, outline: "none", 
@@ -369,13 +369,13 @@ function NavButton({ children, onClick, variant = "next", disabled = false }: {
     return (
         <motion.button whileTap={{ scale: 0.97 }} onClick={onClick} disabled={disabled}
             style={{
-                padding: "14px 28px", borderRadius: 14, fontSize: 14, fontWeight: 600, 
+                padding: "16px 32px", borderRadius: 14, fontSize: 16, fontWeight: 600, 
                 letterSpacing: "0.04em",
                 background: disabled ? "var(--bg-surface)" : styles.bg, 
                 border: `1.5px solid ${disabled ? "var(--border-subtle)" : styles.border}`,
                 color: disabled ? "var(--text-disabled)" : styles.color, 
                 cursor: disabled ? "not-allowed" : "pointer",
-                transition: "all 0.3s ease", minHeight: 50, minWidth: 100,
+                transition: "all 0.3s ease", minHeight: 56, minWidth: 120,
             }}
             onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.background = styles.hoverBg; }}
             onMouseLeave={(e) => { if (!disabled) e.currentTarget.style.background = styles.bg; }}

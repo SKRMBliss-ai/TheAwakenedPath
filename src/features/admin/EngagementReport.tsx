@@ -643,8 +643,19 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         <span className="text-[10px] text-[var(--text-muted)] font-bold">{time}</span>
                                                     </div>
 
-                                                    <div className="text-center font-mono text-[13px] text-[var(--text-muted)]">
+                                                    <div className="text-center font-mono text-[13px] text-[var(--text-muted)] relative group/details">
                                                         {blast.totalRecipients}
+                                                        
+                                                        {blast.recipientEmails?.length > 0 && (
+                                                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[#1C1814] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover/details:opacity-100 transition-opacity pointer-events-none z-50">
+                                                                <p className="text-[8px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left flex justify-between">Sent To: <span>{blast.totalRecipients}</span></p>
+                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left font-mono">
+                                                                    {blast.recipientEmails.map((email: string) => (
+                                                                        <div key={email} className="text-[9px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {/* Opened */}

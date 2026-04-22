@@ -26,7 +26,8 @@ import { MusicMiniPlayer } from './components/ui/MusicMiniPlayer';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
 import { isAdminEmail, isUnlockedUser } from './config/admin';
-import { TodayPath } from './features/practices/TodayPath';
+import { DashboardGrid } from './features/practices/DashboardGrid';
+import { QUESTION_META } from './features/practices/TodayPath';
 import { useCourseTracking } from './hooks/useCourseTracking';
 import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
 import { InfoTooltip } from './components/ui/InfoTooltip';
@@ -38,10 +39,10 @@ import { useRazorpay } from './hooks/useRazorpay';
 import { MusicHub } from './features/music/MusicHub';
 import { PhonePromptModal } from './components/domain/PhonePromptModal';
 
-const DashboardActions = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate, onViewProgress }: any) => {
+const DashboardActions = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate }: any) => {
   return (
     <div className="max-w-2xl mx-auto w-full px-4 mb-4">
-      <TodayPath
+      <DashboardGrid
         userId={user?.uid}
         progress={progress}
         weeklyAssignment={weeklyAssignment}
@@ -52,7 +53,6 @@ const DashboardActions = ({ user, isAccessValid, progress, weeklyAssignment, onN
             onNavigate(tab);
           }
         }}
-        onViewProgress={onViewProgress}
         isAccessValid={isAccessValid}
       />
     </div>
@@ -121,63 +121,187 @@ function getDominantEmotionColor(emotionsStr?: string) {
 
 // --- Sub-components moved outside for stability ---
 
+const BREATH_PHASES = [
+  { phase: 'inhale', label: 'Inhale', duration: 4000, color: '#5EC4B0' },
+  { phase: 'hold',   label: 'Hold',   duration: 2000, color: '#9575CD' },
+  { phase: 'exhale', label: 'Exhale', duration: 4000, color: '#B8973A' },
+  { phase: 'rest',   label: 'Rest',   duration: 2000, color: '#7986CB' },
+] as const;
+
 const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, rotateX, rotateY, progress, weeklyAssignment, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
       : 'Good evening';
 
+  const [breathActive, setBreathActive] = useState(false);
+  const [breathIdx, setBreathIdx] = useState(0);
+
+  useEffect(() => {
+    if (!breathActive) { setBreathIdx(0); return; }
+    let idx = 0;
+    setBreathIdx(0);
+    let t: ReturnType<typeof setTimeout>;
+    function advance() {
+      t = setTimeout(() => {
+        idx = (idx + 1) % BREATH_PHASES.length;
+        setBreathIdx(idx);
+        advance();
+      }, BREATH_PHASES[idx].duration);
+    }
+    advance();
+    return () => clearTimeout(t);
+  }, [breathActive]);
+
+  const questionId = weeklyAssignment?.questionId ?? 'question1';
+  const questionMeta = QUESTION_META[questionId] ?? QUESTION_META['question1'];
+  const currentPhase = BREATH_PHASES[breathIdx];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="space-y-10"
+      className="space-y-6"
     >
-      {/* Hero Container — Floating, no card box */}
-      <div className="relative pt-6 pb-12 mx-2 mt-2">
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(94,196,176,0.07),transparent_60%)] pointer-events-none" />
-
-        <header className="relative flex justify-between items-center z-10 mb-8 px-4">
+      {/* ── Greeting row ── */}
+      <div className="flex items-center justify-between px-4 pt-5">
+        <div className="flex flex-col gap-0.5">
+          <span
+            className="font-sans text-[10px] font-bold tracking-[.28em] uppercase"
+            style={{ color: '#B8973A' }}
+          >
+            {greeting},
+          </span>
+          <span className="font-serif text-[22px] font-normal" style={{ color: 'var(--text-primary)' }}>
+            {user.displayName || 'Traveler'}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Pulsing gold dot */}
+          <motion.div
+            className="rounded-full"
+            style={{ width: 8, height: 8, background: '#B8973A', boxShadow: '0 0 10px #B8973A' }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <button
             onClick={onOpenSidebar}
-            className="w-12 h-12 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center active:scale-90 transition-all backdrop-blur-md"
+            className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
           >
-            <Menu className="w-5 h-5 text-[var(--text-muted)]" />
+            <Menu className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
           </button>
-
-          <div className="flex flex-col items-center">
-            <AwakenedPathLogo variant="icon" size="sm" animated={false} className="mb-1 opacity-80" />
-            <p className="text-[11px] font-serif italic text-[var(--accent-primary)] tracking-[0.3em] uppercase mb-0.5">{greeting},</p>
-            <h1 className="text-[14px] font-serif font-bold text-[var(--text-primary)] uppercase tracking-widest">{user.displayName || 'Traveler'}</h1>
-          </div>
-
-          <div className="w-12 h-12 flex-shrink-0"></div>
-        </header>
-
-        <section className="relative flex flex-col items-center justify-center space-y-12 mt-12 z-10">
-          <div className="transform scale-90 sm:scale-100">
-            <AwakenStage
-              isAnimating={false}
-              size="md"
-              mouseX={rotateX}
-              mouseY={rotateY}
-            />
-          </div>
-
-          <div className="text-center space-y-4 px-6 relative">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-20" />
-            <h3 className="text-2xl font-serif font-medium text-[var(--text-primary)] tracking-wide">
-              Presence <span className="opacity-60 italic mx-1 font-light text-[0.8em]">Over</span> Progress
-            </h3>
-            <p className="text-[14px] font-serif italic text-[var(--text-primary)] leading-relaxed max-w-[280px] mx-auto">
-              "Yesterday is history, tomorrow is a mystery, today is a gift."
-            </p>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-20" />
-          </div>
-
-        </section>
+        </div>
       </div>
+
+      {/* ── Orb section ── */}
+      <div className="flex flex-col items-center gap-3 px-4">
+        {/* Orb + ring */}
+        <div className="relative" style={{ width: 120, height: 120 }}>
+          {/* Outer ring */}
+          <motion.div
+            className="absolute rounded-full pointer-events-none"
+            style={{ inset: -8, border: '1px solid rgba(184,151,58,.25)' }}
+            animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.032, 1] }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
+          />
+          {/* Orb button — always dark bg so text inside stays readable */}
+          <motion.button
+            onClick={() => setBreathActive(b => !b)}
+            className="relative rounded-full flex items-center justify-center overflow-hidden focus:outline-none"
+            style={{
+              width: 120, height: 120,
+              background: 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)',
+              border: '1px solid rgba(184,151,58,.35)',
+              boxShadow: '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.1)',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+            animate={{ scale: [1, 1.025, 1] }}
+            transition={{ duration: breathActive ? 5 : 6, repeat: Infinity, ease: 'easeInOut' }}
+            whileHover={{ boxShadow: '0 0 0 1px rgba(184,151,58,.3), 0 0 40px rgba(184,151,58,.4), 0 0 80px rgba(184,151,58,.15)' }}
+            aria-label={breathActive ? 'End breath practice' : 'Begin breath practice'}
+          >
+            <div
+              className="absolute pointer-events-none rounded-full"
+              style={{
+                top: '8%', left: '12%', width: '42%', height: '30%',
+                background: 'radial-gradient(ellipse, rgba(255,248,255,.07) 0%, transparent 78%)',
+                transform: 'rotate(-18deg)',
+              }}
+            />
+            <AnimatePresence mode="wait">
+              {breathActive ? (
+                <motion.span
+                  key={currentPhase.phase}
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  transition={{ duration: 0.35 }}
+                  className="font-sans text-[11px] tracking-[.3em] uppercase font-bold"
+                  style={{ color: currentPhase.color }}
+                >
+                  {currentPhase.label}
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="awaken"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="font-sans text-[11px] tracking-[.3em] uppercase"
+                  style={{ color: 'rgba(225,205,215,.75)' }}
+                >
+                  AWAKEN
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        </div>
+
+        {/* Intent / breath text — use theme var for legibility on both themes */}
+        <AnimatePresence mode="wait">
+          {breathActive ? (
+            <motion.p
+              key="breath-text"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.25 }}
+              className="font-sans text-[10px] italic text-center leading-relaxed"
+              style={{ color: 'var(--text-muted)', maxWidth: 240 }}
+            >
+              Inhale… hold… exhale… rest
+            </motion.p>
+          ) : (
+            <motion.p
+              key="intent-text"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.25 }}
+              className="font-sans text-[10px] italic text-center leading-relaxed"
+              style={{ color: 'var(--text-muted)', maxWidth: 240 }}
+            >
+              "{questionMeta.dailyIntent}"
+            </motion.p>
+          )}
+        </AnimatePresence>
+
+        {/* Breath button */}
+        <button
+          onClick={() => setBreathActive(b => !b)}
+          className="font-sans text-[9px] font-bold tracking-[.22em] uppercase px-4 py-1.5 rounded-[20px] transition-all duration-200"
+          style={{
+            border: '1px solid rgba(184,151,58,.4)',
+            background: breathActive ? 'rgba(184,151,58,.2)' : 'rgba(184,151,58,.12)',
+            color: '#B8973A',
+          }}
+        >
+          {breathActive ? '✕ End practice' : 'Begin breath practice'}
+        </button>
+      </div>
+
       <div className="px-4">
         <DashboardActions
           user={user}
@@ -198,52 +322,160 @@ const BreadthDesktop = ({ user, isAccessValid, rotateX, rotateY, progress, weekl
     : hour < 17 ? 'Good afternoon'
       : 'Good evening';
 
+  const [breathActive, setBreathActive] = useState(false);
+  const [breathIdx, setBreathIdx] = useState(0);
+
+  useEffect(() => {
+    if (!breathActive) { setBreathIdx(0); return; }
+    let idx = 0;
+    setBreathIdx(0);
+    let t: ReturnType<typeof setTimeout>;
+    function advance() {
+      t = setTimeout(() => {
+        idx = (idx + 1) % BREATH_PHASES.length;
+        setBreathIdx(idx);
+        advance();
+      }, BREATH_PHASES[idx].duration);
+    }
+    advance();
+    return () => clearTimeout(t);
+  }, [breathActive]);
+
+  const questionId = weeklyAssignment?.questionId ?? 'question1';
+  const questionMeta = QUESTION_META[questionId] ?? QUESTION_META['question1'];
+  const currentPhase = BREATH_PHASES[breathIdx];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-8 max-w-5xl mx-auto"
     >
-      <header className="flex justify-between items-center p-8 border-b border-[var(--border-default)]/30 bg-[var(--bg-surface)]/10 backdrop-blur-sm">
-        <div className="flex items-center gap-6">
-          <AwakenedPathLogo variant="icon" size="md" animated={true} />
-          <div className="text-left">
-            <p className="text-xs text-[var(--accent-primary)] font-serif italic mb-1 uppercase tracking-widest">
-              {greeting},
-            </p>
-            <h1 className="text-3xl font-serif font-light text-[var(--text-primary)] tracking-tight">
-              {user.displayName}
-            </h1>
+      {/* ── Desktop hero: greeting + centered orb ── */}
+      <div className="pt-8 pb-2 px-8">
+        {/* Greeting row */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-5">
+            <AwakenedPathLogo variant="icon" size="md" animated={true} />
+            <div>
+              <p className="font-sans text-[11px] font-bold tracking-[.28em] uppercase mb-0.5" style={{ color: '#B8973A' }}>
+                {greeting},
+              </p>
+              <h1 className="font-serif text-3xl font-light" style={{ color: 'var(--text-primary)' }}>
+                {user.displayName}
+              </h1>
+            </div>
           </div>
+          <motion.div
+            className="rounded-full"
+            style={{ width: 10, height: 10, background: '#B8973A', boxShadow: '0 0 12px #B8973A' }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          />
         </div>
-        <div className="flex flex-col items-end">
-        </div>
-      </header>
 
-      <section className="relative py-8 flex flex-col items-center justify-center min-h-[360px]">
-        <div className="relative z-10 flex flex-col items-center text-center space-y-8">
-          <div className="relative group">
-            <AwakenStage
-              isAnimating={false}
-              size="md"
-              mouseX={rotateX}
-              mouseY={rotateY}
+        {/* Centered orb */}
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative" style={{ width: 140, height: 140 }}>
+            <motion.div
+              className="absolute rounded-full pointer-events-none"
+              style={{ inset: -10, border: '1px solid rgba(184,151,58,.25)' }}
+              animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.032, 1] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
             />
+            <motion.button
+              onClick={() => setBreathActive(b => !b)}
+              className="relative rounded-full flex items-center justify-center overflow-hidden focus:outline-none"
+              style={{
+                width: 140, height: 140,
+                background: 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)',
+                border: '1px solid rgba(184,151,58,.35)',
+                boxShadow: '0 0 0 1px rgba(184,151,58,.15), 0 0 32px rgba(184,151,58,.28), 0 0 70px rgba(184,151,58,.12)',
+              }}
+              animate={{ scale: [1, 1.025, 1] }}
+              transition={{ duration: breathActive ? 5 : 6, repeat: Infinity, ease: 'easeInOut' }}
+              whileHover={{ boxShadow: '0 0 0 1px rgba(184,151,58,.3), 0 0 44px rgba(184,151,58,.42), 0 0 90px rgba(184,151,58,.18)' }}
+              aria-label={breathActive ? 'End breath practice' : 'Begin breath practice'}
+            >
+              <div
+                className="absolute pointer-events-none rounded-full"
+                style={{
+                  top: '8%', left: '12%', width: '42%', height: '30%',
+                  background: 'radial-gradient(ellipse, rgba(255,248,255,.07) 0%, transparent 78%)',
+                  transform: 'rotate(-18deg)',
+                }}
+              />
+              <AnimatePresence mode="wait">
+                {breathActive ? (
+                  <motion.span
+                    key={currentPhase.phase}
+                    initial={{ opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.1 }}
+                    transition={{ duration: 0.35 }}
+                    className="font-sans text-[12px] tracking-[.3em] uppercase font-bold"
+                    style={{ color: currentPhase.color }}
+                  >
+                    {currentPhase.label}
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="awaken"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="font-sans text-[12px] tracking-[.3em] uppercase"
+                    style={{ color: 'rgba(225,205,215,.8)' }}
+                  >
+                    AWAKEN
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
           </div>
 
-          <div className="py-12 text-center space-y-6 max-w-3xl mx-auto relative px-4">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-30" />
-            <h3 className="text-4xl sm:text-5xl font-serif font-medium text-[var(--text-primary)] tracking-wide leading-tight">
-              Presence <span className="opacity-60 italic mx-1 font-light text-[0.8em]">Over</span> Progress
-            </h3>
-            <p className="text-[18px] sm:text-[20px] font-serif italic text-[var(--text-primary)] leading-relaxed max-w-xl mx-auto">
-              "Yesterday is history, tomorrow is a mystery, today is a gift. That's why it's called the present."
-            </p>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-30" />
-          </div>
+          {/* Intent / phase text */}
+          <AnimatePresence mode="wait">
+            {breathActive ? (
+              <motion.p
+                key="breath-text"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.25 }}
+                className="font-sans text-[11px] italic text-center leading-relaxed"
+                style={{ color: 'var(--text-muted)', maxWidth: 280 }}
+              >
+                Inhale… hold… exhale… rest
+              </motion.p>
+            ) : (
+              <motion.p
+                key="intent-text"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.25 }}
+                className="font-sans text-[11px] italic text-center leading-relaxed"
+                style={{ color: 'var(--text-muted)', maxWidth: 280 }}
+              >
+                "{questionMeta.dailyIntent}"
+              </motion.p>
+            )}
+          </AnimatePresence>
 
+          <button
+            onClick={() => setBreathActive(b => !b)}
+            className="font-sans text-[10px] font-bold tracking-[.22em] uppercase px-5 py-2 rounded-[20px] transition-all duration-200"
+            style={{
+              border: '1px solid rgba(184,151,58,.3)',
+              background: breathActive ? 'rgba(184,151,58,.2)' : 'rgba(184,151,58,.1)',
+              color: '#B8973A',
+            }}
+          >
+            {breathActive ? '✕ End practice' : 'Begin breath practice'}
+          </button>
         </div>
-      </section>
+      </div>
 
       <div className="max-w-4xl mx-auto w-full">
         <DashboardActions
@@ -666,6 +898,35 @@ export default function UntetheredApp() {
     }
   }, []);
 
+  // ── Deep-link from email CTA ───────────────────────────────────────────────
+  // Handles ?practice=questionX&source=email — navigates directly into the
+  // specific practice once auth resolves and access is confirmed.
+  useEffect(() => {
+    if (loading) return; // wait for auth to resolve
+    
+    // Use a small delay to ensure isAccessValid has settled (firestore check)
+    const timeout = setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      const practiceParam = params.get('practice');
+      const validQuestions = ['question1', 'question2', 'question3', 'question4', 'question5', 'question6', 'question7'];
+      
+      if (practiceParam && validQuestions.includes(practiceParam)) {
+        if (!isAccessValid && currentUser) {
+          // If logged in but no access, send to paywall but KEEP params so they can try again after paying
+          setActiveTab('paywall');
+        } else if (isAccessValid) {
+          console.log('[DeepLink] Success! Routing to:', practiceParam);
+          setActiveTab('situations');
+          setActiveQuestionId(practiceParam);
+          // ONLY clear params on SUCCESSFUL routing
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [loading, isAccessValid, currentUser]);
+
   const onNavigate = (id: string, questionId?: string, view?: string) => {
     // If not unlocked, lock everything except home and profile
     if (!isAccessValid && id !== 'home' && id !== 'profile' && id !== 'paywall' && id !== 'music') {
@@ -719,12 +980,12 @@ export default function UntetheredApp() {
     return getDominantEmotionColor(lastEntry?.emotions);
   }, [lastEntry]);
 
-  // Global Access Control Redirect for first load
+  // Global Access Control — on load, always start at home if the persisted tab is locked
   useEffect(() => {
     if (!loading && !isAccessValid && activeTab !== 'home' && activeTab !== 'profile' && activeTab !== 'paywall' && activeTab !== 'music') {
-      setActiveTab('paywall');
+      setActiveTab('home');
     }
-  }, [isAccessValid, activeTab, loading]);
+  }, [isAccessValid, loading]); // intentionally exclude activeTab — only run on auth state change
 
   // Anti-Overlap Audio Guard: Stop generative drone if music or guidance starts
   const { stopAudio } = useGenerativeAudio();
@@ -736,13 +997,6 @@ export default function UntetheredApp() {
     });
     return unsub;
   }, [stopAudio]);
-
-  // Persist Navigation State
-  useEffect(() => {
-    localStorage.setItem('awakened-path-active-tab', activeTab);
-    localStorage.setItem('awakened-path-active-question', activeQuestionId);
-    localStorage.setItem('awakened-path-view-mode', viewMode);
-  }, [activeTab, activeQuestionId, viewMode]);
 
   useEffect(() => {
     if (emotionColor) {

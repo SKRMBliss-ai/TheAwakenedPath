@@ -261,19 +261,19 @@ export function WitnessAndRelease({ data, onComplete, onTabChange, onHoopComplet
                                     <div className="flex border border-[var(--border-subtle)] rounded-3xl overflow-hidden shadow-lg bg-[var(--bg-surface)] backdrop-blur-md">
                                         <div className="flex-1 p-6 border-r border-[var(--border-subtle)]/30 text-center bg-rose-500/[0.03] dark:bg-rose-500/[0.12]">
                                             <div className="text-2xl mb-3 opacity-100">🌑</div>
-                                            <div className="font-serif text-lg text-rose-800 dark:text-rose-300 font-bold mb-4 underline decoration-rose-500/20 underline-offset-8" style={{ fontFamily: "var(--font-serif)" }}>Fear / Ego</div>
+                                            <div className="font-serif text-xl text-rose-800 dark:text-rose-300 font-bold mb-4 underline decoration-rose-500/20 underline-offset-8" style={{ fontFamily: "var(--font-serif)" }}>Fear / Ego</div>
                                             <ul className="space-y-4">
                                                 {FEAR_TRAITS.map(t => (
-                                                    <li key={t} className="text-xs text-rose-950/80 dark:text-rose-100/70 leading-snug font-medium">{t}</li>
+                                                    <li key={t} className="text-base text-rose-950/80 dark:text-rose-100/70 leading-snug font-medium">{t}</li>
                                                 ))}
                                             </ul>
                                         </div>
                                         <div className="flex-1 p-6 text-center bg-[var(--accent-secondary-muted)] dark:bg-[var(--accent-secondary-muted)]">
                                             <div className="text-2xl mb-3 text-[var(--accent-secondary)] opacity-100">✦</div>
-                                            <div className="font-serif text-lg text-[var(--accent-secondary)] font-bold mb-4 underline decoration-[var(--accent-secondary)]/20 underline-offset-8" style={{ fontFamily: "var(--font-serif)" }}>Being / Love</div>
+                                            <div className="font-serif text-xl text-[var(--accent-secondary)] font-bold mb-4 underline decoration-[var(--accent-secondary)]/20 underline-offset-8" style={{ fontFamily: "var(--font-serif)" }}>Being / Love</div>
                                             <ul className="space-y-4">
                                                 {LOVE_TRAITS.map(t => (
-                                                    <li key={t} className="text-xs text-[var(--text-primary)] dark:text-[var(--accent-secondary)] dark:opacity-90 leading-snug font-bold">{t}</li>
+                                                    <li key={t} className="text-base text-[var(--text-primary)] dark:text-[var(--accent-secondary)] dark:opacity-90 leading-snug font-bold">{t}</li>
                                                 ))}
                                             </ul>
                                         </div>
@@ -288,8 +288,8 @@ export function WitnessAndRelease({ data, onComplete, onTabChange, onHoopComplet
                             {tab === "release" && (
                                 <div className="space-y-6">
                                     <div className="text-center space-y-2">
-                                        <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">Ho'oponopono · 1 min</p>
-                                        <p className="text-sm text-[var(--text-muted)] font-serif italic max-w-xs mx-auto" style={{ fontFamily: "var(--font-serif)" }}>
+                                        <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">Ho'oponopono · 1 min</p>
+                                        <p className="text-lg text-[var(--text-muted)] font-serif italic max-w-sm mx-auto" style={{ fontFamily: "var(--font-serif)" }}>
                                             Silently repeat each phrase. Let each one dissolve a layer of resistance.
                                         </p>
                                     </div>
@@ -308,8 +308,8 @@ export function WitnessAndRelease({ data, onComplete, onTabChange, onHoopComplet
                                                         : 'bg-[var(--bg-surface)] border-[var(--border-subtle)]/60 shadow-sm'}`}
                                             >
                                                 <div className="text-xl mb-1">{h.icon}</div>
-                                                <div className="font-serif text-sm text-[var(--text-primary)]" style={{ fontFamily: "var(--font-serif)" }}>{h.phrase}</div>
-                                                <div className="text-[9px] uppercase tracking-tighter text-[var(--text-muted)]/50">{h.note}</div>
+                                                <div className="font-serif text-base text-[var(--text-primary)]" style={{ fontFamily: "var(--font-serif)" }}>{h.phrase}</div>
+                                                <div className="text-[11px] uppercase tracking-tighter text-[var(--text-muted)]/60 font-medium">{h.note}</div>
                                             </motion.div>
                                         ))}
                                     </div>
@@ -332,7 +332,7 @@ export function WitnessAndRelease({ data, onComplete, onTabChange, onHoopComplet
                                         <button
                                             onClick={startHoop}
                                             disabled={hoopRunning}
-                                            className={`px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all
+                                            className={`px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all
                                             ${hoopRunning
                                                     ? 'bg-[var(--bg-deep)] text-[var(--text-disabled)]'
                                                     : 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-lg transform hover:scale-105 active:scale-95'}`}
@@ -415,7 +415,7 @@ export function WitnessAndRelease({ data, onComplete, onTabChange, onHoopComplet
                     <button
                         onClick={() => { const i = tabIdx - 1; if (i >= 0) handleTabChange(TABS[i].id); }}
                         disabled={tabIdx === 0}
-                        className="px-6 py-2.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[10px] font-bold uppercase tracking-widest transition-opacity disabled:opacity-20"
+                        className="px-6 py-3 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs font-bold uppercase tracking-widest transition-opacity disabled:opacity-20"
                     >
                         ← Back
                     </button>
@@ -423,15 +423,15 @@ export function WitnessAndRelease({ data, onComplete, onTabChange, onHoopComplet
                     {/* Progress Dots */}
                     <div className="flex gap-2">
                         {TABS.map((t, i) => (
-                            <div key={t.id} className={`h-1.5 rounded-full transition-all duration-300
-                            ${i === tabIdx ? 'w-8 bg-[var(--accent-primary)]' : i < tabIdx ? 'w-1.5 bg-[var(--accent-primary)]/40' : 'w-1.5 bg-[var(--border-subtle)]'}`} />
+                            <div key={t.id} className={`h-2 rounded-full transition-all duration-300
+                            ${i === tabIdx ? 'w-10 bg-[var(--accent-primary)]' : i < tabIdx ? 'w-2 bg-[var(--accent-primary)]/40' : 'w-2 bg-[var(--border-subtle)]'}`} />
                         ))}
                     </div>
 
                     {tabIdx < TABS.length - 1 ? (
                         <button
                             onClick={() => { handleTabChange(TABS[tabIdx + 1].id); }}
-                            className="px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all bg-[var(--accent-primary)] text-white"
+                            className="px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all bg-[var(--accent-primary)] text-white"
                         >
                             Next →
                         </button>
@@ -450,17 +450,17 @@ function CheckItem({ checked, onToggle, label, sub }: { checked: boolean; onTogg
             onClick={onToggle}
             className="w-full flex items-start gap-4 p-5 hover:bg-[var(--bg-glass)] transition-colors group text-left"
         >
-            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all mt-0.5
+            <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all mt-0.5
                 ${checked ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]' : 'border-[var(--text-muted)] group-hover:border-[var(--accent-primary)]'}`}>
-                {checked && <Check size={12} className="text-[var(--bg-deep)]" />}
+                {checked && <Check size={16} className="text-[var(--bg-deep)]" />}
             </div>
             <div>
-                <div className={`text-xs font-semibold transition-all
+                <div className={`text-base font-semibold transition-all
                     ${checked ? 'text-[var(--text-disabled)] line-through opacity-50' : 'text-[var(--text-primary)]'}`}>
                     {label}
                 </div>
                 {sub && !checked && (
-                    <div className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tighter mt-1">
+                    <div className="text-xs text-[var(--accent-primary)] font-bold uppercase tracking-widest mt-1">
                         {sub}
                     </div>
                 )}

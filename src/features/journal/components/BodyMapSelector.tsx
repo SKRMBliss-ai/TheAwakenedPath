@@ -273,7 +273,7 @@ export function BodyMapSelector({
                                         y={zone.cy + zone.labelOffset.y + 1}
                                         textAnchor={zone.labelOffset.x > 0 ? "start" : "end"}
                                         style={{
-                                            fontSize: isSelected ? 14 : 12,
+                                            fontSize: isSelected ? 18 : 16,
                                             fontWeight: isSelected ? 700 : 500,
                                             fill: isSelected ? zone.color : isOther ? "var(--text-disabled)" : "currentColor",
                                             fontFamily: "Georgia, serif",
@@ -319,12 +319,12 @@ export function BodyMapSelector({
                             style={{ marginTop: 24 }}
                         >
                             <div style={{ padding: "18px 22px", borderRadius: 20, background: "var(--bg-surface)", border: `1.5px solid ${selectedZone.color}30` }}>
-                                <h3 style={{ fontSize: 20, fontWeight: 600, color: selectedZone.color, marginBottom: 4 }}>{selectedZone.label}</h3>
-                                <p style={{ fontSize: 14, color: "var(--text-muted)" }}>{selectedZone.description}</p>
+                                <h3 style={{ fontSize: 24, fontWeight: 600, color: selectedZone.color, marginBottom: 4 }}>{selectedZone.label}</h3>
+                                <p style={{ fontSize: 16, color: "var(--text-muted)" }}>{selectedZone.description}</p>
                             </div>
 
                             <div style={{ padding: "16px 20px", borderRadius: 16, background: "var(--bg-surface)", borderLeft: `3px solid ${selectedZone.color}40`, opacity: 0.8 }}>
-                                <p style={{ fontSize: 15, color: "var(--text-primary)", fontStyle: "italic", lineHeight: 1.7 }}>
+                                <p style={{ fontSize: 18, color: "var(--text-primary)", fontStyle: "italic", lineHeight: 1.7 }}>
                                     {selectedZone.insight}
                                 </p>
                             </div>
@@ -339,7 +339,7 @@ export function BodyMapSelector({
                                                 A gentle suggestion
                                             </span>
                                         </div>
-                                        <p style={{ fontSize: 15, color: "var(--accent-secondary)", lineHeight: 1.7 }}>
+                                        <p style={{ fontSize: 18, color: "var(--accent-secondary)", lineHeight: 1.7 }}>
                                             {fe.microIntervention.instruction}
                                         </p>
                                     </div>
@@ -352,7 +352,7 @@ export function BodyMapSelector({
                                             A gentle suggestion
                                         </span>
                                     </div>
-                                    <p style={{ fontSize: 15, color: "var(--accent-secondary)", lineHeight: 1.7 }}>
+                                    <p style={{ fontSize: 18, color: "var(--accent-secondary)", lineHeight: 1.7 }}>
                                         {selectedZone.helps}
                                     </p>
                                 </div>

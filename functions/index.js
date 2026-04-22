@@ -92,6 +92,106 @@ const SUBSCRIPTION_PLANS_INR = {
     }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Daily Practice Rotation — 7 practices, one per day of the week (Sun→Sat)
+// Mirrors the practiceLibrary on the frontend.
+// ─────────────────────────────────────────────────────────────────────────────
+const DAILY_PRACTICE_ROTATION = [
+    // 0 = Sunday
+    {
+        q: 'question1',
+        name: '"I Can Handle This" Redirect',
+        tagline: 'Use the higher mind to lift what the lower mind is dragging down.',
+        duration: '~30 seconds when triggered',
+        teaser: 'One real moment of redirection is all it takes. You will know exactly when it is.'
+    },
+    // 1 = Monday
+    {
+        q: 'question2',
+        name: 'The Radio Check',
+        tagline: 'You are the listener in the room. You are not the radio.',
+        duration: '2 minutes',
+        teaser: 'What you notice in the first 30 seconds of silence will surprise you.'
+    },
+    // 2 = Tuesday
+    {
+        q: 'question3',
+        name: 'The One-Second Cosmic Pause',
+        tagline: 'Pause. Relax. Release. Three times today, for just one breath.',
+        duration: '1 minute total',
+        teaser: 'A single breath can change your entire day. We will show you where to place it.'
+    },
+    // 3 = Wednesday
+    {
+        q: 'question4',
+        name: 'The Silent Observation',
+        tagline: 'Notice the stillness behind the movement.',
+        duration: '1 minute',
+        teaser: 'The space was always there. Tonight you will actually feel it.'
+    },
+    // 4 = Thursday
+    {
+        q: 'question5',
+        name: 'The Clarity Sit',
+        tagline: 'Sit comfortably within — despite any noise the mind is making.',
+        duration: '3 minutes',
+        teaser: 'You will be surprised how quickly the noise settles when you stop fighting it.'
+    },
+    // 5 = Friday
+    {
+        q: 'question6',
+        name: 'The Guilt Witness',
+        tagline: 'The one who sees the guilt is not the one who is guilty.',
+        duration: '2 minutes',
+        teaser: 'There is a part of you that has never felt guilty a single day of its life.'
+    },
+    // 6 = Saturday
+    {
+        q: 'question7',
+        name: 'The Noticing Celebration',
+        tagline: 'Measure progress by how quickly you catch yourself, not by years of silence.',
+        duration: '3 minutes',
+        teaser: 'You will catch yourself mid-thought tonight and feel something unexpected — pride.'
+    },
+];
+
+/**
+ * Returns today's practice based on day of week.
+ */
+// ─────────────────────────────────────────────────────────────────────────────
+// Daily Sacred Reminders — Small, powerful anchors for the day.
+// ─────────────────────────────────────────────────────────────────────────────
+const DAILY_REMINDERS = [
+    "Peace is a Choice. Not a State.",
+    "You are the Witness, not the Voice.",
+    "Relax in the face of everything.",
+    "The mind is a tool, not the master.",
+    "Silence is your natural home.",
+    "Nothing can touch the true You.",
+    "Flow with Life, do not fight it."
+];
+
+function getTodaysReminder() {
+    const day = new Date().getDay();
+    return DAILY_REMINDERS[day];
+}
+
+function getTodaysPractice() {
+    const dayOfWeek = new Date().getDay(); // 0 = Sunday, 6 = Saturday
+    return DAILY_PRACTICE_ROTATION[dayOfWeek];
+}
+
+// 7 rotating subject lines — one per day of week
+const DAILY_SUBJECTS = [
+    '🌙 One thought is running your evening. Let\'s see it together.',   // Sun
+    '🔇 The radio is on. Are you listening — or just hearing?',           // Mon
+    '🪐 Before you start the car tomorrow — read this first.',            // Tue
+    '🌌 The silence behind everything is waiting for you tonight.',       // Wed
+    '🧘 The noise doesn\'t have to win this evening.',                    // Thu
+    '👁️ The one who notices the feeling — was never the feeling.',        // Fri
+    '✨ Every time you catch yourself — that is the whole practice.',      // Sat
+];
+
 /**
  * Creates a Razorpay Order
  */
@@ -626,6 +726,123 @@ exports.testEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, a
 });
 
 /**
+ * Preview the full daily reminder email — sends to ?to= with today's live content.
+ * Use this to QA the email design before the 8 PM scheduled send.
+ */
+exports.previewReminderEmail = onRequest({
+    secrets: [emailUser, emailPass, geminiKey],
+    cors: true
+}, async (req, res) => {
+    const { to } = req.query;
+    if (!to) return res.status(400).send("Provide 'to' email address.");
+
+    try {
+        const daily = await getDailyEmailContent(geminiKey.value());
+        const todayPractice = getTodaysPractice();
+        const todaySubject = DAILY_SUBJECTS[new Date().getDay()];
+        const transporter = getTransporter();
+
+        const previewHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @media (prefers-color-scheme: dark) {
+            .body { background-color: #050406 !important; }
+        }
+    </style>
+</head>
+<body style="margin:0;padding:0;background-color:#050406; font-family: 'Georgia', serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050406;">
+        <tr>
+            <td align="center" style="padding:40px 16px;">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#0C0910;border:1px solid rgba(230, 197, 125, 0.2); border-radius: 12px; overflow: hidden;">
+                    <!-- Glow Line -->
+                    <tr><td style="background: linear-gradient(90deg, transparent, #B8973A, transparent); height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+                    <tr>
+                        <td style="padding:48px 48px 24px;text-align:center;">
+                            <p style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#B8973A;margin:0 0 16px; opacity: 0.8;">Sacred Reminder</p>
+                            <h1 style="font-size:28px;font-weight:300;font-style:italic;color:#FDFAF4;margin:0;line-height:1.3; letter-spacing: 1px;">${daily.headline}</h1>
+                            <div style="width:40px;height:1px;background:rgba(184, 151, 58, 0.3);margin:24px auto;"></div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:0 48px 32px;">
+                            <p style="font-size:16px;line-height:1.8;color:rgba(253, 250, 244, 0.7);margin:0 0 24px; text-align: center; font-style: italic;">
+                                &ldquo;${daily.quote}&rdquo;
+                            </p>
+                            <p style="font-size:15px;line-height:1.8;color:#FDFAF4;margin:0; opacity: 0.9;">${daily.explanation}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Today's Practice Card -->
+                    <tr>
+                        <td style="padding:0 48px 24px;">
+                            <div style="padding:28px; background: rgba(184, 151, 58, 0.06); border: 1px solid rgba(184, 151, 58, 0.25); border-radius: 12px;">
+                                <p style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 12px; opacity:0.9;">Tonight's Practice</p>
+                                <p style="font-size:20px;font-weight:300;font-style:italic;color:#FDFAF4;margin:0 0 8px; line-height:1.3;">${todayPractice.name}</p>
+                                <p style="font-size:13px;line-height:1.7;color:rgba(253,250,244,0.6);margin:0 0 16px;">${todayPractice.tagline}</p>
+                                <span style="display:inline-block;font-size:10px;letter-spacing:1px;color:#B8973A;background:rgba(184,151,58,0.1);padding:5px 12px;border-radius:20px;border:1px solid rgba(184,151,58,0.2);">${todayPractice.duration}</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Curiosity Gap -->
+                    <tr>
+                        <td style="padding:0 48px 32px;text-align:center;">
+                            <p style="font-size:14px;line-height:1.9;color:rgba(253,250,244,0.45);font-style:italic;margin:0;">${todayPractice.teaser}</p>
+                        </td>
+                    </tr>
+
+                    <!-- CTA — deep-links directly into the practice -->
+                    <tr>
+                        <td style="padding:0 48px 56px;text-align:center;">
+                            <a href="https://www.skrmblissai.in/awakenedpath?practice=${todayPractice.q}&source=email" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color:rgba(255,255,255,0.02);padding:32px 48px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
+                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.6);margin:0 0 16px;">Awakened Path Studio &nbsp;&middot;&nbsp; Preview Only</p>
+                            <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:0;line-height:1.8;">
+                                <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a>
+                            </p>
+                            <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:8px 0 0;line-height:1.8;">
+                                By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp; 
+                                <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" style="color:#B8973A;text-decoration:none;">
+                                    <img src="https://img.icons8.com/material-rounded/24/B8973A/youtube-play.png" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;" alt="YouTube" />
+                                    Soulful Intelligence Studio
+                                </a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`;
+
+        await transporter.sendMail({
+            from: '"The Awakened Path" <connect@skrmblissai.in>',
+            to: to,
+            subject: `[PREVIEW] ${todaySubject}`,
+            html: previewHtml
+        });
+
+        res.send(`✅ Preview email sent to ${to} — Subject: [PREVIEW] ${todaySubject} — Practice: ${todayPractice.name}`);
+    } catch (error) {
+        console.error("Preview Email Error:", error);
+        res.status(500).send(`Failed: ${error.message}`);
+    }
+});
+
+/**
  * Helper to get nodemailer transporter
  */
 const getTransporter = () => {
@@ -729,7 +946,7 @@ async function getDailyEmailContent(apiKey) {
             Generate a daily evening practice reminder for students.
             Return exactly a JSON object:
             {
-              "headline": "A short poetic headline (max 5 words)",
+              "headline": "A short poetic headline (max 5 words. Theme: 'Peace is a Choice. Not a State.')",
               "quote": "A soul-stirring quote about being the witness (max 20 words)",
               "explanation": "One or two sentences about observing the mind at the end of the day",
               "practice": "A simple 1-sentence evening awareness exercise"
@@ -756,6 +973,8 @@ async function runReminderLogic(apiKey) {
     const transporter = getTransporter();
 
     const daily = await getDailyEmailContent(apiKey);
+    const todayPractice = getTodaysPractice();
+    const todaySubject = DAILY_SUBJECTS[new Date().getDay()];
 
     const emailTemplate = `
 <!DOCTYPE html>
@@ -796,18 +1015,29 @@ async function runReminderLogic(apiKey) {
                         </td>
                     </tr>
                     
+                    <!-- Today's Practice Card -->
                     <tr>
-                        <td style="padding:0 48px 40px;">
-                            <div style="padding:24px; background: rgba(184, 151, 58, 0.05); border: 1px solid rgba(184, 151, 58, 0.1); border-radius: 12px;">
-                                <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 12px; font-weight: bold;">Tonight's Practice</p>
-                                <p style="font-size:14px;line-height:1.75;color:#FDFAF4;margin:0; opacity: 0.8;">${daily.practice}</p>
+                        <td style="padding:0 48px 24px;">
+                            <div style="padding:28px; background: rgba(184, 151, 58, 0.06); border: 1px solid rgba(184, 151, 58, 0.25); border-radius: 12px;">
+                                <p style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 12px; opacity:0.9;">Tonight's Practice</p>
+                                <p style="font-size:20px;font-weight:300;font-style:italic;color:#FDFAF4;margin:0 0 8px; line-height:1.3;">${todayPractice.name}</p>
+                                <p style="font-size:13px;line-height:1.7;color:rgba(253,250,244,0.6);margin:0 0 16px;">${todayPractice.tagline}</p>
+                                <span style="display:inline-block;font-size:10px;letter-spacing:1px;color:#B8973A;background:rgba(184,151,58,0.1);padding:5px 12px;border-radius:20px;border:1px solid rgba(184,151,58,0.2);">${todayPractice.duration}</span>
                             </div>
                         </td>
                     </tr>
-                    
+
+                    <!-- Curiosity Gap -->
+                    <tr>
+                        <td style="padding:0 48px 32px;text-align:center;">
+                            <p style="font-size:14px;line-height:1.9;color:rgba(253,250,244,0.45);font-style:italic;margin:0;">${todayPractice.teaser}</p>
+                        </td>
+                    </tr>
+
+                    <!-- CTA — named after today's practice, deep-links directly into it -->
                     <tr>
                         <td style="padding:0 48px 56px;text-align:center;">
-                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath')}" style="display:inline-block;padding:16px 40px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Record Your Journey &rarr;</a>
+                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath?practice=' + todayPractice.q + '&source=email')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
                         </td>
                     </tr>
                     
@@ -817,7 +1047,14 @@ async function runReminderLogic(apiKey) {
                             <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.6);margin:0 0 16px;">Awakened Path Studio</p>
                             <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:0;line-height:1.8;">
                                 <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp; 
-                                <a href="https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId={{USER_ID}}&blastId=DAILY_REMINDER" style="color:rgba(253, 250, 244, 0.4);text-decoration:none;">Unsubscribe from the Path</a>
+                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=DAILY_REMINDER" style="color:rgba(253, 250, 244, 0.4);text-decoration:none;">Unsubscribe from the Path</a>
+                            </p>
+                            <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:8px 0 0;line-height:1.8;">
+                                By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp; 
+                                <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" style="color:#B8973A;text-decoration:none;">
+                                    <img src="https://img.icons8.com/material-rounded/24/B8973A/youtube-play.png" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;" alt="YouTube" />
+                                    Soulful Intelligence Studio
+                                </a>
                             </p>
                         </td>
                     </tr>
@@ -833,6 +1070,7 @@ async function runReminderLogic(apiKey) {
 
     let sentCount = 0;
     let blastId = null;
+    let recipientEmails = [];
 
     for (const userDoc of usersSnap.docs) {
         const userData = userDoc.data();
@@ -895,17 +1133,17 @@ async function runReminderLogic(apiKey) {
             
             // Personalize unsubscribe link and tracking pixel
             const personalizedHtml = emailTemplate
-                .replace('{{USER_ID}}', userDoc.id)
-                .replace('{{USER_EMAIL_TRACK}}', encodeURIComponent(userData.email))
+                .replace(/{{USER_ID}}/g, userDoc.id)
+                .replace(/{{USER_EMAIL_TRACK}}/g, encodeURIComponent(userData.email))
                 .replace(/DAILY_REMINDER/g, blastId);
 
             await transporter.sendMail({
                 from: '"The Awakened Path" <connect@skrmblissai.in>',
                 to: userData.email,
-                subject: "🌙 An Invitation to Return to Source",
+                subject: todaySubject,
                 html: personalizedHtml,
                 headers: {
-                    'List-Unsubscribe': `<https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId=${userDoc.id}>`
+                    'List-Unsubscribe': `<https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userDoc.id}>`
                 }
             });
 
@@ -915,6 +1153,7 @@ async function runReminderLogic(apiKey) {
             });
 
             sentCount++;
+            recipientEmails.push(userData.email);
             console.log(`Success: Reminder sent to ${userData.email}`);
         }
     }
@@ -922,7 +1161,8 @@ async function runReminderLogic(apiKey) {
     // Update the blast record with final count
     if (blastId && sentCount > 0) {
         await db.collection("email_blasts").doc(blastId).update({
-            totalRecipients: sentCount
+            totalRecipients: sentCount,
+            recipientEmails: recipientEmails
         });
     }
 
@@ -1003,6 +1243,7 @@ exports.blastUpdateEmail = onCall({
     const { chapterTitle, chapterSubtitle, youtubeId } = request.data;
     const usersSnap = await db.collection("users").get();
     const transporter = getTransporter();
+    const recipientEmails = [];
     
     // 1. Create Blast History Record
     const blastRef = await db.collection("email_blasts").add({
@@ -1027,7 +1268,7 @@ exports.blastUpdateEmail = onCall({
                 <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath/courses/wisdom-untethered')}" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 1px; font-weight: bold;">View Course →</a>
             </div>
             <p style="text-align: center; margin-top: 20px;">
-                <a href="https://www.skrmblissai.in/awakenedpath/api/unsubscribe?userId={{USER_ID}}&blastId=${blastId}" style="color: rgba(253, 250, 244, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from these updates</a>
+                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=${blastId}" style="color: rgba(253, 250, 244, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from these updates</a>
             </p>
             <!-- TRACKING PIXEL -->
             <img src="https://us-central1-awakened-path-2026.cloudfunctions.net/emailOpenTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}" width="1" height="1" style="display:none !important;" />
@@ -1042,9 +1283,16 @@ exports.blastUpdateEmail = onCall({
             from: '"The Awakened Path" <connect@skrmblissai.in>',
             to: userData.email,
             subject: `Course Update: ${chapterTitle}`,
-            html: updateTemplate(userData.email, blastRef.id).replace('{{USER_ID}}', userDoc.id)
+            html: updateTemplate(userData.email, blastRef.id).replace(/{{USER_ID}}/g, userDoc.id)
         });
+        recipientEmails.push(userData.email);
     }
+
+    // Update blast with recipients
+    await blastRef.update({
+        recipientEmails: recipientEmails,
+        totalRecipients: recipientEmails.length
+    });
 
     return { success: true, count: usersSnap.size, blastId: blastRef.id };
 });
