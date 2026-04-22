@@ -12,7 +12,7 @@ import StatsDashboard from './features/stats/StatsDashboard';
 import { SituationalPractices } from './features/practices/SituationalPractices';
 import { useAuth } from './features/auth/AuthContext';
 import { MeditationPortal } from './components/ui/MeditationPortal';
-import { AwakenStage, SacredCircle } from './components/ui/SacredCircle';
+import { SacredCircle } from './components/ui/SacredCircle';
 import { SignInScreen } from './features/auth/SignInScreen';
 import { AnchorButton, NoiseOverlay } from './components/ui/SacredUI';
 import { GlobalSparkles } from './components/ui/GlobalSparkles';
@@ -128,7 +128,7 @@ const BREATH_PHASES = [
   { phase: 'rest',   label: 'Rest',   duration: 2000, color: '#7986CB' },
 ] as const;
 
-const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, rotateX, rotateY, progress, weeklyAssignment, onNavigate }: any) => {
+const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyAssignment, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -316,7 +316,7 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, rotateX, rotateY,
   );
 };
 
-const BreadthDesktop = ({ user, isAccessValid, rotateX, rotateY, progress, weeklyAssignment, onNavigate }: any) => {
+const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
