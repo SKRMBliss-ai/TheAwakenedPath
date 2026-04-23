@@ -1,5 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", serif;
+  --font-sans: "Outfit", "Inter", sans-serif;
+  
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+  
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+}
+
+/* ─── BASIC RESET ─── */
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color, #0c0910);
+  color: var(--text-main, #ede9e3);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+:root {
+  /* Default fallbacks for initial load before ThemeSystem.tsx hydrates */
+  --bg-color: #0c0910;
+  --text-main: #ede9e3;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Outfit", "Inter", sans-serif;
+  --accent-primary: #5EC4B0;
+  --accent-secondary: #5EC4B0;
+  --border-glass: rgba(255, 255, 255, 0.1);
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {

@@ -146,12 +146,14 @@ export const VoiceGuidance = ({
   preferredVoice = 'en-GB-Chirp3-HD-Despina',
   activeTab = 'home',
   isAccessValid = false,
-  assignment = null
+  assignment = null,
+  bottomOffset = 108
 }: {
   preferredVoice?: string;
   activeTab?: string;
   isAccessValid?: boolean;
   assignment?: any;
+  bottomOffset?: number;
 }) => {
   const { status, category } = useVoiceStatus();
   const isSpeaking = status === 'playing' && category === 'tts';
@@ -230,7 +232,10 @@ export const VoiceGuidance = ({
   };
 
   return (
-    <div className="fixed bottom-[108px] right-6 z-[100] flex flex-col items-end gap-3 pointer-events-none">
+    <div 
+      className="fixed right-6 z-[100] flex flex-col items-end gap-3 pointer-events-none"
+      style={{ bottom: bottomOffset }}
+    >
       <AnimatePresence>
         {showFull && (
           <motion.div
@@ -379,7 +384,7 @@ export const VoiceGuidance = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => setShowFull(true)}
-            className="pointer-events-auto w-16 h-16 rounded-full bg-[var(--bg-surface)] border border-[var(--accent-primary)]/30 shadow-xl overflow-hidden hover:scale-110 active:scale-95 transition-all relative group p-0"
+            className="pointer-events-auto w-16 h-16 rounded-full bg-[var(--bg-surface)] border border-[var(--accent-primary)]/45 shadow-xl overflow-hidden hover:scale-110 active:scale-95 transition-all relative group p-0"
           >
             <img
               src="/guide-avatar.webp"

@@ -10,16 +10,22 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      injectRegister: 'auto',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'sacred-bg-dark.webp', 'sacred-bg-light.webp'],
       workbox: {
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB to accommodate large bundles
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}']
+        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true
       },
       manifest: {
         name: 'Awakened Path',
         short_name: 'AwakenedPath',
         description: 'Your journey to mindfulness and joy',
-        theme_color: '#ffffff',
+        theme_color: '#000000',
+        background_color: '#000000',
+        display: 'standalone',
         icons: [
           {
             src: 'pwa-192x192.webp',
@@ -35,6 +41,9 @@ export default defineConfig({
       }
     })
   ],
+  css: {
+    transformer: 'lightningcss',
+  },
   build: {
     rollupOptions: {
       output: {

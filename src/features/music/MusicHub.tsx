@@ -51,7 +51,8 @@ const MusicCard = ({
     Calm: <Volume2 size={14} />,
     Uplifting: <Zap size={14} />,
     Deep: <Sparkles size={14} />,
-    Healing: <Heart size={14} />
+    Healing: <Heart size={14} />,
+    Meditation: <Clock size={14} />
   };
 
   const coverSrc = track.coverImage 
@@ -278,7 +279,7 @@ export const MusicHub = () => {
       </header>
 
       <div className={styles.filterBar}>
-        {['All', 'Calm', 'Uplifting', 'Deep', 'Healing'].map(mood => (
+        {['All', 'Meditation', 'Calm', 'Uplifting', 'Deep', 'Healing'].map(mood => (
           <button
             key={mood}
             onClick={() => setActiveMood(mood === 'All' ? null : mood)}

@@ -8,7 +8,7 @@ export interface SacredTrack {
   previewUrl: string;
   priceUSD: number;
   description: string;
-  mood: 'Calm' | 'Uplifting' | 'Deep' | 'Healing';
+  mood: 'Calm' | 'Uplifting' | 'Deep' | 'Healing' | 'Meditation';
   coverImage?: {
     dark: string;
     light: string;
@@ -140,6 +140,34 @@ export const SACRED_TRACKS: SacredTrack[] = [
     coverImage: {
       dark: VoiceService.getStorageUrl('/Soundscapes/Images/MakeEveryWorryLookSmallDark2.webp'),
       light: VoiceService.getStorageUrl('/Soundscapes/Images/MakeEveryWorryLookSmallLight2.webp')
+    }
+  },
+  {
+    id: 'the-watcher-identity',
+    title: 'I am the one who watches',
+    artist: 'Sacred Sounds',
+    duration: '10:00',
+    previewUrl: VoiceService.getStorageUrl('/mp3/Music/WatchersPause.mp3'),
+    priceUSD: 14.99,
+    description: 'A profound meditative soundscape for resting in the seat of the Witness. Let the world fade as you return to the one who is looking.',
+    mood: 'Meditation',
+    coverImage: {
+      dark: '/watcher-dark.webp',
+      light: '/watcher-light.webp'
+    }
+  },
+  {
+    id: 'tired-of-searching-guru',
+    title: 'I am tired of searching a guru',
+    artist: 'Sacred Sounds',
+    duration: '12:45',
+    previewUrl: VoiceService.getStorageUrl('/Soundscapes/TiredOfSearchingLIVE.mp3'),
+    priceUSD: 14.99,
+    description: 'A transformative soundscape documenting the shift from external seeking to internal discovery. When the searcher stops, the Truth is found.',
+    mood: 'Meditation',
+    coverImage: {
+      dark: '/guru-dark.webp',
+      light: '/guru-light.webp'
     }
   }
 ];

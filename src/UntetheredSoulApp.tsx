@@ -129,6 +129,7 @@ const BREATH_PHASES = [
 ] as const;
 
 const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyAssignment, onNavigate }: any) => {
+  const { mode } = useTheme();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -212,9 +213,13 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
             className="relative rounded-full flex items-center justify-center overflow-hidden focus:outline-none"
             style={{
               width: 120, height: 120,
-              background: 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)',
-              border: '1px solid rgba(184,151,58,.35)',
-              boxShadow: '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.1)',
+              background: mode === 'dark' 
+                ? 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)'
+                : 'radial-gradient(ellipse at 37% 30%, #FFFDF7 0%, #F5E6BD 55%, #E6C57D 100%)',
+              border: mode === 'dark' ? '1px solid rgba(184,151,58,.35)' : '1px solid rgba(184,151,58,.5)',
+              boxShadow: mode === 'dark' 
+                ? '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.1)'
+                : '0 0 0 1px rgba(184,151,58,.1), 0 4px 12px rgba(0,0,0,0.05)',
               WebkitTapHighlightColor: 'transparent',
             }}
             animate={{ 
@@ -257,8 +262,8 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="font-sans text-[11px] tracking-[.3em] uppercase"
-                  style={{ color: 'rgba(225,205,215,.75)' }}
+                  className="font-sans text-[11px] tracking-[.3em] uppercase font-black"
+                  style={{ color: mode === 'dark' ? 'rgba(225,205,215,.75)' : '#B8973A' }}
                 >
                   AWAKEN
                 </motion.span>
@@ -288,8 +293,8 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.25 }}
-              className="font-sans text-[10px] italic text-center leading-relaxed"
-              style={{ color: 'var(--text-muted)', maxWidth: 240 }}
+              className="font-sans text-[13px] md:text-[14px] font-semibold text-center leading-relaxed"
+              style={{ color: 'var(--text-primary)', maxWidth: 280 }}
             >
               "{questionMeta.dailyIntent}"
             </motion.p>
@@ -325,6 +330,7 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
 };
 
 const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate }: any) => {
+  const { mode } = useTheme();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
@@ -396,9 +402,13 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
               className="relative rounded-full flex items-center justify-center overflow-hidden focus:outline-none"
               style={{
                 width: 140, height: 140,
-                background: 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)',
-                border: '1px solid rgba(184,151,58,.35)',
-                boxShadow: '0 0 0 1px rgba(184,151,58,.15), 0 0 32px rgba(184,151,58,.28), 0 0 70px rgba(184,151,58,.12)',
+                background: mode === 'dark'
+                  ? 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)'
+                  : 'radial-gradient(ellipse at 37% 30%, #FFFDF7 0%, #F5E6BD 55%, #E6C57D 100%)',
+                border: mode === 'dark' ? '1px solid rgba(184,151,58,.35)' : '1px solid rgba(184,151,58,.5)',
+                boxShadow: mode === 'dark'
+                  ? '0 0 0 1px rgba(184,151,58,.15), 0 0 32px rgba(184,151,58,.28), 0 0 70px rgba(184,151,58,.12)'
+                  : '0 0 0 1px rgba(184,151,58,.1), 0 6px 16px rgba(0,0,0,0.05)',
               }}
               animate={{ 
                 scale: breathActive ? currentPhase.scale : [1, 1.025, 1],
@@ -440,8 +450,8 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="font-sans text-[12px] tracking-[.3em] uppercase"
-                    style={{ color: 'rgba(225,205,215,.8)' }}
+                    className="font-sans text-[12px] tracking-[.3em] uppercase font-black"
+                    style={{ color: mode === 'dark' ? 'rgba(225,205,215,.8)' : '#B8973A' }}
                   >
                     AWAKEN
                   </motion.span>
@@ -870,7 +880,7 @@ export default function UntetheredApp() {
     (v) => ['explanation', 'practice', 'video'].includes(v)
   );
   const [activeCourseId, setActiveCourseId] = usePersistedState<string | null>('awakened-course', null);
-  const [voiceGuidanceEnabled] = usePersistedState<boolean>('voice-guidance-enabled', true);
+  const [voiceGuidanceEnabled, setVoiceGuidanceEnabled] = usePersistedState<boolean>('voice-guidance-enabled', true);
   const [preferredVoice, setPreferredVoice] = usePersistedState<string>('preferred-voice', 'en-GB-Chirp3-HD-Despina');
 
   // ── Force voice migration to Despina — Ensure consistent sacred experience ──
@@ -2120,7 +2130,20 @@ export default function UntetheredApp() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                     <div className="space-y-4">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Guidance Voice</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Guidance Voice</p>
+                        <button
+                          onClick={() => setVoiceGuidanceEnabled(!voiceGuidanceEnabled)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
+                            voiceGuidanceEnabled 
+                              ? "bg-[var(--accent-primary)] text-black" 
+                              : "bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[var(--text-muted)]"
+                          )}
+                        >
+                          {voiceGuidanceEnabled ? 'Enabled' : 'Disabled'}
+                        </button>
+                      </div>
                       <div className="grid grid-cols-1 gap-2">
                         {[
                           { id: 'en-US-Chirp3-HD-Despina', label: 'Despina (Ethereal Presence)', gender: 'FEMALE' },
@@ -2131,6 +2154,7 @@ export default function UntetheredApp() {
                         ].map((v) => (
                           <button
                             key={v.id}
+                            disabled={!voiceGuidanceEnabled}
                             onClick={() => {
                               setPreferredVoice(v.id);
                               // Preview voice
@@ -2140,7 +2164,8 @@ export default function UntetheredApp() {
                               "flex items-center justify-between px-4 py-3 rounded-xl border transition-all",
                               preferredVoice === v.id
                                 ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] text-[var(--text-primary)]"
-                                : "bg-[var(--bg-surface-hover)] border-[var(--border-default)] text-[var(--text-muted)] hover:border-[var(--accent-primary)]/30"
+                                : "bg-[var(--bg-surface-hover)] border-[var(--border-default)] text-[var(--text-muted)] hover:border-[var(--accent-primary)]/30",
+                              !voiceGuidanceEnabled && "opacity-40 cursor-not-allowed"
                             )}
                           >
                             <span className="text-xs font-medium">{v.label}</span>
@@ -2202,6 +2227,7 @@ export default function UntetheredApp() {
           activeTab={activeTab}
           isAccessValid={isAccessValid}
           assignment={weeklyAssignment}
+          bottomOffset={musicUrl ? 180 : 108}
         />
       )}
       <MusicMiniPlayer />

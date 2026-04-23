@@ -20,17 +20,17 @@ import { cn } from '../../lib/utils';
 const STEP_COLORS = ['#B8973A', '#9575CD', '#C65F9D', '#2E9E7A'] as const;
 
 const CARD_IMAGES_DARK = [
-  'learn_dark.png',
-  'practice_dark.png',
-  'reflect_dark.png',
-  'liveit_dark.png',
+  'learn_dark.webp',
+  'practice_dark.webp',
+  'reflect_dark.webp',
+  'liveit_dark.webp',
 ];
 
 const CARD_IMAGES_LIGHT = [
-  'learn_light.png',
-  'practice_light.png',
-  'reflect_light.png',
-  'liveit_light.png',
+  'learn_light.webp',
+  'practice_light.webp',
+  'reflect_light.webp',
+  'liveit_light.webp',
 ];
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -99,15 +99,15 @@ function DashboardCard({
         background: isActive 
           ? `color-mix(in srgb, ${color} ${mode === 'dark' ? '12%' : '8%'}, var(--bg-surface))` 
           : isDone 
-            ? (mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.95)')
+            ? (mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 1)')
             : (mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.85)'),
         backdropFilter: 'blur(8px)',
         boxShadow: isActive 
           ? `0 0 0 1px ${color}50, 0 12px 40px ${color}25` 
           : (isDone || isLocked ? 'none' : `0 4px 20px rgba(0,0,0,0.04)`),
-        cursor: isLocked || isDone ? 'default' : 'pointer',
+        cursor: isLocked && !isDone ? 'default' : 'pointer',
       }}
-      onClick={!isDone && !isLocked ? onClick : undefined}
+      onClick={(isLocked && !isDone) ? undefined : onClick}
     >
       {/* Glow on hover */}
       {!isDone && !isLocked && !isActive && (
@@ -133,8 +133,8 @@ function DashboardCard({
       <div 
         className="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-1000"
         style={{ 
-          opacity: isLocked ? 0.2 : (mode === 'dark' ? 0.75 : 0.45),
-          mixBlendMode: mode === 'dark' ? 'color-dodge' : 'multiply'
+          opacity: isLocked ? 0.7 : (mode === 'dark' ? 0.75 : 0.45),
+          mixBlendMode: isLocked ? 'normal' : (mode === 'dark' ? 'color-dodge' : 'multiply') as any
         }}
       >
         <img 
@@ -142,8 +142,10 @@ function DashboardCard({
           alt="" 
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
           style={{ 
-            opacity: isLocked ? 0.15 : (isDone ? 0.5 : 0.85),
-            filter: mode === 'dark' ? 'brightness(1) contrast(1.1)' : 'brightness(1.05) contrast(1.1)'
+            opacity: isLocked ? 1 : (isDone ? 0.6 : 1),
+            filter: isLocked 
+              ? 'grayscale(1) brightness(0.95) contrast(0.9)' 
+              : (mode === 'dark' ? 'brightness(1.1) contrast(1.1)' : 'brightness(1.05) contrast(1.1)')
           }}
         />
       </div>
@@ -168,12 +170,12 @@ function DashboardCard({
           {/* Top Center: Title - High Visibility */}
           <div className="absolute left-1/2 -translate-x-1/2 text-center -top-1">
             <div
-              className="font-serif font-black leading-tight transition-all duration-300 whitespace-nowrap"
+               className="font-serif font-black leading-tight transition-all duration-300 whitespace-nowrap"
               style={{
-                fontSize: 22,
+                fontSize: 24,
                 color: isLocked ? 'var(--text-disabled)' : (mode === 'dark' ? '#ffffff' : 'var(--text-primary)'),
-                letterSpacing: '-0.01em',
-                textShadow: mode === 'dark' && !isLocked ? '0 2px 4px rgba(0,0,0,0.5)' : 'none'
+                letterSpacing: '-0.02em',
+                textShadow: mode === 'dark' && !isLocked ? '0 2px 8px rgba(0,0,0,0.4)' : 'none'
               }}
             >
               {title}
@@ -224,9 +226,10 @@ function DashboardCard({
           <div className="flex flex-shrink-0">
             {isDone ? (
                <div
-                className="py-1.5 px-3 rounded-full text-[9px] font-black tracking-widest uppercase"
-                style={{ color, opacity: 1 }}
+                className="py-1.5 px-4 rounded-full text-[10px] font-black tracking-[0.2em] uppercase transition-all flex items-center gap-2"
+                style={{ background: color + '25', border: `1px solid ${color}40`, color }}
               >
+                <CheckCircle2 size={12} />
                 Done
               </div>
             ) : isLocked ? (
@@ -259,12 +262,13 @@ function DashboardCard({
 // ─── Inline Practice Panel ────────────────────────────────────────────────────
 
 function InlinePracticePanel({
-  practice, color, onComplete, onGoToRoom,
+  practice, color, onComplete, onGoToRoom, isDone = false,
 }: {
   practice: { name: string; tagline?: string; steps: { instruction: string; duration?: number }[] };
   color: string;
   onComplete: () => void;
   onGoToRoom: () => void;
+  isDone?: boolean;
 }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
@@ -276,20 +280,60 @@ function InlinePracticePanel({
     else setStepIdx((s: number) => s + 1);
   };
 
-  if (done) {
+  if (done || isDone) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="p-8 rounded-[24px] text-center"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 10 }}
+        className="p-7 rounded-[32px]"
         style={{
-          background: `color-mix(in srgb, ${color} 10%, var(--bg-surface))`,
+          background: `color-mix(in srgb, ${color} 8%, var(--bg-surface))`,
           border: `1.5px solid ${color}30`,
         }}
       >
-        <div className="text-3xl mb-3 drop-shadow-md">✦</div>
-        <p className="font-serif italic text-lg" style={{ color: 'var(--text-primary)' }}>Practice complete.</p>
-        <p className="text-[12px] mt-1.5 opacity-60" style={{ color: 'var(--text-muted)' }}>"{practice.name}" done for today</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[.3em] mb-1.5" style={{ color }}>
+              Practice Complete
+            </p>
+            <h3 className="text-[20px] font-serif font-light leading-tight" style={{ color: 'var(--text-primary)' }}>{practice.name}</h3>
+            <p className="text-[11px] font-sans font-medium mt-1 opacity-60" style={{ color: 'var(--text-secondary)' }}>
+              Done for today
+            </p>
+          </div>
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg" 
+            style={{ background: color, color: 'white' }}
+          >
+            <CheckCircle2 size={20} />
+          </motion.div>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          {practice.steps.map((step, i) => (
+            <div 
+              key={i} 
+              className="flex gap-3 p-3.5 rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)]/40"
+            >
+              <div className="text-[12px] font-black opacity-30 mt-0.5" style={{ color }}>0{i+1}</div>
+              <p className="text-[13px] font-serif italic leading-relaxed text-[var(--text-secondary)]">
+                {step.instruction}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-center">
+          <button
+            onClick={onGoToRoom}
+            className="text-[10px] font-black uppercase tracking-[0.2em] px-6 py-3 rounded-full border border-[var(--border-default)] hover:border-[var(--accent-primary)]/40 transition-all active:scale-95 text-[var(--text-muted)]"
+          >
+            View in full room
+          </button>
+        </div>
       </motion.div>
     );
   }
@@ -380,12 +424,13 @@ function InlinePracticePanel({
 // ─── Inline Reflect Panel ─────────────────────────────────────────────────────
 
 function InlineReflectPanel({
-  prompt, color, onSave, onGoToJournal,
+  prompt, color, onSave, onGoToJournal, existingJournal = '',
 }: {
   prompt: string;
   color: string;
   onSave: (text: string) => void;
   onGoToJournal: () => void;
+  existingJournal?: string;
 }) {
   const [text, setText] = useState('');
   const [saved, setSaved] = useState(false);
@@ -396,20 +441,42 @@ function InlineReflectPanel({
     setSaved(true);
   };
 
-  if (saved) {
+  if (saved || existingJournal) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="p-8 rounded-[24px] text-center"
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="p-8 rounded-[32px]"
         style={{
-          background: `color-mix(in srgb, ${color} 10%, var(--bg-surface))`,
+          background: `color-mix(in srgb, ${color} 8%, var(--bg-surface))`,
           border: `1.5px solid ${color}30`,
         }}
       >
-        <div className="text-3xl mb-3 drop-shadow-md">✦</div>
-        <p className="font-serif italic text-lg" style={{ color: 'var(--text-primary)' }}>Reflection saved.</p>
-        <p className="text-[12px] mt-1.5 opacity-60" style={{ color: 'var(--text-muted)' }}>Your words are held.</p>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: color + '20' }}>
+            <PenLine size={14} style={{ color }} />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#B8973A]">Reflection Logged</p>
+            <p className="text-[14px] font-serif italic text-[var(--text-primary)]">"{prompt}"</p>
+          </div>
+        </div>
+        
+        <div className="bg-[var(--bg-primary)]/40 p-5 rounded-2xl border border-[var(--border-default)] mb-6">
+          <p className="text-[14px] font-sans leading-relaxed text-[var(--text-secondary)] whitespace-pre-wrap italic">
+            {text || existingJournal}
+          </p>
+        </div>
+
+        <div className="flex justify-center">
+          <button
+            onClick={onGoToJournal}
+            className="text-[10px] font-black uppercase tracking-[0.2em] px-6 py-3 rounded-full border border-[var(--border-default)] hover:border-[#B8973A]/40 transition-all active:scale-95 text-[var(--text-muted)]"
+          >
+            View in full journal
+          </button>
+        </div>
       </motion.div>
     );
   }
@@ -614,13 +681,11 @@ export function DashboardGrid({
     onNavigate('wisdom_untethered', questionId, 'video');
   };
 
-  const handlePractice = () => {
-    if (practiceCompleted) return;
+   const handlePractice = () => {
     setActivePanel(prev => prev === 'practice' ? null : 'practice');
   };
 
   const handleReflect = () => {
-    if (reflectDone) return;
     setActivePanel(prev => prev === 'reflect' ? null : 'reflect');
   };
 
@@ -656,8 +721,8 @@ export function DashboardGrid({
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center gap-2"
               >
-                <div className="text-[#B8973A] text-xs">✦</div>
-                <span className="font-serif italic text-sm text-[#B8973A]">
+                <div className="text-[#B8973A] text-sm transform -translate-y-0.5">✦</div>
+                <span className="font-sans font-bold text-[13px] tracking-tight text-[#B8973A]">
                   Your presence is your gift today.
                 </span>
               </motion.div>
@@ -669,7 +734,7 @@ export function DashboardGrid({
                 className="font-sans text-[10px] font-black tracking-[0.25em] uppercase opacity-40"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Today's path
+                Today's journey
               </motion.div>
             )}
           </AnimatePresence>
@@ -683,21 +748,21 @@ export function DashboardGrid({
                 key={i}
                 className="rounded-full transition-all duration-700"
                 style={{
-                  width: 6,
-                  height: 6,
+                  width: 8,
+                  height: 8,
                   background: d ? STEP_COLORS[i] : 'var(--border-default)',
-                  boxShadow: d ? `0 0 10px ${STEP_COLORS[i]}cc` : 'none',
-                  opacity: d ? 1 : 0.3
+                  boxShadow: d ? `0 2px 12px ${STEP_COLORS[i]}cc` : 'none',
+                  opacity: d ? 1 : 0.4
                 }}
               />
             ))}
           </div>
           {/* Count */}
           <span
-            className="font-sans text-[12px] font-black tabular-nums tracking-[.05em]"
+            className="font-sans text-[15px] font-black tabular-nums tracking-tight"
             style={{ color: doneCount > 0 ? '#B8973A' : 'var(--text-muted)' }}
           >
-            {doneCount}<span className="text-[10px] opacity-40 mx-0.5">/</span>4
+            {doneCount}<span className="text-[12px] opacity-40 mx-0.5">/</span>4
           </span>
         </div>
       </div>
@@ -723,7 +788,7 @@ export function DashboardGrid({
           title="Practice"
           subtitle={practice.tagline ?? 'A moment of practice is a moment of freedom.'}
           isDone={practiceCompleted}
-          isLocked={!learnDone}
+          isLocked={!learnDone && !practiceCompleted}
           isActive={activePanel === 'practice'}
           ctaLabel="Start"
           onClick={handlePractice}
@@ -732,7 +797,7 @@ export function DashboardGrid({
 
       {/* ── Practice Panel (Expands below Row 1) ──────────────────────────────── */}
       <AnimatePresence mode="wait">
-        {activePanel === 'practice' && !practiceCompleted && (
+        {activePanel === 'practice' && (
           <motion.div
             key="practice-panel"
             initial={{ height: 0, opacity: 0 }}
@@ -744,7 +809,8 @@ export function DashboardGrid({
               practice={practice}
               color={color}
               onComplete={handlePracticeComplete}
-              onGoToRoom={() => { setActivePanel(null); onNavigate('situations'); }}
+              onGoToRoom={() => onNavigate('wisdom_untethered', questionId, 'practice')}
+              isDone={practiceCompleted}
             />
           </motion.div>
         )}
@@ -759,7 +825,7 @@ export function DashboardGrid({
           title="Reflect"
           subtitle="Journal · after practice"
           isDone={reflectDone}
-          isLocked={!practiceCompleted}
+          isLocked={!practiceCompleted && !reflectDone}
           isActive={activePanel === 'reflect'}
           ctaLabel="Write"
           onClick={handleReflect}
@@ -771,16 +837,16 @@ export function DashboardGrid({
           title="Live It"
           subtitle="Sacred commitment · after reflect"
           isDone={integrateDone}
-          isLocked={!reflectDone}
+          isLocked={!reflectDone && !integrateDone}
           isActive={false}
           ctaLabel="I Commit"
-          onClick={() => { if (!integrateDone) setShowCommitment(true); }}
+          onClick={() => { setShowCommitment(true); }}
         />
       </div>
 
       {/* ── Reflect Panel (Expands below Row 2) ───────────────────────────────── */}
       <AnimatePresence mode="wait">
-        {activePanel === 'reflect' && !reflectDone && (
+        {activePanel === 'reflect' && (
           <motion.div
             key="reflect-panel"
             initial={{ height: 0, opacity: 0 }}
@@ -792,6 +858,7 @@ export function DashboardGrid({
               prompt={questionMeta.journalPrompt}
               color={color}
               onSave={handleReflectSave}
+              existingJournal={record?.note || ''}
               onGoToJournal={() => {
                 localStorage.setItem('awakened-journal-prompt', questionMeta.journalPrompt);
                 localStorage.setItem('awakened-reflect-question-id', questionId);
