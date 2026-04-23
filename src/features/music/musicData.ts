@@ -5,7 +5,8 @@ export interface SacredTrack {
   title: string;
   artist: string;
   duration: string;
-  previewUrl: string;
+  previewUrl: string; // Kept for image logic if needed, but we'll use audioPath for secure playing
+  audioPath: string; // The raw path in storage
   priceUSD: number;
   description: string;
   mood: 'Calm' | 'Uplifting' | 'Deep' | 'Healing' | 'Meditation';
@@ -22,6 +23,7 @@ export const SACRED_TRACKS: SacredTrack[] = [
     artist: 'Sacred Sounds',
     duration: '15:00',
     previewUrl: VoiceService.getStorageUrl('/mp3/Music/budhaTranquilRemix1.mp3'),
+    audioPath: '/Soundscapes/budhaTranquilRemix1.mp3',
     priceUSD: 14.99,
     description: 'A gentle ambient journey through soft winds and bird songs. Perfect for your daily presence practice.',
     mood: 'Calm',
@@ -31,11 +33,12 @@ export const SACRED_TRACKS: SacredTrack[] = [
     }
   },
   {
-    id: 'track_2', // Changed from track_1
+    id: 'track_2',
     title: "The Observer's Echo",
     artist: 'Sacred Sounds',
     duration: '00:28',
     previewUrl: VoiceService.getStorageUrl('/mp3/Music/WatchersPause.mp3'),
+    audioPath: '/Soundscapes/WatchersPause.mp3',
     priceUSD: 14.99,
     description: 'A short, deep sonic bridge to silence. Use this as a quick anchor to return to the witness state in between your daily activities.',
     mood: 'Deep',
@@ -50,6 +53,7 @@ export const SACRED_TRACKS: SacredTrack[] = [
     artist: 'Sacred Sounds',
     duration: '03:59',
     previewUrl: VoiceService.getStorageUrl('/mp3/Music/OceanofHooponopono.mp3'),
+    audioPath: '/Soundscapes/OceanofHooponopono.mp3',
     priceUSD: 14.99,
     description: 'A serene immersion in the healing frequencies of Ho’oponopono. Gentle waves and ethereal hums carry the mantra of reconciliation and love.',
     mood: 'Uplifting',
@@ -64,6 +68,7 @@ export const SACRED_TRACKS: SacredTrack[] = [
     artist: 'Sacred Sounds',
     duration: '04:43',
     previewUrl: VoiceService.getStorageUrl('/mp3/Music/OceanofHooponoponoWithMusic.mp3'),
+    audioPath: '/Soundscapes/OceanofHooponoponoWithMusic.mp3',
     priceUSD: 14.99,
     description: 'An enriched version of the Ho’oponopono journey, featuring soft melodic layers and synths that deepen the heart-opening experience.',
     mood: 'Uplifting',
@@ -78,6 +83,7 @@ export const SACRED_TRACKS: SacredTrack[] = [
     artist: 'Sacred Sounds',
     duration: '04:09',
     previewUrl: VoiceService.getStorageUrl('/mp3/Music/budhaflutewithtabla1.mp3'),
+    audioPath: '/Soundscapes/budhaflutewithtabla1.mp3',
     priceUSD: 14.99,
     description: 'Grounding Tabla rhythms meet the celestial breath of the Buddha Flute. Specifically designed to harmonize biological rhythms and restore inner peace.',
     mood: 'Healing',
@@ -92,6 +98,7 @@ export const SACRED_TRACKS: SacredTrack[] = [
     artist: 'Sacred Sounds',
     duration: '07:59',
     previewUrl: VoiceService.getStorageUrl('/mp3/Music/OmVacuum.mp3'),
+    audioPath: '/Soundscapes/OmVacuum.mp3',
     priceUSD: 14.99,
     description: 'A concentrated primordial Om resonance that acts as a mental vacuum, drawing out thoughts and leaving only the vast, silent space of being.',
     mood: 'Deep',
@@ -106,6 +113,7 @@ export const SACRED_TRACKS: SacredTrack[] = [
     artist: 'Sacred Sounds',
     duration: '08:25',
     previewUrl: VoiceService.getStorageUrl('/mp3/Music/BecomeWatcherWithOM.mp3'),
+    audioPath: '/Soundscapes/BecomeWatcherWithOM.mp3',
     priceUSD: 19.99,
     description: 'A guided sonic portal into the presence of the Watcher. Merges the power of the long Om chant with silence to reveal the witnessing consciousness.',
     mood: 'Deep',
@@ -120,6 +128,7 @@ export const SACRED_TRACKS: SacredTrack[] = [
     artist: 'Sacred Sounds',
     duration: '10:00',
     previewUrl: VoiceService.getStorageUrl('/Soundscapes/MakeEveryWorryLookSmall.mp3'),
+    audioPath: '/Soundscapes/MakeEveryWorryLookSmall.mp3',
     priceUSD: 14.99,
     description: "A spacious sonic landscape designed to shrink the mind's burdens and anchor you in the eternal Now.",
     mood: 'Healing',
@@ -134,6 +143,7 @@ export const SACRED_TRACKS: SacredTrack[] = [
     artist: 'Sacred Sounds',
     duration: '12:00',
     previewUrl: VoiceService.getStorageUrl('/Soundscapes/MakeEveryWorryLookSmall1.mp3'),
+    audioPath: '/Soundscapes/MakeEveryWorryLookSmall1.mp3',
     priceUSD: 14.99,
     description: 'An enriched harmonic journey that restores inner balance and makes every obstacle feel like a small wave in a vast ocean.',
     mood: 'Healing',
@@ -147,7 +157,8 @@ export const SACRED_TRACKS: SacredTrack[] = [
     title: 'I am the one who watches',
     artist: 'Sacred Sounds',
     duration: '10:00',
-    previewUrl: VoiceService.getStorageUrl('/mp3/Music/WatchersPause.mp3'),
+    previewUrl: VoiceService.getStorageUrl('/Soundscapes/Thereisavoiceandthereisyou.mp3'),
+    audioPath: '/Soundscapes/Thereisavoiceandthereisyou.mp3',
     priceUSD: 14.99,
     description: 'A profound meditative soundscape for resting in the seat of the Witness. Let the world fade as you return to the one who is looking.',
     mood: 'Meditation',
@@ -161,13 +172,29 @@ export const SACRED_TRACKS: SacredTrack[] = [
     title: 'I am tired of searching a guru',
     artist: 'Sacred Sounds',
     duration: '12:45',
-    previewUrl: VoiceService.getStorageUrl('/Soundscapes/TiredOfSearchingLIVE.mp3'),
+    previewUrl: VoiceService.getStorageUrl('/Soundscapes/TiredOfSearching.mp3'),
+    audioPath: '/Soundscapes/TiredOfSearching.mp3',
     priceUSD: 14.99,
     description: 'A transformative soundscape documenting the shift from external seeking to internal discovery. When the searcher stops, the Truth is found.',
     mood: 'Meditation',
     coverImage: {
       dark: '/guru-dark.webp',
       light: '/guru-light.webp'
+    }
+  },
+  {
+    id: 'you-are-space',
+    title: 'You are Space',
+    artist: 'Sacred Sounds',
+    duration: '15:20',
+    previewUrl: VoiceService.getStorageUrl('/Soundscapes/TiredOfSearchingLIVE.mp3'),
+    audioPath: '/Soundscapes/TiredOfSearchingLIVE.mp3',
+    priceUSD: 14.99,
+    description: 'A profound immersion in the awareness of space. This live recording guides you beyond the limited identity into the vast emptiness that holds all things.',
+    mood: 'Meditation',
+    coverImage: {
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/Youarespacedark.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/Youarespacelight.webp')
     }
   }
 ];

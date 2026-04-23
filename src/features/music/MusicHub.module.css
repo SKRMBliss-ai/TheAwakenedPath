@@ -79,6 +79,22 @@
   border-radius: 100px;
   width: fit-content;
   margin: 0.5rem auto 1.5rem;
+  max-width: 95vw;
+}
+
+@media (max-width: 768px) {
+  .filterBar {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding: 0.5rem 1.5rem;
+    border-radius: 40px;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+  .filterBar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .filterTab {
@@ -270,16 +286,17 @@
 }
 
 .description {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  opacity: 0.8;
-  font-family: var(--font-serif);
+  overflow: hidden;
   display: -webkit-box;
-  line-clamp: 4;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
-  overflow: hidden;
+}
+
+.backContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 /* --- BUTTONS & ACTIONS --- */
@@ -302,7 +319,22 @@
 
 .playing {
   background: #fff;
+  color: #000;
   animation: pulse 2s infinite;
+}
+
+.loading {
+  background: var(--accent-primary) !important;
+  color: #000 !important;
+  opacity: 1 !important;
+  animation: loadingPulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 30px var(--accent-primary-dim);
+}
+
+@keyframes loadingPulse {
+  0% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.9; }
 }
 
 @keyframes pulse {
@@ -324,21 +356,13 @@
   flex-direction: column;
 }
 
-.currency {
-  font-size: 0.7rem;
-  font-weight: 400;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.1rem;
-}
 
 .amount {
-  font-size: 1.8rem;
-  font-weight: 700; /* Bolder for readability */
+  font-size: 1.1rem;
+  font-weight: 300;
   color: var(--text-primary);
-  font-family: var(--font-serif);
-  letter-spacing: -0.02em;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  letter-spacing: 0.02em;
 }
 
 .buttons {
@@ -355,7 +379,7 @@
   padding: 0.5rem 1rem;
   border-radius: 12px;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-primary);
   transition: all 0.3s ease;
 }

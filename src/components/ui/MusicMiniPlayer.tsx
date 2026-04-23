@@ -6,7 +6,7 @@ import { SACRED_TRACKS } from '../../features/music/musicData';
 import { cn } from '../../lib/utils';
 
 export const MusicMiniPlayer: React.FC = () => {
-  const { status, category, musicUrl } = useVoiceStatus();
+  const { status, category, musicUrl, trackId } = useVoiceStatus();
   const [progress, setProgress] = useState({ currentTime: 0, duration: 0 });
   const [volume, setVolume] = useState(VoiceService.volume);
   const [showVolume, setShowVolume] = useState(false);
@@ -26,10 +26,10 @@ export const MusicMiniPlayer: React.FC = () => {
     return () => window.removeEventListener('mousedown', handleClickAway);
   }, [showVolume]);
 
-  const currentTrack = SACRED_TRACKS.find(t => t.previewUrl === musicUrl);
+  const currentTrack = SACRED_TRACKS.find(t => t.id === trackId) || SACRED_TRACKS.find(t => t.previewUrl === musicUrl);
 
   // Visible whenever a music track is loaded — survives TTS interruptions
-  const isVisible = !!currentTrack;
+  const isVisible = !!currentTrack || !!musicUrl;
 
   // Poll progress
   useEffect(() => {
@@ -48,10 +48,18 @@ export const MusicMiniPlayer: React.FC = () => {
   const isTTSInterrupting = category === 'tts' && status === 'playing' && !!musicUrl;
 
   const togglePlay = () => {
-    if (isTTSInterrupting) return; // don't disrupt voice guidance
+    console.log(`[MusicMiniPlayer] TogglePlay clicked. Current State: status=${status}, category=${category}, isMusicPlaying=${isMusicPlaying}`);
+    
+    if (isTTSInterrupting) {
+      console.warn("[MusicMiniPlayer] Cannot toggle play while TTS is interrupting.");
+      return; 
+    }
+
     if (isMusicPlaying) {
+      console.log("[MusicMiniPlayer] Pausing music...");
       VoiceService.pause();
     } else {
+      console.log("[MusicMiniPlayer] Resuming music...");
       VoiceService.resume('music');
     }
   };

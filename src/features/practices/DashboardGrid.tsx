@@ -152,10 +152,10 @@ function DashboardCard({
 
       {/* Content Layer: Corner-based Layout */}
       <div className="relative z-10 h-full flex flex-col justify-between w-full">
-        {/* Top Section: Corners and Centered Title */}
-        <div className="flex items-start justify-between w-full relative">
-          {/* Top Left: Step label */}
-          <div className="flex flex-col">
+        {/* Top Section: Step and Title */}
+        <div className="flex flex-col gap-0.5 w-full">
+          <div className="flex items-center justify-between w-full relative">
+            {/* Top Left: Step label */}
             <span
               className="font-sans text-[10px] font-black tracking-[0.25em] uppercase"
               style={{ 
@@ -165,45 +165,44 @@ function DashboardCard({
             >
               {stepLabel}
             </span>
-          </div>
 
-          {/* Top Center: Title - High Visibility */}
-          <div className="absolute left-1/2 -translate-x-1/2 text-center -top-1">
-            <div
-               className="font-serif font-black leading-tight transition-all duration-300 whitespace-nowrap"
-              style={{
-                fontSize: 24,
-                color: isLocked ? 'var(--text-disabled)' : (mode === 'dark' ? '#ffffff' : 'var(--text-primary)'),
-                letterSpacing: '-0.02em',
-                textShadow: mode === 'dark' && !isLocked ? '0 2px 8px rgba(0,0,0,0.4)' : 'none'
-              }}
-            >
-              {title}
+            {/* Top Right: Status Badge / Icon */}
+            <div className="flex items-center">
+              {isDone ? (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center shadow-lg"
+                  style={{ background: color + '18', border: `1px solid ${color}40` }}
+                >
+                  <CheckCircle2 size={14} style={{ color }} />
+                </motion.div>
+              ) : (
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-500"
+                  style={{ 
+                    border: `1px solid ${isLocked ? 'var(--text-disabled)30' : color + '40'}`,
+                    opacity: isLocked ? 0.3 : 0.8,
+                    background: isActive ? color + '15' : 'transparent'
+                  }}
+                >
+                  <Icon size={14} style={{ color: isLocked ? 'var(--text-disabled)' : color }} />
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Top Right: Status Badge / Icon */}
-          <div className="flex items-center">
-            {isDone ? (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="w-7 h-7 rounded-full flex items-center justify-center"
-                style={{ background: color + '18', border: `1px solid ${color}40` }}
-              >
-                <CheckCircle2 size={14} style={{ color }} />
-              </motion.div>
-            ) : (
-              <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ 
-                  border: `1px solid ${isLocked ? 'var(--text-disabled)30' : color + '40'}`,
-                  opacity: isLocked ? 0.3 : 0.8
-                }}
-              >
-                <Icon size={14} style={{ color: isLocked ? 'var(--text-disabled)' : color }} />
-              </div>
-            )}
+          {/* Title - High Visibility, positioned clearly below step label */}
+          <div
+             className="font-serif font-black leading-tight transition-all duration-300 mt-1"
+            style={{
+              fontSize: 22,
+              color: isLocked ? 'var(--text-disabled)' : (mode === 'dark' ? '#ffffff' : 'var(--text-primary)'),
+              letterSpacing: '-0.02em',
+              textShadow: mode === 'dark' && !isLocked ? '0 2px 8px rgba(0,0,0,0.4)' : 'none'
+            }}
+          >
+            {title}
           </div>
         </div>
 
@@ -543,9 +542,12 @@ function InlineReflectPanel({
 
 function SoundscapeCard({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const track = getDailyTrack();
-  const { status, category } = useVoiceStatus();
+  const { status, category, trackId: activeTrackId } = useVoiceStatus();
   const { mode } = useTheme();
-  const isActive = VoiceService.currentUrl === track.previewUrl;
+  
+  const [localUrl, setLocalUrl] = useState<string | null>(null);
+
+  const isActive = activeTrackId === track.id;
   const isPlaying = isActive && status === 'playing' && category === 'music';
 
   // Lavender theme colors
@@ -555,11 +557,25 @@ function SoundscapeCard({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const soundLabelColor = mode === 'dark' ? 'rgba(192,160,238,.8)'  : 'rgba(100,70,170,.9)';
   const soundIconColor  = mode === 'dark' ? 'rgba(192,160,238,.8)'  : 'rgba(100,70,170,.9)';
 
-  const handlePlay = (e: React.MouseEvent) => {
+  const handlePlay = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isPlaying) VoiceService.pause();
-    else if (isActive && status === 'paused') VoiceService.resume('music');
-    else VoiceService.playAudioURL(track.previewUrl);
+    if (isPlaying) {
+      VoiceService.pause();
+    } else if (isActive && status === 'paused') {
+      VoiceService.resume('music');
+    } else {
+      try {
+        let urlToPlay = localUrl;
+        if (!urlToPlay) {
+          urlToPlay = await VoiceService.getCloakedUrl(track.id, track.audioPath);
+          setLocalUrl(urlToPlay);
+        }
+        VoiceService.playAudioURL(urlToPlay, undefined, track.id);
+      } catch (err) {
+        // Fallback to preview if secure fails (optional)
+        VoiceService.playAudioURL(track.previewUrl, undefined, track.id);
+      }
+    }
   };
 
   return (

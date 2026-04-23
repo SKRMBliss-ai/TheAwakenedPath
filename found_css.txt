@@ -1,0 +1,5 @@
+﻿src/features/courses/wisdom-untethered/Chap1Question1.module.css
+src/features/courses/wisdom-untethered/Chap1Question2.module.css
+src/features/courses/wisdom-untethered/Chap1Question4.module.css
+src/features/courses/wisdom-untethered/Chap1Question6.module.css
+src/features/courses/wisdom-untethered/Chap1Question7.module.css

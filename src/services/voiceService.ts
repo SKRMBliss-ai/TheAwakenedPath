@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 
 /**
  * SERVICE: VoiceService
@@ -12,12 +14,14 @@ export class VoiceService {
     private static ttsAudio: HTMLAudioElement | null = null;
     private static musicAudio: HTMLAudioElement | null = null;
     private static _currentUrl: string | null = null;
+    private static _currentTrackId: string | null = null;
     /** Persists the music URL even while TTS is playing on top */
     private static _musicUrl: string | null = null;
     private static _volume: number = 1;
     private static currentRequestId: number = 0;
-    private static listeners: ((status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null, musicUrl: string | null) => void)[] = [];
+    private static listeners: ((status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null, musicUrl: string | null, trackId: string | null) => void)[] = [];
     private static _status: 'idle' | 'playing' | 'paused' | 'buffering' = 'idle';
+    private static _cloakedCache: Map<string, string> = new Map(); // trackId -> blobUrl
     private static _activeCategory: 'tts' | 'music' | null = null;
     private static _savedTtsTime: number = 0;
     private static _savedMusicTime: number = 0;
@@ -34,16 +38,9 @@ export class VoiceService {
 
     /**
      * Maps local development paths to Firebase Storage Production URLs.
-     * This allows us to move large assets off Hosting without breaking code references.
      */
-    public static getStorageUrl(path: string): string {
-        // If it's already an absolute URL or blob, leave it alone
-        if (path.startsWith('http') || path.startsWith('blob:')) return path;
-
-        // Remove leading slash
+    private static getInternalStoragePath(path: string): string {
         const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-
-        // Structure Mapping
         let storagePath = cleanPath;
         if (cleanPath.startsWith('mp3/Music/Images/')) {
             storagePath = cleanPath.replace('mp3/Music/Images/', 'Soundscapes/Images/');
@@ -52,10 +49,84 @@ export class VoiceService {
         } else if (cleanPath.startsWith('mp3/')) {
             storagePath = cleanPath.replace('mp3/', '');
         }
+        return storagePath;
+    }
 
-        // Using GCS public URL which respects public ACLs and is better for cache/anonymous access.
-        // We do NOT encodeURIComponent the slashes here as storage.googleapis.com expects a standard path.
-        return `https://storage.googleapis.com/${this.STORAGE_BUCKET}/${storagePath}`;
+    public static getStorageUrl(path: string): string {
+        // If it's already an absolute URL or blob, leave it alone
+        if (path.startsWith('http') || path.startsWith('blob:')) return path;
+
+        const storagePath = this.getInternalStoragePath(path);
+        
+        // Use the Firebase Storage public download format (encoded)
+        const encodedPath = encodeURIComponent(storagePath);
+        return `https://firebasestorage.googleapis.com/v0/b/${this.STORAGE_BUCKET}/o/${encodedPath}?alt=media`;
+    }
+
+    /**
+     * Obtains a signed URL from the backend that expires shortly.
+     * Prevents permanent link sharing and blocks direct scraper access.
+     */
+    public static async getCloakedUrl(trackId: string, path: string): Promise<string> {
+        // 0. Check cache first
+        if (this._cloakedCache.has(trackId)) {
+            return this._cloakedCache.get(trackId)!;
+        }
+
+        try {
+            // 1. Get the temporary signed URL
+            const signedUrl = await this.getSecureUrl(trackId, path);
+
+            // 2. Fetch the actual binary data
+            console.log(`[VoiceService] Cloaking attempt for ${trackId}...`);
+            const response = await fetch(signedUrl);
+            
+            if (!response.ok) {
+                console.error(`[VoiceService] Fetch failed with status: ${response.status} ${response.statusText}`);
+                throw new Error(`Vault access denied: ${response.status}`);
+            }
+
+            const blob = await response.blob();
+            console.log(`[VoiceService] Success: Sacred asset cloaked (${blob.size} bytes)`);
+            
+            // 3. Create a local object URL (masked)
+            const cloakUrl = URL.createObjectURL(blob);
+            this._cloakedCache.set(trackId, cloakUrl);
+            return cloakUrl;
+        } catch (error: any) {
+            console.error("[VoiceService] Cloaking failure details:", {
+                message: error.message,
+                stack: error.stack,
+                type: error.name
+            });
+            
+            if (error.message === 'Failed to fetch') {
+                console.warn("[VoiceService] This is likely a CORS block. The bucket needs to allow cross-origin requests from this domain.");
+            }
+            
+            throw error;
+        }
+    }
+
+    /**
+     * Obtains a signed URL from the backend that expires shortly.
+     */
+    public static async getSecureUrl(trackId: string, path: string): Promise<string> {
+        try {
+            const getUrl = httpsCallable(functions, 'getSecureTrackUrl');
+            const result = await getUrl({ trackId, path });
+            const data = result.data as { url?: string, error?: string };
+            
+            if (data.error) {
+                console.error("[VoiceService] Managed Backend Error:", data.error);
+                throw new Error(data.error);
+            }
+            
+            return data.url!;
+        } catch (error) {
+            console.error("[VoiceService] Critical failure in Manifesting Connection:", error);
+            throw error;
+        }
     }
 
     private static audioCache: Record<string, Promise<string>> = {};
@@ -76,6 +147,10 @@ export class VoiceService {
     /** Always returns the loaded music URL regardless of whether TTS is active */
     static get musicUrl() {
         return this._musicUrl;
+    }
+
+    static get currentTrackId() {
+        return this._currentTrackId;
     }
 
     static get isPlaying() {
@@ -116,8 +191,9 @@ export class VoiceService {
     }
 
     private static setStatus(val: 'idle' | 'playing' | 'paused' | 'buffering') {
+        console.log(`[VoiceService] Status Change: ${this._status} -> ${val} (Category: ${this._activeCategory})`);
         this._status = val;
-        this.listeners.forEach(l => l(val, this._activeCategory, this._musicUrl));
+        this.listeners.forEach(l => l(val, this._activeCategory, this._musicUrl, this._currentTrackId));
     }
 
     static playEffect(url: string) {
@@ -128,7 +204,7 @@ export class VoiceService {
         effect.play().catch(err => console.error("Effect playback failed:", err));
     }
 
-    static subscribe(cb: (status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null, musicUrl: string | null) => void) {
+    static subscribe(cb: (status: 'idle' | 'playing' | 'paused' | 'buffering', category: 'tts' | 'music' | null, musicUrl: string | null, trackId: string | null) => void) {
         this.listeners.push(cb);
         return () => {
             this.listeners = this.listeners.filter(l => l !== cb);
@@ -330,7 +406,7 @@ export class VoiceService {
     /**
      * Plays a direct audio URL (e.g., local MP3) instead of generating TTS.
      */
-    static async playAudioURL(url: string, onEnd?: () => void): Promise<void> {
+    static async playAudioURL(url: string, onEnd?: () => void, trackId?: string): Promise<void> {
         if (this._currentUrl === url && this.musicAudio && !this.musicAudio.paused) {
             console.log("VoiceService: Already playing URL.");
             return;
@@ -364,6 +440,7 @@ export class VoiceService {
             this.musicAudio = audio;
             this._currentUrl = url;
             this._musicUrl = url;  // persist separately — never overwritten by TTS
+            this._currentTrackId = trackId || null;
             this._activeCategory = 'music';
             this.setStatus('playing');
 
@@ -374,6 +451,7 @@ export class VoiceService {
                 this.musicAudio = null;
                 this._currentUrl = null;
                 this._musicUrl = null;
+                this._currentTrackId = null;
                 
                 // Maybe resume TTS? Let's not auto-resume TTS after music, 
                 // but music after TTS is often desired for background.
@@ -445,20 +523,26 @@ export class VoiceService {
     }
 
     static resume(category?: 'tts' | 'music') {
-        if (!this._isEnabled) return;
-        
         const target = category || this._activeCategory || 'tts';
-        console.log(`[VoiceService] Resuming: ${target}`);
+        
+        // Music is sacred and should always be allowed to resume if it exists
+        if (!this._isEnabled && target !== 'music') {
+            console.warn("[VoiceService] Cannot resume: VoiceService (TTS) is disabled.");
+            return;
+        }
+        
+        const audio = target === 'music' ? this.musicAudio : this.ttsAudio;
+        
+        console.log(`[VoiceService] Request to Resume: ${target}. Current Status: ${this._status}, ActiveCategory: ${this._activeCategory}`);
+        console.log(`[VoiceService] Audio Element State: ${audio ? `exists (readyState=${audio.readyState}, networkState=${audio.networkState}, src=${audio.src ? 'YES' : 'NO'})` : 'NULL'}`);
 
         if (target === 'tts' && this.ttsAudio) {
-            // Pause music if resuming guidance
             if (this.musicAudio && !this.musicAudio.paused) {
                 this._savedMusicTime = this.musicAudio.currentTime;
                 this.musicAudio.pause();
+                console.log("[VoiceService] Paused music for TTS resume.");
             }
             this._activeCategory = 'tts';
-            this.setStatus('playing');
-            this._currentUrl = 'tts_blob';
             
             if (this._savedTtsTime > 0) {
                 try {
@@ -467,25 +551,55 @@ export class VoiceService {
                 this._savedTtsTime = 0;
             }
             
-            this.ttsAudio.play().catch(e => console.error("TTS Resume failed", e));
+            this.ttsAudio.play().then(() => {
+                this.setStatus('playing');
+            }).catch(err => {
+                console.error("[VoiceService] TTS resume failed", err);
+                this.setStatus('idle');
+            });
         } else if (target === 'music' && this.musicAudio) {
-            // Pause TTS if resuming music
+            const music = this.musicAudio;
             if (this.ttsAudio && !this.ttsAudio.paused) {
                 this._savedTtsTime = this.ttsAudio.currentTime;
                 this.ttsAudio.pause();
+                console.log("[VoiceService] Paused TTS for music resume.");
             }
+            
             this._activeCategory = 'music';
-            this.setStatus('playing');
-            this._currentUrl = this.musicAudio.src; // Restore correct URL
             
-            if (this._savedMusicTime > 0) {
+            // Only seek if we have a saved time that differs from current (e.g. after TTS interruption)
+            if (this._savedMusicTime > 0 && Math.abs(music.currentTime - this._savedMusicTime) > 0.5) {
                 try {
-                    this.musicAudio.currentTime = this._savedMusicTime;
-                } catch (e) {}
-                this._savedMusicTime = 0;
+                    console.log(`[VoiceService] Syncing music to saved time: ${this._savedMusicTime}`);
+                    music.currentTime = this._savedMusicTime;
+                } catch (e) {
+                    console.warn("[VoiceService] Sync failed during resume:", e);
+                }
+            }
+            this._savedMusicTime = 0; 
+            
+            // Critical hardening: if stalled, force load
+            if (music.readyState < 2 && music.src) {
+                console.log("[VoiceService] Music state weak (readyState < 2). Forcing load()...");
+                music.load();
             }
             
-            this.musicAudio.play().catch(e => console.error("Music Resume failed", e));
+            music.play().then(() => {
+                console.log("[VoiceService] Music playback resumed successfully.");
+                this.setStatus('playing');
+            }).catch(e => {
+                console.error("[VoiceService] Music Resume failed:", e);
+                this.setStatus('paused');
+                
+                // One-time recovery attempt
+                if (music.readyState === 0 && music.src) {
+                    console.log("[VoiceService] Attempting one-time recovery play...");
+                    setTimeout(() => music.play().catch(() => {}), 100);
+                }
+            });
+        } else {
+            console.warn(`[VoiceService] Cannot resume ${target}: Audio element missing.`);
+            this.setStatus('idle');
         }
 
         if (typeof window !== 'undefined' && window.speechSynthesis && target === 'tts') {
@@ -563,6 +677,7 @@ export class VoiceService {
         this._savedMusicTime = 0;
         this._currentUrl = null;
         this._musicUrl = null;
+        this._currentTrackId = null;
     }
 
     static init(): Promise<void> {
@@ -602,12 +717,13 @@ export function useVoiceStatus() {
     const [state, setState] = useState({ 
         status: VoiceService.status, 
         category: VoiceService.activeCategory,
-        musicUrl: VoiceService.musicUrl
+        musicUrl: VoiceService.musicUrl,
+        trackId: VoiceService.currentTrackId
     });
     
     useEffect(() => {
-        return VoiceService.subscribe((status, category, musicUrl) => {
-            setState({ status, category, musicUrl });
+        return VoiceService.subscribe((status, category, musicUrl, trackId) => {
+            setState({ status, category, musicUrl, trackId });
         });
     }, []);
     

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Play, Pause, Download, Volume2, MessageSquare, Music, Clock, Heart, Zap, Sparkles } from 'lucide-react';
+import { Play, Pause, Download, Heart, MessageSquare, Clock, Music, Volume2, Sparkles, Loader2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { type SacredTrack, SACRED_TRACKS } from './musicData';
@@ -14,32 +14,49 @@ const MusicCard = ({
   track, 
   onDownload, 
   isProcessing, 
-  isActive, 
   status,
   category,
+  activeTrackId,
   isOwned 
 }: { 
   track: SacredTrack, 
   onDownload: (t: SacredTrack) => void, 
   isProcessing: boolean,
-  isActive: boolean,
   status: 'idle' | 'playing' | 'paused' | 'buffering',
   category: 'tts' | 'music' | null,
+  activeTrackId: string | null,
   isOwned: boolean
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const isPlaying = isActive && status === 'playing' && category === 'music';
+  const [localUrl, setLocalUrl] = useState<string | null>(null);
+  const [localProcessing, setLocalProcessing] = useState(false);
+  const isVisiblePlaying = activeTrackId === track.id && status === 'playing' && category === 'music' && !localProcessing;
+  const isActive = activeTrackId === track.id;
   const regionalPrice = getRegionalPrice(track.priceUSD);
   const { mode } = useTheme();
 
-  const togglePlay = (e: React.MouseEvent) => {
+  const togglePlay = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isPlaying) {
+    
+    if (isVisiblePlaying) {
       VoiceService.pause();
     } else if (isActive && status === 'paused') {
       VoiceService.resume('music');
     } else {
-      VoiceService.playAudioURL(track.previewUrl);
+      setLocalProcessing(true);
+      try {
+        let urlToPlay = localUrl;
+        if (!urlToPlay) {
+          urlToPlay = await VoiceService.getCloakedUrl(track.id, track.audioPath);
+          setLocalUrl(urlToPlay);
+        }
+        await VoiceService.playAudioURL(urlToPlay, undefined, track.id);
+      } catch (err: any) {
+        console.error("Playback manifest error:", err);
+        alert("Unable to reach the sacred vault. Please check your connection.");
+      } finally {
+        setLocalProcessing(false);
+      }
     }
   };
 
@@ -57,7 +74,7 @@ const MusicCard = ({
 
   const coverSrc = track.coverImage 
     ? (mode === 'dark' ? track.coverImage.dark : track.coverImage.light)
-    : (mode === 'dark' ? '/sacred-bg-dark.webp' : '/sacred-bg-light.webp'); // Placeholder
+    : (mode === 'dark' ? '/sacred-bg-dark.webp' : '/sacred-bg-light.webp');
 
   return (
     <div className={styles.trackCard} onClick={toggleFlip}>
@@ -81,9 +98,22 @@ const MusicCard = ({
           <div className={styles.frontOverlay}>
             <button 
               onClick={togglePlay}
-              className={cn(styles.playButton, isPlaying && styles.playing)}
+              className={cn(
+                styles.playButton, 
+                isVisiblePlaying && styles.playing,
+                localProcessing && styles.loading
+              )}
+              disabled={localProcessing}
             >
-              {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
+              {localProcessing ? (
+                <div className="relative flex items-center justify-center w-full h-full">
+                  <Loader2 size={24} className="animate-spin text-black" />
+                </div>
+              ) : isVisiblePlaying ? (
+                <Pause size={28} fill="currentColor" />
+              ) : (
+                <Play size={28} fill="currentColor" className="ml-1" />
+              )}
             </button>
           </div>
           <div className={styles.frontInfo}>
@@ -114,8 +144,7 @@ const MusicCard = ({
 
           <div className={styles.actionRow} onClick={(e) => e.stopPropagation()}>
             <div className={styles.priceTag}>
-              <span className={styles.currency}>{regionalPrice.currency}</span>
-              <span className={styles.amount}>{regionalPrice.amount}</span>
+              <span className={styles.amount}>{regionalPrice.currency} {regionalPrice.amount}</span>
             </div>
             
             <div className={styles.buttons}>
@@ -156,21 +185,18 @@ const MusicCard = ({
           </div>
         </div>
       </motion.div>
-
-      {/* Audio/Video handling is now centralized in VoiceService */}
     </div>
   );
 };
 
 export const MusicHub = () => {
   const [activeMood, setActiveMood] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const { profile } = useAuth();
   const { checkOut, isProcessing: isCheckoutProcessing } = useRazorpay();
-  const { status, category } = useVoiceStatus(); 
-  const [activeTrackUrl, setActiveTrackUrl] = useState<string | null>(null);
+  const { status, category, trackId: activeTrackId } = useVoiceStatus(); 
   const [localOwned, setLocalOwned] = useState<string[]>([]);
   
-  // Combine Firestore profile owned with local temporary owned for immediate feedback
   const ownedTracks = useMemo(() => {
     return Array.from(new Set([
       ...(profile?.purchasedCourses || []),
@@ -178,50 +204,39 @@ export const MusicHub = () => {
     ]));
   }, [profile?.purchasedCourses, localOwned]);
 
-  // Sync active track URL with VoiceService
   useEffect(() => {
-    // 1. Initial sync
-    setActiveTrackUrl(VoiceService.currentUrl);
-    
-    // 2. Preload all track covers to eliminate delay
     SACRED_TRACKS.forEach(track => {
       if (track.coverImage) {
-        const darkImg = new Image();
-        darkImg.crossOrigin = 'anonymous';
-        darkImg.src = track.coverImage.dark;
-        const lightImg = new Image();
-        lightImg.crossOrigin = 'anonymous';
-        lightImg.src = track.coverImage.light;
+        document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preload', as: 'image', href: track.coverImage.dark }));
+        document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preload', as: 'image', href: track.coverImage.light }));
       }
     });
 
-    // 3. Establish early connection to Storage domain
     const link = document.createElement('link');
     link.rel = 'dns-prefetch';
     link.href = 'https://firebasestorage.googleapis.com';
     document.head.appendChild(link);
-
-    // 4. Subscribe to changes
-    return VoiceService.subscribe(() => {
-      setActiveTrackUrl(VoiceService.currentUrl);
-    });
   }, []);
 
   const filteredTracks = activeMood 
     ? SACRED_TRACKS.filter(t => t.mood === activeMood)
     : SACRED_TRACKS;
 
-  const handleDownload = (track: SacredTrack) => {
+  const handleDownload = async (track: SacredTrack) => {
     const isOwned = ownedTracks.includes(track.id);
 
     if (isOwned) {
-      // Direct Download for owned tracks
-      const link = document.createElement('a');
-      link.href = track.previewUrl; // Replace with high-quality URL in production
-      link.download = `${track.title}.mp3`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        const blobUrl = await VoiceService.getCloakedUrl(track.id, track.audioPath);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${track.title}.mp3`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        alert("Verification failed. If you have collected this track, please try again or contact guidance.");
+      }
       return;
     }
 
@@ -232,30 +247,40 @@ export const MusicHub = () => {
 
     const price = getRegionalPrice(track.priceUSD);
     
-    // Trigger real Razorpay checkout
+    setProcessingId(track.id);
+    
     checkOut(
       profile.uid,
       profile.email || '',
-      profile.displayName || 'Traveler',
+      profile.displayName || 'Friend',
       track.id,
       price.currency,
-      () => {
-        // 1. Immediate UI Feedback
+      async () => {
+        setProcessingId(null);
         setLocalOwned(prev => [...prev, track.id]);
-        
-        // 2. Clear Communication
         alert(`Deep Gratitude. Your purchase of "${track.title}" is confirmed. Your high-quality download will begin now.`);
         
-        // 3. Trigger Download
-        const link = document.createElement('a');
-        link.href = track.previewUrl; // Replace with high-quality URL in production
-        link.download = `${track.title}.mp3`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        try {
+          const blobUrl = await VoiceService.getCloakedUrl(track.id, track.audioPath);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `${track.title}.mp3`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (err) {
+          console.error("Auto-download failed:", err);
+        }
       }
     );
   };
+
+  // Reset processingId if isCheckoutProcessing becomes false (for cancellation)
+  useEffect(() => {
+    if (!isCheckoutProcessing) {
+      setProcessingId(null);
+    }
+  }, [isCheckoutProcessing]);
 
   return (
     <div className={styles.container}>
@@ -295,18 +320,21 @@ export const MusicHub = () => {
 
       <div className={styles.trackGrid}>
         <AnimatePresence mode='popLayout'>
-          {filteredTracks.map(track => (
-            <MusicCard 
-              key={track.id} 
-              track={track} 
-              onDownload={handleDownload} 
-              isProcessing={isCheckoutProcessing}
-              isActive={activeTrackUrl === track.previewUrl}
-              status={status}
-              category={category}
-              isOwned={ownedTracks.includes(track.id)}
-            />
-          ))}
+          {filteredTracks.map(track => {
+            console.log(`[MusicHub] Rendering track ${track.id}: isProcessing=${isCheckoutProcessing && processingId === track.id} (globalProccessing=${isCheckoutProcessing}, pID=${processingId})`);
+            return (
+              <MusicCard 
+                key={track.id} 
+                track={track} 
+                onDownload={handleDownload} 
+                isProcessing={isCheckoutProcessing && processingId === track.id}
+                activeTrackId={activeTrackId}
+                status={status}
+                category={category}
+                isOwned={ownedTracks.includes(track.id)}
+              />
+            );
+          })}
         </AnimatePresence>
       </div>
 
@@ -314,18 +342,17 @@ export const MusicHub = () => {
         <div className={styles.customRequest}>
           <Sparkles className={styles.footerIcon} />
           <h3>Need a Longer Session?</h3>
-          <p>We can create extended versions (1h, 3h, or 10h) of any track for your deep meditation or sleep.</p>
+          <p className="hidden md:block">We can create extended versions (1h, 3h, or 10h) of any track for your deep meditation or sleep.</p>
           <a 
             href={getWhatsAppLink('Sacred Sounds Custom', '3')}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.footerWa}
           >
-            Request Custom Length via WhatsApp
+            Request Extensions (1h - 10h)
           </a>
         </div>
       </footer>
     </div>
   );
 };
-

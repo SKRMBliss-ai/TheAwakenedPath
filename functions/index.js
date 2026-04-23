@@ -1,4 +1,4 @@
-const { onRequest, onCall } = require("firebase-functions/v2/https");
+const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { defineSecret } = require("firebase-functions/params");
@@ -10,7 +10,9 @@ const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 
 if (admin.apps.length === 0) {
-    admin.initializeApp();
+    admin.initializeApp({
+        storageBucket: 'awakened-path-2026.firebasestorage.app'
+    });
 }
 
 const db = admin.firestore();
@@ -37,7 +39,11 @@ const COURSE_PRICES = {
     "om-vacuum": 14.99,
     "become-the-watcher": 19.99,
     "worry-small-1": 14.99,
-    "worry-small-2": 14.99
+    "worry-small-2": 14.99,
+    "the-watcher-identity": 14.99,
+    "tired-of-searching-guru": 14.99,
+    "track_2": 14.99,
+    "you-are-space": 14.99
 };
 
 const COURSE_PRICES_INR = {
@@ -51,7 +57,11 @@ const COURSE_PRICES_INR = {
     "om-vacuum": 899,
     "become-the-watcher": 1199,
     "worry-small-1": 899,
-    "worry-small-2": 899
+    "worry-small-2": 899,
+    "the-watcher-identity": 899,
+    "tired-of-searching-guru": 899,
+    "track_2": 899,
+    "you-are-space": 899
 };
 
 const SUBSCRIPTION_PLANS = {
@@ -215,7 +225,7 @@ exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySe
         const options = {
             amount: Math.round(amount * 100), // In cents/paise
             currency: currency,
-            receipt: `receipt_${courseId}_${Date.now()}`,
+            receipt: `r_${courseId.substring(0, 20)}_${Date.now()}`,
             notes: {
                 courseId: courseId,
                 userId: userId || "anonymous",
@@ -279,10 +289,17 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
         const userDoc = await userRef.get();
         const userEmail = userDoc.exists ? userDoc.data().email : null;
 
-        await userRef.set({
+        const updateData = {
             purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        };
+        
+        // If it's a soundscape track, also add to ownedTracks
+        if (COURSE_PRICES[courseId] && courseId !== 'wisdom_untethered' && courseId !== 'all_access') {
+            updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
+        }
+
+        await userRef.set(updateData, { merge: true });
 
         // Send Welcome Email
         if (userEmail) {
@@ -1414,5 +1431,73 @@ exports.notifyAdminOnPresence = onDocumentCreated({
         } catch (e) {
             console.error("Presence Notification Error:", e);
         }
+    }
+});
+
+/**
+ * Generates a temporary signed URL for a sacred track.
+ */
+exports.getSecureTrackUrl = onCall({
+    region: 'us-central1'
+}, async (request) => {
+    console.log("[getSecureTrackUrl] Request data:", {
+        userId: request.auth?.uid,
+        trackId: request.data?.trackId,
+        path: request.data?.path
+    });
+
+    if (!request.auth) {
+        throw new HttpsError('unauthenticated', 'You must be signed in to access sacred sounds.');
+    }
+
+    const { trackId, path } = request.data;
+    if (!trackId || !path) {
+        throw new HttpsError('invalid-argument', 'Missing trackId or path.');
+    }
+
+    try {
+        const defaultBucket = admin.storage().bucket();
+        const appspotBucket = admin.storage().bucket('awakened-path-2026.appspot.com');
+        const soundscapeBucket = admin.storage().bucket('awakened-path-2026.firebasestorage.app');
+        
+        const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+        
+        let file = defaultBucket.file(cleanPath);
+        let [exists] = await file.exists();
+
+        if (!exists) {
+            file = appspotBucket.file(cleanPath);
+            [exists] = await file.exists();
+        }
+
+        if (!exists) {
+            file = soundscapeBucket.file(cleanPath);
+            [exists] = await file.exists();
+        }
+        
+        if (!exists) {
+            throw new HttpsError('not-found', `Sacred asset not found in any vault: ${cleanPath}`);
+        }
+
+        const targetFile = file;
+
+        console.log("[getSecureTrackUrl] Generating signed URL for:", targetFile.name);
+        const [url] = await targetFile.getSignedUrl({
+            version: 'v4',
+            action: 'read',
+            expires: Date.now() + 15 * 60 * 1000,
+        });
+
+        console.log("[getSecureTrackUrl] Success generating URL");
+        return { url };
+    } catch (error) {
+        console.error('[getSecureTrackUrl] Critical Error:', error);
+        // Returning detailed error to the frontend for debugging
+        return { 
+            error: error.message, 
+            stack: error.stack,
+            path: path,
+            trackId: trackId
+        };
     }
 });

@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, Mail, Youtube, Medal } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, Mail, Youtube, Medal, Eye } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
@@ -167,16 +167,25 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
     >
       {/* ── Greeting row ── */}
       <div className="flex items-center justify-between px-4 pt-5">
-        <div className="flex flex-col gap-0.5">
-          <span
-            className="font-sans text-[10px] font-bold tracking-[.28em] uppercase"
-            style={{ color: '#B8973A' }}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onOpenSidebar}
+            className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
           >
-            {greeting},
-          </span>
-          <span className="font-serif text-[22px] font-normal" style={{ color: 'var(--text-primary)' }}>
-            {user.displayName || 'Traveler'}
-          </span>
+            <Menu className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+          </button>
+          <div className="flex flex-col gap-0.5">
+            <span
+              className="font-sans text-[10px] font-bold tracking-[.28em] uppercase"
+              style={{ color: '#B8973A' }}
+            >
+              {greeting},
+            </span>
+            <span className="font-serif text-[22px] font-normal" style={{ color: 'var(--text-primary)' }}>
+              {user.displayName || 'Friend'}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {/* Pulsing gold dot */}
@@ -186,13 +195,6 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           />
-          <button
-            onClick={onOpenSidebar}
-            className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
-          >
-            <Menu className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-          </button>
         </div>
       </div>
 
@@ -514,6 +516,87 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
         />
       </div>
     </motion.div>
+  );
+};
+
+// --- Watcher's Pause Audio Component ---
+const WatcherPauseButton = () => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Sync with visibility
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!audioRef.current) return;
+      if (document.hidden) {
+        audioRef.current.pause();
+      } else if (isPlaying) {
+        audioRef.current.play().catch(console.error);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [isPlaying]);
+
+  const toggle = async () => {
+    if (isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    } else {
+      if (!audioRef.current) {
+        setIsInitializing(true);
+        try {
+          // gs://awakened-path-2026.firebasestorage.app/Soundscapes/WatchersPause.mp3
+          const url = await VoiceService.getCloakedUrl('WatchersPause', 'Soundscapes/WatchersPause.mp3');
+          const audio = new Audio(url);
+          audio.loop = true;
+          audioRef.current = audio;
+        } catch (err) {
+          console.error("[WatcherPause] Failed to manifest audio:", err);
+          setIsInitializing(false);
+          return;
+        }
+      }
+      audioRef.current.play().catch(console.error);
+      setIsPlaying(true);
+      setIsInitializing(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={toggle}
+      className={cn(
+        "p-3 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center group overflow-hidden shadow-2xl relative",
+        isPlaying
+          ? "bg-[var(--accent-secondary)]/10 border-[var(--accent-secondary)]/30 text-[var(--accent-secondary)] shadow-[0_0_20px_var(--accent-secondary-dim)]"
+          : "bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+      )}
+      title="Watcher's Pause (Loop)"
+    >
+      {isPlaying && (
+        <motion.div
+          animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute inset-0 bg-[var(--accent-secondary)]/20 blur-xl"
+        />
+      )}
+      {isInitializing ? (
+        <div className="w-4 h-4 border-2 border-[var(--accent-secondary)] border-t-transparent animate-spin rounded-full" />
+      ) : (
+        <Eye className={cn("w-4 h-4 relative z-10 transition-transform", isPlaying ? "animate-pulse" : "group-hover:scale-110")} />
+      )}
+    </button>
   );
 };
 
@@ -1675,9 +1758,40 @@ export default function UntetheredApp() {
               </button>
             );
           })}
+          {/* ── Insights & Studio (New Section) ── */}
+          <div className="mt-8 pt-4 border-t border-[var(--border-subtle)]/40 space-y-2">
+            <div className="flex items-center gap-3 px-4 py-1">
+              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] opacity-60">
+                Insights & Studio
+              </span>
+            </div>
+            
+            <a
+              href="https://www.youtube.com/@SoulfulIntelligenceStudio"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all hover:bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[#FF0000] group"
+            >
+              <Youtube size={16} className="group-hover:scale-110 transition-transform" />
+              <span className="text-[12px] font-sans tracking-[0.1em] font-medium">Soulful Studio</span>
+            </a>
+
+            {isUnlockedUser(currentUser?.email) && (
+              <button
+                onClick={() => {
+                  setIsReportOpen(true);
+                  if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all hover:bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] group"
+              >
+                <Mail size={16} className="group-hover:scale-110 transition-transform" />
+                <span className="text-[12px] font-sans tracking-[0.1em] font-medium">Engagement Report</span>
+              </button>
+            )}
+          </div>
         </nav>
 
-        {/* ── Footer ── */}
+        {/* --- Sidebar Footer --- */}
         <div className="flex-shrink-0 px-4 pt-2 pb-4 border-t border-[var(--border-subtle)]/50 space-y-1">
           {/* Email */}
           {currentUser?.email && (
@@ -1780,14 +1894,20 @@ export default function UntetheredApp() {
           {/* Moved back/medals into fixed header below to prevent overlap */}
         </AnimatePresence>
 
-        {/* TOP CONTROLS: LEFT (BACK) AND RIGHT (TOOLS) */}
-        {activeTab !== 'home' && activeTab !== 'paywall' && (
-          <div className="fixed top-6 left-6 lg:left-[300px] z-[100]">
+        {/* TOP CONTROLS: LEFT (BACK/MENU) AND RIGHT (TOOLS) */}
+        {activeTab !== 'home' && (
+          <div className="fixed top-6 left-6 lg:left-[300px] z-[100] flex items-center gap-3">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden w-11 h-11 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all shadow-xl active:scale-95"
+            >
+              <Menu size={18} />
+            </button>
             <motion.button
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/30 transition-all group shadow-xl"
+              className="flex items-center gap-2 h-11 px-6 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/30 transition-all group shadow-xl active:scale-95"
             >
               <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
               <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Return</span>
@@ -1796,7 +1916,6 @@ export default function UntetheredApp() {
         )}
 
         <div className="fixed top-6 right-6 z-[100] flex items-center gap-2 sm:gap-3 scale-[0.85] sm:scale-100 origin-right whitespace-nowrap">
-
           <button
             onClick={() => setActiveTab('profile')}
             className={cn(
@@ -1812,45 +1931,7 @@ export default function UntetheredApp() {
             </span>
           </button>
 
-          {isUnlockedUser(currentUser?.email) && (
-            <button
-              onClick={() => setIsReportOpen(true)}
-              className="p-3 rounded-full backdrop-blur-3xl border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-white hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center group shadow-xl"
-              title="Engagement Report"
-            >
-              <Mail className="w-4 h-4 transition-transform group-hover:scale-110 group-hover:text-[#D4AF37]" />
-            </button>
-          )}
-
-          <a
-            href="https://www.youtube.com/@SoulfulIntelligenceStudio"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-3xl border border-[#FF0000]/30 bg-[#FF0000]/5 text-[#FF0000] hover:bg-[#FF0000]/10 transition-all group shadow-[0_0_15px_rgba(255,0,0,0.1)] hover:shadow-[0_0_20px_rgba(255,0,0,0.2)]"
-            title="Awakened Path Studio"
-          >
-            <Youtube size={16} className="fill-current" />
-            <span className="text-[10px] uppercase tracking-[0.2em] font-bold hidden sm:inline-block">Studio</span>
-          </a>
           <ThemeToggle />
-          <button
-            onClick={toggleAudio}
-            className={cn(
-              "p-3 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center group overflow-hidden shadow-2xl",
-              isAudioEnabled
-                ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/30 text-[var(--accent-primary)] shadow-[0_0_20px_var(--glow-primary)]"
-                : "bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-            )}
-          >
-            {isAudioEnabled && (
-              <motion.div
-                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute inset-0 bg-[var(--accent-primary)]/20 blur-xl"
-              />
-            )}
-            <Headphones className={cn("w-4 h-4 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
-          </button>
         </div>
 
         <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
@@ -2231,6 +2312,32 @@ export default function UntetheredApp() {
         />
       )}
       <MusicMiniPlayer />
+      
+      {/* --- Presence Hub (Global Floating Root) --- */}
+      <div className="fixed bottom-40 right-6 z-[999] flex flex-col gap-3 scale-[0.9] sm:scale-100 origin-bottom">
+        <WatcherPauseButton />
+        <button
+          onClick={toggleAudio}
+          className={cn(
+            "p-4 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center group overflow-hidden shadow-2xl relative",
+            isAudioEnabled
+              ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/30 text-[var(--accent-primary)] shadow-[0_0_30px_var(--glow-primary)]"
+              : "bg-[var(--bg-surface)] border-[var(--border-default)]/60 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/20 hover:shadow-[0_0_20px_rgba(184,151,58,0.15)]"
+          )}
+          title={isAudioEnabled ? "Voice Guidance Active" : "Enable Voice Guidance"}
+        >
+          {isAudioEnabled ? (
+            <motion.div
+              animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.8, 0.5] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 bg-[var(--accent-primary)]/20 blur-xl"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          )}
+          <Headphones className={cn("w-5 h-5 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
+        </button>
+      </div>
     </div>
   );
 }
