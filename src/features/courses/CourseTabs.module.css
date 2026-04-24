@@ -215,18 +215,18 @@
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding-top: 60px;
+  }
+
   .topBar {
-    padding: 0 1rem;
-    padding-right: 180px;
-    /* Smaller cluster on mobile */
-    height: auto;
-    min-height: 64px;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    padding: 0 0.75rem;
+    height: 56px;
+    min-height: 56px;
   }
 
   .tab {
-    padding: 0 0.75rem;
+    padding: 0 0.5rem;
   }
 
   .tab label {
@@ -239,5 +239,18 @@
 
   .explanationHeading {
     font-size: 2.25rem;
+  }
+
+  .videoPlayerContainer {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    max-width: none;
+    width: 100vw;
+  }
+
+  .videoView {
+    justify-content: flex-start;
+    padding-top: 10vh;
   }
 }

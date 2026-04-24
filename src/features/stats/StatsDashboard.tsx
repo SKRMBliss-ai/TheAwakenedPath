@@ -90,11 +90,11 @@ const StreakGrid = ({ days }: { days: number[] }) => {
             {weeks.map((week, widx) => {
                 const rangeLabel = getWeekRange(widx);
                 return (
-                    <div key={widx} className="flex items-center gap-4">
-                        <span className="w-24 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] text-right opacity-60">
+                    <div key={widx} className="flex items-center gap-2 sm:gap-4">
+                        <span className="w-16 sm:w-24 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] text-right opacity-60">
                             {rangeLabel}
                         </span>
-                        <div className="flex gap-2.5">
+                        <div className="flex gap-1.5 sm:gap-2.5">
                             {week.map((active, i) => {
                                 // Calculate the actual date for this cell to find "Today"
                                 const cellDate = new Date(currentMonday);
@@ -104,7 +104,7 @@ const StreakGrid = ({ days }: { days: number[] }) => {
                                 return (
                                     <div
                                         key={i}
-                                        className={`w-[18px] h-[18px] rounded-sm transition-all duration-500 relative`}
+                                        className={`w-3.5 h-3.5 sm:w-[18px] sm:h-[18px] rounded-sm transition-all duration-500 relative`}
                                         style={{
                                             background: active
                                                 ? 'var(--accent-secondary-dim)'
@@ -419,11 +419,11 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
     return (
         <div className="space-y-12 animate-in fade-in duration-700">
             <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] pb-8">
-                <div className="space-y-1.5">
-                    <h2 className="text-[48px] font-sans font-bold text-[var(--text-primary)] tracking-tighter leading-tight">
+                <div className="space-y-2">
+                    <h2 className="text-3xl sm:text-5xl font-sans font-bold text-[var(--text-primary)] tracking-tighter leading-tight">
                         {ponProgress.watched}/{ponProgress.total} Chapters
                     </h2>
-                    <p className="text-[13px] font-sans font-bold text-[var(--text-muted)] opacity-40 uppercase tracking-[0.3em]">
+                    <p className="text-[11px] font-sans font-bold text-[var(--text-muted)] opacity-40 uppercase tracking-[0.3em]">
                         Your Collective Awakening Journey
                     </p>
                 </div>
@@ -533,7 +533,7 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
             </div>
 
             {/* Activity Summary Card */}
-            <div className="p-7 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg" >
+            <div className="p-4 sm:p-7 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-lg" >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     {/* Weekly Chart */}
                     <div className="space-y-6">
@@ -566,7 +566,7 @@ const StatsDashboard: React.FC<StatsDashboardProps> = ({ onNavigate }) => {
                             </div>
                         </div>
 
-                        <div className="relative h-48 flex items-end justify-between px-2 gap-2 pt-8">
+                        <div className="relative h-48 flex items-end justify-between px-1 gap-1.5 pt-8">
                             {/* Daily Target Goal Line (4 Practices) */}
                             <div className="absolute inset-x-0 border-b border-dashed border-white/20 z-0 pointer-events-none" 
                                  style={{ bottom: `${(4 / Math.max(4.5, ...weeklyActivity.map(a => a.total))) * 100}%` }}>

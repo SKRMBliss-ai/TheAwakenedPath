@@ -1,0 +1,22 @@
+.git
+.gitignore
+node_modules/
+dist/
+public/
+src/
+.firebase/
+firebase.json
+firestore.rules
+firestore.indexes.json
+storage.rules
+*.bak
+*.tsx
+*.js
+*.cjs
+*.mjs
+*.log
+*.txt
+*.md
+package-lock.json
+# Exceptions for source code if needed, but normally Cloud Run builds from source or uses a container.
+# If you are deploying the dist folder specifically, you should change the ignore logic.

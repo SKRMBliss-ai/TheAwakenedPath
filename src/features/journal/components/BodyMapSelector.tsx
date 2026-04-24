@@ -273,7 +273,7 @@ export function BodyMapSelector({
                                         y={zone.cy + zone.labelOffset.y + 1}
                                         textAnchor={zone.labelOffset.x > 0 ? "start" : "end"}
                                         style={{
-                                            fontSize: isSelected ? 18 : 16,
+                                            fontSize: isSelected ? 15 : 13,
                                             fontWeight: isSelected ? 700 : 500,
                                             fill: isSelected ? zone.color : isOther ? "var(--text-disabled)" : "currentColor",
                                             fontFamily: "Georgia, serif",

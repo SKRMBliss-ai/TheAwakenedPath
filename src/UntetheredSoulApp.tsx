@@ -41,7 +41,7 @@ import { PhonePromptModal } from './components/domain/PhonePromptModal';
 
 const DashboardActions = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate }: any) => {
   return (
-    <div className="max-w-2xl mx-auto w-full px-4 mb-4">
+    <div className="max-w-4xl mx-auto w-full px-4 mb-4">
       <DashboardGrid
         userId={user?.uid}
         progress={progress}
@@ -177,12 +177,12 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
           </button>
           <div className="flex flex-col gap-0.5">
             <span
-              className="font-sans text-[10px] font-bold tracking-[.28em] uppercase"
+              className="font-sans text-[9px] sm:text-[10px] font-bold tracking-[.28em] uppercase"
               style={{ color: '#B8973A' }}
             >
               {greeting},
             </span>
-            <span className="font-serif text-[22px] font-normal" style={{ color: 'var(--text-primary)' }}>
+            <span className="font-serif text-[18px] sm:text-[22px] font-normal" style={{ color: 'var(--text-primary)' }}>
               {user.displayName || 'Friend'}
             </span>
           </div>
@@ -704,7 +704,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] h-full text-center p-4 pt-24 md:p-8 md:pt-8 bg-[var(--bg-base)]">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] h-full text-center p-4 pt-24 md:p-8 md:pt-8">
       <div className="max-w-6xl w-full flex flex-col items-center space-y-12">
         {/* Hero Section */}
         <div className="text-center space-y-4 max-w-2xl px-4 mt-8 md:mt-0">
@@ -722,26 +722,26 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
 
         {/* Comparison Table */}
         <div className="w-full max-w-4xl space-y-8 px-4">
-          <div className="overflow-x-auto rounded-[24px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]/30 backdrop-blur-sm">
-            <table className="w-full text-left border-collapse min-w-[500px]">
+          <div className="overflow-x-auto rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)]/30 backdrop-blur-sm">
+            <table className="w-full text-left border-collapse min-w-[320px] sm:min-w-[500px]">
               <thead>
-                <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/50">
-                  <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Feature</th>
-                  <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Traveler (Free)</th>
-                  <th className="p-5 text-[10px] font-bold uppercase tracking-widest text-[var(--accent-primary)]">Seeker (Premium)</th>
+                <tr className="border-b border-[var(--border-default)] bg-[var(--bg-surface)]/50">
+                  <th className="p-3 sm:p-5 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Feature</th>
+                  <th className="p-3 sm:p-5 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Traveler</th>
+                  <th className="p-3 sm:p-5 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[var(--accent-primary)]">Seeker</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--border-subtle)]/30">
+              <tbody className="divide-y divide-[var(--border-default)]">
                 {features.map((f, i) => (
-                  <tr key={i} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="p-5">
-                      <div className="flex items-center gap-3">
-                        <f.icon size={14} className="text-[var(--accent-primary)] opacity-60" />
-                        <span className="text-[13px] font-medium text-[var(--text-primary)]">{f.name}</span>
+                  <tr key={i} className="hover:bg-white/[0.04] transition-colors bg-[var(--bg-surface)]/20">
+                    <td className="p-4 sm:p-5 border-r border-[var(--border-default)]">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <f.icon size={14} className="text-[var(--accent-primary)] sm:size-[16px]" />
+                        <span className="text-[12px] sm:text-[14px] font-sans font-semibold text-[var(--text-primary)]">{f.name}</span>
                       </div>
                     </td>
-                    <td className="p-5 text-[12px] text-[var(--text-muted)]">{f.basic}</td>
-                    <td className="p-5 text-[12px] text-[var(--text-primary)] font-bold">{f.premium}</td>
+                    <td className="p-4 sm:p-5 text-[11px] sm:text-[13px] text-[var(--text-secondary)] border-r border-[var(--border-default)]">{f.basic}</td>
+                    <td className="p-4 sm:p-5 text-[11px] sm:text-[13px] text-[var(--accent-primary)] font-bold">{f.premium}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1038,7 +1038,7 @@ export default function UntetheredApp() {
 
   const onNavigate = (id: string, questionId?: string, view?: string) => {
     // If not unlocked, lock everything except home, profile, paywall, music, and the learning tabs
-    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence'];
+    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn'];
     if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -1092,7 +1092,7 @@ export default function UntetheredApp() {
 
   // Global Access Control — on load, always start at home if the persisted tab is locked
   useEffect(() => {
-    if (!loading && !isAccessValid && activeTab !== 'home' && activeTab !== 'profile' && activeTab !== 'paywall' && activeTab !== 'music') {
+    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn'].includes(activeTab)) {
       setActiveTab('home');
     }
   }, [isAccessValid, loading]); // intentionally exclude activeTab — only run on auth state change
@@ -1584,7 +1584,7 @@ export default function UntetheredApp() {
             <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40">
               {[
                 { id: 'intelligence', label: 'The Power of Now', locked: !isAccessValid },
-                { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: !isAccessValid },
+                { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: false },
               ].map(sub => {
                 const isActive = activeTab === sub.id;
                 return (
@@ -1642,7 +1642,7 @@ export default function UntetheredApp() {
                             >
                               <div className="grid grid-cols-4 gap-2 px-1 py-2">
                                 {[
-                                  { num: 1, label: 'Using the mind as a tool', id: 'question1', locked: !isAccessValid },
+                                  { num: 1, label: 'Using the mind as a tool', id: 'question1', locked: false },
                                   { num: 2, label: 'Handling doubt and fear', id: 'question2', locked: !isAccessValid },
                                   { num: 3, label: 'Personal to impersonal', id: 'question3', locked: !isAccessValid },
                                   { num: 4, label: 'Which part to listen to', id: 'question4', locked: !isAccessValid },
@@ -1882,7 +1882,7 @@ export default function UntetheredApp() {
 
       {/* MAIN CONTENT AREA */}
       <main className={cn(
-        "relative z-10 min-h-screen transition-all duration-700 overflow-hidden",
+        "relative z-10 min-h-screen transition-all duration-700",
         "lg:pl-[280px]"
       )}>
         {/* Time of Day Ambient Tint */}
@@ -1897,26 +1897,26 @@ export default function UntetheredApp() {
 
         {/* TOP CONTROLS: LEFT (BACK/MENU) AND RIGHT (TOOLS) */}
         {activeTab !== 'home' && (
-          <div className="fixed top-6 left-6 lg:left-[300px] z-[100] flex items-center gap-3">
+          <div className="fixed top-3 left-3 md:top-6 md:left-6 lg:left-[300px] z-[100] flex items-center gap-2 md:gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden w-11 h-11 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all shadow-xl active:scale-95"
+              className="lg:hidden w-10 h-10 md:w-11 md:h-11 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all shadow-xl active:scale-95"
             >
-              <Menu size={18} />
+              <Menu size={16} />
             </button>
             <motion.button
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
-              className="flex items-center gap-2 h-11 px-6 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/30 transition-all group shadow-xl active:scale-95"
+              className="flex items-center gap-1.5 md:gap-2 h-10 md:h-11 px-4 md:px-6 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/30 transition-all group shadow-xl active:scale-95"
             >
-              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Return</span>
+              <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4 transition-transform group-hover:-translate-x-0.5" />
+              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.15em] md:tracking-[0.2em]">Return</span>
             </motion.button>
           </div>
         )}
 
-        <div className="fixed top-6 right-6 z-[100] flex items-center gap-2 sm:gap-3 scale-[0.85] sm:scale-100 origin-right whitespace-nowrap">
+        <div className="fixed top-2 right-2 md:top-6 md:right-6 z-[100] flex items-center gap-1 md:gap-3 scale-[0.75] sm:scale-100 origin-right whitespace-nowrap">
           <button
             onClick={() => setActiveTab('profile')}
             className={cn(
@@ -2301,44 +2301,57 @@ export default function UntetheredApp() {
         achievement={toastQueue[0] || null}
         onDismiss={dismissToast}
       />
-      <WhatsAppButton bottomOffset={musicUrl ? 110 : 32} />
-      <PhonePromptModal />
-      {voiceGuidanceEnabled && (
-        <VoiceGuidance
-          preferredVoice={preferredVoice}
-          activeTab={activeTab}
-          isAccessValid={isAccessValid}
-          assignment={weeklyAssignment}
-          bottomOffset={musicUrl ? 180 : 108}
-        />
-      )}
-      <MusicMiniPlayer />
-      
-      {/* --- Presence Hub (Global Floating Root) --- */}
-      <div className="fixed bottom-40 right-6 z-[999] flex flex-col gap-3 scale-[0.9] sm:scale-100 origin-bottom">
-        <WatcherPauseButton />
-        <button
-          onClick={toggleAudio}
-          className={cn(
-            "p-4 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center group overflow-hidden shadow-2xl relative",
-            isAudioEnabled
-              ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/30 text-[var(--accent-primary)] shadow-[0_0_30px_var(--glow-primary)]"
-              : "bg-[var(--bg-surface)] border-[var(--border-default)]/60 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/20 hover:shadow-[0_0_20px_rgba(184,151,58,0.15)]"
-          )}
-          title={isAudioEnabled ? "Voice Guidance Active" : "Enable Voice Guidance"}
-        >
-          {isAudioEnabled ? (
-            <motion.div
-              animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute inset-0 bg-[var(--accent-primary)]/20 blur-xl"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          )}
-          <Headphones className={cn("w-5 h-5 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
-        </button>
+      {/* Floating Action Stack */}
+      <div className={cn(
+        "fixed right-4 sm:right-6 z-[100] flex flex-col items-center gap-4 transition-all duration-500",
+        musicUrl ? "bottom-24" : "bottom-12"
+      )}>
+        {/* Top: WhatsApp */}
+        <WhatsAppButton bottomOffset={0} isInline />
+
+        {/* Middle: Voice Guidance Avatar */}
+        {voiceGuidanceEnabled && (
+          <VoiceGuidance
+            preferredVoice={preferredVoice}
+            activeTab={activeTab}
+            isAccessValid={isAccessValid}
+            assignment={weeklyAssignment}
+            bottomOffset={0}
+            isInline
+          />
+        )}
+
+        {/* Bottom: Presence Hub (Witness + Toggle) */}
+        <div className={cn(
+          "flex flex-col gap-4 transform transition-all",
+          "scale-[0.85] origin-bottom sm:scale-100"
+        )}>
+          <WatcherPauseButton />
+          <button
+            onClick={toggleAudio}
+            className={cn(
+              "p-4 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center group overflow-hidden shadow-2xl relative",
+              isAudioEnabled
+                ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/30 text-[var(--accent-primary)] shadow-[0_0_30px_var(--glow-primary)]"
+                : "bg-[var(--bg-surface)] border-[var(--border-default)]/60 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/20 hover:shadow-[0_0_20px_rgba(184,151,58,0.15)]"
+            )}
+            title={isAudioEnabled ? "Voice Guidance Active" : "Enable Voice Guidance"}
+          >
+            {isAudioEnabled ? (
+              <motion.div
+                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.8, 0.5] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute inset-0 bg-[var(--accent-primary)]/20 blur-xl"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            )}
+            <Headphones className={cn("w-5 h-5 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
+          </button>
+        </div>
       </div>
+      <PhonePromptModal />
+      <MusicMiniPlayer />
     </div>
   );
 }

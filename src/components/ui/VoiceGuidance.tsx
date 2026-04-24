@@ -147,13 +147,15 @@ export const VoiceGuidance = ({
   activeTab = 'home',
   isAccessValid = false,
   assignment = null,
-  bottomOffset = 108
+  bottomOffset = 108,
+  isInline = false
 }: {
   preferredVoice?: string;
   activeTab?: string;
   isAccessValid?: boolean;
   assignment?: any;
   bottomOffset?: number;
+  isInline?: boolean;
 }) => {
   const { status, category } = useVoiceStatus();
   const isSpeaking = status === 'playing' && category === 'tts';
@@ -233,8 +235,11 @@ export const VoiceGuidance = ({
 
   return (
     <div 
-      className="fixed right-6 z-[100] flex flex-col items-end gap-3 pointer-events-none"
-      style={{ bottom: bottomOffset }}
+      className={cn(
+        "z-[100] flex flex-col items-end gap-3 pointer-events-none",
+        !isInline && "fixed right-6"
+      )}
+      style={!isInline ? { bottom: bottomOffset } : {}}
     >
       <AnimatePresence>
         {showFull && (

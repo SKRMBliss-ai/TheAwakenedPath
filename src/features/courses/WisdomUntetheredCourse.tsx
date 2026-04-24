@@ -175,26 +175,26 @@ export function WisdomUntetheredCourse({
     { 
       id: 'video' as const, 
       label: 'Watch Guidance', 
-      icon: <Youtube className="w-3.5 h-3.5" />, 
+      icon: <Youtube className="w-7 h-7 sm:w-4 sm:h-4" />, 
       field: 'video' as keyof QuestionProgress,
       comingSoon: !QUESTION_VIDEOS[activeQuestionId]
     },
     ...(QUESTION_MUSICAL_VIDEOS[activeQuestionId] ? [{
       id: 'musical' as const,
       label: 'Musical Teaching',
-      icon: <Music className="w-3.5 h-3.5" />,
+      icon: <Music className="w-7 h-7 sm:w-4 sm:h-4" />,
       field: 'musical' as keyof QuestionProgress
     }] : []),
     { 
       id: 'explanation' as const, 
       label: 'Soul Lessons', 
-      icon: <Sparkles className="w-3.5 h-3.5" />, 
+      icon: <Sparkles className="w-7 h-7 sm:w-4 sm:h-4" />, 
       field: 'read' as keyof QuestionProgress 
     },
     { 
       id: 'practice' as const, 
       label: 'Practice Room', 
-      icon: <ExternalLink className="w-3.5 h-3.5" />, 
+      icon: <ExternalLink className="w-7 h-7 sm:w-4 sm:h-4" />, 
       field: 'practice' as keyof QuestionProgress 
     },
   ];

@@ -269,29 +269,29 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-3xl max-h-[90vh] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[24px] shadow-[0_32px_128px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
+                        className="relative w-full max-w-4xl h-full sm:h-auto sm:max-h-[90vh] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-none sm:rounded-[24px] shadow-[0_32px_128px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
                     >
                         {/* Header */}
-                        <div className="p-8 border-b border-[#2A2A2A] flex justify-between items-start">
+                        <div className="p-4 sm:p-8 border-b border-[#2A2A2A] flex flex-col sm:flex-row justify-between items-start gap-6">
                             <div className="flex gap-4">
-                                <div className="p-3 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] shadow-inner">
+                                <div className="p-3 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] shadow-inner flex-shrink-0">
                                     {activeTab === 'logs' ? <Mail className="w-6 h-6 text-[var(--accent-primary)]" /> : <Megaphone className="w-6 h-6 text-[var(--accent-primary)]" />}
                                 </div>
                                 <div>
-                                    <h2 className="text-[22px] font-bold text-[var(--accent-primary)] tracking-wider uppercase">
+                                    <h2 className="text-[18px] sm:text-[22px] font-bold text-[var(--accent-primary)] tracking-wider uppercase">
                                         {activeTab === 'logs' ? 'Engagement Report' : activeTab === 'blast' ? 'Send Course Update' : 'Email History'}
                                     </h2>
-                                    <p className="text-[11px] text-[var(--text-muted)] tracking-[0.2em] font-bold uppercase mt-1">
-                                        {activeTab === 'logs' ? 'Tracking User Activity' : activeTab === 'blast' ? 'Send an email update to all registered users' : 'History of all course update emails sent'}
+                                    <p className="text-[9px] sm:text-[11px] text-[var(--text-muted)] tracking-[0.2em] font-bold uppercase mt-1">
+                                        {activeTab === 'logs' ? 'Tracking User Activity' : activeTab === 'blast' ? 'Send an email update to all users' : 'History of all emails sent'}
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex gap-4">
-                                <div className="flex gap-2 bg-[var(--bg-surface-hover)] p-1 rounded-full border border-[var(--border-subtle)]">
+                            <div className="flex flex-row sm:flex-row gap-4 w-full sm:w-auto items-center">
+                                <div className="flex gap-1 sm:gap-2 bg-[var(--bg-surface-hover)] p-1 rounded-full border border-[var(--border-subtle)] flex-1 sm:flex-none overflow-x-auto custom-scrollbar no-scrollbar">
                                     <button 
                                         onClick={() => setActiveTab('logs')}
                                         className={cn(
-                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
+                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
                                             activeTab === 'logs' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
@@ -300,7 +300,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <button 
                                         onClick={() => setActiveTab('users')}
                                         className={cn(
-                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
+                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
                                             activeTab === 'users' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
@@ -309,7 +309,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <button
                                         onClick={() => setActiveTab('blast')}
                                         className={cn(
-                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
+                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
                                             activeTab === 'blast' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
@@ -318,7 +318,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <button
                                         onClick={() => setActiveTab('history')}
                                         className={cn(
-                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
+                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
                                             activeTab === 'history' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
@@ -363,12 +363,12 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                 )}
 
                                 {/* Table Header */}
-                                <div className="px-10 py-6 grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                <div className="px-4 sm:px-10 py-6 grid grid-cols-[1.5fr_1fr_0.1fr] md:grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
                                     <div>User</div>
                                     <div>Action</div>
-                                    <div>Location</div>
-                                    <div>Date</div>
-                                    <div>Time</div>
+                                    <div className="hidden md:block">Location</div>
+                                    <div className="hidden md:block">Date</div>
+                                    <div className="hidden md:block">Time</div>
                                     <div className="text-right">
                                         <button onClick={fetchLogs} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
                                             <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
@@ -400,7 +400,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                     key={log.id}
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
-                                                    className="grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                    className="grid grid-cols-[1.5fr_1fr_0.1fr] md:grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-primary)] border border-[var(--border-default)] flex items-center justify-center overflow-hidden shrink-0">
@@ -417,13 +417,13 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         <span className="text-[11px] font-bold text-[var(--text-secondary)] tracking-tight">{getSourceLabel(log.activityType)}</span>
                                                     </div>
 
-                                                    <div className="text-[12px] text-[var(--text-muted)] italic pr-2 truncate" title={log.location || 'Unknown'}>
+                                                    <div className="hidden md:block text-[12px] text-[var(--text-muted)] italic pr-2 truncate" title={log.location || 'Unknown'}>
                                                         {log.location || 'Unknown'}
                                                     </div>
 
-                                                    <div className="text-[12px] text-[var(--text-secondary)]">{date}</div>
+                                                    <div className="hidden md:block text-[12px] text-[var(--text-secondary)]">{date}</div>
 
-                                                    <div className="text-[12px] font-bold text-[var(--accent-primary)]">{time}</div>
+                                                    <div className="hidden md:block text-[12px] font-bold text-[var(--accent-primary)]">{time}</div>
 
                                                     <div className="flex justify-end gap-2">
                                                         <button 
@@ -463,11 +463,11 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     </div>
                                 </div>
 
-                                <div className="px-10 py-6 grid grid-cols-[1.5fr_1.5fr_1fr_1fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                <div className="px-4 sm:px-10 py-6 grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[1.5fr_1.5fr_1fr_1fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
                                     <div>User</div>
-                                    <div>Email</div>
-                                    <div>Joined</div>
-                                    <div>Last Presence / Login</div>
+                                    <div className="hidden md:block">Email</div>
+                                    <div className="hidden md:block">Joined</div>
+                                    <div className="hidden md:block">Last Presence / Login</div>
                                     <div className="text-right">
                                         <button onClick={fetchUsers} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
                                             <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
@@ -496,7 +496,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         key={u.id}
                                                         initial={{ opacity: 0, x: -10 }}
                                                         animate={{ opacity: 1, x: 0 }}
-                                                        className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                        className="grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[1.5fr_1.5fr_1fr_1fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
                                                     >
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-primary)] border border-[var(--border-default)] flex items-center justify-center overflow-hidden shrink-0">
@@ -505,9 +505,9 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                             <span className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors truncate">{displayName}</span>
                                                         </div>
 
-                                                        <div className="text-[12px] text-[var(--text-secondary)] truncate">{u.email}</div>
-                                                        <div className="text-[12px] text-[var(--text-muted)]">{joinedDate}</div>
-                                                        <div className="flex flex-col">
+                                                        <div className="hidden md:block text-[12px] text-[var(--text-secondary)] truncate">{u.email}</div>
+                                                        <div className="hidden md:block text-[12px] text-[var(--text-muted)]">{joinedDate}</div>
+                                                        <div className="hidden md:block flex flex-col">
                                                             <span className="text-[12px] text-[var(--text-secondary)]">{loginDate || 'Never'}</span>
                                                             <span className="text-[10px] font-bold text-[var(--accent-primary)]">{loginTime}</span>
                                                         </div>

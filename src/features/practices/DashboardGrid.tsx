@@ -14,7 +14,7 @@ import type { CourseProgress } from '../../hooks/useCourseTracking';
 import { SACRED_TRACKS } from '../music/musicData';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import { useTheme } from '../../theme/ThemeSystem';
-import { cn } from '../../lib/utils';
+
 
 // ─── Per-step fixed colors (Learn · Practice · Reflect · Live It) ─────────────
 const STEP_COLORS = ['#B8973A', '#9575CD', '#C65F9D', '#2E9E7A'] as const;
@@ -84,170 +84,139 @@ function DashboardCard({
 
   return (
     <motion.button
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: idx * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      whileTap={!isDone && !isLocked ? { scale: 0.97 } : {}}
-      className={cn(
-        "relative text-left w-full aspect-square transition-all duration-500 overflow-hidden group"
-      )}
+      transition={{ delay: idx * 0.06, duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={!isLocked ? { y: -2 } : {}}
+      whileTap={!isLocked ? { scale: 0.98 } : {}}
+      className="relative text-left w-full overflow-hidden group"
       style={{
-        padding: '24px',
-        borderRadius: '24px',
-        border: `1px solid ${isActive ? color + '80' : 'var(--border-default)'}`,
+        height: '176px',
+        borderRadius: '20px',
+        border: `1px solid ${
+          isActive ? color + '55'
+          : isDone ? color + '28'
+          : 'var(--border-default)'
+        }`,
         background: isActive
-          ? `color-mix(in srgb, ${color} ${mode === 'dark' ? '12%' : '8%'}, var(--bg-surface))`
-          : isDone
-            ? (mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 1)')
-            : (mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.85)'),
-        backdropFilter: 'blur(8px)',
+          ? `color-mix(in srgb, ${color} ${mode === 'dark' ? '9%' : '6%'}, var(--bg-surface))`
+          : 'var(--bg-surface)',
+        backdropFilter: 'blur(10px)',
         boxShadow: isActive
-          ? `0 0 0 1px ${color}50, 0 12px 40px ${color}25`
-          : (isDone || isLocked ? 'none' : `0 4px 20px rgba(0,0,0,0.04)`),
+          ? `0 6px 28px ${color}18`
+          : 'none',
         cursor: isLocked && !isDone ? 'default' : 'pointer',
+        transition: 'border-color 0.4s ease, background 0.4s ease, box-shadow 0.4s ease, transform 0.3s ease',
       }}
-      onClick={(isLocked && !isDone) ? undefined : onClick}
+      onClick={isLocked && !isDone ? undefined : onClick}
     >
-      {/* Glow on hover */}
-      {!isDone && !isLocked && !isActive && (
-        <div
-          className="absolute inset-0 rounded-[24px] pointer-events-none transition-all duration-500 opacity-0 group-hover:opacity-100"
-          style={{
-            boxShadow: `inset 0 0 0 1px ${color}40, 0 8px 32px ${color}${mode === 'dark' ? '20' : '15'}`,
-            background: `radial-gradient(circle at top right, ${color}${mode === 'dark' ? '15' : '08'}, transparent 60%)`
-          }}
-        />
+      {/* Subtle background image texture */}
+      {!isLocked && (
+        <div className="absolute inset-0 overflow-hidden rounded-[20px]">
+          <img
+            src={`/assets/dashboard/${mode === 'dark' ? CARD_IMAGES_DARK[idx] : CARD_IMAGES_LIGHT[idx]}`}
+            alt=""
+            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+            style={{
+              opacity: isDone ? 0.07 : mode === 'dark' ? 0.14 : 0.10,
+              filter: mode === 'dark'
+                ? 'brightness(1.3) saturate(0.8)'
+                : 'brightness(0.8) saturate(0.6)',
+            }}
+          />
+        </div>
       )}
 
-      {/* Subtle top edge gradient */}
+      {/* Top accent line */}
       <div
-        className="absolute top-0 left-0 right-0 opacity-40 transition-all duration-500 group-hover:opacity-100"
+        className="absolute top-0 left-0 right-0 transition-all duration-500"
         style={{
-          height: isActive ? 3 : 1.5,
-          background: `linear-gradient(90deg, ${color}, transparent)`,
+          height: isActive ? 2 : 1,
+          background: isLocked
+            ? 'var(--border-subtle)'
+            : `linear-gradient(90deg, ${color}${isActive ? 'cc' : '70'}, transparent 75%)`,
+          opacity: isLocked ? 0.3 : 1,
         }}
       />
 
-      {/* Center Image - Glowing & Full-Span */}
-      <div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-1000"
-        style={{
-          opacity: isLocked ? 0.7 : (mode === 'dark' ? 0.75 : 0.45),
-          mixBlendMode: isLocked ? 'normal' : (mode === 'dark' ? 'color-dodge' : 'multiply') as any
-        }}
-      >
-        <img
-          src={`/assets/dashboard/${mode === 'dark' ? CARD_IMAGES_DARK[idx] : CARD_IMAGES_LIGHT[idx]}`}
-          alt=""
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
-          style={{
-            opacity: isLocked ? 1 : (isDone ? 0.6 : 1),
-            filter: isLocked
-              ? 'grayscale(1) brightness(0.95) contrast(0.9)'
-              : (mode === 'dark' ? 'brightness(1.1) contrast(1.1)' : 'brightness(1.05) contrast(1.1)')
-          }}
-        />
+      {/* Content */}
+      <div className="relative z-10 h-full flex flex-col justify-between p-5">
+        {/* Top row: step label + state icon */}
+        <div className="flex items-start justify-between">
+          <span
+            className="text-[9px] font-black uppercase tracking-[0.28em]"
+            style={{
+              color: isLocked ? 'var(--text-disabled)' : color,
+              opacity: isLocked ? 0.45 : 1,
+            }}
+          >
+            {stepLabel}
+          </span>
 
-        {/* CENTER LOCK ICON IF LOCKED */}
-        {isLocked && (
-          <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-            <div className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-xl">
-              <Lock size={12} className="text-white/60" />
-            </div>
-          </div>
-        )}
-
-        {/* Right middle edge: Play icon for active/unlocked cards */}
-        {!isLocked && !isDone && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-white/30 transition-all duration-300"
+          {isDone ? (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: color + '18', border: `1px solid ${color}35` }}
             >
-              <Play size={12} className="text-white fill-current translate-x-[1px]" />
+              <CheckCircle2 size={12} style={{ color }} />
             </motion.div>
-          </div>
-        )}
-      </div>
-
-      {/* Content Layer: Precice positioning to avoid center image overlap */}
-      <div className="absolute inset-x-0 top-3 px-5 z-10 flex flex-col pointer-events-none">
-        {/* Top Row: Step centered, Icon right */}
-        <div className="flex items-start justify-between w-full">
-          <div className="w-8 shrink-0" /> {/* Spacer to help center the step label */}
-
-          <div className="flex-1 flex justify-center">
-            <span
-              className="font-sans text-[10px] font-black tracking-[0.3em] uppercase whitespace-nowrap"
+          ) : isLocked ? (
+            <div
+              className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
               style={{
-                color: isLocked ? 'var(--text-disabled)' : color,
-                opacity: isLocked ? 0.7 : 1
+                background: 'var(--border-subtle)',
+                border: '1px solid var(--border-default)',
               }}
             >
-              {stepLabel}
-            </span>
-          </div>
-
-          <div className="w-8 shrink-0 flex justify-end">
-            {isDone ? (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="w-7 h-7 rounded-full flex items-center justify-center shadow-lg"
-                style={{ background: color + '18', border: `1px solid ${color}40` }}
-              >
-                <CheckCircle2 size={14} style={{ color }} />
-              </motion.div>
-            ) : (
-              <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-500"
-                style={{
-                  border: `1px solid ${isLocked ? 'var(--text-disabled)30' : color + '40'}`,
-                  opacity: isLocked ? 0.3 : 0.8,
-                }}
-              >
-                <Icon size={14} style={{ color: isLocked ? 'var(--text-disabled)' : color }} />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Layout: Centered around the bottom-right quadrant */}
-      <div className="absolute inset-0 p-6 z-10 flex flex-col justify-end pointer-events-none">
-        <div className="flex flex-col items-center justify-end w-full pb-1">
-          {/* Subtitle above the title */}
-          <div className="mb-2">
-            <div
-              className="font-serif italic text-[11px] leading-tight line-clamp-1 opacity-40 text-center"
-              style={{ color: isLocked ? 'var(--text-disabled)' : 'var(--text-secondary)' }}
-            >
-              {subtitle}
+              <Lock size={10} style={{ color: 'var(--text-disabled)' }} />
             </div>
-          </div>
-
-          {/* Bottom Center: Word placement */}
-          <div className="flex flex-col items-center gap-1 translate-y-7">
+          ) : (
             <div
-              className="font-serif font-black leading-none transition-all duration-300 text-center"
+              className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110"
               style={{
-                fontSize: 24,
-                color: isLocked ? 'var(--text-disabled)' : (mode === 'dark' ? '#ffffff' : 'var(--text-primary)'),
-                letterSpacing: '-0.02em',
-                textShadow: '0 4px 15px rgba(0,0,0,0.7)'
+                background: color + '14',
+                border: `1px solid ${color}28`,
+              }}
+            >
+              <Icon size={12} style={{ color }} />
+            </div>
+          )}
+        </div>
+
+        {/* Bottom: subtitle + title + done badge */}
+        <div>
+          <p
+            className="font-serif italic text-[11px] mb-[5px] leading-tight line-clamp-1"
+            style={{
+              color: isLocked ? 'var(--text-disabled)' : 'var(--text-muted)',
+              opacity: isLocked ? 0.4 : 0.65,
+            }}
+          >
+            {subtitle}
+          </p>
+
+          <div className="flex items-baseline gap-2">
+            <h3
+              className="font-serif leading-none"
+              style={{
+                fontSize: '23px',
+                fontWeight: 600,
+                letterSpacing: '-0.025em',
+                color: isLocked ? 'var(--text-disabled)' : 'var(--text-primary)',
               }}
             >
               {title}
-            </div>
-
-            <div className="pointer-events-auto">
-              {isDone && (
-                <div className="py-1 px-3 mt-1 rounded-full text-[9px] font-black uppercase tracking-widest" style={{ background: color + '20', color }}>
-                  Done
-                </div>
-              )}
-            </div>
+            </h3>
+            {isDone && (
+              <span
+                className="text-[8px] font-black uppercase tracking-[0.18em] px-2 py-[3px] rounded-full flex-shrink-0"
+                style={{ background: color + '18', color }}
+              >
+                done
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -279,13 +248,13 @@ function InlinePracticePanel({
   if (done || isDone) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 10 }}
-        className="p-7 rounded-[32px]"
+        exit={{ opacity: 0, y: 8 }}
+        className="p-6 rounded-[20px]"
         style={{
-          background: `color-mix(in srgb, ${color} 8%, var(--bg-surface))`,
-          border: `1.5px solid ${color}30`,
+          background: `color-mix(in srgb, ${color} 7%, var(--bg-surface))`,
+          border: `1px solid ${color}28`,
         }}
       >
         <div className="flex items-center justify-between mb-6">
@@ -325,9 +294,11 @@ function InlinePracticePanel({
         <div className="flex justify-center">
           <button
             onClick={onGoToRoom}
-            className="text-[10px] font-black uppercase tracking-[0.2em] px-6 py-3 rounded-full border border-[var(--border-default)] hover:border-[var(--accent-primary)]/40 transition-all active:scale-95 text-[var(--text-muted)]"
+            className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.25em] transition-opacity hover:opacity-80 active:scale-95"
+            style={{ color: 'var(--text-muted)', opacity: 0.55 }}
           >
-            View in full room
+            <ExternalLink size={11} />
+            View full room
           </button>
         </div>
       </motion.div>
@@ -336,17 +307,17 @@ function InlinePracticePanel({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -8 }}
+      initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      className="rounded-[24px] overflow-hidden"
+      exit={{ opacity: 0, y: -6 }}
+      className="rounded-[20px] overflow-hidden"
       style={{
         background: 'var(--bg-surface)',
-        border: `1.5px solid ${color}35`,
-        boxShadow: `0 8px 32px ${color}12`,
+        border: `1px solid ${color}30`,
+        boxShadow: `0 4px 24px ${color}10`,
       }}
     >
-      <div className="p-6 pb-4">
+      <div className="p-5 pb-4">
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[.3em] mb-1" style={{ color }}>
@@ -371,7 +342,7 @@ function InlinePracticePanel({
         </div>
       </div>
 
-      <div className="px-6 pb-6">
+      <div className="px-5 pb-5">
         <AnimatePresence mode="wait">
           <motion.div
             key={stepIdx}
@@ -440,13 +411,13 @@ function InlineReflectPanel({
   if (saved || existingJournal) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="p-8 rounded-[32px]"
+        exit={{ opacity: 0, scale: 0.97 }}
+        className="p-6 rounded-[20px]"
         style={{
-          background: `color-mix(in srgb, ${color} 8%, var(--bg-surface))`,
-          border: `1.5px solid ${color}30`,
+          background: `color-mix(in srgb, ${color} 7%, var(--bg-surface))`,
+          border: `1px solid ${color}28`,
         }}
       >
         <div className="flex items-center gap-3 mb-4">
@@ -468,9 +439,11 @@ function InlineReflectPanel({
         <div className="flex justify-center">
           <button
             onClick={onGoToJournal}
-            className="text-[10px] font-black uppercase tracking-[0.2em] px-6 py-3 rounded-full border border-[var(--border-default)] hover:border-[#B8973A]/40 transition-all active:scale-95 text-[var(--text-muted)]"
+            className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.25em] transition-opacity hover:opacity-80 active:scale-95"
+            style={{ color: 'var(--text-muted)', opacity: 0.55 }}
           >
-            View in full journal
+            <ExternalLink size={11} />
+            View full journal
           </button>
         </div>
       </motion.div>
@@ -479,17 +452,17 @@ function InlineReflectPanel({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -8 }}
+      initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      className="rounded-[24px] overflow-hidden"
+      exit={{ opacity: 0, y: -6 }}
+      className="rounded-[20px] overflow-hidden"
       style={{
         background: 'var(--bg-surface)',
-        border: `1.5px solid ${color}35`,
-        boxShadow: `0 8px 32px ${color}12`,
+        border: `1px solid ${color}30`,
+        boxShadow: `0 4px 24px ${color}10`,
       }}
     >
-      <div className="p-6">
+      <div className="p-5">
         <p className="text-[10px] font-black uppercase tracking-[.35em] mb-1.5 opacity-60" style={{ color }}>
           Reflect
         </p>
@@ -580,43 +553,43 @@ function SoundscapeCard({ onNavigate }: { onNavigate: (tab: string) => void }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.35, duration: 0.5 }}
+      whileHover={{ y: -1 }}
       whileTap={{ scale: 0.985 }}
-      className="relative rounded-[24px] overflow-hidden flex items-center gap-[14px] cursor-pointer transition-all duration-500 group"
+      className="relative rounded-[20px] overflow-hidden flex items-center gap-4 cursor-pointer transition-all duration-400 group"
       style={{
-        padding: '18px 20px',
+        padding: '16px 18px',
         border: `1px solid ${soundBorderColor}`,
         background: soundBgColor,
-        boxShadow: 'var(--shadow)',
       }}
       onClick={() => onNavigate('music')}
     >
-      {/* Glow on hover */}
+      {/* Hover glow */}
       <div
-        className="absolute inset-0 rounded-[24px] pointer-events-none transition-all duration-500 opacity-0 group-hover:opacity-100"
+        className="absolute inset-0 rounded-[20px] pointer-events-none transition-all duration-500 opacity-0 group-hover:opacity-100"
         style={{
-          boxShadow: `inset 0 0 0 1px ${color}40, 0 8px 32px ${color}${mode === 'dark' ? '20' : '15'}`,
-          background: `radial-gradient(circle at top right, ${color}${mode === 'dark' ? '12' : '06'}, transparent 70%)`
+          background: `radial-gradient(ellipse at 80% 50%, ${color}${mode === 'dark' ? '10' : '07'}, transparent 70%)`
         }}
       />
 
       {/* Top accent line */}
       <div
-        className="absolute top-0 left-0 right-0 opacity-40 group-hover:opacity-100 transition-all duration-500"
+        className="absolute top-0 left-0 right-0 transition-all duration-500"
         style={{
-          height: 1.5,
-          background: `linear-gradient(90deg, ${color}, transparent)`,
+          height: 1,
+          background: `linear-gradient(90deg, ${color}70, transparent 70%)`,
+          opacity: 0.5,
         }}
       />
 
       {/* Icon badge */}
       <div
-        className="w-12 h-12 rounded-[18px] flex items-center justify-center flex-shrink-0 relative z-10 transition-all duration-500"
+        className="w-11 h-11 rounded-[14px] flex items-center justify-center flex-shrink-0 relative z-10 transition-all duration-300 group-hover:scale-105"
         style={{
-          background: mode === 'dark' ? 'rgba(192,160,238,.12)' : 'rgba(140,100,210,.1)',
+          background: mode === 'dark' ? 'rgba(192,160,238,.10)' : 'rgba(140,100,210,.08)',
           border: `1px solid ${soundBorderColor}`,
         }}
       >
-        <Music2 size={22} style={{ color: soundIconColor }} />
+        <Music2 size={20} style={{ color: soundIconColor }} />
       </div>
 
       {/* Info copy */}
@@ -722,66 +695,62 @@ export function DashboardGrid({
 
   return (
     <>
-      {/* ── Section label ───────────────────────────────────────────────────── */}
-      {/* ── Path Identity Header ────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-1 mb-4">
-        <div className="flex flex-col gap-1">
-          <AnimatePresence mode="wait">
-            {allDone ? (
-              <motion.div
-                key="done-msg"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2"
-              >
-                <div className="text-[#B8973A] text-sm transform -translate-y-0.5">✦</div>
-                <span className="font-sans font-bold text-[13px] tracking-tight text-[#B8973A]">
-                  Your presence is your gift today.
-                </span>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="path-label"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="font-sans text-[10px] font-black tracking-[0.25em] uppercase opacity-40"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Today's journey
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-0.5 mb-5">
+        <AnimatePresence mode="wait">
+          {allDone ? (
+            <motion.div
+              key="done-msg"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2"
+            >
+              <span className="font-sans text-[12px] font-semibold tracking-wide" style={{ color: '#B8973A' }}>
+                ✦ Your presence is your gift today.
+              </span>
+            </motion.div>
+          ) : (
+            <motion.p
+              key="path-label"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="font-sans text-[10px] font-bold tracking-[0.28em] uppercase"
+              style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+            >
+              Today's journey
+            </motion.p>
+          )}
+        </AnimatePresence>
 
-        <div className="flex items-center gap-4">
-          {/* Progress Pips */}
-          <div className="flex gap-[6px]">
+        <div className="flex items-center gap-3">
+          {/* Progress pips */}
+          <div className="flex items-center gap-[5px]">
             {([learnDone, practiceCompleted, reflectDone, integrateDone] as boolean[]).map((d, i) => (
               <div
                 key={i}
-                className="rounded-full transition-all duration-700"
+                className="rounded-full transition-all duration-600"
                 style={{
-                  width: 8,
-                  height: 8,
+                  width: d ? 8 : 6,
+                  height: d ? 8 : 6,
                   background: d ? STEP_COLORS[i] : 'var(--border-default)',
-                  boxShadow: d ? `0 2px 12px ${STEP_COLORS[i]}cc` : 'none',
-                  opacity: d ? 1 : 0.4
+                  boxShadow: d ? `0 0 8px ${STEP_COLORS[i]}99` : 'none',
+                  opacity: d ? 1 : 0.35,
                 }}
               />
             ))}
           </div>
           {/* Count */}
           <span
-            className="font-sans text-[15px] font-black tabular-nums tracking-tight"
-            style={{ color: doneCount > 0 ? '#B8973A' : 'var(--text-muted)' }}
+            className="font-sans text-[13px] font-bold tabular-nums"
+            style={{ color: doneCount > 0 ? '#B8973A' : 'var(--text-disabled)', letterSpacing: '-0.01em' }}
           >
-            {doneCount}<span className="text-[12px] opacity-40 mx-0.5">/</span>4
+            {doneCount}<span className="opacity-35 mx-px text-[11px]">/</span>4
           </span>
         </div>
       </div>
 
       {/* ── Row 1 (Steps 1 & 2) ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4 mb-3">
+      <div className="grid grid-cols-2 gap-3 mb-3">
         <DashboardCard
           idx={0}
           Icon={BookOpen}
@@ -828,7 +797,7 @@ export function DashboardGrid({
       </AnimatePresence>
 
       {/* ── Row 2 (Steps 3 & 4) ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4 mb-3">
+      <div className="grid grid-cols-2 gap-3 mb-3">
         <DashboardCard
           idx={2}
           Icon={PenLine}
@@ -884,31 +853,28 @@ export function DashboardGrid({
       {/* Redundant progress row removed in favor of top header */}
 
       {/* ── Soundscape of the Day ───────────────────────────────────────────── */}
-      <div
-        className="font-sans text-[10px] font-black tracking-[0.25em] uppercase mb-[12px] opacity-40 ml-1 mt-2"
-        style={{ color: 'var(--text-primary)' }}
-      >
-        Soundscape of the day
+      <div className="flex items-center gap-3 mb-3 mt-6 px-0.5">
+        <p
+          className="font-sans text-[9px] font-bold tracking-[0.3em] uppercase"
+          style={{ color: 'var(--text-muted)', opacity: 0.45 }}
+        >
+          Soundscape
+        </p>
+        <div className="flex-1 h-px" style={{ background: 'var(--border-subtle)', opacity: 0.4 }} />
       </div>
       <SoundscapeCard onNavigate={onNavigate} />
 
       {/* ── Explore button ──────────────────────────────────────────────────── */}
-      <div className="text-center pt-8 pb-4">
+      <div className="flex justify-center pt-7 pb-3">
         <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => onNavigate('situations')}
-          className="font-sans text-[11px] font-bold tracking-[.25em] uppercase px-8 py-[14px] rounded-[24px] transition-all duration-300 relative group"
-          style={{
-            background: 'var(--bg-surface)',
-            border: '1.5px solid var(--border-default)',
-            color: 'var(--text-muted)',
-          }}
+          className="group flex items-center gap-2 font-sans text-[10px] font-bold tracking-[0.28em] uppercase transition-all duration-300"
+          style={{ color: 'var(--text-muted)', opacity: 0.6 }}
         >
-          <span className="relative z-10 flex items-center gap-2">
-            Explore all practices <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-          </span>
-          <div className="absolute inset-0 rounded-[24px] bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          Explore all practices
+          <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />
         </motion.button>
       </div>
 
@@ -917,14 +883,16 @@ export function DashboardGrid({
         {showCommitment && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/55 backdrop-blur-md">
             <motion.div
-              initial={{ opacity: 0, scale: 0.88, y: 24 }}
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.88, y: 20 }}
-              transition={{ type: 'spring', stiffness: 330, damping: 26 }}
-              className="max-w-sm w-full rounded-[40px] p-10 text-center space-y-7 shadow-2xl relative overflow-hidden"
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+              className="max-w-xs w-full rounded-[28px] p-8 text-center space-y-6 relative overflow-hidden"
               style={{
-                background: 'var(--bg-primary, #0C0A0F)',
+                background: 'var(--bg-surface)',
+                backdropFilter: 'blur(20px)',
                 border: '1px solid var(--border-default)',
+                boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
               }}
             >
               <div
@@ -933,15 +901,15 @@ export function DashboardGrid({
               />
               <div className="relative z-10 space-y-5">
                 <div
-                  className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto"
-                  style={{ background: `${color}18`, border: `2px solid ${color}44` }}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
+                  style={{ background: `${color}15`, border: `1px solid ${color}35` }}
                 >
-                  <Heart size={28} style={{ color }} />
+                  <Heart size={24} style={{ color }} />
                 </div>
-                <h3 className="text-2xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>
                   Sacred Commitment
                 </h3>
-                <p className="text-base font-serif italic leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <p className="text-[15px] font-serif italic leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   "{questionMeta.dailyIntent}"
                 </p>
                 <div className="pt-2 flex flex-col gap-3">

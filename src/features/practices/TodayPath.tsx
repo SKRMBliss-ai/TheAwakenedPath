@@ -102,7 +102,7 @@ function StepCard({ def }: { def: StepDef }) {
       whileTap={!isDone ? { scale: 0.98 } : {}}
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-5 p-5 sm:p-6 mb-4 rounded-3xl border text-left transition-all duration-300',
+        'w-full flex items-center gap-4 sm:gap-5 p-4 sm:p-6 mb-4 rounded-3xl border text-left transition-all duration-300',
         isDone
           ? 'border-[var(--border-subtle)] bg-transparent opacity-60'
           : isActive
@@ -118,7 +118,7 @@ function StepCard({ def }: { def: StepDef }) {
       {/* Huge Icon */}
       <div
         className={cn(
-          'w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] flex items-center justify-center flex-shrink-0 transition-all duration-300',
+          'w-12 h-12 sm:w-16 sm:h-16 rounded-[20px] flex items-center justify-center flex-shrink-0 transition-all duration-300',
           isDone ? 'opacity-50' : ''
         )}
         style={{
@@ -135,7 +135,7 @@ function StepCard({ def }: { def: StepDef }) {
       {/* Large Clear Text */}
       <div className="flex-1 min-w-0">
         <h3 className={cn(
-          'text-xl sm:text-2xl font-serif leading-tight',
+          'text-lg sm:text-2xl font-serif leading-tight',
           isDone
             ? 'line-through text-[var(--text-muted)]'
             : isActive
@@ -440,10 +440,10 @@ export function TodayPath({
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 10 }}
-              className="mx-5 mb-8"
+              className="mx-4 sm:mx-5 mb-8"
             >
               <div 
-                className="p-8 rounded-[32px] bg-gradient-to-br from-[var(--bg-surface-hover)] to-[var(--bg-surface)] border border-[var(--accent-primary)]/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden group"
+                className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-[var(--bg-surface-hover)] to-[var(--bg-surface)] border border-[var(--accent-primary)]/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden group"
               >
                 {/* Animated Background Glow */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,var(--accent-primary-dim),transparent_70%)] opacity-20 group-hover:opacity-30 transition-opacity duration-1000" />
