@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Zap, PenLine, Heart, Play, Pause,
-  CheckCircle2, ArrowRight,
+  CheckCircle2, ArrowRight, Lock,
   Music2, Send, ExternalLink,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -72,13 +72,12 @@ interface DashboardCardProps {
   isDone?: boolean;
   isLocked?: boolean;
   isActive?: boolean;
-  ctaLabel: string;
   onClick: () => void;
 }
 
 function DashboardCard({
   idx, Icon, stepLabel, title, subtitle,
-  isDone, isLocked, isActive, ctaLabel, onClick,
+  isDone, isLocked, isActive, onClick,
 }: DashboardCardProps) {
   const color = STEP_COLORS[idx];
   const { mode } = useTheme();
@@ -96,14 +95,14 @@ function DashboardCard({
         padding: '24px',
         borderRadius: '24px',
         border: `1px solid ${isActive ? color + '80' : 'var(--border-default)'}`,
-        background: isActive 
-          ? `color-mix(in srgb, ${color} ${mode === 'dark' ? '12%' : '8%'}, var(--bg-surface))` 
-          : isDone 
+        background: isActive
+          ? `color-mix(in srgb, ${color} ${mode === 'dark' ? '12%' : '8%'}, var(--bg-surface))`
+          : isDone
             ? (mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 1)')
             : (mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.85)'),
         backdropFilter: 'blur(8px)',
-        boxShadow: isActive 
-          ? `0 0 0 1px ${color}50, 0 12px 40px ${color}25` 
+        boxShadow: isActive
+          ? `0 0 0 1px ${color}50, 0 12px 40px ${color}25`
           : (isDone || isLocked ? 'none' : `0 4px 20px rgba(0,0,0,0.04)`),
         cursor: isLocked && !isDone ? 'default' : 'pointer',
       }}
@@ -111,11 +110,11 @@ function DashboardCard({
     >
       {/* Glow on hover */}
       {!isDone && !isLocked && !isActive && (
-        <div 
+        <div
           className="absolute inset-0 rounded-[24px] pointer-events-none transition-all duration-500 opacity-0 group-hover:opacity-100"
           style={{
-             boxShadow: `inset 0 0 0 1px ${color}40, 0 8px 32px ${color}${mode === 'dark' ? '20' : '15'}`,
-             background: `radial-gradient(circle at top right, ${color}${mode === 'dark' ? '15' : '08'}, transparent 60%)`
+            boxShadow: `inset 0 0 0 1px ${color}40, 0 8px 32px ${color}${mode === 'dark' ? '20' : '15'}`,
+            background: `radial-gradient(circle at top right, ${color}${mode === 'dark' ? '15' : '08'}, transparent 60%)`
           }}
         />
       )}
@@ -130,127 +129,125 @@ function DashboardCard({
       />
 
       {/* Center Image - Glowing & Full-Span */}
-      <div 
+      <div
         className="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-1000"
-        style={{ 
+        style={{
           opacity: isLocked ? 0.7 : (mode === 'dark' ? 0.75 : 0.45),
           mixBlendMode: isLocked ? 'normal' : (mode === 'dark' ? 'color-dodge' : 'multiply') as any
         }}
       >
-        <img 
-          src={`/assets/dashboard/${mode === 'dark' ? CARD_IMAGES_DARK[idx] : CARD_IMAGES_LIGHT[idx]}`} 
-          alt="" 
+        <img
+          src={`/assets/dashboard/${mode === 'dark' ? CARD_IMAGES_DARK[idx] : CARD_IMAGES_LIGHT[idx]}`}
+          alt=""
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
-          style={{ 
+          style={{
             opacity: isLocked ? 1 : (isDone ? 0.6 : 1),
-            filter: isLocked 
-              ? 'grayscale(1) brightness(0.95) contrast(0.9)' 
+            filter: isLocked
+              ? 'grayscale(1) brightness(0.95) contrast(0.9)'
               : (mode === 'dark' ? 'brightness(1.1) contrast(1.1)' : 'brightness(1.05) contrast(1.1)')
           }}
         />
+
+        {/* CENTER LOCK ICON IF LOCKED */}
+        {isLocked && (
+          <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+            <div className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-xl">
+              <Lock size={12} className="text-white/60" />
+            </div>
+          </div>
+        )}
+
+        {/* Right middle edge: Play icon for active/unlocked cards */}
+        {!isLocked && !isDone && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-white/30 transition-all duration-300"
+            >
+              <Play size={12} className="text-white fill-current translate-x-[1px]" />
+            </motion.div>
+          </div>
+        )}
       </div>
 
-      {/* Content Layer: Corner-based Layout */}
-      <div className="relative z-10 h-full flex flex-col justify-between w-full">
-        {/* Top Section: Step and Title */}
-        <div className="flex flex-col gap-0.5 w-full">
-          <div className="flex items-center justify-between w-full relative">
-            {/* Top Left: Step label */}
+      {/* Content Layer: Precice positioning to avoid center image overlap */}
+      <div className="absolute inset-x-0 top-3 px-5 z-10 flex flex-col pointer-events-none">
+        {/* Top Row: Step centered, Icon right */}
+        <div className="flex items-start justify-between w-full">
+          <div className="w-8 shrink-0" /> {/* Spacer to help center the step label */}
+
+          <div className="flex-1 flex justify-center">
             <span
-              className="font-sans text-[10px] font-black tracking-[0.25em] uppercase"
-              style={{ 
+              className="font-sans text-[10px] font-black tracking-[0.3em] uppercase whitespace-nowrap"
+              style={{
                 color: isLocked ? 'var(--text-disabled)' : color,
-                opacity: isLocked ? 0.6 : 1
+                opacity: isLocked ? 0.7 : 1
               }}
             >
               {stepLabel}
             </span>
-
-            {/* Top Right: Status Badge / Icon */}
-            <div className="flex items-center">
-              {isDone ? (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="w-7 h-7 rounded-full flex items-center justify-center shadow-lg"
-                  style={{ background: color + '18', border: `1px solid ${color}40` }}
-                >
-                  <CheckCircle2 size={14} style={{ color }} />
-                </motion.div>
-              ) : (
-                <div
-                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-500"
-                  style={{ 
-                    border: `1px solid ${isLocked ? 'var(--text-disabled)30' : color + '40'}`,
-                    opacity: isLocked ? 0.3 : 0.8,
-                    background: isActive ? color + '15' : 'transparent'
-                  }}
-                >
-                  <Icon size={14} style={{ color: isLocked ? 'var(--text-disabled)' : color }} />
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Title - High Visibility, positioned clearly below step label */}
-          <div
-             className="font-serif font-black leading-tight transition-all duration-300 mt-1"
-            style={{
-              fontSize: 22,
-              color: isLocked ? 'var(--text-disabled)' : (mode === 'dark' ? '#ffffff' : 'var(--text-primary)'),
-              letterSpacing: '-0.02em',
-              textShadow: mode === 'dark' && !isLocked ? '0 2px 8px rgba(0,0,0,0.4)' : 'none'
-            }}
-          >
-            {title}
+          <div className="w-8 shrink-0 flex justify-end">
+            {isDone ? (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="w-7 h-7 rounded-full flex items-center justify-center shadow-lg"
+                style={{ background: color + '18', border: `1px solid ${color}40` }}
+              >
+                <CheckCircle2 size={14} style={{ color }} />
+              </motion.div>
+            ) : (
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-500"
+                style={{
+                  border: `1px solid ${isLocked ? 'var(--text-disabled)30' : color + '40'}`,
+                  opacity: isLocked ? 0.3 : 0.8,
+                }}
+              >
+                <Icon size={14} style={{ color: isLocked ? 'var(--text-disabled)' : color }} />
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Bottom Section: Subtitle and CTA */}
-        <div className="flex items-end justify-between w-full gap-4 mt-8">
-          {/* Bottom Left: Subtitle/Details */}
-          <div className="flex-1 overflow-hidden">
+      {/* Bottom Layout: Centered around the bottom-right quadrant */}
+      <div className="absolute inset-0 p-6 z-10 flex flex-col justify-end pointer-events-none">
+        <div className="flex flex-col items-center justify-end w-full pb-1">
+          {/* Subtitle above the title */}
+          <div className="mb-2">
             <div
-              className="font-serif italic text-[12px] leading-relaxed line-clamp-2 text-left transition-all duration-300"
-              style={{ 
-                color: isLocked ? 'var(--text-disabled)' : 'var(--text-secondary)',
-                opacity: isLocked ? 0.5 : 1
-              }}
+              className="font-serif italic text-[11px] leading-tight line-clamp-1 opacity-40 text-center"
+              style={{ color: isLocked ? 'var(--text-disabled)' : 'var(--text-secondary)' }}
             >
               {subtitle}
             </div>
           </div>
 
-          {/* Bottom Right: Action CTA */}
-          <div className="flex flex-shrink-0">
-            {isDone ? (
-               <div
-                className="py-1.5 px-4 rounded-full text-[10px] font-black tracking-[0.2em] uppercase transition-all flex items-center gap-2"
-                style={{ background: color + '25', border: `1px solid ${color}40`, color }}
-              >
-                <CheckCircle2 size={12} />
-                Done
-              </div>
-            ) : isLocked ? (
-               <div
-                className="py-1.5 px-3 rounded-full text-[9px] font-black tracking-widest uppercase"
-                style={{ color: 'var(--text-disabled)', opacity: 0.6 }}
-              >
-                Locked
-              </div>
-            ) : (
-              <div
-                className="py-1.5 px-4 rounded-full text-[10px] font-black tracking-widest uppercase transition-all duration-300 flex items-center gap-1.5"
-                style={{
-                  background: color + '15',
-                  color: color,
-                  border: `1px solid ${color}30`,
-                }}
-              >
-                {ctaLabel}
-                <ArrowRight size={12} className={isActive ? "rotate-90" : ""} />
-              </div>
-            )}
+          {/* Bottom Center: Word placement */}
+          <div className="flex flex-col items-center gap-1 translate-y-7">
+            <div
+              className="font-serif font-black leading-none transition-all duration-300 text-center"
+              style={{
+                fontSize: 24,
+                color: isLocked ? 'var(--text-disabled)' : (mode === 'dark' ? '#ffffff' : 'var(--text-primary)'),
+                letterSpacing: '-0.02em',
+                textShadow: '0 4px 15px rgba(0,0,0,0.7)'
+              }}
+            >
+              {title}
+            </div>
+
+            <div className="pointer-events-auto">
+              {isDone && (
+                <div className="py-1 px-3 mt-1 rounded-full text-[9px] font-black uppercase tracking-widest" style={{ background: color + '20', color }}>
+                  Done
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -301,10 +298,10 @@ function InlinePracticePanel({
               Done for today
             </p>
           </div>
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg" 
+            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
             style={{ background: color, color: 'white' }}
           >
             <CheckCircle2 size={20} />
@@ -313,11 +310,11 @@ function InlinePracticePanel({
 
         <div className="space-y-3 mb-6">
           {practice.steps.map((step, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="flex gap-3 p-3.5 rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)]/40"
             >
-              <div className="text-[12px] font-black opacity-30 mt-0.5" style={{ color }}>0{i+1}</div>
+              <div className="text-[12px] font-black opacity-30 mt-0.5" style={{ color }}>0{i + 1}</div>
               <p className="text-[13px] font-serif italic leading-relaxed text-[var(--text-secondary)]">
                 {step.instruction}
               </p>
@@ -461,7 +458,7 @@ function InlineReflectPanel({
             <p className="text-[14px] font-serif italic text-[var(--text-primary)]">"{prompt}"</p>
           </div>
         </div>
-        
+
         <div className="bg-[var(--bg-primary)]/40 p-5 rounded-2xl border border-[var(--border-default)] mb-6">
           <p className="text-[14px] font-sans leading-relaxed text-[var(--text-secondary)] whitespace-pre-wrap italic">
             {text || existingJournal}
@@ -544,7 +541,7 @@ function SoundscapeCard({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const track = getDailyTrack();
   const { status, category, trackId: activeTrackId } = useVoiceStatus();
   const { mode } = useTheme();
-  
+
   const [localUrl, setLocalUrl] = useState<string | null>(null);
 
   const isActive = activeTrackId === track.id;
@@ -553,9 +550,9 @@ function SoundscapeCard({ onNavigate }: { onNavigate: (tab: string) => void }) {
   // Lavender theme colors
   const color = '#9575CD';
   const soundBorderColor = mode === 'dark' ? 'rgba(192,160,238,.35)' : 'rgba(120,90,190,.4)';
-  const soundBgColor    = mode === 'dark' ? 'rgba(192,160,238,.07)' : 'rgba(150,110,220,.06)';
-  const soundLabelColor = mode === 'dark' ? 'rgba(192,160,238,.8)'  : 'rgba(100,70,170,.9)';
-  const soundIconColor  = mode === 'dark' ? 'rgba(192,160,238,.8)'  : 'rgba(100,70,170,.9)';
+  const soundBgColor = mode === 'dark' ? 'rgba(192,160,238,.07)' : 'rgba(150,110,220,.06)';
+  const soundLabelColor = mode === 'dark' ? 'rgba(192,160,238,.8)' : 'rgba(100,70,170,.9)';
+  const soundIconColor = mode === 'dark' ? 'rgba(192,160,238,.8)' : 'rgba(100,70,170,.9)';
 
   const handlePlay = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -594,11 +591,11 @@ function SoundscapeCard({ onNavigate }: { onNavigate: (tab: string) => void }) {
       onClick={() => onNavigate('music')}
     >
       {/* Glow on hover */}
-      <div 
+      <div
         className="absolute inset-0 rounded-[24px] pointer-events-none transition-all duration-500 opacity-0 group-hover:opacity-100"
         style={{
-           boxShadow: `inset 0 0 0 1px ${color}40, 0 8px 32px ${color}${mode === 'dark' ? '20' : '15'}`,
-           background: `radial-gradient(circle at top right, ${color}${mode === 'dark' ? '12' : '06'}, transparent 70%)`
+          boxShadow: `inset 0 0 0 1px ${color}40, 0 8px 32px ${color}${mode === 'dark' ? '20' : '15'}`,
+          background: `radial-gradient(circle at top right, ${color}${mode === 'dark' ? '12' : '06'}, transparent 70%)`
         }}
       />
 
@@ -683,10 +680,10 @@ export function DashboardGrid({
   const [showCommitment, setShowCommitment] = useState(false);
   const [activePanel, setActivePanel] = useState<'practice' | 'reflect' | null>(null);
 
-  const learnDone         = record?.learnCompleted === true;
+  const learnDone = record?.learnCompleted === true;
   const practiceCompleted = isAnyPracticeDone;
-  const reflectDone       = record?.reflectCompleted === true;
-  const integrateDone     = record?.integrateCompleted === true;
+  const reflectDone = record?.reflectCompleted === true;
+  const integrateDone = record?.integrateCompleted === true;
   const doneCount = [learnDone, practiceCompleted, reflectDone, integrateDone].filter(Boolean).length;
   const allDone = doneCount === 4;
 
@@ -694,10 +691,10 @@ export function DashboardGrid({
 
   const handleLearn = () => {
     if (isAccessValid) markLearn();
-    onNavigate('wisdom_untethered', questionId, 'video');
+    onNavigate('wisdom_untethered', isAccessValid ? questionId : 'question1', 'video');
   };
 
-   const handlePractice = () => {
+  const handlePractice = () => {
     setActivePanel(prev => prev === 'practice' ? null : 'practice');
   };
 
@@ -794,7 +791,6 @@ export function DashboardGrid({
           isDone={learnDone}
           isLocked={false}
           isActive={false}
-          ctaLabel="Begin"
           onClick={handleLearn}
         />
         <DashboardCard
@@ -806,7 +802,6 @@ export function DashboardGrid({
           isDone={practiceCompleted}
           isLocked={!learnDone && !practiceCompleted}
           isActive={activePanel === 'practice'}
-          ctaLabel="Start"
           onClick={handlePractice}
         />
       </div>
@@ -843,7 +838,6 @@ export function DashboardGrid({
           isDone={reflectDone}
           isLocked={!practiceCompleted && !reflectDone}
           isActive={activePanel === 'reflect'}
-          ctaLabel="Write"
           onClick={handleReflect}
         />
         <DashboardCard
@@ -855,7 +849,6 @@ export function DashboardGrid({
           isDone={integrateDone}
           isLocked={!reflectDone && !integrateDone}
           isActive={false}
-          ctaLabel="I Commit"
           onClick={() => { setShowCommitment(true); }}
         />
       </div>

@@ -704,10 +704,10 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] h-full text-center p-4 md:p-8 bg-[var(--bg-base)]">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] h-full text-center p-4 pt-24 md:p-8 md:pt-8 bg-[var(--bg-base)]">
       <div className="max-w-6xl w-full flex flex-col items-center space-y-12">
         {/* Hero Section */}
-        <div className="text-center space-y-4 max-w-2xl px-4">
+        <div className="text-center space-y-4 max-w-2xl px-4 mt-8 md:mt-0">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1037,8 +1037,9 @@ export default function UntetheredApp() {
   }, [loading, isAccessValid, currentUser]);
 
   const onNavigate = (id: string, questionId?: string, view?: string) => {
-    // If not unlocked, lock everything except home and profile
-    if (!isAccessValid && id !== 'home' && id !== 'profile' && id !== 'paywall' && id !== 'music') {
+    // If not unlocked, lock everything except home, profile, paywall, music, and the learning tabs
+    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence'];
+    if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
       return;
