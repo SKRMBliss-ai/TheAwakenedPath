@@ -117,12 +117,10 @@ function DashboardCard({
           alt=""
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           style={{
-            opacity: isLocked ? 0.35 : (isDone ? 0.25 : 0.55),
+            opacity: isLocked ? 0.65 : 0.9,
             filter: isLocked 
-              ? 'grayscale(1) brightness(0.7)'
-              : mode === 'dark'
-                ? 'brightness(1.1) saturate(1.1)'
-                : 'brightness(1.0) saturate(1.1)',
+              ? 'grayscale(0.6) brightness(0.8) blur(0.5px)'
+              : 'none',
           }}
         />
       </div>

@@ -21,120 +21,141 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // 14 slides tracking with images
+  const SLIDE_IMAGES: Record<string, string> = {
+    "overview": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/overview.webp"),
+    "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide1.webp"),
+    "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide2.webp"),
+    "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide3.webp"),
+    "slide4": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide4.webp"),
+    "slide5": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide5.webp"),
+    "slide6": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide6.webp"),
+    "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide7.webp"),
+    "slide8": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide8.webp"),
+    "slide9": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide9.webp"),
+    "slide10": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide10.webp"),
+    "slide11": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide11.webp"),
+    "slide12": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide12.webp"),
+    "slide13": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide13.webp"),
+    "slide14": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide14.webp"),
+    "slide15": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide15.webp"),
+    "slide16": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/Slide16.webp"),
+  };
+
   const slides = [
     {
       id: 0,
       num: '01',
       title: 'WHICH PART DO I LISTEN TO?',
       text: 'Your mind is extraordinary, but most of us never learn to tell the difference between thoughts worth using and those worth ignoring.',
-      img: 'Slide1.webp'
+      img: SLIDE_IMAGES["slide1"]
     },
     {
       id: 1,
       num: '02',
       title: 'THE CORE DISTINCTION',
       text: 'You are not your thoughts. You are the one noticing them. There are thoughts in your mind—and there is you, the quiet awareness observing them.',
-      img: 'Slide2.webp'
+      img: SLIDE_IMAGES["slide2"]
     },
     {
       id: 2,
       num: '03',
       title: 'THE DUALITY OF MIND',
       text: 'The Analytical Mind solves problems and builds worlds. The Personal Mind replays fear, judgment, and guilt. Use one, but do not follow the other.',
-      img: 'Slide3.webp'
+      img: SLIDE_IMAGES["slide3"]
     },
     {
       id: 3,
       num: '04',
       title: 'THE NARROW FRAME',
       text: 'The personal mind thinks it is the center of the universe. Inside this tiny orbit, every slight and worry feels incredibly urgent and heavy.',
-      img: 'Slide4.webp'
+      img: SLIDE_IMAGES["slide4"]
     },
     {
       id: 4,
       num: '05',
       title: 'VALUE VS. COST',
       text: 'Your partner says something slightly cold at dinner and your mind builds a case. By the time you get in bed, you are frantic and isolated. But nothing happened—they were just tired. You paid for a problem that didn\'t exist with your peace.',
-      img: 'Slide5.webp'
+      img: SLIDE_IMAGES["slide5"]
     },
     {
       id: 5,
       num: '06',
       title: 'THE AMPLIFICATION TRAP',
       text: 'Engaging with internal noise only gives it more power. You cannot ask a mind filled with fear to give you advice on how to be at peace.',
-      img: 'Slide6.webp'
+      img: SLIDE_IMAGES["slide6"]
     },
     {
       id: 6,
       num: '07',
       title: 'THE WIDER FRAME',
       text: 'Scaling back reveals that most disturbances simply stop mattering. You are on a small ball of rock spinning in a vast universe. Relax.',
-      img: 'Slide7.webp'
+      img: SLIDE_IMAGES["slide7"]
     },
     {
       id: 7,
       num: '08',
       title: 'THE ONE-SECOND PAUSE',
       text: 'Perspective is a daily practice. Before you start the engine, open a door, or pick up your phone—stop for one second in awareness.',
-      img: 'Slide8.webp'
+      img: SLIDE_IMAGES["slide8"]
     },
     {
       id: 8,
       num: '09',
       title: 'TRAINING THE NOISE',
       text: 'An untrained mind will always orbit itself. Be firm but gentle. Just as you train a dog to sit, command the mind to "Be still."',
-      img: 'Slide9.webp'
+      img: SLIDE_IMAGES["slide9"]
     },
     {
       id: 9,
       num: '10',
       title: 'THE ONLY REAL CHOICE',
       text: 'You cannot control what arises, only whether you open or close. Fighting discomfort creates blockages. Relaxing allows it to pass through.',
-      img: 'Slide10.webp'
+      img: SLIDE_IMAGES["slide10"]
     },
     {
       id: 10,
       num: '11',
       title: 'LOOSENING THE GRIP',
       text: 'Lean away from the disturbance, not into it. When triggered, relax your shoulders, belly, and heart. Let the energy rise and release.',
-      img: 'Slide11.webp'
+      img: SLIDE_IMAGES["slide11"]
     },
     {
       id: 11,
       num: '12',
       title: 'THE SOUND OF INTUITION',
       text: 'The mind is loud and frantic; intuition is quiet and still. Intuition does not argue or invent fear. It emerges effortlessly when the noise clears.',
-      img: 'Slide12.webp'
+      img: SLIDE_IMAGES["slide12"]
     },
     {
       id: 12,
       num: '13',
       title: 'A MOMENT OF STILLNESS',
       text: 'Close your eyes. Notice a thought with no value. Don’t fight it, don’t follow it. Just see it as a temporary expression passing through.',
-      img: 'Slide14.webp'
+      img: SLIDE_IMAGES["slide13"]
     },
     {
       id: 13,
       num: '14',
       title: 'THE SEAT OF THE WITNESS',
       text: 'Feel the one noticing the silence. That quiet awareness is YOU—the part of you that has always known exactly what to do.',
-      img: 'Slide13.webp'
+      img: SLIDE_IMAGES["slide14"]
     },
     {
       id: 14,
       num: '15',
       title: 'VALUABLE VS. COSTLY THOUGHTS',
       text: 'Solving a problem has value. Judging yourself, replaying the past, or worrying about "what if" only has cost. Learn to see the difference.',
-      img: 'Slide15.webp'
+      img: SLIDE_IMAGES["slide15"]
     },
     {
       id: 15,
       num: '16',
       title: 'AWAKENING...',
       text: 'Carry this quiet into your day. You are the observer, standing one step back from it all.',
-      img: 'Slide16.webp'
+      img: SLIDE_IMAGES["slide16"]
     }
   ];
+
 
   // Progress Bar
   const { scrollYProgress } = useScroll({
@@ -214,7 +235,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         title={<>Finding the <strong>Silent Space</strong><br />The Art of <strong>Observation</strong></>}
         subtitle="A journey through 14 lessons on untethering yourself from the mind's constant noise."
         className="bg-[var(--bg-primary)] dark:bg-[#0A0908]"
-        overviewImage={VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question4/overview.webp")}
+        overviewImage={SLIDE_IMAGES["overview"]}
       />
 
 
@@ -227,8 +248,8 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
         total={slides.length}
         imgSrc={
           lightboxIndex !== null && lightboxIndex !== -1 
-            ? VoiceService.getStorageUrl(`/WisdomUntethered/Chap1/Question4/${slides[lightboxIndex].img}`) 
-            : (lightboxIndex === -1 ? VoiceService.getStorageUrl('/WisdomUntethered/Chap1/Question4/overview.webp') : '')
+            ? slides[lightboxIndex].img 
+            : (lightboxIndex === -1 ? SLIDE_IMAGES["overview"] : '')
         }
       />
 
@@ -238,7 +259,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
           <div className={cn(styles.slideGrid, i % 2 !== 0 && styles.flip)}>
             <div className={styles.imgWrap} onClick={() => openLightbox(i)}>
               <img 
-                src={VoiceService.getStorageUrl(`/WisdomUntethered/Chap1/Question4/${slide.img}`)} 
+                src={slide.img} 
                 alt={slide.title} 
                 className={styles.clickableImg} 
                 crossOrigin="anonymous"

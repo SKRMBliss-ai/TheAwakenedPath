@@ -1,0 +1,311 @@
+/* Chap1Question9.module.css */
+
+.container {
+  --gold: #B8973A;
+  --gold-light: #F0E4C0;
+  --gold-pale: #D4AE5C;
+  --ink: #1C1814;
+  --ink-soft: #3A342C;
+  --warm-white: #FDFAF4;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+  
+  background: var(--warm-white);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-weight: 400;
+  line-height: 1.75;
+  overflow-x: hidden;
+  position: relative;
+  height: 100%;
+}
+
+.container::-webkit-scrollbar {
+  width: 4px;
+}
+.container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.container::-webkit-scrollbar-thumb {
+  background: rgba(184, 151, 58, 0.45);
+  border-radius: 10px;
+}
+
+/* Nav Dots */
+.navDots {
+  position: fixed;
+  right: 1.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  z-index: 50;
+}
+
+.navDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(184,151,58,0.28);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navDot.active {
+  background: var(--gold);
+  transform: scale(1.5);
+}
+
+/* Standard Slide Grid */
+.slide {
+  padding: 2.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.72s ease, transform 0.72s ease;
+}
+
+.slide.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slideGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.slideGrid.flip {
+  direction: rtl;
+}
+
+.slideGrid.flip > * {
+  direction: ltr;
+}
+
+.imgWrap {
+  position: relative;
+}
+
+.imageContainer {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 6px 36px rgba(28,24,20,0.11);
+  background: #000;
+}
+
+.slideImg {
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+  object-fit: contain;
+  display: block;
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+
+.slideImg:hover {
+  transform: scale(1.02);
+}
+
+.clickableImg {
+  width: 100%;
+  height: auto;
+  display: block;
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+
+.clickableImg:hover {
+  transform: scale(1.02);
+}
+
+.slideNum {
+  position: absolute;
+  top: -1.1rem;
+  left: 0;
+  font-family: var(--serif);
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--gold);
+}
+
+.slideTag {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.75rem;
+}
+
+.slideH {
+  font-family: var(--serif);
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  font-weight: 300;
+  line-height: 1.22;
+  color: var(--ink);
+  margin-bottom: 1.1rem;
+}
+
+.slideH em {
+  font-style: italic;
+  font-weight: 500;
+  color: #E6C57D;
+}
+
+.slideH strong {
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.slideP {
+  font-size: 0.97rem;
+  color: var(--ink-soft);
+  line-height: 1.82;
+  font-weight: 300;
+  margin-bottom: 0.9rem;
+}
+
+.pull {
+  border-left: 2px solid var(--gold);
+  padding: 0.75rem 0 0.75rem 1.4rem;
+  margin: 1.4rem 0;
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.rule {
+  max-width: 200px;
+  margin: 2rem auto;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rule::before,
+.rule::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(184, 151, 58, 0.3);
+}
+
+.rule span {
+  font-family: var(--serif);
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(184, 151, 58, 0.4);
+}
+
+/* Closing */
+.closing {
+  padding: 6rem 2rem;
+  text-align: center;
+}
+
+.closingInner {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.closingTitle {
+  font-family: var(--serif);
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 1.4rem;
+}
+
+.closingButton {
+  display: inline-block;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.85rem 2.2rem;
+  border-radius: 1px;
+  text-decoration: none;
+  font-weight: 400;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: none;
+}
+
+.closingButton:hover {
+  background: var(--gold);
+  color: #000;
+}
+
+.openingBand {
+  background: var(--gold);
+  color: #000;
+  text-align: center;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.1rem;
+}
+
+.openingBand p {
+  margin: 0;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+@media (max-width: 700px) {
+  .slideGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .navDots {
+    display: none;
+  }
+}
+
+/* --- DARK MODE OVERRIDES --- */
+:global(.dark) .container {
+  background: #0c0910;
+  color: #FDFAF4;
+}
+
+:global(.dark) .slideH {
+  color: #FDFAF4;
+}
+
+:global(.dark) .slideP {
+  color: rgba(253,250,244,0.8);
+}
+
+:global(.dark) .pull {
+  color: #FDFAF4;
+}
+
+:global(.dark) .closingTitle {
+  color: #FDFAF4;
+}
+
+:global(.dark) .openingBand {
+  background: #B8973A;
+  color: #000;
+}

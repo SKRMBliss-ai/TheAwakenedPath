@@ -1010,7 +1010,7 @@ export default function UntetheredApp() {
     const timeout = setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
       const practiceParam = params.get('practice');
-      const validQuestions = ['question1', 'question2', 'question3', 'question4', 'question5', 'question6', 'question7'];
+      const validQuestions = ['question1', 'question2', 'question3', 'question4', 'question5', 'question6', 'question7', 'question8', 'question9'];
       
       if (practiceParam && validQuestions.includes(practiceParam)) {
         if (!isAccessValid && currentUser) {
@@ -1128,6 +1128,9 @@ export default function UntetheredApp() {
     level: 1,
     joinedAt: currentUser?.metadata.creationTime ? new Date(currentUser.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'March 2026'
   });
+
+  // Load Question 8 and 9 components for the main course view
+  // (Assuming they will be imported or rendered in the course page)
 
   // Sync Power of Now progress for achievement matching
   useEffect(() => {
@@ -1641,7 +1644,9 @@ export default function UntetheredApp() {
                                   { num: 4, label: 'Which part to listen to', id: 'question4', locked: !isAccessValid },
                                   { num: 5, label: 'The Observer Discovery', id: 'question5', locked: !isAccessValid },
                                   { num: 6, label: 'Letting Go of the Past', id: 'question6', locked: !isAccessValid },
-                                  { num: 7, label: 'Back and Forth', id: 'question7', locked: !isAccessValid },
+                                  { num: 7, label: 'Removing the Thorns', id: 'question7', locked: !isAccessValid },
+                                  { num: 8, label: 'Let Go Now or Fall', id: 'question8', locked: !isAccessValid },
+                                  { num: 9, label: 'The Secret of the Middle Way', id: 'question9', locked: !isAccessValid },
                                 ].map(q => {
                                   const isQActive = activeQuestionId === q.id;
                                   return (

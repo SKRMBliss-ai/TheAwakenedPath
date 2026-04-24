@@ -2,14 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import { cn } from '../../../lib/utils';
 import styles from './Chap1Question1.module.css';
-import commonStyles from './CourseCommon.module.css';
 import { useCourseTracking } from '../../../hooks/useCourseTracking';
 import { CourseHero } from './CourseHero';
 import { CourseLightbox } from './CourseLightbox';
-
 import { VoiceService } from '../../../services/voiceService';
 
-const darkImages: Record<string, string> = {
+const SLIDE_IMAGES: Record<string, string> = {
+  "overview": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/06_MindAsTool.webp"),
   "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/01_BadMood.webp"),
   "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/02_QuestionAsked.webp"),
   "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/03_HigherMind.webp"),
@@ -17,23 +16,10 @@ const darkImages: Record<string, string> = {
   "slide5": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/05_Transmutation.webp"),
   "slide6": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/06_MindAsTool.webp"),
   "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/07_Meditation.webp"),
-  "placeholder_alive": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/01_BadMood.webp"),
-};
-
-const lightImages: Record<string, string> = {
-  "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/01_BadMood_light.webp"),
-  "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/02_QuestionAsked_light.webp"),
-  "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/03_HigherMind_light.webp"),
-  "slide4": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/04_Relax_light.webp"),
-  "slide5": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/05_Transmutation_light.webp"),
-  "slide6": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/06_MindAsTool_light.webp"),
-  "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/07_Meditation_light.webp"),
-  "placeholder_alive": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question1/01_BadMood_light.webp"),
 };
 
 const ALL_SLIDES = ["slide1", "slide2", "slide3", "slide4", "slide5", "slide6", "slide7"];
-
-const TOTAL_SLIDES = 11; // 0 to 10
+const TOTAL_SLIDES = 10;
 
 interface Chap1Question1Props {
   onOpenJournal?: () => void;
@@ -44,14 +30,13 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
   const { updateProgress } = useCourseTracking(user?.uid);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // ── Scroll Tracking for "Read" status ──
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleScroll = () => {
-      // Mark as read if user scrolls near the bottom of this specific container
       const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
       if (isNearBottom) {
         updateProgress('question1', { read: true });
@@ -62,14 +47,6 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
     return () => container.removeEventListener('scroll', handleScroll);
   }, [user?.uid, updateProgress]);
 
-  // Theme detection moved to common components or simplified
-  const isDark = true; // Defaulting for visual consistency in this view or use global theme
-  const imageMap = isDark ? darkImages : lightImages;
-
-  // ── Lightbox ──
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-  // ── Intersection observers ──
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -108,22 +85,15 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
   const nextLightbox = () => setLightboxIndex(prev => (prev === null ? 0 : (prev + 1) % ALL_SLIDES.length));
   const prevLightbox = () => setLightboxIndex(prev => (prev === null ? 0 : (prev - 1 + ALL_SLIDES.length) % ALL_SLIDES.length));
 
-
   return (
-    <div
-      className={cn(styles.container, "scroll-container")}
-      ref={containerRef}
-      style={{ height: '100%', overflowY: 'auto' }}
-    >
-      {/* --- Nav Dots --- */}
+    <div className={cn(styles.container, "scroll-container")} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
       <nav className={styles.navDots}>
-        {/* +1 for CourseHero */}
         {Array.from({ length: TOTAL_SLIDES + 1 }).map((_, i) => (
           <button
             key={i}
             className={cn(styles.navDot, activeSection === i && styles.active)}
-            aria-label={`Go to section ${i + 1}`}
             onClick={() => scrollToSection(i)}
+            aria-label={`Go to section ${i}`}
           />
         ))}
       </nav>
@@ -133,6 +103,7 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
         question={1}
         title={<>How to Use the Mind<br />as a <strong>Tool</strong></>}
         subtitle="When a bad mood hits and the spiral begins — Singer's two honest answers for what to actually do"
+        overviewImage={SLIDE_IMAGES["overview"]}
       />
 
       <CourseLightbox 
@@ -142,11 +113,9 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
         onPrev={prevLightbox}
         currentIndex={lightboxIndex ?? 0}
         total={ALL_SLIDES.length}
-        imgSrc={lightboxIndex !== null ? imageMap[ALL_SLIDES[lightboxIndex]] : ''}
+        imgSrc={lightboxIndex !== null ? SLIDE_IMAGES[ALL_SLIDES[lightboxIndex]] : ''}
       />
 
-
-      {/* --- OPENING BAND --- */}
       <div className={styles.openingBand}>
         <p>"Most of us assume the answer is better thinking. More positive thinking. Singer says: yes — that's actually a real technique. But it's only step one. There's something deeper available."</p>
       </div>
@@ -157,14 +126,13 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>01</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide1"]} alt="The hook" onClick={() => openLightbox(0)} className={styles.clickableImg} />
+              <img src={SLIDE_IMAGES["slide1"]} alt="The hook" onClick={() => openLightbox(0)} className={styles.clickableImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The hook</span>
             <h2 className={styles.slideH}>The Bad Mood<br /><em>That Just Hits</em></h2>
             <p className={styles.slideP}>You know this feeling. Nothing dramatic happened. But something shifts inside — and suddenly your mind is running. Replaying things. Criticising. Worrying. You didn't invite it. It just arrived.</p>
-            <p className={styles.slideP}>And the harder you try to think your way out of it, the worse it gets. The mind that's creating the spiral is being asked to solve the spiral. That's the trap most of us are stuck in.</p>
             <div className={styles.pull}>"Nothing happened. But something shifted."</div>
           </div>
         </div>
@@ -174,20 +142,17 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
 
       {/* --- SLIDE 2 --- */}
       <section className={styles.slide} data-section="2">
-        <div className={`${styles.slideGrid} ${styles.flip}`}>
+        <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>02</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide2"]} alt="The question" onClick={() => openLightbox(1)} className={styles.clickableImg} />
+              <img src={SLIDE_IMAGES["slide2"]} alt="The question" onClick={() => openLightbox(1)} className={styles.clickableImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>The question</span>
             <h2 className={styles.slideH}>The Question<br /><em>Most of Us Have Asked</em></h2>
-            <div className={commonStyles.pull}>
-              <p className={styles.slideP}>This lesson is based on the very first question in Wisdom Untethered — from the opening chapter called The Mind, in the section called The Foundation.</p>
-              <p className={styles.slideP}>Someone asked Michael Singer: "How can I use the mind as a tool to escape negative thoughts or feelings?" Most of us have already asked this in some form.</p>
-            </div>
+            <p className={styles.slideP}>Someone asked Michael Singer: "How can I use the mind as a tool to escape negative thoughts or feelings?" Most of us have already asked this in some form.</p>
           </div>
         </div>
       </section>
@@ -200,60 +165,52 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>03</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide3"]} alt="Singer's model" onClick={() => openLightbox(2)} className={styles.clickableImg} />
+              <img src={SLIDE_IMAGES["slide3"]} alt="Singer's model" onClick={() => openLightbox(2)} className={styles.clickableImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>Singer's model</span>
             <h2 className={styles.slideH}>The Mind Has<br /><em>Two Layers</em></h2>
-            <div className={commonStyles.pull}>
-              <p className={styles.slideP}>The lower mind is the reactive layer — trained by every hurt, every fear, every difficult experience. The higher mind is the layer that can redirect.</p>
-            </div>
+            <p className={styles.slideP}>The lower mind is the reactive layer — trained by every hurt, every fear, every difficult experience. The higher mind is the layer that can redirect.</p>
           </div>
         </div>
       </section>
 
-      {/* --- LAYERS INTERLUDE --- */}
       <div className={styles.layersBand} data-section="4">
         <div className={styles.layersBandInner}>
-          <div className={`${styles.layerCol} ${styles.lower}`}>
+          <div className={cn(styles.layerCol, styles.lower)}>
             <span className={styles.layerLabel}>Layer one</span>
             <div className={styles.layerName}>The Lower Mind</div>
-            <p className={styles.layerDesc}>Reactive. Trained by past experience. Pulls you automatically toward old patterns.</p>
+            <p className={styles.layerDesc}>Reactive. Trained by past experience.</p>
           </div>
-          <div className={`${styles.layerCol} ${styles.higher}`}>
+          <div className={cn(styles.layerCol, styles.higher)}>
             <span className={styles.layerLabel}>Layer two</span>
             <div className={styles.layerName}>The Higher Mind</div>
-            <p className={styles.layerDesc}>Conscious. Capable of lifting you out of conditioned patterns.</p>
+            <p className={styles.layerDesc}>Conscious. Capable of lifting you out.</p>
           </div>
         </div>
-        <p className={styles.layersBandQ}>Which one are you feeding right now?</p>
       </div>
 
       {/* --- SLIDE 4 --- */}
       <section className={styles.slide} data-section="5">
-        <div className={`${styles.slideGrid} ${styles.flip}`}>
+        <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>04</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide4"]} alt="Step one" onClick={() => openLightbox(3)} className={styles.clickableImg} />
+              <img src={SLIDE_IMAGES["slide4"]} alt="Step one" onClick={() => openLightbox(3)} className={styles.clickableImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
             <span className={styles.slideTag}>Step one</span>
             <h2 className={styles.slideH}>Use the Higher Mind.<br /><em>"I Can Handle This."</em></h2>
-            <div className={commonStyles.pull}>
-              <p className={styles.slideP}>Singer's first practical answer: use an affirmation. "I can handle this." Not as a magic formula, but as a way to redirect energy upward.</p>
-            </div>
+            <p className={styles.slideP}>Singer's first practical answer: use an affirmation. "I can handle this." Not as a magic formula, but as a way to redirect energy upward.</p>
           </div>
         </div>
       </section>
 
-      {/* --- MANTRA CARD --- */}
       <div className={styles.mantraCard} data-section="6">
         <span className={styles.mantraTag}>The affirmation practice</span>
-        <h2 className={styles.mantraTitle}>When the Spiral Begins —<br />Say This Instead</h2>
-        <div className={styles.mantraHighlight}>"I can handle this."</div>
+        <h2 className={styles.mantraTitle}>"I can handle this."</h2>
         <p className={styles.mantraBody}>Repeat it. Over and over. You are taking the energy that was about to collapse and redirecting it upward.</p>
       </div>
 
@@ -263,7 +220,7 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>05</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide5"]} alt="Step two" onClick={() => openLightbox(4)} className={styles.clickableImg} />
+              <img src={SLIDE_IMAGES["slide5"]} alt="Step two" onClick={() => openLightbox(4)} className={styles.clickableImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
@@ -278,71 +235,42 @@ export function Chap1Question1({ onOpenJournal }: Chap1Question1Props) {
 
       {/* --- SLIDE 6 --- */}
       <section className={styles.slide} data-section="8">
-        <div className={`${styles.slideGrid} ${styles.flip}`}>
+        <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>06</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide6"]} alt="The third option" onClick={() => openLightbox(5)} className={styles.clickableImg} />
+              <img src={SLIDE_IMAGES["slide6"]} alt="The real teaching" onClick={() => openLightbox(5)} className={styles.clickableImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>The third option</span>
-            <h2 className={styles.slideH}>Transmutation:<br /><em>Neither Collapse Nor Fight</em></h2>
+            <span className={styles.slideTag}>The real teaching</span>
+            <h2 className={styles.slideH}>Neither <em>Collapse Nor Fight</em></h2>
             <p className={styles.slideP}>Collapse makes it louder. Fighting makes it louder. Transmutation is the third option: simply relax and let it pass through.</p>
           </div>
         </div>
       </section>
 
-      {/* --- THREE OPTIONS --- */}
-      <div className={styles.threeOptions} data-section="9">
-        <div className={styles.threeOptionsInner}>
-          <div className={styles.threeOptionsHeader}>
-            <span className={styles.threeOptionsEyebrow}>Singer's three options</span>
-            <h2 className={styles.threeOptionsTitle}>What to Do When a Negative Feeling Arrives</h2>
-          </div>
-          <div className={styles.optionsGrid}>
-            <div className={`${styles.optionCard} ${styles.bad}`}>
-              <div className={styles.optionIcon}>↓</div>
-              <div className={styles.optionName}>Collapse</div>
-              <span className={styles.optionResult}>Makes it louder</span>
-            </div>
-            <div className={`${styles.optionCard} ${styles.worse}`}>
-              <div className={styles.optionIcon}>✕</div>
-              <div className={styles.optionName}>Fight</div>
-              <span className={styles.optionResult}>Also makes it louder</span>
-            </div>
-            <div className={`${styles.optionCard} ${styles.third}`}>
-              <div className={styles.optionIcon}>↑</div>
-              <div className={styles.optionName}>Transmute</div>
-              <span className={styles.optionResult}>The energy rises</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* --- SLIDE 7 --- */}
-      <section className={styles.slide} data-section="10">
+      <section className={styles.slide} data-section="9">
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap}>
             <span className={styles.slideNum}>07</span>
             <div className={styles.imageContainer}>
-              <img src={imageMap["slide7"]} alt="The real teaching" onClick={() => openLightbox(6)} className={styles.clickableImg} />
+              <img src={SLIDE_IMAGES["slide7"]} alt="The mind as tool" onClick={() => openLightbox(6)} className={styles.clickableImg} crossOrigin="anonymous" />
             </div>
           </div>
           <div className={styles.slideContent}>
-            <span className={styles.slideTag}>The real teaching</span>
-            <h2 className={styles.slideH}>The Mind Is a Tool.<br /><em>Not Who You Are.</em></h2>
+            <span className={styles.slideTag}>Conclusion</span>
+            <h2 className={styles.slideH}>The Mind Is a <em>Tool</em></h2>
             <p className={styles.slideP}>The mind is a tool, not who you are. Stop asking the problem to solve itself. Soften and let it pass through.</p>
           </div>
         </div>
       </section>
 
-      {/* --- SECTION 10: CLOSING --- */}
       <section className={styles.closing} data-section="10">
         <div className={styles.closingInner}>
           <span className={styles.closingTag}>End of Chapter 1 · Question 1</span>
           <h2 className={styles.closingTitle}>Both Paths Are<br /><em>Available Right Now</em></h2>
-          <p className={styles.closingBody}>Redirect or Transmute. Choose one today.</p>
           <button className={styles.closingButton} onClick={onOpenJournal}>Open Journal →</button>
         </div>
       </section>

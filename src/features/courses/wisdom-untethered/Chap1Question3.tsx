@@ -35,16 +35,24 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
   }, [user?.uid, updateProgress]);
 
   const [activeSection, setActiveSection] = useState(0);
-  const [isDark, setIsDark] = useState(true);
 
   // ── Lightbox ──
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const ALL_SLIDES = [
-    "Slide2.webp", "Slide1.webp", "Slide3.webp", 
-    "Slide4.webp", "Slide5.webp", "Slide6.webp", 
-    "Slide7.webp", "Slide8.webp", "Slide9.webp"
-  ];
+  const SLIDE_IMAGES: Record<string, string> = {
+    "overview": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question3/Slide1.webp"),
+    "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question3/Slide1.webp"),
+    "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question3/Slide2.webp"),
+    "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question3/Slide3.webp"),
+    "slide4": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question3/Slide4.webp"),
+    "slide5": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question3/Slide5.webp"),
+    "slide6": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question3/Slide6.webp"),
+    "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question3/Slide7.webp"),
+    "slide8": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question3/Slide8.webp"),
+    "slide9": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question3/Slide9.webp"),
+  };
+
+  const ALL_SLIDES = ["slide1", "slide2", "slide3", "slide4", "slide5", "slide6", "slide7", "slide8", "slide9"];
 
   const goLightboxNext = () => {
     if (lightboxIndex === null) return;
@@ -60,22 +68,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
     setLightboxIndex(index);
   };
 
-  // Theme Detection
-  useEffect(() => {
-    const isCurrentlyDark = document.documentElement.classList.contains('dark');
-    setIsDark(isCurrentlyDark);
-    
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    
-    observer.observe(document.documentElement, { 
-      attributes: true, 
-      attributeFilter: ['class'] 
-    });
-    
-    return () => observer.disconnect();
-  }, []);
+  // Theme Detection (Removed local logic for consistency)
 
   useEffect(() => {
     const sections = containerRef.current?.querySelectorAll('[data-section]');
@@ -107,30 +100,6 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
     }
   };
 
-  const FILE_MAP: Record<string, { dark: string, light: string }> = {
-    "Slide1": { dark: "Slide1.webp", light: "Slide1.webp" },
-    "Slide2": { dark: "Slide2.webp", light: "Slide2.webp" },
-    "Slide3": { dark: "Slide3.webp", light: "Slide3.webp" },
-    "Slide4": { dark: "Slide4.webp", light: "Slide4Car.webp" },
-    "Slide5": { dark: "Slide5.webp", light: "Slide5.webp" },
-    "Slide6": { dark: "Slide6.webp", light: "Slide6.webp" },
-    "Slide7": { dark: "Slide7.webp", light: "Slide7.webp" },
-    "Slide8": { dark: "Slide8.webp", light: "Slide8.webp" },
-    "Slide9": { dark: "Slide9.webp", light: "Slide9.webp" },
-    "Practice": { dark: "Practice.webp", light: "Practice.webp" }
-  };
-
-  const getImgPath = (name: string) => {
-    const baseName = name.replace(/\.[^/.]+$/, "");
-    const mapping = FILE_MAP[baseName];
-    
-    const filename = mapping 
-      ? (isDark ? mapping.dark : mapping.light) 
-      : `${baseName}${isDark ? '.webp' : '.webp'}`;
-      
-    return VoiceService.getStorageUrl(`/WisdomUntethered/Chap1/Question3/${isDark ? '' : 'Light/'}${filename}`);
-  };
-
   return (
     <div className={cn(styles.container, "scroll-container")} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
       
@@ -139,6 +108,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         question={3}
         title={<>The Mind That Thinks<br />It Is the <strong>Centre of the Universe</strong></>}
         subtitle="How to shift from the narrow personal frame — to the vast, peaceful, impersonal one"
+        overviewImage={SLIDE_IMAGES["overview"]}
       />
 
       <CourseLightbox 
@@ -148,7 +118,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         onPrev={goLightboxPrev}
         currentIndex={lightboxIndex ?? 0}
         total={ALL_SLIDES.length}
-        imgSrc={lightboxIndex !== null ? getImgPath(ALL_SLIDES[lightboxIndex]) : ''}
+        imgSrc={lightboxIndex !== null ? SLIDE_IMAGES[ALL_SLIDES[lightboxIndex]] : ''}
       />
 
       <nav className={styles.navDots}>
@@ -170,7 +140,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(0)}>
             <span className={styles.slideNum}>01</span>
-            <img src={getImgPath('Slide2.webp')} alt="You are on a planet" className={styles.clickableImg} crossOrigin="anonymous" />
+            <img src={SLIDE_IMAGES["slide2"]} alt="You are on a planet" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>Reality check</span>
@@ -187,7 +157,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(1)}>
             <span className={styles.slideNum}>02</span>
-            <img src={getImgPath('Slide1.webp')} alt="The narrow personal frame" className={styles.clickableImg} crossOrigin="anonymous" />
+            <img src={SLIDE_IMAGES["slide1"]} alt="The narrow personal frame" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Observation</span>
@@ -205,7 +175,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(2)}>
             <span className={styles.slideNum}>03</span>
-            <img src={getImgPath('Slide3.webp')} alt="Personal vs impersonal mind" className={styles.clickableImg} crossOrigin="anonymous" />
+            <img src={SLIDE_IMAGES["slide3"]} alt="Personal vs impersonal mind" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>Singer's model</span>
@@ -223,7 +193,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(3)}>
             <span className={styles.slideNum}>04</span>
-            <img src={getImgPath('Slide4.webp')} alt="The Car Analogy" className={styles.clickableImg} crossOrigin="anonymous" />
+            <img src={SLIDE_IMAGES["slide4"]} alt="The Car Analogy" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Car Analogy</span>
@@ -240,7 +210,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(4)}>
             <span className={styles.slideNum}>05</span>
-            <img src={getImgPath('Slide5.webp')} alt="The Universe" className={styles.clickableImg} crossOrigin="anonymous" />
+            <img src={SLIDE_IMAGES["slide5"]} alt="The Universe" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Universe</span>
@@ -257,7 +227,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(5)}>
             <span className={styles.slideNum}>06</span>
-            <img src={getImgPath('Slide6.webp')} alt="The Witness" className={styles.clickableImg} crossOrigin="anonymous" />
+            <img src={SLIDE_IMAGES["slide6"]} alt="The Witness" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Witness</span>
@@ -274,7 +244,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(6)}>
             <span className={styles.slideNum}>07</span>
-            <img src={getImgPath('Slide7.webp')} alt="The Ocean" className={styles.clickableImg} crossOrigin="anonymous" />
+            <img src={SLIDE_IMAGES["slide7"]} alt="The Ocean" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Ocean</span>
@@ -291,7 +261,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={cn(styles.slideGrid, styles.flip)}>
           <div className={styles.imgWrap} onClick={() => openLightbox(7)}>
             <span className={styles.slideNum}>08</span>
-            <img src={getImgPath('Slide8.webp')} alt="The Sky" className={styles.clickableImg} crossOrigin="anonymous" />
+            <img src={SLIDE_IMAGES["slide8"]} alt="The Sky" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Sky</span>
@@ -308,7 +278,7 @@ export function Chap1Question3({ onOpenJournal }: Chap1Question3Props) {
         <div className={styles.slideGrid}>
           <div className={styles.imgWrap} onClick={() => openLightbox(8)}>
             <span className={styles.slideNum}>09</span>
-            <img src={getImgPath('Slide9.webp')} alt="The Discovery" className={styles.clickableImg} crossOrigin="anonymous" />
+            <img src={SLIDE_IMAGES["slide9"]} alt="The Discovery" className={styles.clickableImg} crossOrigin="anonymous" />
           </div>
           <div>
             <span className={styles.slideTag}>The Discovery</span>

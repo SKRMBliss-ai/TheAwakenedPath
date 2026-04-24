@@ -10,6 +10,8 @@ import { Chap1Question4 } from './wisdom-untethered/Chap1Question4';
 import { Chap1Question5 } from './wisdom-untethered/Chap1Question5';
 import { Chap1Question6 } from './wisdom-untethered/Chap1Question6';
 import { Chap1Question7 } from './wisdom-untethered/Chap1Question7';
+import { Chap1Question8 } from './wisdom-untethered/Chap1Question8';
+import { Chap1Question9 } from './wisdom-untethered/Chap1Question9';
 import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
 import { useAuth } from '../auth/AuthContext';
 import { ScrollNavigator } from '../../components/ui/ScrollNavigator';
@@ -41,6 +43,8 @@ const QUESTION_VIDEOS: Record<string, string | null> = {
   'question5': null, 
   'question6': null,
   'question7': null,
+  'question8': null,
+  'question9': null,
 };
 
 const QUESTION_MUSICAL_VIDEOS: Record<string, string | null> = {
@@ -281,6 +285,8 @@ export function WisdomUntetheredCourse({
               {activeQuestionId === 'question5' && <Chap1Question5 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question6' && <Chap1Question6 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question7' && <Chap1Question7 onOpenJournal={onOpenJournal} />}
+              {activeQuestionId === 'question8' && <Chap1Question8 onOpenJournal={onOpenJournal} />}
+              {activeQuestionId === 'question9' && <Chap1Question9 onOpenJournal={onOpenJournal} />}
             </motion.div>
           )}
 

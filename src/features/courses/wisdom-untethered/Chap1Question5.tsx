@@ -7,7 +7,8 @@ import { CourseHero } from "./CourseHero";
 import { CourseLightbox } from "./CourseLightbox";
 import { VoiceService } from "../../../services/voiceService";
 
-const darkImages: Record<string, string> = {
+const SLIDE_IMAGES: Record<string, string> = {
+  "overview": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/01.webp"),
   "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/01.webp"),
   "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/02.webp"),
   "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/03.webp"),
@@ -17,18 +18,6 @@ const darkImages: Record<string, string> = {
   "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/07.webp"),
   "slide8": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/08.webp"),
   "slide9": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/09.webp"),
-};
-
-const lightImages: Record<string, string> = {
-  "slide1": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/01_light.webp"),
-  "slide2": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/02_light.webp"),
-  "slide3": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/03_light.webp"),
-  "slide4": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/04_light.webp"),
-  "slide5": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/05_light.webp"),
-  "slide6": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/06_light.webp"),
-  "slide7": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/07_light.webp"),
-  "slide8": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/08_light.webp"),
-  "slide9": VoiceService.getStorageUrl("/WisdomUntethered/Chap1/Question5/09_light.webp"),
 };
 
 const ALL_SLIDES = ["slide1", "slide2", "slide3", "slide4", "slide5", "slide6", "slide7", "slide8", "slide9"];
@@ -135,7 +124,6 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
   const { updateProgress } = useCourseTracking(user?.uid);
-  const [isDark, setIsDark] = useState(true);
 
   // ── Lightbox ──
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -170,22 +158,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
     return () => container.removeEventListener('scroll', handleScroll);
   }, [user?.uid, updateProgress]);
 
-  // Theme Detection
-  useEffect(() => {
-    const isCurrentlyDark = document.documentElement.classList.contains('dark');
-    setIsDark(isCurrentlyDark);
-    
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    
-    observer.observe(document.documentElement, { 
-      attributes: true, 
-      attributeFilter: ['class'] 
-    });
-    
-    return () => observer.disconnect();
-  }, []);
+  // Theme Detection Removed
 
   useEffect(() => {
     const sections = containerRef.current?.querySelectorAll('[data-section]');
@@ -217,7 +190,6 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
     }
   };
 
-  const imageMap = isDark ? darkImages : lightImages;
 
   return (
     <div className={cn(styles.container, "scroll-container")} ref={containerRef} style={{ height: '100%', overflowY: 'auto' }}>
@@ -227,6 +199,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
         question={5}
         title={<>The Great Discovery: You are the <strong>Observer</strong></>}
         subtitle="Moving from the drama of identity — to the peace of pure awareness"
+        overviewImage={SLIDE_IMAGES["overview"]}
       />
 
       <CourseLightbox 
@@ -236,7 +209,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
         onPrev={goLightboxPrev}
         currentIndex={lightboxIndex ?? 0}
         total={ALL_SLIDES.length}
-        imgSrc={lightboxIndex !== null ? imageMap[ALL_SLIDES[lightboxIndex]] : ''}
+        imgSrc={lightboxIndex !== null ? SLIDE_IMAGES[ALL_SLIDES[lightboxIndex]] : ''}
       />
 
       <nav className={styles.navDots}>
@@ -261,7 +234,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
             <span className={styles.slideNum}>01</span>
             <div className={styles.imageContainer}>
               <img 
-                src={imageMap["slide1"]} 
+                src={SLIDE_IMAGES["slide1"]} 
                 alt={slidesContent[0].tag} 
                 onClick={() => openLightbox(0)} 
                 className={styles.clickableImg} 
@@ -287,7 +260,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
             <span className={styles.slideNum}>02</span>
             <div className={styles.imageContainer}>
               <img 
-                src={imageMap["slide2"]} 
+                src={SLIDE_IMAGES["slide2"]} 
                 alt={slidesContent[1].tag} 
                 onClick={() => openLightbox(1)} 
                 className={styles.clickableImg} 
@@ -313,7 +286,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
             <span className={styles.slideNum}>03</span>
             <div className={styles.imageContainer}>
               <img 
-                src={imageMap["slide3"]} 
+                src={SLIDE_IMAGES["slide3"]} 
                 alt={slidesContent[2].tag} 
                 onClick={() => openLightbox(2)} 
                 className={styles.clickableImg} 
@@ -339,7 +312,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
             <span className={styles.slideNum}>04</span>
             <div className={styles.imageContainer}>
               <img 
-                src={imageMap["slide4"]} 
+                src={SLIDE_IMAGES["slide4"]} 
                 alt={slidesContent[3].tag} 
                 onClick={() => openLightbox(3)} 
                 className={styles.clickableImg} 
@@ -365,7 +338,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
             <span className={styles.slideNum}>05</span>
             <div className={styles.imageContainer}>
               <img 
-                src={imageMap["slide5"]} 
+                src={SLIDE_IMAGES["slide5"]} 
                 alt={slidesContent[4].tag} 
                 onClick={() => openLightbox(4)} 
                 className={styles.clickableImg} 
@@ -391,7 +364,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
             <span className={styles.slideNum}>06</span>
             <div className={styles.imageContainer}>
               <img 
-                src={imageMap["slide6"]} 
+                src={SLIDE_IMAGES["slide6"]} 
                 alt={slidesContent[5].tag} 
                 onClick={() => openLightbox(5)} 
                 className={styles.clickableImg} 
@@ -417,7 +390,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
             <span className={styles.slideNum}>07</span>
             <div className={styles.imageContainer}>
               <img 
-                src={imageMap["slide7"]} 
+                src={SLIDE_IMAGES["slide7"]} 
                 alt={slidesContent[6].tag} 
                 onClick={() => openLightbox(6)} 
                 className={styles.clickableImg} 
@@ -443,7 +416,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
             <span className={styles.slideNum}>08</span>
             <div className={styles.imageContainer}>
               <img 
-                src={imageMap["slide8"]} 
+                src={SLIDE_IMAGES["slide8"]} 
                 alt={slidesContent[7].tag} 
                 onClick={() => openLightbox(7)} 
                 className={styles.clickableImg} 
@@ -469,7 +442,7 @@ export function Chap1Question5({ onOpenJournal }: Chap1Question5Props) {
             <span className={styles.slideNum}>09</span>
             <div className={styles.imageContainer}>
               <img 
-                src={imageMap["slide9"]} 
+                src={SLIDE_IMAGES["slide9"]} 
                 alt={slidesContent[8].tag} 
                 onClick={() => openLightbox(8)} 
                 className={styles.clickableImg} 

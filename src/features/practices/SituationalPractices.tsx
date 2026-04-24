@@ -560,10 +560,10 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
                     <h4 className="text-lg font-serif leading-tight group-hover:text-[var(--accent-primary)] transition-colors" style={{ color: 'var(--text-primary)' }}>
                         {situation.title}
                     </h4>
-                    <p className="text-[13px] leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
+                    <p className="hidden sm:block text-[13px] leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
                         {situation.description}
                     </p>
-                    <p className="text-[12px] font-serif italic opacity-0 group-hover:opacity-80 transition-opacity duration-300 line-clamp-1 mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    <p className="hidden sm:block text-[12px] font-serif italic opacity-0 group-hover:opacity-80 transition-opacity duration-300 line-clamp-1 mt-0.5" style={{ color: 'var(--text-muted)' }}>
                         {situation.whenToUse}
                     </p>
                 </div>
