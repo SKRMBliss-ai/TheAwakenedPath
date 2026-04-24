@@ -188,7 +188,7 @@ function DashboardCard({
         {/* Bottom: subtitle + title + done badge */}
         <div>
           <p
-            className="font-serif italic text-[10px] sm:text-[11px] mb-1 sm:mb-[5px] leading-tight line-clamp-1"
+            className="hidden sm:block font-serif italic text-[11px] mb-[5px] leading-tight line-clamp-1"
             style={{
               color: isLocked ? 'var(--text-disabled)' : 'var(--text-muted)',
               opacity: isLocked ? 0.4 : 0.6,
