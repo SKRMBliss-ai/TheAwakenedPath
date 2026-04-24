@@ -89,9 +89,8 @@ function DashboardCard({
       transition={{ delay: idx * 0.06, duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
       whileHover={!isLocked ? { y: -2 } : {}}
       whileTap={!isLocked ? { scale: 0.98 } : {}}
-      className="relative text-left w-full overflow-hidden group"
+      className="relative text-left w-full overflow-hidden group h-[152px] sm:h-[168px] md:h-[180px]"
       style={{
-        height: '176px',
         borderRadius: '20px',
         border: `1px solid ${
           isActive ? color + '55'
@@ -111,21 +110,22 @@ function DashboardCard({
       onClick={isLocked && !isDone ? undefined : onClick}
     >
       {/* Subtle background image texture */}
-      {!isLocked && (
-        <div className="absolute inset-0 overflow-hidden rounded-[20px]">
-          <img
-            src={`/assets/dashboard/${mode === 'dark' ? CARD_IMAGES_DARK[idx] : CARD_IMAGES_LIGHT[idx]}`}
-            alt=""
-            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-            style={{
-              opacity: isDone ? 0.07 : mode === 'dark' ? 0.14 : 0.10,
-              filter: mode === 'dark'
-                ? 'brightness(1.3) saturate(0.8)'
-                : 'brightness(0.8) saturate(0.6)',
-            }}
-          />
-        </div>
-      )}
+      {/* Backdrop image texture */}
+      <div className="absolute inset-0 overflow-hidden rounded-[20px]">
+        <img
+          src={`/assets/dashboard/${mode === 'dark' ? CARD_IMAGES_DARK[idx] : CARD_IMAGES_LIGHT[idx]}`}
+          alt=""
+          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+          style={{
+            opacity: isLocked ? 0.35 : (isDone ? 0.25 : 0.55),
+            filter: isLocked 
+              ? 'grayscale(1) brightness(0.7)'
+              : mode === 'dark'
+                ? 'brightness(1.1) saturate(1.1)'
+                : 'brightness(1.0) saturate(1.1)',
+          }}
+        />
+      </div>
 
       {/* Top accent line */}
       <div
@@ -140,11 +140,11 @@ function DashboardCard({
       />
 
       {/* Content */}
-      <div className="relative z-10 h-full flex flex-col justify-between p-5">
+      <div className="relative z-10 h-full flex flex-col justify-between p-3.5 sm:p-4 md:p-5">
         {/* Top row: step label + state icon */}
         <div className="flex items-start justify-between">
           <span
-            className="text-[9px] font-black uppercase tracking-[0.28em]"
+            className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.22em] sm:tracking-[0.28em]"
             style={{
               color: isLocked ? 'var(--text-disabled)' : color,
               opacity: isLocked ? 0.45 : 1,
@@ -188,10 +188,10 @@ function DashboardCard({
         {/* Bottom: subtitle + title + done badge */}
         <div>
           <p
-            className="font-serif italic text-[11px] mb-[5px] leading-tight line-clamp-1"
+            className="font-serif italic text-[10px] sm:text-[11px] mb-1 sm:mb-[5px] leading-tight line-clamp-1"
             style={{
               color: isLocked ? 'var(--text-disabled)' : 'var(--text-muted)',
-              opacity: isLocked ? 0.4 : 0.65,
+              opacity: isLocked ? 0.4 : 0.6,
             }}
           >
             {subtitle}
@@ -201,7 +201,7 @@ function DashboardCard({
             <h3
               className="font-serif leading-none"
               style={{
-                fontSize: '23px',
+                fontSize: 'clamp(16px, 4.8vw, 23px)',
                 fontWeight: 600,
                 letterSpacing: '-0.025em',
                 color: isLocked ? 'var(--text-disabled)' : 'var(--text-primary)',
@@ -317,18 +317,18 @@ function InlinePracticePanel({
         boxShadow: `0 4px 24px ${color}10`,
       }}
     >
-      <div className="p-5 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[.3em] mb-1" style={{ color }}>
+      <div className="p-4 sm:p-5 pb-3 sm:pb-4">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="min-w-0 pr-3">
+            <p className="text-[10px] font-black uppercase tracking-[.3em] mb-0.5" style={{ color }}>
               Today's Practice
             </p>
-            <h3 className="text-[18px] font-serif leading-tight" style={{ color: 'var(--text-primary)' }}>{practice.name}</h3>
+            <h3 className="text-[16px] sm:text-[18px] font-serif leading-tight truncate" style={{ color: 'var(--text-primary)' }}>{practice.name}</h3>
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5" style={{ color: 'var(--text-muted)' }}>Step</p>
-            <p className="text-2xl font-black leading-none tabular-nums" style={{ color }}>
-              {stepIdx + 1}<span className="text-sm font-normal opacity-40" style={{ color: 'var(--text-muted)' }}>/{total}</span>
+            <p className="text-xl sm:text-2xl font-black leading-none tabular-nums" style={{ color }}>
+              {stepIdx + 1}<span className="text-xs sm:text-sm font-normal opacity-40" style={{ color: 'var(--text-muted)' }}>/{total}</span>
             </p>
           </div>
         </div>
@@ -342,7 +342,7 @@ function InlinePracticePanel({
         </div>
       </div>
 
-      <div className="px-5 pb-5">
+      <div className="px-4 sm:px-5 pb-4 sm:pb-5">
         <AnimatePresence mode="wait">
           <motion.div
             key={stepIdx}
@@ -350,7 +350,7 @@ function InlinePracticePanel({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -16 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="p-5 rounded-2xl mb-5"
+            className="p-4 sm:p-5 rounded-2xl mb-4 sm:mb-5"
             style={{
               background: `color-mix(in srgb, ${color} 8%, var(--bg-surface))`,
               border: `1px solid ${color}25`,
@@ -462,11 +462,11 @@ function InlineReflectPanel({
         boxShadow: `0 4px 24px ${color}10`,
       }}
     >
-      <div className="p-5">
-        <p className="text-[10px] font-black uppercase tracking-[.35em] mb-1.5 opacity-60" style={{ color }}>
+      <div className="p-4 sm:p-5">
+        <p className="text-[10px] font-black uppercase tracking-[.35em] mb-1 opacity-60" style={{ color }}>
           Reflect
         </p>
-        <p className="text-[15px] font-serif italic mb-5 leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+        <p className="text-[13px] sm:text-[15px] font-serif italic mb-4 sm:mb-5 leading-relaxed" style={{ color: 'var(--text-primary)' }}>
           "{prompt}"
         </p>
         <textarea
@@ -696,7 +696,7 @@ export function DashboardGrid({
   return (
     <>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-0.5 mb-5">
+      <div className="flex items-center justify-between px-0.5 mb-3 sm:mb-5">
         <AnimatePresence mode="wait">
           {allDone ? (
             <motion.div
@@ -750,7 +750,7 @@ export function DashboardGrid({
       </div>
 
       {/* ── Row 1 (Steps 1 & 2) ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-2 sm:mb-3">
         <DashboardCard
           idx={0}
           Icon={BookOpen}
@@ -783,7 +783,7 @@ export function DashboardGrid({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden mb-5"
+            className="overflow-hidden mb-2 sm:mb-5"
           >
             <InlinePracticePanel
               practice={practice}
@@ -797,7 +797,7 @@ export function DashboardGrid({
       </AnimatePresence>
 
       {/* ── Row 2 (Steps 3 & 4) ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-2 sm:mb-3">
         <DashboardCard
           idx={2}
           Icon={PenLine}
@@ -830,7 +830,7 @@ export function DashboardGrid({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden mb-5"
+            className="overflow-hidden mb-2 sm:mb-5"
           >
             <InlineReflectPanel
               prompt={questionMeta.journalPrompt}
@@ -853,7 +853,7 @@ export function DashboardGrid({
       {/* Redundant progress row removed in favor of top header */}
 
       {/* ── Soundscape of the Day ───────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 mb-3 mt-6 px-0.5">
+      <div className="flex items-center gap-3 mb-3 mt-4 sm:mt-6 px-0.5">
         <p
           className="font-sans text-[9px] font-bold tracking-[0.3em] uppercase"
           style={{ color: 'var(--text-muted)', opacity: 0.45 }}
@@ -865,7 +865,7 @@ export function DashboardGrid({
       <SoundscapeCard onNavigate={onNavigate} />
 
       {/* ── Explore button ──────────────────────────────────────────────────── */}
-      <div className="flex justify-center pt-7 pb-3">
+      <div className="flex justify-center pt-5 sm:pt-7 pb-2">
         <motion.button
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.97 }}

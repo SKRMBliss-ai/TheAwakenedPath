@@ -41,7 +41,7 @@ import { PhonePromptModal } from './components/domain/PhonePromptModal';
 
 const DashboardActions = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate }: any) => {
   return (
-    <div className="max-w-4xl mx-auto w-full px-4 mb-4">
+    <div className="max-w-4xl mx-auto w-full px-3 sm:px-4">
       <DashboardGrid
         userId={user?.uid}
         progress={progress}
@@ -166,42 +166,40 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
       className="space-y-6"
     >
       {/* ── Greeting row ── */}
-      <div className="flex items-center justify-between px-4 pt-5">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-3 sm:px-4 pt-4 sm:pt-5">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={onOpenSidebar}
-            className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center active:scale-90 transition-all flex-shrink-0"
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
           >
-            <Menu className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: 'var(--text-muted)' }} />
           </button>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             <span
-              className="font-sans text-[9px] sm:text-[10px] font-bold tracking-[.28em] uppercase"
+              className="font-sans text-[9px] font-bold tracking-[.28em] uppercase"
               style={{ color: '#B8973A' }}
             >
               {greeting},
             </span>
-            <span className="font-serif text-[18px] sm:text-[22px] font-normal" style={{ color: 'var(--text-primary)' }}>
+            <span className="font-serif text-[17px] sm:text-[20px] font-normal truncate" style={{ color: 'var(--text-primary)' }}>
               {user.displayName || 'Friend'}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Pulsing gold dot */}
-          <motion.div
-            className="rounded-full"
-            style={{ width: 8, height: 8, background: '#B8973A', boxShadow: '0 0 10px #B8973A' }}
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </div>
+        {/* Pulsing gold dot */}
+        <motion.div
+          className="rounded-full flex-shrink-0"
+          style={{ width: 8, height: 8, background: '#B8973A', boxShadow: '0 0 10px #B8973A' }}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        />
       </div>
 
       {/* ── Orb section ── */}
-      <div className="flex flex-col items-center gap-3 px-4">
+      <div className="flex flex-col items-center gap-3 px-3 sm:px-4">
         {/* Orb + ring */}
-        <div className="relative" style={{ width: 120, height: 120 }}>
+        <div className="relative w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] md:w-[140px] md:h-[140px]">
           {/* Outer ring */}
           <motion.div
             className="absolute rounded-full pointer-events-none"
@@ -212,14 +210,13 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
           {/* Orb button — always dark bg so text inside stays readable */}
           <motion.button
             onClick={() => setBreathActive(b => !b)}
-            className="relative rounded-full flex items-center justify-center overflow-hidden focus:outline-none"
+            className="relative rounded-full flex items-center justify-center overflow-hidden focus:outline-none w-full h-full"
             style={{
-              width: 120, height: 120,
-              background: mode === 'dark' 
+              background: mode === 'dark'
                 ? 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)'
                 : 'radial-gradient(ellipse at 37% 30%, #FFFDF7 0%, #F5E6BD 55%, #E6C57D 100%)',
               border: mode === 'dark' ? '1px solid rgba(184,151,58,.35)' : '1px solid rgba(184,151,58,.5)',
-              boxShadow: mode === 'dark' 
+              boxShadow: mode === 'dark'
                 ? '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.1)'
                 : '0 0 0 1px rgba(184,151,58,.1), 0 4px 12px rgba(0,0,0,0.05)',
               WebkitTapHighlightColor: 'transparent',
@@ -295,7 +292,7 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.25 }}
-              className="font-sans text-[13px] md:text-[14px] font-semibold text-center leading-relaxed"
+              className="font-sans text-[12px] sm:text-[13px] font-semibold text-center leading-relaxed"
               style={{ color: 'var(--text-primary)', maxWidth: 280 }}
             >
               "{questionMeta.dailyIntent}"
@@ -317,16 +314,14 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
         </button>
       </div>
 
-      <div className="px-4">
-        <DashboardActions
-          user={user}
-          isAccessValid={isAccessValid}
-          progress={progress}
-          weeklyAssignment={weeklyAssignment}
-          onNavigate={onNavigate}
-          onViewProgress={() => onNavigate('stats')}
-        />
-      </div>
+      <DashboardActions
+        user={user}
+        isAccessValid={isAccessValid}
+        progress={progress}
+        weeklyAssignment={weeklyAssignment}
+        onNavigate={onNavigate}
+        onViewProgress={() => onNavigate('stats')}
+      />
     </motion.div>
   );
 };
@@ -368,9 +363,9 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
       className="space-y-8 max-w-5xl mx-auto"
     >
       {/* ── Desktop hero: greeting + centered orb ── */}
-      <div className="pt-8 pb-2 px-8">
+      <div className="pt-6 lg:pt-8 pb-2 px-4 lg:px-8 max-w-4xl mx-auto">
         {/* Greeting row */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 lg:mb-8">
           <div className="flex items-center gap-5">
             <AwakenedPathLogo variant="icon" size="md" animated={true} />
             <div>
@@ -505,16 +500,14 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto w-full">
-        <DashboardActions
-          user={user}
-          isAccessValid={isAccessValid}
-          progress={progress}
-          weeklyAssignment={weeklyAssignment}
-          onNavigate={onNavigate}
-          onViewProgress={() => onNavigate('stats')}
-        />
-      </div>
+      <DashboardActions
+        user={user}
+        isAccessValid={isAccessValid}
+        progress={progress}
+        weeklyAssignment={weeklyAssignment}
+        onNavigate={onNavigate}
+        onViewProgress={() => onNavigate('stats')}
+      />
     </motion.div>
   );
 };
@@ -1916,18 +1909,18 @@ export default function UntetheredApp() {
           </div>
         )}
 
-        <div className="fixed top-2 right-2 md:top-6 md:right-6 z-[100] flex items-center gap-1 md:gap-3 scale-[0.75] sm:scale-100 origin-right whitespace-nowrap">
+        <div className="fixed top-2 right-2 sm:top-5 sm:right-4 md:top-6 md:right-6 z-[100] flex items-center gap-1.5 sm:gap-2 md:gap-3">
           <button
             onClick={() => setActiveTab('profile')}
             className={cn(
-              "p-3 rounded-full backdrop-blur-3xl border border-[var(--border-default)] transition-all flex items-center justify-center group shadow-xl relative overflow-hidden",
+              "p-2 sm:p-2.5 rounded-full backdrop-blur-3xl border border-[var(--border-default)] transition-all flex items-center justify-center group shadow-lg relative overflow-hidden",
               activeTab === 'profile' ? "bg-[var(--accent-primary)] text-black border-[var(--accent-primary)]" : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             )}
             title="Your Journey Profile"
           >
             <div className="absolute inset-0 bg-white/10 animate-pulse opacity-0 group-hover:opacity-30" />
-            <Medal className="w-4 h-4" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--accent-primary)] text-black text-[8px] font-bold flex items-center justify-center rounded-full border border-[var(--bg-surface)]">
+            <Medal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[var(--accent-primary)] text-black text-[7px] sm:text-[8px] font-bold flex items-center justify-center rounded-full border border-[var(--bg-surface)]">
               {unlocked.length}
             </span>
           </button>
@@ -1935,7 +1928,7 @@ export default function UntetheredApp() {
           <ThemeToggle />
         </div>
 
-        <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
+        <div className="max-w-7xl mx-auto px-2 pt-2 pb-28 sm:px-4 sm:pt-4 md:px-6 md:pt-6 lg:pb-8 space-y-6 sm:space-y-8">
           <SacredWelcomeModal
             isOpen={welcomeModal.isOpen}
             onClose={() => {
@@ -2322,10 +2315,7 @@ export default function UntetheredApp() {
         )}
 
         {/* Bottom: Presence Hub (Witness + Toggle) */}
-        <div className={cn(
-          "flex flex-col gap-4 transform transition-all",
-          "scale-[0.85] origin-bottom sm:scale-100"
-        )}>
+        <div className="flex flex-col gap-3 sm:gap-4">
           <WatcherPauseButton />
           <button
             onClick={toggleAudio}
