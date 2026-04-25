@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Download } from 'lucide-react';
+import { Lock } from 'lucide-react';
+import { JournalDashboard } from './JournalDashboard';
 import { useAuth } from '../../auth/AuthContext';
 import { useWeeklyAssignment } from '../../../hooks/useWeeklyAssignment';
 import { MeditationPortal } from '../../../components/ui/MeditationPortal.tsx';
@@ -22,10 +23,8 @@ import {
     SacredToast,
 } from '../../../components/ui/SacredUI.tsx';
 import { useEmotionSync } from '../../presence-intelligence/hooks/useEmotionSync';
-import JournalCalendar from './JournalCalendar';
 import { useDailyPractice } from '../../practices/useDailyPractice';
 import { GentleJournalForm } from './GentleJournalForm';
-import { PracticeHistory } from './PracticeHistory';
 
 
 
@@ -38,17 +37,9 @@ const pageVariants: any = {
         transition: { duration: 1.1, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.1 }
     },
     exit: {
-        opacity: 0, y: -8, filter: 'blur(8px)',
-        transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
-    },
-};
-
-const childVariant: any = {
-    hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
-    visible: {
-        opacity: 1, y: 0, filter: 'blur(0px)',
-        transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] }
-    },
+        opacity: 0, y: -16, filter: 'blur(12px)',
+        transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+    }
 };
 
 const orbExitVariant: any = {
@@ -76,9 +67,12 @@ interface JournalEntry {
     createdAt?: any;
 }
 
-// ─── MAIN JOURNAL COMPONENT ──────────────────────────────────────────────────
+interface JournalProps {
+    isAccessValid: boolean;
+    onUpgrade?: () => void;
+}
 
-const Journal: React.FC = () => {
+const Journal: React.FC<JournalProps> = ({ isAccessValid, onUpgrade }) => {
     const { user, signInWithGoogle } = useAuth();
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     // editingId no longer needed — JournalPage manages its own state
@@ -101,7 +95,6 @@ const Journal: React.FC = () => {
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [showLogForm, setShowLogForm] = useState(false);
-    const [historyTab, setHistoryTab] = useState<'calendar' | 'timeline'>('calendar');
     const { awardEvent, checkAndUnlock } = useAchievements();
     const [isLoadingScript, setIsLoadingScript] = useState(false);
     const [toastVisible, setToastVisible] = useState(false);
@@ -339,6 +332,49 @@ const Journal: React.FC = () => {
         );
     }
 
+    // Freemium Lock
+    if (!isAccessValid && entries.length >= 2) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center min-h-[60vh] max-w-2xl mx-auto relative z-10">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-24 h-24 rounded-full bg-[var(--bg-surface)] border border-[var(--accent-primary)]/30 flex items-center justify-center mb-10 shadow-[0_0_40px_rgba(var(--accent-primary-rgb),0.1)]"
+                >
+                    <Lock className="w-10 h-10 text-[var(--accent-primary)]" />
+                </motion.div>
+                <motion.h2 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-4xl font-serif font-light mb-5" 
+                    style={{ color: 'var(--text-primary)' }}
+                >
+                    Deepen Your Witnessing
+                </motion.h2>
+                <motion.p 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-xl font-serif italic mb-12 leading-relaxed opacity-80" 
+                    style={{ color: 'var(--text-secondary)' }}
+                >
+                    You've successfully integrated your first two reflections into the path. 
+                    Unlock full access to continue recording your journey and witness your growth over time.
+                </motion.p>
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                >
+                    <AnchorButton variant="solid" onClick={onUpgrade} className="px-14 py-4.5 text-xl tracking-[0.05em]">
+                        CONTINUE THE JOURNEY
+                    </AnchorButton>
+                </motion.div>
+            </div>
+        );
+    }
+
     if (isPracticing && dynamicSteps.length > 0) {
         return (
             <AnimatePresence mode="wait">
@@ -396,103 +432,17 @@ const Journal: React.FC = () => {
         <div className="w-full max-w-7xl mx-auto px-6 pt-4 pb-12 relative">
             <NoiseOverlay />
 
-            <nav className="flex items-center justify-between mb-12 relative z-10 w-full border-b border-[var(--border-subtle)]/30 pb-8">
-                <div>
-                    <h1 className="text-3xl md:text-4xl font-serif font-light" 
-                        style={{ color: 'var(--text-primary)' }}>
-                        Daily Log
-                    </h1>
-                    <p className="text-base font-serif italic mt-2" 
-                        style={{ color: 'var(--text-secondary)' }}>
-                        {entries.length} reflection{entries.length === 1 ? '' : 's'}
-                    </p>
-                </div>
-                <a
-                    href="/Journal/Journal.pdf"
-                    download="Journal.pdf"
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all hover:bg-[var(--accent-primary-muted)] hover:text-[var(--text-primary)]"
-                    style={{ 
-                        background: 'var(--bg-surface)', 
-                        border: '1px solid var(--border-subtle)',
-                        color: 'var(--text-muted)',
-                    }}>
-                    <Download size={14} /> Export
-                </a>
-            </nav>
-
             {/* Content fully unlocked for everyone */}
             <div className="relative">
                 <AnimatePresence mode="wait">
                     {!showLogForm ? (
                         <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-8">
-                            {/* Compact Practice CTA Card */}
-                            <motion.section variants={childVariant} className="relative">
-                                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-5 px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 w-full mx-auto shadow-sm transition-all hover:shadow-md">
-                                    <div className="flex items-center gap-5">
-                                        {/* Breathing dot */}
-                                        <div className="w-12 h-12 rounded-full bg-[var(--accent-primary-muted)]/10 border border-[var(--border-subtle)] flex items-center justify-center flex-shrink-0">
-                                            <motion.div
-                                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                                className="w-3 h-3 rounded-full"
-                                                style={{ background: 'var(--accent-primary)', boxShadow: '0 0 12px var(--accent-primary-muted)' }}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <h2 className="text-2xl font-serif font-light tracking-wide" style={{ color: 'var(--text-primary)' }}>
-                                                Settle into the Now
-                                            </h2>
-                                            <p className="text-lg font-serif italic mt-1.5 opacity-90" 
-                                                style={{ color: 'var(--text-secondary)' }}>
-                                                A brief reconnection before journaling
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-4 w-full sm:w-auto mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-[var(--border-subtle)]">
-                                        <AnchorButton variant="solid" onClick={fetchDailyScript} loading={isLoadingScript} className="w-full sm:w-auto justify-center text-lg px-8 py-3">
-                                            BEGIN
-                                        </AnchorButton>
-                                        <button onClick={() => { resetJournalForm(); setShowLogForm(true); }}
-                                            className="text-xs uppercase tracking-[0.2em] font-black transition-colors w-full sm:w-auto text-center sm:text-right hover:text-[var(--accent-primary)]"
-                                            style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0' }}>
-                                            Skip to journal →
-                                        </button>
-                                    </div>
-                                </div>
-                            </motion.section>
-
-                            {/* Calendar / Timeline Toggle & View */}
-                            <motion.section variants={childVariant} className="space-y-6 mt-8">
-                                <div className="flex flex-col sm:flex-row items-center justify-between mb-6 w-full mx-auto gap-4">
-                                    <div className="flex bg-[var(--bg-surface)] rounded-xl p-0.5 border border-[var(--border-subtle)] w-full sm:w-auto">
-                                        {(['calendar', 'timeline'] as const).map(tab => (
-                                            <button key={tab} onClick={() => setHistoryTab(tab)}
-                                                className={`flex-1 sm:flex-none px-6 py-3 text-[12px] font-black uppercase tracking-wider rounded-lg transition-all ${
-                                                    historyTab === tab 
-                                                        ? 'bg-[var(--accent-primary)] text-white shadow-sm' 
-                                                        : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-base)]'
-                                                }`}>
-                                                {tab === 'calendar' ? 'Calendar' : 'History'}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    {/* Entry count */}
-                                    <span className="text-xs font-bold uppercase tracking-wider"
-                                        style={{ color: 'var(--text-muted)' }}>
-                                        {entries.length} journal entries
-                                    </span>
-                                </div>
-                                
-                                <div className="pt-2">
-                                    {historyTab === 'calendar' ? (
-                                        <JournalCalendar entries={entries} />
-                                    ) : (
-                                        <PracticeHistory />
-                                    )}
-                                </div>
-                            </motion.section>
+                            <JournalDashboard
+                                entries={entries}
+                                isLoadingScript={isLoadingScript}
+                                onBegin={fetchDailyScript}
+                                onSkipToWrite={() => { resetJournalForm(); setShowLogForm(true); }}
+                            />
                         </motion.div>
                     ) : (
                         /* ═══════════════════════════════════════════════════════════════

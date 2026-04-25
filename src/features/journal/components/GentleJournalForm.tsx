@@ -4,7 +4,7 @@ import { Loader2, X, Volume2, VolumeX } from "lucide-react";
 import { BodyMapSelector } from "./BodyMapSelector";
 import { WitnessAndRelease } from "./WitnessAndRelease";
 import { useJournalVoice } from "../hooks/useJournalVoice";
-import { ThoughtFeelingSelector } from "./ThoughtFeelingSelector";
+import { MoodGrid } from "./MoodGrid";
 import { FELT_EXPERIENCES } from "../../../data/feltExperiences";
 import { getDailyQuote } from "../../../data/dailyQuotes";
 import { cn } from "../../../lib/utils";
@@ -27,6 +27,90 @@ const STEPS = [
     { label: "Body" },
     { label: "Witness" },
 ];
+
+export function WitnessSummaryCard({
+  selectedThoughts,
+  customThought,
+  selectedEmotions,
+  selectedArea,
+  bodySensations,
+}: {
+  selectedThoughts: string[];
+  customThought: string;
+  selectedEmotions: string[];
+  selectedArea: any;
+  bodySensations: string;
+}) {
+  const thought = [...selectedThoughts, customThought].filter(Boolean)[0] || 'A thought arose';
+  const bodyLabel = selectedArea?.label || selectedArea?.id || bodySensations || 'The body';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="mb-10 p-8 text-center"
+    >
+      <div className="mb-6">
+        <h2 className="text-3xl sm:text-5xl font-serif text-[var(--text-main)] mb-3 leading-tight">
+          You are not the thought.
+        </h2>
+        <p className="text-xl sm:text-2xl font-serif italic text-[var(--accent-primary)] opacity-90">
+          You are the awareness watching it.
+        </p>
+      </div>
+
+      <div style={{
+        fontFamily: "'Georgia', serif",
+        fontSize: 22,
+        fontStyle: 'italic',
+        color: 'rgba(235,215,225,.78)',
+        marginBottom: 18,
+        lineHeight: 1.5,
+        textAlign: 'center'
+      }}>
+        "{thought}"
+      </div>
+
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <span style={{
+          fontFamily: 'sans-serif',
+          fontSize: 9,
+          fontWeight: 700,
+          letterSpacing: '.18em',
+          textTransform: 'uppercase',
+          color: 'rgba(255,255,255,.2)',
+        }}>
+          Creating
+        </span>
+        {selectedEmotions.map(e => (
+          <span key={e} style={{
+            fontFamily: 'sans-serif',
+            fontSize: 11,
+            padding: '4px 12px',
+            borderRadius: 20,
+            background: 'rgba(184,151,58,.1)',
+            border: '1px solid rgba(184,151,58,.25)',
+            color: 'rgba(184,151,58,.8)',
+          }}>
+            {e}
+          </span>
+        ))}
+        {selectedEmotions.length > 0 && (
+          <span style={{ color: 'rgba(255,255,255,.15)', fontSize: 10 }}>·</span>
+        )}
+        <span style={{
+          fontFamily: 'sans-serif',
+          fontSize: 11,
+          color: 'rgba(255,255,255,.3)',
+          fontStyle: 'italic',
+        }}>
+          felt in {bodyLabel}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
 
 // ─── COMPACT HEADER BAR ──────────────────────────────────────────────────────
 // Docks: [step tracker] ─── center ─── [voice toggle] into one horizontal bar.
@@ -55,62 +139,35 @@ function JournalHeader({
     return (
         <div className="flex items-center justify-between gap-4 py-3 px-1">
             {/* Step progress — left-aligned, compact */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-3">
                 {STEPS.map((step, i) => {
                     const isActive = i === currentStep;
                     const isDone = i < currentStep;
                     return (
-                        <React.Fragment key={i}>
-                            {i > 0 && (
-                                <div 
-                                    className="h-px transition-all duration-500"
-                                    style={{ 
-                                        width: 20,
-                                        background: isDone 
-                                            ? 'var(--accent-primary)' 
-                                            : 'var(--border-subtle)',
-                                        opacity: isDone ? 0.5 : 0.3,
-                                    }} 
-                                />
-                            )}
-                            <div className="flex items-center gap-1.5">
-                                <motion.div
-                                    animate={{
-                                        scale: isActive ? 1 : 0.85,
-                                        backgroundColor: isDone 
-                                            ? 'var(--accent-primary)' 
-                                            : isActive 
-                                                ? 'var(--accent-primary)' 
-                                                : 'rgba(0,0,0,0)',
-                                        borderColor: isDone || isActive 
-                                            ? 'var(--accent-primary)' 
-                                            : 'var(--border-default)',
-                                    }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                                    className="flex items-center justify-center rounded-full border-[1.5px]"
-                                    style={{ width: 18, height: 18 }}
-                                >
-                                    {isDone ? (
-                                        <span className="text-[8px] text-white font-bold">✓</span>
-                                    ) : (
-                                        <span className={cn(
-                                            "text-[8px] font-bold",
-                                            isActive ? "text-white" : "text-[var(--text-muted)]"
-                                        )}>{i + 1}</span>
-                                    )}
-                                </motion.div>
+                        <div key={i} className="flex flex-col items-center gap-1.5">
+                            <motion.div
+                                animate={{
+                                    scale: isActive ? 1.1 : 1,
+                                    backgroundColor: isActive ? 'var(--accent-primary)' : 'transparent',
+                                    borderColor: isActive || isDone ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                                    opacity: isActive || isDone ? 1 : 0.3
+                                }}
+                                className="w-8 h-8 rounded-full border-[1.5px] flex items-center justify-center transition-all"
+                            >
                                 <span className={cn(
-                                    "text-[9px] font-bold uppercase tracking-[0.15em] transition-all duration-300 hidden sm:block",
-                                    isActive 
-                                        ? "text-[var(--accent-primary)] opacity-100" 
-                                        : isDone 
-                                            ? "text-[var(--text-muted)] opacity-50"
-                                            : "text-[var(--text-muted)] opacity-30"
+                                    "text-[12px] font-bold",
+                                    isActive ? "text-white" : "text-[var(--text-muted)]"
                                 )}>
-                                    {step.label}
+                                    {isDone ? '✓' : i + 1}
                                 </span>
-                            </div>
-                        </React.Fragment>
+                            </motion.div>
+                            <span className={cn(
+                                "text-[9px] font-black uppercase tracking-widest",
+                                isActive ? "opacity-100 text-[var(--accent-primary)]" : "opacity-30 text-[var(--text-muted)]"
+                            )}>
+                                {step.label}
+                            </span>
+                        </div>
                     );
                 })}
             </div>
@@ -145,13 +202,13 @@ function JournalHeader({
                                         borderLeft: '1px solid var(--accent-secondary-border)',
                                     }} 
                                 />
-                                <p className="font-serif italic">
-                                    <span style={{ color: 'var(--accent-secondary)' }}>Voice guidance is on.</span>
+                                <p className="mt-1.5 text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                                    <b>Tip:</b> I can read the prompts to you.
                                     {' '}Tap here to turn it off anytime.
                                 </p>
                                 <button 
                                     onClick={onDismissTip}
-                                    className="mt-1.5 text-[9px] font-bold uppercase tracking-wider"
+                                    className="mt-2 text-[11px] font-bold uppercase tracking-[0.15em]"
                                     style={{ 
                                         color: 'var(--accent-secondary)',
                                         background: 'none', border: 'none', cursor: 'pointer',
@@ -170,11 +227,10 @@ function JournalHeader({
                         <motion.div
                             key="loading"
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full"
-                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+                            className="flex items-center gap-2"
                         >
-                            <Loader2 className="w-3 h-3 animate-spin" style={{ color: 'var(--text-muted)' }} />
-                            <span className="text-[10px] italic text-[var(--text-muted)] font-serif hidden sm:block">
+                            <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--text-muted)' }} />
+                            <span className="text-[12px] italic text-[var(--text-muted)] font-serif hidden sm:block">
                                 Preparing...
                             </span>
                         </motion.div>
@@ -182,7 +238,7 @@ function JournalHeader({
                         <motion.div
                             key="playing"
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full"
+                            className="flex items-center gap-2 px-3 py-2 rounded-full"
                             style={{ 
                                 background: 'var(--accent-secondary-dim)', 
                                 border: '1px solid var(--accent-secondary-border)' 
@@ -196,20 +252,20 @@ function JournalHeader({
                                         animate={{ scaleY: [0.3, 1, 0.3] }}
                                         transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.12 }}
                                         style={{ 
-                                            width: 2, height: 10, borderRadius: 1,
+                                            width: 2.5, height: 12, borderRadius: 1.5,
                                             background: 'var(--accent-secondary)',
                                             opacity: 0.7,
                                         }}
                                     />
                                 ))}
                             </div>
-                            <span className="text-[10px] italic font-serif hidden sm:block"
+                            <span className="text-[12px] italic font-serif hidden sm:block"
                                 style={{ color: 'var(--accent-secondary)' }}>
                                 Guiding...
                             </span>
                             <button
                                 onClick={onStopVoice}
-                                className="w-5 h-5 rounded-full flex items-center justify-center ml-0.5
+                                className="w-6 h-6 rounded-full flex items-center justify-center ml-0.5
                                     transition-all active:scale-90"
                                 style={{ 
                                     background: 'var(--accent-secondary-muted)',
@@ -237,13 +293,13 @@ function JournalHeader({
                 >
                     {voiceEnabled ? (
                         <>
-                            <Volume2 className="w-4 h-4" />
-                            <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-[1px]">Auto Voice: On</span>
+                            <Volume2 className="w-5 h-5" />
+                            <span className="text-[11px] font-black uppercase tracking-widest leading-none mt-[1px]">Voice: On</span>
                         </>
                     ) : (
                         <>
-                            <VolumeX className="w-4 h-4" />
-                            <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-[1px]">Auto Voice: Off</span>
+                            <VolumeX className="w-5 h-5" />
+                            <span className="text-[11px] font-black uppercase tracking-widest leading-none mt-[1px]">Voice: Off</span>
                         </>
                     )}
                     
@@ -299,90 +355,90 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: {
     }, [value]);
 
     return (
-        <motion.div variants={fadeUp} className="space-y-2">
-            {label && (
-                <label style={{ 
-                    display: "block", fontSize: 20, color: "var(--text-primary)", 
-                    fontFamily: "var(--font-serif)", lineHeight: 1.4 
-                }}>
+        <div className="space-y-3">
+            <div className="flex flex-col gap-1">
+                <label style={{ fontSize: 16, color: "var(--text-primary)", fontWeight: 600, fontFamily: "'Georgia', serif" }}>
                     {label}
                 </label>
-            )}
-            {hint && (
-                <p style={{ 
-                    fontSize: 16, color: "var(--text-secondary)", fontStyle: "italic", 
-                    lineHeight: 1.5, fontWeight: 400 
-                }}>
-                    {hint}
-                </p>
-            )}
+                {hint && <p style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic" }}>{hint}</p>}
+            </div>
             <textarea
-                ref={ref} value={value} onChange={(e) => onChange(e.target.value)} 
-                placeholder={placeholder} rows={3}
+                ref={ref}
+                placeholder={placeholder}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
                 style={{
-                    width: "100%", minHeight: 120, padding: "18px 24px", fontSize: 18, lineHeight: 1.7,
-                    fontFamily: "var(--font-serif)", color: "var(--text-primary)", 
-                    background: "var(--bg-input, var(--bg-surface))",
-                    border: "1.5px solid var(--border-default)", borderRadius: 16, outline: "none", 
-                    resize: "none", transition: "border-color 0.3s, background 0.3s",
+                    width: "100%", padding: "20px", borderRadius: 20, 
+                    fontSize: 20, lineHeight: 1.6,
+                    background: "var(--bg-input)", border: "1.5px solid var(--border-subtle)",
+                    color: "var(--text-primary)", outline: "none", resize: "none",
+                    fontFamily: "'Cormorant Garamond', serif",
+                    minHeight: 120,
+                    transition: "all 0.3s ease",
                 }}
-                onFocus={(e) => { 
-                    e.target.style.borderColor = "var(--accent-primary)"; 
-                    e.target.style.background = "var(--bg-input-focus, var(--bg-surface-hover))"; 
-                }}
-                onBlur={(e) => { 
-                    e.target.style.borderColor = "var(--border-default)"; 
-                    e.target.style.background = "var(--bg-input, var(--bg-surface))"; 
-                }}
-                className="placeholder:text-[var(--text-secondary)] placeholder:opacity-60"
+                onFocus={(e) => { e.currentTarget.style.borderColor = "var(--accent-primary)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border-subtle)"; }}
             />
-        </motion.div>
+        </div>
     );
 }
 
 
 // ─── NAV BUTTON ──────────────────────────────────────────────────────────────
 
-function NavButton({ children, onClick, variant = "next", disabled = false }: { 
-    children: React.ReactNode; onClick: () => void; variant?: "next" | "back" | "save"; disabled?: boolean 
+function NavButton({
+  children,
+  onClick,
+  variant = 'next',
+  disabled = false,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  variant?: 'next' | 'back' | 'save';
+  disabled?: boolean;
 }) {
-    const styles = {
-        next: {
-            bg: "var(--accent-primary-dim)",
-            border: "var(--accent-primary-border)",
-            color: "var(--accent-primary)",
-            hoverBg: "var(--nav-active-bg)"
-        },
-        back: {
-            bg: "var(--bg-surface)",
-            border: "var(--border-default)",
-            color: "var(--text-secondary)",
-            hoverBg: "var(--bg-surface-hover)"
-        },
-        save: {
-            bg: "var(--accent-secondary-dim)",
-            border: "var(--accent-secondary-border)",
-            color: "var(--accent-secondary)",
-            hoverBg: "var(--accent-secondary-muted)"
-        },
-    }[variant];
-    return (
-        <motion.button whileTap={{ scale: 0.97 }} onClick={onClick} disabled={disabled}
-            style={{
-                padding: "16px 32px", borderRadius: 14, fontSize: 16, fontWeight: 600, 
-                letterSpacing: "0.04em",
-                background: disabled ? "var(--bg-surface)" : styles.bg, 
-                border: `1.5px solid ${disabled ? "var(--border-subtle)" : styles.border}`,
-                color: disabled ? "var(--text-disabled)" : styles.color, 
-                cursor: disabled ? "not-allowed" : "pointer",
-                transition: "all 0.3s ease", minHeight: 56, minWidth: 120,
-            }}
-            onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.background = styles.hoverBg; }}
-            onMouseLeave={(e) => { if (!disabled) e.currentTarget.style.background = styles.bg; }}
-        >
-            {children}
-        </motion.button>
-    );
+  const isNext = variant === 'next';
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: '14px 28px',
+        borderRadius: 14,
+        fontSize: 14,
+        fontFamily: 'sans-serif',
+        fontWeight: 700,
+        letterSpacing: '.06em',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'all .25s ease',
+        minHeight: 52,
+        minWidth: 110,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        background: disabled
+          ? 'rgba(255,255,255,.04)'
+          : isNext
+            ? 'linear-gradient(135deg, rgba(184,151,58,.22), rgba(184,151,58,.1))'
+            : 'rgba(255,255,255,.04)',
+        border: disabled
+          ? '1px solid rgba(255,255,255,.06)'
+          : isNext
+            ? '1.5px solid rgba(184,151,58,.4)'
+            : '1px solid rgba(255,255,255,.1)',
+        color: disabled
+          ? 'rgba(255,255,255,.2)'
+          : isNext
+            ? '#B8973A'
+            : 'rgba(255,255,255,.35)',
+      }}
+    >
+      {children}
+    </motion.button>
+  );
 }
 
 
@@ -393,6 +449,19 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
 }) {
     const [step, setStep] = useState(0);
     const voice = useJournalVoice();
+
+    useEffect(() => {
+        const ambients = [
+          'radial-gradient(ellipse at 50% 0%, rgba(184,151,58,.08) 0%, transparent 65%)',
+          'radial-gradient(ellipse at 50% 0%, rgba(92,159,212,.07) 0%, transparent 65%)',
+          'radial-gradient(ellipse at 50% 0%, rgba(171,206,201,.07) 0%, transparent 65%)',
+        ];
+        document.documentElement.style.setProperty(
+          '--journal-ambient',
+          ambients[step] ?? ambients[0]
+        );
+        return () => { document.documentElement.style.removeProperty('--journal-ambient'); };
+    }, [step]);
 
     // Voice is ON by default — show first-time tip
     const [showVoiceTip, setShowVoiceTip] = useState(false);
@@ -442,8 +511,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
     }, [step]);
 
     const bottomRef = useRef<HTMLDivElement>(null);
-    const [showNextPrompt, setShowNextPrompt] = useState(false);
-    useEffect(() => { setShowNextPrompt(false); }, [step]);
+    useEffect(() => { /* was checking showNextPrompt */ }, [step]);
 
     const handleWitnessTabChange = (tabId: string) => {
         if (!voice.voiceEnabled) return;
@@ -511,9 +579,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
     }, [step, voice.voiceEnabled, selectedThoughts, customThought, selectedEmotions, selectedArea, bodySensations]);
 
     const showScrollPrompt = () => {
-        setTimeout(() => {
-            setShowNextPrompt(true);
-        }, 2000);
+        // No longer showing next prompt
     };
 
     const handleSelectionChange = (thoughts: string[], emotions: string[]) => {
@@ -551,7 +617,11 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
     };
 
     return (
-        <div ref={scrollRef} className="w-full h-full" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+        <div ref={scrollRef} className="w-full h-full relative" style={{ 
+            fontFamily: "'Georgia', 'Times New Roman', serif",
+            background: 'var(--journal-ambient, transparent)',
+            transition: 'background 1.5s ease'
+        }}>
             <div className="relative z-10 w-full max-w-4xl mx-auto pb-4 px-4 sm:px-6">
 
                 {/* ═══ HEADER BAR — compact, docked ═══ */}
@@ -568,83 +638,59 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                     />
                 )}
 
-                {/* ═══ STEP CONTENT ═══ */}
-                <div className="mt-2">
+                <div className="mt-8">
                     <AnimatePresence mode="wait">
-
-                        {/* ═══ STEP 0: THOUGHTS ═══ */}
+                        {/* ═══ STEP 0: MIND ═══ */}
                         {step === 0 && (
                             <motion.div key="step0" variants={fadeUp} initial="hidden" animate="visible" exit="exit">
-                                
-                                {/* Step heading + quote — composed together */}
-                                <div className="space-y-4 mb-6">
-                                    <motion.h2 
-                                        variants={fadeUp}
-                                        className="text-center"
-                                        style={{ 
-                                            fontSize: 'clamp(22px, 3.5vw, 30px)', 
-                                            fontFamily: "'Georgia', serif", 
-                                            color: "var(--text-primary)",
-                                            fontWeight: 400,
-                                            lineHeight: 1.2,
-                                        }}
-                                    >
-                                        What's on your mind?
-                                    </motion.h2>
+                                <div className="text-center mb-10">
+                                    <h2 className="text-4xl md:text-6xl font-serif text-[var(--text-main)] mb-4 leading-[1.15]">
+                                        How are you feeling<br />right now?
+                                    </h2>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--text-muted)] opacity-40">
+                                        Tap what resonates · choose freely
+                                    </p>
+                                </div>
 
-                                    {/* Quote — compact, elegant */}
+                                <div className="space-y-4 mb-14">
                                     <motion.div
                                         variants={fadeUp}
-                                        className="flex gap-3 items-start max-w-lg mx-auto"
+                                        className="flex gap-4 items-start max-w-xl mx-auto text-center justify-center"
                                     >
-                                        <div 
-                                            className="w-[2px] self-stretch rounded-full flex-shrink-0 mt-0.5"
-                                            style={{ background: 'var(--accent-primary)', opacity: 0.25 }}
-                                        />
                                         <div>
                                             <p style={{
-                                                fontSize: 14,
-                                                color: "var(--text-secondary)",
+                                                fontSize: 18,
+                                                color: "var(--text-primary)",
                                                 fontStyle: "italic",
                                                 fontFamily: "'Cormorant Garamond', 'Georgia', serif",
-                                                lineHeight: 1.55,
-                                                opacity: 0.85,
+                                                lineHeight: 1.6,
+                                                opacity: 0.9,
                                             }}>
                                                 "{getDailyQuote().text}"
                                             </p>
                                             <p style={{
-                                                fontSize: 10,
+                                                fontSize: 12,
                                                 color: "var(--text-muted)",
-                                                letterSpacing: "0.12em",
+                                                letterSpacing: "0.15em",
                                                 textTransform: "uppercase",
-                                                fontWeight: 600,
-                                                marginTop: 4,
+                                                fontWeight: 700,
+                                                marginTop: 6,
                                                 fontFamily: "system-ui, sans-serif",
                                             }}>
-                                                {getDailyQuote().author}
+                                                — {getDailyQuote().author}
                                             </p>
                                         </div>
                                     </motion.div>
                                 </div>
 
-                                {/* Thought selection */}
-                                <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-3">
-                                    <div className="flex items-baseline justify-between gap-2">
-                                        <p style={{ fontSize: 14, color: "var(--text-primary)", fontFamily: "'Georgia', serif" }}>
-                                            Did any of these come up?
-                                        </p>
-                                        <p style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>
-                                            Tap all that resonate
-                                        </p>
-                                    </div>
-                                    <ThoughtFeelingSelector
+                                <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-4">
+                                    <MoodGrid
                                         selectedThoughts={selectedThoughts}
                                         onSelectionChange={handleSelectionChange}
                                     />
                                 </motion.div>
 
-                                {/* Custom thought */}
-                                <motion.div variants={fadeUp} className="mt-5">
+                                <motion.div variants={fadeUp} className="mt-8">
                                     <GentleTextarea 
                                         label="Or in your own words:" 
                                         placeholder="What was the thought? What triggered it?" 
@@ -653,19 +699,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                     />
                                 </motion.div>
 
-                                {/* Nav */}
-                                <div ref={bottomRef} className="flex flex-col gap-4 pt-6">
-                                    <AnimatePresence>
-                                        {showNextPrompt && (
-                                            <motion.p 
-                                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                                className="text-center text-[12px] italic"
-                                                style={{ color: "var(--text-muted)" }}
-                                            >
-                                                Scroll down to continue ↓
-                                            </motion.p>
-                                        )}
-                                    </AnimatePresence>
+                                <div ref={bottomRef} className="flex flex-col gap-4 pt-10">
                                     <div className="flex justify-between">
                                         <NavButton onClick={onCancel} variant="back">Cancel</NavButton>
                                         <NavButton onClick={() => setStep(1)} variant="next">Next →</NavButton>
@@ -676,35 +710,15 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
 
                         {/* ═══ STEP 1: BODY ═══ */}
                         {step === 1 && (
-                            <motion.div key="step1" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-5">
-                                <motion.div variants={fadeUp} className="text-center space-y-1">
-                                    <h2 style={{ 
-                                        fontSize: 'clamp(22px, 3.5vw, 30px)', 
-                                        fontFamily: "'Georgia', serif", 
-                                        color: "var(--text-primary)", fontWeight: 400 
-                                    }}>
-                                        Where do you feel it?
+                            <motion.div key="step1" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-8">
+                                <div className="text-center mb-8">
+                                    <h2 className="text-4xl md:text-6xl font-serif text-[var(--text-main)] mb-4 leading-[1.15]">
+                                        Where do you<br />feel it?
                                     </h2>
-                                    <p style={{ fontSize: 14, color: "var(--text-muted)", fontFamily: "'Georgia', serif" }}>
-                                        Emotion is energy in motion. It always lands somewhere physical.
+                                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--text-muted)] opacity-40">
+                                        Emotions always land somewhere physical · tap the area that draws you
                                     </p>
-                                </motion.div>
-
-                                {/* Emotion pills */}
-                                {selectedEmotions.length > 0 && (
-                                    <motion.div variants={fadeUp} className="flex flex-wrap gap-1.5 justify-center">
-                                        {selectedEmotions.map(e => (
-                                            <span key={e} style={{ 
-                                                padding: "4px 12px", borderRadius: 100, fontSize: 12,
-                                                background: "var(--accent-secondary-muted)", 
-                                                border: "1px solid var(--accent-secondary-border)", 
-                                                color: "var(--accent-secondary)",
-                                            }}>
-                                                {e}
-                                            </span>
-                                        ))}
-                                    </motion.div>
-                                )}
+                                </div>
 
                                 <motion.div variants={fadeUp}>
                                     <BodyMapSelector selectedArea={selectedArea} onSelect={handleSelectArea} />
@@ -719,17 +733,6 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                 />
 
                                 <div ref={bottomRef} className="flex flex-col gap-4 pt-4">
-                                    <AnimatePresence>
-                                        {showNextPrompt && (
-                                            <motion.p 
-                                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                                className="text-center text-[12px] italic"
-                                                style={{ color: "var(--text-muted)" }}
-                                            >
-                                                Scroll down to continue ↓
-                                            </motion.p>
-                                        )}
-                                    </AnimatePresence>
                                     <div className="flex justify-between">
                                         <NavButton onClick={() => setStep(0)} variant="back">← Back</NavButton>
                                         <NavButton onClick={() => setStep(2)} variant="next">Next →</NavButton>
@@ -740,7 +743,14 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
 
                         {/* ═══ STEP 2: WITNESS ═══ */}
                         {step === 2 && (
-                            <motion.div key="step2" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-5">
+                            <motion.div key="step2" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-8">
+                                <WitnessSummaryCard
+                                    selectedThoughts={selectedThoughts}
+                                    customThought={customThought}
+                                    selectedEmotions={selectedEmotions}
+                                    selectedArea={selectedArea}
+                                    bodySensations={bodySensations}
+                                />
                                 <WitnessAndRelease
                                     data={{
                                         thought: [...selectedThoughts, customThought].filter(Boolean)[0] || "No thought selected",
@@ -764,6 +774,27 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                     <p className="text-[11px] text-[var(--text-muted)] italic font-serif py-4 max-w-[180px] text-right">
                                         Going back will reset your checklist
                                     </p>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* ═══ STEP 5: SUCCESS ═══ */}
+                        {step === 5 && (
+                            <motion.div key="step5" variants={fadeUp} initial="hidden" animate="visible" className="text-center py-20 space-y-8">
+                                <div className="text-6xl mb-8">✨</div>
+                                <h2 style={{
+                                    fontSize: 'clamp(32px, 6vw, 42px)',
+                                    fontFamily: "'Georgia', serif",
+                                    color: 'rgba(235,215,225,.92)',
+                                    fontWeight: 400
+                                }}>
+                                    Entry Sealed
+                                </h2>
+                                <p style={{ fontSize: 18, color: "var(--text-muted)", fontStyle: "italic", maxWidth: 400, margin: "0 auto" }}>
+                                    By watching the thought and feeling the emotion, you have already begun to dissolve the pattern.
+                                </p>
+                                <div className="pt-10">
+                                    <NavButton onClick={onCancel} variant="save">Close the Portal</NavButton>
                                 </div>
                             </motion.div>
                         )}

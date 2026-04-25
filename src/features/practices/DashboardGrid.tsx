@@ -89,7 +89,7 @@ function DashboardCard({
       transition={{ delay: idx * 0.06, duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
       whileHover={!isLocked ? { y: -2 } : {}}
       whileTap={!isLocked ? { scale: 0.98 } : {}}
-      className="relative text-left w-full overflow-hidden group h-[152px] sm:h-[168px] md:h-[180px]"
+      className="relative text-left w-full overflow-hidden group aspect-square"
       style={{
         borderRadius: '20px',
         border: `1px solid ${
@@ -767,7 +767,7 @@ export function DashboardGrid({
           title="Practice"
           subtitle={practice.tagline ?? 'A moment of practice is a moment of freedom.'}
           isDone={practiceCompleted}
-          isLocked={!learnDone && !practiceCompleted}
+          isLocked={false}
           isActive={activePanel === 'practice'}
           onClick={handlePractice}
         />
@@ -803,7 +803,7 @@ export function DashboardGrid({
           title="Reflect"
           subtitle="Journal · after practice"
           isDone={reflectDone}
-          isLocked={!practiceCompleted && !reflectDone}
+          isLocked={false}
           isActive={activePanel === 'reflect'}
           onClick={handleReflect}
         />
@@ -814,7 +814,7 @@ export function DashboardGrid({
           title="Live It"
           subtitle="Sacred commitment · after reflect"
           isDone={integrateDone}
-          isLocked={!reflectDone && !integrateDone}
+          isLocked={false}
           isActive={false}
           onClick={() => { setShowCommitment(true); }}
         />

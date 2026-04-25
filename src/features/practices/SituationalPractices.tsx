@@ -6,7 +6,7 @@ import {
     PenTool, Save, MessageSquare, Zap, Anchor, Moon,
     Coffee, Lightbulb, X, Trophy, Target, Timer, Droplet,
     Search, Play, ChevronRight, CheckCircle2, ChevronDown, Info,
-    Volume2, VolumeX, BookOpen
+    Volume2, VolumeX, BookOpen, Lock
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { ThemeToggle, useTheme } from '../../theme/ThemeSystem';
@@ -37,6 +37,7 @@ interface Situation {
     steps: { title: string; instruction: string; audioScript: string }[];
     realLifeExample: string;
     journalPrompts: { label: string; placeholder: string }[];
+    premium?: boolean;
 }
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -58,7 +59,8 @@ const SITUATIONS: Situation[] = [
             { label: 'What parts of my body felt most alive?', placeholder: 'e.g., fingertips, chest...' },
             { label: 'What parts felt numb or disconnected?', placeholder: 'e.g., lower back, feet...' },
             { label: 'What is my body telling me about my emotional state today?', placeholder: 'Listen to the inner signal...' }
-        ]
+        ],
+        premium: false
     },
     {
         id: 'traffic-light', title: 'Traffic Light Check-In', duration: '30 sec',
@@ -77,7 +79,8 @@ const SITUATIONS: Situation[] = [
             { label: "What 'traffic lights' did I use today?", placeholder: 'e.g., elevator, boiling water...' },
             { label: 'What did I notice in my body?', placeholder: 'e.g., shoulders tight, stomach relaxed...' },
             { label: 'Were there patterns?', placeholder: 'Notice the cycle...' }
-        ]
+        ],
+        premium: false
     },
     {
         id: 'emotional-detective', title: 'Emotional Detective', duration: '5 min',
@@ -105,6 +108,7 @@ const SITUATIONS: Situation[] = [
         durationNum: 10, category: 'Quick', tags: ['breath', 'grounding', 'calm', 'anchor'],
         whenToUse: 'When the mind is racing or you feel disconnected from the present',
         description: 'Use the breath as an anchor to return to the internal energy body.',
+        premium: false,
         icon: Wind, color: '#5EC4B0',
         intro: "Let's use the breath to return to the only moment that truly exists.",
         steps: [
@@ -233,7 +237,8 @@ const SITUATIONS: Situation[] = [
             { label: 'What one sensation did I notice?', placeholder: 'e.g., cold hands...' },
             { label: 'How many times did I manage to do it today?', placeholder: 'Number...' },
             { label: 'Did it break my autopilot mode?', placeholder: 'Yes/No...' }
-        ]
+        ],
+        premium: false
     },
     {
         id: 'bathroom-break', title: 'Bathroom Break Practice', duration: '30 sec',
@@ -259,6 +264,7 @@ const SITUATIONS: Situation[] = [
         durationNum: 2, category: 'Morning', tags: ['morning', 'ritual', 'coffee', 'intention'],
         whenToUse: 'While your coffee/tea is brewing',
         description: 'Turn waiting for caffeine into waiting for presence.',
+        premium: false,
         icon: Coffee, color: '#F4E3DA',
         intro: 'The brewing is happening. Let presence happen too.',
         steps: [
@@ -444,7 +450,7 @@ const CategoryPill = ({ cat }: { cat: string }) => {
     );
 };
 
-const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situation; onClick: () => void; mode: 'light' | 'dark' }) => {
+const SituationalPracticeCard = ({ situation, onClick, mode, isLocked, onUpgrade }: { situation: Situation; onClick: () => void; mode: 'light' | 'dark'; isLocked: boolean; onUpgrade?: () => void }) => {
     const Icon = situation.icon;
     const accent = situation.color;
     const isLight = mode === 'light';
@@ -487,7 +493,13 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
         <motion.button
             whileHover={{ y: -6, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
-            onClick={onClick}
+            onClick={() => {
+                if (isLocked) {
+                    onUpgrade?.();
+                } else {
+                    onClick();
+                }
+            }}
             className="flex-shrink-0 w-64 rounded-[32px] overflow-hidden text-left transition-all group relative border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)]"
             style={{ isolation: 'isolate' }}
         >
@@ -519,15 +531,19 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
                     />
                 )}
 
-                {/* Subtle Grain Texture for premium feel */}
-                <div className="absolute inset-0 opacity-[0.02] mix-blend-overlay pointer-events-none"
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
-                />
-
                 {/* Massive Watermark Icon (Abstracted Background) */}
                 <div className="absolute -right-8 -top-8 opacity-[0.03] dark:opacity-[0.05] group-hover:opacity-[0.07] transition-all duration-1000 rotate-[-12deg] group-hover:rotate-0 scale-110">
                     <Icon size={160} strokeWidth={0.5} style={{ color: accent }} />
                 </div>
+
+                {/* Lock Overlay */}
+                {isLocked && (
+                    <div className="absolute inset-0 z-30 flex items-center justify-center backdrop-blur-[2px] bg-black/20">
+                        <div className="w-10 h-10 rounded-full bg-black/40 border border-white/20 flex items-center justify-center shadow-2xl">
+                            <Lock size={16} className="text-[var(--accent-primary)]" />
+                        </div>
+                    </div>
+                )}
 
                 {/* Floating Icon with Pulse for Quick category */}
                 <div className="absolute top-6 left-6 z-20">
@@ -557,9 +573,16 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
             {/* Content Area */}
             <div className="p-6 pt-2 space-y-4 relative z-10">
                 <div className="space-y-1.5">
-                    <h4 className="text-lg font-serif leading-tight group-hover:text-[var(--accent-primary)] transition-colors" style={{ color: 'var(--text-primary)' }}>
-                        {situation.title}
-                    </h4>
+                    <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-lg font-serif leading-tight group-hover:text-[var(--accent-primary)] transition-colors" style={{ color: 'var(--text-primary)' }}>
+                            {situation.title}
+                        </h4>
+                        {isLocked && (
+                            <span className="text-[9px] font-black uppercase tracking-wider text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 px-1.5 py-0.5 rounded">
+                                Premium
+                            </span>
+                        )}
+                    </div>
                     <p className="hidden sm:block text-[13px] leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
                         {situation.description}
                     </p>
@@ -572,7 +595,7 @@ const SituationalPracticeCard = ({ situation, onClick, mode }: { situation: Situ
                     <div className="flex items-center gap-2">
                         <DurationPill dur={situation.duration} />
                         <span className="text-[11px] font-bold uppercase tracking-wider opacity-60" style={{ color: 'var(--text-muted)' }}>
-                            {situation.steps.length} steps
+                            {situation.steps.length} {situation.steps.length === 1 ? 'step' : 'steps'}
                         </span>
                     </div>
                 </div>
@@ -588,7 +611,9 @@ export const SituationalPractices: React.FC<{
     isAdmin?: boolean;
     activeQuestionId?: string;
     onQuestionSelect?: (id: string) => void;
-}> = ({ onBack, isAdmin, activeQuestionId, onQuestionSelect }) => {
+    isAccessValid: boolean;
+    onUpgrade?: () => void;
+}> = ({ onBack, isAdmin, activeQuestionId, onQuestionSelect, isAccessValid, onUpgrade }) => {
     const { mode } = useTheme();
     const { user } = useAuth();
     const { awardEvent } = useAchievements();
@@ -1129,21 +1154,26 @@ export const SituationalPractices: React.FC<{
                                             </div>
                                         </div>
                                         <div className="flex gap-6 overflow-x-auto pb-8 -mx-4 px-4 scroll-x-styled scroll-smooth">
-                                            {colItems.map(sit => (
-                                                <SituationalPracticeCard
-                                                    key={sit.id}
-                                                    situation={sit}
-                                                    onClick={() => {
-                                                        setSelectedSituation(sit);
-                                                        setCurrentStep(0);
-                                                        setIsPaused(false);
-                                                        setShowLogEntry(false);
-                                                        setJournalData({});
-                                                        setIsPracticing(true);
-                                                    }}
-                                                    mode={mode}
-                                                />
-                                            ))}
+                                            {colItems.map(sit => {
+                                                const isLocked = !isAccessValid && sit.premium !== false;
+                                                return (
+                                                    <SituationalPracticeCard
+                                                        key={sit.id}
+                                                        situation={sit}
+                                                        isLocked={isLocked}
+                                                        onUpgrade={onUpgrade}
+                                                        onClick={() => {
+                                                            setSelectedSituation(sit);
+                                                            setCurrentStep(0);
+                                                            setIsPaused(false);
+                                                            setShowLogEntry(false);
+                                                            setJournalData({});
+                                                            setIsPracticing(true);
+                                                        }}
+                                                        mode={mode}
+                                                    />
+                                                );
+                                            })}
                                         </div>
                                     </section>
                                 );
@@ -1178,6 +1208,7 @@ export const SituationalPractices: React.FC<{
                     )}
                     {filtered.map((sit, i) => {
                         const Icon = sit.icon;
+                        const isLocked = !isAccessValid && sit.premium !== false;
                         return (
                             <motion.button
                                 key={sit.id}
@@ -1188,14 +1219,18 @@ export const SituationalPractices: React.FC<{
                                 transition={{ delay: i * 0.02 }}
                                 whileTap={{ scale: 0.99 }}
                                 onClick={() => {
-                                    setSelectedSituation(sit);
-                                    setCurrentStep(0);
-                                    setIsPaused(false);
-                                    setShowLogEntry(false);
-                                    setJournalData({});
-                                    setIsPracticing(true);
+                                    if (isLocked) {
+                                        onUpgrade?.();
+                                    } else {
+                                        setSelectedSituation(sit);
+                                        setCurrentStep(0);
+                                        setIsPaused(false);
+                                        setShowLogEntry(false);
+                                        setJournalData({});
+                                        setIsPracticing(true);
+                                    }
                                 }}
-                                className="w-full flex items-center gap-5 p-3 rounded-[24px] text-left group transition-all duration-300"
+                                className="w-full flex items-center gap-5 p-3 rounded-[24px] text-left group transition-all duration-300 relative"
                                 style={{
                                     background: 'var(--bg-surface)',
                                     border: '1px solid var(--border-subtle)',
@@ -1209,10 +1244,20 @@ export const SituationalPractices: React.FC<{
                                             <Icon size={24} />
                                         </div>
                                     )}
+                                    {isLocked && (
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
+                                            <Lock size={16} className="text-[var(--accent-primary)]" />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex-1 min-w-0 py-1">
                                     <div className="flex items-center gap-3 mb-1">
                                         <span className="text-[16px] font-serif font-medium" style={{ color: 'var(--text-primary)' }}>{sit.title}</span>
+                                        {isLocked && (
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 px-1.5 py-0.5 rounded">
+                                                Premium
+                                            </span>
+                                        )}
                                         {/* Category pill only shown if filtered results are mixed */}
                                         {activeCategory === 'All' && <CategoryPill cat={sit.category} />}
                                     </div>
@@ -1224,8 +1269,8 @@ export const SituationalPractices: React.FC<{
                                 </div>
                                 <div className="pr-2 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-4 group-hover:translate-x-0 group-focus:opacity-100 group-focus:translate-x-0">
                                     <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transform transition-transform active:scale-90"
-                                        style={{ background: sit.color, color: 'white' }}>
-                                        <Play size={14} fill="currentColor" />
+                                        style={{ background: isLocked ? 'var(--bg-secondary)' : sit.color, color: isLocked ? 'var(--text-muted)' : 'white' }}>
+                                        {isLocked ? <Lock size={14} /> : <Play size={14} fill="currentColor" />}
                                     </div>
                                 </div>
                             </motion.button>

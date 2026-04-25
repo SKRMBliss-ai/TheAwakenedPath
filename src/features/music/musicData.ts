@@ -28,8 +28,8 @@ export const SACRED_TRACKS: SacredTrack[] = [
     description: 'A gentle ambient journey through soft winds and bird songs. Perfect for your daily presence practice.',
     mood: 'Calm',
     coverImage: {
-      dark: VoiceService.getStorageUrl('/mp3/Music/Images/sacred-bg-dark.webp'),
-      light: VoiceService.getStorageUrl('/mp3/Music/Images/sacred-bg-light.webp')
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/sacred-bg-dark.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/sacred-bg-light.webp')
     }
   },
   {
@@ -43,8 +43,8 @@ export const SACRED_TRACKS: SacredTrack[] = [
     description: 'A short, deep sonic bridge to silence. Use this as a quick anchor to return to the witness state in between your daily activities.',
     mood: 'Deep',
     coverImage: {
-      dark: VoiceService.getStorageUrl('/mp3/Music/Images/observer-echo-dark.webp'),
-      light: VoiceService.getStorageUrl('/mp3/Music/Images/observer-echo-light.webp')
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/observer-echo-dark.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/observer-echo-light.webp')
     }
   },
   {
@@ -58,8 +58,8 @@ export const SACRED_TRACKS: SacredTrack[] = [
     description: 'A serene immersion in the healing frequencies of Ho’oponopono. Gentle waves and ethereal hums carry the mantra of reconciliation and love.',
     mood: 'Uplifting',
     coverImage: {
-      dark: VoiceService.getStorageUrl('/mp3/Music/Images/gratitude-flow-dark.webp'),
-      light: VoiceService.getStorageUrl('/mp3/Music/Images/gratitude-flow-light.webp')
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/gratitude-flow-dark.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/gratitude-flow-light.webp')
     }
   },
   {
@@ -73,8 +73,8 @@ export const SACRED_TRACKS: SacredTrack[] = [
     description: 'An enriched version of the Ho’oponopono journey, featuring soft melodic layers and synths that deepen the heart-opening experience.',
     mood: 'Uplifting',
     coverImage: {
-      dark: VoiceService.getStorageUrl('/mp3/Music/Images/gratitude-flow-harmonic-dark.webp'),
-      light: VoiceService.getStorageUrl('/mp3/Music/Images/gratitude-flow-harmonic-light.webp')
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/gratitude-flow-harmonic-dark.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/gratitude-flow-harmonic-light.webp')
     }
   },
   {
@@ -88,8 +88,8 @@ export const SACRED_TRACKS: SacredTrack[] = [
     description: 'Grounding Tabla rhythms meet the celestial breath of the Buddha Flute. Specifically designed to harmonize biological rhythms and restore inner peace.',
     mood: 'Healing',
     coverImage: {
-      dark: VoiceService.getStorageUrl('/mp3/Music/Images/cellular-healing-dark.webp'),
-      light: VoiceService.getStorageUrl('/mp3/Music/Images/cellular-healing-light.webp')
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/cellular-healing-dark.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/cellular-healing-light.webp')
     }
   },
   {
@@ -103,8 +103,8 @@ export const SACRED_TRACKS: SacredTrack[] = [
     description: 'A concentrated primordial Om resonance that acts as a mental vacuum, drawing out thoughts and leaving only the vast, silent space of being.',
     mood: 'Deep',
     coverImage: {
-      dark: VoiceService.getStorageUrl('/mp3/Music/Images/om-vacuum-dark.webp'),
-      light: VoiceService.getStorageUrl('/mp3/Music/Images/om-vacuum-light.webp')
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/om-vacuum-dark.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/om-vacuum-light.webp')
     }
   },
   {
@@ -118,8 +118,8 @@ export const SACRED_TRACKS: SacredTrack[] = [
     description: 'A guided sonic portal into the presence of the Watcher. Merges the power of the long Om chant with silence to reveal the witnessing consciousness.',
     mood: 'Deep',
     coverImage: {
-      dark: VoiceService.getStorageUrl('/mp3/Music/Images/become-watcherwithOmDark.webp'),
-      light: VoiceService.getStorageUrl('/mp3/Music/Images/become-watcherwithOmLight.webp')
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/become-watcherwithOmDark.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/become-watcherwithOmLight.webp')
     }
   },
   {
@@ -163,8 +163,8 @@ export const SACRED_TRACKS: SacredTrack[] = [
     description: 'A profound meditative soundscape for resting in the seat of the Witness. Let the world fade as you return to the one who is looking.',
     mood: 'Meditation',
     coverImage: {
-      dark: '/watcher-dark.webp',
-      light: '/watcher-light.webp'
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/watcher-dark.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/watcher-light.webp')
     }
   },
   {
@@ -178,8 +178,8 @@ export const SACRED_TRACKS: SacredTrack[] = [
     description: 'A transformative soundscape documenting the shift from external seeking to internal discovery. When the searcher stops, the Truth is found.',
     mood: 'Meditation',
     coverImage: {
-      dark: '/guru-dark.webp',
-      light: '/guru-light.webp'
+      dark: VoiceService.getStorageUrl('/Soundscapes/Images/guru-dark.webp'),
+      light: VoiceService.getStorageUrl('/Soundscapes/Images/guru-light.webp')
     }
   },
   {

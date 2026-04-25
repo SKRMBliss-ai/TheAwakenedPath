@@ -1030,8 +1030,8 @@ export default function UntetheredApp() {
   }, [loading, isAccessValid, currentUser]);
 
   const onNavigate = (id: string, questionId?: string, view?: string) => {
-    // If not unlocked, lock everything except home, profile, paywall, music, and the learning tabs
-    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn'];
+    // If not unlocked, lock everything except home, profile, paywall, music, the learning tabs, journal, and situations
+    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations'];
     if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -1085,7 +1085,7 @@ export default function UntetheredApp() {
 
   // Global Access Control — on load, always start at home if the persisted tab is locked
   useEffect(() => {
-    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn'].includes(activeTab)) {
+    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations'].includes(activeTab)) {
       setActiveTab('home');
     }
   }, [isAccessValid, loading]); // intentionally exclude activeTab — only run on auth state change
@@ -2005,6 +2005,8 @@ export default function UntetheredApp() {
                   isAdmin={isAdmin}
                   activeQuestionId={activeQuestionId}
                   onQuestionSelect={setActiveQuestionId}
+                  isAccessValid={isAccessValid}
+                  onUpgrade={() => setActiveTab('paywall')}
                 />
               </motion.div>
             )}
@@ -2050,7 +2052,10 @@ export default function UntetheredApp() {
           <AnimatePresence mode="wait">
             {activeTab === 'chapters' && (
               <motion.div key="chapters" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <Journal />
+                <Journal 
+                  isAccessValid={isAccessValid} 
+                  onUpgrade={() => setActiveTab('paywall')}
+                />
               </motion.div>
             )}
 
