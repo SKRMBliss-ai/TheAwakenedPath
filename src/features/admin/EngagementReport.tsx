@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Trash2 } from 'lucide-react';
+import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Trash2, Search, ExternalLink, Target, Globe } from 'lucide-react';
 import { db, functions } from '../../firebase';
-import { collection, query, orderBy, limit, getDocs, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, where, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { WhisperInput, AnchorButton, SacredToast } from '../../components/ui/SacredUI';
 import { isMonitoredEmail } from '../../config/admin';
@@ -24,7 +24,7 @@ interface EngagementReportProps {
 }
 
 const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) => {
-    const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'blast' | 'history'>('logs');
+    const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'leads' | 'blast' | 'history'>('logs');
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -38,6 +38,12 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
 
     // Blast History State
     const [blasts, setBlasts] = useState<any[]>([]);
+
+    // Leads State
+    const [leads, setLeads] = useState<any[]>([]);
+    const [leadKeywords, setLeadKeywords] = useState('spiritual awakening, untethered soul, presence meditation, anxiety meditation help');
+    const [isScanning, setIsScanning] = useState(false);
+    const [lastScan, setLastScan] = useState<any>(null);
 
     const fetchHistory = async () => {
         setIsLoading(true);
@@ -196,6 +202,71 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         }
     };
 
+    const fetchLeads = async () => {
+        setIsLoading(true);
+        try {
+            const leadsRef = collection(db, 'leads');
+            const q = query(leadsRef, orderBy('foundAt', 'desc'), limit(200));
+            const snap = await getDocs(q);
+            setLeads(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+            const scansRef = collection(db, 'lead_scans');
+            const sq = query(scansRef, orderBy('startedAt', 'desc'), limit(1));
+            const sSnap = await getDocs(sq);
+            setLastScan(sSnap.docs[0] ? { id: sSnap.docs[0].id, ...sSnap.docs[0].data() } : null);
+        } catch (e) {
+            console.error('Error fetching leads:', e);
+            setToast('Failed to load leads.');
+            setTimeout(() => setToast(''), 4000);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleRunScan = async () => {
+        setIsScanning(true);
+        try {
+            const keywords = leadKeywords.split(',').map(k => k.trim()).filter(Boolean);
+            const scanFn = httpsCallable(functions, 'scanLeads');
+            const res: any = await scanFn({ keywords, sources: ['google', 'reddit'] });
+            const data = res?.data || {};
+            const msg = data.googleConfigured === false
+                ? `Found ${data.newLeadsCount} new leads from Reddit (Google API key not configured)`
+                : `Found ${data.newLeadsCount} new leads across ${data.keywordsScanned} keywords`;
+            setToast(msg);
+            setTimeout(() => setToast(''), 5000);
+            await fetchLeads();
+        } catch (e: any) {
+            console.error('Lead scan failed:', e);
+            setToast(`Scan failed: ${e?.message || 'unknown error'}`);
+            setTimeout(() => setToast(''), 5000);
+        } finally {
+            setIsScanning(false);
+        }
+    };
+
+    const handleUpdateLeadStatus = async (leadId: string, status: string) => {
+        try {
+            await updateDoc(doc(db, 'leads', leadId), { status });
+            setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l));
+        } catch (e) {
+            console.error('Failed to update lead status:', e);
+            setToast('Failed to update lead.');
+            setTimeout(() => setToast(''), 4000);
+        }
+    };
+
+    const handleDeleteLead = async (leadId: string) => {
+        try {
+            await deleteDoc(doc(db, 'leads', leadId));
+            setLeads(prev => prev.filter(l => l.id !== leadId));
+        } catch (e) {
+            console.error('Failed to delete lead:', e);
+            setToast('Failed to delete lead.');
+            setTimeout(() => setToast(''), 4000);
+        }
+    };
+
     const handleBlastUpdate = async () => {
         if (!blastTitle || !blastSubtitle) return;
         setIsBlasting(true);
@@ -223,6 +294,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             if (activeTab === 'logs') fetchLogs();
             if (activeTab === 'users') fetchUsers();
             if (activeTab === 'history') fetchHistory();
+            if (activeTab === 'leads') fetchLeads();
         }
     }, [isOpen, activeTab]);
 
@@ -279,10 +351,18 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                 </div>
                                 <div>
                                     <h2 className="text-[18px] sm:text-[22px] font-bold text-[var(--accent-primary)] tracking-wider uppercase">
-                                        {activeTab === 'logs' ? 'Engagement Report' : activeTab === 'blast' ? 'Send Course Update' : 'Email History'}
+                                        {activeTab === 'logs' ? 'Engagement Report'
+                                            : activeTab === 'users' ? 'Users'
+                                            : activeTab === 'leads' ? 'Lead Finder'
+                                            : activeTab === 'blast' ? 'Send Course Update'
+                                            : 'Email History'}
                                     </h2>
                                     <p className="text-[9px] sm:text-[11px] text-[var(--text-muted)] tracking-[0.2em] font-bold uppercase mt-1">
-                                        {activeTab === 'logs' ? 'Tracking User Activity' : activeTab === 'blast' ? 'Send an email update to all users' : 'History of all emails sent'}
+                                        {activeTab === 'logs' ? 'Tracking User Activity'
+                                            : activeTab === 'users' ? 'All registered users'
+                                            : activeTab === 'leads' ? 'Daily prospect scan from Google + Reddit'
+                                            : activeTab === 'blast' ? 'Send an email update to all users'
+                                            : 'History of all emails sent'}
                                     </p>
                                 </div>
                             </div>
@@ -305,6 +385,15 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                         )}
                                     >
                                         Users
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('leads')}
+                                        className={cn(
+                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
+                                            activeTab === 'leads' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                        )}
+                                    >
+                                        Leads
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('blast')}
@@ -531,6 +620,155 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                     </motion.div>
                                                 );
                                             })}
+                                    </div>
+                                </div>
+                            </>
+                        ) : activeTab === 'leads' ? (
+                            <>
+                                {/* Scan controls */}
+                                <div className="px-6 sm:px-10 py-5 bg-[var(--bg-surface-hover)] border-b border-[var(--border-subtle)]/50 space-y-4">
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">
+                                            Search keywords (comma-separated)
+                                        </label>
+                                        <textarea
+                                            value={leadKeywords}
+                                            onChange={(e) => setLeadKeywords(e.target.value)}
+                                            rows={2}
+                                            className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl py-2.5 px-4 text-[12px] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]/50 transition-colors resize-none"
+                                            placeholder="e.g. spiritual awakening, untethered soul, presence meditation"
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between gap-4 flex-wrap">
+                                        <div className="flex items-center gap-3 text-[10px] text-[var(--text-muted)] uppercase tracking-[0.18em] font-bold">
+                                            <span className="flex items-center gap-1.5"><Globe className="w-3 h-3" /> Google</span>
+                                            <span className="opacity-40">+</span>
+                                            <span className="flex items-center gap-1.5"><Target className="w-3 h-3" /> Reddit</span>
+                                            {lastScan?.startedAt && (
+                                                <>
+                                                    <span className="opacity-40">·</span>
+                                                    <span>
+                                                        Last scan: {formatTimestamp(lastScan.startedAt).date} {formatTimestamp(lastScan.startedAt).time}
+                                                        {typeof lastScan.newLeadsCount === 'number' && ` · +${lastScan.newLeadsCount} new`}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
+                                        <button
+                                            onClick={handleRunScan}
+                                            disabled={isScanning || !leadKeywords.trim()}
+                                            className={cn(
+                                                "flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] transition-all",
+                                                "bg-[var(--accent-primary)] text-black hover:opacity-90",
+                                                (isScanning || !leadKeywords.trim()) && "opacity-50 cursor-not-allowed"
+                                            )}
+                                        >
+                                            {isScanning ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                                            <span>{isScanning ? 'Scanning…' : 'Run Scan Now'}</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Table header */}
+                                <div className="px-4 sm:px-10 py-5 grid grid-cols-[1.6fr_0.5fr_0.4fr] md:grid-cols-[2fr_0.6fr_0.6fr_0.6fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                    <div>Lead</div>
+                                    <div className="hidden md:block">Source</div>
+                                    <div>Status</div>
+                                    <div className="hidden md:block">Found</div>
+                                    <div className="text-right">
+                                        <button onClick={fetchLeads} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
+                                            <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-8 custom-scrollbar">
+                                    <div className="space-y-1">
+                                        {leads.map((lead) => {
+                                            const { date, time } = formatTimestamp(lead.foundAt);
+                                            const status = lead.status || 'new';
+                                            return (
+                                                <motion.div
+                                                    key={lead.id}
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    className="grid grid-cols-[1.6fr_0.5fr_0.4fr] md:grid-cols-[2fr_0.6fr_0.6fr_0.6fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                >
+                                                    <div className="flex flex-col gap-1 min-w-0 pr-3">
+                                                        <a
+                                                            href={lead.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1 flex items-center gap-1.5"
+                                                            title={lead.title}
+                                                        >
+                                                            {lead.title || '(untitled)'}
+                                                            <ExternalLink className="w-3 h-3 opacity-50 shrink-0" />
+                                                        </a>
+                                                        {lead.snippet && (
+                                                            <span className="text-[10px] text-[var(--text-muted)] line-clamp-2 italic">{lead.snippet}</span>
+                                                        )}
+                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest truncate">
+                                                            {lead.displayLink || lead.url}
+                                                            {lead.keyword && <> · matched: <span className="text-[var(--accent-primary)]/70">{lead.keyword}</span></>}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="hidden md:flex items-center gap-2">
+                                                        {lead.source === 'google'
+                                                            ? <Globe className="w-4 h-4 text-[var(--accent-primary)]" />
+                                                            : <Target className="w-4 h-4 text-[#E67E22]" />
+                                                        }
+                                                        <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-tight">{lead.source}</span>
+                                                    </div>
+
+                                                    <div>
+                                                        <select
+                                                            value={status}
+                                                            onChange={(e) => handleUpdateLeadStatus(lead.id, e.target.value)}
+                                                            className={cn(
+                                                                "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border bg-transparent focus:outline-none cursor-pointer",
+                                                                status === 'new' && "border-[var(--accent-primary)]/40 text-[var(--accent-primary)]",
+                                                                status === 'reviewed' && "border-blue-400/40 text-blue-400",
+                                                                status === 'contacted' && "border-purple-400/40 text-purple-400",
+                                                                status === 'converted' && "border-green-400/40 text-green-400",
+                                                                status === 'rejected' && "border-red-400/40 text-red-400"
+                                                            )}
+                                                        >
+                                                            <option value="new">New</option>
+                                                            <option value="reviewed">Reviewed</option>
+                                                            <option value="contacted">Contacted</option>
+                                                            <option value="converted">Converted</option>
+                                                            <option value="rejected">Rejected</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div className="hidden md:flex flex-col">
+                                                        <span className="text-[12px] text-[var(--text-secondary)]">{date}</span>
+                                                        <span className="text-[10px] font-bold text-[var(--accent-primary)]">{time}</span>
+                                                    </div>
+
+                                                    <div className="flex justify-end gap-2">
+                                                        <button
+                                                            onClick={() => handleDeleteLead(lead.id)}
+                                                            className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400"
+                                                            title="Delete Lead"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })}
+
+                                        {leads.length === 0 && !isLoading && (
+                                            <div className="py-20 text-center space-y-2">
+                                                <p className="text-[var(--text-muted)] italic">No leads yet.</p>
+                                                <p className="text-[10px] text-[var(--text-muted)]/60 uppercase tracking-[0.2em] font-bold">
+                                                    Click "Run Scan Now" to search Google + Reddit
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </>

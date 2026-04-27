@@ -24,6 +24,10 @@ const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
 const emailUser = defineSecret("EMAIL_USER");
 const emailPass = defineSecret("EMAIL_PASS");
 
+// Lead-finder secrets — Google Custom Search (Reddit uses public JSON, no key needed)
+const googleSearchKey = defineSecret("GOOGLE_SEARCH_API_KEY");
+const googleSearchCx = defineSecret("GOOGLE_SEARCH_CX");
+
 // Text-to-Speech Client
 const ttsClient = new textToSpeech.TextToSpeechClient();
 
@@ -1493,11 +1497,187 @@ exports.getSecureTrackUrl = onCall({
     } catch (error) {
         console.error('[getSecureTrackUrl] Critical Error:', error);
         // Returning detailed error to the frontend for debugging
-        return { 
-            error: error.message, 
+        return {
+            error: error.message,
             stack: error.stack,
             path: path,
             trackId: trackId
         };
     }
+});
+
+/* ===========================================================================
+ * Lead Finder
+ * Admin-triggered scan that searches public web (Google Custom Search) and
+ * Reddit for keyword matches and writes deduped lead docs to Firestore.
+ * Manual trigger via httpsCallable from the admin UI.
+ * =========================================================================== */
+const ADMIN_EMAILS_FOR_LEADS = [
+    'shrutikhungar@gmail.com',
+    'simkatyal1@gmail.com',
+    'rashmi.purbey@gmail.com',
+    'smriti.duggal@gmail.com',
+    'skrmblissai@gmail.com'
+];
+
+const DEFAULT_LEAD_KEYWORDS = [
+    'spiritual awakening',
+    'untethered soul',
+    'presence meditation',
+    'consciousness journey',
+    'anxiety meditation help',
+    'witnessing awareness'
+];
+
+// Tiny GET wrapper using Node built-in https - avoids adding a dependency
+function httpsGetJson(url, headers) {
+    return new Promise((resolve, reject) => {
+        const https = require('https');
+        const req = https.get(url, { headers: Object.assign({ 'User-Agent': 'AwakenedPath-LeadBot/1.0' }, headers || {}) }, (res) => {
+            let raw = '';
+            res.on('data', (c) => { raw += c; });
+            res.on('end', () => {
+                if (res.statusCode < 200 || res.statusCode >= 300) {
+                    return reject(new Error('HTTP ' + res.statusCode + ': ' + raw.slice(0, 200)));
+                }
+                try { resolve(JSON.parse(raw)); }
+                catch (e) { reject(new Error('Invalid JSON: ' + e.message)); }
+            });
+        });
+        req.on('error', reject);
+        req.setTimeout(15000, () => { req.destroy(new Error('Request timeout')); });
+    });
+}
+
+async function searchGoogle(keyword, apiKey, cx) {
+    if (!apiKey || !cx) return [];
+    const url = 'https://www.googleapis.com/customsearch/v1?key=' + encodeURIComponent(apiKey) + '&cx=' + encodeURIComponent(cx) + '&q=' + encodeURIComponent(keyword) + '&num=10';
+    try {
+        const data = await httpsGetJson(url);
+        return (data.items || []).map(item => ({
+            source: 'google',
+            keyword,
+            title: item.title || '',
+            snippet: item.snippet || '',
+            url: item.link || '',
+            displayLink: item.displayLink || ''
+        }));
+    } catch (e) {
+        console.warn('[scanLeads] Google search failed for "' + keyword + '":', e.message);
+        return [];
+    }
+}
+
+async function searchReddit(keyword) {
+    // Public Reddit JSON endpoint; no auth needed for read-only search
+    const url = 'https://www.reddit.com/search.json?q=' + encodeURIComponent(keyword) + '&limit=15&sort=new';
+    try {
+        const data = await httpsGetJson(url);
+        const children = (data && data.data && data.data.children) || [];
+        return children.map(c => {
+            const d = c.data || {};
+            return {
+                source: 'reddit',
+                keyword,
+                title: d.title || '',
+                snippet: (d.selftext || '').slice(0, 280),
+                url: d.url ? d.url : (d.permalink ? 'https://www.reddit.com' + d.permalink : ''),
+                displayLink: d.subreddit ? 'r/' + d.subreddit : 'reddit.com',
+                author: d.author || ''
+            };
+        }).filter(r => r.url);
+    } catch (e) {
+        console.warn('[scanLeads] Reddit search failed for "' + keyword + '":', e.message);
+        return [];
+    }
+}
+
+exports.scanLeads = onCall({
+    secrets: [googleSearchKey, googleSearchCx],
+    timeoutSeconds: 120,
+    memory: '512MiB'
+}, async (request) => {
+    // Admin auth gate
+    const callerEmail = request.auth && request.auth.token && request.auth.token.email;
+    if (!callerEmail || !ADMIN_EMAILS_FOR_LEADS.includes(callerEmail)) {
+        throw new HttpsError('permission-denied', 'Admin only.');
+    }
+
+    // Inputs
+    const keywords = Array.isArray(request.data && request.data.keywords) && request.data.keywords.length > 0
+        ? request.data.keywords.map(String).map(s => s.trim()).filter(Boolean).slice(0, 20)
+        : DEFAULT_LEAD_KEYWORDS;
+    const sources = Array.isArray(request.data && request.data.sources) && request.data.sources.length > 0
+        ? request.data.sources
+        : ['google', 'reddit'];
+
+    let apiKey = '';
+    let cx = '';
+    try { apiKey = googleSearchKey.value(); } catch (e) { apiKey = ''; }
+    try { cx = googleSearchCx.value(); } catch (e) { cx = ''; }
+
+    // Run searches across all keywords / sources in parallel
+    const tasks = [];
+    for (const kw of keywords) {
+        if (sources.includes('google')) tasks.push(searchGoogle(kw, apiKey, cx));
+        if (sources.includes('reddit')) tasks.push(searchReddit(kw));
+    }
+    const results = (await Promise.all(tasks)).flat();
+
+    // Build run record
+    const runRef = await db.collection('lead_scans').add({
+        startedAt: admin.firestore.FieldValue.serverTimestamp(),
+        triggeredBy: callerEmail,
+        keywords,
+        sources,
+        rawResultCount: results.length
+    });
+
+    // Dedupe vs. existing leads (by URL)
+    const existingUrls = new Set();
+    const existingSnap = await db.collection('leads').select('url').limit(2000).get();
+    existingSnap.forEach(d => { const u = d.get('url'); if (u) existingUrls.add(u); });
+
+    // Also dedupe within this batch
+    const batchSeen = new Set();
+    const newLeads = [];
+    for (const r of results) {
+        if (!r.url) continue;
+        if (existingUrls.has(r.url) || batchSeen.has(r.url)) continue;
+        batchSeen.add(r.url);
+        newLeads.push(r);
+    }
+
+    // Write new leads in chunks of 400 to stay under the 500-op batch limit
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    let written = 0;
+    for (let i = 0; i < newLeads.length; i += 400) {
+        const chunk = newLeads.slice(i, i + 400);
+        const batch = db.batch();
+        chunk.forEach(lead => {
+            const ref = db.collection('leads').doc();
+            batch.set(ref, Object.assign({}, lead, {
+                status: 'new',
+                foundAt: now,
+                scanId: runRef.id
+            }));
+        });
+        await batch.commit();
+        written += chunk.length;
+    }
+
+    await runRef.update({
+        finishedAt: admin.firestore.FieldValue.serverTimestamp(),
+        newLeadsCount: written,
+        configured: { google: !!(apiKey && cx), reddit: true }
+    });
+
+    return {
+        success: true,
+        scanId: runRef.id,
+        keywordsScanned: keywords.length,
+        rawResultCount: results.length,
+        newLeadsCount: written,
+        googleConfigured: !!(apiKey && cx)
+    };
 });
