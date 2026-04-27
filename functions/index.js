@@ -1097,7 +1097,15 @@ async function runReminderLogic(apiKey) {
         const userData = userDoc.data();
 
         // Exclude specific emails
-        const blockedEmails = ['simkatyal1@gmail.com', 'smriti.duggal@gmail.com', 'jetski@test.com', 'shrutikhungar@gmail.com'];
+        const blockedEmails = [
+            'simkatyal1@gmail.com', 
+            'smriti.duggal@gmail.com', 
+            'jetski@test.com', 
+            'shrutikhungar@gmail.com',
+            'testuser@example.com',
+            'test@example.com',
+            'echarttolleteachings@gmail.com'
+        ];
         if (userData.email && blockedEmails.includes(userData.email.toLowerCase())) {
             continue;
         }
@@ -1512,6 +1520,50 @@ exports.getSecureTrackUrl = onCall({
  * Reddit for keyword matches and writes deduped lead docs to Firestore.
  * Manual trigger via httpsCallable from the admin UI.
  * =========================================================================== */
+const GOOGLE_DAILY_BUDGET = 90; // hard cap, leaves 10-query buffer under Google's 100/day free tier
+
+function _todayDateKeyUTC() {
+    const d = new Date();
+    return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+}
+
+// Atomically reserve N Google queries against today's budget. Returns how many were granted.
+async function reserveGoogleBudget(needed) {
+    if (needed <= 0) return { reserved: 0, used: 0, remaining: GOOGLE_DAILY_BUDGET };
+    const dateKey = _todayDateKeyUTC();
+    const ref = db.collection('lead_scans').doc('_quota_' + dateKey);
+    return await db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        const used = (snap.exists && snap.data().googleUsed) || 0;
+        const remaining = Math.max(0, GOOGLE_DAILY_BUDGET - used);
+        const reserved = Math.min(needed, remaining);
+        if (reserved > 0) {
+            tx.set(ref, {
+                date: dateKey,
+                budget: GOOGLE_DAILY_BUDGET,
+                googleUsed: used + reserved,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+        return { reserved, used: used + reserved, remaining: remaining - reserved };
+    });
+}
+
+// If a reserved Google call ultimately failed (network etc), refund 1 to the budget.
+async function refundGoogleBudget(count) {
+    if (count <= 0) return;
+    const dateKey = _todayDateKeyUTC();
+    const ref = db.collection('lead_scans').doc('_quota_' + dateKey);
+    try {
+        await db.runTransaction(async (tx) => {
+            const snap = await tx.get(ref);
+            if (!snap.exists) return;
+            const used = snap.data().googleUsed || 0;
+            tx.update(ref, { googleUsed: Math.max(0, used - count) });
+        });
+    } catch (e) { console.warn('[scanLeads] refund failed:', e.message); }
+}
+
 const ADMIN_EMAILS_FOR_LEADS = [
     'shrutikhungar@gmail.com',
     'simkatyal1@gmail.com',
@@ -1615,11 +1667,30 @@ exports.scanLeads = onCall({
     let cx = '';
     try { apiKey = googleSearchKey.value(); } catch (e) { apiKey = ''; }
     try { cx = googleSearchCx.value(); } catch (e) { cx = ''; }
+    const googleConfigured = !!(apiKey && cx);
 
-    // Run searches across all keywords / sources in parallel
+    // Reserve Google budget BEFORE making any external calls. This is atomic — even
+    // if the admin button is mashed in parallel, two scans cannot both blow past 100/day.
+    const desiredGoogleCalls = (sources.includes('google') && googleConfigured) ? keywords.length : 0;
+    const budget = await reserveGoogleBudget(desiredGoogleCalls);
+    const grantedGoogle = budget.reserved; // how many Google queries we may make this run
+
+    // Run searches in parallel: only the first `grantedGoogle` keywords get a Google call.
+    // Reddit is free / unmetered, so it runs for every keyword as long as 'reddit' is in sources.
     const tasks = [];
-    for (const kw of keywords) {
-        if (sources.includes('google')) tasks.push(searchGoogle(kw, apiKey, cx));
+    let googleAttempted = 0;
+    let googleFailed = 0;
+    for (let i = 0; i < keywords.length; i++) {
+        const kw = keywords[i];
+        if (i < grantedGoogle) {
+            googleAttempted++;
+            tasks.push((async () => {
+                const r = await searchGoogle(kw, apiKey, cx);
+                // searchGoogle returns [] on failure; we can't reliably distinguish 'no results'
+                // from 'network error', so we don't refund on empty arrays.
+                return r;
+            })());
+        }
         if (sources.includes('reddit')) tasks.push(searchReddit(kw));
     }
     const results = (await Promise.all(tasks)).flat();
@@ -1669,7 +1740,13 @@ exports.scanLeads = onCall({
     await runRef.update({
         finishedAt: admin.firestore.FieldValue.serverTimestamp(),
         newLeadsCount: written,
-        configured: { google: !!(apiKey && cx), reddit: true }
+        configured: { google: googleConfigured, reddit: true },
+        budget: {
+            googleDailyCap: GOOGLE_DAILY_BUDGET,
+            googleUsedToday: budget.used,
+            googleRemainingToday: budget.remaining,
+            googleCallsThisRun: googleAttempted
+        }
     });
 
     return {
@@ -1678,6 +1755,11 @@ exports.scanLeads = onCall({
         keywordsScanned: keywords.length,
         rawResultCount: results.length,
         newLeadsCount: written,
-        googleConfigured: !!(apiKey && cx)
+        googleConfigured,
+        googleCallsThisRun: googleAttempted,
+        googleUsedToday: budget.used,
+        googleRemainingToday: budget.remaining,
+        googleDailyCap: GOOGLE_DAILY_BUDGET,
+        budgetCapped: desiredGoogleCalls > grantedGoogle
     };
 });

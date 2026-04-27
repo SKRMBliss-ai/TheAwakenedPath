@@ -230,11 +230,16 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             const scanFn = httpsCallable(functions, 'scanLeads');
             const res: any = await scanFn({ keywords, sources: ['google', 'reddit'] });
             const data = res?.data || {};
-            const msg = data.googleConfigured === false
-                ? `Found ${data.newLeadsCount} new leads from Reddit (Google API key not configured)`
-                : `Found ${data.newLeadsCount} new leads across ${data.keywordsScanned} keywords`;
+            let msg: string;
+            if (data.googleConfigured === false) {
+                msg = `Found ${data.newLeadsCount} new leads from Reddit (Google API key not configured)`;
+            } else if (data.budgetCapped) {
+                msg = `Found ${data.newLeadsCount} new leads. Daily Google quota near limit — only ${data.googleCallsThisRun}/${data.keywordsScanned} keywords used Google. ${data.googleRemainingToday} queries left today.`;
+            } else {
+                msg = `Found ${data.newLeadsCount} new leads. Google quota: ${data.googleUsedToday}/${data.googleDailyCap} used today.`;
+            }
             setToast(msg);
-            setTimeout(() => setToast(''), 5000);
+            setTimeout(() => setToast(''), 6500);
             await fetchLeads();
         } catch (e: any) {
             console.error('Lead scan failed:', e);
@@ -640,10 +645,25 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                         />
                                     </div>
                                     <div className="flex items-center justify-between gap-4 flex-wrap">
-                                        <div className="flex items-center gap-3 text-[10px] text-[var(--text-muted)] uppercase tracking-[0.18em] font-bold">
+                                        <div className="flex items-center gap-3 text-[10px] text-[var(--text-muted)] uppercase tracking-[0.18em] font-bold flex-wrap">
                                             <span className="flex items-center gap-1.5"><Globe className="w-3 h-3" /> Google</span>
                                             <span className="opacity-40">+</span>
                                             <span className="flex items-center gap-1.5"><Target className="w-3 h-3" /> Reddit</span>
+                                            {lastScan?.budget && (
+                                                <span
+                                                    className={cn(
+                                                        "px-2 py-0.5 rounded-full border",
+                                                        lastScan.budget.googleRemainingToday <= 10
+                                                            ? "border-red-400/40 text-red-400"
+                                                            : lastScan.budget.googleRemainingToday <= 30
+                                                            ? "border-amber-400/40 text-amber-400"
+                                                            : "border-[var(--accent-primary)]/40 text-[var(--accent-primary)]"
+                                                    )}
+                                                    title="Google Custom Search free-tier daily quota (resets at UTC midnight)"
+                                                >
+                                                    Quota: {lastScan.budget.googleUsedToday}/{lastScan.budget.googleDailyCap}
+                                                </span>
+                                            )}
                                             {lastScan?.startedAt && (
                                                 <>
                                                     <span className="opacity-40">·</span>
