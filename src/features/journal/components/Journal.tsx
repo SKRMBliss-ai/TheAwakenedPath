@@ -25,6 +25,7 @@ import {
 import { useEmotionSync } from '../../presence-intelligence/hooks/useEmotionSync';
 import { useDailyPractice } from '../../practices/useDailyPractice';
 import { GentleJournalForm } from './GentleJournalForm';
+import { PracticeHistory } from './PracticeHistory';
 
 
 
@@ -101,6 +102,7 @@ const Journal: React.FC<JournalProps> = ({ isAccessValid, onUpgrade }) => {
     const [toastMessage, setToastMessage] = useState('');
     const [dynamicSteps, setDynamicSteps] = useState<any[]>([]);
     const [practiceStep, setPracticeStep] = useState(0);
+    const [showHistory, setShowHistory] = useState(false);
     const [journeyTitle, setJourneyTitle] = useState("Daily Presence");
     const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
     const lastSpokenRef = useRef<string | null>(null);
@@ -157,7 +159,7 @@ const Journal: React.FC<JournalProps> = ({ isAccessValid, onUpgrade }) => {
     const speak = useCallback((text: string, onEnd?: () => void, isAudioUrl: boolean = false) => {
         if (isPaused) return;
         if (isAudioUrl) {
-            VoiceService.playAudioURL(text, onEnd);
+            VoiceService.playAudioURL(text, { onEnd });
         } else {
             VoiceService.speak(text, {
                 voice: 'Enceladus',
@@ -429,19 +431,32 @@ const Journal: React.FC<JournalProps> = ({ isAccessValid, onUpgrade }) => {
     }
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-6 pt-4 pb-12 relative">
+        <div className="w-full max-w-7xl mx-auto px-6 pt-0 pb-12 relative">
             <NoiseOverlay />
 
             {/* Content fully unlocked for everyone */}
             <div className="relative">
                 <AnimatePresence mode="wait">
-                    {!showLogForm ? (
-                        <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="space-y-8">
+                    {showHistory ? (
+                        <motion.div key="history" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="relative">
+                            <div className="max-w-2xl mx-auto px-4 pt-4">
+                                <button 
+                                    onClick={() => setShowHistory(false)}
+                                    className="mb-8 font-sans text-xs font-bold uppercase tracking-widest text-[var(--accent-primary)] flex items-center gap-2 hover:opacity-70 transition-opacity"
+                                >
+                                    ← Back to Dashboard
+                                </button>
+                                <PracticeHistory />
+                            </div>
+                        </motion.div>
+                    ) : !showLogForm ? (
+                        <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit">
                             <JournalDashboard
                                 entries={entries}
                                 isLoadingScript={isLoadingScript}
                                 onBegin={fetchDailyScript}
                                 onSkipToWrite={() => { resetJournalForm(); setShowLogForm(true); }}
+                                onViewLogs={() => setShowHistory(true)}
                             />
                         </motion.div>
                     ) : (

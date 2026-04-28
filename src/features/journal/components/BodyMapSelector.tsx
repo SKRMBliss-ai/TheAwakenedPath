@@ -130,18 +130,10 @@ const BODY_PATH = `
   Z
 `;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const fadeIn: any = {
-    hidden: { opacity: 0, y: 12 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 1, 0.5, 1] } },
-    exit: { opacity: 0, y: -8, transition: { duration: 0.3 } },
-};
-
 interface BodyMapProps {
     activeAreas?: string[];
     selectedArea: string | null;
     onSelectArea?: (areaId: string | null) => void;
-    /** @deprecated Use onSelectArea instead */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onSelect?: (zone: any) => void;
     activeCategories?: FeltExperience[];
@@ -154,7 +146,6 @@ export function BodyMapSelector({
     onSelect,
     activeCategories = [],
 }: BodyMapProps) {
-    // GentleJournalForm passes the full zone object for backward compatibility
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const selectedZoneId = typeof selectedArea === 'object' ? (selectedArea as any)?.id : selectedArea;
     const selectedZone = BODY_ZONES.find(z => z.id === selectedZoneId) || null;
@@ -163,7 +154,6 @@ export function BodyMapSelector({
     const handleSelect = (zone: any) => {
         const toggled = selectedZoneId === zone.id ? null : zone.id;
         onSelectArea?.(toggled);
-        // Backward compat for old GentleJournalForm
         if (onSelect) {
             onSelect(toggled ? zone : null);
         }
@@ -171,207 +161,106 @@ export function BodyMapSelector({
 
     return (
         <div className="w-full flex flex-col items-center" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-            <div className="relative z-10 w-full max-w-md mx-auto pt-4 pb-4">
-                <div className="relative flex justify-center">
+            <div className="relative z-10 w-full max-w-4xl mx-auto pt-4 pb-4">
+                <div className="relative flex justify-center mb-12">
                     <svg
                         viewBox="60 30 280 440"
-                        className="w-full text-[var(--text-primary)]"
-                        style={{ maxWidth: 380, maxHeight: 520, overflow: 'visible' }}
+                        className="w-full text-[var(--text-primary)] transition-all duration-700"
+                        style={{ maxWidth: 420, maxHeight: 560, overflow: 'visible' }}
                         role="img"
                         aria-label="Human body map — tap a body area to explore"
                     >
-                        {/* Body silhouette */}
-                        <path d={BODY_PATH} fill="none" stroke="var(--border-subtle)" strokeWidth="1.5" strokeLinejoin="round" />
-                        <path d={BODY_PATH} fill="url(#bodyGradient)" opacity="0.3" />
-
                         <defs>
                             <radialGradient id="bodyGradient" cx="50%" cy="40%" r="60%">
-                                <stop offset="0%" stopColor="var(--accent-primary-muted)" />
-                                <stop offset="100%" stopColor="var(--bg-surface)" />
+                                <stop offset="0%" stopColor="var(--accent-primary-dim)" stopOpacity="0.6" />
+                                <stop offset="60%" stopColor="#000" stopOpacity="0.2" />
+                                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
                             </radialGradient>
 
-                            {/* Glow filters for each zone */}
-                            {BODY_ZONES.map((zone) => (
-                                <filter key={`glow-${zone.id}`} id={`glow-${zone.id}`} x="-50%" y="-50%" width="200%" height="200%">
-                                    <feGaussianBlur stdDeviation="6" result="blur" />
-                                    <feFlood floodColor={zone.color} floodOpacity="0.4" />
-                                    <feComposite in2="blur" operator="in" />
-                                    <feMerge>
-                                        <feMergeNode />
-                                        <feMergeNode in="SourceGraphic" />
-                                    </feMerge>
-                                </filter>
-                            ))}
+                            <filter id="premium-glow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="5" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
                         </defs>
+
+                        {/* Body silhouette */}
+                        <path d={BODY_PATH} fill="none" stroke="var(--border-subtle)" strokeWidth="1" strokeLinejoin="round" opacity="0.4" />
+                        <path d={BODY_PATH} fill="url(#bodyGradient)" opacity="0.5" />
 
                         {/* Zone hotspots */}
                         {BODY_ZONES.map((zone, i) => {
                             const isSelected = selectedZoneId === zone.id;
-                            const isOther = selectedZoneId && !isSelected;
-                            const isPreHighlighted = activeAreas.includes(zone.id) ||
-                                activeCategories.some((c: any) => c.bodyAreas?.includes(zone.id));
+                            const isOtherSelected = selectedZoneId && !isSelected;
+                            const isActive = activeAreas.includes(zone.id) ||
+                                (activeCategories && activeCategories.some((c: FeltExperience) => c.bodyAreas?.includes(zone.id)));
 
                             return (
-                                <g key={zone.id}>
-                                    {/* Invisible large tap target */}
-                                    <circle
-                                        cx={zone.cx} cy={zone.cy} r={Math.max(zone.r, 30)}
-                                        fill="transparent"
-                                        style={{ cursor: "pointer", outline: "none" }}
-                                        onClick={() => handleSelect(zone)}
-                                        role="button"
-                                        aria-label={`${zone.label}: ${zone.description}`}
-                                        tabIndex={0}
-                                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleSelect(zone); }}
-                                        className="outline-none focus:outline-none"
-                                    />
-
-                                    {/* Pulsing outer ring (idle / pre-highlighted) */}
-                                    {!isSelected && (
-                                        <circle cx={zone.cx} cy={zone.cy} r={14}
-                                            fill="none"
-                                            stroke={isPreHighlighted ? zone.color : zone.color}
-                                            strokeWidth={isPreHighlighted ? 2 : 1.5}
-                                            opacity={isPreHighlighted ? 0.7 : 0.4}
-                                        >
-                                            <animate attributeName="r" values="14;20;14" dur={`${3 + i * 0.3}s`} repeatCount="indefinite" />
-                                            <animate attributeName="opacity" values={isPreHighlighted ? "0.7;0.3;0.7" : "0.4;0.1;0.4"} dur={`${3 + i * 0.3}s`} repeatCount="indefinite" />
-                                        </circle>
-                                    )}
+                                <g key={zone.id} className="cursor-pointer outline-none group" onClick={() => handleSelect(zone)}>
+                                    {/* Living Pulse Rings */}
+                                    <circle cx={zone.cx} cy={zone.cy} r={12} fill="none" stroke={zone.color} strokeWidth="1" opacity={isSelected ? 0.8 : 0.3}>
+                                        <animate attributeName="r" values="10;24;10" dur={`${4 + i * 0.4}s`} repeatCount="indefinite" />
+                                        <animate attributeName="opacity" values="0.3;0;0.3" dur={`${4 + i * 0.4}s`} repeatCount="indefinite" />
+                                    </circle>
 
                                     {/* Main dot */}
                                     <circle
-                                        cx={zone.cx} cy={zone.cy} r={isSelected ? 16 : 10}
-                                        opacity={isOther ? 0.6 : 1}
+                                        cx={zone.cx} cy={zone.cy} r={isSelected ? 14 : 7}
+                                        fill={isSelected ? zone.color : isActive ? zone.color : "var(--border-subtle)"}
+                                        className="transition-all duration-500 ease-out"
                                         style={{ 
-                                            cursor: "pointer", 
-                                            transition: "all 0.4s ease",
-                                            fill: isSelected ? zone.color : isPreHighlighted ? zone.color : "var(--text-muted)",
-                                            stroke: isSelected ? zone.color : isPreHighlighted ? zone.color : "var(--border-subtle)",
-                                            strokeWidth: isSelected || isPreHighlighted ? 2 : 1.5,
-                                            filter: (isSelected || isPreHighlighted) ? `drop-shadow(0 0 12px ${zone.color})` : "none"
+                                            filter: isSelected || isActive ? 'url(#premium-glow)' : 'none',
+                                            opacity: isOtherSelected ? 0.2 : 1
                                         }}
-                                        onClick={() => handleSelect(zone)}
                                     />
-
-                                    {/* Inner bright center and Outer Glowing Aura */}
-                                    {isSelected && (
-                                        <>
-                                            <circle cx={zone.cx} cy={zone.cy} r={5} fill="white" opacity="0.8">
-                                                <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite" />
-                                            </circle>
-                                            <circle cx={zone.cx} cy={zone.cy} r={28} fill={zone.color} opacity="0.4">
-                                                <animate attributeName="opacity" values="0.25;0.6;0.25" dur="2.5s" repeatCount="indefinite" />
-                                                <animate attributeName="r" values="24;36;24" dur="2.5s" repeatCount="indefinite" />
-                                            </circle>
-                                        </>
-                                    )}
 
                                     {/* Label */}
                                     <text
                                         x={zone.cx + zone.labelOffset.x}
-                                        y={zone.cy + zone.labelOffset.y + 1}
+                                        y={zone.cy + zone.labelOffset.y + 4}
                                         textAnchor={zone.labelOffset.x > 0 ? "start" : "end"}
+                                        className="transition-all duration-500"
                                         style={{
-                                            fontSize: isSelected ? 15 : 13,
-                                            fontWeight: isSelected ? 700 : 500,
-                                            fill: isSelected ? zone.color : isOther ? "var(--text-disabled)" : "currentColor",
-                                            fontFamily: "Georgia, serif",
-                                            cursor: "pointer",
-                                            transition: "all 0.4s ease",
-                                            letterSpacing: "0.03em",
+                                            fontSize: isSelected ? 16 : 13,
+                                            fontWeight: isSelected ? 800 : 700,
+                                            fill: isSelected ? zone.color : 'var(--text-main)',
+                                            fontFamily: "'Outfit', 'Inter', sans-serif",
+                                            opacity: isOtherSelected ? 0.35 : 1,
+                                            letterSpacing: '0',
                                         }}
-                                        onClick={() => handleSelect(zone)}
                                     >
                                         {zone.label}
                                     </text>
-
-                                    {/* Connecting line */}
-                                    <line
-                                        x1={zone.cx + (zone.labelOffset.x > 0 ? 18 : -18)}
-                                        y1={zone.cy + zone.labelOffset.y}
-                                        x2={zone.cx + zone.labelOffset.x + (zone.labelOffset.x > 0 ? -4 : 4)}
-                                        y2={zone.cy + zone.labelOffset.y}
-                                        strokeWidth="1"
-                                        strokeDasharray={isSelected ? "none" : "3,3"}
-                                        style={{ 
-                                            transition: "all 0.4s ease", 
-                                            stroke: isSelected ? zone.color : "var(--text-muted)",
-                                            opacity: isOther ? 0.35 : 0.8
-                                        }}
-                                    />
                                 </g>
                             );
                         })}
                     </svg>
                 </div>
 
-                {/* Insight Card — from old version + new micro-intervention support */}
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                     {selectedZone && (
                         <motion.div
                             key={selectedZone.id}
-                            variants={fadeIn}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            className="space-y-4"
-                            style={{ marginTop: 24 }}
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1] }}
                         >
-                            <div style={{ padding: "18px 22px", borderRadius: 20, border: `1.5px solid ${selectedZone.color}30` }}>
-                                <h3 style={{ fontSize: 24, fontWeight: 600, color: selectedZone.color, marginBottom: 4 }}>{selectedZone.label}</h3>
-                                <p style={{ fontSize: 16, color: "var(--text-muted)" }}>{selectedZone.description}</p>
-                            </div>
-
-                            <div style={{ padding: "16px 20px", borderRadius: 16, borderLeft: `3px solid ${selectedZone.color}40`, opacity: 0.8 }}>
-                                <p style={{ fontSize: 18, color: "var(--text-primary)", fontStyle: "italic", lineHeight: 1.7 }}>
-                                    {selectedZone.insight}
+                            <div className="rounded-[32px] p-8 sm:p-10 backdrop-blur-md shadow-lg"
+                                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+                                <h3 className="text-3xl sm:text-4xl font-serif font-bold mb-4" style={{ color: selectedZone.color }}>{selectedZone.label}</h3>
+                                <p className="text-lg text-[var(--text-muted)] font-sans font-medium mb-8 pb-6" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                    {selectedZone.description}
                                 </p>
-                            </div>
-
-                            {/* Micro-intervention from matched felt experiences */}
-                            {activeCategories.filter(fe => fe.bodyAreas.includes(selectedZone.id)).length > 0 ? (
-                                activeCategories.filter(fe => fe.bodyAreas.includes(selectedZone.id)).map((fe, idx) => (
-                                    <div key={idx} style={{ padding: "20px", borderRadius: 18, border: "1px solid var(--accent-secondary-border)" }}>
-                                        <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
-                                            <span style={{ fontSize: 15 }}>💚</span>
-                                            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--accent-secondary)", opacity: 0.8 }}>
-                                                A gentle suggestion
-                                            </span>
-                                        </div>
-                                        <p style={{ fontSize: 18, color: "var(--accent-secondary)", lineHeight: 1.7 }}>
-                                            {fe.microIntervention.instruction}
-                                        </p>
+                                <div className="space-y-8">
+                                    <p className="text-xl sm:text-2xl italic font-serif">"{selectedZone.insight}"</p>
+                                    <div className="p-6 rounded-[24px]" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-subtle)' }}>
+                                        <p className="text-lg text-[var(--accent-secondary)] font-sans font-medium">{selectedZone.helps}</p>
                                     </div>
-                                ))
-                            ) : (
-                                <div style={{ padding: "20px", borderRadius: 18, border: "1px solid var(--accent-secondary-border)" }}>
-                                    <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
-                                        <span style={{ fontSize: 15 }}>💚</span>
-                                        <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--accent-secondary)", opacity: 0.8 }}>
-                                            A gentle suggestion
-                                        </span>
-                                    </div>
-                                    <p style={{ fontSize: 18, color: "var(--accent-secondary)", lineHeight: 1.7 }}>
-                                        {selectedZone.helps}
-                                    </p>
                                 </div>
-                            )}
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
-
-                {!selectedArea && (
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="text-center"
-                        style={{ fontSize: 13, color: "var(--text-disabled)", marginTop: 24, fontStyle: "italic" }}
-                    >
-                        Each glowing point on the body is tappable
-                    </motion.p>
-                )}
             </div>
         </div>
     );

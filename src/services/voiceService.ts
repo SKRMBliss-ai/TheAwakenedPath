@@ -34,6 +34,9 @@ export class VoiceService {
         } catch { return true; }
     })();
 
+    private static _isDucked: boolean = false;
+    private static _preDuckVolume: number = 1;
+
     private static STORAGE_BUCKET = "awakened-path-2026.firebasestorage.app";
 
     /**
@@ -289,11 +292,9 @@ export class VoiceService {
         if (!options.isInternal) {
             console.log(`[VoiceService] speak requestId: ${requestId}, key: ${key}`);
             
-            // Pause music if talking
-            if (this.musicAudio && !this.musicAudio.paused) {
-                this._savedMusicTime = this.musicAudio.currentTime;
-                this.musicAudio.pause();
-            }
+            // --- UPDATED: Intelligent Ducking instead of Hard Stop ---
+            // We duck the music instead of stopping it so guided meditations feel professional
+            this.duckMusic();
 
             // Stop current TTS segments
             this.stopTTS();
@@ -333,10 +334,8 @@ export class VoiceService {
                     this.ttsAudio = null;
                     this._currentUrl = null;
                     
-                    // Auto-resume music if it was paused for guidance
-                    if (this.musicAudio && this._savedMusicTime > 0) {
-                        this.resume('music');
-                    }
+                    // --- UPDATED: Unduck instead of doing nothing ---
+                    this.unduckMusic();
                 }
                 options.onEnd?.();
             };
@@ -356,11 +355,8 @@ export class VoiceService {
     private static async speakSegments(segments: string[], options: any): Promise<void> {
         const requestId = ++this.currentRequestId;
         
-        // Pause music if talking
-        if (this.musicAudio && !this.musicAudio.paused) {
-            this._savedMusicTime = this.musicAudio.currentTime;
-            this.musicAudio.pause();
-        }
+        // --- UPDATED: Intelligent Ducking ---
+        this.duckMusic();
 
         this.stopTTS();
         this.currentRequestId = requestId;
@@ -396,37 +392,35 @@ export class VoiceService {
         if (this.currentRequestId === requestId) {
             this.setStatus('idle');
             this._activeCategory = null;
-            // Auto-resume music?
-            if (this.musicAudio && this._savedMusicTime > 0) {
-                this.resume('music');
-            }
+            this.unduckMusic();
         }
     }
 
     /**
      * Plays a direct audio URL (e.g., local MP3) instead of generating TTS.
      */
-    static async playAudioURL(url: string, onEnd?: () => void, trackId?: string): Promise<void> {
+    static async playAudioURL(url: string, options: { onEnd?: () => void, trackId?: string, loop?: boolean, category?: 'music' | 'tts' } = {}): Promise<void> {
         if (this._currentUrl === url && this.musicAudio && !this.musicAudio.paused) {
             console.log("VoiceService: Already playing URL.");
             return;
         }
 
-        // Pause TTS if starting music
-        if (this.ttsAudio && !this.ttsAudio.paused) {
-            this._savedTtsTime = this.ttsAudio.currentTime;
-            this.ttsAudio.pause();
+        const category = options.category || 'music';
+
+        // --- UPDATED: Context-Aware Exclusivity ---
+        // If we are playing actual music, stop previous music and TTS.
+        // If we are playing a TTS file (category='tts'), just duck music.
+        if (category === 'music') {
+            this.stopMusic();
+            this.stopTTS();
+        } else {
+            this.duckMusic();
+            this.stopTTS();
         }
 
         const requestId = ++this.currentRequestId;
         console.log(`VoiceService [${requestId}]: Triggering playback for:`, url);
         
-        // Stop previous music, don't stop TTS
-        if (this.musicAudio) {
-            this.musicAudio.pause();
-            this.musicAudio = null;
-        }
-
         this.currentRequestId = requestId;
 
         try {
@@ -434,27 +428,24 @@ export class VoiceService {
             const audio = new Audio();
             audio.src = storageUrl;
             audio.preload = "auto";
-            audio.crossOrigin = "anonymous"; // Now safe since you set the CORS rules!
+            audio.crossOrigin = "anonymous"; 
             audio.volume = 0; // Start muted for ramp-up
+            audio.loop = !!options.loop;
 
             this.musicAudio = audio;
             this._currentUrl = url;
-            this._musicUrl = url;  // persist separately — never overwritten by TTS
-            this._currentTrackId = trackId || null;
-            this._activeCategory = 'music';
+            this._musicUrl = category === 'music' ? url : this._musicUrl; 
+            this._currentTrackId = options.trackId || null;
+            this._activeCategory = category;
             this.setStatus('playing');
 
             audio.onended = () => {
+                if (audio.loop) return; // loop handles its own state
                 this.setStatus('idle');
                 this._activeCategory = null;
-                onEnd?.();
-                this.musicAudio = null;
-                this._currentUrl = null;
                 this._musicUrl = null;
                 this._currentTrackId = null;
-                
-                // Maybe resume TTS? Let's not auto-resume TTS after music, 
-                // but music after TTS is often desired for background.
+                if (category === 'tts') this.unduckMusic();
             };
 
             audio.onerror = (e: any) => {
@@ -467,7 +458,7 @@ export class VoiceService {
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 await playPromise;
-                // Subtle volume ramp to avoid pops and feel "instant"
+                // Subtle volume ramp
                 let currentVol = 0;
                 const targetVol = this._volume;
                 const ramp = setInterval(() => {
@@ -618,13 +609,8 @@ export class VoiceService {
 
         // If music was paused by the TTS being stopped, resume it now
         if (this._activeCategory === 'tts') {
-            const hasSavedMusic = this._savedMusicTime > 0;
             this.setStatus('idle');
             this._activeCategory = null;
-            
-            if (this.musicAudio && hasSavedMusic) {
-                this.resume('music');
-            }
         }
         
         if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -664,7 +650,7 @@ export class VoiceService {
         }
     }
 
-    private static stopMusic() {
+    public static stopMusic() {
         if (this.musicAudio) {
             try {
                 this.musicAudio.pause();
@@ -678,6 +664,23 @@ export class VoiceService {
         this._currentUrl = null;
         this._musicUrl = null;
         this._currentTrackId = null;
+        this._isDucked = false;
+    }
+
+    private static duckMusic() {
+        if (!this.musicAudio || this._isDucked) return;
+        console.log("[VoiceService] Ducking Music...");
+        this._preDuckVolume = this.musicAudio.volume;
+        this._isDucked = true;
+        // Fade out slightly
+        this.musicAudio.volume = Math.min(this._preDuckVolume, 0.15);
+    }
+
+    private static unduckMusic() {
+        if (!this.musicAudio || !this._isDucked) return;
+        console.log("[VoiceService] Unducking Music...");
+        this.musicAudio.volume = this._preDuckVolume;
+        this._isDucked = false;
     }
 
     static init(): Promise<void> {

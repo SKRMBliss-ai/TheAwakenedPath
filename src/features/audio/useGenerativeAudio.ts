@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { VoiceService } from '../../services/voiceService';
 
 // Generates procedural binaural beats + atmospheric drone
@@ -20,6 +20,28 @@ export const useGenerativeAudio = () => {
     const lfoGain = useRef<GainNode | null>(null);
 
     const FADE_TIME = 2.0;
+
+    const stopAudio = useCallback(() => {
+        if (!isAudioEnabled || !ctxRef.current || !masterGain.current) return;
+        const ctx = ctxRef.current;
+        const gain = masterGain.current.gain;
+        
+        gain.setValueAtTime(gain.value, ctx.currentTime);
+        gain.linearRampToValueAtTime(0, ctx.currentTime + FADE_TIME);
+        setTimeout(() => {
+            if (ctx.state === 'running') ctx.suspend();
+        }, FADE_TIME * 1000 + 100);
+        setIsAudioEnabled(false);
+    }, [isAudioEnabled, FADE_TIME]);
+
+    // Sync with VoiceService for exclusivity
+    useEffect(() => {
+        return VoiceService.subscribe((status) => {
+            if (status === 'playing' && isAudioEnabled) {
+                stopAudio();
+            }
+        });
+    }, [isAudioEnabled, stopAudio]);
 
     const initAudio = () => {
         if (ctxRef.current) return;
@@ -146,19 +168,6 @@ export const useGenerativeAudio = () => {
                 setIsAudioEnabled(true);
             });
         }
-    }, [isAudioEnabled]);
-
-    const stopAudio = useCallback(() => {
-        if (!isAudioEnabled || !ctxRef.current || !masterGain.current) return;
-        const ctx = ctxRef.current;
-        const gain = masterGain.current.gain;
-        
-        gain.setValueAtTime(gain.value, ctx.currentTime);
-        gain.linearRampToValueAtTime(0, ctx.currentTime + FADE_TIME);
-        setTimeout(() => {
-            if (ctx.state === 'running') ctx.suspend();
-        }, FADE_TIME * 1000 + 100);
-        setIsAudioEnabled(false);
     }, [isAudioEnabled]);
 
     // Expose a method to shift frequencies based on app state

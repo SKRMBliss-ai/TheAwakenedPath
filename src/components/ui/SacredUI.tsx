@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "../../theme/ThemeSystem";
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────
 export const tokens = {
@@ -123,6 +124,7 @@ export const WhisperInput = ({ label, placeholder, multiline, value, onChange }:
 // 2. PRIMARY CTA — "Anchor" Button  
 // ══════════════════════════════════════════════════════════════════
 export const AnchorButton = ({ children, variant = "ghost", onClick, loading, className, disabled }: any) => {
+    const { mode } = useTheme();
     const [hovered, setHovered] = useState(false);
 
     const handleClick = () => {
@@ -144,14 +146,14 @@ export const AnchorButton = ({ children, variant = "ghost", onClick, loading, cl
                     position: "relative", overflow: "hidden",
                     padding: "12px 40px",
                     background: hovered
-                        ? `linear-gradient(135deg, ${tokens.teal}, #6BBFB7)`
-                        : `linear-gradient(135deg, ${tokens.teal}, #5BB2AB)`,
+                        ? `linear-gradient(135deg, ${tokens.teal}, ${mode === 'light' ? '#1B5450' : '#6BBFB7'})`
+                        : `linear-gradient(135deg, ${tokens.teal}, ${mode === 'light' ? '#24736E' : '#5BB2AB'})`,
                     borderRadius: 100,
                     border: `1.5px solid ${hovered ? tokens.teal : tokens.teal + 'CC'}`,
                     cursor: disabled ? "not-allowed" : "pointer",
                     fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
                     fontSize: 11, letterSpacing: "0.25em", textTransform: "uppercase",
-                    color: "#0D1F1E",
+                    color: mode === 'light' ? "white" : "var(--bg-primary)",
                     opacity: disabled ? 0.3 : 1,
                     boxShadow: hovered && !disabled
                         ? `0 20px 60px ${tokens.teal}50, 0 0 0 1px ${tokens.teal}40`
@@ -166,7 +168,7 @@ export const AnchorButton = ({ children, variant = "ghost", onClick, loading, cl
                 {loading ? (
                     <motion.div
                         animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-                        style={{ display: "inline-block", width: 14, height: 14, border: `2px solid #0D1F1E`, borderTopColor: "transparent", borderRadius: "50%" }}
+                        style={{ display: "inline-block", width: 14, height: 14, border: `2px solid var(--text-primary)`, borderTopColor: "transparent", borderRadius: "50%" }}
                     />
                 ) : children}
             </motion.button>
@@ -295,10 +297,12 @@ export const EpochCard = ({ date, preview, bucket = "today", emotions, onClick }
                         {(Array.isArray(emotions) ? emotions : [emotions]).map((e: string) => (
                             <span key={e} style={{
                                 padding: "3px 10px", borderRadius: 100,
-                                border: `1px solid rgba(171,206,201,${0.2 * intensity})`,
+                                border: `1px solid var(--accent-primary-border)`,
                                 fontSize: 8, letterSpacing: "0.3em", textTransform: "uppercase",
-                                color: `rgba(171,206,201,${0.5 * intensity})`,
+                                color: `var(--accent-primary)`,
                                 fontFamily: "'DM Sans', sans-serif",
+                                fontWeight: 600,
+                                opacity: intensity,
                             } as any}>{e}</span>
                         ))}
                     </div>
@@ -361,7 +365,7 @@ export const PracticeCard = ({ title, type, level, xp, icon: Icon, accent = toke
             onClick={onClick}
             whileHover={{ y: -8 }}
             whileTap={{ scale: 0.98 }}
-            className="group relative h-[320px] p-10 rounded-[48px] overflow-hidden cursor-pointer border border-white/5 bg-white/[0.01] transition-all duration-700"
+            className="group relative h-[320px] p-10 rounded-[48px] overflow-hidden cursor-pointer border border-[var(--border-subtle)] bg-[var(--bg-surface)] transition-all duration-700 shadow-sm hover:shadow-xl"
         >
             {/* Massive Background Icon */}
             <div className="absolute right-[-10%] bottom-[-10%] opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-1000 pointer-events-none">
@@ -377,28 +381,28 @@ export const PracticeCard = ({ title, type, level, xp, icon: Icon, accent = toke
             <div className="relative z-10 h-full flex flex-col justify-between">
                 <div>
                     <div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center border border-white/10 mb-6 group-hover:scale-110 transition-transform duration-700"
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center border border-[var(--border-subtle)] mb-6 group-hover:scale-110 transition-transform duration-700"
                         style={{ background: `${accent}15` }}
                     >
                         <Icon size={24} style={{ color: accent }} />
                     </div>
 
-                    <h3 className="text-3xl font-serif font-light text-white/90 group-hover:text-white mb-2 tracking-tight">
+                    <h3 className="text-3xl font-serif font-light text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] mb-2 tracking-tight">
                         {title}
                     </h3>
                     <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-primary)]">
                             {type} · {level}
                         </span>
-                        <div className="w-1 h-1 rounded-full bg-white/10" />
+                        <div className="w-1 h-1 rounded-full bg-[var(--text-primary)]/20" />
                         <span className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: accent }}>
                             +{xp} XP
                         </span>
                     </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-8 border-t border-white/5 group-hover:border-white/10 transition-all">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-white/70 group-hover:text-white/70 transition-colors">
+                <div className="flex justify-between items-center pt-8 border-t border-[var(--text-primary)]/5 group-hover:border-[var(--text-primary)]/10 transition-all">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.6em] text-[var(--text-primary)]/70 group-hover:text-[var(--text-primary)]/70 transition-colors">
                         Begin Journey
                     </span>
                     <div
@@ -437,7 +441,7 @@ export const SacredToast = ({ message, visible }: { message: string; visible: bo
                 }} />
                 <span style={{
                     fontSize: 8, letterSpacing: "0.45em", textTransform: "uppercase",
-                    color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                    color: "white", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
                 }}>{message}</span>
             </motion.div>
         )}

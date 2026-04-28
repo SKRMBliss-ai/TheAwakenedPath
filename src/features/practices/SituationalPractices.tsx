@@ -440,11 +440,19 @@ const DurationPill = ({ dur }: { dur: string }) => (
 );
 
 const CategoryPill = ({ cat }: { cat: string }) => {
-    const colors: Record<string, string> = { Morning: '#ABCEC9', Work: '#9575CD', Emotions: '#FF7043', Sleep: '#5C6BC0', Quick: '#C65F9D' };
+    const { mode } = useTheme();
+    const isLight = mode === 'light';
+    const colors: Record<string, string> = { 
+        Morning: isLight ? '#1F615D' : '#ABCEC9', 
+        Work: isLight ? '#5E35B1' : '#9575CD', 
+        Emotions: isLight ? '#E64A19' : '#FF7043', 
+        Sleep: isLight ? '#303F9F' : '#5C6BC0', 
+        Quick: isLight ? '#880E4F' : '#C65F9D' 
+    };
     const c = colors[cat] || 'var(--text-muted)';
     return (
         <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest"
-            style={{ background: c + '15', color: c, border: `1px solid ${c}30` }}>
+            style={{ background: c + '15', color: c, border: `1px solid ${c}40` }}>
             {cat}
         </span>
     );
@@ -679,7 +687,7 @@ export const SituationalPractices: React.FC<{
     useEffect(() => {
         if (isPracticing && selectedSituation && !isPaused) {
             if (selectedSituation.audioFile) {
-                VoiceService.playAudioURL(selectedSituation.audioFile, handleNextStep);
+                VoiceService.playAudioURL(selectedSituation.audioFile, { onEnd: handleNextStep });
             } else {
                 speak(selectedSituation.steps[currentStep].audioScript, handleNextStep);
             }

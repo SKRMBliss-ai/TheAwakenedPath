@@ -11,6 +11,7 @@ import { getPractice } from './practiceLibrary';
 import type { QuestionPractice } from './practiceLibrary';
 import { useDailyPractice } from './useDailyPractice';
 import { useCourseTracking } from '../../hooks/useCourseTracking';
+import { useTheme } from '../../theme/ThemeSystem';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Icon map
@@ -204,6 +205,7 @@ function GuidedStepPractice({
   userId: string | undefined | null;
   onComplete: () => void;
 }) {
+  const { mode } = useTheme();
   const [currentStep, setCurrentStep] = useState(0);
   const [stepDone, setStepDone] = useState(false);
 
@@ -290,7 +292,7 @@ function GuidedStepPractice({
             className="w-full py-3.5 rounded-2xl font-bold uppercase tracking-[0.15em] text-[12px] flex items-center justify-center gap-2 mt-2 transition-all active:scale-[0.98]"
             style={{
               background: color,
-              color: 'white',
+              color: mode === 'light' ? 'var(--text-primary)' : 'white',
               boxShadow: `0 8px 24px -8px ${color}80`,
             }}
           >
@@ -315,6 +317,7 @@ export function DailyPracticeCard({
   className,
 }: DailyPracticeCardProps) {
   const practice = getPractice(questionId);
+  const { mode } = useTheme();
   const isQ3 = questionId === 'question3';
   const requiredTriggers = isQ3 ? 3 : 1;
 
@@ -471,7 +474,7 @@ export function DailyPracticeCard({
                   className="w-full py-3.5 rounded-2xl font-bold uppercase tracking-[0.15em] text-[11px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                   style={{
                     background: color,
-                    color: 'white',
+                    color: mode === 'light' ? 'var(--text-primary)' : 'white',
                     boxShadow: `0 8px 24px -8px ${color}80`,
                   }}
                 >

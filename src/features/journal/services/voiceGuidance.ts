@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { VoiceService } from "../../../services/voiceService";
 
 // Convert Gemini's raw PCM (s16le, 24kHz, mono) to playable WAV
 function pcmToWavBlob(base64Pcm: string): Blob {
@@ -52,8 +53,14 @@ export function useVoiceGuidance() {
         } catch { return true; }
     });
 
-    const audioRef = useRef<HTMLAudioElement | null>(null);
     const cache = useRef<Record<string, string>>({});
+
+    // Sync isPlaying with VoiceService
+    useEffect(() => {
+        return VoiceService.subscribe((status, category) => {
+            setIsPlaying(status === 'playing' && category === 'tts');
+        });
+    }, []);
 
     // Persist voice preference
     const toggleAudio = useCallback(() => {
@@ -62,27 +69,19 @@ export function useVoiceGuidance() {
         try {
             localStorage.setItem("awakened-voice", next ? "on" : "off");
         } catch { }
-        if (!next && audioRef.current) {
-            audioRef.current.pause();
-            setIsPlaying(false);
+        if (!next) {
+            VoiceService.stop();
         }
     }, [audioEnabled]);
 
     // Stop any playing audio
     const stop = useCallback(() => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-            setIsPlaying(false);
-        }
+        VoiceService.stop();
     }, []);
 
     // Generate and play voice
     const playText = useCallback(async (text: string, cacheKey?: string) => {
         if (!audioEnabled) return;
-
-        // Stop any current audio
-        stop();
 
         // Check cache
         const key = cacheKey || text;
@@ -91,8 +90,6 @@ export function useVoiceGuidance() {
         if (!audioBase64) {
             setIsLoading(true);
             try {
-                // In production, use relative /api/voice
-                // In local dev, might need absolute depending on setup
                 const res = await fetch("/api/voice", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -117,32 +114,20 @@ export function useVoiceGuidance() {
 
         setIsLoading(false);
 
-        // Convert PCM to WAV and play
+        // Convert PCM to WAV and play via VoiceService for exclusivity
         const blob = pcmToWavBlob(audioBase64);
         const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audioRef.current = audio;
-
-        audio.onplay = () => setIsPlaying(true);
-        audio.onended = () => {
-            setIsPlaying(false);
-            URL.revokeObjectURL(url);
-        };
-        audio.onerror = () => {
-            setIsPlaying(false);
-            URL.revokeObjectURL(url);
-        };
-
-        // Play immediately without artificial delay
-        audio.play().catch(() => { });
-    }, [audioEnabled, stop]);
+        
+        await VoiceService.playAudioURL(url, { 
+            category: 'tts',
+            onEnd: () => URL.revokeObjectURL(url) 
+        });
+    }, [audioEnabled]);
 
     // Cleanup on unmount
     useEffect(() => {
         return () => {
-            if (audioRef.current) {
-                audioRef.current.pause();
-            }
+            VoiceService.stop();
         };
     }, []);
 

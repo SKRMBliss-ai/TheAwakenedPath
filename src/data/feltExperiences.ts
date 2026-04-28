@@ -22,7 +22,7 @@ export const FELT_EXPERIENCES: FeltExperience[] = [
         emoji: "💔",
         label: "Feeling Rejected or Unseen",
         subtitle: "Threat to belonging or attachment security",
-        color: "#90CAF9",
+        color: "#2C73B4",
         cognitiveDistortion: "Mind-reading / Personalizing",
         thoughts: [
             "They ignored me",

@@ -37,25 +37,25 @@ const fontSerif = "'Cormorant Garamond', Georgia, serif";
 
 const LIGHT = {
   orbBg: `radial-gradient(ellipse at 37% 29%,
-    #EDE3D8 0%, #D3C3B6 32%, #B9A89A 62%, #9E8E80 100%)`,
-  orbBorder:   '1.5px solid rgba(160,120,90,0.30)',
+    #FFFFFF 0%, #F5F1EB 35%, #EBE4D8 65%, #DFD6C8 100%)`,
+  orbBorder:   '1.5px solid rgba(46,143,137,0.22)',
   orbShadow:   [
-    '0 0 0 1.5px rgba(160,120,90,0.28)',
-    '0 8px 44px rgba(110,80,55,0.22)',
-    'inset 0 1.5px 0 rgba(255,255,255,0.52)',
-    'inset 0 -1px 0 rgba(0,0,0,0.07)',
+    '0 0 0 1.5px rgba(46,143,137,0.15)',
+    '0 10px 48px rgba(46,143,137,0.12)',
+    'inset 0 1.5px 0 rgba(255,255,255,0.85)',
+    'inset 0 -1.5px 0 rgba(0,0,0,0.05)',
   ].join(', '),
-  highlightBg:    'radial-gradient(ellipse at center, rgba(255,255,255,0.52) 0%, transparent 78%)',
-  highlightStyle: { top:'7%', left:'13%', width:'46%', height:'34%', transform:'rotate(-18deg)' },
-  rimBg:          'radial-gradient(ellipse at center, rgba(255,215,150,0.28) 0%, transparent 78%)',
-  rimStyle:       { bottom:'9%', right:'9%', width:'34%', height:'23%' },
-  innerRing1:     'rgba(160,120,90,0.20)',
-  innerRing2:     'rgba(160,120,90,0.11)',
-  outerRing:      'rgba(160,120,90,0.15)',
-  ambientBg:      'radial-gradient(circle, rgba(160,120,90,0.16) 0%, transparent 68%)',
-  textColor:      'rgba(55,36,24,0.72)',
-  textShadow:     '0 1px 0 rgba(255,255,255,0.55)',
-  pR: 95, pG: 65, pB: 45,   // particle: warm sepia
+  highlightBg:    'radial-gradient(ellipse at center, rgba(255,255,255,0.92) 0%, transparent 75%)',
+  highlightStyle: { top:'5%', left:'12%', width:'50%', height:'40%', transform:'rotate(-16deg)' },
+  rimBg:          'radial-gradient(ellipse at center, rgba(46,143,137,0.15) 0%, transparent 75%)',
+  rimStyle:       { bottom:'10%', right:'10%', width:'40%', height:'28%' },
+  innerRing1:     'rgba(46,143,137,0.18)',
+  innerRing2:     'rgba(46,143,137,0.09)',
+  outerRing:      'rgba(46,143,137,0.12)',
+  ambientBg:      'radial-gradient(circle, rgba(46,143,137,0.08) 0%, transparent 70%)',
+  textColor:      '#2A2421',
+  textShadow:     '0 1px 1px rgba(255,255,255,0.8)',
+  pR: 46, pG: 143, pB: 137,   // particle: teal accent
 };
 
 const DARK = {

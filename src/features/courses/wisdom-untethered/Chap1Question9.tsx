@@ -63,7 +63,7 @@ const slidesContent: SlideContent[] = [
 ];
 
 interface Chap1Question9Props {
-  onOpenJournal: () => void;
+  onOpenJournal?: () => void;
 }
 
 export function Chap1Question9({ onOpenJournal }: Chap1Question9Props) {

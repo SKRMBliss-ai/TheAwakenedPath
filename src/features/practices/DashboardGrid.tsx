@@ -233,6 +233,7 @@ function InlinePracticePanel({
   onGoToRoom: () => void;
   isDone?: boolean;
 }) {
+  const { mode } = useTheme();
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
   const total = practice.steps.length;
@@ -372,8 +373,9 @@ function InlinePracticePanel({
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={handleNext}
-            className="flex-1 py-3.5 rounded-[20px] font-black uppercase tracking-[.15em] text-[11px] text-white"
+            className="flex-1 py-3.5 rounded-[20px] font-black uppercase tracking-[.15em] text-[11px]"
             style={{
+              color: mode === 'light' ? 'var(--text-primary)' : 'white',
               background: `linear-gradient(135deg, ${color}, ${color}cc)`,
               boxShadow: `0 8px 20px ${color}35`,
             }}
@@ -397,6 +399,7 @@ function InlineReflectPanel({
   onGoToJournal: () => void;
   existingJournal?: string;
 }) {
+  const { mode } = useTheme();
   const [text, setText] = useState('');
   const [saved, setSaved] = useState(false);
 
@@ -491,8 +494,9 @@ function InlineReflectPanel({
             whileTap={{ scale: 0.97 }}
             onClick={handleSave}
             disabled={!text.trim()}
-            className="flex items-center gap-2.5 px-6 py-3 rounded-[20px] font-black uppercase tracking-wider text-[11px] text-white disabled:opacity-30 transition-all"
+            className="flex items-center gap-2.5 px-6 py-3 rounded-[20px] font-black uppercase tracking-wider text-[11px] disabled:opacity-30 transition-all"
             style={{
+              color: mode === 'light' ? 'var(--text-primary)' : 'white',
               background: `linear-gradient(135deg, ${color}, ${color}cc)`,
               boxShadow: text.trim() ? `0 8px 20px ${color}35` : 'none',
             }}
@@ -538,10 +542,10 @@ function SoundscapeCard({ onNavigate }: { onNavigate: (tab: string) => void }) {
           urlToPlay = await VoiceService.getCloakedUrl(track.id, track.audioPath);
           setLocalUrl(urlToPlay);
         }
-        VoiceService.playAudioURL(urlToPlay, undefined, track.id);
+        VoiceService.playAudioURL(urlToPlay, { trackId: track.id });
       } catch (err) {
         // Fallback to preview if secure fails (optional)
-        VoiceService.playAudioURL(track.previewUrl, undefined, track.id);
+        VoiceService.playAudioURL(track.previewUrl, { trackId: track.id });
       }
     }
   };
@@ -636,6 +640,7 @@ export function DashboardGrid({
   onNavigate,
   isAccessValid,
 }: DashboardGridProps) {
+  const { mode } = useTheme();
   const assignment = weeklyAssignment ?? FALLBACK_ASSIGNMENT;
   const { questionId } = assignment;
   const questionMeta = QUESTION_META[questionId] ?? QUESTION_META['question1'];
@@ -913,8 +918,9 @@ export function DashboardGrid({
                 <div className="pt-2 flex flex-col gap-3">
                   <button
                     onClick={confirmIntegrate}
-                    className="w-full py-4 rounded-2xl font-black uppercase tracking-[.15em] text-sm transition-all hover:scale-[1.02] active:scale-[.98] text-white shadow-xl"
+                    className="w-full py-4 rounded-2xl font-black uppercase tracking-[.15em] text-sm transition-all hover:scale-[1.02] active:scale-[.98] shadow-xl"
                     style={{
+                      color: mode === 'light' ? 'var(--bg-primary)' : 'white',
                       background: `linear-gradient(135deg, ${color}, ${color}bb)`,
                       boxShadow: `0 8px 24px ${color}40`,
                     }}

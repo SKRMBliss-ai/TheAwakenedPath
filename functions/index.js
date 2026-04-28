@@ -1585,12 +1585,17 @@ const DEFAULT_LEAD_KEYWORDS = [
 function httpsGetJson(url, headers) {
     return new Promise((resolve, reject) => {
         const https = require('https');
-        const req = https.get(url, { headers: Object.assign({ 'User-Agent': 'AwakenedPath-LeadBot/1.0' }, headers || {}) }, (res) => {
+        const req = https.get(url, { headers: Object.assign({ 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }, headers || {}) }, (res) => {
             let raw = '';
             res.on('data', (c) => { raw += c; });
             res.on('end', () => {
                 if (res.statusCode < 200 || res.statusCode >= 300) {
-                    return reject(new Error('HTTP ' + res.statusCode + ': ' + raw.slice(0, 200)));
+                    const err = new Error(`HTTP ${res.statusCode} from ${url.split('?')[0]}`);
+                    const diagnosticSnippet = raw.slice(0, 800);
+                    console.error(`[scanLeads] ${err.message} - Response: ${diagnosticSnippet}`);
+                    // Attach the raw response to the error for catching/logging
+                    err.responseBody = raw;
+                    return reject(err);
                 }
                 try { resolve(JSON.parse(raw)); }
                 catch (e) { reject(new Error('Invalid JSON: ' + e.message)); }
@@ -1602,10 +1607,21 @@ function httpsGetJson(url, headers) {
 }
 
 async function searchGoogle(keyword, apiKey, cx) {
-    if (!apiKey || !cx) return [];
+    if (!apiKey || !cx) {
+        console.warn('[scanLeads] Google Search skipped: API Key or CX missing.');
+        return [];
+    }
     const url = 'https://www.googleapis.com/customsearch/v1?key=' + encodeURIComponent(apiKey) + '&cx=' + encodeURIComponent(cx) + '&q=' + encodeURIComponent(keyword) + '&num=10';
+    
+    // Diagnostic log once per keyword (masked)
+    console.log(`[scanLeads] Google Request: key=${apiKey.slice(0,4)}... cx=${cx.slice(0,4)}... q="${keyword}"`);
+
     try {
         const data = await httpsGetJson(url);
+        if (data.error) {
+            console.error('[scanLeads] Google Search API Error:', JSON.stringify(data.error));
+            return [];
+        }
         return (data.items || []).map(item => ({
             source: 'google',
             keyword,
@@ -1615,16 +1631,25 @@ async function searchGoogle(keyword, apiKey, cx) {
             displayLink: item.displayLink || ''
         }));
     } catch (e) {
-        console.warn('[scanLeads] Google search failed for "' + keyword + '":', e.message);
-        return [];
+        console.warn(`[scanLeads] Google search network/auth failure for "${keyword}": ${e.message}`);
+        // Log more details if it's an API error
+        if (e.responseBody) {
+            console.error(`[scanLeads] Google API Detailed Error: ${e.responseBody}`);
+        }
+        // Signal that this particular call failed so we can refund
+        throw e;
     }
 }
 
 async function searchReddit(keyword) {
-    // Public Reddit JSON endpoint; no auth needed for read-only search
+    // Public Reddit JSON endpoint
+    // Standard User-Agent is critical; Reddit blocks generic node-fetch/https bot strings.
     const url = 'https://www.reddit.com/search.json?q=' + encodeURIComponent(keyword) + '&limit=15&sort=new';
     try {
-        const data = await httpsGetJson(url);
+        const data = await httpsGetJson(url, {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.reddit.com/'
+        });
         const children = (data && data.data && data.data.children) || [];
         return children.map(c => {
             const d = c.data || {};
@@ -1665,8 +1690,18 @@ exports.scanLeads = onCall({
 
     let apiKey = '';
     let cx = '';
-    try { apiKey = googleSearchKey.value(); } catch (e) { apiKey = ''; }
-    try { cx = googleSearchCx.value(); } catch (e) { cx = ''; }
+    try { 
+        apiKey = (googleSearchKey.value() || '').trim(); 
+    } catch (e) { 
+        console.warn('[scanLeads] Failed to read googleSearchKey secret:', e.message);
+        apiKey = ''; 
+    }
+    try { 
+        cx = (googleSearchCx.value() || '').trim(); 
+    } catch (e) { 
+        console.warn('[scanLeads] Failed to read googleSearchCx secret:', e.message);
+        cx = ''; 
+    }
     const googleConfigured = !!(apiKey && cx);
 
     // Reserve Google budget BEFORE making any external calls. This is atomic — even
@@ -1685,15 +1720,24 @@ exports.scanLeads = onCall({
         if (i < grantedGoogle) {
             googleAttempted++;
             tasks.push((async () => {
-                const r = await searchGoogle(kw, apiKey, cx);
-                // searchGoogle returns [] on failure; we can't reliably distinguish 'no results'
-                // from 'network error', so we don't refund on empty arrays.
-                return r;
+                try {
+                    return await searchGoogle(kw, apiKey, cx);
+                } catch (e) {
+                    googleFailed++;
+                    // searchGoogle throws on network/API failure (unlike empty result)
+                    return [];
+                }
             })());
         }
         if (sources.includes('reddit')) tasks.push(searchReddit(kw));
     }
     const results = (await Promise.all(tasks)).flat();
+
+    // Refund if any Google calls actually failed (e.g. 400 error)
+    if (googleFailed > 0) {
+        console.log(`[scanLeads] Refunding ${googleFailed} Google units due to API errors`);
+        await refundGoogleBudget(googleFailed);
+    }
 
     // Build run record
     const runRef = await db.collection('lead_scans').add({

@@ -13,12 +13,23 @@ export const PhonePromptModal: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
 
-    // Check if skipped within last 10 visits
+    // Check if skipped within last 30 days or last 10 visits
     let hasRecentlySkipped = false;
-    if (profile?.phonePromptSkippedAtVisit !== undefined) {
+    if (profile?.phonePromptSkippedAt) {
+        const skippedDate = profile.phonePromptSkippedAt.toDate 
+            ? profile.phonePromptSkippedAt.toDate() 
+            : new Date(profile.phonePromptSkippedAt);
+        
+        const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+        if (Date.now() - skippedDate.getTime() < thirtyDaysInMs) {
+            hasRecentlySkipped = true;
+        }
+    }
+    
+    // Fallback/Secondary guard: also suppress for 10 visits
+    if (!hasRecentlySkipped && profile?.phonePromptSkippedAtVisit !== undefined) {
         const currentVisit = profile.visitCount || 0;
         const skipVisit = profile.phonePromptSkippedAtVisit;
-        // Suppress for next 10 logins
         if (currentVisit - skipVisit <= 10) {
             hasRecentlySkipped = true;
         }

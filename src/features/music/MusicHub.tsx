@@ -50,7 +50,7 @@ const MusicCard = ({
           urlToPlay = await VoiceService.getCloakedUrl(track.id, track.audioPath);
           setLocalUrl(urlToPlay);
         }
-        await VoiceService.playAudioURL(urlToPlay, undefined, track.id);
+        await VoiceService.playAudioURL(urlToPlay, { trackId: track.id });
       } catch (err: any) {
         console.error("Playback manifest error:", err);
         alert("Unable to reach the sacred vault. Please check your connection.");

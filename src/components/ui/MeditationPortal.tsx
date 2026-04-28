@@ -107,7 +107,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
             style={{
                 position: 'fixed', inset: 0,
                 left: isLargeScreen ? '288px' : '0px',
-                zIndex: 100, overflow: 'hidden',
+                zIndex: 1000, overflow: 'hidden',
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 background: T.plum,
                 maxHeight: '100vh',
@@ -299,21 +299,20 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
                             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
                         >
                             {/* Step label — e.g. "Step 2 of 4 · The Scan" */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                                 <span style={{
-                                    fontSize: 9, letterSpacing: '0.5em', textTransform: 'uppercase',
+                                    fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase',
                                     color: accentColor || 'var(--accent-secondary)',
-                                    fontFamily: 'system-ui, sans-serif', fontWeight: 700,
-                                    opacity: 0.7,
+                                    fontFamily: 'system-ui, sans-serif', fontWeight: 800,
                                 }}>
                                     Step {currentStepIndex + 1} of {totalSteps}
                                 </span>
                                 <span style={{
-                                    width: 3, height: 3, borderRadius: '50%',
-                                    background: 'var(--text-muted)', opacity: 0.3,
+                                    width: 4, height: 4, borderRadius: '50%',
+                                    background: 'var(--text-muted)', opacity: 0.5,
                                 }} />
                                 <span style={{
-                                    fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase',
+                                    fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase',
                                     color: 'var(--text-muted)',
                                     fontFamily: 'system-ui, sans-serif', fontWeight: 600,
                                 }}>
@@ -341,7 +340,7 @@ export const MeditationPortal: React.FC<MeditationPortalProps> = ({
             <footer style={{
                 position: 'relative', zIndex: 30, width: '100%',
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
-                gap: 16, paddingBottom: 32, flexShrink: 0,
+                gap: 16, paddingBottom: isLargeScreen ? 32 : 120, flexShrink: 0,
             }}>
                 {/* Control row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
@@ -391,11 +390,11 @@ const ControlButton: React.FC<{
                 {children}
             </motion.button>
             <span style={{
-                fontSize: 7, letterSpacing: '0.4em', textTransform: 'uppercase',
+                fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase',
                 color: 'var(--text-muted)',
-                fontFamily: 'system-ui, sans-serif', fontWeight: 700,
-                opacity: hov ? 1 : 0, transition: 'opacity 0.3s',
-                height: 10,
+                fontFamily: 'system-ui, sans-serif', fontWeight: 800,
+                opacity: hov ? 1 : 0.6, transition: 'opacity 0.3s',
+                height: 12,
             }}>{label}</span>
         </div>
     );

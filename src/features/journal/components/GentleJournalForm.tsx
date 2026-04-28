@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, X, Volume2, VolumeX } from "lucide-react";
 import { BodyMapSelector } from "./BodyMapSelector";
 import { WitnessAndRelease } from "./WitnessAndRelease";
 import { useJournalVoice } from "../hooks/useJournalVoice";
 import { MoodGrid } from "./MoodGrid";
 import { FELT_EXPERIENCES } from "../../../data/feltExperiences";
-import { getDailyQuote } from "../../../data/dailyQuotes";
+
+
 import { cn } from "../../../lib/utils";
 import { VoiceService } from "../../../services/voiceService";
 
@@ -48,63 +48,45 @@ export function WitnessSummaryCard({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="mb-10 p-8 text-center"
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="mb-14 p-10 text-center rounded-[40px] border border-white/25 bg-white/[0.05] backdrop-blur-md shadow-xl"
     >
-      <div className="mb-6">
-        <h2 className="text-3xl sm:text-5xl font-serif text-[var(--text-main)] mb-3 leading-tight">
-          You are not the thought.
+      <div className="mb-8">
+        <h2 className="text-4xl sm:text-6xl font-serif text-[var(--text-main)] mb-4 leading-tight">
+          You are the Witness.
         </h2>
-        <p className="text-xl sm:text-2xl font-serif italic text-[var(--accent-primary)] opacity-90">
-          You are the awareness watching it.
+        <div className="w-16 h-[1px] bg-[var(--accent-primary)] mx-auto opacity-40 mb-6" />
+        <p className="text-lg sm:text-xl font-serif italic text-[var(--text-muted)] opacity-80 max-w-sm mx-auto">
+          Notice the energy moving through you, while you remain still.
         </p>
       </div>
 
-      <div style={{
-        fontFamily: "'Georgia', serif",
-        fontSize: 22,
-        fontStyle: 'italic',
-        color: 'rgba(235,215,225,.78)',
-        marginBottom: 18,
-        lineHeight: 1.5,
-        textAlign: 'center'
-      }}>
-        "{thought}"
+      <div className="relative inline-block px-10 py-6 mb-10">
+        <div className="absolute inset-0 border border-[var(--accent-primary)]/20 rounded-2xl rotate-1" />
+        <div className="font-serif text-2xl sm:text-3xl italic text-[var(--text-main)] leading-relaxed relative z-10">
+          "{thought}"
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <span style={{
-          fontFamily: 'sans-serif',
-          fontSize: 9,
-          fontWeight: 700,
-          letterSpacing: '.18em',
-          textTransform: 'uppercase',
-          color: 'rgba(255,255,255,.2)',
-        }}>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] opacity-30">
           Creating
         </span>
         {selectedEmotions.map(e => (
-          <span key={e} style={{
-            fontFamily: 'sans-serif',
-            fontSize: 11,
-            padding: '4px 12px',
-            borderRadius: 20,
-            background: 'rgba(184,151,58,.1)',
-            border: '1px solid rgba(184,151,58,.25)',
-            color: 'rgba(184,151,58,.8)',
-          }}>
+          <span key={e} className="font-sans text-[11px] font-black uppercase tracking-wider px-5 py-2 rounded-full"
+            style={{
+                background: 'var(--accent-primary-dim)',
+                border: '1px solid var(--accent-primary-border)',
+                color: 'var(--accent-primary)',
+                opacity: 0.8
+            }}>
             {e}
           </span>
         ))}
         {selectedEmotions.length > 0 && (
-          <span style={{ color: 'rgba(255,255,255,.15)', fontSize: 10 }}>·</span>
+          <span className="text-[var(--text-muted)] opacity-20 text-xl">·</span>
         )}
-        <span style={{
-          fontFamily: 'sans-serif',
-          fontSize: 11,
-          color: 'rgba(255,255,255,.3)',
-          fontStyle: 'italic',
-        }}>
+        <span className="font-sans text-[12px] text-[var(--text-muted)] italic opacity-60">
           felt in {bodyLabel}
         </span>
       </div>
@@ -117,225 +99,44 @@ export function WitnessSummaryCard({
 // Replaces the 6-item vertical stack that was: title → subtitle → download → 
 // step circles → voice status → heading.
 
-function JournalHeader({ 
-    currentStep, 
-    voiceEnabled, 
-    isPlaying, 
-    isLoading, 
-    onToggleVoice, 
-    onStopVoice,
-    showVoiceTip,
-    onDismissTip 
-}: {
-    currentStep: number;
-    voiceEnabled: boolean;
-    isPlaying: boolean;
-    isLoading: boolean;
-    onToggleVoice: () => void;
-    onStopVoice: () => void;
-    showVoiceTip: boolean;
-    onDismissTip: () => void;
-}) {
+function JournalHeader({ currentStep, onStepClick }: { currentStep: number, onStepClick?: (step: number) => void }) {
     return (
-        <div className="flex items-center justify-between gap-4 py-3 px-1">
-            {/* Step progress — left-aligned, compact */}
-            <div className="flex items-center gap-3">
-                {STEPS.map((step, i) => {
-                    const isActive = i === currentStep;
-                    const isDone = i < currentStep;
-                    return (
-                        <div key={i} className="flex flex-col items-center gap-1.5">
-                            <motion.div
-                                animate={{
-                                    scale: isActive ? 1.1 : 1,
-                                    backgroundColor: isActive ? 'var(--accent-primary)' : 'transparent',
-                                    borderColor: isActive || isDone ? 'var(--accent-primary)' : 'var(--border-subtle)',
-                                    opacity: isActive || isDone ? 1 : 0.3
-                                }}
-                                className="w-8 h-8 rounded-full border-[1.5px] flex items-center justify-center transition-all"
-                            >
-                                <span className={cn(
-                                    "text-[12px] font-bold",
-                                    isActive ? "text-white" : "text-[var(--text-muted)]"
-                                )}>
-                                    {isDone ? '✓' : i + 1}
-                                </span>
-                            </motion.div>
-                            <span className={cn(
-                                "text-[9px] font-black uppercase tracking-widest",
-                                isActive ? "opacity-100 text-[var(--accent-primary)]" : "opacity-30 text-[var(--text-muted)]"
-                            )}>
-                                {step.label}
-                            </span>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Voice control — right-aligned */}
-            <div className="relative flex items-center gap-2">
-                {/* First-time tooltip */}
-                <AnimatePresence>
-                    {showVoiceTip && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 4, scale: 0.95 }}
-                            transition={{ duration: 0.3 }}
-                            className="absolute right-0 top-full mt-2 z-50"
-                            style={{ width: 'max-content', maxWidth: 220 }}
-                        >
-                            <div 
-                                className="relative px-3 py-2 rounded-xl text-[11px] leading-relaxed shadow-lg"
-                                style={{
-                                    background: 'var(--bg-surface)',
-                                    border: '1px solid var(--accent-secondary-border)',
-                                    color: 'var(--text-secondary)',
-                                }}
-                            >
-                                {/* Arrow */}
-                                <div 
-                                    className="absolute -top-[5px] right-4 w-2.5 h-2.5 rotate-45"
-                                    style={{ 
-                                        background: 'var(--bg-surface)',
-                                        borderTop: '1px solid var(--accent-secondary-border)',
-                                        borderLeft: '1px solid var(--accent-secondary-border)',
-                                    }} 
-                                />
-                                <p className="mt-1.5 text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                                    <b>Tip:</b> I can read the prompts to you.
-                                    {' '}Tap here to turn it off anytime.
-                                </p>
-                                <button 
-                                    onClick={onDismissTip}
-                                    className="mt-2 text-[11px] font-bold uppercase tracking-[0.15em]"
-                                    style={{ 
-                                        color: 'var(--accent-secondary)',
-                                        background: 'none', border: 'none', cursor: 'pointer',
-                                    }}
-                                >
-                                    Got it
-                                </button>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Voice status indicator */}
-                <AnimatePresence mode="wait">
-                    {isLoading ? (
-                        <motion.div
-                            key="loading"
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="flex items-center gap-2"
-                        >
-                            <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--text-muted)' }} />
-                            <span className="text-[12px] italic text-[var(--text-muted)] font-serif hidden sm:block">
-                                Preparing...
-                            </span>
-                        </motion.div>
-                    ) : isPlaying ? (
-                        <motion.div
-                            key="playing"
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="flex items-center gap-2 px-3 py-2 rounded-full"
-                            style={{ 
-                                background: 'var(--accent-secondary-dim)', 
-                                border: '1px solid var(--accent-secondary-border)' 
-                            }}
-                        >
-                            {/* Mini equalizer bars */}
-                            <div className="flex items-center gap-[2px]">
-                                {[0, 1, 2].map(i => (
-                                    <motion.div
-                                        key={i}
-                                        animate={{ scaleY: [0.3, 1, 0.3] }}
-                                        transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.12 }}
-                                        style={{ 
-                                            width: 2.5, height: 12, borderRadius: 1.5,
-                                            background: 'var(--accent-secondary)',
-                                            opacity: 0.7,
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                            <span className="text-[12px] italic font-serif hidden sm:block"
-                                style={{ color: 'var(--accent-secondary)' }}>
-                                Guiding...
-                            </span>
-                            <button
-                                onClick={onStopVoice}
-                                className="w-6 h-6 rounded-full flex items-center justify-center ml-0.5
-                                    transition-all active:scale-90"
-                                style={{ 
-                                    background: 'var(--accent-secondary-muted)',
-                                    border: '1px solid var(--accent-secondary-border)',
-                                    color: 'var(--accent-secondary)',
-                                }}
-                            >
-                                <X className="w-3 h-3" />
-                            </button>
-                        </motion.div>
-                    ) : null}
-                </AnimatePresence>
-
-                {/* Voice toggle switch */}
-                <button
-                    onClick={onToggleVoice}
-                    className={cn(
-                        "group relative h-9 px-3.5 rounded-full flex items-center justify-center gap-2 transition-all duration-300",
-                        voiceEnabled
-                            ? "bg-[var(--accent-secondary-dim)] border border-[var(--accent-secondary-border)] text-[var(--accent-secondary)]"
-                            : "bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[var(--text-muted)] hover:border-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                    )}
-                    style={{ cursor: 'pointer' }}
-                    aria-label={voiceEnabled ? "Turn voice off" : "Turn voice on"}
-                >
-                    {voiceEnabled ? (
-                        <>
-                            <Volume2 className="w-5 h-5" />
-                            <span className="text-[11px] font-black uppercase tracking-widest leading-none mt-[1px]">Voice: On</span>
-                        </>
-                    ) : (
-                        <>
-                            <VolumeX className="w-5 h-5" />
-                            <span className="text-[11px] font-black uppercase tracking-widest leading-none mt-[1px]">Voice: Off</span>
-                        </>
-                    )}
-                    
-                    {/* Hover Tooltip */}
-                    <div 
-                        className="absolute right-0 top-full mt-2 w-max max-w-[200px] px-3 py-2 rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60] shadow-[0_4px_20px_rgba(0,0,0,0.15)] pointer-events-none"
-                        style={{ 
-                            background: 'var(--bg-secondary)', 
-                            border: '1px solid var(--border-default)',
-                            backdropFilter: 'blur(12px)'
-                        }}
+        <div className="flex items-center gap-3 py-3 px-1">
+            {STEPS.map((step, i) => {
+                const isActive = i === currentStep;
+                const isDone = i < currentStep;
+                return (
+                    <button 
+                        key={i} 
+                        onClick={() => onStepClick?.(i)}
+                        disabled={i > currentStep} // Can't skip forward
+                        className="flex flex-col items-center gap-1.5 cursor-pointer disabled:cursor-default"
                     >
-                        {/* Little triangle arrow pointing up */}
-                        <div 
-                            className="absolute -top-[5px] right-[24px] w-2.5 h-2.5 rotate-45"
-                            style={{ 
-                                background: 'var(--bg-surface)',
-                                borderTop: '1px solid var(--border-subtle)',
-                                borderLeft: '1px solid var(--border-subtle)',
-                            }} 
-                        />
-                        <div className="relative z-10 text-[11px] font-medium tracking-wide text-left">
-                            {voiceEnabled ? (
-                                "Voice Guidance is ON"
-                            ) : (
-                                <div className="flex flex-col gap-1 w-[150px] whitespace-normal">
-                                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Voice Guidance is OFF</span>
-                                    <span style={{ fontSize: 9.5, color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                                        It will remain paused on future visits until you decide to turn it back on.
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </button>
-            </div>
+                        <motion.div
+                            animate={{
+                                scale: isActive ? 1.1 : 1,
+                                backgroundColor: isActive ? 'var(--accent-primary)' : 'transparent',
+                                borderColor: isActive || isDone ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                                opacity: isActive || isDone ? 1 : 0.55
+                            }}
+                            className="w-8 h-8 rounded-full border-[1.5px] flex items-center justify-center transition-all"
+                        >
+                            <span className={cn(
+                                "text-[12px] font-bold",
+                                isActive ? "text-white" : "text-[var(--text-muted)]"
+                            )}>
+                                {isDone ? '✓' : i + 1}
+                            </span>
+                        </motion.div>
+                        <span className={cn(
+                            "text-[9px] font-semibold uppercase tracking-widest",
+                            isActive ? "text-[var(--accent-primary)]" : "opacity-55 text-[var(--text-muted)]"
+                        )}>
+                            {step.label}
+                        </span>
+                    </button>
+                );
+            })}
         </div>
     );
 }
@@ -368,13 +169,14 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: {
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 style={{
-                    width: "100%", padding: "20px", borderRadius: 20, 
-                    fontSize: 20, lineHeight: 1.6,
-                    background: "var(--bg-input)", border: "1.5px solid var(--border-subtle)",
+                    width: "100%", padding: "16px 20px", borderRadius: 16,
+                    fontSize: 16, lineHeight: 1.6,
+                    background: 'var(--bg-input)',
+                    border: '1.5px solid var(--border-subtle)',
                     color: "var(--text-primary)", outline: "none", resize: "none",
-                    fontFamily: "'Cormorant Garamond', serif",
-                    minHeight: 120,
-                    transition: "all 0.3s ease",
+                    fontFamily: "'Outfit', 'Inter', sans-serif",
+                    minHeight: 100,
+                    transition: "border-color 0.25s ease",
                 }}
                 onFocus={(e) => { e.currentTarget.style.borderColor = "var(--accent-primary)"; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border-subtle)"; }}
@@ -420,20 +222,26 @@ function NavButton({
         justifyContent: 'center',
         gap: 8,
         background: disabled
-          ? 'rgba(255,255,255,.04)'
-          : isNext
-            ? 'linear-gradient(135deg, rgba(184,151,58,.22), rgba(184,151,58,.1))'
-            : 'rgba(255,255,255,.04)',
+          ? 'var(--bg-surface)'
+          : variant === 'save'
+            ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover, #2E8F89))'
+            : isNext
+              ? 'var(--accent-primary)'
+              : 'var(--bg-surface)',
         border: disabled
-          ? '1px solid rgba(255,255,255,.06)'
-          : isNext
-            ? '1.5px solid rgba(184,151,58,.4)'
-            : '1px solid rgba(255,255,255,.1)',
+          ? '1px solid var(--border-subtle)'
+          : variant === 'save'
+            ? '1.5px solid var(--accent-primary)'
+            : isNext
+              ? '1.5px solid var(--accent-primary)'
+              : '1.5px solid var(--border-default)',
         color: disabled
-          ? 'rgba(255,255,255,.2)'
-          : isNext
-            ? '#B8973A'
-            : 'rgba(255,255,255,.35)',
+          ? 'var(--text-disabled)'
+          : variant === 'save'
+            ? '#fff'
+            : isNext
+              ? '#fff'
+              : 'var(--text-secondary)',
       }}
     >
       {children}
@@ -463,7 +271,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         return () => { document.documentElement.style.removeProperty('--journal-ambient'); };
     }, [step]);
 
-    // Voice is ON by default — show first-time tip
+    // Voice is ON by default
     const [showVoiceTip, setShowVoiceTip] = useState(false);
 
     useEffect(() => {
@@ -473,7 +281,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
             const timer = setTimeout(() => setShowVoiceTip(true), 1500);
             return () => clearTimeout(timer);
         }
-    }, []);
+    }, [setShowVoiceTip]);
 
     // Auto-dismiss tip after 6 seconds
     useEffect(() => {
@@ -486,10 +294,6 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         }
     }, [showVoiceTip]);
 
-    const dismissTip = () => {
-        setShowVoiceTip(false);
-        try { localStorage?.setItem?.('awakened-voice-tip-seen', 'true'); } catch {}
-    };
 
     const [selectedThoughts, setSelectedThoughts] = useState<string[]>(
         initialData?.thoughts ? initialData.thoughts.split(' | ').filter(Boolean) : []
@@ -520,11 +324,11 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         const body = selectedArea?.label || bodySensations || "part of your body";
 
         const tabScripts: Record<string, string> = {
-            witness: `Now, step back. A thought arose, ${t}. Which created a feeling of, ${e}. Which you felt in your, ${body}. But notice something. You are not the thought. You are not the emotion. You are not the sensation. You, are the one who was watching them happen. That awareness, that witnessing presence, that is who you truly are. When you're ready to look closer, click next to find the deeper truth.`,
-            truth: "Now, let's bring in the light of truth. Thoughts are not facts. Read this antidote to yourself. How does it feel to hear a truer, kinder story? Click next to shift your perspective on this entirely.",
-            perspective: "Notice where this thought is coming from. Is it from the fearful ego, or from your true being? Remind yourself, you are not the fear. You are the awareness witnessing it. Click next to begin releasing this energy.",
-            release: "Let's practice a moment of deep release. Silently repeat these phrases, and let each one dissolve a layer of resistance. Click Begin Practice to start.",
-            close: "As we close this practice, take a final moment to reflect. What have you learned about yourself? Check off the steps you completed on the checklist above, ask yourself the final question on the screen, and then tap Seal This Entry.",
+            witness: `Now, step back and observe. You noticed a thought about, ${t}. Which created a feeling of, ${e}. In your, ${body}. Take a slow breath. You are the one witnessing these events, not the events themselves. You are the stillness behind them. Read the wisdom on the screen. When you're ready to explore a deeper truth, tap Next or click the Truth button at the top.`,
+            truth: "It is natural for our minds to create patterns, but those patterns aren't always facts. Read the Wiser Truth on your screen. Notice how it feels to shift from a critical thought to a kinder one. When you are ready to see where this thought is coming from, tap Next or the Perspective button.",
+            perspective: "On this screen, you can see The Two Voices. One part of us speaks from our old fears, while the other speaks from a place of calm presence and love. Notice which one you are choosing right now. You are doing great work just by being aware. When you feel ready to let go, tap Next to begin the release practice.",
+            release: "We will now use a simple practice to release this energy from your body. Tap Begin Practice and follow the phrases on the screen. Let each one wash through you with your breath. When you're finished, tap Next to wrap up your entry.",
+            close: "To finish your journey today, look at the checklist at the top of this card. Tap each box to check off the steps you explored. Once all boxes are checked, a button will appear at the bottom that says Seal this Entry. Tap that button to save your work. You can find all your saved entries later in your Daily Log on the main dashboard. Peace be with you.",
         };
         if (tabScripts[tabId]) voice.speak(tabScripts[tabId]);
     };
@@ -534,11 +338,11 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         if (!voice.voiceEnabled) return;
         const intros: Record<number, { text: string; key: string }> = {
             0: {
-                text: "Take a moment, and notice what's been on your mind today. Sometimes thoughts come as quiet whispers, sometimes they feel loud and heavy. If anything below feels familiar, simply tap the one that resonates. Once you've selected what's on your mind, click next to find out where this energy is hiding in your body.",
+                text: "Welcome to your reflection. Let's begin by checking in with your mind. Below, you will see a grid of common feelings. Tap any that resonate with you right now. If your specific thought isn't there, you can type it in the box labeled 'Describe your thought.' You can move between major steps using the buttons at the very top. When you are ready, tap Next to see how this feeling is affecting your body.",
                 key: "step-0-intro"
             },
             1: {
-                text: "Emotions are energy in motion, and that energy always lands somewhere in the body. If you can, close your eyes for a moment. Take one slow breath. Now notice, where in your body do you feel it? Tap the area that draws your attention. Once you've found it, click next to begin the process of releasing it.",
+                text: "Now, let's notice your physical body. Sometimes our emotions show up as tension or a heavy feeling. Look at the body map and tap the area where you feel this sensation most strongly. If you prefer to use words, you can describe it in the text box below. When you have identified the area, tap Next to begin the witnessing process.",
                 key: "step-1-intro"
             }
         };
@@ -548,7 +352,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         } else if (step === 2) {
             handleWitnessTabChange("witness");
         } else if (step === 5) {
-            voice.speak("Your reflection has been saved. By watching the thought, feeling the emotion, and noticing the body, you have already begun to dissolve the pattern.");
+            voice.speak("Your entry has been sealed. You have taken a powerful step in dissolving these old patterns. You can find this reflection anytime in your Daily Log. Until next time, stay in presence.");
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [step, voice.voiceEnabled]);
@@ -558,23 +362,20 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         if (!voice.voiceEnabled) return;
         
         if (step === 0) {
-            // "intros[1].text" hardcoded so we don't need to rebuild the object
-            VoiceService.preloadText("Emotions are energy in motion, and that energy always lands somewhere in the body. If you can, close your eyes for a moment. Take one slow breath. Now notice, where in your body do you feel it? Tap the area that draws your attention. Once you've found it, click next to begin the process of releasing it.");
+            VoiceService.preloadText("Now, let's notice your physical body. Sometimes our emotions show up as tension or a heavy feeling. Look at the body map and tap the area where you feel this sensation most strongly. If you prefer to use words, you can describe it in the text box below. When you have identified the area, tap Next to begin the witnessing process.");
         } else if (step === 1) {
-            // We use the same generation logic as the witness tab, so it perfectly matches the cache key in handleWitnessTabChange
             const t = [...selectedThoughts, customThought].filter(Boolean).join(", and ");
             const e = selectedEmotions.join(", ");
             const body = selectedArea?.label || bodySensations || "part of your body";
-            const witnessIntro = `Now, step back. A thought arose, ${t}. Which created a feeling of, ${e}. Which you felt in your, ${body}. But notice something. You are not the thought. You are not the emotion. You are not the sensation. You, are the one who was watching them happen. That awareness, that witnessing presence, that is who you truly are. When you're ready to look closer, click next to find the deeper truth.`;
+            const witnessIntro = `Now, step back and observe. You noticed a thought about, ${t}. Which created a feeling of, ${e}. In your, ${body}. Take a slow breath. You are the one witnessing these events, not the events themselves. You are the stillness behind them. Read the wisdom on the screen. When you're ready to explore a deeper truth, tap Next or click the Truth button at the top.`;
             VoiceService.preloadText(witnessIntro);
         } else if (step === 2) {
-            // Preload all remaining static tabs!
-            VoiceService.preloadText("Now, let's bring in the light of truth. Thoughts are not facts. Read this antidote to yourself. How does it feel to hear a truer, kinder story? Click next to shift your perspective on this entirely.");
-            VoiceService.preloadText("Notice where this thought is coming from. Is it from the fearful ego, or from your true being? Remind yourself, you are not the fear. You are the awareness witnessing it. Click next to begin releasing this energy.");
-            VoiceService.preloadText("Let's practice a moment of deep release. Silently repeat these phrases, and let each one dissolve a layer of resistance. Click Begin Practice to start.");
+            VoiceService.preloadText("It is natural for our minds to create patterns, but those patterns aren't always facts. Read the Wiser Truth on your screen. Notice how it feels to shift from a critical thought to a kinder one. When you are ready to see where this thought is coming from, tap Next or the Perspective button.");
+            VoiceService.preloadText("On this screen, you can see The Two Voices. One part of us speaks from our old fears, while the other speaks from a place of calm presence and love. Notice which one you are choosing right now. You are doing great work just by being aware. When you feel ready to let go, tap Next to begin the release practice.");
+            VoiceService.preloadText("We will now use a simple practice to release this energy from your body. Tap Begin Practice and follow the phrases on the screen. Let each one wash through you with your breath. When you're finished, tap Next to wrap up your entry.");
             VoiceService.preloadText("I am sorry. Please forgive me. Thank you. I love you.");
-            VoiceService.preloadText("You have completed the release practice. Complete your checklist and click on the Seal this entry button. Return back tomorrow for the same activity.");
-            VoiceService.preloadText("As we close this practice, take a final moment to reflect. What have you learned about yourself? Check off the steps you completed on the checklist above, ask yourself the final question on the screen, and then tap Seal This Entry.");
+            VoiceService.preloadText("To finish your journey today, look at the checklist at the top of this card. Tap each box to check off the steps you explored. Once all boxes are checked, a button will appear at the bottom that says Seal this Entry. Tap that button to save your work. You can find all your saved entries later in your Daily Log on the main dashboard. Peace be with you.");
+            VoiceService.preloadText("Your entry has been sealed. You have taken a powerful step in dissolving these old patterns. You can find this reflection anytime in your Daily Log. Until next time, stay in presence.");
         }
     }, [step, voice.voiceEnabled, selectedThoughts, customThought, selectedEmotions, selectedArea, bodySensations]);
 
@@ -626,16 +427,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
 
                 {/* ═══ HEADER BAR — compact, docked ═══ */}
                 {step < 5 && (
-                    <JournalHeader
-                        currentStep={step}
-                        voiceEnabled={voice.voiceEnabled}
-                        isPlaying={voice.isPlaying}
-                        isLoading={voice.isLoading}
-                        onToggleVoice={voice.toggleVoice}
-                        onStopVoice={voice.stop}
-                        showVoiceTip={showVoiceTip}
-                        onDismissTip={dismissTip}
-                    />
+                    <JournalHeader currentStep={step} onStepClick={setStep} />
                 )}
 
                 <div className="mt-8">
@@ -643,44 +435,17 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                         {/* ═══ STEP 0: MIND ═══ */}
                         {step === 0 && (
                             <motion.div key="step0" variants={fadeUp} initial="hidden" animate="visible" exit="exit">
-                                <div className="text-center mb-10">
-                                    <h2 className="text-4xl md:text-6xl font-serif text-[var(--text-main)] mb-4 leading-[1.15]">
-                                        How are you feeling<br />right now?
-                                    </h2>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--text-muted)] opacity-40">
-                                        Tap what resonates · choose freely
-                                    </p>
-                                </div>
-
-                                <div className="space-y-4 mb-14">
-                                    <motion.div
-                                        variants={fadeUp}
-                                        className="flex gap-4 items-start max-w-xl mx-auto text-center justify-center"
-                                    >
-                                        <div>
-                                            <p style={{
-                                                fontSize: 18,
-                                                color: "var(--text-primary)",
-                                                fontStyle: "italic",
-                                                fontFamily: "'Cormorant Garamond', 'Georgia', serif",
-                                                lineHeight: 1.6,
-                                                opacity: 0.9,
-                                            }}>
-                                                "{getDailyQuote().text}"
-                                            </p>
-                                            <p style={{
-                                                fontSize: 12,
-                                                color: "var(--text-muted)",
-                                                letterSpacing: "0.15em",
-                                                textTransform: "uppercase",
-                                                fontWeight: 700,
-                                                marginTop: 6,
-                                                fontFamily: "system-ui, sans-serif",
-                                            }}>
-                                                — {getDailyQuote().author}
-                                            </p>
-                                        </div>
-                                    </motion.div>
+                                {/* Compact header — no quote, no divider */}
+                                <div className="flex items-center gap-3 mb-6 px-1">
+                                    <span className="text-2xl">🧠</span>
+                                    <div>
+                                        <h2 className="font-sans font-bold text-xl text-[var(--text-main)] leading-tight">
+                                            How are you feeling right now?
+                                        </h2>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] mt-0.5" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                                            Witness the mind · choose with presence
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-4">
@@ -711,13 +476,17 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                         {/* ═══ STEP 1: BODY ═══ */}
                         {step === 1 && (
                             <motion.div key="step1" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-8">
-                                <div className="text-center mb-8">
-                                    <h2 className="text-4xl md:text-6xl font-serif text-[var(--text-main)] mb-4 leading-[1.15]">
-                                        Where do you<br />feel it?
-                                    </h2>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--text-muted)] opacity-40">
-                                        Emotions always land somewhere physical · tap the area that draws you
-                                    </p>
+                                {/* Compact header matching Mind step */}
+                                <div className="flex items-center gap-3 mb-6 px-1">
+                                    <span className="text-2xl">🫀</span>
+                                    <div>
+                                        <h2 className="font-sans font-bold text-xl text-[var(--text-main)] leading-tight">
+                                            Where do you feel it in your body?
+                                        </h2>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] mt-0.5" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                                            Energy moves through the body · Tap what draws you
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <motion.div variants={fadeUp}>
@@ -744,13 +513,8 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                         {/* ═══ STEP 2: WITNESS ═══ */}
                         {step === 2 && (
                             <motion.div key="step2" variants={fadeUp} initial="hidden" animate="visible" exit="exit" className="space-y-8">
-                                <WitnessSummaryCard
-                                    selectedThoughts={selectedThoughts}
-                                    customThought={customThought}
-                                    selectedEmotions={selectedEmotions}
-                                    selectedArea={selectedArea}
-                                    bodySensations={bodySensations}
-                                />
+
+
                                 <WitnessAndRelease
                                     data={{
                                         thought: [...selectedThoughts, customThought].filter(Boolean)[0] || "No thought selected",
@@ -768,13 +532,8 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                             voice.speak("You have completed the release practice. Complete your checklist and click on the Seal this entry button. Return back tomorrow for the same activity.");
                                         }
                                     }}
+                                    onBackStep={() => setStep(1)}
                                 />
-                                <div className="flex justify-between pt-4 opacity-50 hover:opacity-100 transition-opacity">
-                                    <NavButton onClick={() => setStep(1)} variant="back">← Back</NavButton>
-                                    <p className="text-[11px] text-[var(--text-muted)] italic font-serif py-4 max-w-[180px] text-right">
-                                        Going back will reset your checklist
-                                    </p>
-                                </div>
                             </motion.div>
                         )}
 
@@ -785,7 +544,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                 <h2 style={{
                                     fontSize: 'clamp(32px, 6vw, 42px)',
                                     fontFamily: "'Georgia', serif",
-                                    color: 'rgba(235,215,225,.92)',
+                                    color: 'var(--text-main)',
                                     fontWeight: 400
                                 }}>
                                     Entry Sealed

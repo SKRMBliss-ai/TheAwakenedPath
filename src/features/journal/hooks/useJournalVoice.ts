@@ -8,26 +8,27 @@ import type { FeltExperience } from '../../../data/feltExperiences';
 
 // Calming, spiritual prompts for each step
 const STEP_PROMPTS = {
-    1: `Take a gentle breath. Welcome to your reflection space. Look through these felt experiences and notice which one resonates with you right now. There is no right or wrong answer... just notice what feels true. Tap the one that speaks to you, and then select the specific thoughts underneath.`,
+    1: `Take a gentle breath. Welcome to your reflection space. To begin, look through these "Felt Experiences" and notice which one resonates with you right now—perhaps you feel Anxiety, Sadness, or maybe a sense of Peace. 
+        Tap the card that matches your truth. Once selected, you'll see common thoughts associated with that feeling. Tap one or more that you've noticed lately, or type your own in the box. 
+        When you have identified the mind's activity, tap the arrow at the bottom to continue to the body.`,
 
     2: (bodyAreas: string[]): string => {
-        if (bodyAreas.length > 0) {
-            return `Beautiful... Now bring your awareness to your body. 
-                Based on what you're feeling, your ${bodyAreas.join(' and ')} area might be holding some of this. 
-                Tap where you feel it the most. Your body always knows.`;
-        }
-        return `Now, gently bring your awareness to your body. 
-            Where do you feel this emotion sitting? 
-            Perhaps in your chest... your stomach... your shoulders? 
-            Tap the area that feels the most resonant.`;
+        const areaText = bodyAreas.length > 0 
+            ? `Based on your selection, your ${bodyAreas.join(' and ')} might be where this is held.` 
+            : `Where do you feel this emotion sitting? Perhaps in your chest, your stomach, or your shoulders?`;
+            
+        return `Beautiful... Now bring your awareness to your body. ${areaText} 
+            Tap the area on the map that feels the most resonant to you. You can also add more details about how it feels—is it tight, heavy, or perhaps a tingling sensation? 
+            Once you've mapped the sensation, tap the arrow to move into the final step: Witnessing.`;
     },
 
     3: (_category: string, distortion: string): string => {
-        return `Here is what the witness sees... 
-            Your mind is working in a pattern called ${distortion}. 
-            This is not who you are... it's just a pattern your mind has learned. 
-            Take a moment to read the gentle guidance below. 
-            When you're ready, save this reflection. You're doing beautiful work.`;
+        return `Here is what the Witness sees... Your mind is currently working through a pattern called ${distortion}. 
+            Remember, this is not who you are—it is just a temporary cloud passing through your awareness. 
+            Read the gentle guidance on the card to gain a new perspective. 
+            When you feel ready to release this experience, click the "Record Reflection" button at the bottom. 
+            This will save your entry securely. You can find all your previous reflections anytime by clicking the "View all reflections" button on your main journal dashboard. 
+            You are doing beautiful work staying present.`;
     }
 };
 

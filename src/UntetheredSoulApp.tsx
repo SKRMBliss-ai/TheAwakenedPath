@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, Mail, Youtube, Medal, Eye } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
@@ -514,55 +514,26 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
 
 // --- Watcher's Pause Audio Component ---
 const WatcherPauseButton = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const { status, category, trackId } = useVoiceStatus();
+  const isActive = trackId === 'WatchersPause';
+  const isPlaying = isActive && status === 'playing' && category === 'music';
   const [isInitializing, setIsInitializing] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  // Sync with visibility
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (!audioRef.current) return;
-      if (document.hidden) {
-        audioRef.current.pause();
-      } else if (isPlaying) {
-        audioRef.current.play().catch(console.error);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [isPlaying]);
 
   const toggle = async () => {
     if (isPlaying) {
-      audioRef.current?.pause();
-      setIsPlaying(false);
+      VoiceService.pause();
+    } else if (isActive && status === 'paused') {
+      VoiceService.resume('music');
     } else {
-      if (!audioRef.current) {
-        setIsInitializing(true);
-        try {
-          // gs://awakened-path-2026.firebasestorage.app/Soundscapes/WatchersPause.mp3
-          const url = await VoiceService.getCloakedUrl('WatchersPause', 'Soundscapes/WatchersPause.mp3');
-          const audio = new Audio(url);
-          audio.loop = true;
-          audioRef.current = audio;
-        } catch (err) {
-          console.error("[WatcherPause] Failed to manifest audio:", err);
-          setIsInitializing(false);
-          return;
-        }
+      setIsInitializing(true);
+      try {
+        const url = await VoiceService.getCloakedUrl('WatchersPause', 'Soundscapes/WatchersPause.mp3');
+        await VoiceService.playAudioURL(url, { loop: true, trackId: 'WatchersPause' });
+      } catch (err) {
+        console.error("[WatcherPause] Failed to manifest audio:", err);
+      } finally {
+        setIsInitializing(false);
       }
-      audioRef.current.play().catch(console.error);
-      setIsPlaying(true);
-      setIsInitializing(false);
     }
   };
 
