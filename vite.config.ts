@@ -44,10 +44,6 @@ export default defineConfig({
       }
     })
   ],
-  // Using lightningcss to downlevel modern CSS features (like oklch and color-mix) for older mobile browsers
-  css: {
-    transformer: 'lightningcss',
-  },
   build: {
     target: ['es2015', 'chrome60', 'safari12', 'ios12', 'firefox60'],
     cssTarget: ['chrome60', 'safari12', 'ios12', 'firefox60'],

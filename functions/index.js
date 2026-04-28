@@ -873,7 +873,7 @@ exports.previewReminderEmail = onRequest({
                     <!-- CTA — deep-links directly into the practice -->
                     <tr>
                         <td style="padding:0 48px 56px;text-align:center;">
-                            <a href="https://www.skrmblissai.in/awakenedpath?practice=${todayPractice.q}&source=email" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
+                            <a href="https://www.skrmblissai.in/aboutawakenedpath" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
                         </td>
                     </tr>
 
@@ -1109,7 +1109,7 @@ async function runReminderLogic(apiKey) {
                     <!-- CTA — named after today's practice, deep-links directly into it -->
                     <tr>
                         <td style="padding:0 48px 56px;text-align:center;">
-                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath?practice=' + todayPractice.q + '&source=email')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
+                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/aboutawakenedpath')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
                         </td>
                     </tr>
                     
