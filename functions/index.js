@@ -1155,7 +1155,9 @@ async function runReminderLogic(apiKey) {
             'shrutikhungar@gmail.com',
             'testuser@example.com',
             'test@example.com',
-            'echarttolleteachings@gmail.com'
+            'echarttolleteachings@gmail.com',
+            'russel.brownlee@gmail.com',
+            'sup.trezor.io@gmail.com'
         ];
         if (userData.email && blockedEmails.includes(userData.email.toLowerCase())) {
             continue;
@@ -1350,7 +1352,7 @@ exports.blastUpdateEmail = onCall({
 
     for (const userDoc of usersSnap.docs) {
         const userData = userDoc.data();
-        if (!userData.email) continue;
+        if (!userData.email || userData.notificationsEnabled === false) continue;
         
         await transporter.sendMail({
             from: '"The Awakened Path" <connect@skrmblissai.in>',

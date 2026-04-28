@@ -6,7 +6,7 @@ import { useTheme } from '../../theme/ThemeSystem';
 import appLogo from '../../assets/logo.webp';
 
 export const SignInScreen = () => {
-    const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+    const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } = useAuth();
     const { theme, mode } = useTheme();
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
@@ -15,6 +15,8 @@ export const SignInScreen = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showEmailForm, setShowEmailForm] = useState(false);
+    const [forgotSent, setForgotSent] = useState(false);
+    const [forgotLoading, setForgotLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,6 +33,23 @@ export const SignInScreen = () => {
             setError(err.message || 'An error occurred');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async () => {
+        if (!email) {
+            setError('Please enter your email address above first.');
+            return;
+        }
+        setError('');
+        setForgotLoading(true);
+        try {
+            await resetPassword(email);
+            setForgotSent(true);
+        } catch (err: any) {
+            setError(err.message || 'Could not send reset email.');
+        } finally {
+            setForgotLoading(false);
         }
     };
 
@@ -212,6 +231,35 @@ export const SignInScreen = () => {
                                             </button>
                                         </div>
                                     </div>
+
+                                    {/* Forgot Password */}
+                                    {isLogin && (
+                                        <AnimatePresence mode="wait">
+                                            {forgotSent ? (
+                                                <motion.p
+                                                    key="sent"
+                                                    initial={{ opacity: 0, y: -4 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="text-[11px] text-center"
+                                                    style={{ color: theme.accentPrimary }}
+                                                >
+                                                    ✨ A reset link has been sent to your soul's inbox.
+                                                </motion.p>
+                                            ) : (
+                                                <motion.button
+                                                    key="link"
+                                                    type="button"
+                                                    onClick={handleForgotPassword}
+                                                    disabled={forgotLoading}
+                                                    className="w-full text-right text-[11px] font-medium pr-1 opacity-60 hover:opacity-100 transition-opacity"
+                                                    style={{ color: theme.accentPrimary }}
+                                                    aria-label="Send password reset email"
+                                                >
+                                                    {forgotLoading ? 'Sending...' : 'Forgot Password?'}
+                                                </motion.button>
+                                            )}
+                                        </AnimatePresence>
+                                    )}
 
                                     {/* Email Action Button */}
                                     <button

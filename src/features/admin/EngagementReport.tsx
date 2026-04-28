@@ -24,7 +24,7 @@ interface EngagementReportProps {
 }
 
 const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) => {
-    const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'leads' | 'blast' | 'history'>('logs');
+    const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'waitlist' | 'leads' | 'blast' | 'history'>('logs');
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -44,6 +44,9 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
     const [leadKeywords, setLeadKeywords] = useState('spiritual awakening, untethered soul, presence meditation, anxiety meditation help');
     const [isScanning, setIsScanning] = useState(false);
     const [lastScan, setLastScan] = useState<any>(null);
+    
+    // Waitlist State
+    const [waitlist, setWaitlist] = useState<any[]>([]);
 
     const fetchHistory = async () => {
         setIsLoading(true);
@@ -223,6 +226,34 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         }
     };
 
+    const fetchWaitlist = async () => {
+        setIsLoading(true);
+        try {
+            const waitlistRef = collection(db, 'waitlist');
+            const q = query(waitlistRef, orderBy('createdAt', 'desc'), limit(200));
+            const snap = await getDocs(q);
+            setWaitlist(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        } catch (e) {
+            console.error('Error fetching waitlist:', e);
+            setToast('Failed to load waitlist.');
+            setTimeout(() => setToast(''), 4000);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDeleteWaitlist = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, 'waitlist', id));
+            setWaitlist(prev => prev.filter(w => w.id !== id));
+            setToast('Waitlist entry removed.');
+            setTimeout(() => setToast(''), 4000);
+        } catch (error) {
+            setToast('Failed to delete entry.');
+            setTimeout(() => setToast(''), 4000);
+        }
+    };
+
     const handleRunScan = async () => {
         setIsScanning(true);
         try {
@@ -300,6 +331,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             if (activeTab === 'users') fetchUsers();
             if (activeTab === 'history') fetchHistory();
             if (activeTab === 'leads') fetchLeads();
+            if (activeTab === 'waitlist') fetchWaitlist();
         }
     }, [isOpen, activeTab]);
 
@@ -358,6 +390,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <h2 className="text-[18px] sm:text-[22px] font-bold text-[var(--accent-primary)] tracking-wider uppercase">
                                         {activeTab === 'logs' ? 'Engagement Report'
                                             : activeTab === 'users' ? 'Users'
+                                            : activeTab === 'waitlist' ? 'Waitlist'
                                             : activeTab === 'leads' ? 'Lead Finder'
                                             : activeTab === 'blast' ? 'Send Course Update'
                                             : 'Email History'}
@@ -365,6 +398,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <p className="text-[9px] sm:text-[11px] text-[var(--text-muted)] tracking-[0.2em] font-bold uppercase mt-1">
                                         {activeTab === 'logs' ? 'Tracking User Activity'
                                             : activeTab === 'users' ? 'All registered users'
+                                            : activeTab === 'waitlist' ? 'Emails from Journal Downloads'
                                             : activeTab === 'leads' ? 'Daily prospect scan from Google + Reddit'
                                             : activeTab === 'blast' ? 'Send an email update to all users'
                                             : 'History of all emails sent'}
@@ -390,6 +424,15 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                         )}
                                     >
                                         Users
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveTab('waitlist')}
+                                        className={cn(
+                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
+                                            activeTab === 'waitlist' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                        )}
+                                    >
+                                        Waitlist
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('leads')}
@@ -625,6 +668,65 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                     </motion.div>
                                                 );
                                             })}
+                                    </div>
+                                </div>
+                            </>
+                        ) : activeTab === 'waitlist' ? (
+                            <>
+                                <div className="px-4 sm:px-10 py-6 grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[2fr_1fr_1.5fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                    <div>Email</div>
+                                    <div className="hidden md:block">Source</div>
+                                    <div className="hidden md:block">Joined</div>
+                                    <div className="text-right">
+                                        <button onClick={fetchWaitlist} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
+                                            <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar">
+                                    <div className="space-y-1">
+                                        {waitlist.map((w) => {
+                                            const { date, time } = formatTimestamp(w.createdAt);
+                                            return (
+                                                <motion.div
+                                                    key={w.id}
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    className="grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[2fr_1fr_1.5fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-primary)] border border-[var(--border-default)] flex items-center justify-center overflow-hidden shrink-0">
+                                                            <Mail className="w-4 h-4 text-[var(--text-muted)]" />
+                                                        </div>
+                                                        <span className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors truncate">{w.email}</span>
+                                                    </div>
+
+                                                    <div className="hidden md:block text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-tight">{w.source || 'Journal Gate'}</div>
+                                                    
+                                                    <div className="hidden md:block flex flex-col">
+                                                        <span className="text-[12px] text-[var(--text-secondary)]">{date}</span>
+                                                        <span className="text-[10px] font-bold text-[var(--accent-primary)]">{time}</span>
+                                                    </div>
+
+                                                    <div className="flex justify-end pr-2">
+                                                        <button 
+                                                            onClick={() => handleDeleteWaitlist(w.id)}
+                                                            className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400"
+                                                            title="Remove Entry"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })}
+
+                                        {waitlist.length === 0 && !isLoading && (
+                                            <div className="py-20 text-center">
+                                                <p className="text-[var(--text-muted)] italic">Waitlist is currently empty.</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </>

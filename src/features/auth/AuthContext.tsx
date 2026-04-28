@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth, db } from '../../firebase';
 import { doc, setDoc, updateDoc, collection, addDoc, serverTimestamp, onSnapshot, increment } from 'firebase/firestore';
@@ -32,6 +32,7 @@ interface AuthContextType {
     signInWithEmail: (email: string, pass: string) => Promise<void>;
     signUpWithEmail: (email: string, pass: string) => Promise<void>;
     signOut: () => Promise<void>;
+    resetPassword: (email: string) => Promise<void>;
     activateTrial: () => Promise<void>;
     isAccessValid: boolean;
 }
@@ -44,6 +45,7 @@ const AuthContext = createContext<AuthContextType>({
     signInWithEmail: async () => { },
     signUpWithEmail: async () => { },
     signOut: async () => { },
+    resetPassword: async () => { },
     activateTrial: async () => { },
     isAccessValid: false,
 });
@@ -207,6 +209,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const resetPassword = async (email: string) => {
+        try {
+            await sendPasswordResetEmail(auth, email);
+        } catch (error) {
+            console.error("Error sending password reset email", error);
+            throw error;
+        }
+    };
+
     const activateTrial = async () => {
         if (!user) return;
         const userRef = doc(db, 'users', user.uid);
@@ -232,7 +243,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [user, profile]);
 
     return (
-        <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut, activateTrial, isAccessValid }}>
+        <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut, resetPassword, activateTrial, isAccessValid }}>
             {children}
         </AuthContext.Provider>
     );
