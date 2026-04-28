@@ -266,7 +266,7 @@ export function Chap1Question2({ onOpenJournal }: Chap1Question2Props) {
             <p className={styles.visualText}>
               The mind is a constant narrator, generating unsolicited noise to give the illusion of control.
             </p>
-            <p className={styles.slideBodySmall}>Log in to the app for the full deep-dive on these patterns.</p>
+            <p className={styles.slideBodySmall}>Log in to the Journal for the full deep-dive on these patterns.</p>
           </div>
         </div>
       </section>

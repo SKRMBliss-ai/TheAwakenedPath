@@ -15,8 +15,8 @@ The Awakened Path is designed to guide users from a state of conceptual thinking
 
 ## Authors & Origin
 - **Content Framework:** Michael A. Singer & Eckhart Tolle.
-- **Development & Design:** Awakened Path Studio.
-- **Hosting:** part of the Awakened Path ecosystem at skrmblissai.in/awakenedpath.
+- **Development & Design:** The Awakened Path Studio.
+- **Hosting:** Part of the spiritual ecosystem at skrmblissai.in/awakenedpath.
 
 ## Technical Architecture
 - **Frontend:** React, TypeScript, Vite, Tailwind CSS, Framer Motion.

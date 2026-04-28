@@ -17,12 +17,30 @@ if (admin.apps.length === 0) {
 
 const db = admin.firestore();
 
+// SECURITY: Single source of truth for admins. Helper enforces email_verified=true
+// to prevent privilege escalation via unverified Firebase Auth signups.
+const ADMIN_EMAILS = [
+    'shrutikhungar@gmail.com',
+    'simkatyal1@gmail.com',
+    'rashmi.purbey@gmail.com',
+    'smriti.duggal@gmail.com',
+    'skrmblissai@gmail.com'
+];
+function isAdminRequest(request) {
+    const tok = request && request.auth && request.auth.token;
+    if (!tok) return false;
+    if (tok.email_verified !== true) return false;
+    return ADMIN_EMAILS.includes((tok.email || '').toLowerCase());
+}
+
 // Define the secrets created in Google Cloud Secret Manager
 const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
 const razorpayKeyId = defineSecret("RAZORPAY_KEY_ID");
 const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
 const emailUser = defineSecret("EMAIL_USER");
 const emailPass = defineSecret("EMAIL_PASS");
+// Razorpay webhook signing secret — was hard-coded as "YOUR_WEBHOOK_SECRET" before, breaking all webhook signature checks
+const razorpayWebhookSecret = defineSecret("RAZORPAY_WEBHOOK_SECRET");
 
 // Lead-finder secrets — Google Custom Search (Reddit uses public JSON, no key needed)
 const googleSearchKey = defineSecret("GOOGLE_SEARCH_API_KEY");
@@ -316,13 +334,17 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
             }
         }
 
-        // 4. Log the transaction (Atomic/Secure)
+        // 4. Log the transaction (Atomic/Secure) — record the actual paid amount &
+        //    currency from the Razorpay order, not the USD price map (was wrong for INR).
+        const paidCurrency = rzpOrder.currency || (rzpOrder.notes && rzpOrder.notes.currency) || 'USD';
+        const paidAmountMajor = typeof rzpOrder.amount === 'number' ? rzpOrder.amount / 100 : null;
         await db.collection("transactions").doc(razorpay_payment_id).set({
             userId,
             courseId,
             razorpayOrderId: razorpay_order_id,
             razorpayPaymentId: razorpay_payment_id,
-            amount: COURSE_PRICES[courseId],
+            amount: paidAmountMajor,
+            currency: paidCurrency,
             status: "SUCCESS",
             timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
@@ -427,6 +449,17 @@ exports.verifyRazorpaySubscription = onRequest({ secrets: [razorpayKeyId, razorp
             return res.status(400).send("Invalid subscription signature");
         }
 
+        // SECURITY: Without this check, a single legit subscription could be
+        // replayed to grant premium to ANY userId in the request body.
+        const razorpay = new Razorpay({
+            key_id: razorpayKeyId.value(),
+            key_secret: razorpayKeySecret.value(),
+        });
+        const rzpSub = await razorpay.subscriptions.fetch(razorpay_subscription_id);
+        if (!rzpSub || !rzpSub.notes || rzpSub.notes.userId !== userId) {
+            return res.status(400).send("Subscription / user mismatch.");
+        }
+
         // 2. Grant Access in Firestore
         const userRef = db.collection("users").doc(userId);
 
@@ -452,12 +485,25 @@ exports.verifyRazorpaySubscription = onRequest({ secrets: [razorpayKeyId, razorp
             }
         }
 
-        // 3. Log transaction
+        // 3. Log transaction — pull amount/currency from the actual subscription plan
+        //    (was hard-coded to 9.99, wrong for INR plans and any future plan changes).
+        let subAmountMajor = null;
+        let subCurrency = null;
+        try {
+            const plan = await razorpay.plans.fetch(rzpSub.plan_id);
+            if (plan && plan.item) {
+                subAmountMajor = typeof plan.item.amount === 'number' ? plan.item.amount / 100 : null;
+                subCurrency = plan.item.currency || null;
+            }
+        } catch (e) {
+            console.warn("Could not fetch plan for transaction log:", e && e.message);
+        }
         await db.collection("transactions").doc(razorpay_payment_id).set({
             userId,
             razorpayPaymentId: razorpay_payment_id,
             razorpaySubscriptionId: razorpay_subscription_id,
-            amount: 9.99,
+            amount: subAmountMajor,
+            currency: subCurrency,
             type: "SUBSCRIPTION_START",
             status: "SUCCESS",
             timestamp: admin.firestore.FieldValue.serverTimestamp()
@@ -474,8 +520,13 @@ exports.verifyRazorpaySubscription = onRequest({ secrets: [razorpayKeyId, razorp
  * Optional: Razorpay Webhook for async capture (Robustness)
  * You would point https://your-app.web.app/api/razorpay-webhook to this in Razorpay Dashboard
  */
-exports.razorpayWebhook = onRequest({ secrets: [razorpayKeySecret], cors: true }, async (req, res) => {
-    const secret = "YOUR_WEBHOOK_SECRET"; // Should be a Secret Manager secret
+exports.razorpayWebhook = onRequest({ secrets: [razorpayKeySecret, razorpayWebhookSecret], cors: false }, async (req, res) => {
+    let secret = '';
+    try { secret = razorpayWebhookSecret.value(); } catch (_) { secret = ''; }
+    if (!secret) {
+        console.error("[razorpayWebhook] RAZORPAY_WEBHOOK_SECRET not configured — rejecting all webhook calls.");
+        return res.status(500).send("Webhook not configured");
+    }
     const signature = req.headers["x-razorpay-signature"];
 
     // 1. Verify Webhook Signature
@@ -734,7 +785,7 @@ exports.testEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, a
     try {
         const transporter = getTransporter();
         await transporter.sendMail({
-            from: '"The Awakened Path Test" <bliss@awakened-path.com>',
+            from: '"The Awakened Journal Test" <connect@skrmblissai.in>',
             to: to,
             subject: "Verification: The Path is Open",
             html: "<b>Success.</b> This email confirms that the automated reminder system is correctly configured."
@@ -829,7 +880,7 @@ exports.previewReminderEmail = onRequest({
                     <!-- Footer -->
                     <tr>
                         <td style="background-color:rgba(255,255,255,0.02);padding:32px 48px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
-                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.6);margin:0 0 16px;">Awakened Path Studio &nbsp;&middot;&nbsp; Preview Only</p>
+                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.6);margin:0 0 16px;">The Awakened Journal Studio &nbsp;&middot;&nbsp; Preview Only</p>
                             <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:0;line-height:1.8;">
                                 <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a>
                             </p>
@@ -927,7 +978,7 @@ async function sendWelcomeEmail(toEmail, planName) {
 `;
 
     await transporter.sendMail({
-        from: '"The Awakened Path" <bliss@awakened-path.com>',
+        from: '"The Awakened Path" <connect@skrmblissai.in>',
         to: toEmail,
         subject: "Welcome: The Path is Open",
         html: emailTemplate
@@ -1257,16 +1308,9 @@ exports.unsubscribe = onRequest({ cors: true }, async (req, res) => {
 exports.blastUpdateEmail = onCall({
     secrets: [emailUser, emailPass]
 }, async (request) => {
-    // Only allow for admin emails
-    const adminEmails = [
-        'shrutikhungar@gmail.com',
-        'simkatyal1@gmail.com',
-        'rashmi.purbey@gmail.com',
-        'smriti.duggal@gmail.com'
-    ];
-
-    if (!adminEmails.includes(request.auth.token.email)) {
-        throw new Error("Unauthorized");
+    // SECURITY: central admin gate — also enforces email_verified.
+    if (!isAdminRequest(request)) {
+        throw new HttpsError("permission-denied", "Unauthorized");
     }
 
     const { chapterTitle, chapterSubtitle, youtubeId } = request.data;
@@ -1405,10 +1449,9 @@ exports.notifyAdminOnPresence = onDocumentCreated({
     const criticalTypes = ['SESSION_START', 'LOGIN', 'EMAIL_CLICK'];
     
     if (criticalTypes.includes(logData.activityType)) {
-        const adminList = ['shrutikhungar@gmail.com', 'simkatyal1@gmail.com', 'rashmi.purbey@gmail.com', 'smriti.duggal@gmail.com'];
-        
-        // Don't notify if the activity is from an admin
-        if (adminList.includes(logData.userEmail?.toLowerCase())) {
+        // Use the central ADMIN_EMAILS list so this filter never drifts.
+        // Don't notify if the activity is from an admin themselves.
+        if (ADMIN_EMAILS.includes((logData.userEmail || '').toLowerCase())) {
             return;
         }
 
@@ -1529,9 +1572,15 @@ function _todayDateKeyUTC() {
 
 // Atomically reserve N Google queries against today's budget. Returns how many were granted.
 async function reserveGoogleBudget(needed) {
-    if (needed <= 0) return { reserved: 0, used: 0, remaining: GOOGLE_DAILY_BUDGET };
     const dateKey = _todayDateKeyUTC();
     const ref = db.collection('lead_scans').doc('_quota_' + dateKey);
+    // Always read the persisted doc so the UI surfaces real quota state — even on
+    // Reddit-only or unconfigured-Google scans, where 'needed' is 0.
+    if (needed <= 0) {
+        const snap = await ref.get();
+        const used = (snap.exists && snap.data().googleUsed) || 0;
+        return { reserved: 0, used, remaining: Math.max(0, GOOGLE_DAILY_BUDGET - used) };
+    }
     return await db.runTransaction(async (tx) => {
         const snap = await tx.get(ref);
         const used = (snap.exists && snap.data().googleUsed) || 0;
@@ -1674,11 +1723,11 @@ exports.scanLeads = onCall({
     timeoutSeconds: 120,
     memory: '512MiB'
 }, async (request) => {
-    // Admin auth gate
-    const callerEmail = request.auth && request.auth.token && request.auth.token.email;
-    if (!callerEmail || !ADMIN_EMAILS_FOR_LEADS.includes(callerEmail)) {
+    // Admin auth gate — uses centralized helper that enforces email_verified.
+    if (!isAdminRequest(request)) {
         throw new HttpsError('permission-denied', 'Admin only.');
     }
+    const callerEmail = request.auth.token.email;
 
     // Inputs
     const keywords = Array.isArray(request.data && request.data.keywords) && request.data.keywords.length > 0

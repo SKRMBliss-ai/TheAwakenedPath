@@ -7,7 +7,7 @@ import { cn } from "../lib/utils";
 
 /*
   ═══════════════════════════════════════════════════════════════════
-  AWAKENED PATH — THEME SYSTEM
+  THE AWAKENED PATH — THEME SYSTEM
   ═══════════════════════════════════════════════════════════════════
   
   Dark Mode:  "Deep Night" — the original bioluminescent sacred space

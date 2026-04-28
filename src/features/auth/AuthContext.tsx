@@ -21,6 +21,7 @@ interface UserProfile {
     phoneNumber?: string;
     phonePromptSkippedAt?: any;
     phonePromptSkippedAtVisit?: number;
+    phonePromptDismissed?: boolean;
 }
 
 interface AuthContextType {
@@ -114,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 phoneNumber: data?.phoneNumber || '',
                                 phonePromptSkippedAt: data?.phonePromptSkippedAt,
                                 phonePromptSkippedAtVisit: data?.phonePromptSkippedAtVisit,
+                                phonePromptDismissed: data?.phonePromptDismissed || false,
                             } as UserProfile);
                         } else {
                             const userData = {

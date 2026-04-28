@@ -3,9 +3,9 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useTheme } from '../../theme/ThemeSystem';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, Circle, BookOpen, ChevronRight, ArrowRight, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, Circle, BookOpen, ChevronRight, ArrowRight, ArrowLeft, Play, Pause } from 'lucide-react';
 import { doc, setDoc, onSnapshot, Timestamp } from 'firebase/firestore';
-import { VoiceService } from '../../services/voiceService';
+import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 
 import { db } from '../../firebase';
 import { ErrorBoundary } from '../../components/ui/ErrorBoundary';
@@ -23,6 +23,7 @@ const WISDOM_PRACTICES = [
     color: '#B8973A',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q1_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q1_dark.png'),
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q1.mp3',
     steps: [
       'Notice the negative thought or anxious spiral starting.',
       'Stop following it. Take one slow breath.',
@@ -40,6 +41,7 @@ const WISDOM_PRACTICES = [
     color: '#9575CD',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q2_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q2_dark.png'),
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q2.mp3',
     steps: [
       'Sit quietly. Close your eyes if you can. Take one slow breath.',
       'Notice what the mind is saying. Don\'t answer it. Just hear it.',
@@ -58,6 +60,7 @@ const WISDOM_PRACTICES = [
     color: '#3A8BBF',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q3_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q3_dark.png'),
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q3.mp3',
     triggerCount: 3,
     triggers: [
       'Before starting the car — notice you\'re on a small planet spinning in space.',
@@ -75,6 +78,7 @@ const WISDOM_PRACTICES = [
     color: '#FF6F61',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q4_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q4_dark.png'),
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q4.mp3',
     steps: [
       'Find a quiet moment. Sit or stand comfortably.',
       'Notice the sounds, thoughts, and sensations present.',
@@ -92,6 +96,7 @@ const WISDOM_PRACTICES = [
     color: '#2E9E7A',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q5_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q5_dark.png'),
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q5.mp3',
     steps: [
       'Sit comfortably. Take two slow breaths.',
       'The mind will talk. Let it. You are not trying to stop it.',
@@ -109,6 +114,7 @@ const WISDOM_PRACTICES = [
     color: '#EC4899',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q6_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q6_dark.png'),
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q6.mp3',
     steps: [
       'Pause and notice your surroundings — colors, shapes, light.',
       'Notice the thoughts and feelings moving within you.',
@@ -126,6 +132,7 @@ const WISDOM_PRACTICES = [
     color: '#F59E0B',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q7_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q7_dark.png'),
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q7.mp3',
     steps: [
       'Notice a small irritation, judgment, or "thorn" in your mind today.',
       'Instead of trying to "fix" or "remove" it, simply relax and let it be there.',
@@ -243,6 +250,22 @@ function WisdomCard({
   const [stepIndex, setStepIndex] = useState(-1);
   const { completed, triggers, anySituationalDone, markDone, markTrigger } = usePracticeRecord(userId, practice.id);
 
+  // Audio handling
+  const { status, musicUrl } = useVoiceStatus();
+  const audioUrl = practice.audioPath ? VoiceService.getStorageUrl(practice.audioPath) : null;
+  const isActuallyPlaying = status === 'playing' && (musicUrl === audioUrl || musicUrl === practice.audioPath);
+
+  const handleToggleAudio = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!audioUrl) return;
+
+    if (isActuallyPlaying) {
+      VoiceService.pause();
+    } else {
+      await VoiceService.playAudioURL(audioUrl);
+    }
+  };
+
   const isQ3 = practice.triggerCount !== undefined;
   const isLocked = !!practice.locked;
   const color = practice.color;
@@ -318,11 +341,26 @@ function WisdomCard({
               </h4>
             </div>
 
-            {/* Bottom Right Start Gateway */}
-            <div className="absolute bottom-6 right-8">
+            {/* Bottom Right Gateway / Audio Control */}
+            <div className="absolute bottom-6 left-6 right-8 flex items-center justify-between pointer-events-none">
+              {practice.audioPath ? (
+                <button
+                  onClick={handleToggleAudio}
+                  className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-2xl bg-[var(--bg-surface)] border border-white/10 shadow-lg text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform"
+                  style={{ color }}
+                >
+                  {isActuallyPlaying ? (
+                    <><Pause size={12} fill="currentColor" /> Pause Meditation</>
+                  ) : (
+                    <><Play size={12} fill="currentColor" /> Play Meditation</>
+                  )}
+                </button>
+              ) : <div />}
+
               <div
-                className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] group/btn"
+                className="pointer-events-auto inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] group/btn cursor-pointer"
                 style={{ color }}
+                onClick={() => !isLocked && setExpanded(true)}
               >
                 Start Practice
                 <motion.div

@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════════════════════
-// AWAKENED PATH — ACHIEVEMENTS & POINTS SYSTEM
+// THE AWAKENED PATH — ACHIEVEMENTS & POINTS SYSTEM
 // ══════════════════════════════════════════════════════════════════════════════
 
 import {

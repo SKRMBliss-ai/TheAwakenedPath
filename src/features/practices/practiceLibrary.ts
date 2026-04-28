@@ -19,6 +19,7 @@ export interface QuestionPractice {
   completionCriteria: string;    // what counts as "done" for the checkbox
   durationLabel: string;         // shown in the card header
   color: string;                 // accent colour for this question
+  audioPath?: string;            // path to the meditation mp3
   icon: 'brain' | 'radio' | 'planet' | 'clarity'; // maps to an icon in the card
   triggerCount?: number;         // for Q3 — how many times they need to do the pause
 }
@@ -67,6 +68,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
       'Done at least once today when a real negative thought or spiral arose.',
     durationLabel: '~30 seconds when triggered',
     color: '#B8973A',
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q1.mp3',
     icon: 'brain',
   },
 
@@ -118,6 +120,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
       'Completed the 2-minute sitting practice at least once today.',
     durationLabel: '2 minutes',
     color: '#9575CD',
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q2.mp3',
     icon: 'radio',
   },
 
@@ -164,6 +167,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
       'All three pause moments completed today.',
     durationLabel: '1 second × 3 triggers',
     color: '#3A8BBF',
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q3.mp3',
     icon: 'planet',
     triggerCount: 3,
   },
@@ -188,6 +192,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
     completionCriteria: 'Paused for 1 minute to observe the silent space.',
     durationLabel: '1 min',
     color: '#FF6F61',
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q4.mp3',
     icon: 'clarity',
   },
 
@@ -232,6 +237,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
     completionCriteria: 'Completed the 3-minute clarity sit today.',
     durationLabel: '3 minutes',
     color: '#2E9E7A',
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q5.mp3',
     icon: 'clarity',
   },
 
@@ -255,6 +261,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
     completionCriteria: 'Witnessed a moment of guilt or regret from the seat of awareness.',
     durationLabel: '2 minutes',
     color: '#B8973A',
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q6.mp3',
     icon: 'brain',
   },
 
@@ -296,6 +303,7 @@ export const PRACTICE_LIBRARY: Record<string, QuestionPractice> = {
     completionCriteria: 'Celebrated at least one moment of noticing today.',
     durationLabel: '3 minutes',
     color: '#3A8BBF',
+    audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q7.mp3',
     icon: 'clarity',
   },
 };

@@ -461,7 +461,7 @@ const Journal: React.FC<JournalProps> = ({ isAccessValid, onUpgrade }) => {
                         </motion.div>
                     ) : (
                         /* ═══════════════════════════════════════════════════════════════
-                           AWAKENED PATH 3-STEP JOURNAL FLOW
+                           THE AWAKENED PATH 3-STEP FLOW
                         ═══════════════════════════════════════════════════════════════ */
                         <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-6xl mx-auto w-full">
                             <GentleJournalForm

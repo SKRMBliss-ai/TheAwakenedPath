@@ -113,7 +113,7 @@ function DashboardCard({
       {/* Backdrop image texture */}
       <div className="absolute inset-0 overflow-hidden rounded-[20px]">
         <img
-          src={`/assets/dashboard/${mode === 'dark' ? CARD_IMAGES_DARK[idx] : CARD_IMAGES_LIGHT[idx]}`}
+          src={VoiceService.getStorageUrl(`Dashboard/Images/${mode === 'dark' ? CARD_IMAGES_DARK[idx] : CARD_IMAGES_LIGHT[idx]}`)}
           alt=""
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           style={{
@@ -227,7 +227,12 @@ function DashboardCard({
 function InlinePracticePanel({
   practice, color, onComplete, onGoToRoom, isDone = false,
 }: {
-  practice: { name: string; tagline?: string; steps: { instruction: string; duration?: number }[] };
+  practice: { 
+    name: string; 
+    tagline?: string; 
+    steps: { instruction: string; duration?: number }[];
+    audioPath?: string; 
+  };
   color: string;
   onComplete: () => void;
   onGoToRoom: () => void;
@@ -239,8 +244,28 @@ function InlinePracticePanel({
   const total = practice.steps.length;
   const isLast = stepIdx === total - 1;
 
+  // Audio state
+  const { status, musicUrl } = useVoiceStatus();
+  const audioUrl = practice.audioPath ? VoiceService.getStorageUrl(practice.audioPath) : null;
+  const isActuallyPlaying = status === 'playing' && (musicUrl === audioUrl || musicUrl === practice.audioPath);
+
+  const handleToggleAudio = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!audioUrl) return;
+
+    if (isActuallyPlaying) {
+      VoiceService.pause();
+    } else {
+      await VoiceService.playAudioURL(audioUrl);
+    }
+  };
+
   const handleNext = () => {
-    if (isLast) { setDone(true); onComplete(); }
+    if (isLast) { 
+      setDone(true); 
+      VoiceService.stopAll(); // Stop meditation when finishing
+      onComplete(); 
+    }
     else setStepIdx((s: number) => s + 1);
   };
 
@@ -324,11 +349,26 @@ function InlinePracticePanel({
             </p>
             <h3 className="text-[16px] sm:text-[18px] font-serif leading-tight truncate" style={{ color: 'var(--text-primary)' }}>{practice.name}</h3>
           </div>
-          <div className="text-right flex-shrink-0">
-            <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5" style={{ color: 'var(--text-muted)' }}>Step</p>
-            <p className="text-xl sm:text-2xl font-black leading-none tabular-nums" style={{ color }}>
-              {stepIdx + 1}<span className="text-xs sm:text-sm font-normal opacity-40" style={{ color: 'var(--text-muted)' }}>/{total}</span>
-            </p>
+          <div className="flex items-center gap-3">
+            {practice.audioPath && (
+              <button
+                onClick={handleToggleAudio}
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90"
+                style={{ 
+                  background: isActuallyPlaying ? color + '20' : 'color-mix(in srgb, var(--bg-secondary) 50%, transparent)',
+                  border: `1px solid ${isActuallyPlaying ? color + '40' : 'var(--border-subtle)'}`,
+                  color: isActuallyPlaying ? color : 'var(--text-muted)'
+                }}
+              >
+                {isActuallyPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" style={{ marginLeft: 2 }} />}
+              </button>
+            )}
+            <div className="text-right flex-shrink-0">
+              <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5" style={{ color: 'var(--text-muted)' }}>Step</p>
+              <p className="text-xl sm:text-2xl font-black leading-none tabular-nums" style={{ color }}>
+                {stepIdx + 1}<span className="text-xs sm:text-sm font-normal opacity-40" style={{ color: 'var(--text-muted)' }}>/{total}</span>
+              </p>
+            </div>
           </div>
         </div>
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>

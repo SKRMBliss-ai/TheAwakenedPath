@@ -1196,7 +1196,7 @@ export default function UntetheredApp() {
   }, [currentUser, checkAndUnlock, points, watchedParts.length]);
 
   useEffect(() => {
-    document.title = "Awakened Path";
+    document.title = "The Awakened Path";
   }, []);
 
   useEffect(() => {
@@ -2119,7 +2119,7 @@ export default function UntetheredApp() {
                         <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Reflections</span>
                         <InfoTooltip
                           title="Reflections"
-                          description="The total number of times you have journalled, completed a practice, or recorded a thought in this app."
+                          description="The total number of times you have journalled, completed a practice, or recorded a thought in this Journal."
                           howCalculated="Counts every journal entry, completed situational practice, and daily practice session."
                         />
                       </div>

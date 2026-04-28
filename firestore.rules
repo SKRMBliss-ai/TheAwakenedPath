@@ -3,12 +3,19 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email == 'shrutikhungar@gmail.com' || 
-        request.auth.token.email == 'smriti.duggal@gmail.com' || 
-        request.auth.token.email == 'skrmblissai@gmail.com' ||
-        request.auth.token.email == 'test@example.com'
-      );
+      // SECURITY: require email_verified=true — Firebase Auth lets anyone sign up
+      // with email/password using ANY email address; only verified emails should
+      // be trusted. Without this, an attacker could register as an admin email
+      // (unverified) and gain full admin access.
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && (
+          request.auth.token.email == 'shrutikhungar@gmail.com' ||
+          request.auth.token.email == 'simkatyal1@gmail.com' ||
+          request.auth.token.email == 'smriti.duggal@gmail.com' ||
+          request.auth.token.email == 'rashmi.purbey@gmail.com' ||
+          request.auth.token.email == 'skrmblissai@gmail.com'
+        );
     }
 
     match /users/{userId}/{allPaths=**} {
@@ -29,7 +36,16 @@ service cloud.firestore {
     }
     
     match /email_opens/{openId} {
-      allow create: if true; // Allows anonymous tracking pixel
+      // The tracking pixel is fired anonymously by email clients, so we can't gate
+      // creation behind auth — but we DO restrict shape to prevent garbage spam:
+      //  - exactly the expected fields
+      //  - reasonable size limits
+      //  - no other writes (only create) and no read except admin
+      allow create: if request.resource.data.keys().hasOnly(['blastId', 'userEmail', 'timestamp'])
+        && request.resource.data.blastId is string
+        && request.resource.data.blastId.size() < 200
+        && request.resource.data.userEmail is string
+        && request.resource.data.userEmail.size() < 200;
       allow read: if isAdmin();
     }
     
@@ -50,6 +66,20 @@ service cloud.firestore {
     match /lead_scans/{scanId} {
       allow read: if isAdmin();
       allow write: if isAdmin();
+    }
+
+    match /waitlist/{entryId} {
+      // Anonymous email captures from the marketing landing page (/aboutjournal).
+      // Strict shape validation prevents abuse and unbounded writes.
+      allow create: if request.resource.data.keys().hasOnly(['email', 'source', 'userAgent', 'createdAt'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 3
+        && request.resource.data.email.size() < 200
+        && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && request.resource.data.source is string
+        && request.resource.data.source.size() < 60;
+      allow read: if isAdmin();
+      allow delete: if isAdmin();
     }
   }
 }

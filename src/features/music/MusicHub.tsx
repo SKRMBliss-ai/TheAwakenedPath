@@ -74,7 +74,7 @@ const MusicCard = ({
 
   const coverSrc = track.coverImage 
     ? (mode === 'dark' ? track.coverImage.dark : track.coverImage.light)
-    : (mode === 'dark' ? '/sacred-bg-dark.webp' : '/sacred-bg-light.webp');
+    : (mode === 'dark' ? VoiceService.getStorageUrl('/Soundscapes/Images/sacred-bg-dark.webp') : VoiceService.getStorageUrl('/Soundscapes/Images/sacred-bg-light.webp'));
 
   return (
     <div className={styles.trackCard} onClick={toggleFlip}>

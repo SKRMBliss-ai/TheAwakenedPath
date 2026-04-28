@@ -11,7 +11,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'sacred-bg-dark.webp', 'sacred-bg-light.webp'],
+      // Only list files that actually exist in /public — VitePWA precache will fail
+      // (or silently 404 in offline mode) on missing assets. Sacred-bg files removed
+      // because they're no longer present in /public.
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.png'],
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
@@ -20,22 +23,22 @@ export default defineConfig({
         skipWaiting: true
       },
       manifest: {
-        name: 'Awakened Path',
-        short_name: 'AwakenedPath',
-        description: 'Your journey to mindfulness and joy',
+        name: 'The Awakened Path',
+        short_name: 'AwakenedJournal',
+        description: 'Your journey into the seat of the witness',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',
         icons: [
           {
-            src: 'pwa-192x192.webp',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/webp'
+            type: 'image/png'
           },
           {
-            src: 'pwa-512x512.webp',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/webp'
+            type: 'image/png'
           }
         ]
       }

@@ -8,7 +8,12 @@ import { AnchorButton } from '../ui/SacredUI';
 
 export const PhonePromptModal: React.FC = () => {
     const { profile, user } = useAuth();
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return !localStorage.getItem('AP_WA_PROMPT_DISMISSED');
+        }
+        return true;
+    });
     const [phone, setPhone] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -35,8 +40,16 @@ export const PhonePromptModal: React.FC = () => {
         }
     }
 
+    // Check for permanent dismissal in profile
+    const isPermanentlyDismissed = profile?.phonePromptDismissed;
+
     // Only show if it's the 2nd visit (or more) and phone is missing
-    const shouldShow = profile && (profile.visitCount || 0) >= 2 && !profile.phoneNumber && isOpen && !hasRecentlySkipped;
+    const shouldShow = profile && 
+                      (profile.visitCount || 0) >= 2 && 
+                      !profile.phoneNumber && 
+                      isOpen && 
+                      !hasRecentlySkipped && 
+                      !isPermanentlyDismissed;
 
     if (!shouldShow && !isSuccess) return null;
 
@@ -62,11 +75,13 @@ export const PhonePromptModal: React.FC = () => {
 
     const handleSkip = async () => {
         if (!user) return;
+        localStorage.setItem('AP_WA_PROMPT_DISMISSED', 'true');
         setIsOpen(false);
         try {
             await updateDoc(doc(db, 'users', user.uid), {
                 phonePromptSkippedAt: new Date(),
-                phonePromptSkippedAtVisit: profile?.visitCount || 0
+                phonePromptSkippedAtVisit: profile?.visitCount || 0,
+                phonePromptDismissed: true
             });
         } catch (error) {
             console.error("Failed to log skip:", error);

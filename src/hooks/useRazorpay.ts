@@ -57,7 +57,7 @@ export const useRazorpay = () => {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
                 amount: order.amount,
                 currency: order.currency,
-                name: "Awakened Path",
+                name: "The Awakened Path",
                 description: `Unlock ${courseId}`,
                 order_id: order.id,
                 handler: async (response: any) => {
@@ -135,7 +135,7 @@ export const useRazorpay = () => {
             const options: any = {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
                 subscription_id: subscription.id,
-                name: "Awakened Path",
+                name: "The Awakened Path",
                 description: planId.includes('yearly') ? "Annual Premium Access" : "Monthly Premium Access",
                 handler: async (response: any) => {
                     // 2. Verify Subscription via Firebase Cloud Function
