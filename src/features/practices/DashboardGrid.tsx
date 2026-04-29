@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Zap, PenLine, Heart, Play, Pause,
   CheckCircle2, ArrowRight, Lock,
-  Music2, Send, ExternalLink,
+  Music2, Send, ExternalLink, Sparkles
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PRACTICE_LIBRARY } from './practiceLibrary';
@@ -924,55 +924,109 @@ export function DashboardGrid({
       {/* ── Sacred Commitment modal ─────────────────────────────────────────── */}
       <AnimatePresence>
         {showCommitment && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/55 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 16 }}
-              transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-              className="max-w-xs w-full rounded-[28px] p-8 text-center space-y-6 relative overflow-hidden"
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl">
+            {/* ── Background Halo / Aura ── */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ 
+                opacity: [0.1, 0.25, 0.1], 
+                scale: [1, 1.2, 1],
+              }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute w-[500px] h-[500px] rounded-full pointer-events-none"
               style={{
-                background: 'var(--bg-surface)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid var(--border-default)',
-                boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
+                background: `radial-gradient(circle, ${color}40 0%, transparent 70%)`,
+                filter: 'blur(80px)',
+              }}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="max-w-xs w-full rounded-[36px] p-10 text-center space-y-8 relative overflow-hidden"
+              style={{
+                background: mode === 'dark' 
+                  ? 'rgba(20, 20, 20, 0.7)' 
+                  : 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(30px) saturate(150%)',
+                border: `1px solid ${color}30`,
+                boxShadow: `0 32px 80px rgba(0,0,0,0.45), inset 0 0 20px ${color}10`,
               }}
             >
+              {/* ── Inner Light Leak ── */}
               <div
-                className="absolute inset-0 pointer-events-none rounded-[40px]"
-                style={{ background: `radial-gradient(ellipse 80% 55% at 50% 0%, ${color}12, transparent)` }}
+                className="absolute inset-0 pointer-events-none"
+                style={{ 
+                  background: `linear-gradient(180deg, ${color}15 0%, transparent 40%, ${color}05 100%)` 
+                }}
               />
-              <div className="relative z-10 space-y-5">
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
-                  style={{ background: `${color}15`, border: `1px solid ${color}35` }}
-                >
-                  <Heart size={24} style={{ color }} />
+
+              <div className="relative z-10 space-y-7">
+                {/* ── Animated Icon Container ── */}
+                <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.15, 1],
+                      opacity: [0.3, 0.6, 0.3]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: `${color}20`, filter: 'blur(15px)' }}
+                  />
+                  <motion.div
+                    animate={{ scale: [1, 1.08, 1] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    className="w-16 h-16 rounded-[22px] flex items-center justify-center bg-[var(--bg-surface)] relative z-10 border shadow-inner"
+                    style={{ borderColor: `${color}40` }}
+                  >
+                    <Heart size={28} style={{ color, filter: `drop-shadow(0 0 8px ${color}60)` }} fill={color + '20'} />
+                  </motion.div>
                 </div>
-                <h3 className="text-xl font-serif font-light" style={{ color: 'var(--text-primary)' }}>
-                  Sacred Commitment
-                </h3>
-                <p className="text-[15px] font-serif italic leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                  "{questionMeta.dailyIntent}"
-                </p>
-                <div className="pt-2 flex flex-col gap-3">
-                  <button
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-2 opacity-50 mb-1">
+                    <Sparkles size={10} style={{ color }} />
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em]" style={{ color }}>Sacred Portal</span>
+                    <Sparkles size={10} style={{ color }} />
+                  </div>
+                  <h3 className="text-2xl font-serif font-light tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                    Sacred Commitment
+                  </h3>
+                </div>
+
+                <div className="py-2">
+                  <p className="text-[17px] font-serif italic leading-relaxed px-2" style={{ color: 'var(--text-secondary)' }}>
+                    "{questionMeta.dailyIntent}"
+                  </p>
+                </div>
+
+                <div className="pt-4 flex flex-col gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={confirmIntegrate}
-                    className="w-full py-4 rounded-2xl font-black uppercase tracking-[.15em] text-sm transition-all hover:scale-[1.02] active:scale-[.98] shadow-xl"
+                    className="w-full py-4.5 rounded-2xl font-black uppercase tracking-[.2em] text-[12px] transition-all shadow-2xl relative overflow-hidden group"
                     style={{
-                      color: mode === 'light' ? 'var(--bg-primary)' : 'white',
-                      background: `linear-gradient(135deg, ${color}, ${color}bb)`,
-                      boxShadow: `0 8px 24px ${color}40`,
+                      color: mode === 'light' ? 'white' : 'white',
+                      background: `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color}, black 20%))`,
+                      boxShadow: `0 12px 32px ${color}50`,
                     }}
                   >
-                    I Promise to Live This
-                  </button>
+                    <span className="relative z-10">I Promise to Live This</span>
+                    <motion.div 
+                      className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                      initial={false}
+                    />
+                  </motion.button>
+                  
                   <button
                     onClick={() => setShowCommitment(false)}
-                    className="w-full py-3 text-sm font-bold uppercase tracking-widest transition-colors hover:opacity-80"
+                    className="w-full py-2 text-[11px] font-bold uppercase tracking-[.3em] transition-all opacity-40 hover:opacity-80 hover:tracking-[.35em]"
                     style={{ color: 'var(--text-muted)' }}
                   >
-                    Not yet — I need more time
+                    Not ready yet
                   </button>
                 </div>
               </div>

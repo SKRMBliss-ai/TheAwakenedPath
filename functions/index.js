@@ -1157,7 +1157,8 @@ async function runReminderLogic(apiKey) {
             'test@example.com',
             'echarttolleteachings@gmail.com',
             'russel.brownlee@gmail.com',
-            'sup.trezor.io@gmail.com'
+            'sup.trezor.io@gmail.com',
+            'brjdjej@aol.com'
         ];
         if (userData.email && blockedEmails.includes(userData.email.toLowerCase())) {
             continue;
