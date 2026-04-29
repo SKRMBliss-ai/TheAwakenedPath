@@ -21,8 +21,8 @@ try {
 // fast for anonymous traffic and survives provider failures.
 const isAboutJournalRoute = (() => {
   if (typeof window === 'undefined') return false;
-  const p = window.location.pathname.replace(/\/+$/, '');
-  return p === '/aboutjournal' || p === '/aboutjournal/index.html';
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/aboutjournal' || p === '/aboutjournal/index.html' || p === '/aboutawakenedpath';
 })();
 
 const root = createRoot(document.getElementById('root')!);

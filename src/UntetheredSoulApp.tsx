@@ -38,6 +38,7 @@ import { usePersistedState } from './hooks/usePersistedState';
 import { useRazorpay } from './hooks/useRazorpay';
 import { MusicHub } from './features/music/MusicHub';
 import { PhonePromptModal } from './components/domain/PhonePromptModal';
+import SacredWelcomeModal from './components/ui/SacredWelcomeModal';
 
 const DashboardActions = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate }: any) => {
   return (
@@ -565,66 +566,6 @@ const WatcherPauseButton = () => {
 };
 
 // --- Sacred Welcome Modal ---
-const SacredWelcomeModal = ({ isOpen, onClose, planName, userEmail }: any) => {
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-lg bg-[#FDFAF4] rounded-[32px] overflow-hidden shadow-2xl border border-[#E6C57D]"
-          >
-            {/* Top gold bar */}
-            <div className="h-1.5 bg-[#B8973A] w-full" />
-
-            <div className="p-8 md:p-12 text-center space-y-6">
-              <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#B8973A]">Access Granted</p>
-                <h2 className="text-3xl font-serif italic text-[#1C1814] leading-tight">Welcome to the<br />Deepest Journey.</h2>
-              </div>
-
-              <div className="w-12 h-px bg-[#B8973A] mx-auto opacity-30" />
-
-              <div className="space-y-4 text-[#3A342C] font-serif leading-relaxed">
-                <p className="text-sm">Your gateway for <b>{planName}</b> was successful.</p>
-                <div className="text-[13px] space-y-3 opacity-90">
-                  <p>Step beyond the noise. You now possess full access to the intelligence course, the practice room, and interactive journaling.</p>
-                  <p>As a premium member, remember that you also hold the key to <b>2 complimentary personal consultations</b>. Email us whenever you are ready.</p>
-                </div>
-              </div>
-
-              <div className="pt-4">
-                <p className="text-[10px] uppercase tracking-widest text-[#B8973A] font-bold mb-4">A confirmation email has been sent to</p>
-                <div className="px-4 py-2 rounded-full bg-[#B8973A]/5 border border-[#B8973A]/20 inline-block">
-                  <span className="text-xs font-medium text-[#1C1814]">{userEmail}</span>
-                </div>
-              </div>
-
-              <AnchorButton
-                variant="solid"
-                onClick={onClose}
-                className="w-full bg-[#1C1814] text-[#E6C57D] hover:bg-[#2C2824] uppercase tracking-widest font-bold mt-4"
-              >
-                Begin Your Journey
-              </AnchorButton>
-
-              <p className="text-[10px] italic text-[#B0A090]">Peace is the way.</p>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
-};
 
 // --- Premium Paywall Component ---
 const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial, hasUsedTrial, onSuccess }: any) => {

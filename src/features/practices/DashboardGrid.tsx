@@ -930,13 +930,13 @@ export function DashboardGrid({
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ 
                 opacity: [0.1, 0.25, 0.1], 
-                scale: [1, 1.2, 1],
+                scale: [1, 1.1, 1],
               }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
               className="absolute w-[500px] h-[500px] rounded-full pointer-events-none"
               style={{
-                background: `radial-gradient(circle, ${color}40 0%, transparent 70%)`,
-                filter: 'blur(80px)',
+                background: `radial-gradient(circle, ${color}60 0%, ${color}20 40%, transparent 70%)`,
+                willChange: 'transform, opacity',
               }}
             />
 
@@ -948,11 +948,12 @@ export function DashboardGrid({
               className="max-w-xs w-full rounded-[36px] p-10 text-center space-y-8 relative overflow-hidden"
               style={{
                 background: mode === 'dark' 
-                  ? 'rgba(20, 20, 20, 0.7)' 
-                  : 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(30px) saturate(150%)',
+                  ? 'rgba(20, 20, 20, 0.85)' 
+                  : 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(20px) saturate(150%)',
                 border: `1px solid ${color}30`,
                 boxShadow: `0 32px 80px rgba(0,0,0,0.45), inset 0 0 20px ${color}10`,
+                willChange: 'transform, opacity',
               }}
             >
               {/* ── Inner Light Leak ── */}
@@ -968,20 +969,23 @@ export function DashboardGrid({
                 <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
                   <motion.div
                     animate={{ 
-                      scale: [1, 1.15, 1],
+                      scale: [1, 1.2, 1],
                       opacity: [0.3, 0.6, 0.3]
                     }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     className="absolute inset-0 rounded-full"
-                    style={{ background: `${color}20`, filter: 'blur(15px)' }}
+                    style={{ 
+                      background: `radial-gradient(circle, ${color}40 0%, transparent 70%)`,
+                      willChange: 'transform, opacity'
+                    }}
                   />
                   <motion.div
                     animate={{ scale: [1, 1.08, 1] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     className="w-16 h-16 rounded-[22px] flex items-center justify-center bg-[var(--bg-surface)] relative z-10 border shadow-inner"
-                    style={{ borderColor: `${color}40` }}
+                    style={{ borderColor: `${color}40`, transform: 'translateZ(0)' }}
                   >
-                    <Heart size={28} style={{ color, filter: `drop-shadow(0 0 8px ${color}60)` }} fill={color + '20'} />
+                    <Heart size={28} style={{ color, filter: `drop-shadow(0 0 8px ${color}40)` }} fill={color + '20'} />
                   </motion.div>
                 </div>
 

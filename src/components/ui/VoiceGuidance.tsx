@@ -129,13 +129,14 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, timezon
   // Fallback to Paywall/Upgrade script if not premium OR on paywall tab
   if (!isAccessValid || tab === 'paywall') {
     return `
-      Welcome to your Journey to Inner Freedom. I am your guide, here to help you navigate our sacred space and choose the right path for your evolution.
-      Currently, you are experiencing our limited portals. The true transformation lies within our full library of wisdom.
-      We offer three distinct tiers:
-      First, our Monthly Flow at ${pricing.monthly}.
-      Second, our annual Sacred Commitment at ${pricing.annual}.
-      Finally, we have the Eternal Traveler Lifetime pass at ${pricing.lifetime}.
-      Choose the path that resonates with your current depth. We are honored to walk beside you.
+      Welcome to the threshold of your transformation. Currently, you are experiencing our limited portals, but the full depth of the Awakened Path universe is waiting for you.
+      To begin your immersion, we invite you to activate your three-day gift of awareness. 
+      On this screen, scroll down to the section titled 'Choose Your Commitment.' 
+      Look for the 'Begin Trial' card—the one glowing with a golden dashed border. 
+      You will see it offers full access with no credit card required. 
+      Simply click the 'Start 3-Day Trial' button to begin.
+      If you are ready for a deeper commitment, we also offer our Monthly Flow at ${pricing.monthly}, our annual Sacred Commitment at ${pricing.annual}, or the Eternal Traveler Lifetime pass at ${pricing.lifetime}.
+      Choose the path that resonates with your spirit. We are honored to walk beside you.
     `;
   }
 

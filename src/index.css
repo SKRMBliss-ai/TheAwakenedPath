@@ -103,7 +103,7 @@ h4,
 h5,
 h6 {
     font-family: var(--font-serif), Georgia, serif;
-    font-weight: 300;
+    font-weight: 400;
 }
 
 /* Standardized Label Style */
@@ -116,14 +116,13 @@ h6 {
 
 /* Animations - Reduction Strategy */
 @keyframes heartbeat {
-
-    0%,
-    100% {
-        box-shadow: 0 0 20px var(--card-glow-base);
+    0%, 100% { 
+        opacity: 0.9;
+        transform: scale(1) translateZ(0);
     }
-
-    50% {
-        box-shadow: 0 0 30px var(--card-glow-pulse);
+    50% { 
+        opacity: 1;
+        transform: scale(1.01) translateZ(0);
     }
 }
 

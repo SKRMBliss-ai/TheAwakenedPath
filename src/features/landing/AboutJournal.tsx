@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import {
     ArrowRight,
     Sparkles,
@@ -45,85 +45,128 @@ const useLandingTheme = () => {
     return { theme, toggle };
 };
 
-// ─── Section: Hero ────────────────────────────────────────────────────────────
-const Hero = ({ theme }: { theme: 'dark' | 'light' }) => (
-    <section className={`relative pt-12 pb-12 md:pt-16 md:pb-16 px-6 overflow-hidden border-b ${GOLD_BORDER}`}>
-        <div
-            aria-hidden="true"
-            className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
-            style={{
-                background: theme === 'dark'
-                    ? 'radial-gradient(60% 50% at 50% 0%, rgba(94,196,176,0.18) 0%, rgba(12,9,16,0) 70%)'
-                    : 'radial-gradient(60% 50% at 50% 0%, rgba(94,196,176,0.12) 0%, rgba(252,248,242,0) 70%)',
-            }}
-        />
-        <div className="relative max-w-4xl mx-auto text-center">
-            <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 dark:bg-white/5 bg-black/5 ${GOLD_BORDER} text-[11px] tracking-[0.18em] uppercase font-medium text-black/70 dark:text-white/70 mb-8`}
-            >
-                <Sparkles className="w-3 h-3 text-[#D4AF37]" />
-                <span>The Awakened Journal</span>
-            </motion.div>
-
-            <motion.h1
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.05 }}
-                className="font-[Outfit] text-[clamp(34px,6vw,60px)] font-light leading-[1.05] tracking-tight text-black dark:text-white"
-            >
-                A quieter mind,
-                <br />
-                <span className="font-medium text-[#5EC4B0]">one breath at a time.</span>
-            </motion.h1>
-
-            <motion.p
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.15 }}
-                className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-black/60 dark:text-white/65 leading-relaxed"
-            >
-                Daily journaling, breathwork, and witnessing practices grounded in modern wisdom —
-                designed to help you watch the noise instead of being it.
-            </motion.p>
-
-            <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center"
-            >
-                <a
-                    href={PREMIUM_URL}
-                    className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-semibold tracking-wide transition-all shadow-[0_8px_30px_rgba(212,175,55,0.15)] hover:shadow-[0_12px_40px_rgba(212,175,55,0.25)]"
-                >
-                    Begin the journey
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                </a>
-
-                <a
-                    href="#download"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-black/80 dark:text-white/80 text-sm font-semibold tracking-wide transition-all"
-                >
-                    Download Journal
-                    <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
-                </a>
-
-            </motion.div>
-        </div>
-    </section>
-);
-
-// ─── Section: How it works ────────────────────────────────────────────────────
-// Global practice grid data - shared via storage URLs
+// ─── Firebase Storage helpers (used by Hero + HowItWorks + JournalFeatures) ──
 const STORAGE_BASE = "https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2F";
 const getStorageImg = (name: string) => `${STORAGE_BASE}${name}.webp?alt=media`;
+
+// ─── Section: Hero ────────────────────────────────────────────────────────────
+const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
+    const containerRef = useRef<HTMLElement>(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start start", "end start"]
+    });
+
+    const overlayOpacity = useTransform(scrollYProgress, [0, 0.4], [0, 1]);
+    const textOpacity = useTransform(scrollYProgress, [0.15, 0.5], [0, 1]);
+    const textY = useTransform(scrollYProgress, [0.15, 0.5], [30, 0]);
+
+    return (
+        <section ref={containerRef} className={`relative w-full border-b ${GOLD_BORDER}`} style={{ height: '200vh' }}>
+            <div className="sticky top-0 w-full overflow-hidden h-[75vh] md:h-[85vh] min-h-[450px] md:min-h-[520px] max-h-[900px]">
+                {/* Full-bleed background image */}
+                <div className="absolute inset-0 z-0 bg-black">
+                    <img
+                        src={getStorageImg(theme === 'dark' ? 'hero-dark' : 'hero-light')}
+                        alt="The Awakened Path Dashboard"
+                        className="w-full h-full object-cover object-center md:object-center"
+                    />
+                    {/* Multi-stop gradient overlay + blur that fades in on scroll */}
+                    <motion.div
+                        className="absolute inset-0 backdrop-blur-[12px]"
+                        style={{
+                            opacity: overlayOpacity,
+                            background: theme === 'dark'
+                                ? 'linear-gradient(to bottom, rgba(12,9,16,0.85) 0%, rgba(12,9,16,0.65) 40%, rgba(12,9,16,0.75) 80%, rgba(12,9,16,0.95) 100%)'
+                                : 'linear-gradient(to bottom, rgba(252,248,242,0.85) 0%, rgba(252,248,242,0.65) 40%, rgba(252,248,242,0.75) 80%, rgba(252,248,242,0.98) 100%)',
+                        }}
+                    />
+                </div>
+
+                {/* Text content — overlaid */}
+                <motion.div 
+                    className="relative z-10 flex flex-col items-center justify-center text-center px-6 h-full pt-16" 
+                    style={{ opacity: textOpacity, y: textY }}
+                >
+                    {/* Badge */}
+                    <div
+                        className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full ${GOLD_BORDER} text-[11px] tracking-[0.18em] uppercase font-semibold mb-8`}
+                        style={{
+                            background: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.65)',
+                            backdropFilter: 'blur(12px)',
+                            color: theme === 'dark' ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.65)',
+                        }}
+                    >
+                        <Sparkles className="w-3 h-3 text-[#D4AF37]" />
+                        <span>The Awakened Journal</span>
+                    </div>
+
+                    {/* Headline */}
+                    <h1
+                        className="font-[Outfit] text-[clamp(36px,6.5vw,72px)] font-light leading-[1.05] tracking-tight"
+                        style={{ color: theme === 'dark' ? '#ffffff' : '#0c0910' }}
+                    >
+                        A quieter mind,
+                        <br />
+                        <span className="font-medium" style={{ color: '#5EC4B0' }}>one breath at a time.</span>
+                    </h1>
+
+                    {/* Description */}
+                    <p
+                        className="mt-6 max-w-xl mx-auto text-base md:text-lg leading-relaxed"
+                        style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.62)' }}
+                    >
+                        Daily journaling, breathwork, and witnessing practices grounded in modern wisdom —
+                        designed to help you watch the noise instead of being it.
+                    </p>
+
+                    {/* CTAs */}
+                    <div className="mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                        <a
+                            href={PREMIUM_URL}
+                            className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-[0_8px_30px_rgba(94,196,176,0.4)] hover:shadow-[0_12px_40px_rgba(94,196,176,0.55)]"
+                        >
+                            Begin the journey
+                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                        </a>
+
+                        <a
+                            href="#download"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full text-sm font-semibold tracking-wide transition-all"
+                            style={{
+                                background: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.7)',
+                                backdropFilter: 'blur(12px)',
+                                border: '1px solid rgba(255,255,255,0.25)',
+                                color: theme === 'dark' ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.75)',
+                            }}
+                        >
+                            Download Journal
+                            <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+                        </a>
+                    </div>
+                </motion.div>
+
+                {/* Scroll cue (visible initially, fades out as you scroll) */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1, duration: 0.8 }}
+                    style={{ opacity: useTransform(scrollYProgress, [0, 0.15], [1, 0]) }}
+                    className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5"
+                >
+                    <span className="text-[10px] uppercase tracking-[0.25em]" style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>Scroll</span>
+                    <div className="w-px h-8 bg-current opacity-40" style={{ color: theme === 'dark' ? 'white' : 'black' }} />
+                </motion.div>
+            </div>
+        </section>
+    );
+};
+
+// ─── Section: How it works ────────────────────────────────────────────────────
 
 const STEPS = [
     {
@@ -157,59 +200,211 @@ const STEPS = [
     },
 ];
 
-const HowItWorks = () => (
-    <section className={`px-6 py-12 md:py-16 border-b ${GOLD_BORDER} bg-black/[0.01] dark:bg-white/[0.01]`}>
+// Per-step color palette — mirrors the "Your Daily Journey" infographic
+const STEP_COLORS = [
+    { accent: '#D4AF37', glow: 'rgba(212,175,55,0.35)', bg: 'rgba(212,175,55,0.08)', border: 'rgba(212,175,55,0.25)', label: 'Learn' },
+    { accent: '#9B6DFF', glow: 'rgba(155,109,255,0.35)', bg: 'rgba(155,109,255,0.08)', border: 'rgba(155,109,255,0.25)', label: 'Practice' },
+    { accent: '#F4779A', glow: 'rgba(244,119,154,0.35)', bg: 'rgba(244,119,154,0.08)', border: 'rgba(244,119,154,0.25)', label: 'Reflect' },
+    { accent: '#5EC49A', glow: 'rgba(94,196,154,0.35)', bg: 'rgba(94,196,154,0.08)', border: 'rgba(94,196,154,0.25)', label: 'Live It' },
+];
+
+// ─── Inline YouTube player: thumbnail → iframe on click ──────────────────────
+const YOUTUBE_ID = 'rLXnxzq_Dlk';
+
+function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
+    const [playing, setPlaying] = useState(false);
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.7 }}
+            className="max-w-3xl mx-auto mb-16"
+        >
+            {/* Label */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="h-px flex-1 max-w-[60px] bg-[#D4AF37]/30" />
+                <div className="flex items-center gap-2">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-red-500">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                    </svg>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-black/50 dark:text-white/50">
+                        Demo · The 4-Step Daily Process
+                    </span>
+                </div>
+                <div className="h-px flex-1 max-w-[60px] bg-[#D4AF37]/30" />
+            </div>
+
+            {/* Player */}
+            <div
+                className="group relative rounded-[20px] overflow-hidden shadow-[0_20px_60px_-10px_rgba(0,0,0,0.25)] border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 transition-colors duration-500"
+                style={{ aspectRatio: '16/9' }}
+            >
+                {playing ? (
+                    <iframe
+                        className="absolute inset-0 w-full h-full"
+                        src={`https://www.youtube.com/embed/${YOUTUBE_ID}?autoplay=1&rel=0&modestbranding=1`}
+                        title="Your Daily Journey — 4-Step Process Demo"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                    />
+                ) : (
+                    <>
+                        <img
+                            src={getStorageImg(theme === 'dark' ? 'daily-journey-dark' : 'daily-journey-light')}
+                            alt="Your Daily Journey — 4-Step Process Demo"
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+
+                        {/* Play button — embeds iframe on click */}
+                        <button
+                            onClick={() => setPlaying(true)}
+                            aria-label="Play video"
+                            className="absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer"
+                        >
+                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.5)] group-hover:scale-110 group-hover:shadow-[0_0_70px_rgba(212,175,55,0.7)] group-hover:border-[#D4AF37]/60 transition-all duration-500">
+                                <svg viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 md:w-9 md:h-9 text-white translate-x-0.5">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                            </div>
+                        </button>
+
+                        {/* Bottom bar */}
+                        <div className="absolute bottom-0 left-0 right-0 px-5 py-4 flex items-end justify-between pointer-events-none">
+                            <div>
+                                <p className="text-white text-[11px] uppercase tracking-widest font-semibold opacity-80">Watch the walkthrough</p>
+                                <p className="text-white/60 text-xs mt-0.5">Learn · Practice · Reflect · Live It</p>
+                            </div>
+                            {/* YouTube badge — opens new tab, independent of play button */}
+                            <a
+                                href={`https://youtu.be/${YOUTUBE_ID}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="pointer-events-auto flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10 hover:border-red-500/50 transition-colors"
+                                aria-label="Open on YouTube"
+                            >
+                                <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-red-500">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                                </svg>
+                                <span className="text-[10px] font-bold text-white tracking-wider uppercase">YouTube ↗</span>
+                            </a>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            <p className="text-center text-[11px] text-black/40 dark:text-white/35 mt-4 tracking-wide">
+                This video walks you through exactly how to use these 4 steps daily →
+            </p>
+        </motion.div>
+    );
+}
+
+// ─── Section: How it works ────────────────────────────────────────────────────
+const HowItWorks = ({ theme }: { theme: 'dark' | 'light' }) => (
+
+    <section className={`px-6 py-14 md:py-20 border-b ${GOLD_BORDER} bg-black/[0.01] dark:bg-white/[0.01]`}>
         <div className="max-w-5xl mx-auto">
-            <div className="text-center max-w-2xl mx-auto mb-10">
+            {/* Heading */}
+            <div className="text-center max-w-2xl mx-auto mb-14">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-[#D4AF37] mb-3 font-semibold">
                     How it works
                 </p>
-                <h2 className="font-[Outfit] text-[clamp(26px,4vw,36px)] font-light tracking-tight text-black dark:text-white">
+                <h2 className="font-[Outfit] text-[clamp(26px,4vw,38px)] font-light tracking-tight text-black dark:text-white">
                     A simple practice, repeated daily.
                 </h2>
+                <p className="mt-4 text-sm text-black/50 dark:text-white/50 leading-relaxed">
+                    Four steps. Ten minutes. A lifetime of presence.
+                </p>
             </div>
- 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+            {/* Inline video player */}
+            <DailyJourneyVideo theme={theme} />
+
+            {/* 4 Step Cards — unique accent per step */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
                 {STEPS.map((s, i) => {
                     const Icon = s.icon;
+                    const color = STEP_COLORS[i];
+                    const rotations = ['rotate-[1.5deg]', '-rotate-[1deg]', 'rotate-[0.5deg]', '-rotate-[1.5deg]'];
+                    const offsets  = ['translate-y-2', '-translate-y-1', 'translate-y-3', '-translate-y-2'];
                     return (
                         <motion.div
                             key={s.n}
-                            initial={{ opacity: 0, y: 12 }}
+                            initial={{ opacity: 0, y: 16 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: '-60px' }}
-                            transition={{ duration: 0.4, delay: i * 0.05 }}
-                            className={`group relative aspect-square rounded-[32px] bg-white/[0.03] dark:bg-white/[0.03] bg-white border-[4px] border-white dark:border-white/5 hover:border-[#D4AF37]/40 transition-all overflow-hidden shadow-2xl ${i % 2 === 0 ? 'rotate-1' : '-rotate-1'} hover:rotate-0 translate-y-${i % 2 === 0 ? '2' : '0'} hover:translate-y-0 duration-500 animate-heartbeat card-surge`}
+                            transition={{ duration: 0.45, delay: i * 0.08 }}
+                            className={`group relative aspect-square rounded-[28px] overflow-hidden shadow-2xl border-[3px] border-white dark:border-white/5 transition-all duration-500 hover:rotate-0 hover:translate-y-0 ${rotations[i]} ${offsets[i]}`}
+                            style={{
+                                boxShadow: `0 8px 32px -8px ${color.glow}`,
+                                transition: 'transform 0.5s cubic-bezier(0.23,1,0.32,1), box-shadow 0.5s ease, border-color 0.3s ease',
+                            }}
+                            whileHover={{
+                                boxShadow: `0 0 50px 4px ${color.glow}`,
+                                borderColor: color.accent + '60',
+                            }}
                         >
-                            {/* Image - Hidden on hover */}
+                            {/* Background image fades on hover */}
                             <div className="absolute inset-0 z-0 opacity-100 group-hover:opacity-0 transition-opacity duration-500 overflow-hidden">
                                 <img src={s.image} alt="" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-1000" />
-                                <div className="absolute inset-0 bg-black/20" />
+                                <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${color.glow}, transparent 60%)` }} />
                             </div>
- 
-                            {/* Content - Visible on hover, Title/Icon always visible but emphasized on hover */}
-                            <div className="absolute inset-0 z-10 p-6 flex flex-col justify-center items-center text-center">
-                                <div className="mb-4 transform group-hover:scale-110 transition-transform duration-500">
-                                    <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center">
-                                        <Icon className="w-5 h-5 text-[#D4AF37]" />
+
+                            {/* Hover reveal bg */}
+                            <div
+                                className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                                style={{ background: `radial-gradient(ellipse at 50% 30%, ${color.bg} 0%, transparent 70%)` }}
+                            />
+
+                            {/* Content */}
+                            <div className="absolute inset-0 z-10 p-5 flex flex-col justify-between">
+                                {/* Label pill + step number */}
+                                <div className="flex items-center justify-between">
+                                    <span
+                                        className="text-[10px] font-bold tracking-[0.25em] px-2.5 py-1 rounded-full"
+                                        style={{ color: color.accent, background: color.bg, border: `1px solid ${color.border}` }}
+                                    >
+                                        {color.label}
+                                    </span>
+                                    <span className="text-[10px] font-mono opacity-30 text-black dark:text-white">{s.n}</span>
+                                </div>
+
+                                {/* Icon */}
+                                <div className="flex justify-center">
+                                    <div
+                                        className="w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500"
+                                        style={{ background: color.bg, border: `1px solid ${color.border}` }}
+                                    >
+                                        <Icon className="w-6 h-6" style={{ color: color.accent }} />
                                     </div>
                                 </div>
-                                <h3 className="font-[Outfit] text-xl font-medium text-black dark:text-white mb-2 transform group-hover:-translate-y-1 transition-transform duration-500">
-                                    {s.title}
-                                </h3>
-                                <motion.p 
-                                    className="text-sm text-black/60 dark:text-white/60 leading-relaxed opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500"
-                                >
-                                    {s.body}
-                                </motion.p>
-                                
-                                <span className="absolute top-4 left-6 text-[10px] tracking-[0.2em] text-black/20 dark:text-white/20 font-mono group-hover:opacity-0 transition-opacity">
-                                    {s.n}
-                                </span>
+
+                                {/* Title + description */}
+                                <div className="text-center space-y-1.5">
+                                    <h3 className="font-[Outfit] text-base md:text-lg font-semibold text-black dark:text-white group-hover:-translate-y-0.5 transition-transform duration-500">
+                                        {s.title}
+                                    </h3>
+                                    <p className="text-[11px] text-black/60 dark:text-white/55 leading-relaxed opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-500">
+                                        {s.body}
+                                    </p>
+                                </div>
                             </div>
                         </motion.div>
                     );
                 })}
+            </div>
+
+            {/* Connector dots */}
+            <div className="mt-8 flex items-center justify-center gap-2 opacity-40">
+                {STEP_COLORS.map((c, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full" style={{ background: c.accent }} />
+                        {i < 3 && <div className="w-6 h-px bg-current opacity-30" />}
+                    </div>
+                ))}
             </div>
         </div>
     </section>
@@ -500,18 +695,22 @@ const FloatingActions = () => {
 // ─── Animations & Styles ──────────────────────────────────────────────────────
 const HEARTBEAT_KEYFRAMES = `
   @keyframes heartbeat {
-    0% { box-shadow: 0 0 15px rgba(94, 196, 176, 0.1); }
-    50% { box-shadow: 0 0 35px rgba(94, 196, 176, 0.3); }
-    100% { box-shadow: 0 0 15px rgba(94, 196, 176, 0.1); }
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.02); opacity: 1; }
   }
   .animate-heartbeat {
     animation: heartbeat 4s infinite ease-in-out;
     transform: translateZ(0);
-    will-change: box-shadow;
+    will-change: transform, opacity;
+  }
+  .card-surge {
+    transform: translateZ(0);
+    will-change: transform, box-shadow;
+    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s cubic-bezier(0.23, 1, 0.32, 1);
   }
   .card-surge:hover {
     box-shadow: 0 0 50px rgba(94, 196, 176, 0.5) !important;
-    transform: translateY(-4px) scale(1.01) !important;
+    transform: translateY(-4px) scale(1.01) translateZ(0) !important;
   }
 `;
 
@@ -554,7 +753,7 @@ export default function AboutJournal() {
 
 
             <Hero theme={theme} />
-            <HowItWorks />
+            <HowItWorks theme={theme} />
             <JournalFeatures />
             <JournalDownload />
             <Footer />
