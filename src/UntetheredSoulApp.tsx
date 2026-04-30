@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, Mail, Youtube, Medal, Eye } from 'lucide-react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, Mail, Youtube, Eye } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
@@ -1805,45 +1805,65 @@ export default function UntetheredApp() {
           {/* Moved back/medals into fixed header below to prevent overlap */}
         </AnimatePresence>
 
-        {/* TOP CONTROLS: LEFT (BACK/MENU) AND RIGHT (TOOLS) */}
-        {activeTab !== 'home' && (
-          <div className="fixed top-3 left-3 md:top-6 md:left-6 lg:left-[300px] z-[100] flex items-center gap-2 md:gap-3">
+        {/* Premium Ribbon Header Overlay */}
+        <header className={cn(
+          "fixed top-0 left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 transition-all duration-500",
+          "lg:left-[280px]" // Respect the desktop sidebar
+        )}>
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden w-10 h-10 md:w-11 md:h-11 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all shadow-xl active:scale-95"
+              className="lg:hidden w-10 h-10 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all shadow-xl active:scale-95"
             >
               <Menu size={16} />
             </button>
-            <motion.button
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
-              className="flex items-center gap-1.5 md:gap-2 h-10 md:h-11 px-4 md:px-6 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/30 transition-all group shadow-xl active:scale-95"
+            
+            <a 
+                href="/aboutjournal" 
+                className="flex items-center gap-3 text-current hover:text-[var(--accent-primary)] transition-all group"
+                title="View About Journal"
             >
-              <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4 transition-transform group-hover:-translate-x-0.5" />
-              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.15em] md:tracking-[0.2em]">Return</span>
-            </motion.button>
-          </div>
-        )}
+                <div className={`w-9 h-9 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                </div>
+            </a>
 
-        <div className="fixed top-2 right-2 sm:top-5 sm:right-4 md:top-6 md:right-6 z-[100] flex items-center gap-1.5 sm:gap-2 md:gap-3">
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={cn(
-              "p-2 sm:p-2.5 rounded-full backdrop-blur-3xl border border-[var(--border-default)] transition-all flex items-center justify-center group shadow-lg relative overflow-hidden",
-              activeTab === 'profile' ? "bg-[var(--accent-primary)] text-black border-[var(--accent-primary)]" : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+            {/* Internal Return to Dashboard Button */}
+            {activeTab !== 'home' && (
+              <motion.button
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                onClick={() => { setActiveTab('home'); setActivePractice(null); setIsSidebarOpen(false); }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all hover:bg-[var(--accent-primary)]/10 group"
+              >
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Return</span>
+              </motion.button>
             )}
-            title="Your Journey Profile"
-          >
-            <div className="absolute inset-0 bg-white/10 animate-pulse opacity-0 group-hover:opacity-30" />
-            <Medal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[var(--accent-primary)] text-black text-[7px] sm:text-[8px] font-bold flex items-center justify-center rounded-full border border-[var(--bg-surface)]">
-              {unlocked.length}
-            </span>
-          </button>
+          </div>
 
-          <ThemeToggle />
-        </div>
+          <div className="flex items-center gap-4 sm:gap-6 md:gap-8">
+              <ThemeToggle />
+              
+              <button
+                  onClick={() => setActiveTab('profile')}
+                  className={cn(
+                      "flex items-center gap-3 px-4 py-2 rounded-xl transition-all relative overflow-hidden",
+                      activeTab === 'profile' 
+                          ? "bg-[var(--accent-primary)] text-black font-bold shadow-lg" 
+                          : "bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-muted)] hover:bg-[var(--accent-primary)]/10 hover:text-[var(--text-primary)]"
+                  )}
+              >
+                  <User className={cn("w-4 h-4", activeTab === 'profile' ? "fill-current" : "")} />
+                  <span className="text-[10px] font-black tracking-widest uppercase hidden xs:block">Your Journey</span>
+                  {unlocked.length > 0 && activeTab !== 'profile' && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--accent-primary)] text-black text-[8px] font-black flex items-center justify-center rounded-full border border-[var(--bg-base)]">
+                      {unlocked.length}
+                    </span>
+                  )}
+              </button>
+          </div>
+        </header>
 
         <div className="max-w-7xl mx-auto px-2 pt-2 pb-28 sm:px-4 sm:pt-4 md:px-6 md:pt-6 lg:pb-8 space-y-6 sm:space-y-8">
           <SacredWelcomeModal

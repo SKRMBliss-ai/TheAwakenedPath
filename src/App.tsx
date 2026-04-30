@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, Flame, Book, Target, Clock, Eye, Wind, Sun, Moon, Play, Zap, User, Brain } from 'lucide-react';
+import { Heart, Flame, Book, Target, Clock, Eye, Wind, Sun, Moon, Play, Zap, User, Brain, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -379,11 +379,54 @@ export default function UntetheredApp() {
       <div className={cn("h-screen w-full font-sans transition-colors duration-500 flex flex-col relative overflow-hidden", darkMode ? 'bg-[#0f172a] text-slate-100' : 'bg-slate-50 text-slate-900')}>
         <PracticeModal />
 
-        {/* Minimal Header */}
-        <div className="absolute top-0 w-full p-6 flex justify-between z-40 pointer-events-none">
-          <div className="pointer-events-auto p-2"><div className="space-y-1"><div className="w-6 h-0.5 bg-current" /><div className="w-4 h-0.5 bg-current opacity-70" /></div></div>
-          <button onClick={() => setDarkMode(!darkMode)} className="pointer-events-auto p-2 opacity-70 hover:opacity-100">{darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}</button>
-        </div>
+        {/* Premium Ribbon Header Overlay */}
+        <header className="fixed top-0 left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5">
+            <a 
+                href="/aboutjournal" 
+                className="flex items-center gap-3 text-current hover:text-[#5EC4B0] transition-all group"
+                title="View About Journal"
+            >
+                <div className={`w-9 h-9 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <Brain className="w-4 h-4 text-[#D4AF37]" />
+                </div>
+            </a>
+
+            {/* Internal Return to Dashboard Button */}
+            {activeTab !== 'journey' && (
+              <motion.button
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                onClick={() => { setActiveTab('journey'); setActivePractice(null); }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-current hover:text-[#5EC4B0] transition-all hover:bg-[#5EC4B0]/10 group"
+              >
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Return</span>
+              </motion.button>
+            )}
+
+            <div className="flex items-center gap-6 sm:gap-8">
+                <button 
+                    onClick={() => setDarkMode(!darkMode)}
+                    className={`p-2.5 rounded-xl bg-white/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-current hover:text-[#D4AF37] transition-all hover:scale-110`}
+                    aria-label="Toggle theme"
+                >
+                    {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+                
+                <button
+                    onClick={() => setActiveTab('profile')}
+                    className={cn(
+                        "flex items-center gap-3 px-4 py-2 rounded-xl transition-all",
+                        activeTab === 'profile' 
+                            ? "bg-[#5EC4B0] text-[#0c0910] font-bold shadow-lg" 
+                            : "bg-white/5 dark:bg-white/10 border border-black/10 dark:border-white/10 hover:bg-[#5EC4B0]/10"
+                    )}
+                >
+                    <User className={cn("w-4 h-4", activeTab === 'profile' ? "fill-current" : "")} />
+                    <span className="text-sm font-bold tracking-wide uppercase hidden xs:block">Profile</span>
+                </button>
+            </div>
+        </header>
 
         {/* Dynamic Content */}
         <div className="flex-1 overflow-hidden relative">

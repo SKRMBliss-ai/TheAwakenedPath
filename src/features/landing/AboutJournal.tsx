@@ -27,7 +27,8 @@ const useLandingTheme = () => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('AP_LANDING_THEME');
             if (saved === 'light' || saved === 'dark') return saved;
-            return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            // Default to dark
+            return 'dark';
         }
         return 'dark';
     });
@@ -57,77 +58,126 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
         offset: ["start start", "end start"]
     });
 
-    const overlayOpacity = useTransform(scrollYProgress, [0, 0.4], [0, 1]);
-    const textOpacity = useTransform(scrollYProgress, [0.15, 0.5], [0, 1]);
-    const textY = useTransform(scrollYProgress, [0.15, 0.5], [30, 0]);
+    const [isHeroHovered, setIsHeroHovered] = useState(false);
+    
+    // Background transitions
+    const overlayOpacity = useTransform(scrollYProgress, [0, 0.3], [0.4, 1]); 
+
+    const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+    
+    // Content transitions — Hidden initially, reveal on scroll
+    const textOpacity = useTransform(scrollYProgress, [0.05, 0.25], [0, 1]);
+    const textY = useTransform(scrollYProgress, [0.05, 0.25], [40, 0]);
+    
+    // Scroll cues
+    const mainScrollCueOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
 
     return (
-        <section ref={containerRef} className={`relative w-full border-b ${GOLD_BORDER}`} style={{ height: '200vh' }}>
-            <div className="sticky top-0 w-full overflow-hidden h-[75vh] md:h-[85vh] min-h-[450px] md:min-h-[520px] max-h-[900px]">
-                {/* Full-bleed background image */}
-                <div className="absolute inset-0 z-0 bg-black">
-                    <img
-                        src={getStorageImg(theme === 'dark' ? 'hero-dark' : 'hero-light')}
-                        alt="The Awakened Path Dashboard"
-                        className="w-full h-full object-cover object-center md:object-center"
-                    />
-                    {/* Multi-stop gradient overlay + blur that fades in on scroll */}
+        <section 
+            ref={containerRef} 
+            className={`relative w-full border-b ${GOLD_BORDER}`} 
+            style={{ height: '160vh' }}
+            onMouseEnter={() => setIsHeroHovered(true)}
+            onMouseLeave={() => setIsHeroHovered(false)}
+        >
+            <div className="sticky top-0 w-full overflow-hidden h-[75vh] md:h-[80vh] min-h-[450px]">
+                {/* Background Layer with Hover Interaction */}
+                <motion.div 
+                    className={`absolute inset-0 z-0 flex items-center justify-center group ${theme === 'dark' ? 'bg-[#0c0910]' : 'bg-[#fcf8f2]'}`}
+                    style={{ scale: bgScale }}
+                    animate={{ filter: isHeroHovered ? 'blur(12px)' : 'blur(0px)' }}
+                    transition={{ duration: 0.7 }}
+                >
+                    <picture className="w-full h-full transition-transform duration-1000 group-hover:scale-105">
+                        <source media="(max-width: 768px)" srcSet={getStorageImg(theme === 'dark' ? 'hero-dark-mobile' : 'hero-light-mobile')} />
+                        <img
+                            src={getStorageImg(theme === 'dark' ? 'hero-dark' : 'hero-light')}
+                            alt="The Awakened Path"
+                            className="w-full h-full object-contain"
+                        />
+                    </picture>
+
+                    {/* Gradient Overlay */}
                     <motion.div
-                        className="absolute inset-0 backdrop-blur-[12px]"
+                        className="absolute inset-0"
                         style={{
                             opacity: overlayOpacity,
                             background: theme === 'dark'
-                                ? 'linear-gradient(to bottom, rgba(12,9,16,0.85) 0%, rgba(12,9,16,0.65) 40%, rgba(12,9,16,0.75) 80%, rgba(12,9,16,0.95) 100%)'
-                                : 'linear-gradient(to bottom, rgba(252,248,242,0.85) 0%, rgba(252,248,242,0.65) 40%, rgba(252,248,242,0.75) 80%, rgba(252,248,242,0.98) 100%)',
+                                ? 'linear-gradient(to bottom, rgba(12,9,16,0.3) 0%, rgba(12,9,16,0.6) 50%, rgba(12,9,16,0.98) 100%)'
+                                : 'linear-gradient(to bottom, rgba(252,248,242,0.3) 0%, rgba(252,248,242,0.6) 50%, rgba(252,248,242,0.98) 100%)',
                         }}
                     />
-                </div>
+                </motion.div>
 
-                {/* Text content — overlaid */}
+                {/* Central Scroll Hint - Visible on hover and only at start */}
                 <motion.div 
-                    className="relative z-10 flex flex-col items-center justify-center text-center px-6 h-full pt-16" 
+                    style={{ 
+                        opacity: useTransform(
+                            [mainScrollCueOpacity], 
+                            ([o]) => isHeroHovered ? Number(o) : 0
+                        ) 
+                    }}
+                    className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none transition-opacity duration-500"
+                >
+                    <div className="flex flex-col items-center gap-6">
+                        <span 
+                            className="text-[clamp(24px,5vw,48px)] font-light tracking-[0.5em] uppercase select-none"
+                            style={{ color: theme === 'dark' ? 'white' : 'black' }}
+                        >
+                            Scroll
+                        </span>
+                        <motion.div 
+                            animate={{ y: [0, 15, 0] }}
+                            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                            className="w-px h-16 bg-current opacity-40"
+                            style={{ color: theme === 'dark' ? 'white' : 'black' }}
+                        />
+                    </div>
+                </motion.div>
+
+                {/* Content Layer */}
+                <motion.div 
+                    className={`relative z-10 flex flex-col items-center justify-center text-center px-6 h-full pt-16 ${scrollYProgress.get() < 0.05 ? 'pointer-events-none' : 'pointer-events-auto'}`} 
                     style={{ opacity: textOpacity, y: textY }}
                 >
                     {/* Badge */}
                     <div
-                        className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full ${GOLD_BORDER} text-[11px] tracking-[0.18em] uppercase font-semibold mb-8`}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${GOLD_BORDER} text-[10px] tracking-[0.2em] uppercase font-bold mb-8`}
                         style={{
-                            background: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.65)',
+                            background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.6)',
                             backdropFilter: 'blur(12px)',
-                            color: theme === 'dark' ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.65)',
+                            color: theme === 'dark' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                         }}
                     >
-                        <Sparkles className="w-3 h-3 text-[#D4AF37]" />
-                        <span>The Awakened Journal</span>
+                        <Sparkles className="w-3 h-3 text-[#D4AF37] animate-pulse" />
+                        <span>The Presence Journal</span>
                     </div>
 
                     {/* Headline */}
                     <h1
-                        className="font-[Outfit] text-[clamp(36px,6.5vw,72px)] font-light leading-[1.05] tracking-tight"
+                        className="font-[Outfit] text-[clamp(40px,8vw,80px)] font-light leading-[1.02] tracking-tight max-w-4xl mx-auto"
                         style={{ color: theme === 'dark' ? '#ffffff' : '#0c0910' }}
                     >
-                        A quieter mind,
-                        <br />
-                        <span className="font-medium" style={{ color: '#5EC4B0' }}>one breath at a time.</span>
+                        Quiet the noise. <br />
+                        <span className="font-medium" style={{ color: '#5EC4B0' }}>Witness the life.</span>
                     </h1>
 
                     {/* Description */}
                     <p
-                        className="mt-6 max-w-xl mx-auto text-base md:text-lg leading-relaxed"
-                        style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.62)' }}
+                        className="mt-8 max-w-xl mx-auto text-base md:text-xl leading-relaxed font-light"
+                        style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}
                     >
-                        Daily journaling, breathwork, and witnessing practices grounded in modern wisdom —
-                        designed to help you watch the noise instead of being it.
+                        A daily rhythm of journaling and meditation designed to move you from thinking about life to actually living it.
                     </p>
 
                     {/* CTAs */}
-                    <div className="mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                    <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center">
                         <a
                             href={PREMIUM_URL}
-                            className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-[0_8px_30px_rgba(94,196,176,0.4)] hover:shadow-[0_12px_40px_rgba(94,196,176,0.55)]"
+                            className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-xl hover:shadow-[#5EC4B0]/30"
                         >
-                            Begin the journey
-                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                            Begin Journey
+                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                         </a>
 
                         <a
@@ -136,30 +186,15 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                                 e.preventDefault();
                                 document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
                             }}
-                            className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full text-sm font-semibold tracking-wide transition-all"
+                            className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full text-sm font-semibold tracking-wide transition-all border border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-md"
                             style={{
-                                background: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.7)',
-                                backdropFilter: 'blur(12px)',
-                                border: '1px solid rgba(255,255,255,0.25)',
-                                color: theme === 'dark' ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.75)',
+                                color: theme === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
                             }}
                         >
-                            Download Journal
-                            <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+                            Download Guide
+                            <Download className="w-4 h-4 transition-transform group-hover:translate-y-1" />
                         </a>
                     </div>
-                </motion.div>
-
-                {/* Scroll cue (visible initially, fades out as you scroll) */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1, duration: 0.8 }}
-                    style={{ opacity: useTransform(scrollYProgress, [0, 0.15], [1, 0]) }}
-                    className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5"
-                >
-                    <span className="text-[10px] uppercase tracking-[0.25em]" style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>Scroll</span>
-                    <div className="w-px h-8 bg-current opacity-40" style={{ color: theme === 'dark' ? 'white' : 'black' }} />
                 </motion.div>
             </div>
         </section>
@@ -727,24 +762,23 @@ export default function AboutJournal() {
             }}
         >
             <style>{HEARTBEAT_KEYFRAMES}</style>
-            <header className="px-6 py-5 flex items-center justify-between max-w-6xl mx-auto">
-                <a href="/aboutjournal" className="flex items-center gap-2 text-black/80 dark:text-white/85 hover:text-black dark:hover:text-white transition-colors">
-                    <div className={`w-7 h-7 rounded-full bg-[#D4AF37]/10 ${GOLD_BORDER} flex items-center justify-center`}>
-                        <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <header className="fixed top-0 left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-black/10 dark:bg-black/20 backdrop-blur-md border-b border-white/5">
+                <a href="/aboutjournal" className="flex items-center gap-3 text-black/90 dark:text-white/95 hover:text-black dark:hover:text-white transition-all group">
+                    <div className={`w-9 h-9 rounded-full bg-[#D4AF37]/15 ${GOLD_BORDER} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                        <Sparkles className="w-4 h-4 text-[#D4AF37]" />
                     </div>
-                    <span className="font-medium text-sm tracking-wide">The Awakened Journal</span>
                 </a>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-8">
                     <button 
                         onClick={toggle}
-                        className={`p-2 rounded-full bg-black/5 dark:bg-white/5 ${GOLD_BORDER} text-black/60 dark:text-white/60 hover:text-[#D4AF37] transition-colors`}
+                        className={`p-2.5 rounded-xl bg-white/5 dark:bg-white/10 ${GOLD_BORDER} text-black/80 dark:text-white/80 hover:text-[#D4AF37] transition-all hover:scale-110`}
                         aria-label="Toggle theme"
                     >
-                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                     </button>
                     <a
                         href="/"
-                        className="text-sm text-black/60 dark:text-white/65 hover:text-black dark:hover:text-white transition-colors font-medium"
+                        className="text-sm text-black/80 dark:text-white/85 hover:text-[#5EC4B0] transition-colors font-bold tracking-wide uppercase"
                     >
                         Sign in
                     </a>
