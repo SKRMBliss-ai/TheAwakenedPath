@@ -84,26 +84,67 @@ export const SignInScreen = () => {
 
             {/* App Identity */}
             <motion.div
-                initial={{ y: -20, opacity: 0 }}
+                initial={{ y: -24, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.8 }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
                 className="relative z-10 flex flex-col items-center mb-10"
             >
-                <div className="w-24 h-24 mb-4 rounded-[22px] overflow-hidden shadow-2xl" style={{ boxShadow: '0 0 40px rgba(184,151,58,0.25)' }}>
-                    <img src="/AwakenedPathAppLogo.webp" alt="The Awakened Path" className="w-full h-full object-cover" />
+                {/* Logo stack */}
+                <div className="relative flex items-center justify-center mb-6">
+                    {/* Outermost slow-pulse ring */}
+                    <motion.div
+                        className="absolute rounded-full"
+                        style={{ width: 180, height: 180, border: '1px solid rgba(184,151,58,0.15)' }}
+                        animate={{ scale: [1, 1.06, 1], opacity: [0.4, 0.1, 0.4] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                    {/* Middle ring */}
+                    <motion.div
+                        className="absolute rounded-full"
+                        style={{ width: 148, height: 148, border: '1px solid rgba(184,151,58,0.25)' }}
+                        animate={{ scale: [1, 1.04, 1], opacity: [0.6, 0.2, 0.6] }}
+                        transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+                    />
+                    {/* Gold radial glow disc */}
+                    <div
+                        className="absolute rounded-full blur-[30px]"
+                        style={{ width: 120, height: 120, background: 'radial-gradient(circle, rgba(184,151,58,0.35) 0%, transparent 70%)' }}
+                    />
+                    {/* Logo image — no clipping box, floats freely */}
+                    <motion.img
+                        src="/AwakenedPathAppLogo.webp"
+                        alt="The Awakened Path"
+                        animate={{ scale: [1, 1.025, 1] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                        style={{ width: 112, height: 112, borderRadius: 26, position: 'relative', zIndex: 1 }}
+                        draggable={false}
+                    />
                 </div>
-                <h1
-                    className="text-2xl font-serif font-bold tracking-[0.15em] uppercase text-center"
-                    style={{ color: theme.textPrimary }}
+
+                {/* Wordmark */}
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.35 }}
+                    className="flex flex-col items-center gap-2"
                 >
-                    The Awakened Path
-                </h1>
-                <p
-                    className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase mt-2 opacity-60"
-                    style={{ color: theme.textSecondary }}
-                >
-                    A Presence Study
-                </p>
+                    <p className="text-[9px] font-sans font-bold tracking-[0.45em] uppercase" style={{ color: theme.accentPrimary, opacity: 0.7 }}>
+                        the
+                    </p>
+                    <h1
+                        className="text-[26px] font-serif font-light tracking-[0.08em] text-center leading-tight"
+                        style={{ color: theme.textPrimary }}
+                    >
+                        Awakened Path
+                    </h1>
+                    <div className="flex items-center gap-3 mt-1">
+                        <div className="h-px w-8 opacity-20" style={{ background: theme.accentPrimary }} />
+                        <p className="text-[9px] font-sans font-bold tracking-[0.4em] uppercase opacity-40" style={{ color: theme.textSecondary }}>
+                            A Presence Study
+                        </p>
+                        <div className="h-px w-8 opacity-20" style={{ background: theme.accentPrimary }} />
+                    </div>
+                </motion.div>
             </motion.div>
 
             {/* Main Auth Card */}
