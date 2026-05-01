@@ -27,6 +27,7 @@ import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
 import { isAdminEmail, isUnlockedUser } from './config/admin';
 import { DashboardGrid } from './features/practices/DashboardGrid';
+import { CHAPTERS } from './features/presence-intelligence/teachingData';
 import { QUESTION_META } from './features/practices/TodayPath';
 import { useCourseTracking } from './hooks/useCourseTracking';
 import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
@@ -1118,14 +1119,17 @@ export default function UntetheredApp() {
       });
 
       // Global check for unlocking new standard achievements on boot/refresh
+      const chaptersComplete = CHAPTERS.filter(ch =>
+        ch.parts.every(p => watchedParts.includes(p.id))
+      ).length;
       checkAndUnlock({
         journalEntries: jSnap.size,
         situationalPractices: sSnap.size,
         journeyActivities: jySnap.size,
         videosWatched: watchedParts.length,
-        chaptersComplete: 0,
+        chaptersComplete,
         currentStreak: streak,
-        maxStreak: streak, // This ideally should be from a history field if we tracked it
+        maxStreak: streak,
         panicUsed: 0,
         bodyTruthTests: 0,
         voiceWitnessed: 0,
@@ -1304,7 +1308,7 @@ export default function UntetheredApp() {
         situationalPractices: stats.situationalCount,
         journeyActivities: stats.journeyCount,
         videosWatched: watchedParts.length,
-        chaptersComplete: 0,
+        chaptersComplete: CHAPTERS.filter(ch => ch.parts.every(p => watchedParts.includes(p.id))).length,
         currentStreak: stats.streak,
         maxStreak: stats.streak,
         panicUsed: 0,

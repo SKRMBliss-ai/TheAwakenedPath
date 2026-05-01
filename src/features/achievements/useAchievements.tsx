@@ -10,12 +10,16 @@ import {
 } from './achievementsDefs';
 import { isUnlockedUser } from '../../config/admin';
 
+// Events that should only award points once per user (across all sessions)
+const ONE_TIME_EVENTS = new Set(['reminders_enabled', 'voice_witnessed', 'body_truth_test']);
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface AchievementsState {
     unlocked: string[];
     points: number;
     loading: boolean;
     toastQueue: Achievement[];
+    awardedOnce: string[];
 }
 
 export interface AchievementsContextValue extends AchievementsState {
@@ -34,6 +38,7 @@ export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         points: 0,
         loading: true,
         toastQueue: [],
+        awardedOnce: [],
     });
 
     // Load from Firestore
@@ -50,15 +55,17 @@ export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     ...prev,
                     unlocked: isAlwaysUnlocked ? allAchIds : (data.unlocked ?? []),
                     points: data.points ?? 0,
+                    awardedOnce: data.awardedOnce ?? [],
                     loading: false,
                 }));
             } else {
-                setDoc(ref, { unlocked: [], points: 0, pointsLog: [] });
-                setState(prev => ({ 
-                    ...prev, 
-                    unlocked: isAlwaysUnlocked ? allAchIds : [], 
-                    points: 0, 
-                    loading: false 
+                setDoc(ref, { unlocked: [], points: 0, pointsLog: [], awardedOnce: [] });
+                setState(prev => ({
+                    ...prev,
+                    unlocked: isAlwaysUnlocked ? allAchIds : [],
+                    points: 0,
+                    awardedOnce: [],
+                    loading: false
                 }));
             }
         });
@@ -70,13 +77,27 @@ export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const pts = POINT_EVENTS[eventKey];
         if (!pts) return;
 
+        // Prevent duplicate awards for one-time events
+        if (ONE_TIME_EVENTS.has(eventKey) && state.awardedOnce.includes(eventKey)) return;
+
         const ref = doc(db, 'users', user.uid, 'meta', 'achievements');
-        await updateDoc(ref, {
+        const updates: Record<string, unknown> = {
             points: increment(pts),
             pointsLog: arrayUnion({ event: eventKey, pts, ts: Date.now() }),
-        });
-        setState((prev) => ({ ...prev, points: prev.points + pts }));
-    }, [user]);
+        };
+        if (ONE_TIME_EVENTS.has(eventKey)) {
+            updates.awardedOnce = arrayUnion(eventKey);
+        }
+
+        await updateDoc(ref, updates);
+        setState((prev) => ({
+            ...prev,
+            points: prev.points + pts,
+            awardedOnce: ONE_TIME_EVENTS.has(eventKey)
+                ? [...prev.awardedOnce, eventKey]
+                : prev.awardedOnce,
+        }));
+    }, [user, state.awardedOnce]);
 
     // Check criteria and unlock (+ enqueue toasts)
     const checkAndUnlock = useCallback(async (stats: UserStats): Promise<string[]> => {

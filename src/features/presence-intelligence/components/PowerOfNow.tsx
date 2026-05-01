@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, AlertCircle, Bell, Activity, Sparkles, Play, CheckCircle2, X, ChevronRight, Lock } from 'lucide-react';
 import { useWitnessingVoice } from '../hooks/useWitnessingVoice';
@@ -354,6 +354,9 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
         youtubeId: string;
     } | null>(null);
     const [watchedParts, setWatchedParts] = useState<string[]>([]);
+    // Ref so effects that only need current value don't re-run on every watch update
+    const watchedPartsRef = useRef<string[]>([]);
+    useEffect(() => { watchedPartsRef.current = watchedParts; });
 
     // Sync Progress from Firestore
     useEffect(() => {
@@ -409,16 +412,17 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
         }
     };
 
-    // Watch for notification change to award 'Presence Bell'
+    // Watch for notification change to award 'Presence Bell' — only fires when toggle changes
     useEffect(() => {
         if (notificationsEnabled) {
+            const wp = watchedPartsRef.current;
             awardEvent('reminders_enabled');
             checkAndUnlock({
                 journalEntries: 0,
                 situationalPractices: 0,
                 journeyActivities: 0,
-                videosWatched: watchedParts.length,
-                chaptersComplete: CHAPTERS.filter(ch => ch.parts.every(p => watchedParts.includes(p.id))).length,
+                videosWatched: wp.length,
+                chaptersComplete: CHAPTERS.filter(ch => ch.parts.every(p => wp.includes(p.id))).length,
                 currentStreak: 0,
                 maxStreak: 0,
                 panicUsed: 0,
@@ -428,7 +432,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                 statsViewed: 0,
             });
         }
-    }, [notificationsEnabled, awardEvent, checkAndUnlock, watchedParts]);
+    }, [notificationsEnabled, awardEvent, checkAndUnlock]);
 
     useEffect(() => {
         if (initialChapter) setExpanded(initialChapter);
@@ -465,16 +469,17 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
         setGroundingText(exercise);
     };
 
-    // Watch for voice reflection completion
+    // Watch for voice reflection completion — only fires when reflection changes
     useEffect(() => {
         if (reflection) {
+            const wp = watchedPartsRef.current;
             awardEvent('voice_witnessed');
             checkAndUnlock({
                 journalEntries: 0,
                 situationalPractices: 0,
                 journeyActivities: 0,
-                videosWatched: watchedParts.length,
-                chaptersComplete: 0,
+                videosWatched: wp.length,
+                chaptersComplete: CHAPTERS.filter(ch => ch.parts.every(p => wp.includes(p.id))).length,
                 currentStreak: 0,
                 maxStreak: 0,
                 panicUsed: 0,
@@ -484,7 +489,7 @@ export const PowerOfNow: React.FC<PowerOfNowProps> = ({ initialChapter, onReturn
                 statsViewed: 0,
             });
         }
-    }, [reflection, awardEvent, checkAndUnlock, watchedParts, notificationsEnabled]);
+    }, [reflection, awardEvent, checkAndUnlock, notificationsEnabled]);
 
     // ── Compute real progress ─────────────────────────────────────────────────
     const totalParts = CHAPTERS.reduce((sum, ch) => sum + ch.parts.length, 0);

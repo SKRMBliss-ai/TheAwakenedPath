@@ -1,9 +1,50 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, X } from 'lucide-react';
 import { ACHIEVEMENTS, type Achievement } from './achievementsDefs';
 import { ProgressFilament } from '../../components/ui/SacredUI';
 import { Medal } from '../../components/domain/MedalGrid';
+
+// ─── Badge Celebration Particles ─────────────────────────────────────────────
+const PARTICLE_ANGLES = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 15, 75, 135, 195, 255, 315];
+const PARTICLE_DISTANCES = [55, 70, 48, 65, 72, 50, 60, 68, 45, 75, 52, 63, 58, 66, 46, 71, 54, 62];
+const PARTICLE_SIZES = [4, 3, 5, 3, 4, 5, 3, 4, 5, 3, 4, 3, 5, 4, 3, 5, 4, 3];
+const PARTICLE_DELAYS = [0, 0.05, 0.1, 0.02, 0.08, 0.12, 0.04, 0.07, 0.03, 0.11, 0.06, 0.09, 0.01, 0.08, 0.1, 0.04, 0.07, 0.05];
+
+const BadgeParticles: React.FC<{ color: string }> = ({ color }) => (
+    <div className="absolute inset-0 pointer-events-none overflow-visible" style={{ zIndex: 1 }}>
+        {PARTICLE_ANGLES.map((angle, i) => {
+            const rad = (angle * Math.PI) / 180;
+            const dist = PARTICLE_DISTANCES[i];
+            const x = Math.cos(rad) * dist;
+            const y = Math.sin(rad) * dist;
+            const size = PARTICLE_SIZES[i];
+            return (
+                <motion.div
+                    key={i}
+                    className="absolute rounded-full"
+                    style={{
+                        width: size,
+                        height: size,
+                        background: color,
+                        boxShadow: `0 0 ${size * 2}px ${color}`,
+                        top: '50%',
+                        left: '50%',
+                        marginTop: -size / 2,
+                        marginLeft: -size / 2,
+                    }}
+                    initial={{ x: 0, y: 0, opacity: 1, scale: 0 }}
+                    animate={{ x, y, opacity: 0, scale: 1.2 }}
+                    transition={{
+                        duration: 0.75,
+                        delay: PARTICLE_DELAYS[i],
+                        ease: [0.2, 0, 0.8, 1],
+                    }}
+                />
+            );
+        })}
+    </div>
+);
 
 // ─── Main Panel (Compact Strip) ───────────────────────────────────────────────
 interface AchievementsPanelProps {
@@ -67,9 +108,12 @@ export const AchievementToast: React.FC<{
     achievement: Achievement | null;
     onDismiss: () => void;
 }> = ({ achievement, onDismiss }) => {
+    // Stable key so particles only animate on a new achievement
+    const particleKey = useMemo(() => achievement?.id ?? '', [achievement?.id]);
+
     React.useEffect(() => {
         if (!achievement) return;
-        
+
         // Play celebration sound
         import('../../services/voiceService').then(({ VoiceService }) => {
             VoiceService.playEffect('/mp3/tibetanbell.mp3');
@@ -130,18 +174,35 @@ export const AchievementToast: React.FC<{
                         <p className="text-[10px] font-serif italic text-[var(--text-secondary)] mt-0.5 opacity-80">+{achievement.points} EXP</p>
                     </div>
 
-                    <div className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{
-                            background: `radial-gradient(circle, ${achievement.color}20, ${achievement.color}05)`,
-                            border: `1px solid ${achievement.color}30`,
-                            boxShadow: `0 0 10px ${achievement.color}20`
-                        }}>
+                    <div className="relative w-10 h-10 flex-shrink-0">
+                        {/* Particle burst — re-mounts on each new badge */}
+                        <AnimatePresence>
+                            <BadgeParticles key={particleKey} color={achievement.color} />
+                        </AnimatePresence>
+
+                        {/* Ring-pulse */}
                         <motion.div
-                            animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                        >
-                            <Icon size={18} style={{ color: achievement.color, filter: `drop-shadow(0 0 3px ${achievement.color})` }} />
-                        </motion.div>
+                            className="absolute inset-0 rounded-full"
+                            initial={{ scale: 0.6, opacity: 0.9 }}
+                            animate={{ scale: 2.2, opacity: 0 }}
+                            transition={{ duration: 0.9, ease: 'easeOut' }}
+                            style={{ border: `2px solid ${achievement.color}` }}
+                        />
+
+                        {/* Icon circle */}
+                        <div className="relative w-10 h-10 rounded-full flex items-center justify-center"
+                            style={{
+                                background: `radial-gradient(circle, ${achievement.color}20, ${achievement.color}05)`,
+                                border: `1px solid ${achievement.color}30`,
+                                boxShadow: `0 0 12px ${achievement.color}40`
+                            }}>
+                            <motion.div
+                                animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
+                                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                            >
+                                <Icon size={18} style={{ color: achievement.color, filter: `drop-shadow(0 0 4px ${achievement.color})` }} />
+                            </motion.div>
+                        </div>
                     </div>
 
                     {/* Close Button */}
