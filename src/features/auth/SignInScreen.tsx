@@ -156,7 +156,7 @@ export const SignInScreen = () => {
                         alt="The Awakened Path"
                         animate={{ scale: [1, 1.02, 1] }}
                         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                        style={{ width: 108, height: 108, position: 'relative', zIndex: 1, display: 'block' }}
+                        style={{ width: 130, height: 130, position: 'relative', zIndex: 1, display: 'block' }}
                         draggable={false}
                     />
                 </div>
