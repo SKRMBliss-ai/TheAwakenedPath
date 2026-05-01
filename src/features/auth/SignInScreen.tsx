@@ -68,7 +68,7 @@ export const SignInScreen = () => {
     return (
         <div
             className="min-h-screen w-full relative flex flex-col items-center justify-center overflow-hidden p-6"
-            style={{ background: theme.bgGradient }}
+            style={{ background: '#000000' }}
         >
             {/* Ambient Background Glows */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -116,7 +116,7 @@ export const SignInScreen = () => {
                         alt="The Awakened Path"
                         animate={{ scale: [1, 1.025, 1] }}
                         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                        style={{ width: 112, height: 112, borderRadius: 26, position: 'relative', zIndex: 1 }}
+                        style={{ width: 112, height: 112, borderRadius: 0, position: 'relative', zIndex: 1 }}
                         draggable={false}
                     />
                 </div>
