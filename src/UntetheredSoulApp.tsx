@@ -369,7 +369,6 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
         {/* Greeting row */}
         <div className="flex items-center justify-between mb-6 lg:mb-8">
           <div className="flex items-center gap-5">
-            <AwakenedPathLogo variant="icon" size="md" animated={true} />
             <div>
               <p className="font-sans text-[11px] font-bold tracking-[.28em] uppercase mb-0.5" style={{ color: '#B8973A' }}>
                 {greeting},
