@@ -91,7 +91,7 @@ export const SignInScreen = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1.4, ease: 'easeOut' }}
-                className="relative flex flex-col items-center pt-16 pb-0 z-10"
+                className="relative flex flex-col items-center pt-8 pb-0 z-10"
             >
                 {/* Particle field */}
                 <div className="absolute inset-0 pointer-events-none" style={{ overflow: 'visible' }}>
@@ -117,45 +117,38 @@ export const SignInScreen = () => {
                 </div>
 
                 {/* Ring stack */}
-                <div className="relative flex items-center justify-center" style={{ width: 260, height: 260 }}>
+                <div className="relative flex items-center justify-center" style={{ width: 220, height: 220 }}>
                     {/* Outermost pulse ring */}
                     <motion.div className="absolute rounded-full"
-                        style={{ width: 252, height: 252, border: '1px solid rgba(184,151,58,0.08)' }}
+                        style={{ width: 214, height: 214, border: '1px solid rgba(184,151,58,0.08)' }}
                         animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0, 0.5] }}
                         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
                     />
                     {/* Slow CW rotation ring */}
                     <motion.div className="absolute rounded-full"
-                        style={{
-                            width: 224, height: 224,
-                            border: '1px dashed rgba(184,151,58,0.18)',
-                            borderRadius: '50%',
-                        }}
+                        style={{ width: 190, height: 190, border: '1px dashed rgba(184,151,58,0.18)', borderRadius: '50%' }}
                         animate={{ rotate: 360 }}
                         transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
                     />
                     {/* Slow CCW rotation ring */}
                     <motion.div className="absolute rounded-full"
-                        style={{
-                            width: 192, height: 192,
-                            border: '1px solid rgba(94,196,176,0.12)',
-                        }}
+                        style={{ width: 163, height: 163, border: '1px solid rgba(94,196,176,0.12)' }}
                         animate={{ rotate: -360 }}
                         transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
                     />
                     {/* Inner pulse ring */}
                     <motion.div className="absolute rounded-full"
-                        style={{ width: 162, height: 162, border: '1px solid rgba(184,151,58,0.22)' }}
+                        style={{ width: 138, height: 138, border: '1px solid rgba(184,151,58,0.22)' }}
                         animate={{ scale: [1, 1.03, 1], opacity: [0.7, 0.2, 0.7] }}
                         transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
                     />
                     {/* Gold bloom glow */}
-                    <div className="absolute rounded-full blur-[40px]"
-                        style={{ width: 140, height: 140, background: 'radial-gradient(circle, rgba(184,151,58,0.28) 0%, transparent 70%)' }}
+                    <div className="absolute rounded-full blur-[36px]"
+                        style={{ width: 118, height: 118, background: 'radial-gradient(circle, rgba(184,151,58,0.28) 0%, transparent 70%)' }}
                     />
                     {/* Teal inner glow */}
-                    <div className="absolute rounded-full blur-[20px]"
-                        style={{ width: 100, height: 100, background: 'radial-gradient(circle, rgba(94,196,176,0.12) 0%, transparent 70%)' }}
+                    <div className="absolute rounded-full blur-[18px]"
+                        style={{ width: 85, height: 85, background: 'radial-gradient(circle, rgba(94,196,176,0.12) 0%, transparent 70%)' }}
                     />
                     {/* Logo — flush black, breathes gently */}
                     <motion.img
@@ -163,7 +156,7 @@ export const SignInScreen = () => {
                         alt="The Awakened Path"
                         animate={{ scale: [1, 1.02, 1] }}
                         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                        style={{ width: 128, height: 128, position: 'relative', zIndex: 1, display: 'block' }}
+                        style={{ width: 108, height: 108, position: 'relative', zIndex: 1, display: 'block' }}
                         draggable={false}
                     />
                 </div>
@@ -173,7 +166,7 @@ export const SignInScreen = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1, delay: 0.5 }}
-                    className="flex flex-col items-center mt-5 mb-0 gap-1.5"
+                    className="flex flex-col items-center mt-1 mb-0 gap-1"
                 >
                     <p className="text-[8px] font-sans font-bold tracking-[0.55em] uppercase"
                         style={{ color: theme.accentPrimary, opacity: 0.55 }}>
@@ -183,15 +176,15 @@ export const SignInScreen = () => {
                         style={{ color: theme.textPrimary }}>
                         Awakened Path
                     </h1>
-                    <p className="text-[8.5px] font-sans font-bold tracking-[0.42em] uppercase mt-1"
-                        style={{ color: theme.textSecondary, opacity: 0.35 }}>
+                    <p className="text-[11px] font-sans font-medium tracking-[0.38em] uppercase mt-1"
+                        style={{ color: '#a89fc0' }}>
                         A Presence Study
                     </p>
                 </motion.div>
 
                 {/* Light shaft connecting logo to card */}
-                <div className="w-px mt-6" style={{
-                    height: 48,
+                <div className="w-px mt-4" style={{
+                    height: 28,
                     background: 'linear-gradient(to bottom, rgba(184,151,58,0.25), rgba(184,151,58,0.04))'
                 }} />
             </motion.div>
@@ -216,7 +209,7 @@ export const SignInScreen = () => {
                     <div className="absolute top-0 left-0 right-0 h-px"
                         style={{ background: 'linear-gradient(90deg, transparent, rgba(184,151,58,0.3), transparent)' }} />
 
-                    <div className="p-7 flex flex-col items-center">
+                    <div className="p-5 flex flex-col items-center">
 
                         {/* Error */}
                         <AnimatePresence>
@@ -237,7 +230,7 @@ export const SignInScreen = () => {
                         <button
                             onClick={handleGoogleSignIn}
                             disabled={loading}
-                            className="w-full group flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl transition-all active:scale-[0.97] mb-5"
+                            className="w-full group flex items-center justify-center gap-3 px-6 py-3 rounded-2xl transition-all active:scale-[0.97] mb-4"
                             style={{ background: 'white', color: '#0c0910', boxShadow: '0 4px 20px rgba(255,255,255,0.08)' }}
                         >
                             <LayoutGrid className="w-4 h-4 opacity-70 group-hover:rotate-12 transition-transform duration-300" />
@@ -245,11 +238,11 @@ export const SignInScreen = () => {
                         </button>
 
                         {/* Divider */}
-                        <div className="w-full flex items-center gap-3 mb-5">
-                            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                            <span className="text-[9px] font-bold uppercase tracking-[0.3em]"
-                                style={{ color: theme.textSecondary, opacity: 0.3 }}>or</span>
-                            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                        <div className="w-full flex items-center gap-3 mb-4">
+                            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.22)' }} />
+                            <span className="text-[11px] font-bold uppercase tracking-[0.35em]"
+                                style={{ color: '#9b92b8' }}>or</span>
+                            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.22)' }} />
                         </div>
 
                         {/* Email toggle */}
@@ -258,11 +251,12 @@ export const SignInScreen = () => {
                             className="w-full flex items-center justify-between px-4 py-2 rounded-xl transition-colors mb-1"
                             style={{ color: theme.textPrimary }}
                         >
-                            <span className="text-[11px] font-bold tracking-[0.2em] uppercase opacity-50">
+                            <span className="text-[13px] font-semibold tracking-[0.12em]"
+                                style={{ color: '#cdc6e0' }}>
                                 Use Email
                             </span>
                             <motion.div animate={{ rotate: showEmailForm ? 180 : 0 }} transition={{ duration: 0.25 }}>
-                                <ChevronDown className="w-4 h-4 opacity-30" />
+                                <ChevronDown className="w-4 h-4" style={{ color: '#9b92b8' }} />
                             </motion.div>
                         </button>
 
@@ -354,11 +348,11 @@ export const SignInScreen = () => {
 
                         {/* Toggle login/signup */}
                         <button onClick={() => setIsLogin(!isLogin)}
-                            className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] opacity-40 hover:opacity-80 transition-opacity"
-                            style={{ color: theme.textSecondary }}>
+                            className="mt-4 text-[13px] font-medium tracking-wide transition-opacity hover:opacity-90"
+                            style={{ color: '#9b92b8' }}>
                             {isLogin
-                                ? <span>New here? <span style={{ color: theme.accentPrimary, opacity: 1 }}>Join the Path</span></span>
-                                : <span>Have an account? <span style={{ color: theme.accentPrimary, opacity: 1 }}>Sign In</span></span>
+                                ? <span>New here? <span className="font-bold" style={{ color: theme.accentPrimary }}>Join the Path</span></span>
+                                : <span>Have an account? <span className="font-bold" style={{ color: theme.accentPrimary }}>Sign In</span></span>
                             }
                         </button>
                     </div>
@@ -366,11 +360,11 @@ export const SignInScreen = () => {
 
                 {/* Footer */}
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
-                    className="mt-6 flex justify-center gap-6">
-                    <a href="#" className="text-[9px] font-bold uppercase tracking-widest opacity-20 hover:opacity-50 transition-opacity"
-                        style={{ color: theme.textPrimary }}>Privacy</a>
-                    <a href="#" className="text-[9px] font-bold uppercase tracking-widest opacity-20 hover:opacity-50 transition-opacity"
-                        style={{ color: theme.textPrimary }}>Terms</a>
+                    className="mt-3 flex justify-center gap-6">
+                    <a href="#" className="text-[13px] font-semibold tracking-wide hover:opacity-100 transition-opacity"
+                        style={{ color: '#b8aed4' }}>Privacy</a>
+                    <a href="#" className="text-[13px] font-semibold tracking-wide hover:opacity-100 transition-opacity"
+                        style={{ color: '#b8aed4' }}>Terms</a>
                 </motion.div>
             </motion.div>
         </div>
