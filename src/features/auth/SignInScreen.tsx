@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './AuthContext';
 import { ArrowRight, Eye, EyeOff, LayoutGrid, ChevronDown, ChevronUp } from 'lucide-react';
-import { useTheme } from '../../theme/ThemeSystem';
-import appLogo from '../../assets/logo.webp';
+import { themes } from '../../theme/constants';
 
 export const SignInScreen = () => {
     const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } = useAuth();
-    const { theme, mode } = useTheme();
+    // Login page is always dark — independent of the user's saved theme preference
+    const theme = themes.dark;
+    const mode = 'dark' as const;
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -88,8 +89,8 @@ export const SignInScreen = () => {
                 transition={{ duration: 0.8 }}
                 className="relative z-10 flex flex-col items-center mb-10"
             >
-                <div className="w-20 h-20 mb-4 rounded-2xl p-1 bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] shadow-xl flex items-center justify-center">
-                    <img src={appLogo} alt="Logo" className="w-full h-full object-contain rounded-xl bg-black/20" />
+                <div className="w-24 h-24 mb-4 rounded-[22px] overflow-hidden shadow-2xl" style={{ boxShadow: '0 0 40px rgba(184,151,58,0.25)' }}>
+                    <img src="/AwakenedPathAppLogo.webp" alt="The Awakened Path" className="w-full h-full object-cover" />
                 </div>
                 <h1
                     className="text-2xl font-serif font-bold tracking-[0.15em] uppercase text-center"
