@@ -14,7 +14,7 @@ export default defineConfig({
       // Only list files that actually exist in /public — VitePWA precache will fail
       // (or silently 404 in offline mode) on missing assets. Sacred-bg files removed
       // because they're no longer present in /public.
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.png', 'AwakenedPathAppLogo.webp'],
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
@@ -24,7 +24,7 @@ export default defineConfig({
       },
       manifest: {
         name: 'The Awakened Path',
-        short_name: 'AwakenedJournal',
+        short_name: 'Awakened Path',
         description: 'Your journey into the seat of the witness',
         theme_color: '#000000',
         background_color: '#000000',
@@ -38,6 +38,19 @@ export default defineConfig({
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            // Maskable icon: fills the full safe zone on Android adaptive icons
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            // Apple touch icon (iOS home screen)
+            src: 'apple-touch-icon.png',
+            sizes: '180x180',
             type: 'image/png'
           }
         ]
