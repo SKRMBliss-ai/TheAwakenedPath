@@ -9,18 +9,33 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' lets us control the reload moment precisely via the
+      // useRegisterSW hook, avoiding the race where autoUpdate silently
+      // activates a new SW while the old bundle is still running.
+      registerType: 'prompt',
       injectRegister: 'auto',
-      // Only list files that actually exist in /public — VitePWA precache will fail
-      // (or silently 404 in offline mode) on missing assets. Sacred-bg files removed
-      // because they're no longer present in /public.
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.png', 'AwakenedPathAppLogo.webp'],
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
+        // Use NetworkFirst for HTML navigation so users always get a fresh
+        // index.html and never run a stale app shell from SW cache.
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/api\//],
+        runtimeCaching: [
+          {
+            // HTML documents — always try network first
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'html-cache',
+              networkTimeoutSeconds: 5,
+            },
+          },
+        ],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        skipWaiting: true
+        skipWaiting: true,
       },
       manifest: {
         name: 'The Awakened Path',

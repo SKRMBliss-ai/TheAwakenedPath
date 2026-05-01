@@ -9,6 +9,17 @@ import { VoiceService } from './services/voiceService'
 import { AchievementsProvider } from './features/achievements/useAchievements'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 
+// ─── Service Worker update handler ───────────────────────────────────────────
+// When a new SW takes over (skipWaiting + clientsClaim), reload the page so
+// users never run a stale cached bundle after a deploy.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // Guard against the very first activation (no previous controller)
+    // by only reloading when a controller was already in place.
+    window.location.reload();
+  });
+}
+
 // Initialize Voice System — wrapped so a throwing init (older mobile browsers
 // where some Web APIs are missing) cannot blank the entire app.
 try {
