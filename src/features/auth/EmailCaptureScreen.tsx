@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { useTheme } from '../../theme/ThemeSystem';
 import { ArrowRight, LayoutGrid } from 'lucide-react';
 import appLogo from '../../assets/logo.webp';
+import { CrystalPyramid } from '../../components/ui/CrystalPyramid';
 
 interface EmailCaptureScreenProps {
   onShowSignIn?: () => void;
@@ -111,7 +112,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
 
   return (
     <div
-      className="min-h-screen w-full relative flex flex-col items-center justify-center overflow-hidden p-6"
+      className="min-h-screen w-full relative overflow-hidden"
       style={{ background: theme.bgGradient }}
     >
       {/* Ambient glows */}
@@ -125,6 +126,12 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
           style={{ background: theme.accentSecondary }}
         />
       </div>
+
+      {/* Two-column layout: form left, crystal right (split on md+) */}
+      <div className="relative z-10 min-h-screen flex flex-col md:flex-row">
+
+        {/* ── Left / main column ── */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 md:pl-12 md:pr-6">
 
       {/* Identity */}
       <motion.div
@@ -408,6 +415,35 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
           No credit card · Cancel anytime · Your data is private
         </p>
       </motion.div>
+
+        </div>{/* end left column */}
+
+        {/* ── Right column: Crystal (desktop only) ── */}
+        <div className="hidden md:flex flex-col items-center justify-center w-[48%] px-10 relative">
+          <CrystalPyramid className="w-full max-w-[360px]" />
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 1 }}
+            className="text-center mt-2 space-y-2"
+          >
+            <p
+              className="text-[clamp(18px,2vw,26px)] font-serif font-light leading-snug tracking-wide"
+              style={{ color: theme.textPrimary }}
+            >
+              Presence is<br />
+              <span style={{ color: theme.accentPrimary }}>your power.</span>
+            </p>
+            <p
+              className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-35"
+              style={{ color: theme.textSecondary }}
+            >
+              The Awakened Path
+            </p>
+          </motion.div>
+        </div>
+
+      </div>{/* end two-column flex */}
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { CrystalPyramid } from '../../components/ui/CrystalPyramid';
 import {
     ArrowRight,
     Sparkles,
@@ -135,65 +136,77 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                     </div>
                 </motion.div>
 
-                {/* Content Layer */}
-                <motion.div 
-                    className={`relative z-10 flex flex-col items-center justify-center text-center px-6 h-full pt-16 ${scrollYProgress.get() < 0.05 ? 'pointer-events-none' : 'pointer-events-auto'}`} 
+                {/* Content Layer — split on desktop */}
+                <motion.div
+                    className={`relative z-10 flex items-center justify-center h-full px-6 pt-16 ${scrollYProgress.get() < 0.05 ? 'pointer-events-none' : 'pointer-events-auto'}`}
                     style={{ opacity: textOpacity, y: textY }}
                 >
-                    {/* Badge */}
-                    <div
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${GOLD_BORDER} text-[10px] tracking-[0.2em] uppercase font-bold mb-8`}
-                        style={{
-                            background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.6)',
-                            backdropFilter: 'blur(12px)',
-                            color: theme === 'dark' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
-                        }}
-                    >
-                        <Sparkles className="w-3 h-3 text-[#D4AF37] animate-pulse" />
-                        <span>The Presence Journal</span>
-                    </div>
+                    <div className="max-w-6xl w-full mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-0">
 
-                    {/* Headline */}
-                    <h1
-                        className="font-[Outfit] text-[clamp(40px,8vw,80px)] font-light leading-[1.02] tracking-tight max-w-4xl mx-auto"
-                        style={{ color: theme === 'dark' ? '#ffffff' : '#0c0910' }}
-                    >
-                        Quiet the noise. <br />
-                        <span className="font-medium" style={{ color: '#5EC4B0' }}>Witness the life.</span>
-                    </h1>
+                        {/* ── Text side ── */}
+                        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left md:pr-10">
+                            {/* Badge */}
+                            <div
+                                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${GOLD_BORDER} text-[10px] tracking-[0.2em] uppercase font-bold mb-8`}
+                                style={{
+                                    background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.6)',
+                                    backdropFilter: 'blur(12px)',
+                                    color: theme === 'dark' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
+                                }}
+                            >
+                                <Sparkles className="w-3 h-3 text-[#D4AF37] animate-pulse" />
+                                <span>The Presence Journal</span>
+                            </div>
 
-                    {/* Description */}
-                    <p
-                        className="mt-8 max-w-xl mx-auto text-base md:text-xl leading-relaxed font-light"
-                        style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}
-                    >
-                        A daily rhythm of journaling and meditation designed to move you from thinking about life to actually living it.
-                    </p>
+                            {/* Headline */}
+                            <h1
+                                className="font-[Outfit] text-[clamp(36px,6vw,72px)] font-light leading-[1.02] tracking-tight"
+                                style={{ color: theme === 'dark' ? '#ffffff' : '#0c0910' }}
+                            >
+                                Quiet the noise. <br />
+                                <span className="font-medium" style={{ color: '#5EC4B0' }}>Witness the life.</span>
+                            </h1>
 
-                    {/* CTAs */}
-                    <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <a
-                            href={PREMIUM_URL}
-                            className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-xl hover:shadow-[#5EC4B0]/30"
-                        >
-                            Begin Journey
-                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                        </a>
+                            {/* Description */}
+                            <p
+                                className="mt-8 max-w-xl text-base md:text-lg leading-relaxed font-light"
+                                style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}
+                            >
+                                A daily rhythm of journaling and meditation designed to move you from thinking about life to actually living it.
+                            </p>
 
-                        <a
-                            href="#download"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
-                            }}
-                            className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full text-sm font-semibold tracking-wide transition-all border border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-md"
-                            style={{
-                                color: theme === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
-                            }}
-                        >
-                            Download Guide
-                            <Download className="w-4 h-4 transition-transform group-hover:translate-y-1" />
-                        </a>
+                            {/* CTAs */}
+                            <div className="mt-10 flex flex-col sm:flex-row gap-4 items-center md:items-start">
+                                <a
+                                    href={PREMIUM_URL}
+                                    className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-xl hover:shadow-[#5EC4B0]/30"
+                                >
+                                    Begin Journey
+                                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                                </a>
+
+                                <a
+                                    href="#download"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
+                                    }}
+                                    className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full text-sm font-semibold tracking-wide transition-all border border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-md"
+                                    style={{
+                                        color: theme === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
+                                    }}
+                                >
+                                    Download Guide
+                                    <Download className="w-4 h-4 transition-transform group-hover:translate-y-1" />
+                                </a>
+                            </div>
+                        </div>
+
+                        {/* ── Crystal side (desktop only) ── */}
+                        <div className="hidden md:flex flex-shrink-0 w-[42%] items-center justify-center">
+                            <CrystalPyramid className="w-full max-w-[340px]" />
+                        </div>
+
                     </div>
                 </motion.div>
             </div>
