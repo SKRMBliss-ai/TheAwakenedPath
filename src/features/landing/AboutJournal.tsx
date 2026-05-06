@@ -70,13 +70,8 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
         offset: ["start start", "end start"]
     });
 
-    // Scroll-driven transforms (desktop only, declared unconditionally per hook rules)
-    const bgScale        = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
-    // Overlay starts nearly transparent (image fully visible) → almost opaque by 35% scroll
-    const overlayOpacity = useTransform(scrollYProgress, [0, 0.35], [0.05, 0.91]);
-    // Text reveals AFTER overlay is mostly opaque (no clash with image)
-    const textOpacity    = useTransform(scrollYProgress, [0.22, 0.42], [0, 1]);
-    const textY          = useTransform(scrollYProgress, [0.22, 0.42], [32, 0]);
+    // Gentle parallax on the background image as user scrolls past the hero
+    const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
 
     const isDark = theme === 'dark';
 
@@ -168,74 +163,54 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
         );
     }
 
-    // ── DESKTOP HERO — photo background, scroll-reveals content + crystal ───
+    // ── DESKTOP HERO — image background always visible, content immediate ───
     return (
         <section
             ref={containerRef}
-            className={`relative w-full border-b ${GOLD_BORDER}`}
-            style={{ height: '190vh' }}
+            className={`relative w-full border-b ${GOLD_BORDER} overflow-hidden`}
+            style={{ minHeight: '90vh' }}
         >
-            <div className="sticky top-0 w-full overflow-hidden h-[88vh] min-h-[520px]">
-
-                {/* ── Background photo (full opacity, scales on scroll) ── */}
-                <motion.div
-                    className={`absolute inset-0 z-0 ${isDark ? 'bg-[#0c0910]' : 'bg-[#fcf8f2]'}`}
-                    style={{ scale: bgScale }}
-                >
-                    <img
-                        src={getStorageImg(isDark ? 'hero-dark' : 'hero-light')}
-                        alt="The Awakened Path"
-                        className="w-full h-full object-contain"
-                    />
-                </motion.div>
-
-                {/* ── Full-screen overlay — darkens the ENTIRE image uniformly so
-                     nothing from the background bleeds through when text appears ── */}
-                <motion.div
-                    className="absolute inset-0 z-10"
-                    style={{
-                        opacity: overlayOpacity,
-                        background: isDark ? '#0c0910' : '#fcf8f2',
-                    }}
+            {/* ── Background: hero photo with gentle parallax scale ── */}
+            <motion.div
+                className={`absolute inset-0 z-0 ${isDark ? 'bg-[#0c0910]' : 'bg-[#fcf8f2]'}`}
+                style={{ scale: bgScale }}
+            >
+                <img
+                    src={getStorageImg(isDark ? 'hero-dark' : 'hero-light')}
+                    alt="The Awakened Path"
+                    className="w-full h-full object-contain"
                 />
+            </motion.div>
 
-                {/* ── Content: fades in as overlay darkens ── */}
-                <motion.div
-                    className="absolute inset-0 z-20 flex items-center px-8 xl:px-16"
-                    style={{ opacity: textOpacity, y: textY }}
-                >
-                    <div className="max-w-6xl w-full mx-auto flex flex-row items-center gap-4">
-                        {/* Text left */}
-                        <div className="flex-1 min-w-0 flex flex-col items-start text-left">
-                            <ContentText />
-                        </div>
-                        {/* Crystal right — fixed width so it never clips */}
-                        <div className="flex-shrink-0 w-[360px] xl:w-[420px] flex items-center justify-center">
-                            <CrystalPyramid className="w-full" />
-                        </div>
+            {/* ── Left-side gradient so text is always readable over the image ── */}
+            <div
+                className="absolute inset-0 z-10"
+                style={{
+                    background: isDark
+                        ? 'linear-gradient(to right, rgba(12,9,16,0.94) 0%, rgba(12,9,16,0.72) 38%, rgba(12,9,16,0.08) 100%)'
+                        : 'linear-gradient(to right, rgba(252,248,242,0.95) 0%, rgba(252,248,242,0.72) 38%, rgba(252,248,242,0.08) 100%)',
+                }}
+            />
+
+            {/* ── Content: text left + crystal right, both visible on load ── */}
+            <motion.div
+                initial={{ opacity: 0, y: 22 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.85, ease: 'easeOut' }}
+                className="relative z-20 flex items-center px-8 xl:px-16"
+                style={{ minHeight: '90vh' }}
+            >
+                <div className="max-w-6xl w-full mx-auto flex flex-row items-center gap-6">
+                    {/* Text — left column */}
+                    <div className="flex-1 min-w-0 flex flex-col items-start text-left">
+                        <ContentText />
                     </div>
-                </motion.div>
-
-                {/* ── Scroll nudge — bottom center, fades as user scrolls ── */}
-                <motion.div
-                    className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3 pointer-events-none"
-                    style={{ opacity: useTransform(scrollYProgress, [0, 0.08], [1, 0]) }}
-                >
-                    <span
-                        className="text-[10px] font-bold tracking-[0.4em] uppercase"
-                        style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}
-                    >
-                        Scroll
-                    </span>
-                    <motion.div
-                        animate={{ y: [0, 10, 0] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                        className="w-px h-10 opacity-30"
-                        style={{ background: isDark ? 'white' : 'black' }}
-                    />
-                </motion.div>
-
-            </div>
+                    {/* Crystal — fixed-width right column, never clips */}
+                    <div className="flex-shrink-0 w-[340px] xl:w-[400px] flex items-center justify-center">
+                        <CrystalPyramid className="w-full" />
+                    </div>
+                </div>
+            </motion.div>
         </section>
     );
 };
