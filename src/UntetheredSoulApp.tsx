@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, Mail, Youtube, Eye } from 'lucide-react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare } from 'lucide-react';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
@@ -14,6 +14,8 @@ import { useAuth } from './features/auth/AuthContext';
 import { MeditationPortal } from './components/ui/MeditationPortal';
 import { SacredCircle } from './components/ui/SacredCircle';
 import { SignInScreen } from './features/auth/SignInScreen';
+import { EmailCaptureScreen } from './features/auth/EmailCaptureScreen';
+import { TrialBadge } from './components/ui/TrialBadge';
 import { AnchorButton, NoiseOverlay } from './components/ui/SacredUI';
 import { GlobalSparkles } from './components/ui/GlobalSparkles';
 import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
@@ -829,7 +831,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
 // --- Main App Component ---
 
 export default function UntetheredApp() {
-  const { user: currentUser, profile, loading, signOut, isAccessValid, activateTrial } = useAuth();
+  const { user: currentUser, profile, loading, signOut, isAccessValid, activateTrial, deductTokens } = useAuth();
   const { theme } = useTheme();
   const { musicUrl } = useVoiceStatus();
 
@@ -859,6 +861,8 @@ export default function UntetheredApp() {
       expiresAt: trialDate
     };
   }, [profile, currentUser?.email]);
+  const [showSignIn, setShowSignIn] = useState(false);
+
   // ── Persisted navigation state — app resumes exactly where user left off ──
   const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'home');
   const [activeQuestionId, setActiveQuestionId] = usePersistedState<string>('awakened-question', 'question1');
@@ -959,6 +963,10 @@ export default function UntetheredApp() {
     if (id === 'wisdom_untethered') {
       setActiveTab('wisdom_untethered');
       setActiveCourseId('wisdom_untethered');
+      if (questionId && questionId !== activeQuestionId) {
+        // Deduct token when user opens a new chapter
+        deductTokens(10, 'wisdom_chapter').catch(console.warn);
+      }
       if (questionId) setActiveQuestionId(questionId);
       if (view) setViewMode(view as any);
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -1246,7 +1254,10 @@ export default function UntetheredApp() {
   }
 
   if (!currentUser) {
-    return <SignInScreen />;
+    if (showSignIn) {
+      return <SignInScreen />;
+    }
+    return <EmailCaptureScreen onShowSignIn={() => setShowSignIn(true)} />;
   }
 
   const practices: Practice[] = [
@@ -1678,6 +1689,24 @@ export default function UntetheredApp() {
             </div>
             
             <a
+              href="https://www.skrmblissai.in/habitquest2026"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all hover:bg-[var(--bg-surface)] text-teal-400 hover:text-teal-300 group"
+              style={{ filter: 'drop-shadow(0 0 6px rgba(45,212,191,0.4))' }}
+            >
+              <CheckSquare size={16} className="group-hover:scale-110 transition-transform flex-shrink-0" style={{ filter: 'drop-shadow(0 0 5px rgba(45,212,191,0.9))' }} />
+              <span className="text-[12px] font-sans tracking-[0.1em] font-medium">Habit Tracker</span>
+              <span className="ml-auto flex items-center gap-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-400" />
+                </span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-teal-400">New</span>
+              </span>
+            </a>
+
+            <a
               href="https://www.youtube.com/@SoulfulIntelligenceStudio"
               target="_blank"
               rel="noopener noreferrer"
@@ -1687,7 +1716,7 @@ export default function UntetheredApp() {
               <span className="text-[12px] font-sans tracking-[0.1em] font-medium">Soulful Studio</span>
             </a>
 
-            {isUnlockedUser(currentUser?.email) && (
+            {isUnlockedUser(currentUser?.email ?? profile?.email) && (
               <button
                 onClick={() => {
                   setIsReportOpen(true);
@@ -1705,11 +1734,11 @@ export default function UntetheredApp() {
         {/* --- Sidebar Footer --- */}
         <div className="flex-shrink-0 px-4 pt-2 pb-4 border-t border-[var(--border-subtle)]/50 space-y-1">
           {/* Email */}
-          {currentUser?.email && (
+          {(currentUser?.email ?? profile?.email) && (
             <div className="flex items-center gap-2 px-4 py-[0.5vh] opacity-70">
               <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-secondary)] flex-shrink-0" />
               <span className="text-[10px] text-[var(--text-secondary)] truncate tracking-wider">
-                {currentUser.email}
+                {currentUser?.email ?? profile?.email}
               </span>
             </div>
           )}
@@ -1749,6 +1778,9 @@ export default function UntetheredApp() {
                 )}
               </div>
 
+              {/* Token / trial badge */}
+              <TrialBadge onUpgrade={() => onNavigate('paywall')} />
+
               {membershipInfo.type !== 'Premium' && (
                 <button
                   onClick={() => onNavigate('paywall')}
@@ -1760,18 +1792,32 @@ export default function UntetheredApp() {
             </div>
           )}
 
-          {/* Log out */}
-          <button
-            onClick={async () => {
-              if (window.confirm('Sign out?')) await signOut();
-            }}
-            className="w-full flex items-center gap-3 px-4 py-[0.8vh] rounded-xl group hover:bg-[var(--bg-surface)] transition-all"
-          >
-            <LogOut size={14} className="text-[var(--text-secondary)] group-hover:text-rose-400 transition-colors flex-shrink-0" />
-            <span className="text-[10px] uppercase tracking-[0.35em] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
-              Log Out
-            </span>
-          </button>
+          {/* Log out / Sign in */}
+          {currentUser?.isAnonymous ? (
+            <button
+              onClick={async () => {
+                if (window.confirm('Sign in with Google to save your progress and unlock your full account?')) await signOut();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-[0.8vh] rounded-xl group hover:bg-[var(--bg-surface)] transition-all"
+            >
+              <LogIn size={14} className="text-[var(--accent-primary)] group-hover:text-[var(--accent-secondary)] transition-colors flex-shrink-0" />
+              <span className="text-[10px] uppercase tracking-[0.35em] text-[var(--accent-primary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
+                Sign In
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={async () => {
+                if (window.confirm('Sign out?')) await signOut();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-[0.8vh] rounded-xl group hover:bg-[var(--bg-surface)] transition-all"
+            >
+              <LogOut size={14} className="text-[var(--text-secondary)] group-hover:text-rose-400 transition-colors flex-shrink-0" />
+              <span className="text-[10px] uppercase tracking-[0.35em] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
+                Log Out
+              </span>
+            </button>
+          )}
 
           {/* Brand credit */}
           <div className="px-4 pt-1">
@@ -2062,9 +2108,17 @@ export default function UntetheredApp() {
                       </div>
                     </div>
 
-                    <AnchorButton variant="ghost" onClick={signOut} className="!w-auto !px-10 text-[var(--text-muted)] hover:text-rose-400 transition-colors">
-                      <LogOut className="w-4 h-4 mr-2" /> Sign Out
-                    </AnchorButton>
+                    {currentUser?.isAnonymous ? (
+                      <AnchorButton variant="ghost" onClick={async () => {
+                        if (window.confirm('Sign in with Google to save your progress and unlock your full account?')) await signOut();
+                      }} className="!w-auto !px-10 text-[var(--accent-primary)] hover:text-[var(--accent-secondary)] transition-colors">
+                        <LogIn className="w-4 h-4 mr-2" /> Sign In
+                      </AnchorButton>
+                    ) : (
+                      <AnchorButton variant="ghost" onClick={signOut} className="!w-auto !px-10 text-[var(--text-muted)] hover:text-rose-400 transition-colors">
+                        <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                      </AnchorButton>
+                    )}
                   </div>
                 </header>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, Flame, Book, Target, Clock, Eye, Wind, Sun, Moon, Play, Zap, User, Brain, ArrowLeft } from 'lucide-react';
+import { Heart, Flame, Book, Target, Clock, Eye, Wind, Sun, Moon, Play, Zap, User, Brain, ArrowLeft, CheckSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -447,6 +447,21 @@ export default function UntetheredApp() {
               <span className="text-[10px] font-bold uppercase tracking-widest">{t.l}</span>
             </button>
           ))}
+          <a
+            href="https://www.skrmblissai.in/habitquest2026"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 py-1 flex flex-col items-center gap-1 transition-colors text-teal-400 hover:text-teal-300"
+          >
+            <div className="relative">
+              <CheckSquare className="w-6 h-6" style={{ filter: 'drop-shadow(0 0 6px rgba(45,212,191,0.9))' }} />
+              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-400" />
+              </span>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Habits</span>
+          </a>
         </div>
       </div>
     </ErrorBoundary>
