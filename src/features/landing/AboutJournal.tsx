@@ -70,18 +70,8 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
         offset: ["start start", "end start"]
     });
 
-    const [isHeroHovered, setIsHeroHovered] = useState(false);
-
-    // All transforms declared unconditionally (hook rules)
-    const overlayOpacity = useTransform(scrollYProgress, [0, 0.3], [0.4, 1]);
-    const bgScale       = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
-    const textOpacity   = useTransform(scrollYProgress, [0.05, 0.25], [0, 1]);
-    const textY         = useTransform(scrollYProgress, [0.05, 0.25], [40, 0]);
-    const scrollCueOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
-    const scrollCueVisible = useTransform(
-        [scrollCueOpacity],
-        ([o]) => isHeroHovered ? Number(o) : 0
-    );
+    // Parallax scale — used by both mobile and desktop background
+    const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.06]);
 
     const isDark = theme === 'dark';
 
@@ -173,73 +163,61 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
         );
     }
 
-    // ── DESKTOP HERO — sticky scroll-reveal ─────────────────────────────────
+    // ── DESKTOP HERO — full-height, immediate content ───────────────────────
     return (
         <section
             ref={containerRef}
-            className={`relative w-full border-b ${GOLD_BORDER}`}
-            style={{ height: '160vh' }}
-            onMouseEnter={() => setIsHeroHovered(true)}
-            onMouseLeave={() => setIsHeroHovered(false)}
+            className={`relative w-full border-b ${GOLD_BORDER} overflow-hidden`}
+            style={{ minHeight: '88vh' }}
         >
-            <div className="sticky top-0 w-full overflow-hidden h-[80vh] min-h-[450px]">
-                {/* Background: Firebase Storage image */}
-                <motion.div
-                    className={`absolute inset-0 z-0 flex items-center justify-center group ${isDark ? 'bg-[#0c0910]' : 'bg-[#fcf8f2]'}`}
-                    style={{ scale: bgScale }}
-                    animate={{ filter: isHeroHovered ? 'blur(12px)' : 'blur(0px)' }}
-                    transition={{ duration: 0.7 }}
-                >
-                    <img
-                        src={getStorageImg(isDark ? 'hero-dark' : 'hero-light')}
-                        alt="The Awakened Path"
-                        className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-105"
-                    />
-                    <motion.div
-                        className="absolute inset-0"
-                        style={{
-                            opacity: overlayOpacity,
-                            background: isDark
-                                ? 'linear-gradient(to bottom, rgba(12,9,16,0.3) 0%, rgba(12,9,16,0.6) 50%, rgba(12,9,16,0.98) 100%)'
-                                : 'linear-gradient(to bottom, rgba(252,248,242,0.3) 0%, rgba(252,248,242,0.6) 50%, rgba(252,248,242,0.98) 100%)',
-                        }}
-                    />
-                </motion.div>
+            {/* Parallax background image — decorative, behind content */}
+            <motion.div
+                className={`absolute inset-0 z-0 ${isDark ? 'bg-[#0c0910]' : 'bg-[#fcf8f2]'}`}
+                style={{ scale: bgScale }}
+            >
+                <img
+                    src={getStorageImg(isDark ? 'hero-dark' : 'hero-light')}
+                    alt=""
+                    aria-hidden="true"
+                    className="w-full h-full object-cover object-center opacity-40"
+                />
+                {/* Gradient so text is always readable */}
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        background: isDark
+                            ? 'linear-gradient(135deg, rgba(12,9,16,0.75) 0%, rgba(12,9,16,0.45) 50%, rgba(12,9,16,0.70) 100%)'
+                            : 'linear-gradient(135deg, rgba(252,248,242,0.80) 0%, rgba(252,248,242,0.50) 50%, rgba(252,248,242,0.75) 100%)',
+                    }}
+                />
+            </motion.div>
 
-                {/* Scroll hint (hover only) */}
-                <motion.div
-                    style={{ opacity: scrollCueVisible }}
-                    className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none"
-                >
-                    <div className="flex flex-col items-center gap-6">
-                        <span
-                            className="text-[clamp(24px,5vw,48px)] font-light tracking-[0.5em] uppercase select-none"
-                            style={{ color: isDark ? 'white' : 'black' }}
-                        >
-                            Scroll
-                        </span>
-                        <motion.div
-                            animate={{ y: [0, 15, 0] }}
-                            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                            className="w-px h-16 bg-current opacity-40"
-                            style={{ color: isDark ? 'white' : 'black' }}
-                        />
-                    </div>
-                </motion.div>
-
-                {/* Content: text left, crystal right */}
-                <motion.div
-                    className="relative z-10 flex items-center justify-center h-full px-6 pt-16"
-                    style={{ opacity: textOpacity, y: textY }}
-                >
-                    <div className="max-w-6xl w-full mx-auto flex flex-row items-center">
-                        <ContentText />
-                        <div className="flex-shrink-0 w-[42%] flex items-center justify-center">
-                            <CrystalPyramid className="w-full max-w-[340px]" />
-                        </div>
-                    </div>
-                </motion.div>
+            {/* Ambient teal/indigo blobs */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute top-[10%] right-[10%] w-[38%] h-[60%] rounded-full blur-[120px] opacity-25"
+                    style={{ background: 'radial-gradient(ellipse, rgba(94,196,176,0.6), transparent)' }} />
+                <div className="absolute bottom-[5%] left-[5%] w-[28%] h-[40%] rounded-full blur-[100px] opacity-15"
+                    style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.6), transparent)' }} />
             </div>
+
+            {/* Content — visible immediately */}
+            <motion.div
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.85, ease: 'easeOut' }}
+                className="relative z-10 flex items-center min-h-[88vh] px-8 xl:px-16"
+            >
+                <div className="max-w-6xl w-full mx-auto flex flex-row items-center gap-8">
+                    {/* Text left — capped so crystal has room */}
+                    <div className="flex-1 min-w-0 flex flex-col items-start text-left pr-4">
+                        <ContentText />
+                    </div>
+                    {/* Crystal right — fixed width, never clips */}
+                    <div className="flex-shrink-0 w-[380px] xl:w-[420px] flex items-center justify-center">
+                        <CrystalPyramid className="w-full" />
+                    </div>
+                </div>
+            </motion.div>
         </section>
     );
 };
