@@ -71,10 +71,12 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
     });
 
     // Scroll-driven transforms (desktop only, declared unconditionally per hook rules)
-    const bgScale      = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
-    const overlayOpacity = useTransform(scrollYProgress, [0, 0.3], [0.15, 0.92]);
-    const textOpacity  = useTransform(scrollYProgress, [0.05, 0.28], [0, 1]);
-    const textY        = useTransform(scrollYProgress, [0.05, 0.28], [40, 0]);
+    const bgScale        = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
+    // Overlay starts nearly transparent (image fully visible) → almost opaque by 35% scroll
+    const overlayOpacity = useTransform(scrollYProgress, [0, 0.35], [0.05, 0.91]);
+    // Text reveals AFTER overlay is mostly opaque (no clash with image)
+    const textOpacity    = useTransform(scrollYProgress, [0.22, 0.42], [0, 1]);
+    const textY          = useTransform(scrollYProgress, [0.22, 0.42], [32, 0]);
 
     const isDark = theme === 'dark';
 
@@ -171,7 +173,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
         <section
             ref={containerRef}
             className={`relative w-full border-b ${GOLD_BORDER}`}
-            style={{ height: '170vh' }}
+            style={{ height: '190vh' }}
         >
             <div className="sticky top-0 w-full overflow-hidden h-[88vh] min-h-[520px]">
 
@@ -187,14 +189,13 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                     />
                 </motion.div>
 
-                {/* ── Gradient overlay darkens as you scroll (lets text appear) ── */}
+                {/* ── Full-screen overlay — darkens the ENTIRE image uniformly so
+                     nothing from the background bleeds through when text appears ── */}
                 <motion.div
                     className="absolute inset-0 z-10"
                     style={{
                         opacity: overlayOpacity,
-                        background: isDark
-                            ? 'linear-gradient(to right, rgba(12,9,16,1) 0%, rgba(12,9,16,0.75) 45%, rgba(12,9,16,0.15) 100%)'
-                            : 'linear-gradient(to right, rgba(252,248,242,1) 0%, rgba(252,248,242,0.75) 45%, rgba(252,248,242,0.15) 100%)',
+                        background: isDark ? '#0c0910' : '#fcf8f2',
                     }}
                 />
 
