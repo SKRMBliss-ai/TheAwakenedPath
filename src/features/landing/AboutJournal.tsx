@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useMotionTemplate, useScroll, useTransform } from 'framer-motion';
 import { CrystalPyramid } from '../../components/ui/CrystalPyramid';
 import {
     ArrowRight,
@@ -72,6 +72,9 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
 
     // Gentle parallax on the background image as user scrolls past the hero
     const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+    const imageBlur = useTransform(scrollYProgress, [0, 0.35], [12, 0]);
+    const imageOpacity = useTransform(scrollYProgress, [0, 0.35], [0.72, 1]);
+    const imageFilter = useMotionTemplate`blur(${imageBlur}px)`;
 
     const isDark = theme === 'dark';
 
@@ -133,72 +136,80 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
         </div>
     );
 
-    // ── MOBILE HERO — immediate, no scroll gating ────────────────────────────
+    const heroImageSrc = getStorageImg(isDark ? 'hero-dark' : 'hero-light');
+
+    // ── MOBILE HERO — content first, image after with overlap ────────────────
     if (isMobile) {
         return (
             <section className={`relative w-full border-b ${GOLD_BORDER} overflow-hidden`}>
-                {/* Ambient gradient background */}
                 <div
-                    className="absolute inset-0"
+                    className="relative"
                     style={{
                         background: isDark
                             ? 'radial-gradient(ellipse at 60% 30%, rgba(94,196,176,0.10) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(99,102,241,0.08) 0%, transparent 55%), #0c0910'
                             : 'radial-gradient(ellipse at 60% 30%, rgba(94,196,176,0.18) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(99,102,241,0.10) 0%, transparent 55%), #fcf8f2',
                     }}
-                />
-
-                <motion.div
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.9, ease: 'easeOut' }}
-                    className="relative z-10 flex flex-col items-center px-6 pt-20 pb-16 gap-2"
                 >
-                    {/* Crystal prominently on mobile */}
-                    <CrystalPyramid className="w-full max-w-[260px]" />
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.9, ease: 'easeOut' }}
+                        className="relative z-10 flex flex-col items-center px-6 pt-20 pb-14 gap-2"
+                    >
+                        {/* Crystal prominently on mobile */}
+                        <CrystalPyramid className="w-full max-w-[260px]" />
 
-                    {/* Text below crystal */}
-                    <ContentText />
-                </motion.div>
+                        {/* Text below crystal */}
+                        <ContentText />
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.95, delay: 0.1, ease: 'easeOut' }}
+                        className="relative z-20 mx-4 mt-6 mb-8"
+                    >
+                        <div className="text-center mb-5 px-2">
+                            <p className="text-[11px] uppercase tracking-[0.22em] text-[#D4AF37] mb-2 font-semibold">
+                                The Awakened Path
+                            </p>
+                            <h2 className="font-[Outfit] text-[clamp(22px,5vw,30px)] font-light tracking-tight text-white">
+                                Your daily practice, in one sacred space.
+                            </h2>
+                            <p className="mt-2 text-xs text-white/55 leading-relaxed">
+                                Journal, reflect, track growth, and stay present through every part of your day.
+                            </p>
+                        </div>
+                        <img
+                            src={heroImageSrc}
+                            alt="The Awakened Path"
+                            className="w-full h-auto object-cover rounded-[28px] border border-white/10 shadow-[0_24px_80px_-30px_rgba(0,0,0,0.8)]"
+                        />
+                    </motion.div>
+
+                    <div className="mx-6 mb-8 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-transparent" />
+                </div>
             </section>
         );
     }
 
-    // ── DESKTOP HERO — image background always visible, content immediate ───
+    // ── DESKTOP HERO — content first, image revealed after with overlap ─────
     return (
         <section
             ref={containerRef}
             className={`relative w-full border-b ${GOLD_BORDER} overflow-hidden`}
-            style={{ minHeight: '90vh' }}
+            style={{
+                background: isDark
+                    ? 'radial-gradient(ellipse at 20% 25%, rgba(94,196,176,0.08) 0%, transparent 52%), radial-gradient(ellipse at 80% 15%, rgba(99,102,241,0.08) 0%, transparent 55%), #0c0910'
+                    : 'radial-gradient(ellipse at 20% 25%, rgba(94,196,176,0.15) 0%, transparent 52%), radial-gradient(ellipse at 80% 15%, rgba(99,102,241,0.12) 0%, transparent 55%), #fcf8f2',
+            }}
         >
-            {/* ── Background: hero photo with gentle parallax scale ── */}
-            <motion.div
-                className={`absolute inset-0 z-0 ${isDark ? 'bg-[#0c0910]' : 'bg-[#fcf8f2]'}`}
-                style={{ scale: bgScale }}
-            >
-                <img
-                    src={getStorageImg(isDark ? 'hero-dark' : 'hero-light')}
-                    alt="The Awakened Path"
-                    className="w-full h-full object-contain"
-                />
-            </motion.div>
-
-            {/* ── Left-side gradient so text is always readable over the image ── */}
-            <div
-                className="absolute inset-0 z-10"
-                style={{
-                    background: isDark
-                        ? 'linear-gradient(to right, rgba(12,9,16,0.94) 0%, rgba(12,9,16,0.72) 38%, rgba(12,9,16,0.08) 100%)'
-                        : 'linear-gradient(to right, rgba(252,248,242,0.95) 0%, rgba(252,248,242,0.72) 38%, rgba(252,248,242,0.08) 100%)',
-                }}
-            />
-
-            {/* ── Content: text left + crystal right, both visible on load ── */}
             <motion.div
                 initial={{ opacity: 0, y: 22 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.85, ease: 'easeOut' }}
-                className="relative z-20 flex items-center px-8 xl:px-16"
-                style={{ minHeight: '90vh' }}
+                className="relative z-20 flex items-center px-8 xl:px-16 pt-28 pb-14"
+                style={{ minHeight: '74vh' }}
             >
                 <div className="max-w-6xl w-full mx-auto flex flex-row items-center gap-6">
                     {/* Text — left column */}
@@ -210,6 +221,36 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                         <CrystalPyramid className="w-full" />
                     </div>
                 </div>
+            </motion.div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.95, delay: 0.08, ease: 'easeOut' }}
+                className="relative z-30 px-8 xl:px-16 pb-12"
+            >
+                <div className="max-w-6xl mx-auto text-center mb-6">
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-[#D4AF37] mb-3 font-semibold">
+                        The Awakened Path
+                    </p>
+                    <h2 className="font-[Outfit] text-[clamp(26px,4vw,38px)] font-light tracking-tight text-black dark:text-white">
+                        Your daily practice, in one sacred space.
+                    </h2>
+                    <p className="mt-3 text-sm text-black/50 dark:text-white/50 leading-relaxed">
+                        Journal, reflect, track growth, and stay present through every part of your day.
+                    </p>
+                </div>
+                <div className="max-w-6xl mx-auto mb-6 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-transparent" />
+                <motion.div
+                    className="max-w-6xl mx-auto mt-6 rounded-[34px] overflow-hidden border border-white/10 shadow-[0_38px_100px_-45px_rgba(0,0,0,0.85)]"
+                    style={{ scale: bgScale, filter: imageFilter, opacity: imageOpacity }}
+                >
+                    <img
+                        src={heroImageSrc}
+                        alt="The Awakened Path"
+                        className="w-full h-auto object-cover"
+                    />
+                </motion.div>
             </motion.div>
         </section>
     );
