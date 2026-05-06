@@ -55,159 +55,188 @@ const getStorageImg = (name: string) => `${STORAGE_BASE}${name}.webp?alt=media`;
 // ─── Section: Hero ────────────────────────────────────────────────────────────
 const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
     const containerRef = useRef<HTMLElement>(null);
+    const [isMobile, setIsMobile] = useState(() =>
+        typeof window !== 'undefined' ? window.innerWidth < 768 : false
+    );
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
+
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ["start start", "end start"]
     });
 
     const [isHeroHovered, setIsHeroHovered] = useState(false);
-    
-    // Background transitions
-    const overlayOpacity = useTransform(scrollYProgress, [0, 0.3], [0.4, 1]); 
 
-    const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
-    
-    // Content transitions — Hidden initially, reveal on scroll
-    const textOpacity = useTransform(scrollYProgress, [0.05, 0.25], [0, 1]);
-    const textY = useTransform(scrollYProgress, [0.05, 0.25], [40, 0]);
-    
-    // Scroll cues
-    const mainScrollCueOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
+    // All transforms declared unconditionally (hook rules)
+    const overlayOpacity = useTransform(scrollYProgress, [0, 0.3], [0.4, 1]);
+    const bgScale       = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+    const textOpacity   = useTransform(scrollYProgress, [0.05, 0.25], [0, 1]);
+    const textY         = useTransform(scrollYProgress, [0.05, 0.25], [40, 0]);
+    const scrollCueOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
+    const scrollCueVisible = useTransform(
+        [scrollCueOpacity],
+        ([o]) => isHeroHovered ? Number(o) : 0
+    );
 
+    const isDark = theme === 'dark';
+
+    // ── Shared content block (text + CTAs) ──────────────────────────────────
+    const ContentText = () => (
+        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left md:pr-10">
+            {/* Badge */}
+            <div
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${GOLD_BORDER} text-[10px] tracking-[0.2em] uppercase font-bold mb-6 md:mb-8`}
+                style={{
+                    background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.6)',
+                    backdropFilter: 'blur(12px)',
+                    color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
+                }}
+            >
+                <Sparkles className="w-3 h-3 text-[#D4AF37] animate-pulse" />
+                <span>The Presence Journal</span>
+            </div>
+
+            {/* Headline */}
+            <h1
+                className="font-[Outfit] text-[clamp(32px,6vw,72px)] font-light leading-[1.05] tracking-tight"
+                style={{ color: isDark ? '#ffffff' : '#0c0910' }}
+            >
+                Quiet the noise. <br />
+                <span className="font-medium" style={{ color: '#5EC4B0' }}>Witness the life.</span>
+            </h1>
+
+            {/* Description */}
+            <p
+                className="mt-6 max-w-md md:max-w-xl text-sm md:text-lg leading-relaxed font-light"
+                style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}
+            >
+                A daily rhythm of journaling and meditation designed to move you from thinking about life to actually living it.
+            </p>
+
+            {/* CTAs */}
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 items-center md:items-start">
+                <a
+                    href={PREMIUM_URL}
+                    className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-xl hover:shadow-[#5EC4B0]/30"
+                >
+                    Begin Journey
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </a>
+                <a
+                    href="#download"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full text-sm font-semibold tracking-wide transition-all border border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-md"
+                    style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)' }}
+                >
+                    Download Guide
+                    <Download className="w-4 h-4 transition-transform group-hover:translate-y-1" />
+                </a>
+            </div>
+        </div>
+    );
+
+    // ── MOBILE HERO — immediate, no scroll gating ────────────────────────────
+    if (isMobile) {
+        return (
+            <section className={`relative w-full border-b ${GOLD_BORDER} overflow-hidden`}>
+                {/* Ambient gradient background */}
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        background: isDark
+                            ? 'radial-gradient(ellipse at 60% 30%, rgba(94,196,176,0.10) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(99,102,241,0.08) 0%, transparent 55%), #0c0910'
+                            : 'radial-gradient(ellipse at 60% 30%, rgba(94,196,176,0.18) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(99,102,241,0.10) 0%, transparent 55%), #fcf8f2',
+                    }}
+                />
+
+                <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.9, ease: 'easeOut' }}
+                    className="relative z-10 flex flex-col items-center px-6 pt-20 pb-16 gap-2"
+                >
+                    {/* Crystal prominently on mobile */}
+                    <CrystalPyramid className="w-full max-w-[260px]" />
+
+                    {/* Text below crystal */}
+                    <ContentText />
+                </motion.div>
+            </section>
+        );
+    }
+
+    // ── DESKTOP HERO — sticky scroll-reveal ─────────────────────────────────
     return (
-        <section 
-            ref={containerRef} 
-            className={`relative w-full border-b ${GOLD_BORDER}`} 
+        <section
+            ref={containerRef}
+            className={`relative w-full border-b ${GOLD_BORDER}`}
             style={{ height: '160vh' }}
             onMouseEnter={() => setIsHeroHovered(true)}
             onMouseLeave={() => setIsHeroHovered(false)}
         >
-            <div className="sticky top-0 w-full overflow-hidden h-[75vh] md:h-[80vh] min-h-[450px]">
-                {/* Background Layer with Hover Interaction */}
-                <motion.div 
-                    className={`absolute inset-0 z-0 flex items-center justify-center group ${theme === 'dark' ? 'bg-[#0c0910]' : 'bg-[#fcf8f2]'}`}
+            <div className="sticky top-0 w-full overflow-hidden h-[80vh] min-h-[450px]">
+                {/* Background: Firebase Storage image */}
+                <motion.div
+                    className={`absolute inset-0 z-0 flex items-center justify-center group ${isDark ? 'bg-[#0c0910]' : 'bg-[#fcf8f2]'}`}
                     style={{ scale: bgScale }}
                     animate={{ filter: isHeroHovered ? 'blur(12px)' : 'blur(0px)' }}
                     transition={{ duration: 0.7 }}
                 >
-                    <picture className="w-full h-full transition-transform duration-1000 group-hover:scale-105">
-                        <source media="(max-width: 768px)" srcSet={getStorageImg(theme === 'dark' ? 'hero-dark-mobile' : 'hero-light-mobile')} />
-                        <img
-                            src={getStorageImg(theme === 'dark' ? 'hero-dark' : 'hero-light')}
-                            alt="The Awakened Path"
-                            className="w-full h-full object-contain"
-                        />
-                    </picture>
-
-                    {/* Gradient Overlay */}
+                    <img
+                        src={getStorageImg(isDark ? 'hero-dark' : 'hero-light')}
+                        alt="The Awakened Path"
+                        className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-105"
+                    />
                     <motion.div
                         className="absolute inset-0"
                         style={{
                             opacity: overlayOpacity,
-                            background: theme === 'dark'
+                            background: isDark
                                 ? 'linear-gradient(to bottom, rgba(12,9,16,0.3) 0%, rgba(12,9,16,0.6) 50%, rgba(12,9,16,0.98) 100%)'
                                 : 'linear-gradient(to bottom, rgba(252,248,242,0.3) 0%, rgba(252,248,242,0.6) 50%, rgba(252,248,242,0.98) 100%)',
                         }}
                     />
                 </motion.div>
 
-                {/* Central Scroll Hint - Visible on hover and only at start */}
-                <motion.div 
-                    style={{ 
-                        opacity: useTransform(
-                            [mainScrollCueOpacity], 
-                            ([o]) => isHeroHovered ? Number(o) : 0
-                        ) 
-                    }}
-                    className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none transition-opacity duration-500"
+                {/* Scroll hint (hover only) */}
+                <motion.div
+                    style={{ opacity: scrollCueVisible }}
+                    className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none"
                 >
                     <div className="flex flex-col items-center gap-6">
-                        <span 
+                        <span
                             className="text-[clamp(24px,5vw,48px)] font-light tracking-[0.5em] uppercase select-none"
-                            style={{ color: theme === 'dark' ? 'white' : 'black' }}
+                            style={{ color: isDark ? 'white' : 'black' }}
                         >
                             Scroll
                         </span>
-                        <motion.div 
+                        <motion.div
                             animate={{ y: [0, 15, 0] }}
-                            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                             className="w-px h-16 bg-current opacity-40"
-                            style={{ color: theme === 'dark' ? 'white' : 'black' }}
+                            style={{ color: isDark ? 'white' : 'black' }}
                         />
                     </div>
                 </motion.div>
 
-                {/* Content Layer — split on desktop */}
+                {/* Content: text left, crystal right */}
                 <motion.div
-                    className={`relative z-10 flex items-center justify-center h-full px-6 pt-16 ${scrollYProgress.get() < 0.05 ? 'pointer-events-none' : 'pointer-events-auto'}`}
+                    className="relative z-10 flex items-center justify-center h-full px-6 pt-16"
                     style={{ opacity: textOpacity, y: textY }}
                 >
-                    <div className="max-w-6xl w-full mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-0">
-
-                        {/* ── Text side ── */}
-                        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left md:pr-10">
-                            {/* Badge */}
-                            <div
-                                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${GOLD_BORDER} text-[10px] tracking-[0.2em] uppercase font-bold mb-8`}
-                                style={{
-                                    background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.6)',
-                                    backdropFilter: 'blur(12px)',
-                                    color: theme === 'dark' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
-                                }}
-                            >
-                                <Sparkles className="w-3 h-3 text-[#D4AF37] animate-pulse" />
-                                <span>The Presence Journal</span>
-                            </div>
-
-                            {/* Headline */}
-                            <h1
-                                className="font-[Outfit] text-[clamp(36px,6vw,72px)] font-light leading-[1.02] tracking-tight"
-                                style={{ color: theme === 'dark' ? '#ffffff' : '#0c0910' }}
-                            >
-                                Quiet the noise. <br />
-                                <span className="font-medium" style={{ color: '#5EC4B0' }}>Witness the life.</span>
-                            </h1>
-
-                            {/* Description */}
-                            <p
-                                className="mt-8 max-w-xl text-base md:text-lg leading-relaxed font-light"
-                                style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}
-                            >
-                                A daily rhythm of journaling and meditation designed to move you from thinking about life to actually living it.
-                            </p>
-
-                            {/* CTAs */}
-                            <div className="mt-10 flex flex-col sm:flex-row gap-4 items-center md:items-start">
-                                <a
-                                    href={PREMIUM_URL}
-                                    className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-xl hover:shadow-[#5EC4B0]/30"
-                                >
-                                    Begin Journey
-                                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                                </a>
-
-                                <a
-                                    href="#download"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
-                                    }}
-                                    className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full text-sm font-semibold tracking-wide transition-all border border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-md"
-                                    style={{
-                                        color: theme === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
-                                    }}
-                                >
-                                    Download Guide
-                                    <Download className="w-4 h-4 transition-transform group-hover:translate-y-1" />
-                                </a>
-                            </div>
-                        </div>
-
-                        {/* ── Crystal side (desktop only) ── */}
-                        <div className="hidden md:flex flex-shrink-0 w-[42%] items-center justify-center">
+                    <div className="max-w-6xl w-full mx-auto flex flex-row items-center">
+                        <ContentText />
+                        <div className="flex-shrink-0 w-[42%] flex items-center justify-center">
                             <CrystalPyramid className="w-full max-w-[340px]" />
                         </div>
-
                     </div>
                 </motion.div>
             </div>
