@@ -5,6 +5,13 @@ import { useTheme } from '../../theme/ThemeSystem';
 import { ArrowRight, LayoutGrid } from 'lucide-react';
 import appLogo from '../../assets/logo.webp';
 import { CrystalPyramid } from '../../components/ui/CrystalPyramid';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebase';
+import {
+  getSuggestion,
+  validateEmailLocally,
+  checkMxRecords,
+} from '../../utils/emailValidation';
 
 interface EmailCaptureScreenProps {
   onShowSignIn?: () => void;
@@ -32,46 +39,15 @@ const TRIAL_FEATURES = [
   { icon: '📓', label: 'Daily Journal' },
 ];
 
-const BLOCKED_DOMAINS = new Set(['mailinator.com','guerrillamail.com','temp-mail.org','throwam.com','fakeinbox.com','yopmail.com','trashmail.com','maildrop.cc','sharklasers.com','dispostable.com','spamgourmet.com','getairmail.com','trashmail.me','spam4.me','tempinbox.com','throwaway.email','emailondeck.com']);
-
-const VALID_TLDS = new Set(['com','org','net','edu','gov','io','ai','co','app','dev','me','info','biz','in','uk','us','de','fr','au','ca','jp','cn','br','ru','it','es','nl','pl','pt','se','no','dk','fi','be','ch','at','nz','mx','sg','hk','ae','sa','za','ng','ke','pro','tech','online','site','store','shop','blog','cloud','digital','email','media','studio','live','world','today','space','academy','id']);
-
-const TYPO_MAP: Record<string, string> = {
-  'gmail.coma':'gmail.com','gmail.con':'gmail.com','gmail.cm':'gmail.com','gmail.ocm':'gmail.com',
-  'gmai.com':'gmail.com','gmal.com':'gmail.com','gmial.com':'gmail.com','gmali.com':'gmail.com',
-  'gnail.com':'gmail.com','gamil.com':'gmail.com','gmail.co':'gmail.com',
-  'yahoo.coma':'yahoo.com','yahoo.con':'yahoo.com','yhoo.com':'yahoo.com','yaho.com':'yahoo.com',
-  'hotmail.coma':'hotmail.com','hotmail.con':'hotmail.com','hotmal.com':'hotmail.com','hotmial.com':'hotmail.com',
-  'outlook.coma':'outlook.com','outlook.con':'outlook.com','outlok.com':'outlook.com',
-  'icloud.coma':'icloud.com','icloud.con':'icloud.com',
-};
-
 export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) => {
   const { beginAnonymousPath, signInWithGoogle } = useAuth();
   const { theme, mode } = useTheme();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mxChecking, setMxChecking] = useState(false);
   const [success, setSuccess] = useState(false);
   const [suggestion, setSuggestion] = useState<string | null>(null);
-
-  const getSuggestion = (v: string): string | null => {
-    const domain = v.split('@')[1]?.toLowerCase();
-    if (!domain) return null;
-    const correct = TYPO_MAP[domain];
-    return correct ? v.split('@')[0] + '@' + correct : null;
-  };
-
-  const validateEmail = (v: string): string | null => {
-    const trimmed = v.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(trimmed)) return 'Please enter a valid email address.';
-    const parts = trimmed.split('@');
-    const domain = parts[1];
-    const tld = domain.split('.').pop() ?? '';
-    if (!VALID_TLDS.has(tld)) return `".${tld}" doesn't look like a real email domain. Please use your actual email.`;
-    if (BLOCKED_DOMAINS.has(domain)) return 'Please use your real email — disposable addresses are not allowed.';
-    return null;
-  };
 
   const handleEmailChange = (v: string) => {
     setEmail(v);
@@ -81,15 +57,31 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
 
   const handleBegin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const emailError = validateEmail(email);
-    if (emailError) {
-      setError(emailError);
+    const localError = validateEmailLocally(email);
+    if (localError) { setError(localError); return; }
+
+    // MX record check — verifies the domain has a mail server
+    const domain = email.trim().toLowerCase().split('@')[1];
+    setMxChecking(true);
+    const hasMx = await checkMxRecords(domain);
+    setMxChecking(false);
+    if (!hasMx) {
+      setError(`"${domain}" doesn't appear to have email configured. Please use your real email address.`);
       return;
     }
+
     setError('');
     setLoading(true);
     try {
-      await beginAnonymousPath(email.toLowerCase().trim());
+      const cleanEmail = email.toLowerCase().trim();
+      await beginAnonymousPath(cleanEmail);
+      // Store in waitlist for daily email campaigns
+      await addDoc(collection(db, 'waitlist'), {
+        email: cleanEmail,
+        source: 'app_signup',
+        mailingList: true,
+        createdAt: serverTimestamp(),
+      }).catch(() => {}); // non-blocking
       setSuccess(true);
     } catch (err: any) {
       setError(toFriendlyError(err));
@@ -349,7 +341,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
 
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || mxChecking}
                     className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl transition-all active:scale-95 text-sm font-bold tracking-wide"
                     style={{
                       background: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))`,
@@ -357,7 +349,12 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
                       boxShadow: '0 4px 20px rgba(94,196,176,0.3)',
                     }}
                   >
-                    {loading ? (
+                    {mxChecking ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Verifying email…</span>
+                      </>
+                    ) : loading ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>

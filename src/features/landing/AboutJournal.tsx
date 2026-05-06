@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import presenceGuideImg from '../../assets/presence_guide_cover.png';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { getSuggestion, validateEmailLocally, checkMxRecords } from '../../utils/emailValidation';
 import { db } from '../../firebase';
 
 const PREMIUM_URL = '/?plan=wisdom_untethered';
@@ -552,21 +553,37 @@ const JournalFeatures = () => (
 // ─── Section: 30-Day Journal Download ─────────────────────────────────────────
 const JournalDownload = () => {
     const [email, setEmail] = useState('');
-    const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
+    const [suggestion, setSuggestion] = useState<string | null>(null);
+    const [status, setStatus] = useState<'idle' | 'checking' | 'submitting' | 'done' | 'error'>('idle');
     const [errorMsg, setErrorMsg] = useState('');
     const [hasAccess, setHasAccess] = useState(false);
+    const [accessEmail, setAccessEmail] = useState('');
 
     useEffect(() => {
         if (typeof window !== 'undefined' && localStorage.getItem('journal_access_granted') === 'true') {
             setHasAccess(true);
+            setAccessEmail(localStorage.getItem('journal_access_email') || '');
         }
     }, []);
+
+    const handleEmailChange = (v: string) => {
+        setEmail(v);
+        setErrorMsg('');
+        setSuggestion(getSuggestion(v));
+    };
 
     const handleGrantAccess = async (e: React.FormEvent) => {
         e.preventDefault();
         const trimmed = email.trim().toLowerCase();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-            setErrorMsg('Please enter a valid email');
+
+        const localError = validateEmailLocally(trimmed);
+        if (localError) { setErrorMsg(localError); setStatus('error'); return; }
+
+        setStatus('checking');
+        const domain = trimmed.split('@')[1];
+        const hasMx = await checkMxRecords(domain);
+        if (!hasMx) {
+            setErrorMsg(`"${domain}" doesn't appear to have email configured. Please use your real email.`);
             setStatus('error');
             return;
         }
@@ -581,12 +598,27 @@ const JournalDownload = () => {
                 createdAt: serverTimestamp(),
             });
             localStorage.setItem('journal_access_granted', 'true');
+            localStorage.setItem('journal_access_email', trimmed);
+            setAccessEmail(trimmed);
             setHasAccess(true);
             setStatus('done');
         } catch (err) {
             console.error('Email capture failed:', err);
             setErrorMsg('Something went wrong. Please try again.');
             setStatus('error');
+        }
+    };
+
+    const handleDownloadClick = () => {
+        const emailToTrack = accessEmail || email.trim().toLowerCase();
+        if (emailToTrack) {
+            addDoc(collection(db, 'waitlist'), {
+                email: emailToTrack,
+                source: 'journal_download_clicked',
+                type: 'download',
+                mailingList: true,
+                createdAt: serverTimestamp(),
+            }).catch(() => {});
         }
     };
 
@@ -610,28 +642,44 @@ const JournalDownload = () => {
                     <div className="mt-8">
                         {!hasAccess ? (
                             <form onSubmit={handleGrantAccess} className="max-w-md">
-                                <div className={`flex flex-col sm:flex-row gap-2 p-1.5 rounded-full bg-white dark:bg-white/5 border ${GOLD_BORDER} focus-within:border-[#5EC4B0]/50 transition-colors shadow-sm`}>
+                                <div className={`flex flex-col sm:flex-row gap-2 p-1.5 rounded-full bg-white dark:bg-white/5 border transition-colors shadow-sm ${
+                                    errorMsg ? 'border-red-400/50' : suggestion ? 'border-amber-400/50' : GOLD_BORDER
+                                } focus-within:border-[#5EC4B0]/50`}>
                                     <input
-                                        type="email"
-                                        required
+                                        type="text"
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        onChange={(e) => handleEmailChange(e.target.value)}
                                         placeholder="Enter email to get access"
+                                        autoCapitalize="none"
+                                        spellCheck={false}
                                         className="flex-1 bg-transparent px-5 py-2.5 text-sm text-black dark:text-white placeholder:text-black/30 dark:placeholder:text-white/35 focus:outline-none"
                                     />
                                     <button
                                         type="submit"
-                                        disabled={status === 'submitting'}
+                                        disabled={status === 'submitting' || status === 'checking'}
                                         className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] disabled:opacity-50 text-[#0c0910] text-sm font-semibold tracking-wide transition-all shadow-sm group"
                                     >
-                                        {status === 'submitting' ? (
+                                        {status === 'checking' ? (
+                                            <><Loader2 className="w-4 h-4 animate-spin" /><span>Verifying…</span></>
+                                        ) : status === 'submitting' ? (
                                             <Loader2 className="w-4 h-4 animate-spin" />
                                         ) : (
                                             <>Get Journal <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" /></>
                                         )}
                                     </button>
                                 </div>
-                                {status === 'error' && (
+                                {suggestion && !errorMsg && (
+                                    <div className="mt-2 px-4 py-2 rounded-2xl flex items-center justify-between gap-2"
+                                        style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)' }}>
+                                        <span className="text-[11px] text-yellow-500 dark:text-yellow-400">Did you mean <strong>{suggestion}</strong>?</span>
+                                        <button type="button"
+                                            onClick={() => { setEmail(suggestion); setSuggestion(null); setErrorMsg(''); }}
+                                            className="text-[10px] font-black uppercase tracking-widest text-yellow-500 dark:text-yellow-400 hover:opacity-70 transition-opacity">
+                                            Fix
+                                        </button>
+                                    </div>
+                                )}
+                                {errorMsg && (
                                     <p className="mt-2 text-xs text-red-500 ml-4">{errorMsg}</p>
                                 )}
                                 <p className="mt-3 text-[10px] text-black/40 dark:text-white/40 ml-4 uppercase tracking-widest font-medium">
@@ -648,6 +696,7 @@ const JournalDownload = () => {
                                     href="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2FSoulfulIntelligenceStudio-30day_journal.docx.pdf?alt=media"
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    onClick={handleDownloadClick}
                                     className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-lg hover:shadow-[#5EC4B0]/20"
                                 >
                                     Download PDF Journal

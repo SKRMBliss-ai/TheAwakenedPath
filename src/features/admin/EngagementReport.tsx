@@ -390,7 +390,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <h2 className="text-[18px] sm:text-[22px] font-bold text-[var(--accent-primary)] tracking-wider uppercase">
                                         {activeTab === 'logs' ? 'Engagement Report'
                                             : activeTab === 'users' ? 'Users'
-                                            : activeTab === 'waitlist' ? 'Waitlist'
+                                            : activeTab === 'waitlist' ? 'Subscribers'
                                             : activeTab === 'leads' ? 'Lead Finder'
                                             : activeTab === 'blast' ? 'Send Course Update'
                                             : 'Email History'}
@@ -398,7 +398,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <p className="text-[9px] sm:text-[11px] text-[var(--text-muted)] tracking-[0.2em] font-bold uppercase mt-1">
                                         {activeTab === 'logs' ? 'Tracking User Activity'
                                             : activeTab === 'users' ? 'All registered users'
-                                            : activeTab === 'waitlist' ? 'Emails from Journal Downloads'
+                                            : activeTab === 'waitlist' ? 'App signups · Journal gate · Downloads'
                                             : activeTab === 'leads' ? 'Daily prospect scan from Google + Reddit'
                                             : activeTab === 'blast' ? 'Send an email update to all users'
                                             : 'History of all emails sent'}
@@ -432,7 +432,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                             activeTab === 'waitlist' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
-                                        Waitlist
+                                        Subscribers
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('leads')}
@@ -702,7 +702,14 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         <span className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors truncate">{w.email}</span>
                                                     </div>
 
-                                                    <div className="hidden md:block text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-tight">{w.source || 'Journal Gate'}</div>
+                                                    <div className="hidden md:block text-[11px] font-bold uppercase tracking-tight" style={{
+                                                        color: w.source === 'app_signup' ? 'var(--accent-primary)' : w.source === 'journal_download_clicked' ? '#818cf8' : 'var(--text-secondary)'
+                                                    }}>
+                                                        {w.source === 'app_signup' ? 'App Signup'
+                                                            : w.source === 'journal_download_gate' ? 'Journal Gate'
+                                                            : w.source === 'journal_download_clicked' ? '⬇ Downloaded'
+                                                            : w.source || 'Journal Gate'}
+                                                    </div>
                                                     
                                                     <div className="hidden md:block flex flex-col">
                                                         <span className="text-[12px] text-[var(--text-secondary)]">{date}</span>
