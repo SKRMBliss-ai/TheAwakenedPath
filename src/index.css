@@ -18,9 +18,16 @@
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  overflow-x: hidden;
   background-color: var(--bg-color, #0c0910);
   color: var(--text-main, #ede9e3);
   font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
   min-height: 100vh;
 }
 

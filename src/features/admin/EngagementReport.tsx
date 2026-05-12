@@ -12,6 +12,8 @@ interface ActivityLog {
     id: string;
     userId: string;
     userEmail: string;
+    entryEmail?: string;
+    isAnonymous?: boolean;
     activityType: string;
     details: string;
     location?: string;
@@ -522,6 +524,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                 const s = searchTerm.toLowerCase();
                                                 return (
                                                     log.userEmail?.toLowerCase().includes(s) ||
+                                                    log.entryEmail?.toLowerCase().includes(s) ||
                                                     log.activityType?.toLowerCase().includes(s) ||
                                                     log.location?.toLowerCase().includes(s) ||
                                                     getSourceLabel(log.activityType).toLowerCase().includes(s)
@@ -529,7 +532,9 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                             })
                                             .map((log) => {
                                             const { date, time } = formatTimestamp(log.timestamp);
-                                            const userName = log.userEmail ? log.userEmail.split('@')[0] : 'User';
+                                            // Prefer real email; fall back to entryEmail for anonymous users
+                                            const resolvedEmail = log.userEmail || log.entryEmail || null;
+                                            const userName = resolvedEmail ? resolvedEmail.split('@')[0] : 'User';
                                             const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
 
                                             return (
@@ -545,7 +550,12 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         </div>
                                                         <div className="flex flex-col min-w-0">
                                                             <span className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors truncate">{displayName}</span>
-                                                            <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest truncate">{log.userEmail}</span>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-widest truncate">{resolvedEmail}</span>
+                                                                {log.isAnonymous && (
+                                                                    <span className="text-[8px] font-black tracking-widest text-amber-400/70 uppercase shrink-0">Anon ✦</span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
 

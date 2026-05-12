@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Play, X, Pause, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
-
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../features/auth/AuthContext';
 
 import { QUESTION_META } from '../../features/practices/TodayPath';
 
@@ -159,6 +159,7 @@ export const VoiceGuidance = ({
   isInline?: boolean;
 }) => {
   const { status, category } = useVoiceStatus();
+  const { deductTokens } = useAuth();
   const isSpeaking = status === 'playing' && category === 'tts';
   const isPaused = status === 'paused' && category === 'tts';
   const [showFull, setShowFull] = useState(false);
@@ -218,6 +219,13 @@ export const VoiceGuidance = ({
     if (isSpeaking) {
       VoiceService.stop();
     } else {
+      // Deduct token before speaking
+      const tokenResult = await deductTokens(15, 'voice_guidance');
+      if (!tokenResult.success && tokenResult.error === 'INSUFFICIENT_TOKENS') {
+        // PaymentWall handled at app level via token balance being 0
+        return;
+      }
+
       setIsPreparing(true);
       console.log(`[VoiceGuidance] UI triggered speak on tab '${activeTab}' with persona: ${preferredVoice}`);
       try {

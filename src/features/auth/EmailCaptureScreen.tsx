@@ -142,7 +142,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
           The Awakened Path
         </h1>
         <p
-          className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase mt-2 opacity-60"
+          className="text-[12px] font-sans font-medium tracking-[0.3em] uppercase mt-2 opacity-75"
           style={{ color: theme.textSecondary }}
         >
           A Presence Study
@@ -167,95 +167,8 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
         >
           <div className="p-8 flex flex-col items-center">
 
-            {/* ── Trial teaser – premium design ── */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.35, duration: 0.6 }}
-              className="w-full mb-6"
-            >
-              {/* Gradient border wrapper */}
-              <div
-                className="relative rounded-[18px] p-[1px]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(94,196,176,0.55) 0%, rgba(94,196,176,0.08) 50%, rgba(94,196,176,0.35) 100%)',
-                }}
-              >
-                <div
-                  className="rounded-[17px] px-4 pt-4 pb-3"
-                  style={{
-                    background: mode === 'dark'
-                      ? 'linear-gradient(160deg, rgba(20,28,26,0.95) 0%, rgba(12,14,16,0.95) 100%)'
-                      : 'linear-gradient(160deg, rgba(240,252,250,0.95) 0%, rgba(228,248,244,0.95) 100%)',
-                    backdropFilter: 'blur(20px)',
-                  }}
-                >
-                  {/* Top row: label + badge */}
-                  <div className="flex items-center justify-between mb-2.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm leading-none">✨</span>
-                      <span
-                        className="text-[11px] font-black tracking-[0.18em] uppercase"
-                        style={{ color: theme.accentPrimary }}
-                      >
-                        7-Day Free Trial
-                      </span>
-                    </div>
-                    <div
-                      className="px-2 py-0.5 rounded-full text-[8.5px] font-black tracking-widest uppercase"
-                      style={{
-                        background: 'rgba(94,196,176,0.15)',
-                        color: theme.accentPrimary,
-                        border: '1px solid rgba(94,196,176,0.3)',
-                      }}
-                    >
-                      No Card
-                    </div>
-                  </div>
-
-                  {/* Token count */}
-                  <div className="flex items-baseline gap-1.5 mb-3">
-                    <span
-                      className="text-[32px] leading-none font-serif font-light tracking-tight"
-                      style={{ color: theme.textPrimary }}
-                    >
-                      300
-                    </span>
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-wider opacity-50 mb-1"
-                      style={{ color: theme.textSecondary }}
-                    >
-                      tokens · all features unlocked
-                    </span>
-                  </div>
-
-                  {/* Feature pills */}
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {TRIAL_FEATURES.map((f) => (
-                      <div
-                        key={f.label}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl"
-                        style={{
-                          background: 'rgba(94,196,176,0.06)',
-                          border: '1px solid rgba(94,196,176,0.12)',
-                        }}
-                      >
-                        <span className="text-[12px] leading-none">{f.icon}</span>
-                        <span
-                          className="text-[9px] font-bold uppercase tracking-wider opacity-60"
-                          style={{ color: theme.textSecondary }}
-                        >
-                          {f.label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
             <h2
-              className="text-xl font-serif font-light mb-6 text-center"
+              className="text-2xl font-serif font-light mb-8 text-center tracking-wide"
               style={{ color: theme.textPrimary }}
             >
               Begin Your Path
@@ -392,11 +305,88 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
             {/* Already have an account */}
             <button
               onClick={onShowSignIn}
-              className="text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-80 transition-opacity"
+              className="text-[13px] font-medium opacity-65 hover:opacity-90 transition-opacity mb-6"
               style={{ color: theme.textSecondary }}
             >
-              Already have an account? <span style={{ color: theme.accentPrimary }}>Sign in</span>
+              Already have an account?{' '}
+              <span className="font-semibold" style={{ color: theme.accentPrimary }}>Sign in</span>
             </button>
+
+            {/* ── Trial teaser – sits at the bottom of the card ── */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5, duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+              className="w-full group"
+            >
+              <div
+                className="relative rounded-[24px] p-5 overflow-hidden transition-all duration-700 hover:scale-[1.01] active:scale-[0.99]"
+                style={{
+                  background: mode === 'dark'
+                    ? 'linear-gradient(165deg, rgba(20,30,28,0.9) 0%, rgba(8,10,12,0.95) 100%)'
+                    : 'linear-gradient(165deg, rgba(240,252,250,0.95) 0%, rgba(224,246,242,0.95) 100%)',
+                  border: `1px solid ${theme.borderGlass}`,
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 0 20px rgba(94,196,176,0.04)',
+                }}
+              >
+                {/* Shimmer */}
+                <div className="absolute inset-0 pointer-events-none opacity-15 group-hover:opacity-30 transition-opacity duration-1000 bg-[radial-gradient(circle_at_50%_0%,rgba(94,196,176,0.3),transparent_70%)]" />
+
+                {/* Header row */}
+                <div className="flex items-center justify-between mb-4 relative z-10">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse" />
+                    <span className="text-[11px] font-black tracking-[0.2em] uppercase opacity-85" style={{ color: theme.accentPrimary }}>
+                      Limited Trial
+                    </span>
+                  </div>
+                  <div
+                    className="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase"
+                    style={{ background: 'rgba(94,196,176,0.12)', color: theme.accentPrimary, border: '1px solid rgba(94,196,176,0.3)' }}
+                  >
+                    No Card Needed
+                  </div>
+                </div>
+
+                {/* Feature pills */}
+                <div className="grid grid-cols-2 gap-1.5 mb-4 relative z-10">
+                  {TRIAL_FEATURES.map((f, i) => (
+                    <motion.div
+                      key={f.label}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 + (i * 0.08) }}
+                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl"
+                      style={{
+                        background: mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(94,196,176,0.05)',
+                        border: `1px solid ${mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(94,196,176,0.1)'}`,
+                      }}
+                    >
+                      <span className="text-sm">{f.icon}</span>
+                      <span className="text-[11px] font-semibold uppercase tracking-wide opacity-80" style={{ color: theme.textSecondary }}>
+                        {f.label}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Token count */}
+                <div className="flex items-center justify-center gap-3 relative z-10">
+                  <span
+                    className="text-[32px] leading-none font-bold"
+                    style={{ color: theme.textPrimary }}
+                  >
+                    300
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-[12px] font-black uppercase tracking-[0.2em] opacity-90" style={{ color: theme.accentPrimary }}>
+                      Sacred Tokens ✨
+                    </span>
+                    <span className="text-[11px] uppercase tracking-wider opacity-55" style={{ color: theme.textSecondary }}>Full Access Unlocked</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </motion.div>
@@ -408,7 +398,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
         transition={{ delay: 1 }}
         className="mt-10 flex flex-col items-center gap-3 z-10"
       >
-        <p className="text-[9px] font-bold uppercase tracking-widest opacity-20 text-center" style={{ color: theme.textPrimary }}>
+        <p className="text-[11px] font-medium tracking-wide opacity-45 text-center" style={{ color: theme.textPrimary }}>
           No credit card · Cancel anytime · Your data is private
         </p>
       </motion.div>

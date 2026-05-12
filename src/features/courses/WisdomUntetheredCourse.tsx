@@ -39,9 +39,9 @@ const QUESTION_VIDEOS: Record<string, string | null> = {
   'question1': '3oAQijy87rs',
   'question2': 'rlRi9eCyZuU',
   'question3': '_tyTb6hpGW8',
-  'question4': null, 
-  'question5': null, 
-  'question6': null,
+  'question4': null,
+  'question5': null,
+  'question6': 'U641BQMa6lc', // Watch Guidance for Q6
   'question7': null,
   'question8': null,
   'question9': null,
@@ -50,6 +50,7 @@ const QUESTION_VIDEOS: Record<string, string | null> = {
 const QUESTION_MUSICAL_VIDEOS: Record<string, string | null> = {
   'question2': '-yxvAQs5Dgk',
   'question3': 'i8opqcWy71A',
+  'question5': 'MHNUWxjfVXo', // Musical Teaching for Q5
 };
 
 interface CourseProps {

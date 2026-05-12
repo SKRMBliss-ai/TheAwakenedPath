@@ -17,6 +17,20 @@ try {
   console.warn('[main] VoiceService.init failed; continuing without audio:', e);
 }
 
+// ─── Lightweight page-visit tracker (fire-and-forget) ────────────────────────
+const LOG_URL = 'https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity';
+function trackPageVisit(page: string, action: string) {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get('utm_email') || localStorage.getItem('journal_access_email') || 'anonymous';
+    fetch(LOG_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, action, page, details: `Visited ${page}`, source: document.referrer || 'direct' }),
+    }).catch(() => {});
+  } catch (_) { /* silent */ }
+}
+
 // Marketing landing route — rendered without auth/theme providers so it stays
 // fast for anonymous traffic and survives provider failures.
 const isAboutJournalRoute = (() => {
@@ -24,6 +38,14 @@ const isAboutJournalRoute = (() => {
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
   return p === '/aboutjournal' || p === '/aboutjournal/index.html' || p === '/aboutawakenedpath';
 })();
+
+// Track /awakenedpath (main app) visits — AboutJournal tracks its own visits internally
+if (!isAboutJournalRoute && typeof window !== 'undefined') {
+  const p = window.location.pathname.toLowerCase();
+  if (p === '/awakenedpath' || p === '/awakenedpath/' || p === '/') {
+    trackPageVisit('/awakenedpath', 'PAGE_VISIT_APP');
+  }
+}
 
 const root = createRoot(document.getElementById('root')!);
 

@@ -623,7 +623,7 @@ export const SituationalPractices: React.FC<{
     onUpgrade?: () => void;
 }> = ({ onBack, isAdmin, activeQuestionId, onQuestionSelect, isAccessValid, onUpgrade }) => {
     const { mode } = useTheme();
-    const { user } = useAuth();
+    const { user, deductTokens } = useAuth();
     const { awardEvent } = useAchievements();
     const [selectedSituation, setSelectedSituation] = useState<Situation | null>(null);
     const [currentStep, setCurrentStep] = useState(0);
@@ -1170,7 +1170,9 @@ export const SituationalPractices: React.FC<{
                                                         situation={sit}
                                                         isLocked={isLocked}
                                                         onUpgrade={onUpgrade}
-                                                        onClick={() => {
+                                                        onClick={async () => {
+                                                            const result = await deductTokens(5, 'situational_practice');
+                                                            if (!result.success && result.error === 'INSUFFICIENT_TOKENS') return;
                                                             setSelectedSituation(sit);
                                                             setCurrentStep(0);
                                                             setIsPaused(false);
@@ -1226,10 +1228,12 @@ export const SituationalPractices: React.FC<{
                                 exit={{ opacity: 0, scale: 0.98 }}
                                 transition={{ delay: i * 0.02 }}
                                 whileTap={{ scale: 0.99 }}
-                                onClick={() => {
+                                onClick={async () => {
                                     if (isLocked) {
                                         onUpgrade?.();
                                     } else {
+                                        const result = await deductTokens(5, 'situational_practice');
+                                        if (!result.success && result.error === 'INSUFFICIENT_TOKENS') return;
                                         setSelectedSituation(sit);
                                         setCurrentStep(0);
                                         setIsPaused(false);

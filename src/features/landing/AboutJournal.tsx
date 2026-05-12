@@ -20,6 +20,35 @@ import { db } from '../../firebase';
 
 const PREMIUM_URL = '/?plan=wisdom_untethered';
 
+// ─── Activity Tracker ─────────────────────────────────────────────────────────
+const LOG_URL = 'https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity';
+
+function getTrackedEmail(): string {
+    if (typeof window === 'undefined') return 'anonymous';
+    // Check URL param first (appended by emailClickTracker redirect)
+    const params = new URLSearchParams(window.location.search);
+    const utmEmail = params.get('utm_email');
+    if (utmEmail) return utmEmail.toLowerCase();
+    return localStorage.getItem('journal_access_email') || 'anonymous';
+}
+
+async function trackActivity(action: string, details = '', emailOverride?: string) {
+    try {
+        const email = emailOverride || getTrackedEmail();
+        fetch(LOG_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email,
+                action,
+                page: typeof window !== 'undefined' ? window.location.pathname : '/aboutawakenedpath',
+                details,
+                source: typeof document !== 'undefined' ? document.referrer || 'direct' : 'direct',
+            }),
+        }).catch(() => {}); // fire and forget — never block UI
+    } catch (_) { /* silent */ }
+}
+
 // Gold border utility for premium look
 const GOLD_BORDER = "border border-[#D4AF37]/30 dark:border-[#D4AF37]/40";
 
@@ -349,7 +378,7 @@ function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
 
                         {/* Play button — embeds iframe on click */}
                         <button
-                            onClick={() => setPlaying(true)}
+                            onClick={() => { setPlaying(true); trackActivity('VIDEO_PLAY', `Played walkthrough video (${YOUTUBE_ID}) on /aboutawakenedpath`); }}
                             aria-label="Play video"
                             className="absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer"
                         >
@@ -371,7 +400,7 @@ function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
                                 href={`https://youtu.be/${YOUTUBE_ID}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => { e.stopPropagation(); trackActivity('YOUTUBE_BADGE_CLICK', `Opened YouTube video ${YOUTUBE_ID} from /aboutawakenedpath`); }}
                                 className="pointer-events-auto flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10 hover:border-red-500/50 transition-colors"
                                 aria-label="Open on YouTube"
                             >
@@ -643,6 +672,7 @@ const JournalDownload = () => {
             setAccessEmail(trimmed);
             setHasAccess(true);
             setStatus('done');
+            trackActivity('EMAIL_FORM_SUBMIT', 'Submitted email for journal access on /aboutawakenedpath', trimmed);
         } catch (err) {
             console.error('Email capture failed:', err);
             setErrorMsg('Something went wrong. Please try again.');
@@ -660,6 +690,7 @@ const JournalDownload = () => {
                 mailingList: true,
                 createdAt: serverTimestamp(),
             }).catch(() => {});
+            trackActivity('JOURNAL_DOWNLOAD', 'Downloaded 30-day journal PDF from /aboutawakenedpath', emailToTrack);
         }
     };
 
@@ -855,7 +886,10 @@ const HEARTBEAT_KEYFRAMES = `
 export default function AboutJournal() {
     const { theme, toggle } = useLandingTheme();
 
-
+    // Track page visit once on mount
+    useEffect(() => {
+        trackActivity('PAGE_VISIT_ABOUT', 'Visited /aboutawakenedpath');
+    }, []);
 
     return (
         <div

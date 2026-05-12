@@ -39,6 +39,7 @@ const razorpayKeyId = defineSecret("RAZORPAY_KEY_ID");
 const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
 const emailUser = defineSecret("EMAIL_USER");
 const emailPass = defineSecret("EMAIL_PASS");
+const youtubeApiKey = defineSecret("YOUTUBE_API_KEY");
 // Razorpay webhook signing secret — was hard-coded as "YOUR_WEBHOOK_SECRET" before, breaking all webhook signature checks
 const razorpayWebhookSecret = defineSecret("RAZORPAY_WEBHOOK_SECRET");
 
@@ -223,6 +224,220 @@ const DAILY_SUBJECTS = [
     '👁️ The one who notices the feeling — was never the feeling.',        // Fri
     '✨ Every time you catch yourself — that is the whole practice.',      // Sat
 ];
+
+// Daily YouTube rotation (Sun->Sat) from Soulful Intelligence Studio.
+const DAILY_VIDEO_ROTATION = [
+    { id: "rLXnxzq_Dlk", title: "The Witness Practice", focus: "Return to the watcher behind thought." },
+    { id: "cGfM9JwzY8s", title: "Relax and Release", focus: "Soften resistance and let the moment move through." },
+    { id: "l0Hq6YQv4zA", title: "One Breath Presence", focus: "Use one conscious breath to reset attention." },
+    { id: "bqQ9fN7b2XM", title: "Silent Observation", focus: "Feel the stillness beneath mental movement." },
+    { id: "VgQx7S8kT3A", title: "Inner Clarity Sit", focus: "Sit as awareness while the mind settles itself." },
+    { id: "xA0m8uY2kNQ", title: "Witnessing Emotions", focus: "Observe feelings without becoming them." },
+    { id: "Qh7Jk2Pz6LM", title: "Celebrate Noticing", focus: "Treat each moment of awareness as progress." }
+];
+
+function getTodaysVideo() {
+    const day = new Date().getDay();
+    return DAILY_VIDEO_ROTATION[day];
+}
+
+function parseYouTubeDurationToSeconds(iso) {
+    if (!iso || typeof iso !== 'string') return 0;
+    const m = iso.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+    if (!m) return 0;
+    const h = parseInt(m[1] || '0', 10);
+    const min = parseInt(m[2] || '0', 10);
+    const sec = parseInt(m[3] || '0', 10);
+    return (h * 3600) + (min * 60) + sec;
+}
+
+function httpsGetJsonWithHeaders(url, headers) {
+    return new Promise((resolve, reject) => {
+        const https = require('https');
+        const req = https.get(url, { headers: headers || {} }, (res) => {
+            let raw = '';
+            res.on('data', (c) => { raw += c; });
+            res.on('end', () => {
+                if (res.statusCode < 200 || res.statusCode >= 300) {
+                    const snippet = (raw || '').slice(0, 700);
+                    const err = new Error(`HTTP ${res.statusCode} from ${url.split('?')[0]} :: ${snippet}`);
+                    err.responseBody = raw;
+                    return reject(err);
+                }
+                try {
+                    resolve(JSON.parse(raw));
+                } catch (e) {
+                    reject(new Error(`Invalid JSON response: ${e.message}`));
+                }
+            });
+        });
+        req.on('error', reject);
+        req.setTimeout(15000, () => req.destroy(new Error('Request timeout')));
+    });
+}
+
+async function getDailyYoutubeVideo(youtubeKey, firestoreDb) {
+    if (!youtubeKey) return getTodaysVideo();
+
+    const fallback = getTodaysVideo();
+    const handle = '@SoulfulIntelligenceStudio';
+    try {
+        // 0) Get video IDs sent in the last 3 days so we can avoid repeating them
+        const recentlySentIds = new Set();
+        if (firestoreDb) {
+            try {
+                const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+                const blastsSnap = await firestoreDb.collection('email_blasts')
+                    .where('sentAt', '>=', threeDaysAgo)
+                    .where('videoId', '!=', null)
+                    .get();
+                blastsSnap.docs.forEach(d => {
+                    const vid = d.data().videoId;
+                    if (vid) recentlySentIds.add(vid);
+                });
+                console.log('[YouTube] Recently sent video IDs (last 3 days):', [...recentlySentIds]);
+            } catch (e) {
+                console.log('[YouTube] Could not query recent blasts:', e.message);
+            }
+        }
+
+        // 1) Resolve handle -> uploads playlist
+        const channelsUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&forHandle=${encodeURIComponent(handle)}&key=${encodeURIComponent(youtubeKey)}`;
+        console.log('[YouTube] Resolving channel with handle:', handle);
+        const channelsData = await httpsGetJsonWithHeaders(channelsUrl, {
+            'User-Agent': 'AwakenedPath/1.0'
+        });
+        const channelItem = channelsData && channelsData.items && channelsData.items[0];
+        let uploadsPlaylistId = channelItem && channelItem.contentDetails && channelItem.contentDetails.relatedPlaylists && channelItem.contentDetails.relatedPlaylists.uploads;
+
+        // Fallback: resolve channel via search endpoint if forHandle fails/returns none.
+        if (!uploadsPlaylistId) {
+            console.log('[YouTube] Handle lookup returned no uploads playlist, trying search fallback.');
+            const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&maxResults=1&q=${encodeURIComponent('Soulful Intelligence Studio')}&key=${encodeURIComponent(youtubeKey)}`;
+            const searchData = await httpsGetJsonWithHeaders(searchUrl, {
+                'User-Agent': 'AwakenedPath/1.0'
+            });
+            const channelId = searchData && searchData.items && searchData.items[0] && searchData.items[0].snippet && searchData.items[0].snippet.channelId;
+            if (!channelId) {
+                console.log('[YouTube] Search fallback failed to resolve channel id.');
+                return fallback;
+            }
+            const channelsByIdUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${encodeURIComponent(channelId)}&key=${encodeURIComponent(youtubeKey)}`;
+            const channelsById = await httpsGetJsonWithHeaders(channelsByIdUrl, {
+                'User-Agent': 'AwakenedPath/1.0'
+            });
+            const byIdItem = channelsById && channelsById.items && channelsById.items[0];
+            uploadsPlaylistId = byIdItem && byIdItem.contentDetails && byIdItem.contentDetails.relatedPlaylists && byIdItem.contentDetails.relatedPlaylists.uploads;
+            if (!uploadsPlaylistId) {
+                console.log('[YouTube] Could not resolve uploads playlist from channel id fallback.');
+                return fallback;
+            }
+        }
+        console.log('[YouTube] uploadsPlaylistId:', uploadsPlaylistId);
+
+        // 2) Read latest uploads from channel uploads playlist (fetch more to have fallbacks)
+        const playlistItemsUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${encodeURIComponent(uploadsPlaylistId)}&maxResults=25&key=${encodeURIComponent(youtubeKey)}`;
+        const playlistData = await httpsGetJsonWithHeaders(playlistItemsUrl, {
+            'User-Agent': 'AwakenedPath/1.0'
+        });
+
+        const playlistVideos = ((playlistData && playlistData.items) || [])
+            .map((item) => {
+                const snippet = item && item.snippet;
+                const resource = snippet && snippet.resourceId;
+                const videoId = resource && resource.videoId;
+                const title = (snippet && snippet.title) || '';
+                const thumbs = snippet && snippet.thumbnails;
+                const thumb =
+                    (thumbs && thumbs.maxres && thumbs.maxres.url) ||
+                    (thumbs && thumbs.high && thumbs.high.url) ||
+                    (thumbs && thumbs.medium && thumbs.medium.url) ||
+                    (thumbs && thumbs.default && thumbs.default.url) ||
+                    null;
+                return videoId ? { id: videoId, title, thumb } : null;
+            })
+            .filter(Boolean);
+
+        if (!playlistVideos.length) return fallback;
+
+        // 3) Validate: fetch status + snippet + contentDetails + statistics for all candidates
+        const ids = playlistVideos.map(v => v.id).slice(0, 25);
+        const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=status,snippet,contentDetails,statistics&id=${encodeURIComponent(ids.join(','))}&key=${encodeURIComponent(youtubeKey)}`;
+        const videosData = await httpsGetJsonWithHeaders(videosUrl, {
+            'User-Agent': 'AwakenedPath/1.0'
+        });
+
+        // Build a stats map keyed by id for quick lookup
+        const statsMap = {};
+        ((videosData && videosData.items) || []).forEach((v) => {
+            const isPublic = v.status && v.status.privacyStatus === 'public';
+            const broadcastStatus = (v.snippet && v.snippet.liveBroadcastContent) || 'none';
+            const isLiveOrScheduled = broadcastStatus === 'live' || broadcastStatus === 'upcoming';
+            const title = ((v.snippet && v.snippet.title) || '').toLowerCase();
+            const durationSec = parseYouTubeDurationToSeconds(v.contentDetails && v.contentDetails.duration);
+            const isShortByTitle = title.includes('#shorts') || title.includes(' shorts');
+            const isShortByLength = durationSec > 0 && durationSec <= 75;
+            if (isLiveOrScheduled) {
+                console.log(`[YouTube] Skipping ${broadcastStatus} video: ${v.id} - ${v.snippet && v.snippet.title}`);
+            }
+            if (isPublic && !isLiveOrScheduled && !isShortByTitle && !isShortByLength) {
+                statsMap[v.id] = {
+                    viewCount: parseInt((v.statistics && v.statistics.viewCount) || '0', 10),
+                    likeCount: parseInt((v.statistics && v.statistics.likeCount) || '0', 10),
+                };
+            }
+        });
+
+        // Filter playlist to only valid candidates (public, not live/scheduled, not shorts)
+        const validVideos = playlistVideos.filter(v => statsMap[v.id]);
+        if (!validVideos.length) {
+            console.log('[YouTube] No valid public videos found; using fallback.');
+            return fallback;
+        }
+
+        // 4) Smart selection:
+        //    a) Latest video not sent in last 3 days  → use it
+        //    b) If latest was sent → best by views not sent in last 3 days
+        //    c) If all top by views also sent → next best by views (even if sent before)
+        const latestVideo = validVideos[0]; // playlist is newest-first
+
+        let pick;
+        if (!recentlySentIds.has(latestVideo.id)) {
+            // Latest is fresh — use it
+            pick = latestVideo;
+            console.log('[YouTube] Using latest video (not recently sent):', pick.id, pick.title);
+        } else {
+            console.log('[YouTube] Latest video was recently sent:', latestVideo.id, '— looking for best performer.');
+            // Sort all valid videos by viewCount descending
+            const byViews = [...validVideos].sort((a, b) =>
+                (statsMap[b.id].viewCount || 0) - (statsMap[a.id].viewCount || 0)
+            );
+            // Find best not sent recently
+            pick = byViews.find(v => !recentlySentIds.has(v.id));
+            if (pick) {
+                console.log(`[YouTube] Using best performer not recently sent: ${pick.id} (${statsMap[pick.id].viewCount} views) - ${pick.title}`);
+            } else {
+                // All top performers were also sent — just pick the highest-viewed regardless
+                pick = byViews[0];
+                console.log(`[YouTube] All candidates recently sent; using top by views: ${pick.id} (${statsMap[pick.id].viewCount} views) - ${pick.title}`);
+            }
+        }
+
+        return {
+            id: pick.id,
+            title: pick.title || fallback.title,
+            focus: fallback.focus,
+            thumb: pick.thumb || `https://img.youtube.com/vi/${pick.id}/hqdefault.jpg`,
+            viewCount: statsMap[pick.id] ? statsMap[pick.id].viewCount : 0,
+        };
+    } catch (e) {
+        console.error('YouTube API fetch failed, using fallback rotation:', e.message);
+        if (e && e.responseBody) {
+            console.error('[YouTube] API error response body:', String(e.responseBody).slice(0, 900));
+        }
+        return fallback;
+    }
+}
 
 /**
  * Creates a Razorpay Order
@@ -802,7 +1017,7 @@ exports.testEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, a
  * Use this to QA the email design before the 8 PM scheduled send.
  */
 exports.previewReminderEmail = onRequest({
-    secrets: [emailUser, emailPass, geminiKey],
+    secrets: [emailUser, emailPass, geminiKey, youtubeApiKey],
     cors: true
 }, async (req, res) => {
     const { to } = req.query;
@@ -812,6 +1027,9 @@ exports.previewReminderEmail = onRequest({
         const daily = await getDailyEmailContent(geminiKey.value());
         const todayPractice = getTodaysPractice();
         const todaySubject = DAILY_SUBJECTS[new Date().getDay()];
+        const todayVideo = await getDailyYoutubeVideo(youtubeApiKey.value(), db);
+        const videoUrl = `https://www.youtube.com/watch?v=${todayVideo.id}`;
+        const videoThumb = todayVideo.thumb || `https://img.youtube.com/vi/${todayVideo.id}/hqdefault.jpg`;
         const transporter = getTransporter();
 
         const previewHtml = `
@@ -820,45 +1038,71 @@ exports.previewReminderEmail = onRequest({
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        @media (prefers-color-scheme: dark) {
-            .body { background-color: #050406 !important; }
-        }
-    </style>
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
 </head>
-<body style="margin:0;padding:0;background-color:#050406; font-family: 'Georgia', serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050406;">
+<body style="margin:0;padding:0;background-color:#F6F2EA; font-family: 'Georgia', serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F6F2EA;">
         <tr>
             <td align="center" style="padding:40px 16px;">
-                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#0C0910;border:1px solid rgba(230, 197, 125, 0.2); border-radius: 12px; overflow: hidden;">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#FFFCF6;border:1px solid rgba(184, 151, 58, 0.35); border-radius: 12px; overflow: hidden;">
                     <!-- Glow Line -->
                     <tr><td style="background: linear-gradient(90deg, transparent, #B8973A, transparent); height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
 
                     <tr>
                         <td style="padding:48px 48px 24px;text-align:center;">
                             <p style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#B8973A;margin:0 0 16px; opacity: 0.8;">Sacred Reminder</p>
-                            <h1 style="font-size:28px;font-weight:300;font-style:italic;color:#FDFAF4;margin:0;line-height:1.3; letter-spacing: 1px;">${daily.headline}</h1>
+                            <h1 style="font-size:28px;font-weight:300;font-style:italic;color:#1E1912;margin:0;line-height:1.3; letter-spacing: 1px;">${daily.headline}</h1>
                             <div style="width:40px;height:1px;background:rgba(184, 151, 58, 0.3);margin:24px auto;"></div>
                         </td>
                     </tr>
 
                     <tr>
                         <td style="padding:0 48px 32px;">
-                            <p style="font-size:16px;line-height:1.8;color:rgba(253, 250, 244, 0.7);margin:0 0 24px; text-align: center; font-style: italic;">
+                            <p style="font-size:16px;line-height:1.8;color:rgba(30, 25, 18, 0.72);margin:0 0 24px; text-align: center; font-style: italic;">
                                 &ldquo;${daily.quote}&rdquo;
                             </p>
-                            <p style="font-size:15px;line-height:1.8;color:#FDFAF4;margin:0; opacity: 0.9;">${daily.explanation}</p>
+                            <p style="font-size:15px;line-height:1.8;color:#2E261C;margin:0; opacity: 0.95;">${daily.explanation}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Daily YouTube Video -->
+                    <tr>
+                        <td style="padding:0 48px 24px;">
+                            <div style="padding:24px; background: rgba(184, 151, 58, 0.04); border: 1px solid rgba(184, 151, 58, 0.25); border-radius: 12px;">
+                                <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 14px;font-weight:700;">Today's Video</p>
+                                <p style="font-size:22px;font-weight:600;color:#1E1912;margin:0 0 14px;line-height:1.35;">${todayVideo.title}</p>
+                                <!-- Thumbnail with play button overlay -->
+                                <div style="position:relative;line-height:0;border-radius:10px;overflow:hidden;">
+                                    <a href="${videoUrl}" target="_blank" rel="noopener noreferrer" style="display:block;line-height:0;">
+                                        <img src="${videoThumb}" alt="Today's Soulful Intelligence Studio video" style="display:block;width:100%;max-width:100%;border-radius:10px;border:1px solid rgba(184,151,58,0.25);" />
+                                    </a>
+                                    <a href="${videoUrl}" target="_blank" rel="noopener noreferrer"
+                                       style="position:absolute;top:50%;left:50%;margin-top:-40px;margin-left:-40px;
+                                              width:80px;height:80px;background:rgba(0,0,0,0.62);
+                                              border-radius:50%;border:3px solid rgba(255,255,255,0.92);
+                                              display:block;text-align:center;line-height:80px;text-decoration:none;">
+                                        <span style="display:inline-block;width:0;height:0;
+                                                     border-top:15px solid transparent;
+                                                     border-bottom:15px solid transparent;
+                                                     border-left:26px solid #ffffff;
+                                                     margin-top:25px;margin-left:6px;vertical-align:top;"></span>
+                                    </a>
+                                </div>
+                                <p style="font-size:15px;line-height:1.7;color:#2E261C;margin:14px 0 0;">Watch on YouTube: <a href="${videoUrl}" style="color:#8B6A1A;text-decoration:none;font-weight:600;">Soulful Intelligence Studio ↗</a></p>
+                            </div>
                         </td>
                     </tr>
 
                     <!-- Today's Practice Card -->
                     <tr>
                         <td style="padding:0 48px 24px;">
-                            <div style="padding:28px; background: rgba(184, 151, 58, 0.06); border: 1px solid rgba(184, 151, 58, 0.25); border-radius: 12px;">
-                                <p style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 12px; opacity:0.9;">Tonight's Practice</p>
-                                <p style="font-size:20px;font-weight:300;font-style:italic;color:#FDFAF4;margin:0 0 8px; line-height:1.3;">${todayPractice.name}</p>
-                                <p style="font-size:13px;line-height:1.7;color:rgba(253,250,244,0.6);margin:0 0 16px;">${todayPractice.tagline}</p>
-                                <span style="display:inline-block;font-size:10px;letter-spacing:1px;color:#B8973A;background:rgba(184,151,58,0.1);padding:5px 12px;border-radius:20px;border:1px solid rgba(184,151,58,0.2);">${todayPractice.duration}</span>
+                            <div style="padding:32px; background: rgba(184, 151, 58, 0.06); border: 2px solid rgba(184, 151, 58, 0.35); border-radius: 12px;">
+                                <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;font-weight:700;">Practice from Today's Video</p>
+                                <p style="font-size:26px;font-weight:400;font-style:italic;color:#1E1912;margin:0 0 12px;line-height:1.3;">${todayPractice.name}</p>
+                                <p style="font-size:17px;line-height:1.75;color:#2E261C;margin:0 0 14px;font-weight:400;">${todayPractice.tagline}</p>
+                                <p style="font-size:16px;line-height:1.7;color:#3A2E1E;margin:0 0 20px;"><strong style="color:#1E1912;">Video focus:</strong> ${todayVideo.focus}</p>
+                                <span style="display:inline-block;font-size:13px;letter-spacing:1px;color:#B8973A;background:rgba(184,151,58,0.12);padding:8px 18px;border-radius:20px;border:1px solid rgba(184,151,58,0.3);font-weight:600;">${todayPractice.duration}</span>
                             </div>
                         </td>
                     </tr>
@@ -866,25 +1110,25 @@ exports.previewReminderEmail = onRequest({
                     <!-- Curiosity Gap -->
                     <tr>
                         <td style="padding:0 48px 32px;text-align:center;">
-                            <p style="font-size:14px;line-height:1.9;color:rgba(253,250,244,0.45);font-style:italic;margin:0;">${todayPractice.teaser}</p>
+                            <p style="font-size:17px;line-height:1.9;color:rgba(46,38,28,0.85);font-style:italic;margin:0;font-weight:400;">${todayPractice.teaser}</p>
                         </td>
                     </tr>
 
                     <!-- CTA — deep-links directly into the practice -->
                     <tr>
                         <td style="padding:0 48px 56px;text-align:center;">
-                            <a href="https://www.skrmblissai.in/aboutawakenedpath" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
+                            <a href="https://www.skrmblissai.in/awakenedpath" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
                         </td>
                     </tr>
 
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color:rgba(255,255,255,0.02);padding:32px 48px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
-                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.6);margin:0 0 16px;">The Awakened Journal Studio &nbsp;&middot;&nbsp; Preview Only</p>
-                            <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:0;line-height:1.8;">
+                        <td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
+                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.8);margin:0 0 16px;">The Awakened Journal Studio &nbsp;&middot;&nbsp; Preview Only</p>
+                            <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:0;line-height:1.8;">
                                 <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a>
                             </p>
-                            <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:8px 0 0;line-height:1.8;">
+                            <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:8px 0 0;line-height:1.8;">
                                 By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp; 
                                 <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" style="color:#B8973A;text-decoration:none;">
                                     <img src="https://img.icons8.com/material-rounded/24/B8973A/youtube-play.png" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;" alt="YouTube" />
@@ -986,12 +1230,12 @@ async function sendWelcomeEmail(toEmail, planName) {
 }
 
 exports.forceTriggerEmail = onRequest({
-    secrets: [emailUser, emailPass, geminiKey],
+    secrets: [emailUser, emailPass, geminiKey, youtubeApiKey],
     timeoutSeconds: 300
 }, async (req, res) => {
     try {
         console.log(`Manually triggering daily reminders...`);
-        await runReminderLogic(geminiKey.value());
+        await runReminderLogic(geminiKey.value(), youtubeApiKey.value(), true);
         res.send("Daily reminders triggered successfully.");
     } catch (e) {
         console.error(`FORCETRIGGER_ERROR:`, e);
@@ -1004,9 +1248,9 @@ exports.forceTriggerEmail = onRequest({
  */
 exports.sendDailyReminder = onSchedule({
     schedule: "0 * * * *", // Runs every hour
-    secrets: [emailUser, emailPass, geminiKey]
+    secrets: [emailUser, emailPass, geminiKey, youtubeApiKey]
 }, async (event) => {
-    return runReminderLogic(geminiKey.value());
+    return runReminderLogic(geminiKey.value(), youtubeApiKey.value());
 });
 
 async function getDailyEmailContent(apiKey) {
@@ -1039,7 +1283,7 @@ async function getDailyEmailContent(apiKey) {
     }
 }
 
-async function runReminderLogic(apiKey) {
+async function runReminderLogic(apiKey, youtubeKey, force = false) {
     const today = new Date().toISOString().split('T')[0];
     const usersSnap = await db.collection("users").get();
     const transporter = getTransporter();
@@ -1047,6 +1291,9 @@ async function runReminderLogic(apiKey) {
     const daily = await getDailyEmailContent(apiKey);
     const todayPractice = getTodaysPractice();
     const todaySubject = DAILY_SUBJECTS[new Date().getDay()];
+    const todayVideo = await getDailyYoutubeVideo(youtubeKey, db);
+    const videoUrl = `https://www.youtube.com/watch?v=${todayVideo.id}`;
+    const videoThumb = todayVideo.thumb || `https://img.youtube.com/vi/${todayVideo.id}/hqdefault.jpg`;
 
     const emailTemplate = `
 <!DOCTYPE html>
@@ -1054,47 +1301,72 @@ async function runReminderLogic(apiKey) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        @media (prefers-color-scheme: dark) {
-            .body { background-color: #050406 !important; }
-            .card { background-color: #0C0910 !important; border-color: rgba(230, 197, 125, 0.2) !important; }
-        }
-    </style>
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
 </head>
-<body style="margin:0;padding:0;background-color:#050406; font-family: 'Georgia', serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050406;">
+<body style="margin:0;padding:0;background-color:#F6F2EA; font-family: 'Georgia', serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F6F2EA;">
         <tr>
             <td align="center" style="padding:40px 16px;">
-                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#0C0910;border:1px solid rgba(230, 197, 125, 0.2); border-radius: 12px; overflow: hidden;">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#FFFCF6;border:1px solid rgba(184, 151, 58, 0.35); border-radius: 12px; overflow: hidden;">
                     <!-- Glow Line -->
                     <tr><td style="background: linear-gradient(90deg, transparent, #B8973A, transparent); height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
                     
                     <tr>
                         <td style="padding:48px 48px 24px;text-align:center;">
                             <p style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#B8973A;margin:0 0 16px; opacity: 0.8;">Sacred Reminder</p>
-                            <h1 style="font-size:28px;font-weight:300;font-style:italic;color:#FDFAF4;margin:0;line-height:1.3; letter-spacing: 1px;">${daily.headline}</h1>
+                            <h1 style="font-size:28px;font-weight:300;font-style:italic;color:#1E1912;margin:0;line-height:1.3; letter-spacing: 1px;">${daily.headline}</h1>
                             <div style="width:40px;height:1px;background:rgba(184, 151, 58, 0.3);margin:24px auto;"></div>
                         </td>
                     </tr>
                     
                     <tr>
                         <td style="padding:0 48px 32px;">
-                            <p style="font-size:16px;line-height:1.8;color:rgba(253, 250, 244, 0.7);margin:0 0 24px; text-align: center; font-style: italic;">
+                            <p style="font-size:16px;line-height:1.8;color:rgba(30, 25, 18, 0.72);margin:0 0 24px; text-align: center; font-style: italic;">
                                 "${daily.quote}"
                             </p>
-                            
-                            <p style="font-size:15px;line-height:1.8;color:#FDFAF4;margin:0; opacity: 0.9;">${daily.explanation}</p>
+                            <p style="font-size:15px;line-height:1.8;color:#2E261C;margin:0; opacity: 0.95;">${daily.explanation}</p>
                         </td>
                     </tr>
-                    
+
+                    <!-- Daily YouTube Video -->
+                    <tr>
+                        <td style="padding:0 48px 24px;">
+                            <div style="padding:24px; background: rgba(184, 151, 58, 0.04); border: 1px solid rgba(184, 151, 58, 0.25); border-radius: 12px;">
+                                <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 14px;font-weight:700;">Today's Video</p>
+                                <p style="font-size:22px;font-weight:600;color:#1E1912;margin:0 0 14px;line-height:1.35;">${todayVideo.title}</p>
+                                <!-- Thumbnail with play button overlay -->
+                                <div style="position:relative;line-height:0;border-radius:10px;overflow:hidden;">
+                                    <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:block;line-height:0;">
+                                        <img src="${videoThumb}" alt="Today's Soulful Intelligence Studio video" style="display:block;width:100%;max-width:100%;border-radius:10px;border:1px solid rgba(184,151,58,0.25);" />
+                                    </a>
+                                    <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent(videoUrl)}"
+                                       target="_blank" rel="noopener noreferrer"
+                                       style="position:absolute;top:50%;left:50%;margin-top:-40px;margin-left:-40px;
+                                              width:80px;height:80px;background:rgba(0,0,0,0.62);
+                                              border-radius:50%;border:3px solid rgba(255,255,255,0.92);
+                                              display:block;text-align:center;line-height:80px;text-decoration:none;">
+                                        <span style="display:inline-block;width:0;height:0;
+                                                     border-top:15px solid transparent;
+                                                     border-bottom:15px solid transparent;
+                                                     border-left:26px solid #ffffff;
+                                                     margin-top:25px;margin-left:6px;vertical-align:top;"></span>
+                                    </a>
+                                </div>
+                                <p style="font-size:15px;line-height:1.7;color:#2E261C;margin:14px 0 0;">Watch on YouTube: <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent(videoUrl)}" style="color:#8B6A1A;text-decoration:none;font-weight:600;">Soulful Intelligence Studio ↗</a></p>
+                            </div>
+                        </td>
+                    </tr>
+
                     <!-- Today's Practice Card -->
                     <tr>
                         <td style="padding:0 48px 24px;">
-                            <div style="padding:28px; background: rgba(184, 151, 58, 0.06); border: 1px solid rgba(184, 151, 58, 0.25); border-radius: 12px;">
-                                <p style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 12px; opacity:0.9;">Tonight's Practice</p>
-                                <p style="font-size:20px;font-weight:300;font-style:italic;color:#FDFAF4;margin:0 0 8px; line-height:1.3;">${todayPractice.name}</p>
-                                <p style="font-size:13px;line-height:1.7;color:rgba(253,250,244,0.6);margin:0 0 16px;">${todayPractice.tagline}</p>
-                                <span style="display:inline-block;font-size:10px;letter-spacing:1px;color:#B8973A;background:rgba(184,151,58,0.1);padding:5px 12px;border-radius:20px;border:1px solid rgba(184,151,58,0.2);">${todayPractice.duration}</span>
+                            <div style="padding:32px; background: rgba(184, 151, 58, 0.06); border: 2px solid rgba(184, 151, 58, 0.35); border-radius: 12px;">
+                                <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;font-weight:700;">Practice from Today's Video</p>
+                                <p style="font-size:26px;font-weight:400;font-style:italic;color:#1E1912;margin:0 0 12px;line-height:1.3;">${todayPractice.name}</p>
+                                <p style="font-size:17px;line-height:1.75;color:#2E261C;margin:0 0 14px;font-weight:400;">${todayPractice.tagline}</p>
+                                <p style="font-size:16px;line-height:1.7;color:#3A2E1E;margin:0 0 20px;"><strong style="color:#1E1912;">Video focus:</strong> ${todayVideo.focus}</p>
+                                <span style="display:inline-block;font-size:13px;letter-spacing:1px;color:#B8973A;background:rgba(184,151,58,0.12);padding:8px 18px;border-radius:20px;border:1px solid rgba(184,151,58,0.3);font-weight:600;">${todayPractice.duration}</span>
                             </div>
                         </td>
                     </tr>
@@ -1102,26 +1374,26 @@ async function runReminderLogic(apiKey) {
                     <!-- Curiosity Gap -->
                     <tr>
                         <td style="padding:0 48px 32px;text-align:center;">
-                            <p style="font-size:14px;line-height:1.9;color:rgba(253,250,244,0.45);font-style:italic;margin:0;">${todayPractice.teaser}</p>
+                            <p style="font-size:17px;line-height:1.9;color:rgba(46,38,28,0.85);font-style:italic;margin:0;font-weight:400;">${todayPractice.teaser}</p>
                         </td>
                     </tr>
 
                     <!-- CTA — named after today's practice, deep-links directly into it -->
                     <tr>
                         <td style="padding:0 48px 56px;text-align:center;">
-                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/aboutawakenedpath')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
+                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color:rgba(255,255,255,0.02);padding:32px 48px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
-                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.6);margin:0 0 16px;">Awakened Path Studio</p>
-                            <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:0;line-height:1.8;">
+                        <td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
+                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.8);margin:0 0 16px;">Awakened Path Studio</p>
+                            <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:0;line-height:1.8;">
                                 <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp; 
-                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=DAILY_REMINDER" style="color:rgba(253, 250, 244, 0.4);text-decoration:none;">Unsubscribe from the Path</a>
+                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=DAILY_REMINDER" style="color:rgba(30, 25, 18, 0.6);text-decoration:none;">Unsubscribe from the Path</a>
                             </p>
-                            <p style="font-size:10px;color:rgba(253, 250, 244, 0.4);margin:8px 0 0;line-height:1.8;">
+                            <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:8px 0 0;line-height:1.8;">
                                 By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp; 
                                 <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" style="color:#B8973A;text-decoration:none;">
                                     <img src="https://img.icons8.com/material-rounded/24/B8973A/youtube-play.png" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;" alt="YouTube" />
@@ -1177,7 +1449,7 @@ async function runReminderLogic(apiKey) {
             userHour = new Date().getHours();
         }
 
-        if (userHour !== 20) {
+        if (!force && userHour !== 20) {
             continue;
         }
 
@@ -1207,7 +1479,9 @@ async function runReminderLogic(apiKey) {
                     chapterSubtitle: daily.headline,
                     sentAt: admin.firestore.FieldValue.serverTimestamp(),
                     totalRecipients: 0, // Will update later
-                    adminEmail: "SYSTEM_AUTOMATED"
+                    adminEmail: "SYSTEM_AUTOMATED",
+                    videoId: todayVideo.id || null,
+                    videoTitle: todayVideo.title || null,
                 });
                 blastId = blastRef.id;
             }
@@ -1220,24 +1494,28 @@ async function runReminderLogic(apiKey) {
                 .replace(/{{USER_EMAIL_TRACK}}/g, encodeURIComponent(userData.email))
                 .replace(/DAILY_REMINDER/g, blastId);
 
-            await transporter.sendMail({
-                from: '"The Awakened Path" <connect@skrmblissai.in>',
-                to: userData.email,
-                subject: todaySubject,
-                html: personalizedHtml,
-                headers: {
-                    'List-Unsubscribe': `<https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userDoc.id}>`
-                }
-            });
-
-            // Update last sent timestamp
-            await userDoc.ref.update({
-                lastReminderSentAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-
-            sentCount++;
-            recipientEmails.push(userData.email);
-            console.log(`Success: Reminder sent to ${userData.email}`);
+            try {
+                await transporter.sendMail({
+                    from: '"The Awakened Path" <connect@skrmblissai.in>',
+                    to: userData.email,
+                    subject: todaySubject,
+                    html: personalizedHtml,
+                    headers: {
+                        'List-Unsubscribe': `<https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userDoc.id}>`
+                    }
+                });
+                console.log(`Success: Reminder sent to ${userData.email}`);
+                sentCount++;
+                recipientEmails.push(userData.email);
+                
+                // Update last sent timestamp
+                await userDoc.ref.update({
+                    lastReminderSentAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (mailErr) {
+                console.error(`Failed to send reminder to ${userData.email}:`, mailErr.message);
+                // Continue to next user
+            }
         }
     }
 
@@ -1414,20 +1692,29 @@ exports.emailClickTracker = onRequest({ cors: true }, async (req, res) => {
     const { blastId, email, url } = req.query;
     const target = url || 'https://www.skrmblissai.in/awakenedpath';
 
+    // Detect link type for richer logging
+    const isYouTube = typeof target === 'string' && (target.includes('youtube.com') || target.includes('youtu.be'));
+    const activityType = isYouTube ? 'EMAIL_YOUTUBE_CLICK' : 'EMAIL_CTA_CLICK';
+    const clickDetails = isYouTube
+        ? `Clicked YouTube video link from email${blastId ? ` (blast ${blastId})` : ''}`
+        : `Clicked CTA button in email${blastId ? ` (blast ${blastId})` : ''} → ${target}`;
+
     if (blastId && email) {
         try {
-            // Log to activity_logs for visibility in Engagement Report
             await db.collection("activity_logs").add({
                 userEmail: email,
-                activityType: 'EMAIL_CLICK',
-                details: `Clicked Button in Email (${blastId})`,
-                timestamp: admin.firestore.FieldValue.serverTimestamp(),
-                location: 'Email'
+                activityType,
+                details: clickDetails,
+                location: 'Email',
+                destination: target,
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
 
             await db.collection("email_clicks").add({
                 blastId,
                 userEmail: email,
+                isYouTube,
+                destination: target,
                 timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
         } catch (e) {
@@ -1435,7 +1722,69 @@ exports.emailClickTracker = onRequest({ cors: true }, async (req, res) => {
         }
     }
 
-    res.redirect(target);
+    // Append utm_email to destination so the landing page can identify the user
+    let redirectTarget = target;
+    if (email && typeof target === 'string' && !isYouTube) {
+        const separator = target.includes('?') ? '&' : '?';
+        redirectTarget = `${target}${separator}utm_email=${encodeURIComponent(email)}`;
+    }
+
+    res.redirect(redirectTarget);
+});
+
+/**
+ * Generic web activity tracker — called from frontend pages (AboutJournal, main app)
+ * to log page visits, video plays, downloads, and form submissions.
+ */
+exports.logWebActivity = onRequest({ cors: true }, async (req, res) => {
+    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+    const body = req.method === 'POST' ? req.body : req.query;
+    const { email, action, page, details, source } = body || {};
+
+    if (!action) return res.status(400).json({ error: 'Missing action' });
+
+    const userEmail = (email || 'anonymous').toLowerCase().trim();
+
+    try {
+        await db.collection("activity_logs").add({
+            userEmail,
+            activityType: action,
+            details: details || '',
+            location: page || 'web',
+            source: source || 'direct',
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Notify admin for high-value events (email submit, download)
+        const notifyEvents = ['EMAIL_FORM_SUBMIT', 'JOURNAL_DOWNLOAD'];
+        if (notifyEvents.includes(action) && userEmail !== 'anonymous') {
+            try {
+                const transporter = getTransporter();
+                const actionLabel = action === 'EMAIL_FORM_SUBMIT' ? 'submitted their email on' : 'downloaded the journal from';
+                await transporter.sendMail({
+                    from: '"Awakened Presence" <connect@skrmblissai.in>',
+                    to: 'shrutikhungar@gmail.com',
+                    subject: `✨ Presence: ${userEmail} ${actionLabel} ${page || 'the website'}`,
+                    html: `<div style="font-family:Georgia,serif;padding:32px;background:#0C0910;color:#FDFAF4;border-radius:12px;max-width:480px;margin:auto;">
+                        <p style="color:#B8973A;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 16px;">Live Notification</p>
+                        <h2 style="font-weight:300;font-style:italic;margin:0 0 20px;font-size:22px;">A Witness has Arrived</h2>
+                        <p style="margin:6px 0;"><strong>User:</strong> ${userEmail}</p>
+                        <p style="margin:6px 0;"><strong>Action:</strong> ${action.replace(/_/g, ' ')}</p>
+                        <p style="margin:6px 0;"><strong>Page:</strong> ${page || 'unknown'}</p>
+                        <p style="margin:6px 0;"><strong>Details:</strong> ${details || '-'}</p>
+                        <p style="margin:16px 0 0;font-size:12px;color:#B8973A;">${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
+                    </div>`
+                });
+            } catch (mailErr) {
+                console.error('Admin notify failed:', mailErr.message);
+            }
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error('logWebActivity failed:', e);
+        res.status(500).json({ error: 'Failed to log activity' });
+    }
 });
 
 /**
