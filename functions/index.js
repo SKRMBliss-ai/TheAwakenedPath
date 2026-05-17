@@ -1587,7 +1587,7 @@ Mind Gym · connect@skrmblissai.in
 To stop receiving these emails: https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userDoc.id}
 `;
                 await transporter.sendMail({
-                    from: '"Shruti · Mind Gym" <connect@skrmblissai.in>',
+                    from: '"Mind Gym" <connect@skrmblissai.in>',
                     replyTo: 'connect@skrmblissai.in',
                     to: userData.email,
                     subject: todaySubject,
