@@ -1114,10 +1114,21 @@ exports.previewReminderEmail = onRequest({
                         </td>
                     </tr>
 
-                    <!-- CTA — deep-links directly into the practice -->
+                    <!-- Primary CTA -->
                     <tr>
-                        <td style="padding:0 48px 56px;text-align:center;">
-                            <a href="https://www.skrmblissai.in/awakenedpath" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
+                        <td style="padding:0 48px 20px;text-align:center;">
+                            <a href="https://www.skrmblissai.in/awakenedpath" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Begin ${todayPractice.name} &rarr;</a>
+                        </td>
+                    </tr>
+
+                    <!-- Secondary CTA — Free Journal Download -->
+                    <tr>
+                        <td style="padding:0 48px 48px;text-align:center;">
+                            <div style="border:1px solid rgba(184,151,58,0.35);border-radius:12px;padding:20px 28px;background:rgba(184,151,58,0.04);display:inline-block;">
+                                <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 8px;font-weight:700;">🎁 Free Resource</p>
+                                <p style="font-size:16px;color:#1E1912;margin:0 0 14px;font-weight:500;line-height:1.4;">Download your free<br><strong>30-Day Now Practice Journal</strong></p>
+                                <a href="https://www.skrmblissai.in/aboutawakenedpath" style="display:inline-block;padding:12px 32px;background:transparent;color:#B8973A;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border:2px solid #B8973A;border-radius:4px;">Get Free Journal &darr;</a>
+                            </div>
                         </td>
                     </tr>
 
@@ -1311,7 +1322,14 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                 <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#FFFCF6;border:1px solid rgba(184, 151, 58, 0.35); border-radius: 12px; overflow: hidden;">
                     <!-- Glow Line -->
                     <tr><td style="background: linear-gradient(90deg, transparent, #B8973A, transparent); height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
-                    
+
+                    <!-- Gmail Primary nudge — helps avoid Promotions tab -->
+                    <tr>
+                        <td style="padding:10px 48px 0;text-align:center;">
+                            <p style="font-size:11px;color:rgba(30,25,18,0.45);margin:0;line-height:1.6;">If this arrived in Promotions, move it to <strong>Primary</strong> so you never miss your daily practice.</p>
+                        </td>
+                    </tr>
+
                     <tr>
                         <td style="padding:48px 48px 24px;text-align:center;">
                             <p style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#B8973A;margin:0 0 16px; opacity: 0.8;">Sacred Reminder</p>
@@ -1378,13 +1396,24 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                         </td>
                     </tr>
 
-                    <!-- CTA — named after today's practice, deep-links directly into it -->
+                    <!-- Primary CTA -->
                     <tr>
-                        <td style="padding:0 48px 56px;text-align:center;">
-                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold; border-radius: 4px;">Begin ${todayPractice.name} &rarr;</a>
+                        <td style="padding:0 48px 20px;text-align:center;">
+                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Begin ${todayPractice.name} &rarr;</a>
                         </td>
                     </tr>
-                    
+
+                    <!-- Secondary CTA — Free Journal Download -->
+                    <tr>
+                        <td style="padding:0 48px 48px;text-align:center;">
+                            <div style="border:1px solid rgba(184,151,58,0.35);border-radius:12px;padding:20px 28px;background:rgba(184,151,58,0.04);display:inline-block;">
+                                <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 8px;font-weight:700;">🎁 Free Resource</p>
+                                <p style="font-size:16px;color:#1E1912;margin:0 0 14px;font-weight:500;line-height:1.4;">Download your free<br><strong>30-Day Now Practice Journal</strong></p>
+                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/aboutawakenedpath')}" style="display:inline-block;padding:12px 32px;background:transparent;color:#B8973A;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border:2px solid #B8973A;border-radius:4px;">Get Free Journal &darr;</a>
+                            </div>
+                        </td>
+                    </tr>
+
                     <!-- Footer -->
                     <tr>
                         <td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
@@ -1495,13 +1524,43 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                 .replace(/DAILY_REMINDER/g, blastId);
 
             try {
+                // Plain-text version — Gmail is far less likely to filter to Promotions
+                // when a proper text/plain alternative exists alongside the HTML.
+                const plainText = `Good evening,
+
+${todaySubject}
+
+TODAY'S PRACTICE: ${todayPractice.name}
+${todayPractice.tagline}
+
+${todayPractice.teaser}
+
+Begin your practice → https://www.skrmblissai.in/awakenedpath
+
+──────────────────────────────
+FREE: Download your 30-Day Now Practice Journal
+→ https://www.skrmblissai.in/aboutawakenedpath
+──────────────────────────────
+
+Reply to this email anytime — I read every message.
+
+With love,
+Shruti
+Awakened Path · connect@skrmblissai.in
+
+To stop receiving these emails: https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userDoc.id}
+`;
                 await transporter.sendMail({
-                    from: '"The Awakened Path" <connect@skrmblissai.in>',
+                    from: '"Shruti · Awakened Path" <connect@skrmblissai.in>',
+                    replyTo: 'connect@skrmblissai.in',
                     to: userData.email,
                     subject: todaySubject,
+                    text: plainText,
                     html: personalizedHtml,
                     headers: {
-                        'List-Unsubscribe': `<https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userDoc.id}>`
+                        'List-Unsubscribe': `<https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userDoc.id}>`,
+                        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                        'X-Entity-Ref-ID': `awakened-path-daily-${new Date().toISOString().split('T')[0]}`,
                     }
                 });
                 console.log(`Success: Reminder sent to ${userData.email}`);
