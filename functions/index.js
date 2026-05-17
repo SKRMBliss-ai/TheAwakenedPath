@@ -1351,7 +1351,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                     <tr>
                         <td style="padding:14px 48px 0;text-align:center;">
                             <p style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 4px;">Mind Gym</p>
-                            <p style="font-size:12px;color:rgba(30,25,18,0.55);margin:0 0 8px;font-style:italic;">Your daily practice for a quieter mind</p>
+                            <p style="font-size:12px;color:rgba(30,25,18,0.55);margin:0 0 8px;font-style:italic;">Train your mind daily</p>
                             <p style="font-size:10px;color:rgba(30,25,18,0.35);margin:0;line-height:1.6;">If this arrived in Promotions, move it to <strong>Primary</strong> so you never miss your daily practice.</p>
                         </td>
                     </tr>

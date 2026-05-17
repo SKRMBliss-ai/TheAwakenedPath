@@ -1133,7 +1133,7 @@ export default function UntetheredApp() {
   }, [currentUser, checkAndUnlock, points, watchedParts.length]);
 
   useEffect(() => {
-    document.title = "Mind Gym · Your daily practice for a quieter mind";
+    document.title = "Mind Gym · Train your mind daily";
   }, []);
 
   useEffect(() => {

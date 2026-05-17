@@ -215,7 +215,7 @@ function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
         className={cn(subSize, 'font-sans font-bold text-[var(--accent-primary)] uppercase tracking-[0.3em] opacity-100 mt-1')}
         style={{ fontSize: size === 'sm' ? '6.5px' : size === 'md' ? '9px' : '11px' }}
       >
-        Your daily practice for a quieter mind
+        Train your mind daily
       </span>
     </div>
   );

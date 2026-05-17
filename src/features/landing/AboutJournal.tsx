@@ -128,8 +128,8 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                 className="font-[Outfit] text-[clamp(32px,6vw,72px)] font-light leading-[1.05] tracking-tight"
                 style={{ color: isDark ? '#ffffff' : '#0c0910' }}
             >
-                Your daily practice<br />
-                <span className="font-medium" style={{ color: '#5EC4B0' }}>for a quieter mind.</span>
+                Train your mind.<br />
+                <span className="font-medium" style={{ color: '#5EC4B0' }}>Every day.</span>
             </h1>
 
             {/* Description */}
