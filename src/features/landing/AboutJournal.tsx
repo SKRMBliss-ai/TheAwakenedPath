@@ -806,7 +806,7 @@ const Footer = () => (
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-black/40 dark:text-white/40">
             <div className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span className="tracking-wide">Mind Gym</span>
+                <span className="tracking-wide">Inner Space</span>
             </div>
             <div className="flex items-center gap-5">
                 <a href="/" className="hover:text-black/70 dark:hover:text-white/70 transition-colors">Journal</a>

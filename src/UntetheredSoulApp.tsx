@@ -622,7 +622,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
           >
             <h2 className="text-4xl md:text-6xl font-sans font-medium text-[var(--text-primary)] tracking-tight">Expand Your Journey</h2>
             <p className="text-[15px] md:text-[17px] font-sans font-medium text-[var(--text-secondary)] leading-relaxed">
-              Step beyond the gateway to unlock full access to the Mind Gym universe.
+              Step beyond the gateway to unlock full access to the Inner Space universe.
             </p>
           </motion.div>
         </div>
@@ -1145,7 +1145,7 @@ export default function UntetheredApp() {
   }, [currentUser, checkAndUnlock, points, watchedParts.length]);
 
   useEffect(() => {
-    document.title = "Mind Gym";
+    document.title = "Inner Space · Your daily practice for a quieter mind";
   }, []);
 
   useEffect(() => {
