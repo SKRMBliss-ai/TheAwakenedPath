@@ -1266,32 +1266,50 @@ exports.sendDailyReminder = onSchedule({
     return runReminderLogic(geminiKey.value(), youtubeApiKey.value());
 });
 
-async function getDailyEmailContent(apiKey) {
+async function getDailyEmailContent(apiKey, video) {
+    const videoTitle = video ? video.title : '';
+    const videoFocus = video ? video.focus : '';
+
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         const prompt = `
-            Act as a Presence Coach based on 'The Untethered Soul' and 'The Power of Now'.
-            Generate a daily evening practice reminder for students.
-            Return exactly a JSON object:
-            {
-              "headline": "A short poetic headline (max 5 words. Theme: 'Peace is a Choice. Not a State.')",
-              "quote": "A soul-stirring quote about being the witness (max 20 words)",
-              "explanation": "One or two sentences about observing the mind at the end of the day",
-              "practice": "A simple 1-sentence evening awareness exercise"
-            }
+You are a Presence Coach who sends a daily evening email to spiritual seekers studying 'The Untethered Soul' and 'The Power of Now'.
+
+Today's YouTube video is: "${videoTitle}"
+Video focus/theme: "${videoFocus}"
+
+Your job: write email content that:
+1. Identifies ONE real, relatable mental problem this video addresses (e.g. "mind that won't stop", "replaying past events", "anxiety about tomorrow")
+2. Positions the video + practice as the solution
+3. Makes the reader feel understood — not preached at
+
+Return ONLY a valid JSON object (no markdown, no explanation):
+{
+  "subject": "A plain-text subject line (max 10 words). No emoji. Conversational. Name the problem the video solves. Make the reader think 'that is exactly what I am dealing with.' E.g. 'The part of your mind that never stops talking.'",
+  "preheader": "One short sentence (max 15 words) that teases the solution. E.g. 'Today's video shows you exactly how to step back from it.'",
+  "headline": "Short poetic headline (max 6 words) that echoes the problem/solution theme",
+  "hook": "2-3 sentences. Call out the exact problem directly and personally. Make the reader feel seen. Then hint that today's video and practice is the answer.",
+  "quote": "A soul-stirring quote about the witness/observer (max 20 words)",
+  "explanation": "1-2 sentences about observing the mind tonight, tied to the video theme"
+}
         `;
         const result = await model.generateContent(prompt);
         const text = (await result.response).text().trim();
         const cleanedJson = text.replace(/```json|```/gi, '').trim();
-        return JSON.parse(cleanedJson);
+        const parsed = JSON.parse(cleanedJson);
+        // Validate required fields
+        if (!parsed.subject || !parsed.preheader || !parsed.hook) throw new Error('Missing fields');
+        return parsed;
     } catch (e) {
         console.error("Gemini Content Error:", e);
         return {
-            headline: "Peace is a Choice. Not a State.",
+            subject: "The part of your mind that never stops talking",
+            preheader: "Today's video shows you exactly how to step back from it.",
+            headline: "You are not the noise.",
+            hook: "There is a voice in your head that has been running non-stop today — replaying conversations, planning tomorrow, judging what happened. You have tried to stop it. It doesn't stop. Today's video and practice show you something different: what it feels like to simply step back and watch it — without being pulled in.",
             quote: "You are the listener. Not the radio.",
-            explanation: "The voice in your head has been talking all day. You don't have to answer it. You don't have to silence it. Just — step back. Notice it is there. And rest in the one who is noticing.",
-            practice: "Before you sleep — notice one thought that ran today without your permission. Don't judge it. Just see it for what it is."
+            explanation: "The voice in your head has been talking all day. You don't have to answer it. Just — step back. Notice it is there. Rest in the one who is noticing."
         };
     }
 }
@@ -1301,10 +1319,12 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
     const usersSnap = await db.collection("users").get();
     const transporter = getTransporter();
 
-    const daily = await getDailyEmailContent(apiKey);
-    const todayPractice = getTodaysPractice();
-    const todaySubject = DAILY_SUBJECTS[new Date().getDay()];
     const todayVideo = await getDailyYoutubeVideo(youtubeKey, db);
+    const daily = await getDailyEmailContent(apiKey, todayVideo); // pass video so Gemini can tailor content
+    const todayPractice = getTodaysPractice();
+    // Use Gemini-generated subject; fallback to static array
+    const todaySubject = daily.subject || DAILY_SUBJECTS[new Date().getDay()];
+    const todayPreheader = daily.preheader || '';
     const videoUrl = `https://www.youtube.com/watch?v=${todayVideo.id}`;
     const videoThumb = todayVideo.thumb || `https://img.youtube.com/vi/${todayVideo.id}/hqdefault.jpg`;
 
@@ -1318,6 +1338,8 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
     <meta name="supported-color-schemes" content="light">
 </head>
 <body style="margin:0;padding:0;background-color:#F6F2EA; font-family: 'Georgia', serif;">
+    <!-- Preheader: visible in Gmail inbox after subject line -->
+    <div style="display:none;font-size:1px;color:#F6F2EA;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">${todayPreheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F6F2EA;">
         <tr>
             <td align="center" style="padding:40px 16px;">
@@ -1334,14 +1356,21 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                         </td>
                     </tr>
 
+                    <!-- Hook: problem-aware opening paragraph -->
                     <tr>
-                        <td style="padding:48px 48px 24px;text-align:center;">
+                        <td style="padding:32px 48px 0;">
+                            <p style="font-size:16px;line-height:1.85;color:#2E261C;margin:0;font-family:Georgia,serif;">${daily.hook || ''}</p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:28px 48px 24px;text-align:center;">
                             <p style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#B8973A;margin:0 0 16px; opacity: 0.8;">Inner Space · Daily Practice</p>
                             <h1 style="font-size:28px;font-weight:300;font-style:italic;color:#1E1912;margin:0;line-height:1.3; letter-spacing: 1px;">${daily.headline}</h1>
                             <div style="width:40px;height:1px;background:rgba(184, 151, 58, 0.3);margin:24px auto;"></div>
                         </td>
                     </tr>
-                    
+
                     <tr>
                         <td style="padding:0 48px 32px;">
                             <p style="font-size:16px;line-height:1.8;color:rgba(30, 25, 18, 0.72);margin:0 0 24px; text-align: center; font-style: italic;">
@@ -1532,7 +1561,10 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                 // when a proper text/plain alternative exists alongside the HTML.
                 const plainText = `Good evening,
 
-${todaySubject}
+${daily.hook || ''}
+
+TODAY'S VIDEO: ${todayVideo.title}
+Watch now → https://www.youtube.com/watch?v=${todayVideo.id}
 
 TODAY'S PRACTICE: ${todayPractice.name}
 ${todayPractice.tagline}
