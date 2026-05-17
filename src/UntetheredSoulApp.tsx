@@ -570,33 +570,46 @@ const WatcherPauseButton = () => {
 // --- Sacred Welcome Modal ---
 
 // --- Premium Paywall Component ---
-const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial, hasUsedTrial, onSuccess }: any) => {
-  const [isTrialLoading, setIsTrialLoading] = useState(false);
+const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, onSuccess }: any) => {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // May is Mental Health Awareness Month — 70% off all plans
+  const DISCOUNT = 0.70;
+  const disc = (n: number) => Math.round(n * (1 - DISCOUNT));
 
   const pricingConfig = useMemo(() => {
     if (timezone === 'Asia/Calcutta' || timezone === 'Asia/Kolkata') {
-      return { symbol: '₹', monthly: '799', annual: '7,999', lifetime: '14,999', currency: 'INR', strike: '9,588' };
+      return { symbol: '₹', monthly: '799', annual: '7,999', lifetime: '14,999', currency: 'INR', strike: '9,588',
+        dMonthly: disc(799), dAnnual: disc(7999), dLifetime: disc(14999) };
     }
     if (timezone === 'Europe/London') {
-      return { symbol: '£', monthly: '8.99', annual: '89.99', lifetime: '169.99', currency: 'GBP', strike: '107.88' };
+      return { symbol: '£', monthly: '8.99', annual: '89.99', lifetime: '169.99', currency: 'GBP', strike: '107.88',
+        dMonthly: disc(899)/100, dAnnual: disc(8999)/100, dLifetime: disc(16999)/100 };
     }
     if (timezone.startsWith('Europe/')) {
-      return { symbol: '€', monthly: '9.99', annual: '99.99', lifetime: '189.99', currency: 'EUR', strike: '119.88' };
+      return { symbol: '€', monthly: '9.99', annual: '99.99', lifetime: '189.99', currency: 'EUR', strike: '119.88',
+        dMonthly: disc(999)/100, dAnnual: disc(9999)/100, dLifetime: disc(18999)/100 };
     }
     if (timezone.startsWith('Australia/')) {
-      return { symbol: 'A$', monthly: '14.99', annual: '149.99', lifetime: '299.99', currency: 'AUD', strike: '179.88' };
+      return { symbol: 'A$', monthly: '14.99', annual: '149.99', lifetime: '299.99', currency: 'AUD', strike: '179.88',
+        dMonthly: disc(1499)/100, dAnnual: disc(14999)/100, dLifetime: disc(29999)/100 };
     }
     if (timezone.startsWith('America/Toronto') || timezone.startsWith('America/Vancouver') || timezone.startsWith('Canada/')) {
-      return { symbol: 'C$', monthly: '13.99', annual: '139.99', lifetime: '259.99', currency: 'CAD', strike: '167.88' };
+      return { symbol: 'C$', monthly: '13.99', annual: '139.99', lifetime: '259.99', currency: 'CAD', strike: '167.88',
+        dMonthly: disc(1399)/100, dAnnual: disc(13999)/100, dLifetime: disc(25999)/100 };
     }
-    return { symbol: '$', monthly: '9.99', annual: '99.99', lifetime: '199.99', currency: 'USD', strike: '119.88' };
+    return { symbol: '$', monthly: '9.99', annual: '99.99', lifetime: '199.99', currency: 'USD', strike: '119.88',
+      dMonthly: disc(999)/100, dAnnual: disc(9999)/100, dLifetime: disc(19999)/100 };
   }, [timezone]);
 
   const currency = pricingConfig.currency;
   const prices = {
     monthly: `${pricingConfig.symbol}${pricingConfig.monthly}`,
     annuallyStrikethrough: `${pricingConfig.symbol}${pricingConfig.strike}`,
+    // Discounted (70% off — Mental Health Awareness Month)
+    dMonthly:  `${pricingConfig.symbol}${pricingConfig.dMonthly}`,
+    dAnnual:   `${pricingConfig.symbol}${pricingConfig.dAnnual}`,
+    dLifetime: `${pricingConfig.symbol}${pricingConfig.dLifetime}`,
     annually: `${pricingConfig.symbol}${pricingConfig.annual}`,
     lifetime: `${pricingConfig.symbol}${pricingConfig.lifetime}`,
   };
@@ -679,55 +692,21 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
           <p className="text-sm text-[var(--text-secondary)] font-sans font-medium">The path that resonates with your current depth.</p>
         </div>
 
-        {/* Pricing Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full items-stretch">
-          {/* 1. Trial Option Card (First Now) */}
-          <div className={cn(
-            "p-6 rounded-[32px] border transition-all shadow-xl flex flex-col justify-between items-center group relative overflow-hidden",
-            hasUsedTrial
-              ? "border-[var(--border-subtle)] bg-[var(--bg-surface)]/20 opacity-60 grayscale-[0.5]"
-              : "border-dashed border-[var(--accent-primary)] bg-[var(--accent-primary)]/5"
-          )}>
-            <div className="absolute top-0 right-0 p-3 opacity-20 transform rotate-12">
-              <Flame size={48} className={hasUsedTrial ? "text-[var(--text-muted)]" : "text-[var(--accent-primary)]"} />
-            </div>
-            <div className="text-center relative z-10">
-              <p className={cn("text-[10px] font-bold uppercase tracking-[0.3em] mb-1", hasUsedTrial ? "text-[var(--text-muted)]" : "text-[var(--accent-primary)]")}>Taste Awareness</p>
-              <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mb-3 opacity-70">Experience full potential</p>
-              <h4 className="text-[20px] font-bold text-[var(--text-primary)] mb-1">Begin Trial</h4>
-              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">
-                {hasUsedTrial ? "Trial already used" : "Full Access • No Card Needed"}
-              </p>
-            </div>
-            <div className="w-full space-y-4 relative z-10">
-              <p className={cn("text-[28px] font-bold", hasUsedTrial ? "text-[var(--text-muted)]" : "text-[var(--accent-primary)]")}>Free</p>
-              <AnchorButton
-                variant={hasUsedTrial ? "ghost" : "solid"}
-                onClick={async () => {
-                  if (hasUsedTrial) return;
-                  setIsTrialLoading(true);
-                  try {
-                    await activateTrial();
-                    localStorage.setItem('show-welcome-modal', '3-Day Trial');
-                    onSuccess?.();
-                  } catch (e) {
-                    console.error(e);
-                  } finally {
-                    setIsTrialLoading(false);
-                  }
-                }}
-                disabled={isTrialLoading || isProcessing || hasUsedTrial}
-                className={cn(
-                  "w-full font-bold uppercase tracking-widest",
-                  !hasUsedTrial && "bg-[var(--accent-primary)] text-black"
-                )}
-              >
-                {isTrialLoading ? 'Initiating...' : (hasUsedTrial ? 'Trial Used' : 'Start 3-Day Trial')}
-              </AnchorButton>
-            </div>
-          </div>
+        {/* 🌿 Mental Health Awareness Month Discount Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-3xl mx-auto rounded-[20px] border border-amber-400/40 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 px-6 py-4 text-center shadow-[0_0_30px_rgba(245,158,11,0.15)]"
+        >
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400 mb-1">🌿 Mental Health Awareness Month — May 2026</p>
+          <p className="text-[18px] font-bold text-amber-300">70% Off All Plans — This Month Only</p>
+          <p className="text-[12px] text-amber-200/70 mt-1">Offer ends May 31 · No code needed · Prices already applied below</p>
+        </motion.div>
 
-          {/* 2. Monthly */}
+        {/* Pricing Grid — 3 paid plans (trial is automatic on sign-up) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-4xl items-stretch">
+
+          {/* 1. Monthly */}
           <div className="p-6 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/40 transition-all shadow-lg flex flex-col justify-between">
             <div className="text-left">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Step by Step</p>
@@ -735,9 +714,13 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
               <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">Recurring Journey</p>
             </div>
             <div className="w-full space-y-4">
-              <div className="flex items-baseline gap-1">
-                <span className="text-[28px] font-bold text-[var(--text-primary)]">{prices.monthly}</span>
-                <span className="text-xs text-[var(--text-muted)]">/ month</span>
+              <div>
+                <p className="text-[12px] line-through text-[var(--text-muted)] opacity-50">{prices.monthly}/mo</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[28px] font-bold text-amber-400">{prices.dMonthly}</span>
+                  <span className="text-xs text-[var(--text-muted)]">/ month</span>
+                </div>
+                <p className="text-[10px] text-amber-400/80 font-bold uppercase tracking-wide mt-0.5">70% off this May</p>
               </div>
               <AnchorButton
                 variant="ghost"
@@ -768,12 +751,13 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
               <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">2 Months Free Included</p>
             </div>
             <div className="w-full space-y-4">
-              <div className="space-y-0">
-                <p className="text-[11px] font-sans text-[var(--text-muted)] line-through opacity-60 ml-0.5">{prices.annuallyStrikethrough}</p>
+              <div>
+                <p className="text-[12px] line-through text-[var(--text-muted)] opacity-50">{prices.annually}/yr</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-[32px] font-bold text-[var(--accent-primary)]">{prices.annually}</span>
-                  <span className="text-xs text-[var(--accent-primary)]/70">/ year</span>
+                  <span className="text-[32px] font-bold text-amber-400">{prices.dAnnual}</span>
+                  <span className="text-xs text-amber-400/70">/ year</span>
                 </div>
+                <p className="text-[10px] text-amber-400/80 font-bold uppercase tracking-wide mt-0.5">70% off this May</p>
               </div>
               <AnchorButton
                 variant="solid"
@@ -801,9 +785,13 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, activateTrial
               <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">One-Time Offering</p>
             </div>
             <div className="w-full space-y-4">
-              <div className="flex items-baseline gap-1">
-                <span className="text-[28px] font-bold text-[var(--text-primary)]">{prices.lifetime}</span>
-                <span className="text-xs text-[var(--text-muted)]">/ forever</span>
+              <div>
+                <p className="text-[12px] line-through text-[var(--text-muted)] opacity-50">{prices.lifetime}</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[28px] font-bold text-amber-400">{prices.dLifetime}</span>
+                  <span className="text-xs text-[var(--text-muted)]">/ forever</span>
+                </div>
+                <p className="text-[10px] text-amber-400/80 font-bold uppercase tracking-wide mt-0.5">70% off this May</p>
               </div>
               <AnchorButton
                 variant="ghost"
