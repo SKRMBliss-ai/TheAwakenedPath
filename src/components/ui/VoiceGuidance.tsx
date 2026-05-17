@@ -129,7 +129,7 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, timezon
   // Fallback to Paywall/Upgrade script if not premium OR on paywall tab
   if (!isAccessValid || tab === 'paywall') {
     return `
-      Welcome to the threshold of your transformation. Currently, you are experiencing our limited portals, but the full depth of the Awakened Path universe is waiting for you.
+      Welcome to the threshold of your transformation. Currently, you are experiencing our limited portals, but the full depth of Inner Space is waiting for you.
       To begin your immersion, we invite you to activate your three-day gift of awareness. 
       On this screen, scroll down to the section titled 'Choose Your Commitment.' 
       Look for the 'Begin Trial' card—the one glowing with a golden dashed border. 

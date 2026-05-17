@@ -317,7 +317,7 @@ const Journal: React.FC<JournalProps> = ({ isAccessValid, onUpgrade }) => {
             <div className="flex flex-col items-center justify-center p-12 text-center h-[60vh]">
                 <p className="text-[10px] uppercase tracking-[0.3em] font-bold mb-3"
                     style={{ color: 'var(--text-muted)' }}>
-                    The Awakened Path
+                    Inner Space
                 </p>
                 <h1 className="text-3xl font-serif font-light mb-2"
                     style={{ color: 'var(--text-primary)' }}>
@@ -461,7 +461,7 @@ const Journal: React.FC<JournalProps> = ({ isAccessValid, onUpgrade }) => {
                         </motion.div>
                     ) : (
                         /* ═══════════════════════════════════════════════════════════════
-                           THE AWAKENED PATH 3-STEP FLOW
+                           INNER SPACE 3-STEP FLOW
                         ═══════════════════════════════════════════════════════════════ */
                         <motion.div key="form" variants={pageVariants} initial="hidden" animate="visible" exit="exit" className="max-w-6xl mx-auto w-full">
                             <GentleJournalForm

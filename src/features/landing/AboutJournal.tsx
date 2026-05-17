@@ -120,7 +120,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                 }}
             >
                 <Sparkles className="w-3 h-3 text-[#D4AF37] animate-pulse" />
-                <span>The Presence Journal</span>
+                <span>Inner Space</span>
             </div>
 
             {/* Headline */}
@@ -128,8 +128,8 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                 className="font-[Outfit] text-[clamp(32px,6vw,72px)] font-light leading-[1.05] tracking-tight"
                 style={{ color: isDark ? '#ffffff' : '#0c0910' }}
             >
-                Quiet the noise. <br />
-                <span className="font-medium" style={{ color: '#5EC4B0' }}>Witness the life.</span>
+                Your daily practice<br />
+                <span className="font-medium" style={{ color: '#5EC4B0' }}>for a quieter mind.</span>
             </h1>
 
             {/* Description */}
@@ -137,7 +137,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                 className="mt-6 max-w-md md:max-w-xl text-sm md:text-lg leading-relaxed font-light"
                 style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}
             >
-                A daily rhythm of journaling and meditation designed to move you from thinking about life to actually living it.
+                A daily rhythm of journaling, video teachings, and awareness practices — designed to quiet the mental noise and help you actually feel at peace.
             </p>
 
             {/* CTAs */}

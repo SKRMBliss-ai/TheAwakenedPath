@@ -139,7 +139,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
           className="text-2xl font-serif font-bold tracking-[0.15em] uppercase text-center"
           style={{ color: theme.textPrimary }}
         >
-          The Awakened Path
+          Inner Space
         </h1>
         <p
           className="text-[12px] font-sans font-medium tracking-[0.3em] uppercase mt-2 opacity-75"
@@ -425,7 +425,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
               className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-35"
               style={{ color: theme.textSecondary }}
             >
-              The Awakened Path
+              Inner Space
             </p>
           </motion.div>
         </div>

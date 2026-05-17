@@ -89,7 +89,7 @@ const COURSE_PRICES_INR = {
 
 const SUBSCRIPTION_PLANS = {
     "premium_monthly": {
-        name: "Awakened Path Premium",
+        name: "Inner Space Premium",
         description: "Monthly recurring subscription for full application access",
         amount: 9.99, // USD
         period: "monthly",
@@ -97,7 +97,7 @@ const SUBSCRIPTION_PLANS = {
         total_count: 120 // 10 years max
     },
     "premium_yearly": {
-        name: "Awakened Path Premium (Annual)",
+        name: "Inner Space Premium (Annual)",
         description: "Yearly recurring subscription for full application access",
         amount: 99.90, // USD
         period: "yearly",
@@ -108,7 +108,7 @@ const SUBSCRIPTION_PLANS = {
 
 const SUBSCRIPTION_PLANS_INR = {
     "premium_monthly": {
-        name: "Awakened Path Premium (INR)",
+        name: "Inner Space Premium (INR)",
         description: "Monthly recurring subscription for full application access",
         amount: 799, // INR
         period: "monthly",
@@ -116,7 +116,7 @@ const SUBSCRIPTION_PLANS_INR = {
         total_count: 120
     },
     "premium_yearly": {
-        name: "Awakened Path Premium Annual (INR)",
+        name: "Inner Space Premium Annual (INR)",
         description: "Yearly recurring subscription for full application access",
         amount: 7999, // INR
         period: "yearly",
@@ -1119,7 +1119,7 @@ exports.previewReminderEmail = onRequest({
                     <!-- Primary CTA -->
                     <tr>
                         <td style="padding:0 48px 20px;text-align:center;">
-                            <a href="https://www.skrmblissai.in/awakenedpath" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Begin ${todayPractice.name} &rarr;</a>
+                            <a href="https://www.skrmblissai.in/awakenedpath" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Open Today's Practice &rarr; (5 min)</a>
                         </td>
                     </tr>
 
@@ -1432,7 +1432,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                     <!-- Primary CTA -->
                     <tr>
                         <td style="padding:0 48px 20px;text-align:center;">
-                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Begin ${todayPractice.name} &rarr;</a>
+                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Open Today's Practice &rarr; (5 min)</a>
                         </td>
                     </tr>
 
