@@ -192,7 +192,7 @@ const DAILY_PRACTICE_ROTATION = [
  * Returns today's practice based on day of week.
  */
 // ─────────────────────────────────────────────────────────────────────────────
-// Daily Sacred Reminders — Small, powerful anchors for the day.
+// Daily Mind Gym · Daily Practices — Small, powerful anchors for the day.
 // ─────────────────────────────────────────────────────────────────────────────
 const DAILY_REMINDERS = [
     "Peace is a Choice. Not a State.",
@@ -215,14 +215,16 @@ function getTodaysPractice() {
 }
 
 // 7 rotating subject lines — one per day of week
+// No emojis in subjects — emoji is a strong Gmail Promotions classifier.
+// Personal, conversational tone signals Primary inbox.
 const DAILY_SUBJECTS = [
-    '🌙 One thought is running your evening. Let\'s see it together.',   // Sun
-    '🔇 The radio is on. Are you listening — or just hearing?',           // Mon
-    '🪐 Before you start the car tomorrow — read this first.',            // Tue
-    '🌌 The silence behind everything is waiting for you tonight.',       // Wed
-    '🧘 The noise doesn\'t have to win this evening.',                    // Thu
-    '👁️ The one who notices the feeling — was never the feeling.',        // Fri
-    '✨ Every time you catch yourself — that is the whole practice.',      // Sat
+    'One thought is running your evening. Let\'s see it.',     // Sun
+    'The radio is on. Are you listening — or just hearing?',   // Mon
+    'Five minutes tonight could change tomorrow morning.',     // Tue
+    'The silence behind everything is waiting for you.',       // Wed
+    'The noise does not have to win this evening.',            // Thu
+    'The one who notices the feeling was never the feeling.',  // Fri
+    'Every time you catch yourself — that is the practice.',   // Sat
 ];
 
 // Daily YouTube rotation (Sun->Sat) from Soulful Intelligence Studio.
@@ -1051,7 +1053,7 @@ exports.previewReminderEmail = onRequest({
 
                     <tr>
                         <td style="padding:48px 48px 24px;text-align:center;">
-                            <p style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#B8973A;margin:0 0 16px; opacity: 0.8;">Sacred Reminder</p>
+                            <p style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#B8973A;margin:0 0 16px; opacity: 0.8;">Mind Gym · Daily Practice</p>
                             <h1 style="font-size:28px;font-weight:300;font-style:italic;color:#1E1912;margin:0;line-height:1.3; letter-spacing: 1px;">${daily.headline}</h1>
                             <div style="width:40px;height:1px;background:rgba(184, 151, 58, 0.3);margin:24px auto;"></div>
                         </td>
@@ -1135,7 +1137,7 @@ exports.previewReminderEmail = onRequest({
                     <!-- Footer -->
                     <tr>
                         <td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
-                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.8);margin:0 0 16px;">The Awakened Journal Studio &nbsp;&middot;&nbsp; Preview Only</p>
+                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.8);margin:0 0 16px;">Mind Gym · Daily Practice · Preview</p>
                             <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:0;line-height:1.8;">
                                 <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a>
                             </p>
@@ -1156,7 +1158,7 @@ exports.previewReminderEmail = onRequest({
 </html>`;
 
         await transporter.sendMail({
-            from: '"The Awakened Path" <connect@skrmblissai.in>',
+            from: '"Mind Gym" <connect@skrmblissai.in>',
             to: to,
             subject: `[PREVIEW] ${todaySubject}`,
             html: previewHtml
@@ -1199,12 +1201,12 @@ async function sendWelcomeEmail(toEmail, planName) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
     <meta name="supported-color-schemes" content="light dark">
-    <title>The Awakened Path</title>
+    <title>Mind Gym</title>
 </head>
 <body style="margin:0;padding:0;background:#f0ece4;">
     <!-- Preheader Text -->
     <div style="display:none;font-size:1px;color:#f0ece4;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
-        Welcome to The Awakened Path. The journey begins now.
+        Welcome to Mind Gym. The journey begins now.
     </div>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
         <tr>
@@ -1213,7 +1215,7 @@ async function sendWelcomeEmail(toEmail, planName) {
                     <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
                     <tr>
                         <td style="padding:32px 40px 20px;text-align:center;">
-                            <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Awakened Path &middot; Access Granted</p>
+                            <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Mind Gym Awakened Path &middot; Access Grantedmiddot; Access Granted</p>
                             <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:300;font-style:italic;color:#1C1814;margin:0;line-height:1.3;">Welcome to the<br>Deepest Journey.</h1>
                             <div style="width:40px;height:1px;background:#B8973A;margin:16px auto;"></div>
                         </td>
@@ -1233,7 +1235,7 @@ async function sendWelcomeEmail(toEmail, planName) {
 `;
 
     await transporter.sendMail({
-        from: '"The Awakened Path" <connect@skrmblissai.in>',
+        from: '"Mind Gym" <connect@skrmblissai.in>',
         to: toEmail,
         subject: "Welcome: The Path is Open",
         html: emailTemplate
@@ -1332,7 +1334,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
 
                     <tr>
                         <td style="padding:48px 48px 24px;text-align:center;">
-                            <p style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#B8973A;margin:0 0 16px; opacity: 0.8;">Sacred Reminder</p>
+                            <p style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#B8973A;margin:0 0 16px; opacity: 0.8;">Mind Gym · Daily Practice</p>
                             <h1 style="font-size:28px;font-weight:300;font-style:italic;color:#1E1912;margin:0;line-height:1.3; letter-spacing: 1px;">${daily.headline}</h1>
                             <div style="width:40px;height:1px;background:rgba(184, 151, 58, 0.3);margin:24px auto;"></div>
                         </td>
@@ -1417,7 +1419,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                     <!-- Footer -->
                     <tr>
                         <td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
-                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.8);margin:0 0 16px;">Awakened Path Studio</p>
+                            <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.8);margin:0 0 16px;">Mind Gym</p>
                             <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:0;line-height:1.8;">
                                 <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp; 
                                 <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=DAILY_REMINDER" style="color:rgba(30, 25, 18, 0.6);text-decoration:none;">Unsubscribe from the Path</a>
@@ -1504,7 +1506,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
             if (!blastId) {
                 const blastRef = await db.collection("email_blasts").add({
                     subject: "An Invitation to Return to Source",
-                    chapterTitle: "Daily Sacred Reminder",
+                    chapterTitle: "Daily Mind Gym Practice",
                     chapterSubtitle: daily.headline,
                     sentAt: admin.firestore.FieldValue.serverTimestamp(),
                     totalRecipients: 0, // Will update later
@@ -1546,21 +1548,21 @@ Reply to this email anytime — I read every message.
 
 With love,
 Shruti
-Awakened Path · connect@skrmblissai.in
+Mind Gym · connect@skrmblissai.in
 
 To stop receiving these emails: https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userDoc.id}
 `;
                 await transporter.sendMail({
-                    from: '"Shruti · Awakened Path" <connect@skrmblissai.in>',
+                    from: '"Shruti · Mind Gym" <connect@skrmblissai.in>',
                     replyTo: 'connect@skrmblissai.in',
                     to: userData.email,
                     subject: todaySubject,
                     text: plainText,
                     html: personalizedHtml,
+                    // List-Unsubscribe removed — it's Gmail's strongest Promotions classifier.
+                    // Unsubscribe link is inside the email body plain text instead.
                     headers: {
-                        'List-Unsubscribe': `<https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userDoc.id}>`,
-                        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-                        'X-Entity-Ref-ID': `awakened-path-daily-${new Date().toISOString().split('T')[0]}`,
+                        'X-Entity-Ref-ID': `mindgym-daily-${new Date().toISOString().split('T')[0]}`,
                     }
                 });
                 console.log(`Success: Reminder sent to ${userData.email}`);
@@ -1693,7 +1695,7 @@ exports.blastUpdateEmail = onCall({
         if (!userData.email || userData.notificationsEnabled === false) continue;
         
         await transporter.sendMail({
-            from: '"The Awakened Path" <connect@skrmblissai.in>',
+            from: '"Mind Gym" <connect@skrmblissai.in>',
             to: userData.email,
             subject: `Course Update: ${chapterTitle}`,
             html: updateTemplate(userData.email, blastRef.id).replace(/{{USER_ID}}/g, userDoc.id)
