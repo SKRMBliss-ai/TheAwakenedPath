@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Trash2, Search, ExternalLink, Target, Globe } from 'lucide-react';
+import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Trash2, Search, ExternalLink, Target, Globe, Youtube, Download, PlayCircle, UserX } from 'lucide-react';
 import { db, functions } from '../../firebase';
 import { collection, query, orderBy, limit, getDocs, where, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -31,6 +31,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
     const [users, setUsers] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showAnonymous, setShowAnonymous] = useState(false);
     
     // Blast Form State
     const [blastTitle, setBlastTitle] = useState('');
@@ -351,6 +352,14 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         if (type === 'LOGIN' || type === 'SESSION_START') return <Monitor className="w-4 h-4 text-[var(--accent-primary)]" />;
         if (type === 'EMAIL_OPEN') return <Eye className="w-4 h-4 text-[var(--accent-primary)]" />;
         if (type === 'EMAIL_UNSUBSCRIBED') return <Mail className="w-4 h-4 text-[#FF4B4B]" />;
+        if (type === 'EMAIL_YOUTUBE_CLICK') return <Youtube className="w-4 h-4 text-red-500" />;
+        if (type === 'EMAIL_CTA_CLICK') return <ExternalLink className="w-4 h-4 text-amber-400" />;
+        if (type === 'PAGE_VISIT_ABOUT') return <Globe className="w-4 h-4 text-teal-400" />;
+        if (type === 'PAGE_VISIT_APP') return <Monitor className="w-4 h-4 text-teal-400" />;
+        if (type === 'VIDEO_PLAY') return <PlayCircle className="w-4 h-4 text-purple-400" />;
+        if (type === 'YOUTUBE_BADGE_CLICK') return <Youtube className="w-4 h-4 text-red-400" />;
+        if (type === 'JOURNAL_DOWNLOAD') return <Download className="w-4 h-4 text-green-400" />;
+        if (type === 'EMAIL_FORM_SUBMIT') return <Mail className="w-4 h-4 text-teal-400" />;
         return <Mail className="w-4 h-4 text-[#E67E22]" />;
     };
 
@@ -359,8 +368,28 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         if (type === 'SESSION_START') return 'PRESENCE';
         if (type === 'EMAIL_OPEN') return 'OPENED';
         if (type === 'EMAIL_UNSUBSCRIBED') return 'UNSUBSCRIBED';
+        if (type === 'EMAIL_YOUTUBE_CLICK') return 'YOUTUBE CLICK';
+        if (type === 'EMAIL_CTA_CLICK') return 'CTA CLICK';
+        if (type === 'PAGE_VISIT_ABOUT') return 'VISITED PAGE';
+        if (type === 'PAGE_VISIT_APP') return 'ENTERED APP';
+        if (type === 'VIDEO_PLAY') return 'VIDEO PLAY';
+        if (type === 'YOUTUBE_BADGE_CLICK') return 'YOUTUBE ↗';
+        if (type === 'JOURNAL_DOWNLOAD') return 'DOWNLOADED';
+        if (type === 'EMAIL_FORM_SUBMIT') return 'EMAIL SUBMIT';
         return 'EMAIL';
     };
+
+    // Derived stats from logs
+    const logStats = useMemo(() => {
+        const ytClicks = logs.filter(l => l.activityType === 'EMAIL_YOUTUBE_CLICK').length;
+        const ctaClicks = logs.filter(l => l.activityType === 'EMAIL_CTA_CLICK').length;
+        const videoPlays = logs.filter(l => l.activityType === 'VIDEO_PLAY' || l.activityType === 'YOUTUBE_BADGE_CLICK').length;
+        const downloads = logs.filter(l => l.activityType === 'JOURNAL_DOWNLOAD').length;
+        const emailSubmits = logs.filter(l => l.activityType === 'EMAIL_FORM_SUBMIT').length;
+        const pageVisits = logs.filter(l => l.activityType === 'PAGE_VISIT_ABOUT' || l.activityType === 'PAGE_VISIT_APP').length;
+        const anonymousCount = logs.filter(l => !l.userEmail || l.userEmail === 'anonymous').length;
+        return { ytClicks, ctaClicks, videoPlays, downloads, emailSubmits, pageVisits, anonymousCount };
+    }, [logs]);
 
     return (
         <AnimatePresence>
@@ -501,6 +530,32 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     </div>
                                 )}
 
+                                {/* ── Stats Bar ── */}
+                                <div className="px-4 sm:px-10 py-3 border-b border-[var(--border-subtle)]/50 flex flex-wrap items-center gap-3">
+                                    {[
+                                        { icon: <Youtube className="w-3 h-3 text-red-500" />, label: 'YouTube clicks', value: logStats.ytClicks, color: 'text-red-400' },
+                                        { icon: <ExternalLink className="w-3 h-3 text-amber-400" />, label: 'CTA clicks', value: logStats.ctaClicks, color: 'text-amber-400' },
+                                        { icon: <PlayCircle className="w-3 h-3 text-purple-400" />, label: 'Video plays', value: logStats.videoPlays, color: 'text-purple-400' },
+                                        { icon: <Download className="w-3 h-3 text-green-400" />, label: 'Downloads', value: logStats.downloads, color: 'text-green-400' },
+                                        { icon: <Mail className="w-3 h-3 text-teal-400" />, label: 'Email submits', value: logStats.emailSubmits, color: 'text-teal-400' },
+                                        { icon: <Globe className="w-3 h-3 text-teal-300" />, label: 'Page visits', value: logStats.pageVisits, color: 'text-teal-300' },
+                                    ].map(s => (
+                                        <div key={s.label} className="flex items-center gap-1.5 bg-[var(--bg-surface)] rounded-lg px-2.5 py-1.5 border border-[var(--border-subtle)]/60">
+                                            {s.icon}
+                                            <span className={`text-[11px] font-black ${s.color}`}>{s.value}</span>
+                                            <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider">{s.label}</span>
+                                        </div>
+                                    ))}
+                                    {/* Anonymous toggle */}
+                                    <button
+                                        onClick={() => setShowAnonymous(v => !v)}
+                                        className={`ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-wider transition-all ${showAnonymous ? 'border-amber-400/50 text-amber-400 bg-amber-400/10' : 'border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+                                    >
+                                        <UserX className="w-3 h-3" />
+                                        {showAnonymous ? 'Hide' : 'Show'} anonymous ({logStats.anonymousCount})
+                                    </button>
+                                </div>
+
                                 {/* Table Header */}
                                 <div className="px-4 sm:px-10 py-6 grid grid-cols-[1.5fr_1fr_0.1fr] md:grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
                                     <div>User</div>
@@ -520,6 +575,9 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <div className="space-y-1">
                                         {logs
                                             .filter(log => {
+                                                // Filter anonymous unless toggle is on
+                                                const isAnon = !log.userEmail || log.userEmail === 'anonymous';
+                                                if (isAnon && !showAnonymous) return false;
                                                 if (!searchTerm) return true;
                                                 const s = searchTerm.toLowerCase();
                                                 return (
