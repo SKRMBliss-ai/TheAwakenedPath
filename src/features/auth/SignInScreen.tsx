@@ -95,7 +95,7 @@ export const SignInScreen = () => {
                     className="text-2xl font-serif font-bold tracking-[0.15em] uppercase text-center"
                     style={{ color: theme.textPrimary }}
                 >
-                    Inner Space
+                    Mind Gym
                 </h1>
                 <p
                     className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase mt-2 opacity-60"

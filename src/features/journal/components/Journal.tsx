@@ -317,7 +317,7 @@ const Journal: React.FC<JournalProps> = ({ isAccessValid, onUpgrade }) => {
             <div className="flex flex-col items-center justify-center p-12 text-center h-[60vh]">
                 <p className="text-[10px] uppercase tracking-[0.3em] font-bold mb-3"
                     style={{ color: 'var(--text-muted)' }}>
-                    Inner Space
+                    Mind Gym
                 </p>
                 <h1 className="text-3xl font-serif font-light mb-2"
                     style={{ color: 'var(--text-primary)' }}>

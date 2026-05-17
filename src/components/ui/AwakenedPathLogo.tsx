@@ -207,7 +207,7 @@ function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
           'group-hover:text-[var(--accent-primary)] transition-colors duration-300'
         )}
       >
-        Inner Space
+        Mind Gym
       </h1>
 
       {/* Sub-label / tagline */}
