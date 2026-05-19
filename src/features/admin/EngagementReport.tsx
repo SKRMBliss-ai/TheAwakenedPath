@@ -391,6 +391,31 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         return { ytClicks, ctaClicks, videoPlays, downloads, emailSubmits, pageVisits, anonymousCount };
     }, [logs]);
 
+    // Daily breakdown — last 14 days
+    const dailyStats = useMemo(() => {
+        const days: Record<string, { opens: number; uniqueOpeners: Set<string>; ytClicks: number; ctaClicks: number; interactions: number }> = {};
+        const toKey = (ts: any) => {
+            if (!ts) return null;
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        };
+        logs.forEach(l => {
+            const key = toKey(l.timestamp);
+            if (!key) return;
+            if (!days[key]) days[key] = { opens: 0, uniqueOpeners: new Set(), ytClicks: 0, ctaClicks: 0, interactions: 0 };
+            if (l.activityType === 'EMAIL_OPEN') {
+                days[key].opens++;
+                if (l.userEmail && l.userEmail !== 'anonymous') days[key].uniqueOpeners.add(l.userEmail);
+            }
+            if (l.activityType === 'EMAIL_YOUTUBE_CLICK') { days[key].ytClicks++; days[key].interactions++; }
+            if (l.activityType === 'EMAIL_CTA_CLICK') { days[key].ctaClicks++; days[key].interactions++; }
+        });
+        return Object.entries(days)
+            .map(([date, d]) => ({ date, opens: d.opens, uniqueOpeners: d.uniqueOpeners.size, ytClicks: d.ytClicks, ctaClicks: d.ctaClicks, interactions: d.interactions }))
+            .sort((a, b) => new Date(b.date + ' 2026').getTime() - new Date(a.date + ' 2026').getTime())
+            .slice(0, 14);
+    }, [logs]);
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -526,6 +551,44 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                     <X className="w-4 h-4" />
                                                 </button>
                                             )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── Daily Breakdown Table ── */}
+                                {dailyStats.length > 0 && (
+                                    <div className="px-4 sm:px-10 py-4 border-b border-[var(--border-subtle)]/50">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--text-muted)] mb-3">Daily Email Engagement</p>
+                                        <div className="overflow-x-auto rounded-xl border border-[var(--border-subtle)]/60">
+                                            <table className="w-full text-[11px] border-collapse">
+                                                <thead>
+                                                    <tr className="bg-[var(--bg-surface-hover)] border-b border-[var(--border-subtle)]/50">
+                                                        <th className="px-3 py-2 text-left font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">Date</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-[var(--accent-primary)] uppercase tracking-wider whitespace-nowrap">📬 Opens</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-[var(--accent-primary)] uppercase tracking-wider whitespace-nowrap">👥 Unique</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-red-400 uppercase tracking-wider whitespace-nowrap">▶ YouTube</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-amber-400 uppercase tracking-wider whitespace-nowrap">🔗 CTA</th>
+                                                        <th className="px-3 py-2 text-center font-bold uppercase tracking-wider whitespace-nowrap text-[var(--text-muted)]">Interactions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-[var(--border-subtle)]/30">
+                                                    {dailyStats.map((d, i) => (
+                                                        <tr key={d.date} className={i % 2 === 0 ? 'bg-[var(--bg-base)]' : 'bg-[var(--bg-surface)]/40'}>
+                                                            <td className="px-3 py-2 font-bold text-[var(--text-primary)] whitespace-nowrap">{d.date}</td>
+                                                            <td className="px-3 py-2 text-center font-bold text-[var(--accent-primary)]">{d.opens}</td>
+                                                            <td className="px-3 py-2 text-center text-[var(--text-secondary)]">{d.uniqueOpeners}</td>
+                                                            <td className="px-3 py-2 text-center font-bold text-red-400">{d.ytClicks || '—'}</td>
+                                                            <td className="px-3 py-2 text-center font-bold text-amber-400">{d.ctaClicks || '—'}</td>
+                                                            <td className="px-3 py-2 text-center">
+                                                                {d.interactions > 0
+                                                                    ? <span className="px-2 py-0.5 rounded-full bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] font-black">{d.interactions}</span>
+                                                                    : <span className="text-[var(--text-muted)]">—</span>
+                                                                }
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 )}
