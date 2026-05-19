@@ -1316,8 +1316,37 @@ Return ONLY a valid JSON object (no markdown, no explanation):
 
 async function runReminderLogic(apiKey, youtubeKey, force = false) {
     const today = new Date().toISOString().split('T')[0];
-    const usersSnap = await db.collection("users").get();
     const transporter = getTransporter();
+
+    // ── Read subscriber list from subscribers.txt ────────────────────────────
+    // Each non-empty, non-comment line is an active email.
+    // To disable someone: prefix their line with # or delete the line.
+    const fs = require('fs');
+    const path = require('path');
+    const subscriberFile = path.join(__dirname, 'subscribers.txt');
+    let subscriberEmails = [];
+    try {
+        const raw = fs.readFileSync(subscriberFile, 'utf8');
+        subscriberEmails = raw
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l && !l.startsWith('#'))
+            .map(l => l.toLowerCase());
+        console.log(`[Subscribers] Loaded ${subscriberEmails.length} emails from subscribers.txt`);
+    } catch (e) {
+        console.error('[Subscribers] Could not read subscribers.txt, falling back to Firestore:', e.message);
+        // Fallback: read from Firestore users collection
+        const snap = await db.collection("users").get();
+        snap.docs.forEach(d => { if (d.data().email) subscriberEmails.push(d.data().email.toLowerCase()); });
+    }
+
+    // Build a lookup map: email → Firestore user data (for timezone, uid etc.)
+    const usersSnap = await db.collection("users").get();
+    const usersByEmail = {};
+    usersSnap.docs.forEach(d => {
+        const data = d.data();
+        if (data.email) usersByEmail[data.email.toLowerCase()] = { ...data, _id: d.id };
+    });
 
     const todayVideo = await getDailyYoutubeVideo(youtubeKey, db);
     const daily = await getDailyEmailContent(apiKey, todayVideo); // pass video so Gemini can tailor content
@@ -1478,27 +1507,10 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
     let blastId = null;
     let recipientEmails = [];
 
-    for (const userDoc of usersSnap.docs) {
-        const userData = userDoc.data();
-
-        // Exclude specific emails
-        const blockedEmails = [
-            'simkatyal1@gmail.com', 
-            'smriti.duggal@gmail.com', 
-            'jetski@test.com', 
-            'shrutikhungar@gmail.com',
-            'testuser@example.com',
-            'test@example.com',
-            'echarttolleteachings@gmail.com',
-            'russel.brownlee@gmail.com',
-            'sup.trezor.io@gmail.com',
-            'brjdjej@aol.com'
-        ];
-        if (userData.email && blockedEmails.includes(userData.email.toLowerCase())) {
-            continue;
-        }
-
-        if (!userData.email || userData.notificationsEnabled === false) continue;
+    for (const emailAddr of subscriberEmails) {
+        // Look up Firestore data for this email (timezone, uid, etc.)
+        const userData = usersByEmail[emailAddr] || { email: emailAddr };
+        const userDoc = userData._id ? { id: userData._id } : { id: emailAddr };
 
         // Calculate User's current local hour
         const userTimezone = userData.timezone || 'Asia/Kolkata'; // Default to India if not specified
@@ -1516,7 +1528,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
         }
 
         // Check for 5-day throttle for Support@eckharttolle.com
-        if (userData.email && userData.email.toLowerCase() === 'support@eckharttolle.com') {
+        if (emailAddr && emailAddr.toLowerCase() === 'support@eckharttolle.com') {
             const lastSent = userData.lastReminderSentAt ? (userData.lastReminderSentAt.toDate ? userData.lastReminderSentAt.toDate() : new Date(userData.lastReminderSentAt)) : null;
             if (lastSent) {
                 const now = new Date();
@@ -1529,31 +1541,28 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
             }
         }
 
-        // Check if user has already practiced today
-        const practiceSnap = await userDoc.ref.collection("dailyPractices").doc(today).get();
-        if (!practiceSnap.exists || !practiceSnap.data().completed) {
-            
-            // Create blast record on first real send of this run
-            if (!blastId) {
-                const blastRef = await db.collection("email_blasts").add({
-                    subject: "An Invitation to Return to Source",
-                    chapterTitle: "Daily Mind Gym Practice",
-                    chapterSubtitle: daily.headline,
-                    sentAt: admin.firestore.FieldValue.serverTimestamp(),
-                    totalRecipients: 0, // Will update later
-                    adminEmail: "SYSTEM_AUTOMATED",
-                    videoId: todayVideo.id || null,
-                    videoTitle: todayVideo.title || null,
-                });
-                blastId = blastRef.id;
-            }
+        // Create blast record on first real send of this run
+        if (!blastId) {
+            const blastRef = await db.collection("email_blasts").add({
+                subject: todaySubject,
+                chapterTitle: "Daily Mind Gym Practice",
+                chapterSubtitle: daily.headline,
+                sentAt: admin.firestore.FieldValue.serverTimestamp(),
+                totalRecipients: 0,
+                adminEmail: "SYSTEM_AUTOMATED",
+                videoId: todayVideo.id || null,
+                videoTitle: todayVideo.title || null,
+            });
+            blastId = blastRef.id;
+        }
 
-            console.log(`Sending reminder to ${userData.email}`);
-            
+        {
+            console.log(`Sending reminder to ${emailAddr}`);
+
             // Personalize unsubscribe link and tracking pixel
             const personalizedHtml = emailTemplate
-                .replace(/{{USER_ID}}/g, userDoc.id)
-                .replace(/{{USER_EMAIL_TRACK}}/g, encodeURIComponent(userData.email))
+                .replace(/{{USER_ID}}/g, userData._id || emailAddr)
+                .replace(/{{USER_EMAIL_TRACK}}/g, encodeURIComponent(emailAddr))
                 .replace(/DAILY_REMINDER/g, blastId);
 
             try {
@@ -1584,12 +1593,12 @@ With love,
 Shruti
 Mind Gym · connect@skrmblissai.in
 
-To stop receiving these emails: https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userDoc.id}
+To stop receiving these emails: https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userData._id || emailAddr}
 `;
                 await transporter.sendMail({
                     from: '"Mind Gym" <connect@skrmblissai.in>',
                     replyTo: 'connect@skrmblissai.in',
-                    to: userData.email,
+                    to: emailAddr,
                     subject: todaySubject,
                     text: plainText,
                     html: personalizedHtml,
@@ -1599,16 +1608,18 @@ To stop receiving these emails: https://us-central1-awakened-path-2026.cloudfunc
                         'X-Entity-Ref-ID': `mindgym-daily-${new Date().toISOString().split('T')[0]}`,
                     }
                 });
-                console.log(`Success: Reminder sent to ${userData.email}`);
+                console.log(`Success: Reminder sent to ${emailAddr}`);
                 sentCount++;
-                recipientEmails.push(userData.email);
+                recipientEmails.push(emailAddr);
                 
-                // Update last sent timestamp
-                await userDoc.ref.update({
-                    lastReminderSentAt: admin.firestore.FieldValue.serverTimestamp()
-                });
+                // Update last sent timestamp in Firestore if user exists there
+                if (userData._id) {
+                    await db.collection("users").doc(userData._id).update({
+                        lastReminderSentAt: admin.firestore.FieldValue.serverTimestamp()
+                    }).catch(() => {});
+                }
             } catch (mailErr) {
-                console.error(`Failed to send reminder to ${userData.email}:`, mailErr.message);
+                console.error(`Failed to send reminder to ${emailAddr}:`, mailErr.message);
                 // Continue to next user
             }
         }
@@ -1726,15 +1737,15 @@ exports.blastUpdateEmail = onCall({
 
     for (const userDoc of usersSnap.docs) {
         const userData = userDoc.data();
-        if (!userData.email || userData.notificationsEnabled === false) continue;
+        if (!emailAddr || userData.notificationsEnabled === false) continue;
         
         await transporter.sendMail({
             from: '"Mind Gym" <connect@skrmblissai.in>',
-            to: userData.email,
+            to: emailAddr,
             subject: `Course Update: ${chapterTitle}`,
-            html: updateTemplate(userData.email, blastRef.id).replace(/{{USER_ID}}/g, userDoc.id)
+            html: updateTemplate(emailAddr, blastRef.id).replace(/{{USER_ID}}/g, userData._id || emailAddr)
         });
-        recipientEmails.push(userData.email);
+        recipientEmails.push(emailAddr);
     }
 
     // Update blast with recipients

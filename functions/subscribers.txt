@@ -1,0 +1,124 @@
+# Mind Gym — Daily Email Subscriber List
+# ─────────────────────────────────────────────────────────────────────────────
+# HOW TO USE:
+#   • One email per line = active subscriber (will receive daily email)
+#   • Start a line with # to disable/comment out (won't receive email)
+#   • Save the file, then run: firebase deploy --only functions
+# ─────────────────────────────────────────────────────────────────────────────
+
+acero0977@gmail.com
+aishwarya.gj@gmail.com
+akpoga4matic@gmail.com
+alexspruijt1988@gmail.com
+allam.yagan@gmail.com
+allblackdre@gmail.com
+alvarovegalopez902@gmail.com
+amitha1610@gmail.com
+anthonyneilwestfall@gmail.com
+awelltendedmind@yahoo.com
+bgrealestatemiami@gmail.com
+blanco.carrera@gmail.com
+bodyworker100@gmail.com
+bossjipk@gmail.com
+brascari18@gmail.com
+catcitycat@yahoo.com
+celinakesar@hotmail.com
+chandragowd1990@gmail.com
+charlemagne.sabrina@gmail.com
+chjhansi109@gmail.com
+cosentino_s@yahoo.com
+csridhar66@gmail.com
+dalia.ali@o2online.de
+dc1975dc4@aol.com
+dmmsbook@gmail.com
+drsurekha710@gmail.com
+duygusaglam87@hotmail.com
+ecarlisle@healing-ayurveda.com
+faerention@gmail.com
+floriana.romagnolli@gmail.com
+forexnancy99@gmail.com
+francisl82@live.ca
+gaellewagner21@gmail.com
+gaubriella94@gmail.com
+gavrilov.lina@gmail.com
+getkrish83@gmail.com
+hari322.hp@gmail.com
+idigesh@gmail.com
+ivory94@hotmail.it
+jane@strategenic.co.uk
+janiharipriya@gmail.com
+janmitxx@gmail.com
+kcshreem8@gmail.com
+kelleymmiller3@gmail.com
+kerstin@metamorphicwellness.ca
+khaledhasizur@gmail.com
+kkoob56@aol.com
+krishnatamuli70@gmail.com
+ksjyothi208@gmail.com
+lasha.loladze108@gmail.com
+leeeetfong@gmail.com
+lucindaluna@ymail.com
+maddiemorfin7@gmail.com
+maltecengg12@gmail.com
+manjeetsahu@gmail.com
+meenabhojwani@gmail.com
+message@merrymonk.me
+micahannsullivan@gmail.com
+nairinicolenerkizian@yahoo.com
+niket_mech@yahoo.co.in
+nitinkhungar@gmail.com
+nivalev@012.net.il
+norahtonk1611@gmail.com
+odenisteward@gmail.com
+ozlemelikucuk@gmail.com
+padron73@hotmail.com
+pinkymgidwani@gmail.com
+pkoneru14@gmail.com
+pratibhamic@gmail.com
+rakeshtalapaka522@gmail.com
+rashmi.purbey@gmail.com
+raymosgonzales@gmail.com
+reemg25@gmail.com
+renegv6240@gmail.com
+ruffwayne40@gmail.com
+s.apostles@gmail.com
+sami.abir@hotmail.com
+sannielai.gc@gmail.com
+sbekarnataka@gmail.com
+serendipity0609.hbn@gmail.com
+shamimmohammed305@gmail.com
+shuklajay4@rediffmail.com
+skrmblissai@gmail.com
+sonamiota@gmail.com
+ssroy617@gmail.com
+suryakumar_p@yahoo.com
+t.lambert@chello.nl
+t.termined1@gmail.com
+tbxllm@gmail.com
+tracivanwagoner@icloud.com
+tramanathan87@gmail.com
+tranhuyenchieu79@gmail.com
+vaishnavirajamanickam20@gmail.com
+vijeta.ralhan@gmail.com
+vip.mirsveta@gmail.com
+vophuongjeff@gmail.com
+wanpamarcoo@outlook.com
+wayne_yoder@msn.com
+wealthisrael12@gmail.com
+williamhbp@gmail.com
+yrvadacoot@hotmail.com
+zkeskich@yahoo.ca
+
+# ── DISABLED (unsubscribed / opted out) ─────────────────────────────────────
+# innerintensive@gmail.com
+# kusumavenkatesh@gmail.com
+# newsletter9999@duck.com
+# 017gma@gmail.com
+# eric@ericniequist.com
+# cheriesmith.art@gmail.com
+# moonchildearthborn@gmail.com
+# rociteba@gmail.com
+# rcasanches@gmail.com
+# support@dannycompier.com
+# support@eckharttolle.com
+# slate-yam-stole@duck.com
