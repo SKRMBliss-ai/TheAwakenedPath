@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Trash2, Search, ExternalLink, Target, Globe, Youtube, Download, PlayCircle, UserX } from 'lucide-react';
 import { db, functions } from '../../firebase';
 import { collection, query, orderBy, limit, getDocs, where, deleteDoc, doc, updateDoc } from 'firebase/firestore';
@@ -440,25 +440,19 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             .slice(0, 14);
     }, [logs]);
 
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-                    {/* Backdrop */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                    />
+    if (!isOpen) return null;
 
-                    {/* Modal Content */}
-                    <motion.div
-                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-4xl h-full sm:h-auto sm:max-h-[90vh] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-none sm:rounded-[24px] shadow-[0_32px_128px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.25 }}
+            className="w-full min-h-screen flex flex-col bg-[var(--bg-base)]"
+        >
+                    {/* Inline Page Content */}
+                    <div
+                        className="w-full flex flex-col"
                     >
                         {/* Header */}
                         <div className="p-4 sm:p-8 border-b border-[#2A2A2A] flex flex-col sm:flex-row justify-between items-start gap-6">
@@ -545,9 +539,9 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
 
                                 <button
                                     onClick={onClose}
-                                    className="p-3 rounded-full hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all border border-transparent hover:border-[var(--border-subtle)]"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all text-[13px] font-medium border border-[var(--border-subtle)]"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-4 h-4" /> Close
                                 </button>
                             </div>
                         </div>
@@ -1272,10 +1266,8 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                             .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 10px; }
                             .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--border-default); }
                         ` }} />
-                    </motion.div>
-                </div>
-            )}
-        </AnimatePresence>
+                    </div>
+        </motion.div>
     );
 };
 

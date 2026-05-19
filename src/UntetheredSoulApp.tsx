@@ -1899,7 +1899,12 @@ export default function UntetheredApp() {
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto px-2 pt-2 pb-28 sm:px-4 sm:pt-4 md:px-6 md:pt-6 lg:pb-8 space-y-6 sm:space-y-8">
+        {/* Engagement Report — renders inline, replacing main content */}
+        {isReportOpen && (
+          <EngagementReport isOpen={true} onClose={() => setIsReportOpen(false)} />
+        )}
+
+        <div className={cn("max-w-7xl mx-auto px-2 pt-2 pb-28 sm:px-4 sm:pt-4 md:px-6 md:pt-6 lg:pb-8 space-y-6 sm:space-y-8", isReportOpen && "hidden")}>
           <SacredWelcomeModal
             isOpen={welcomeModal.isOpen}
             onClose={() => {
@@ -2273,7 +2278,7 @@ export default function UntetheredApp() {
           </AnimatePresence>
         </div>
       </main>
-      <EngagementReport isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} />
+      {/* EngagementReport is now rendered inline in the main content area above */}
       <AchievementToast
         achievement={toastQueue[0] || null}
         onDismiss={dismissToast}
