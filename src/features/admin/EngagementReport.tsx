@@ -379,21 +379,34 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         return 'EMAIL';
     };
 
+    // Helper: is this CTA click a journal download link?
+    const isJournalCta = (l: ActivityLog) =>
+        l.activityType === 'EMAIL_CTA_CLICK' &&
+        (l.details?.toLowerCase().includes('aboutawakened') || (l as any).destination?.includes('aboutawakened'));
+
     // Derived stats from logs
     const logStats = useMemo(() => {
-        const ytClicks = logs.filter(l => l.activityType === 'EMAIL_YOUTUBE_CLICK').length;
-        const ctaClicks = logs.filter(l => l.activityType === 'EMAIL_CTA_CLICK').length;
-        const videoPlays = logs.filter(l => l.activityType === 'VIDEO_PLAY' || l.activityType === 'YOUTUBE_BADGE_CLICK').length;
-        const downloads = logs.filter(l => l.activityType === 'JOURNAL_DOWNLOAD').length;
+        const ytClicks    = logs.filter(l => l.activityType === 'EMAIL_YOUTUBE_CLICK').length;
+        const appCtaClicks     = logs.filter(l => l.activityType === 'EMAIL_CTA_CLICK' && !isJournalCta(l)).length;
+        const journalCtaClicks = logs.filter(l => isJournalCta(l)).length;
+        const videoPlays  = logs.filter(l => l.activityType === 'VIDEO_PLAY' || l.activityType === 'YOUTUBE_BADGE_CLICK').length;
+        const downloads   = logs.filter(l => l.activityType === 'JOURNAL_DOWNLOAD').length;
         const emailSubmits = logs.filter(l => l.activityType === 'EMAIL_FORM_SUBMIT').length;
-        const pageVisits = logs.filter(l => l.activityType === 'PAGE_VISIT_ABOUT' || l.activityType === 'PAGE_VISIT_APP').length;
+        const pageVisits  = logs.filter(l => l.activityType === 'PAGE_VISIT_ABOUT' || l.activityType === 'PAGE_VISIT_APP').length;
         const anonymousCount = logs.filter(l => !l.userEmail || l.userEmail === 'anonymous').length;
-        return { ytClicks, ctaClicks, videoPlays, downloads, emailSubmits, pageVisits, anonymousCount };
+        // Unique openers (all-time)
+        const uniqueOpeners = new Set(logs.filter(l => l.activityType === 'EMAIL_OPEN' && l.userEmail && l.userEmail !== 'anonymous').map(l => l.userEmail)).size;
+        // Interactions = any click beyond opening (YouTube + either CTA)
+        const interactions = ytClicks + appCtaClicks + journalCtaClicks;
+        return { ytClicks, appCtaClicks, journalCtaClicks, videoPlays, downloads, emailSubmits, pageVisits, anonymousCount, uniqueOpeners, interactions };
     }, [logs]);
 
     // Daily breakdown — last 14 days
     const dailyStats = useMemo(() => {
-        const days: Record<string, { opens: number; uniqueOpeners: Set<string>; ytClicks: number; ctaClicks: number; interactions: number }> = {};
+        const days: Record<string, {
+            opens: number; uniqueOpeners: Set<string>;
+            ytClicks: number; appCtaClicks: number; journalCtaClicks: number;
+        }> = {};
         const toKey = (ts: any) => {
             if (!ts) return null;
             const d = ts.toDate ? ts.toDate() : new Date(ts);
@@ -402,16 +415,27 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         logs.forEach(l => {
             const key = toKey(l.timestamp);
             if (!key) return;
-            if (!days[key]) days[key] = { opens: 0, uniqueOpeners: new Set(), ytClicks: 0, ctaClicks: 0, interactions: 0 };
+            if (!days[key]) days[key] = { opens: 0, uniqueOpeners: new Set(), ytClicks: 0, appCtaClicks: 0, journalCtaClicks: 0 };
             if (l.activityType === 'EMAIL_OPEN') {
                 days[key].opens++;
                 if (l.userEmail && l.userEmail !== 'anonymous') days[key].uniqueOpeners.add(l.userEmail);
             }
-            if (l.activityType === 'EMAIL_YOUTUBE_CLICK') { days[key].ytClicks++; days[key].interactions++; }
-            if (l.activityType === 'EMAIL_CTA_CLICK') { days[key].ctaClicks++; days[key].interactions++; }
+            if (l.activityType === 'EMAIL_YOUTUBE_CLICK') days[key].ytClicks++;
+            if (l.activityType === 'EMAIL_CTA_CLICK') {
+                if (isJournalCta(l)) days[key].journalCtaClicks++;
+                else days[key].appCtaClicks++;
+            }
         });
         return Object.entries(days)
-            .map(([date, d]) => ({ date, opens: d.opens, uniqueOpeners: d.uniqueOpeners.size, ytClicks: d.ytClicks, ctaClicks: d.ctaClicks, interactions: d.interactions }))
+            .map(([date, d]) => ({
+                date,
+                opens: d.opens,
+                uniqueOpeners: d.uniqueOpeners.size,
+                ytClicks: d.ytClicks,
+                appCtaClicks: d.appCtaClicks,
+                journalCtaClicks: d.journalCtaClicks,
+                interactions: d.ytClicks + d.appCtaClicks + d.journalCtaClicks,
+            }))
             .sort((a, b) => new Date(b.date + ' 2026').getTime() - new Date(a.date + ' 2026').getTime())
             .slice(0, 14);
     }, [logs]);
@@ -564,11 +588,12 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                 <thead>
                                                     <tr className="bg-[var(--bg-surface-hover)] border-b border-[var(--border-subtle)]/50">
                                                         <th className="px-3 py-2 text-left font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">Date</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-[var(--accent-primary)] uppercase tracking-wider whitespace-nowrap">📬 Opens</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-[var(--accent-primary)] uppercase tracking-wider whitespace-nowrap">👥 Unique</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-red-400 uppercase tracking-wider whitespace-nowrap">▶ YouTube</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-amber-400 uppercase tracking-wider whitespace-nowrap">🔗 CTA</th>
-                                                        <th className="px-3 py-2 text-center font-bold uppercase tracking-wider whitespace-nowrap text-[var(--text-muted)]">Interactions</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-[var(--accent-primary)] uppercase tracking-wider whitespace-nowrap" title="Total email open events">Opens</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-[var(--accent-primary)] uppercase tracking-wider whitespace-nowrap" title="Distinct people who opened (no duplicates)">Unique</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-red-400 uppercase tracking-wider whitespace-nowrap" title="Clicked YouTube link in email">▶ YT</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-amber-400 uppercase tracking-wider whitespace-nowrap" title="Clicked 'Open Today's Practice' → app">📱 App</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-green-400 uppercase tracking-wider whitespace-nowrap" title="Clicked 'Get Free Journal' → /aboutawakenedpath">📓 Journal</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-purple-400 uppercase tracking-wider whitespace-nowrap" title="Total clicks (YouTube + App + Journal) — people who did more than just open">Interactions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-[var(--border-subtle)]/30">
@@ -576,12 +601,13 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         <tr key={d.date} className={i % 2 === 0 ? 'bg-[var(--bg-base)]' : 'bg-[var(--bg-surface)]/40'}>
                                                             <td className="px-3 py-2 font-bold text-[var(--text-primary)] whitespace-nowrap">{d.date}</td>
                                                             <td className="px-3 py-2 text-center font-bold text-[var(--accent-primary)]">{d.opens}</td>
-                                                            <td className="px-3 py-2 text-center text-[var(--text-secondary)]">{d.uniqueOpeners}</td>
-                                                            <td className="px-3 py-2 text-center font-bold text-red-400">{d.ytClicks || '—'}</td>
-                                                            <td className="px-3 py-2 text-center font-bold text-amber-400">{d.ctaClicks || '—'}</td>
+                                                            <td className="px-3 py-2 text-center text-[var(--text-secondary)]" title="Distinct people (no duplicates)">{d.uniqueOpeners}</td>
+                                                            <td className="px-3 py-2 text-center font-bold text-red-400">{d.ytClicks || <span className="text-[var(--text-muted)]">—</span>}</td>
+                                                            <td className="px-3 py-2 text-center font-bold text-amber-400">{d.appCtaClicks || <span className="text-[var(--text-muted)]">—</span>}</td>
+                                                            <td className="px-3 py-2 text-center font-bold text-green-400">{d.journalCtaClicks || <span className="text-[var(--text-muted)]">—</span>}</td>
                                                             <td className="px-3 py-2 text-center">
                                                                 {d.interactions > 0
-                                                                    ? <span className="px-2 py-0.5 rounded-full bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] font-black">{d.interactions}</span>
+                                                                    ? <span className="px-2 py-0.5 rounded-full bg-purple-400/15 text-purple-400 font-black">{d.interactions}</span>
                                                                     : <span className="text-[var(--text-muted)]">—</span>
                                                                 }
                                                             </td>
@@ -596,14 +622,15 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                 {/* ── Stats Bar ── */}
                                 <div className="px-4 sm:px-10 py-3 border-b border-[var(--border-subtle)]/50 flex flex-wrap items-center gap-3">
                                     {[
-                                        { icon: <Youtube className="w-3 h-3 text-red-500" />, label: 'YouTube clicks', value: logStats.ytClicks, color: 'text-red-400' },
-                                        { icon: <ExternalLink className="w-3 h-3 text-amber-400" />, label: 'CTA clicks', value: logStats.ctaClicks, color: 'text-amber-400' },
-                                        { icon: <PlayCircle className="w-3 h-3 text-purple-400" />, label: 'Video plays', value: logStats.videoPlays, color: 'text-purple-400' },
-                                        { icon: <Download className="w-3 h-3 text-green-400" />, label: 'Downloads', value: logStats.downloads, color: 'text-green-400' },
-                                        { icon: <Mail className="w-3 h-3 text-teal-400" />, label: 'Email submits', value: logStats.emailSubmits, color: 'text-teal-400' },
-                                        { icon: <Globe className="w-3 h-3 text-teal-300" />, label: 'Page visits', value: logStats.pageVisits, color: 'text-teal-300' },
+                                        { icon: <Youtube className="w-3 h-3 text-red-500" />, label: 'YouTube (from email)', value: logStats.ytClicks, color: 'text-red-400', title: 'Clicked the YouTube video link in the email' },
+                                        { icon: <Monitor className="w-3 h-3 text-amber-400" />, label: 'App clicks', value: logStats.appCtaClicks, color: 'text-amber-400', title: 'Clicked "Open Today\'s Practice" button → /awakenedpath' },
+                                        { icon: <Download className="w-3 h-3 text-green-400" />, label: 'Journal CTA', value: logStats.journalCtaClicks, color: 'text-green-400', title: 'Clicked "Get Free Journal" button → /aboutawakenedpath' },
+                                        { icon: <Eye className="w-3 h-3 text-[var(--accent-primary)]" />, label: 'Unique openers', value: logStats.uniqueOpeners, color: 'text-[var(--accent-primary)]', title: 'Distinct people who opened (regardless of how many times)' },
+                                        { icon: <Target className="w-3 h-3 text-purple-400" />, label: 'Total interactions', value: logStats.interactions, color: 'text-purple-400', title: 'Any click (YouTube + App CTA + Journal CTA) — people who did more than just open' },
+                                        { icon: <PlayCircle className="w-3 h-3 text-purple-300" />, label: 'Video plays (site)', value: logStats.videoPlays, color: 'text-purple-300', title: 'Played the walkthrough video on /aboutawakenedpath' },
+                                        { icon: <Globe className="w-3 h-3 text-teal-300" />, label: 'Page visits', value: logStats.pageVisits, color: 'text-teal-300', title: 'Visited /awakenedpath or /aboutawakenedpath' },
                                     ].map(s => (
-                                        <div key={s.label} className="flex items-center gap-1.5 bg-[var(--bg-surface)] rounded-lg px-2.5 py-1.5 border border-[var(--border-subtle)]/60">
+                                        <div key={s.label} title={s.title} className="flex items-center gap-1.5 bg-[var(--bg-surface)] rounded-lg px-2.5 py-1.5 border border-[var(--border-subtle)]/60 cursor-help">
                                             {s.icon}
                                             <span className={`text-[11px] font-black ${s.color}`}>{s.value}</span>
                                             <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider">{s.label}</span>
