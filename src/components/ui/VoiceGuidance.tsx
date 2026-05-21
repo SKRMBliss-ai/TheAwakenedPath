@@ -193,6 +193,7 @@ export const VoiceGuidance = ({
 
   // Preload Voice
   useEffect(() => {
+    if (!VoiceService.isEnabled) return; // don't preload if voice off
     const segments = currentScript.split(/\n\n+/).filter(s => s.trim().length > 0);
     segments.forEach(segment => {
       VoiceService.preloadText(segment, {
@@ -201,6 +202,32 @@ export const VoiceGuidance = ({
       });
     });
   }, [preferredVoice, currentScript]);
+
+  // Auto-play on first visit to this tab (only if voice enabled & not heard before)
+  useEffect(() => {
+    if (!VoiceService.isEnabled) return;
+    if (VoiceService.hasHeardScreen(`tab-${activeTab}`)) return;
+    if (status === 'playing') return; // already playing something
+
+    const timer = setTimeout(async () => {
+      if (!VoiceService.isEnabled) return;
+      if (VoiceService.hasHeardScreen(`tab-${activeTab}`)) return;
+      try {
+        setIsPreparing(true);
+        await VoiceService.speak(currentScript, {
+          gender: preferredVoice.includes('-D') ? 'MALE' : 'FEMALE',
+          voice: preferredVoice,
+          promptContext: `Spiritual, calming guide for ${activeTab} context`
+        });
+        VoiceService.markScreenHeard(`tab-${activeTab}`);
+      } catch { /* silent */ } finally {
+        setIsPreparing(false);
+      }
+    }, 1200); // small delay so UI settles first
+
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   // Sync isPreparing with service status
   useEffect(() => {
@@ -393,37 +420,80 @@ export const VoiceGuidance = ({
         )}
 
         {!showFull && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => setShowFull(true)}
-            className="pointer-events-auto w-16 h-16 rounded-full bg-[var(--bg-surface)] border border-[var(--accent-primary)]/45 shadow-xl overflow-hidden hover:scale-110 active:scale-95 transition-all relative group p-0"
-          >
-            <img
-              src="/guide-avatar.webp"
-              alt="Voice Presence"
-              className="w-full h-full object-cover object-[center_30%]"
-            />
-            {isPulsating && (
-              <motion.div
-                animate={{
-                  scale: [1, 1.3, 1],
-                  opacity: [0.3, 0.6, 0.3],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="absolute inset-0 rounded-full bg-[var(--accent-primary)] z-0"
+          <div className="flex flex-col items-center gap-1.5">
+            {/* "Tap to pause" label when speaking */}
+            <AnimatePresence>
+              {isSpeaking && (
+                <motion.button
+                  initial={{ opacity: 0, y: 6, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 4, scale: 0.9 }}
+                  onClick={() => VoiceService.pause()}
+                  className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg"
+                  style={{ background: 'var(--accent-primary)', color: 'var(--bg-base)' }}
+                >
+                  <Pause size={9} fill="currentColor" />
+                  Tap to pause
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={() => {
+                if (isSpeaking) {
+                  VoiceService.pause();
+                } else if (isPaused) {
+                  VoiceService.resume('tts');
+                } else {
+                  setShowFull(true);
+                }
+              }}
+              className="pointer-events-auto w-16 h-16 rounded-full bg-[var(--bg-surface)] border border-[var(--accent-primary)]/45 shadow-xl overflow-hidden hover:scale-110 active:scale-95 transition-all relative group p-0"
+            >
+              <img
+                src="/guide-avatar.webp"
+                alt="Voice Presence"
+                className="w-full h-full object-cover object-[center_30%]"
               />
-            )}
-            {/* Hover indicator for familiar users */}
-            {!isPulsating && !isNewUser && (
-              <div className="absolute inset-0 bg-[var(--accent-primary)]/0 group-hover:bg-[var(--accent-primary)]/10 transition-colors" />
-            )}
-          </motion.button>
+
+              {/* Speaking: teal overlay with pause icon */}
+              {(isSpeaking || isPaused) && (
+                <div className="absolute inset-0 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(94,196,176,0.72)' }}>
+                  {isSpeaking
+                    ? <Pause size={22} className="text-white drop-shadow" fill="white" />
+                    : <Play  size={22} className="text-white drop-shadow" fill="white" />}
+                </div>
+              )}
+
+              {/* Pulse ring when speaking */}
+              {isSpeaking && (
+                <motion.div
+                  animate={{ scale: [1, 1.45, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute inset-0 rounded-full z-0"
+                  style={{ background: 'var(--accent-primary)' }}
+                />
+              )}
+
+              {/* Pulsate for new-user prompt */}
+              {isPulsating && !isSpeaking && (
+                <motion.div
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute inset-0 rounded-full bg-[var(--accent-primary)] z-0"
+                />
+              )}
+
+              {/* Hover overlay for familiar users */}
+              {!isPulsating && !isSpeaking && !isPaused && (
+                <div className="absolute inset-0 bg-[var(--accent-primary)]/0 group-hover:bg-[var(--accent-primary)]/10 transition-colors" />
+              )}
+            </motion.button>
+          </div>
         )}
       </AnimatePresence>
     </div>

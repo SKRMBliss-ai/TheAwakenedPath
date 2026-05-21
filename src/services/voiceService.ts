@@ -25,12 +25,39 @@ export class VoiceService {
     private static _activeCategory: 'tts' | 'music' | null = null;
     private static _savedTtsTime: number = 0;
     private static _savedMusicTime: number = 0;
+    // ── Heard-screens tracking ────────────────────────────────────────────────
+    // Stores an array of screen/step IDs the user has already listened to.
+    // New users (no key present) get voice ON by default; returning users use their saved preference.
+    private static readonly HEARD_KEY = 'voice-heard-screens';
+
+    static isFirstTimeVoiceUser(): boolean {
+        try { return !localStorage.getItem(this.HEARD_KEY); } catch { return true; }
+    }
+
+    static hasHeardScreen(screenId: string): boolean {
+        try {
+            const raw = localStorage.getItem(this.HEARD_KEY);
+            if (!raw) return false;
+            return (JSON.parse(raw) as string[]).includes(screenId);
+        } catch { return false; }
+    }
+
+    static markScreenHeard(screenId: string): void {
+        try {
+            const raw = localStorage.getItem(this.HEARD_KEY);
+            const heard: string[] = raw ? JSON.parse(raw) : [];
+            if (!heard.includes(screenId)) {
+                heard.push(screenId);
+                localStorage.setItem(this.HEARD_KEY, JSON.stringify(heard));
+            }
+        } catch {}
+    }
+
     private static _isEnabled: boolean = (() => {
         try {
-            // Default is OFF to avoid Cloud TTS charges for users who never use voice.
-            // Users can enable via Settings. Existing users who already enabled it keep their setting.
             const saved = localStorage.getItem('voice-guidance-enabled');
-            if (saved === null) return false; // NEW default: off
+            // Brand-new users (no heard-screens key yet) → voice ON by default
+            if (saved === null) return !localStorage.getItem('voice-heard-screens') ? true : false;
             return JSON.parse(saved) === true;
         } catch { return false; }
     })();

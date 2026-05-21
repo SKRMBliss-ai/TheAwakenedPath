@@ -333,33 +333,38 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         if (tabScripts[tabId]) voice.speak(tabScripts[tabId]);
     };
 
-    // Voice narration per step
+    // Voice narration per step — only auto-plays on first visit; marks heard after playing
     useEffect(() => {
         if (!voice.voiceEnabled) return;
-        const intros: Record<number, { text: string; key: string }> = {
-            0: {
-                text: "Welcome to your reflection. Let's begin by checking in with your mind. Below, you will see a grid of common feelings. Tap any that resonate with you right now. If your specific thought isn't there, you can type it in the box labeled 'Describe your thought.' You can move between major steps using the buttons at the very top. When you are ready, tap Next to see how this feeling is affecting your body.",
-                key: "step-0-intro"
-            },
-            1: {
-                text: "Now, let's notice your physical body. Sometimes our emotions show up as tension or a heavy feeling. Look at the body map and tap the area where you feel this sensation most strongly. If you prefer to use words, you can describe it in the text box below. When you have identified the area, tap Next to begin the witnessing process.",
-                key: "step-1-intro"
-            }
+        const screenId = `journal-step-${step}`;
+        if (VoiceService.hasHeardScreen(screenId)) return; // already heard → skip auto-play
+
+        const intros: Record<number, string> = {
+            0: "Welcome to your reflection. Let's begin by checking in with your mind. Below, you will see a grid of common feelings. Tap any that resonate with you right now. If your specific thought isn't there, you can type it in the box labeled 'Describe your thought.' You can move between major steps using the buttons at the very top. When you are ready, tap Next to see how this feeling is affecting your body.",
+            1: "Now, let's notice your physical body. Sometimes our emotions show up as tension or a heavy feeling. Look at the body map and tap the area where you feel this sensation most strongly. If you prefer to use words, you can describe it in the text box below. When you have identified the area, tap Next to begin the witnessing process.",
         };
 
-        if (intros[step]) {
-            voice.speak(intros[step].text);
-        } else if (step === 2) {
-            handleWitnessTabChange("witness");
-        } else if (step === 5) {
-            voice.speak("Your entry has been sealed. You have taken a powerful step in dissolving these old patterns. You can find this reflection anytime in your Daily Log. Until next time, stay in presence.");
-        }
+        const play = async () => {
+            try {
+                if (intros[step]) {
+                    await voice.speak(intros[step]);
+                } else if (step === 2) {
+                    handleWitnessTabChange("witness");
+                } else if (step === 5) {
+                    await voice.speak("Your entry has been sealed. You have taken a powerful step in dissolving these old patterns. You can find this reflection anytime in your Daily Log. Until next time, stay in presence.");
+                } else { return; }
+                VoiceService.markScreenHeard(screenId); // mark heard after successful play
+            } catch { /* silent */ }
+        };
+        play();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [step, voice.voiceEnabled]);
 
     // Eagerly preload the NEXT step's audio to eliminate the 5-7 second wait
     useEffect(() => {
         if (!voice.voiceEnabled) return;
+        // Don't preload if this step has already been heard (no point pre-fetching)
+        if (VoiceService.hasHeardScreen(`journal-step-${step}`)) return;
         
         if (step === 0) {
             VoiceService.preloadText("Now, let's notice your physical body. Sometimes our emotions show up as tension or a heavy feeling. Look at the body map and tap the area where you feel this sensation most strongly. If you prefer to use words, you can describe it in the text box below. When you have identified the area, tap Next to begin the witnessing process.");
