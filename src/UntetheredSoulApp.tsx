@@ -2013,6 +2013,7 @@ export default function UntetheredApp() {
                 onOpenJournal={() => setActiveTab('chapters')}
                 onNavigateToPractice={() => setActiveTab('situations')}
                 onReturn={() => setActiveTab('dashboard')}
+                onNavigateToQuestion={(id) => setActiveQuestionId(id)}
               />
             </motion.div>
           )}

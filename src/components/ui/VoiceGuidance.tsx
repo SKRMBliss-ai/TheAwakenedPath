@@ -297,7 +297,7 @@ export const VoiceGuidance = ({
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="pointer-events-auto w-[320px] bg-[var(--bg-surface)] border border-[var(--accent-primary)]/20 backdrop-blur-3xl rounded-[32px] shadow-2xl p-6 relative overflow-hidden"
+            className="pointer-events-auto w-[calc(100vw-80px)] max-w-[300px] sm:w-[300px] bg-[var(--bg-surface)] border border-[var(--accent-primary)]/20 backdrop-blur-3xl rounded-[24px] shadow-2xl p-4 sm:p-6 relative overflow-hidden"
           >
             {/* Close Button */}
             <button
@@ -307,9 +307,9 @@ export const VoiceGuidance = ({
               <X size={18} />
             </button>
 
-            <div className="flex items-start gap-4 mb-6">
+            <div className="flex items-start gap-3 mb-4">
               <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--accent-primary)]/30 relative z-10 shadow-lg">
+                <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-[var(--accent-primary)]/30 relative z-10 shadow-lg">
                   <img
                     src="/guide-avatar.webp"
                     alt="Voice Presence"

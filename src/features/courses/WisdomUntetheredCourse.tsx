@@ -60,6 +60,7 @@ interface CourseProps {
   onOpenJournal?: () => void;
   onNavigateToPractice?: () => void;
   onReturn?: () => void;
+  onNavigateToQuestion?: (id: string) => void;
 }
 
 function VideoPlayerView({ videoId }: { videoId: string | null }) {
@@ -155,15 +156,30 @@ function VideoPlayerView({ videoId }: { videoId: string | null }) {
 }
 
 
+const QUESTION_LABELS: Record<string, string> = {
+  question1: 'Q1 · Why the mind runs',
+  question2: 'Q2 · Handling doubt & fear',
+  question3: 'Q3 · Personal to impersonal',
+  question4: 'Q4 · Which part to listen to',
+  question5: 'Q5 · The Observer',
+  question6: 'Q6 · Letting go of the past',
+  question7: 'Q7 · Removing the thorns',
+  question8: 'Q8 · Let go now or fall',
+  question9: 'Q9 · The middle way',
+};
+
 export function WisdomUntetheredCourse({
   activeQuestionId,
   viewMode,
   setViewMode,
   onOpenJournal,
   onNavigateToPractice: _onNavigateToPractice,
-  onReturn: _onReturn
+  onReturn: _onReturn,
+  onNavigateToQuestion,
 }: CourseProps) {
   const activeChapter = useMemo(() => CHAPTERS[0], []);
+  const [showQPicker, setShowQPicker] = useState(false);
+  const qNum = parseInt(activeQuestionId.replace('question', ''), 10);
   const { user: currentUser } = useAuth();
   const { progress = {}, updateProgress } = useCourseTracking(currentUser?.uid);
 
@@ -207,11 +223,38 @@ export function WisdomUntetheredCourse({
   return (
     <div className={styles.container}>
       {/* ── Top Navigation Bar ── */}
-      <header 
-        className={styles.topBar}
-      >
-        <div className="flex items-center gap-6">
-          {/* Return button removed to streamline UI */}
+      <header className={styles.topBar}>
+        {/* Chapter + Question label + switcher */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex flex-col leading-tight">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] opacity-70">Ch 1 · The Mind</span>
+            <button
+              onClick={() => setShowQPicker(v => !v)}
+              className="flex items-center gap-1.5 text-[13px] font-bold text-[var(--accent-primary)] hover:opacity-80 transition-opacity"
+            >
+              Q{qNum} <span className="text-[var(--text-secondary)] font-normal text-[11px] max-w-[120px] truncate hidden sm:inline">· {QUESTION_LABELS[activeQuestionId]?.split(' · ')[1]}</span>
+              <span className="text-[10px] opacity-60">▾</span>
+            </button>
+          </div>
+          {/* Question picker dropdown */}
+          {showQPicker && (
+            <div className="absolute top-14 left-2 z-50 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-2xl shadow-2xl p-2 min-w-[200px]">
+              {Object.entries(QUESTION_LABELS).map(([id, label]) => (
+                <button
+                  key={id}
+                  onClick={() => { onNavigateToQuestion?.(id); setShowQPicker(false); }}
+                  className={cn(
+                    "w-full text-left px-3 py-2.5 rounded-xl text-[12px] font-medium transition-all",
+                    id === activeQuestionId
+                      ? "bg-[var(--accent-primary)] text-black font-bold"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)]"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <nav className={styles.tabGroup}>
