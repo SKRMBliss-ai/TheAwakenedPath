@@ -314,7 +314,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }, [step]);
 
-    const bottomRef = useRef<HTMLDivElement>(null);
+    // bottomRef removed — buttons now in sticky footer
     useEffect(() => { /* was checking showNextPrompt */ }, [step]);
 
     const handleWitnessTabChange = (tabId: string) => {
@@ -422,12 +422,31 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         setStep(5);
     };
 
+    // Sticky nav actions per step
+    const stepNavActions: Record<number, React.ReactNode> = {
+        0: <><NavButton onClick={onCancel} variant="back">Cancel</NavButton><NavButton onClick={() => setStep(1)} variant="next">Next →</NavButton></>,
+        1: <><NavButton onClick={() => setStep(0)} variant="back">← Back</NavButton><NavButton onClick={() => setStep(2)} variant="next">Next →</NavButton></>,
+    };
+
     return (
-        <div ref={scrollRef} className="w-full h-full relative" style={{ 
+        <div ref={scrollRef} className="w-full h-full relative" style={{
             fontFamily: "'Georgia', 'Times New Roman', serif",
             background: 'var(--journal-ambient, transparent)',
             transition: 'background 1.5s ease'
         }}>
+            {/* ── Sticky bottom nav — always visible even when keyboard is open ── */}
+            {step in stepNavActions && (
+                <div className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 flex justify-between items-center"
+                    style={{
+                        background: 'var(--bg-primary, #0c0910)',
+                        borderTop: '1px solid var(--border-subtle)',
+                        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+                        backdropFilter: 'blur(12px)',
+                    }}>
+                    {stepNavActions[step]}
+                </div>
+            )}
+
             <div className="relative z-10 w-full max-w-4xl mx-auto pb-4 px-4 sm:px-6">
 
                 {/* ═══ HEADER BAR — compact, docked ═══ */}
@@ -469,12 +488,8 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                     />
                                 </motion.div>
 
-                                <div ref={bottomRef} className="flex flex-col gap-4 pt-10">
-                                    <div className="flex justify-between">
-                                        <NavButton onClick={onCancel} variant="back">Cancel</NavButton>
-                                        <NavButton onClick={() => setStep(1)} variant="next">Next →</NavButton>
-                                    </div>
-                                </div>
+                                {/* Spacer so sticky bar doesn't cover content */}
+                                <div className="h-20" />
                             </motion.div>
                         )}
 
@@ -506,12 +521,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                     onChange={setBodySensations}
                                 />
 
-                                <div ref={bottomRef} className="flex flex-col gap-4 pt-4">
-                                    <div className="flex justify-between">
-                                        <NavButton onClick={() => setStep(0)} variant="back">← Back</NavButton>
-                                        <NavButton onClick={() => setStep(2)} variant="next">Next →</NavButton>
-                                    </div>
-                                </div>
+                                <div className="h-20" />
                             </motion.div>
                         )}
 
