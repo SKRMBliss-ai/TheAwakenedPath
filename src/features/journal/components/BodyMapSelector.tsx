@@ -219,8 +219,9 @@ export function BodyMapSelector({
                         </defs>
 
                         {/* Body silhouette */}
-                        <path d={BODY_PATH} fill="none" stroke="var(--border-subtle)" strokeWidth="1" strokeLinejoin="round" opacity="0.4" />
-                        <path d={BODY_PATH} fill="url(#bodyGradient)" opacity="0.5" />
+                        <path d={BODY_PATH} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinejoin="round" opacity="0.7" />
+                        <path d={BODY_PATH} fill="url(#bodyGradient)" opacity="0.65" />
+                        <path d={BODY_PATH} fill="rgba(255,255,255,0.03)" opacity="1" />
 
                         {/* Zone hotspots */}
                         {BODY_ZONES.map((zone, i) => {

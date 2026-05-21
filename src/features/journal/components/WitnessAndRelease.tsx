@@ -214,7 +214,7 @@ export function WitnessAndRelease({
                                 >
                                     <div className="flex flex-col items-center gap-2">
                                         <div className={cn(
-                                            "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-500",
+                                            "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[10px] sm:text-sm font-bold border-2 transition-all duration-500",
                                             active
                                                 ? "bg-[var(--accent-primary)] border-[var(--accent-primary)] text-white"
                                                 : past
@@ -224,7 +224,7 @@ export function WitnessAndRelease({
                                             <span className={active ? 'font-black' : 'font-semibold'}>{t.icon}</span>
                                         </div>
                                         <span className={cn(
-                                            "text-[9px] font-bold uppercase tracking-[0.2em] transition-all duration-300",
+                                            "text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em] transition-all duration-300",
                                             active ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)] opacity-60"
                                         )}>{t.label}</span>
                                     </div>
@@ -285,7 +285,7 @@ export function WitnessAndRelease({
                                     <button
                                         onClick={() => toggle("witnessed")}
                                         className={cn(
-                                            "px-12 py-4 rounded-full text-sm font-bold uppercase tracking-[0.2em] transition-all duration-400 border-2",
+                                            "w-full max-w-xs mx-auto py-3.5 rounded-full text-sm font-bold uppercase tracking-[0.2em] transition-all duration-400 border-2 block",
                                             checks.witnessed
                                                 ? "bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]"
                                                 : "border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--text-main)]"
@@ -338,7 +338,7 @@ export function WitnessAndRelease({
                                     <button
                                         onClick={() => toggle("truth")}
                                         className={cn(
-                                            "px-12 py-4 rounded-full text-sm font-bold uppercase tracking-[0.2em] transition-all duration-400 border-2",
+                                            "w-full max-w-xs mx-auto py-3.5 rounded-full text-sm font-bold uppercase tracking-[0.2em] transition-all duration-400 border-2 block",
                                             checks.truth
                                                 ? "bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]"
                                                 : "border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--text-main)]"
@@ -398,9 +398,9 @@ export function WitnessAndRelease({
                                     </div>
 
                                     <div className="text-center pt-2">
-                                        <button 
+                                        <button
                                             onClick={() => handleTabChange("release")}
-                                            className="px-10 py-3 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--text-main)]"
+                                            className="w-full max-w-xs mx-auto py-3 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--text-main)] block"
                                         >
                                             Next: Begin Release →
                                         </button>
@@ -589,10 +589,10 @@ export function WitnessAndRelease({
                 </div>
 
                 {/* ── Footer navigation ── */}
-                <div className="px-2 py-8 flex items-center justify-between border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+                <div className="px-2 py-8 flex items-center gap-3 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
                     <button
                         onClick={handleBack}
-                        className="px-8 py-3 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300"
+                        className="flex-1 py-3 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 text-center"
                         style={{
                             background: 'var(--bg-surface)',
                             border: '1.5px solid var(--border-default)',
@@ -603,11 +603,11 @@ export function WitnessAndRelease({
                     </button>
 
                     {/* Dot indicators */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-shrink-0">
                         {TABS.map((t, i) => (
                             <div key={t.id} className={cn(
                                 "h-1.5 rounded-full transition-all duration-500",
-                                i === tabIdx ? "w-10 bg-[var(--accent-primary)]" : "w-3"
+                                i === tabIdx ? "w-6 bg-[var(--accent-primary)]" : "w-2"
                             )}
                             style={{ background: i === tabIdx ? 'var(--accent-primary)' : 'var(--border-subtle)' }} />
                         ))}
@@ -616,7 +616,7 @@ export function WitnessAndRelease({
                     {tabIdx < TABS.length - 1 ? (
                         <button
                             onClick={() => handleTabChange(TABS[tabIdx + 1].id)}
-                            className="px-8 py-3 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300"
+                            className="flex-1 py-3 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 text-center"
                             style={{
                                 background: 'var(--accent-primary)',
                                 color: '#fff',
@@ -625,7 +625,7 @@ export function WitnessAndRelease({
                             Next →
                         </button>
                     ) : (
-                        <div className="w-[100px]" />
+                        <div className="flex-1" />
                     )}
                 </div>
             </div>
