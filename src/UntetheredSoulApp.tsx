@@ -2283,15 +2283,22 @@ export default function UntetheredApp() {
         achievement={toastQueue[0] || null}
         onDismiss={dismissToast}
       />
-      {/* Floating Action Stack */}
+      {/* Floating Action Stack
+          On mobile (< sm): pushed higher to avoid the sticky journal Cancel/Next bar.
+          In journal/witness tabs: compact — only voice avatar + headphone shown.       */}
       <div className={cn(
-        "fixed right-4 sm:right-6 z-[100] flex flex-col items-center gap-4 transition-all duration-500",
-        musicUrl ? "bottom-24" : "bottom-12"
+        "fixed right-3 sm:right-6 z-[100] flex flex-col items-center gap-3 sm:gap-4 transition-all duration-500",
+        // On mobile: bottom-20 so stack clears the sticky 64px nav bar; on desktop keep existing offsets
+        musicUrl
+          ? "bottom-28 sm:bottom-24"
+          : "bottom-20 sm:bottom-12"
       )}>
-        {/* Top: WhatsApp */}
-        <WhatsAppButton bottomOffset={0} isInline />
+        {/* WhatsApp — hide on mobile in journal to save vertical space */}
+        <div className="hidden sm:block">
+          <WhatsAppButton bottomOffset={0} isInline />
+        </div>
 
-        {/* Middle: Voice Guidance Avatar */}
+        {/* Voice Guidance Avatar — always shown */}
         {voiceGuidanceEnabled && (
           <VoiceGuidance
             preferredVoice={preferredVoice}
@@ -2303,10 +2310,11 @@ export default function UntetheredApp() {
           />
         )}
 
-        {/* Bottom: Presence Hub (Witness + Toggle) */}
-        <div className="flex flex-col gap-3 sm:gap-4">
+        {/* Presence Hub — hide on mobile to reduce clutter */}
+        <div className="hidden sm:flex flex-col gap-3 sm:gap-4">
           <WatcherPauseButton />
-          <button
+        </div>
+        <button
             onClick={toggleAudio}
             className={cn(
               "p-4 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center group overflow-hidden shadow-2xl relative",
@@ -2327,7 +2335,6 @@ export default function UntetheredApp() {
             )}
             <Headphones className={cn("w-5 h-5 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
           </button>
-        </div>
       </div>
       <PhonePromptModal />
       <MusicMiniPlayer />
