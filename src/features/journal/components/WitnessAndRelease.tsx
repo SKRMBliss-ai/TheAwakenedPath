@@ -142,30 +142,23 @@ export function WitnessAndRelease({
         return () => { if (timerRef.current) clearTimeout(timerRef.current); };
     }, [hoopRunning, hoopTime, onHoopComplete]);
 
-    const startHoop = async () => {
-        // Stop any voice guidance that may be auto-playing — no overlap with the meditation
+    const startHoop = () => {
+        // Stop any voice guidance / TTS that may be playing — MP3 only
         VoiceService.stop();
+        VoiceService.stopMusic(); // stop any existing soundscape
 
         setHoopRunning(true);
         setHoopTime(60);
         setHoopDone(false);
 
-        // Play the new dedicated meditation audio from Firebase Storage
-        // gs://awakened-path-2026.firebasestorage.app/AboutJournal/MeditationJournal/sorryForgivemeThankyou.mp3
+        // Play the dedicated meditation MP3 — it already contains all four phrases
+        // No TTS loop — the audio file speaks the phrases itself
         const meditationUrl = 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2FMeditationJournal%2FsorryForgivemeThankyou.mp3?alt=media';
         VoiceService.playAudioURL(meditationUrl, {
             category: 'music',
-            loop: true,
+            loop: false, // play once — 60s timer runs in parallel
             trackId: 'hoop_meditation'
         });
-
-        for (const h of HOOP) {
-            // Check if we were cancelled
-            if (timerRef.current === null && !hoopRunning) break; 
-            await VoiceService.speak(h.speak);
-            // Wait for 15 seconds (voice speak takes ~1.5s, remaining ~13.5s is silence/music)
-            await new Promise(r => setTimeout(r, 15000));
-        }
     };
 
     const toggle = (k: keyof typeof checks) => {
