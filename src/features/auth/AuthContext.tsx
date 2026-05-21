@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInAnonymously,
   linkWithPopup,
   linkWithCredential,
@@ -140,6 +142,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error logging activity:', error);
     }
   };
+
+  // ── Handle Google redirect result (mobile Safari uses redirect not popup) ──
+  useEffect(() => {
+    getRedirectResult(auth).then(result => {
+      if (result?.user) {
+        console.log('[Auth] Redirect sign-in completed for:', result.user.email);
+      }
+    }).catch(err => {
+      // Only log real errors, not the "no pending redirect" case
+      if (err?.code !== 'auth/no-pending-redirect') {
+        console.error('[Auth] Redirect result error:', err?.code);
+      }
+    });
+  }, []);
 
   // ── Auth state listener ───────────────────────────────────────────────────
   useEffect(() => {
@@ -359,7 +375,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ── Auth actions ──────────────────────────────────────────────────────────
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    // Mobile Safari blocks popups → use redirect flow to avoid getting stuck on /__/auth/handler
+    const isMobileSafari = /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+      (/Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent) && /Mobile/i.test(navigator.userAgent));
+    if (isMobileSafari) {
+      await signInWithRedirect(auth, provider); // full-page redirect — handled by getRedirectResult above
+    } else {
+      await signInWithPopup(auth, provider);
+    }
   };
 
   const signInWithEmail = async (email: string, pass: string) => {

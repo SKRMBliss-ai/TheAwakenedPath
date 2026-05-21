@@ -626,21 +626,24 @@ export class VoiceService {
         }
     }
 
-    /** 
-     * Stops the current voice guidance (TTS) but keeps background music loaded/playing.
-     * This is the default 'cleanup' method used when navigating between screens.
+    /**
+     * Stops TTS only. Keeps soundscape/music playing (or resumes it if paused by TTS).
+     * Called on in-app screen navigation.
      */
     static stop() {
-        this.currentRequestId++; // Invalidate any in-flight requests
-        
+        this.currentRequestId++; // invalidate in-flight requests
         this.stopTTS();
 
-        // If music was paused by the TTS being stopped, resume it now
         if (this._activeCategory === 'tts') {
             this.setStatus('idle');
             this._activeCategory = null;
         }
-        
+
+        // If music was paused because TTS was playing, resume it now
+        if (this._isDucked) {
+            this.unduckMusic();
+        }
+
         if (typeof window !== 'undefined' && window.speechSynthesis) {
             window.speechSynthesis.cancel();
         }
@@ -695,26 +698,60 @@ export class VoiceService {
         this._isDucked = false;
     }
 
+    // ── Music-pause-for-TTS (replaces the old "duck" which only lowered volume) ──
     private static duckMusic() {
-        if (!this.musicAudio || this._isDucked) return;
-        console.log("[VoiceService] Ducking Music...");
+        if (!this.musicAudio || this.musicAudio.paused || this._isDucked) return;
+        console.log('[VoiceService] Pausing music for TTS (duck).');
+        this._savedMusicTime = this.musicAudio.currentTime;
         this._preDuckVolume = this.musicAudio.volume;
         this._isDucked = true;
-        // Fade out slightly
-        this.musicAudio.volume = Math.min(this._preDuckVolume, 0.15);
+        this.musicAudio.pause(); // fully pause — no audio overlap
     }
 
     private static unduckMusic() {
         if (!this.musicAudio || !this._isDucked) return;
-        console.log("[VoiceService] Unducking Music...");
-        this.musicAudio.volume = this._preDuckVolume;
+        console.log('[VoiceService] Resuming music after TTS (unduck).');
         this._isDucked = false;
+        this.musicAudio.volume = this._preDuckVolume;
+        // Restore playhead position
+        if (this._savedMusicTime > 0) {
+            try { this.musicAudio.currentTime = this._savedMusicTime; } catch {}
+            this._savedMusicTime = 0;
+        }
+        this.musicAudio.play().catch(() => {});
     }
+
+    // ── Pause everything on tab hidden/minimised; restore on return ───────────
+    private static _hiddenWasPlayingTTS   = false;
+    private static _hiddenWasPlayingMusic = false;
 
     static init(): Promise<void> {
         if (typeof window !== 'undefined') {
-            window.addEventListener('pagehide', () => this.stopAll());
+            window.addEventListener('pagehide',    () => this.stopAll());
             window.addEventListener('beforeunload', () => this.stopAll());
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    // Save current play state, pause everything
+                    this._hiddenWasPlayingTTS   = this._activeCategory === 'tts'   && this._status === 'playing';
+                    this._hiddenWasPlayingMusic  = (this._activeCategory === 'music' || this._isDucked) && this._status === 'playing';
+                    if (this._hiddenWasPlayingTTS || this._hiddenWasPlayingMusic) {
+                        console.log('[VoiceService] Page hidden — pausing audio.');
+                        this.pause();
+                    }
+                } else {
+                    // Restore audio when user returns to the tab
+                    if (this._hiddenWasPlayingTTS) {
+                        console.log('[VoiceService] Page visible — resuming TTS.');
+                        this.resume('tts');
+                        this._hiddenWasPlayingTTS = false;
+                    } else if (this._hiddenWasPlayingMusic) {
+                        console.log('[VoiceService] Page visible — resuming music.');
+                        this.resume('music');
+                        this._hiddenWasPlayingMusic = false;
+                    }
+                }
+            });
         }
         return Promise.resolve();
     }

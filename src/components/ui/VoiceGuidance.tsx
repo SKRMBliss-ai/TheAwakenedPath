@@ -205,9 +205,11 @@ export const VoiceGuidance = ({
 
   // Auto-play on first visit to EVERY tab/screen (only if voice enabled & not heard before)
   useEffect(() => {
+    // Always stop TTS when navigating between screens (soundscape music is unaffected by stop())
+    VoiceService.stop();
+
     if (!VoiceService.isEnabled) return;
     if (VoiceService.hasHeardScreen(`tab-${activeTab}`)) return;
-    if (status === 'playing' || status === 'buffering') return;
 
     // Small delay so the UI settles before audio starts
     const timer = setTimeout(async () => {
