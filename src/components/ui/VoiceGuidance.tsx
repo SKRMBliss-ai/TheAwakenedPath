@@ -191,16 +191,20 @@ export const VoiceGuidance = ({
     return () => clearTimeout(pulseTimer);
   }, [activeTab, isNewUser]);
 
-  // Preload Voice
+  // Preload Voice — delayed 8s after mount so it doesn't compete with initial page render
   useEffect(() => {
-    if (!VoiceService.isEnabled) return; // don't preload if voice off
-    const segments = currentScript.split(/\n\n+/).filter(s => s.trim().length > 0);
-    segments.forEach(segment => {
-      VoiceService.preloadText(segment, {
-        voice: preferredVoice,
-        gender: preferredVoice.includes('-D') ? 'MALE' : 'FEMALE'
+    if (!VoiceService.isEnabled) return;
+    const delay = setTimeout(() => {
+      if (!VoiceService.isEnabled) return;
+      const segments = currentScript.split(/\n\n+/).filter(s => s.trim().length > 0);
+      segments.forEach(segment => {
+        VoiceService.preloadText(segment, {
+          voice: preferredVoice,
+          gender: preferredVoice.includes('-D') ? 'MALE' : 'FEMALE'
+        });
       });
-    });
+    }, 8000); // 8s delay — page fully rendered and interactive before any TTS network calls
+    return () => clearTimeout(delay);
   }, [preferredVoice, currentScript]);
 
   // Auto-play on first visit to EVERY tab/screen (only if voice enabled & not heard before)
@@ -211,7 +215,8 @@ export const VoiceGuidance = ({
     if (!VoiceService.isEnabled) return;
     if (VoiceService.hasHeardScreen(`tab-${activeTab}`)) return;
 
-    // Small delay so the UI settles before audio starts
+    // Delay auto-play: 5s on first screen (let app fully settle), 2s on subsequent screens
+    const isFirstScreen = !localStorage.getItem('voice-heard-screens');
     const timer = setTimeout(async () => {
       // Re-check inside timer (user may have navigated away)
       if (!VoiceService.isEnabled) return;
@@ -231,7 +236,7 @@ export const VoiceGuidance = ({
       } catch { /* silent */ } finally {
         setIsPreparing(false);
       }
-    }, 1000);
+    }, isFirstScreen ? 5000 : 2000); // 5s on very first screen, 2s after that
 
     return () => clearTimeout(timer);
   // activeTab is the primary trigger; re-read isAccessValid/assignment inside the callback
