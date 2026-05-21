@@ -50,21 +50,13 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
+          // Only split vendor libraries — splitting app code causes circular dependency errors
           if (id.includes('node_modules')) {
             if (id.includes('firebase')) return 'vendor-firebase';
             if (id.includes('framer-motion')) return 'vendor-framer';
             if (id.includes('lucide-react')) return 'vendor-lucide';
-            if (id.includes('@google-cloud') || id.includes('text-to-speech')) return 'vendor-gcp';
             return 'vendor';
           }
-          // Split heavy app features into separate chunks loaded on demand
-          if (id.includes('features/courses')) return 'feature-courses';
-          if (id.includes('features/stats')) return 'feature-stats';
-          if (id.includes('features/music')) return 'feature-music';
-          if (id.includes('features/admin')) return 'feature-admin';
-          if (id.includes('features/journal')) return 'feature-journal';
-          if (id.includes('features/practices')) return 'feature-practices';
-          if (id.includes('features/breath')) return 'feature-breath';
         }
       }
     }
