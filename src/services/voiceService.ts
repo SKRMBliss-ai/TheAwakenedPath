@@ -27,11 +27,12 @@ export class VoiceService {
     private static _savedMusicTime: number = 0;
     private static _isEnabled: boolean = (() => {
         try {
-            // Sync with usePersistedState key used in app
+            // Default is OFF to avoid Cloud TTS charges for users who never use voice.
+            // Users can enable via Settings. Existing users who already enabled it keep their setting.
             const saved = localStorage.getItem('voice-guidance-enabled');
-            if (saved === null) return true;
+            if (saved === null) return false; // NEW default: off
             return JSON.parse(saved) === true;
-        } catch { return true; }
+        } catch { return false; }
     })();
 
     private static _isDucked: boolean = false;

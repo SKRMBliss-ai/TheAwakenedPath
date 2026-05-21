@@ -1348,8 +1348,38 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
         if (data.email) usersByEmail[data.email.toLowerCase()] = { ...data, _id: d.id };
     });
 
-    const todayVideo = await getDailyYoutubeVideo(youtubeKey, db);
-    const daily = await getDailyEmailContent(apiKey, todayVideo); // pass video so Gemini can tailor content
+    // ── Daily content cache ────────────────────────────────────────────────────
+    // Gemini + YouTube API are only called ONCE per day on the first hourly run.
+    // All subsequent runs (up to 23 more) read from Firestore cache — saving ~95%
+    // of API costs for content generation.
+    let todayVideo, daily;
+    const cacheRef = db.collection('daily_email_cache').doc(today);
+    try {
+        const cached = await cacheRef.get();
+        if (cached.exists && !force) {
+            console.log(`[DailyCache] HIT — using cached content for ${today}, skipping Gemini + YouTube API calls.`);
+            const data = cached.data();
+            todayVideo = data.video;
+            daily = data.emailContent;
+        } else {
+            console.log(`[DailyCache] MISS — generating fresh content for ${today}.`);
+            todayVideo = await getDailyYoutubeVideo(youtubeKey, db);
+            daily = await getDailyEmailContent(apiKey, todayVideo);
+            // Write to cache so the remaining 23 hourly runs skip API calls
+            await cacheRef.set({
+                video: todayVideo,
+                emailContent: daily,
+                generatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                date: today,
+            });
+            console.log(`[DailyCache] Stored fresh content for ${today}.`);
+        }
+    } catch (cacheErr) {
+        console.error('[DailyCache] Cache error, falling back to live generation:', cacheErr.message);
+        todayVideo = await getDailyYoutubeVideo(youtubeKey, db);
+        daily = await getDailyEmailContent(apiKey, todayVideo);
+    }
+
     const todayPractice = getTodaysPractice();
     // Use Gemini-generated subject; fallback to static array
     const todaySubject = daily.subject || DAILY_SUBJECTS[new Date().getDay()];
