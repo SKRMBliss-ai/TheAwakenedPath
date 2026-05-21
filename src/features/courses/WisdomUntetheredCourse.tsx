@@ -224,8 +224,8 @@ export function WisdomUntetheredCourse({
     <div className={styles.container}>
       {/* ── Top Navigation Bar ── */}
       <header className={styles.topBar}>
-        {/* Chapter + Question label + switcher */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Chapter + Question label — mobile only (desktop shows it in sidebar) */}
+        <div className="flex sm:hidden items-center gap-2 flex-shrink-0">
           <div className="flex flex-col leading-tight">
             <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] opacity-70">Ch 1 · The Mind</span>
             <button
