@@ -194,7 +194,7 @@ export function WitnessAndRelease({
         }
     };
 
-    const allDone = Object.values(checks).every(Boolean);
+    // allDone removed — Seal button is always enabled
 
     return (
         <div className="w-full max-w-5xl mx-auto py-4">

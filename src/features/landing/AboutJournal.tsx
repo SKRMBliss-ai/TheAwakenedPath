@@ -200,7 +200,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                     >
                         <div className="text-center mb-5 px-2">
                             <p className="text-[11px] uppercase tracking-[0.22em] text-[#D4AF37] mb-2 font-semibold">
-                                The Awakened Path
+                                Mind Gym
                             </p>
                             <h2 className="font-[Outfit] text-[clamp(22px,5vw,30px)] font-light tracking-tight text-white">
                                 Your daily practice, in one sacred space.
@@ -211,7 +211,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                         </div>
                         <img
                             src={heroImageSrc}
-                            alt="The Awakened Path"
+                            alt="Mind Gym"
                             className="w-full h-auto object-cover rounded-[28px] border border-white/10 shadow-[0_24px_80px_-30px_rgba(0,0,0,0.8)]"
                         />
                     </motion.div>
@@ -260,7 +260,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
             >
                 <div className="max-w-6xl mx-auto text-center mb-6">
                     <p className="text-[11px] uppercase tracking-[0.22em] text-[#D4AF37] mb-3 font-semibold">
-                        The Awakened Path
+                        Mind Gym
                     </p>
                     <h2 className="font-[Outfit] text-[clamp(26px,4vw,38px)] font-light tracking-tight text-black dark:text-white">
                         Your daily practice, in one sacred space.
@@ -276,7 +276,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                 >
                     <img
                         src={heroImageSrc}
-                        alt="The Awakened Path"
+                        alt="Mind Gym"
                         className="w-full h-auto object-cover"
                     />
                 </motion.div>

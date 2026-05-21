@@ -23,9 +23,9 @@ export default defineConfig({
         skipWaiting: true
       },
       manifest: {
-        name: 'The Awakened Path',
-        short_name: 'AwakenedJournal',
-        description: 'Your journey into the seat of the witness',
+        name: 'Mind Gym',
+        short_name: 'Mind Gym',
+        description: 'Your daily practice for a quieter mind',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',
