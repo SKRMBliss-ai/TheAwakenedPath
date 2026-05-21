@@ -532,10 +532,7 @@ export function WitnessAndRelease({
 
                                     <textarea
                                         value={reflection}
-                                        onChange={e => {
-                                            setReflection(e.target.value);
-                                            if (e.target.value.length > 0) setChecks(c => ({ ...c, reflection: true }));
-                                        }}
+                                        onChange={e => setReflection(e.target.value)}
                                         placeholder="What did you notice or learn today..."
                                         className="w-full h-36 p-5 rounded-[20px] font-sans text-base text-[var(--text-main)] resize-none outline-none transition-all duration-300"
                                         style={{
@@ -566,19 +563,13 @@ export function WitnessAndRelease({
                                         </AnimatePresence>
                                     </div>
 
-                                    {/* Seal Entry Button — Always visible but disabled until ready */}
+                                    {/* Seal Entry Button — always enabled */}
                                     <div className="pt-4">
                                         <button
-                                            onClick={() => allDone && onComplete(reflection)}
-                                            disabled={!allDone}
-                                            className={cn(
-                                                "w-full py-5 rounded-[24px] font-bold uppercase tracking-[0.3em] text-sm transition-all duration-400",
-                                                allDone 
-                                                    ? "bg-[var(--accent-primary)] text-white hover:scale-[1.02] active:scale-[0.98]" 
-                                                    : "bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-disabled)] cursor-not-allowed"
-                                            )}
+                                            onClick={() => onComplete(reflection)}
+                                            className="w-full py-5 rounded-[24px] font-bold uppercase tracking-[0.3em] text-sm transition-all duration-400 bg-[var(--accent-primary)] text-white hover:scale-[1.02] active:scale-[0.98]"
                                         >
-                                            {allDone ? "Seal this Entry ✦" : "Finish the checklist above to seal"}
+                                            Seal this Entry ✦
                                         </button>
                                     </div>
                                 </div>
