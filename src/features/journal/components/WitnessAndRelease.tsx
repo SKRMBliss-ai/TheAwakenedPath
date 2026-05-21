@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check } from "lucide-react";
 import { cn } from "../../../lib/utils";
-import { VoiceService, useVoiceEnabled } from "../../../services/voiceService";
+import { VoiceService, useVoiceEnabled, useVoiceStatus } from "../../../services/voiceService";
 import { AnchorButton } from "../../../components/ui/SacredUI";
 
 /*
@@ -100,6 +100,8 @@ export function WitnessAndRelease({
 }: WitnessAndReleaseProps) {
     const [tab, setTab] = useState<TabId>("witness");
     const voiceEnabled = useVoiceEnabled();
+    const { status: voiceStatus, category: voiceCategory } = useVoiceStatus();
+    const isVoiceGuidancePlaying = voiceStatus === 'playing' && voiceCategory === 'tts';
     const [hoopRunning, setHoopRunning] = useState(false);
     const [hoopTime, setHoopTime] = useState(60);
     const [hoopPhase, setHoopPhase] = useState(0);
@@ -141,21 +143,20 @@ export function WitnessAndRelease({
     }, [hoopRunning, hoopTime, onHoopComplete]);
 
     const startHoop = async () => {
-        // Ensure voice is enabled for the guided session
-        if (!VoiceService.isEnabled) {
-            VoiceService.setEnabled(true);
-        }
+        // Stop any voice guidance that may be auto-playing — no overlap with the meditation
+        VoiceService.stop();
 
         setHoopRunning(true);
         setHoopTime(60);
         setHoopDone(false);
 
-        // Start background meditation music (Ocean of Ho'oponopono)
-        // This will now properly "duck" when the voice speaks instead of stopping.
-        VoiceService.playAudioURL('/Soundscapes/OceanofHooponopono.mp3', { 
-            category: 'music', 
+        // Play the new dedicated meditation audio from Firebase Storage
+        // gs://awakened-path-2026.firebasestorage.app/AboutJournal/MeditationJournal/sorryForgivemeThankyou.mp3
+        const meditationUrl = 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2FMeditationJournal%2FsorryForgivemeThankyou.mp3?alt=media';
+        VoiceService.playAudioURL(meditationUrl, {
+            category: 'music',
             loop: true,
-            trackId: 'hoop_bg'
+            trackId: 'hoop_meditation'
         });
 
         for (const h of HOOP) {
@@ -406,6 +407,18 @@ export function WitnessAndRelease({
                                             Each one helps dissolve the tension in this thought.
                                             Press "Begin" and breathe slowly for one minute.
                                         </p>
+                                        {/* Pause voice guidance if it's auto-playing on this screen */}
+                                        {isVoiceGuidancePlaying && (
+                                            <motion.button
+                                                initial={{ opacity: 0, y: -6 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                onClick={() => VoiceService.pause()}
+                                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all"
+                                                style={{ background: 'var(--accent-primary)', color: 'var(--bg-base)' }}
+                                            >
+                                                ⏸ Pause Voice Guidance
+                                            </motion.button>
+                                        )}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
