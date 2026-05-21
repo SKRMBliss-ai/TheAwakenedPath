@@ -103,6 +103,7 @@ export function WitnessAndRelease({
     const { status: voiceStatus, category: voiceCategory } = useVoiceStatus();
     const isVoiceGuidancePlaying = voiceStatus === 'playing' && voiceCategory === 'tts';
     const [hoopRunning, setHoopRunning] = useState(false);
+    const [hoopPaused, setHoopPaused] = useState(false);
     const [hoopTime, setHoopTime] = useState(60);
     const [hoopPhase, setHoopPhase] = useState(0);
     const [hoopDone, setHoopDone] = useState(false);
@@ -127,7 +128,7 @@ export function WitnessAndRelease({
     const tabIdx = TABS.findIndex(t => t.id === tab);
 
     useEffect(() => {
-        if (hoopRunning && hoopTime > 0) {
+        if (hoopRunning && !hoopPaused && hoopTime > 0) {
             timerRef.current = setTimeout(() => {
                 setHoopTime(t => t - 1);
                 const e = 60 - (hoopTime - 1);
@@ -136,11 +137,30 @@ export function WitnessAndRelease({
         }
         if (hoopRunning && hoopTime === 0) {
             setHoopRunning(false);
+            setHoopPaused(false);
             setHoopDone(true);
             onHoopComplete?.();
         }
         return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-    }, [hoopRunning, hoopTime, onHoopComplete]);
+    }, [hoopRunning, hoopPaused, hoopTime, onHoopComplete]);
+
+    const pauseHoop = () => {
+        setHoopPaused(true);
+        VoiceService.pause();
+    };
+
+    const resumeHoop = () => {
+        setHoopPaused(false);
+        VoiceService.resume('music');
+    };
+
+    const stopHoop = () => {
+        setHoopRunning(false);
+        setHoopPaused(false);
+        setHoopTime(60);
+        setHoopPhase(0);
+        VoiceService.stopMusic();
+    };
 
     const startHoop = () => {
         // Stop any voice guidance / TTS that may be playing — MP3 only
@@ -460,18 +480,33 @@ export function WitnessAndRelease({
                                             </div>
                                         </div>
 
-                                        <AnchorButton
-                                            onClick={startHoop}
-                                            disabled={hoopRunning}
-                                            variant="solid"
-                                            className="w-full sm:w-[240px]"
-                                        >
-                                            {hoopRunning ? (
-                                                <span className="flex items-center gap-2 justify-center">
-                                                    <span className="animate-spin text-sm">⏳</span> Breathing...
-                                                </span>
-                                            ) : hoopDone ? 'Repeat Practice' : 'Begin Practice ✨'}
-                                        </AnchorButton>
+                                        {/* Controls — swap Begin for Pause/Stop when running */}
+                                        {hoopRunning ? (
+                                            <div className="flex gap-3 w-full sm:w-[240px]">
+                                                <button
+                                                    onClick={hoopPaused ? resumeHoop : pauseHoop}
+                                                    className="flex-1 py-3.5 rounded-2xl font-bold text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
+                                                    style={{ background: 'var(--accent-primary)', color: 'var(--bg-base)' }}
+                                                >
+                                                    {hoopPaused ? '▶ Resume' : '⏸ Pause'}
+                                                </button>
+                                                <button
+                                                    onClick={stopHoop}
+                                                    className="flex-1 py-3.5 rounded-2xl font-bold text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
+                                                    style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}
+                                                >
+                                                    ⏹ Stop
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <AnchorButton
+                                                onClick={startHoop}
+                                                variant="solid"
+                                                className="w-full sm:w-[240px]"
+                                            >
+                                                {hoopDone ? '↺ Repeat Practice' : 'Begin Practice ✨'}
+                                            </AnchorButton>
+                                        )}
 
                                         {!voiceEnabled && !hoopRunning && (
                                             <p className="text-[10px] text-[var(--text-muted)] italic opacity-60">
