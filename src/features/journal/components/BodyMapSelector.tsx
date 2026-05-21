@@ -162,6 +162,41 @@ export function BodyMapSelector({
     return (
         <div className="w-full flex flex-col items-center" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
             <div className="relative z-10 w-full max-w-4xl mx-auto pt-4 pb-4">
+
+                {/* ── Bubble prompt — shown when nothing selected ── */}
+                <AnimatePresence>
+                    {!selectedZoneId && (
+                        <motion.div
+                            key="bubble-prompt"
+                            initial={{ opacity: 0, y: -8, scale: 0.94 }}
+                            animate={{ opacity: 1, y: [0, -5, 0], scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.5, y: { duration: 2, repeat: Infinity, ease: "easeInOut" } }}
+                            className="flex justify-center mb-4"
+                        >
+                            <div className="relative inline-flex items-center gap-2 px-5 py-3 rounded-2xl shadow-lg text-sm font-semibold"
+                                style={{
+                                    background: 'var(--accent-primary)',
+                                    color: 'var(--bg-base)',
+                                    boxShadow: '0 4px 20px rgba(94,196,176,0.35)',
+                                }}>
+                                <span style={{ fontSize: 18 }}>👆</span>
+                                <span>Tap a circle — where do you feel it?</span>
+                                {/* Downward speech bubble tail */}
+                                <span className="absolute left-1/2 -translate-x-1/2 -bottom-[9px]"
+                                    style={{
+                                        width: 0, height: 0,
+                                        borderLeft: '9px solid transparent',
+                                        borderRight: '9px solid transparent',
+                                        borderTop: '10px solid var(--accent-primary)',
+                                        display: 'block',
+                                    }}
+                                />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <div className="relative flex justify-center mb-12">
                     <svg
                         viewBox="60 30 280 440"
@@ -196,22 +231,41 @@ export function BodyMapSelector({
 
                             return (
                                 <g key={zone.id} className="cursor-pointer outline-none group" onClick={() => handleSelect(zone)}>
-                                    {/* Living Pulse Rings */}
-                                    <circle cx={zone.cx} cy={zone.cy} r={12} fill="none" stroke={zone.color} strokeWidth="1" opacity={isSelected ? 0.8 : 0.3}>
-                                        <animate attributeName="r" values="10;24;10" dur={`${4 + i * 0.4}s`} repeatCount="indefinite" />
-                                        <animate attributeName="opacity" values="0.3;0;0.3" dur={`${4 + i * 0.4}s`} repeatCount="indefinite" />
+                                    {/* Outer pulse ring */}
+                                    <circle cx={zone.cx} cy={zone.cy} r={12} fill="none" stroke={zone.color} strokeWidth="1.5" opacity={isSelected ? 0.9 : 0.5}>
+                                        <animate attributeName="r" values="10;26;10" dur={`${4 + i * 0.4}s`} repeatCount="indefinite" />
+                                        <animate attributeName="opacity" values="0.5;0;0.5" dur={`${4 + i * 0.4}s`} repeatCount="indefinite" />
                                     </circle>
 
-                                    {/* Main dot */}
+                                    {/* Visible outer ring — always shown for discoverability */}
                                     <circle
-                                        cx={zone.cx} cy={zone.cy} r={isSelected ? 14 : 7}
-                                        fill={isSelected ? zone.color : isActive ? zone.color : "var(--border-subtle)"}
+                                        cx={zone.cx} cy={zone.cy}
+                                        r={isSelected ? 18 : 13}
+                                        fill="none"
+                                        stroke={zone.color}
+                                        strokeWidth={isSelected ? 2.5 : 1.8}
+                                        opacity={isOtherSelected ? 0.15 : isSelected ? 1 : 0.7}
+                                        className="transition-all duration-400"
+                                    />
+
+                                    {/* Main filled dot — bigger + colored always */}
+                                    <circle
+                                        cx={zone.cx} cy={zone.cy}
+                                        r={isSelected ? 12 : 8}
+                                        fill={isSelected ? zone.color : isActive ? zone.color : zone.color}
+                                        fillOpacity={isSelected ? 1 : isActive ? 0.85 : 0.45}
                                         className="transition-all duration-500 ease-out"
-                                        style={{ 
+                                        style={{
                                             filter: isSelected || isActive ? 'url(#premium-glow)' : 'none',
-                                            opacity: isOtherSelected ? 0.2 : 1
+                                            opacity: isOtherSelected ? 0.18 : 1,
                                         }}
                                     />
+
+                                    {/* White inner highlight dot for 3D feel */}
+                                    {!isOtherSelected && (
+                                        <circle cx={zone.cx - 2} cy={zone.cy - 2} r={isSelected ? 3.5 : 2.5}
+                                            fill="white" opacity={isSelected ? 0.6 : 0.4} />
+                                    )}
 
                                     {/* Label */}
                                     <text
@@ -224,7 +278,7 @@ export function BodyMapSelector({
                                             fontWeight: isSelected ? 800 : 700,
                                             fill: isSelected ? zone.color : 'var(--text-main)',
                                             fontFamily: "'Outfit', 'Inter', sans-serif",
-                                            opacity: isOtherSelected ? 0.35 : 1,
+                                            opacity: isOtherSelected ? 0.3 : 1,
                                             letterSpacing: '0',
                                         }}
                                     >
