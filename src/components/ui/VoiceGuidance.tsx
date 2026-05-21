@@ -203,31 +203,38 @@ export const VoiceGuidance = ({
     });
   }, [preferredVoice, currentScript]);
 
-  // Auto-play on first visit to this tab (only if voice enabled & not heard before)
+  // Auto-play on first visit to EVERY tab/screen (only if voice enabled & not heard before)
   useEffect(() => {
     if (!VoiceService.isEnabled) return;
     if (VoiceService.hasHeardScreen(`tab-${activeTab}`)) return;
-    if (status === 'playing') return; // already playing something
+    if (status === 'playing' || status === 'buffering') return;
 
+    // Small delay so the UI settles before audio starts
     const timer = setTimeout(async () => {
+      // Re-check inside timer (user may have navigated away)
       if (!VoiceService.isEnabled) return;
       if (VoiceService.hasHeardScreen(`tab-${activeTab}`)) return;
+
+      const script = getScript(activeTab, isAccessValid, assignment, timezone);
+      if (!script || script.trim().length < 10) return; // no script for this tab
+
       try {
         setIsPreparing(true);
-        await VoiceService.speak(currentScript, {
+        VoiceService.markScreenHeard(`tab-${activeTab}`); // mark immediately so re-renders don't re-trigger
+        await VoiceService.speak(script, {
           gender: preferredVoice.includes('-D') ? 'MALE' : 'FEMALE',
           voice: preferredVoice,
-          promptContext: `Spiritual, calming guide for ${activeTab} context`
+          promptContext: `Spiritual guide for the ${activeTab} screen`
         });
-        VoiceService.markScreenHeard(`tab-${activeTab}`);
       } catch { /* silent */ } finally {
         setIsPreparing(false);
       }
-    }, 1200); // small delay so UI settles first
+    }, 1000);
 
     return () => clearTimeout(timer);
+  // activeTab is the primary trigger; re-read isAccessValid/assignment inside the callback
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+  }, [activeTab, preferredVoice]);
 
   // Sync isPreparing with service status
   useEffect(() => {
