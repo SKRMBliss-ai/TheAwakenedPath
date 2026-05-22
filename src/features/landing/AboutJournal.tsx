@@ -229,7 +229,6 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                             loading="eager"
                             onError={handleImgError}
                             className="w-full h-auto object-cover rounded-[28px] border border-white/10 shadow-[0_24px_80px_-30px_rgba(0,0,0,0.8)]"
-                            style={{ minHeight: 200, background: 'rgba(94,196,176,0.08)' }}
                         />
                     </motion.div>
 
@@ -297,7 +296,6 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                         loading="eager"
                         onError={handleImgError}
                         className="w-full h-auto object-cover"
-                        style={{ minHeight: 300, background: 'rgba(94,196,176,0.08)' }}
                     />
                 </motion.div>
             </motion.div>
