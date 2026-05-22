@@ -81,6 +81,20 @@ const useLandingTheme = () => {
 const STORAGE_BASE = "https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2F";
 const getStorageImg = (name: string) => `${STORAGE_BASE}${name}.webp?alt=media`;
 
+// Graceful image fallback — called when Firebase Storage image fails to load.
+// Replaces the img with a subtle gradient so the page never shows a black void.
+const handleImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const el = e.currentTarget;
+    el.style.display = 'none';
+    const placeholder = document.createElement('div');
+    placeholder.style.cssText = `
+        width:100%;height:${Math.max(el.offsetHeight || 200, 200)}px;
+        background:linear-gradient(135deg,rgba(94,196,176,0.12) 0%,rgba(99,102,241,0.08) 100%);
+        border-radius:inherit;
+    `;
+    el.parentNode?.insertBefore(placeholder, el);
+};
+
 // ─── Section: Hero ────────────────────────────────────────────────────────────
 const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
     const containerRef = useRef<HTMLElement>(null);
@@ -212,7 +226,10 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                         <img
                             src={heroImageSrc}
                             alt="Mind Gym"
+                            loading="eager"
+                            onError={handleImgError}
                             className="w-full h-auto object-cover rounded-[28px] border border-white/10 shadow-[0_24px_80px_-30px_rgba(0,0,0,0.8)]"
+                            style={{ minHeight: 200, background: 'rgba(94,196,176,0.08)' }}
                         />
                     </motion.div>
 
@@ -277,7 +294,10 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                     <img
                         src={heroImageSrc}
                         alt="Mind Gym"
+                        loading="eager"
+                        onError={handleImgError}
                         className="w-full h-auto object-cover"
+                        style={{ minHeight: 300, background: 'rgba(94,196,176,0.08)' }}
                     />
                 </motion.div>
             </motion.div>
@@ -468,7 +488,7 @@ const HowItWorks = ({ theme }: { theme: 'dark' | 'light' }) => (
                         >
                             {/* Background image fades on hover */}
                             <div className="absolute inset-0 z-0 opacity-100 group-hover:opacity-0 transition-opacity duration-500 overflow-hidden">
-                                <img src={s.image} alt="" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-1000" />
+                                <img src={s.image} alt="" loading="lazy" onError={handleImgError} className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-1000" style={{minHeight:120,background:"rgba(94,196,176,0.08)"}} />
                                 <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${color.glow}, transparent 60%)` }} />
                             </div>
 
@@ -599,7 +619,7 @@ const JournalFeatures = () => (
                         >
                             {/* Background Image - visible by default, hidden on hover */}
                             <div className="absolute inset-0 z-0 opacity-100 group-hover:opacity-0 transition-opacity duration-500 overflow-hidden">
-                                <img src={f.image} alt="" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-1000" />
+                                <img src={f.image} alt="" loading="lazy" onError={handleImgError} className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-1000" style={{minHeight:120,background:"rgba(94,196,176,0.08)"}} />
                                 <div className="absolute inset-0 bg-black/10 dark:bg-black/30" />
                             </div>
  
