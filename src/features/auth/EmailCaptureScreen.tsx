@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './AuthContext';
 import { useTheme } from '../../theme/ThemeSystem';
@@ -49,6 +49,16 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
   const [success, setSuccess] = useState(false);
   const [suggestion, setSuggestion] = useState<string | null>(null);
 
+  // Auto-trigger Google sign-in if redirected from iframe with ?google=1
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('google') === '1') {
+      // Remove param from URL cleanly
+      window.history.replaceState({}, '', window.location.pathname);
+      signInWithGoogle().catch(() => {});
+    }
+  }, []);
+
   const handleEmailChange = (v: string) => {
     setEmail(v);
     setError('');
@@ -92,6 +102,22 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
 
   const handleGoogle = async () => {
     setError('');
+
+    // If running inside an iframe (e.g. embedded on skrmblissai.in via Systeme.io),
+    // Google OAuth will fail — Google blocks auth in cross-origin iframes.
+    // Break out to the standalone app URL so sign-in works correctly.
+    const isInIframe = window.self !== window.top;
+    if (isInIframe) {
+      try {
+        // Try to navigate the parent window to the standalone app
+        window.top!.location.href = 'https://awakened-path-2026.web.app/?google=1';
+      } catch {
+        // If parent access is blocked, open in new tab
+        window.open('https://awakened-path-2026.web.app/?google=1', '_blank');
+      }
+      return;
+    }
+
     setLoading(true);
     try {
       await signInWithGoogle();
