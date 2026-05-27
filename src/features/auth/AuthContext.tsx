@@ -375,11 +375,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ── Auth actions ──────────────────────────────────────────────────────────
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    // Always use signInWithPopup — it works on all devices including iPhone
-    // when called directly from a user tap/click (which this always is).
-    // signInWithRedirect was tried but breaks on iOS 16.4+ due to Safari ITP
-    // blocking cross-site storage during redirect flows.
-    await signInWithPopup(auth, provider);
+    const ua = navigator.userAgent;
+    // Android mobile: redirect is faster (no popup tab round-trip)
+    // iOS Safari: popup only (redirect breaks on iOS 16.4+ due to ITP)
+    // Desktop: popup (no page navigation needed)
+    const isAndroid = /Android/i.test(ua);
+    if (isAndroid) {
+      await signInWithRedirect(auth, provider);
+    } else {
+      await signInWithPopup(auth, provider);
+    }
   };
 
   const signInWithEmail = async (email: string, pass: string) => {
