@@ -1119,7 +1119,7 @@ exports.previewReminderEmail = onRequest({
                     <!-- Primary CTA -->
                     <tr>
                         <td style="padding:0 48px 20px;text-align:center;">
-                            <a href="https://www.skrmblissai.in/awakenedpath" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Open Today's Practice &rarr; (5 min)</a>
+                            <a href="https://www.skrmblissai.in/mindgym" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Open Today's Practice &rarr; (5 min)</a>
                         </td>
                     </tr>
 
@@ -1491,7 +1491,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                     <!-- Primary CTA -->
                     <tr>
                         <td style="padding:0 48px 20px;text-align:center;">
-                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/awakenedpath')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Open Today's Practice &rarr; (5 min)</a>
+                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/mindgym')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Open Today's Practice &rarr; (5 min)</a>
                         </td>
                     </tr>
 
@@ -1610,7 +1610,7 @@ ${todayPractice.tagline}
 
 ${todayPractice.teaser}
 
-Begin your practice → https://www.skrmblissai.in/awakenedpath
+Begin your practice → https://www.skrmblissai.in/mindgym
 
 ──────────────────────────────
 FREE: Download your 30-Day Now Practice Journal
@@ -1709,7 +1709,7 @@ exports.unsubscribe = onRequest({ cors: true }, async (req, res) => {
             <body style="font-family: Georgia, serif; text-align: center; padding: 80px 20px; background: #FDFAF4; color: #1C1814;">
                 <h1 style="font-weight: 300; font-style: italic;">You have successfully unsubscribed.</h1>
                 <p style="color: #3A342C; margin: 20px 0 40px;">Your notifications have been turned off. We wish you peace on your continued journey.</p>
-                <a href="https://www.skrmblissai.in/awakenedpath" style="display: inline-block; padding: 12px 30px; background: #1C1814; color: #E6C57D; text-decoration: none; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Return to Presence</a>
+                <a href="https://www.skrmblissai.in/mindgym" style="display: inline-block; padding: 12px 30px; background: #1C1814; color: #E6C57D; text-decoration: none; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Return to Presence</a>
             </body>
             </html>
         `);
