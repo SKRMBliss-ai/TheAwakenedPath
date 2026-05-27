@@ -586,7 +586,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         <th className="px-3 py-2 text-center font-bold text-[var(--accent-primary)] uppercase tracking-wider whitespace-nowrap" title="Distinct people who opened (no duplicates)">Unique</th>
                                                         <th className="px-3 py-2 text-center font-bold text-red-400 uppercase tracking-wider whitespace-nowrap" title="Clicked YouTube link in email">▶ YT</th>
                                                         <th className="px-3 py-2 text-center font-bold text-amber-400 uppercase tracking-wider whitespace-nowrap" title="Clicked 'Open Today's Practice' → app">📱 App</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-green-400 uppercase tracking-wider whitespace-nowrap" title="Clicked 'Get Free Journal' → /aboutawakenedpath">📓 Journal</th>
+                                                        <th className="px-3 py-2 text-center font-bold text-green-400 uppercase tracking-wider whitespace-nowrap" title="Clicked 'Get Free Journal' → /aboutmindzym">📓 Journal</th>
                                                         <th className="px-3 py-2 text-center font-bold text-purple-400 uppercase tracking-wider whitespace-nowrap" title="Total clicks (YouTube + App + Journal) — people who did more than just open">Interactions</th>
                                                     </tr>
                                                 </thead>
@@ -618,11 +618,11 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     {[
                                         { icon: <Youtube className="w-3 h-3 text-red-500" />, label: 'YouTube (from email)', value: logStats.ytClicks, color: 'text-red-400', title: 'Clicked the YouTube video link in the email' },
                                         { icon: <Monitor className="w-3 h-3 text-amber-400" />, label: 'App clicks', value: logStats.appCtaClicks, color: 'text-amber-400', title: 'Clicked "Open Today\'s Practice" button → /awakenedpath' },
-                                        { icon: <Download className="w-3 h-3 text-green-400" />, label: 'Journal CTA', value: logStats.journalCtaClicks, color: 'text-green-400', title: 'Clicked "Get Free Journal" button → /aboutawakenedpath' },
+                                        { icon: <Download className="w-3 h-3 text-green-400" />, label: 'Journal CTA', value: logStats.journalCtaClicks, color: 'text-green-400', title: 'Clicked "Get Free Journal" button → /aboutmindzym' },
                                         { icon: <Eye className="w-3 h-3 text-[var(--accent-primary)]" />, label: 'Unique openers', value: logStats.uniqueOpeners, color: 'text-[var(--accent-primary)]', title: 'Distinct people who opened (regardless of how many times)' },
                                         { icon: <Target className="w-3 h-3 text-purple-400" />, label: 'Total interactions', value: logStats.interactions, color: 'text-purple-400', title: 'Any click (YouTube + App CTA + Journal CTA) — people who did more than just open' },
-                                        { icon: <PlayCircle className="w-3 h-3 text-purple-300" />, label: 'Video plays (site)', value: logStats.videoPlays, color: 'text-purple-300', title: 'Played the walkthrough video on /aboutawakenedpath' },
-                                        { icon: <Globe className="w-3 h-3 text-teal-300" />, label: 'Page visits', value: logStats.pageVisits, color: 'text-teal-300', title: 'Visited /awakenedpath or /aboutawakenedpath' },
+                                        { icon: <PlayCircle className="w-3 h-3 text-purple-300" />, label: 'Video plays (site)', value: logStats.videoPlays, color: 'text-purple-300', title: 'Played the walkthrough video on /aboutmindzym' },
+                                        { icon: <Globe className="w-3 h-3 text-teal-300" />, label: 'Page visits', value: logStats.pageVisits, color: 'text-teal-300', title: 'Visited /awakenedpath or /aboutmindzym' },
                                     ].map(s => (
                                         <div key={s.label} title={s.title} className="flex items-center gap-1.5 bg-[var(--bg-surface)] rounded-lg px-2.5 py-1.5 border border-[var(--border-subtle)]/60 cursor-help">
                                             {s.icon}

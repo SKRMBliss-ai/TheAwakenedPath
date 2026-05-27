@@ -1853,7 +1853,7 @@ export default function UntetheredApp() {
             </button>
             
             <a 
-                href="/aboutjournal" 
+                href="/aboutmindzym" 
                 className="flex items-center gap-3 text-current hover:text-[var(--accent-primary)] transition-all group"
                 title="View About Journal"
             >

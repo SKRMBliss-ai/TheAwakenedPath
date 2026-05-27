@@ -36,7 +36,7 @@ function trackPageVisit(page: string, action: string) {
 const isAboutJournalRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  return p === '/aboutjournal' || p === '/aboutjournal/index.html' || p === '/aboutawakenedpath';
+  return p === '/aboutmindzym' || p === '/aboutmindzym/index.html' || p === '/aboutmindzym';
 })();
 
 // Track /awakenedpath (main app) visits — AboutJournal tracks its own visits internally
