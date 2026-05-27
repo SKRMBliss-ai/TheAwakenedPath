@@ -194,26 +194,37 @@ function LogoMark({ size, animated }: { size: number; animated: boolean }) {
 // Wordmark — "Awakened Path" with sub-label
 // ─────────────────────────────────────────────
 function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
-  const titleSize = { sm: 'text-[10px]', md: 'text-base', lg: 'text-xl' }[size];
-  const subSize   = { sm: 'text-[5px]', md: 'text-[7px]', lg: 'text-[9px]' }[size];
+  const titleSize = {
+    sm: 'text-[15px]',
+    md: 'text-[22px]',
+    lg: 'text-[28px]',
+  }[size];
+
+  const subFontSize = { sm: '8px', md: '10px', lg: '12px' }[size];
 
   return (
-    <div className="flex flex-col leading-none gap-0.5">
-      {/* Main wordmark */}
+    <div className="flex flex-col gap-1.5 ml-1">
+      {/* Main wordmark — larger, stronger, clearly legible */}
       <h1
         className={cn(
           titleSize,
-          'font-serif font-light text-[var(--text-primary)] tracking-tight leading-none',
+          'font-serif font-semibold text-[var(--text-primary)] tracking-wide leading-[1.1]',
           'group-hover:text-[var(--accent-primary)] transition-colors duration-300'
         )}
+        style={{ letterSpacing: '0.02em' }}
       >
         Mind Gym
       </h1>
 
-      {/* Sub-label / tagline */}
+      {/* Tagline — tighter tracking, slightly brighter */}
       <span
-        className={cn(subSize, 'font-sans font-bold text-[var(--accent-primary)] uppercase tracking-[0.3em] opacity-100 mt-1')}
-        style={{ fontSize: size === 'sm' ? '6.5px' : size === 'md' ? '9px' : '11px' }}
+        className="font-sans font-bold uppercase text-[var(--accent-primary)]"
+        style={{
+          fontSize: subFontSize,
+          letterSpacing: '0.22em',
+          opacity: 0.85,
+          lineHeight: 1,
+        }}
       >
         Train your mind daily
       </span>

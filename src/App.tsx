@@ -382,7 +382,7 @@ export default function UntetheredApp() {
         {/* Premium Ribbon Header Overlay */}
         <header className="fixed top-0 left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5">
             <a 
-                href="/aboutmindzym" 
+                href="/aboutmindgym" 
                 className="flex items-center gap-3 text-current hover:text-[#5EC4B0] transition-all group"
                 title="View About Journal"
             >

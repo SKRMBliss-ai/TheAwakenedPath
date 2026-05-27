@@ -41,7 +41,7 @@ async function trackActivity(action: string, details = '', emailOverride?: strin
             body: JSON.stringify({
                 email,
                 action,
-                page: typeof window !== 'undefined' ? window.location.pathname : '/aboutmindzym',
+                page: typeof window !== 'undefined' ? window.location.pathname : '/aboutmindgym',
                 details,
                 source: typeof document !== 'undefined' ? document.referrer || 'direct' : 'direct',
             }),
@@ -396,7 +396,7 @@ function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
 
                         {/* Play button — embeds iframe on click */}
                         <button
-                            onClick={() => { setPlaying(true); trackActivity('VIDEO_PLAY', `Played walkthrough video (${YOUTUBE_ID}) on /aboutmindzym`); }}
+                            onClick={() => { setPlaying(true); trackActivity('VIDEO_PLAY', `Played walkthrough video (${YOUTUBE_ID}) on /aboutmindgym`); }}
                             aria-label="Play video"
                             className="absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer"
                         >
@@ -418,7 +418,7 @@ function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
                                 href={`https://youtu.be/${YOUTUBE_ID}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                onClick={(e) => { e.stopPropagation(); trackActivity('YOUTUBE_BADGE_CLICK', `Opened YouTube video ${YOUTUBE_ID} from /aboutmindzym`); }}
+                                onClick={(e) => { e.stopPropagation(); trackActivity('YOUTUBE_BADGE_CLICK', `Opened YouTube video ${YOUTUBE_ID} from /aboutmindgym`); }}
                                 className="pointer-events-auto flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10 hover:border-red-500/50 transition-colors"
                                 aria-label="Open on YouTube"
                             >
@@ -690,7 +690,7 @@ const JournalDownload = () => {
             setAccessEmail(trimmed);
             setHasAccess(true);
             setStatus('done');
-            trackActivity('EMAIL_FORM_SUBMIT', 'Submitted email for journal access on /aboutmindzym', trimmed);
+            trackActivity('EMAIL_FORM_SUBMIT', 'Submitted email for journal access on /aboutmindgym', trimmed);
         } catch (err) {
             console.error('Email capture failed:', err);
             setErrorMsg('Something went wrong. Please try again.');
@@ -708,7 +708,7 @@ const JournalDownload = () => {
                 mailingList: true,
                 createdAt: serverTimestamp(),
             }).catch(() => {});
-            trackActivity('JOURNAL_DOWNLOAD', 'Downloaded 30-day journal PDF from /aboutmindzym', emailToTrack);
+            trackActivity('JOURNAL_DOWNLOAD', 'Downloaded 30-day journal PDF from /aboutmindgym', emailToTrack);
         }
     };
 
@@ -906,7 +906,7 @@ export default function AboutJournal() {
 
     // Track page visit once on mount
     useEffect(() => {
-        trackActivity('PAGE_VISIT_ABOUT', 'Visited /aboutmindzym');
+        trackActivity('PAGE_VISIT_ABOUT', 'Visited /aboutmindgym');
     }, []);
 
     return (
@@ -918,7 +918,7 @@ export default function AboutJournal() {
         >
             <style>{HEARTBEAT_KEYFRAMES}</style>
             <header className="fixed top-0 left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-black/10 dark:bg-black/20 backdrop-blur-md border-b border-white/5">
-                <a href="/aboutmindzym" className="flex items-center gap-3 text-black/90 dark:text-white/95 hover:text-black dark:hover:text-white transition-all group">
+                <a href="/aboutmindgym" className="flex items-center gap-3 text-black/90 dark:text-white/95 hover:text-black dark:hover:text-white transition-all group">
                     <div className={`w-9 h-9 rounded-full bg-[#D4AF37]/15 ${GOLD_BORDER} flex items-center justify-center group-hover:scale-110 transition-transform`}>
                         <Sparkles className="w-4 h-4 text-[#D4AF37]" />
                     </div>

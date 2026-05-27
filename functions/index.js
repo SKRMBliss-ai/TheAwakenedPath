@@ -1129,7 +1129,7 @@ exports.previewReminderEmail = onRequest({
                             <div style="border:1px solid rgba(184,151,58,0.35);border-radius:12px;padding:20px 28px;background:rgba(184,151,58,0.04);display:inline-block;">
                                 <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 8px;font-weight:700;">🎁 Free Resource</p>
                                 <p style="font-size:16px;color:#1E1912;margin:0 0 14px;font-weight:500;line-height:1.4;">Download your free<br><strong>30-Day Now Practice Journal</strong></p>
-                                <a href="https://www.skrmblissai.in/aboutmindzym" style="display:inline-block;padding:12px 32px;background:transparent;color:#B8973A;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border:2px solid #B8973A;border-radius:4px;">Get Free Journal &darr;</a>
+                                <a href="https://www.skrmblissai.in/aboutmindgym" style="display:inline-block;padding:12px 32px;background:transparent;color:#B8973A;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border:2px solid #B8973A;border-radius:4px;">Get Free Journal &darr;</a>
                             </div>
                         </td>
                     </tr>
@@ -1501,7 +1501,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                             <div style="border:1px solid rgba(184,151,58,0.35);border-radius:12px;padding:20px 28px;background:rgba(184,151,58,0.04);display:inline-block;">
                                 <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 8px;font-weight:700;">🎁 Free Resource</p>
                                 <p style="font-size:16px;color:#1E1912;margin:0 0 14px;font-weight:500;line-height:1.4;">Download your free<br><strong>30-Day Now Practice Journal</strong></p>
-                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/aboutmindzym')}" style="display:inline-block;padding:12px 32px;background:transparent;color:#B8973A;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border:2px solid #B8973A;border-radius:4px;">Get Free Journal &darr;</a>
+                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/aboutmindgym')}" style="display:inline-block;padding:12px 32px;background:transparent;color:#B8973A;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border:2px solid #B8973A;border-radius:4px;">Get Free Journal &darr;</a>
                             </div>
                         </td>
                     </tr>
@@ -1614,7 +1614,7 @@ Begin your practice → https://www.skrmblissai.in/awakenedpath
 
 ──────────────────────────────
 FREE: Download your 30-Day Now Practice Journal
-→ https://www.skrmblissai.in/aboutmindzym
+→ https://www.skrmblissai.in/aboutmindgym
 ──────────────────────────────
 
 Reply to this email anytime — I read every message.
