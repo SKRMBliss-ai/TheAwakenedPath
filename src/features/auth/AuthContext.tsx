@@ -146,25 +146,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ── Handle Google redirect result (mobile Safari uses redirect not popup) ──
   useEffect(() => {
-    getRedirectResult(auth).then(async (result) => {
-      if (result?.user) {
-        console.log('[Auth] Redirect sign-in completed for:', result.user.email);
-        const userRef = doc(db, 'users', result.user.uid);
-        await updateDoc(userRef, {
-          isAnonymous: false,
-          email: result.user.email,
-          displayName: result.user.displayName ?? (result.user.email ? result.user.email.split('@')[0] : null),
-          photoURL: result.user.photoURL,
-        }).catch(err => {
-          console.warn('[Auth] Failed to sync user doc after redirect:', err);
-        });
+    let retries = 0;
+    const maxRetries = 3;
+
+    const checkRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          console.log('[Auth] Redirect sign-in completed for:', result.user.email);
+          const userRef = doc(db, 'users', result.user.uid);
+          await updateDoc(userRef, {
+            isAnonymous: false,
+            email: result.user.email,
+            displayName: result.user.displayName ?? (result.user.email ? result.user.email.split('@')[0] : null),
+            photoURL: result.user.photoURL,
+          }).catch(err => {
+            console.warn('[Auth] Failed to sync user doc after redirect:', err);
+          });
+        }
+      } catch (err: any) {
+        // Retry on transient errors
+        if (retries < maxRetries && err?.code === 'auth/network-request-failed') {
+          retries++;
+          console.warn('[Auth] Network error checking redirect, retrying...', retries);
+          setTimeout(checkRedirectResult, 1000);
+        } else if (err?.code !== 'auth/no-pending-redirect') {
+          console.error('[Auth] Redirect result error:', err?.code, err?.message);
+        }
       }
-    }).catch(err => {
-      // Only log real errors, not the "no pending redirect" case
-      if (err?.code !== 'auth/no-pending-redirect') {
-        console.error('[Auth] Redirect result error:', err?.code);
-      }
-    });
+    };
+
+    // Small delay to ensure auth is ready
+    const timer = setTimeout(checkRedirectResult, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // ── Auth state listener ───────────────────────────────────────────────────
@@ -391,14 +405,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ── Auth actions ──────────────────────────────────────────────────────────
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
+    // Ensure scopes are requested
+    provider.addScopes(['profile', 'email']);
+
     const ua = navigator.userAgent;
     // Mobile browsers (Android/iOS): redirect is reliable and avoids popup blockers
     // Desktop: popup (no page navigation/reload needed)
     const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
-    if (isMobile) {
-      await signInWithRedirect(auth, provider);
-    } else {
-      await signInWithPopup(auth, provider);
+
+    try {
+      if (isMobile) {
+        // For mobile, use redirect with explicit handling
+        console.log('[Auth] Using redirect flow for Google sign-in (mobile)');
+        await signInWithRedirect(auth, provider);
+        // Note: Page will redirect, so code after this won't execute
+      } else {
+        // For desktop, use popup
+        console.log('[Auth] Using popup flow for Google sign-in (desktop)');
+        await signInWithPopup(auth, provider);
+      }
+    } catch (err: any) {
+      console.error('[Auth] Google sign-in error:', err?.code, err?.message);
+      // Re-throw with user-friendly message
+      if (err?.code === 'auth/popup-blocked') {
+        throw new Error('Google sign-in popup was blocked. Please allow popups and try again.');
+      } else if (err?.code === 'auth/cancelled-popup-request') {
+        throw new Error('Google sign-in was cancelled. Please try again.');
+      } else if (err?.code === 'auth/network-request-failed') {
+        throw new Error('Network error. Please check your connection and try again.');
+      }
+      throw err;
     }
   };
 
