@@ -116,13 +116,18 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
       setLocalStream(stream);
       setCameraPermission('granted');
 
-      // Add video tracks to all existing peer connections
+      // Add or replace video tracks in all peer connections
       peerConnections.current.forEach(pc => {
         stream.getTracks().forEach(track => {
-          // Check if this track kind is already in the peer connection
-          const hasSender = pc.getSenders().some(s => s.track?.kind === track.kind);
-          if (!hasSender) {
+          const videoSenders = pc.getSenders().filter(s => s.track?.kind === 'video' || (s.track === null && track.kind === 'video'));
+          if (videoSenders.length === 0) {
+            // No existing video sender, add new track
             pc.addTrack(track, stream);
+          } else {
+            // Replace existing video sender track
+            videoSenders.forEach(sender => {
+              sender.replaceTrack(track).catch(err => console.warn('[WebRTC] replaceTrack failed:', err));
+            });
           }
         });
       });
@@ -173,11 +178,16 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
     localStreamRef.current = stream;
     setLocalStream(stream);
     setCameraPermission('granted');
-    // Add tracks to any existing peer connections
+    // Add or replace tracks in any existing peer connections
     peerConnections.current.forEach(pc => {
       stream.getTracks().forEach(track => {
-        if (!pc.getSenders().some(s => s.track?.kind === track.kind)) {
+        const existingSenders = pc.getSenders().filter(s => s.track?.kind === track.kind);
+        if (existingSenders.length === 0) {
           pc.addTrack(track, stream);
+        } else {
+          existingSenders.forEach(sender => {
+            sender.replaceTrack(track).catch(err => console.warn('[WebRTC] replaceTrack failed:', err));
+          });
         }
       });
     });

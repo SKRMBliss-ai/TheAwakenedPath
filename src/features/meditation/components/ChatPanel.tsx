@@ -85,7 +85,11 @@ const ChatPanel = ({ sessionId, user, onClose }:
       {/* Header */}
       <div
         className="flex items-start justify-between px-5 py-3 gap-3 flex-shrink-0"
-        style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        style={{
+          borderBottom: '1px solid var(--border-subtle)',
+          background: 'var(--bg-surface)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+        }}
       >
         <div className="flex-1 min-w-0">
           <h3 className="font-black text-sm leading-tight" style={{ color: 'var(--text-primary)' }}>Practice Space</h3>
