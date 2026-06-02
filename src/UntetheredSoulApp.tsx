@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare } from 'lucide-react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MeditationFeature } from './features/meditation/MeditationFeature';
+import { MeditationHomeCard } from './features/meditation/MeditationHomeCard';
 import { db } from './firebase';
 import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
@@ -171,9 +173,10 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
       {/* ── Greeting row ── */}
       <div className="flex items-center justify-between px-3 sm:px-4 pt-4 sm:pt-5">
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Menu button hidden on mobile — top fixed header already has one */}
           <button
             onClick={onOpenSidebar}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center active:scale-90 transition-all flex-shrink-0"
+            className="hidden lg:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full items-center justify-center active:scale-90 transition-all flex-shrink-0"
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
           >
             <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: 'var(--text-muted)' }} />
@@ -887,6 +890,7 @@ export default function UntetheredApp() {
   const [, setBreathCount] = useState(0);
   const [showReward, setShowReward] = useState<Reward | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
@@ -1405,13 +1409,35 @@ export default function UntetheredApp() {
       </AnimatePresence>
 
       {/* SIDEBAR */}
+      {/* Floating sidebar expand button — only visible on desktop when sidebar is collapsed */}
+      {isSidebarCollapsed && (
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          onClick={() => setIsSidebarCollapsed(false)}
+          className="hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-[75] w-8 h-14 items-center justify-center rounded-r-2xl transition-all hover:w-10 group"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1.5px solid var(--border-default)',
+            borderLeft: 'none',
+            boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
+          }}
+          title="Expand sidebar"
+        >
+          <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} className="group-hover:scale-110 transition-transform" />
+        </motion.button>
+      )}
+
       <aside className={cn(
         "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70] overflow-hidden",
         "border-r border-[var(--border-default)]",
         "bg-[var(--bg-surface)] backdrop-blur-2xl px-2",
-        "transition-transform duration-500 ease-fluid",
-        "lg:translate-x-0",
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        "transition-transform duration-500",
+        // Desktop: collapse based on isSidebarCollapsed
+        isSidebarCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
+        // Mobile: show/hide based on isSidebarOpen
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
 
         {/* ── Logo ── */}
@@ -1423,6 +1449,15 @@ export default function UntetheredApp() {
             onClick={() => setActiveTab('home')}
             className="group"
           />
+          {/* Desktop collapse button */}
+          <button
+            onClick={() => setIsSidebarCollapsed(true)}
+            className="hidden lg:flex w-8 h-8 rounded-xl items-center justify-center transition-all hover:bg-[var(--bg-base)] group"
+            title="Collapse sidebar"
+          >
+            <ChevronLeft size={15} style={{ color: 'var(--text-muted)' }} className="group-hover:scale-110 transition-transform" />
+          </button>
+          {/* Mobile close button */}
           <button
             onClick={() => setIsSidebarOpen(false)}
             className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all"
@@ -1668,6 +1703,26 @@ export default function UntetheredApp() {
               </button>
             );
           })}
+          {/* ── Daily Meditation Room ── */}
+          <button
+            onClick={() => { onNavigate('meditation'); setIsSidebarOpen(false); }}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all group mt-2",
+              activeTab === 'meditation'
+                ? "bg-amber-500/20 text-amber-400 border border-amber-400/30"
+                : "hover:bg-[var(--bg-surface)] text-[var(--text-secondary)]"
+            )}
+          >
+            <Wind size={16} className={cn("flex-shrink-0 transition-transform group-hover:scale-110", activeTab==='meditation'?'text-amber-400':'')} />
+            <span className="text-[12px] font-sans tracking-[0.1em] font-medium">Daily Meditation</span>
+            {activeTab !== 'meditation' && (
+              <span className="ml-auto relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
+              </span>
+            )}
+          </button>
+
           {/* ── Insights & Studio (New Section) ── */}
           <div className="mt-8 pt-4 border-t border-[var(--border-subtle)]/40 space-y-2">
             <div className="flex items-center gap-3 px-4 py-1">
@@ -1826,8 +1881,8 @@ export default function UntetheredApp() {
 
       {/* MAIN CONTENT AREA */}
       <main className={cn(
-        "relative z-10 min-h-screen transition-all duration-700",
-        "lg:pl-[280px]"
+        "relative z-10 min-h-screen transition-all duration-500",
+        isSidebarCollapsed ? "lg:pl-0" : "lg:pl-[280px]"
       )}>
         {/* Time of Day Ambient Tint */}
         <div
@@ -1842,7 +1897,7 @@ export default function UntetheredApp() {
         {/* Premium Ribbon Header Overlay */}
         <header className={cn(
           "fixed top-0 left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 transition-all duration-500",
-          "lg:left-[280px]" // Respect the desktop sidebar
+          isSidebarCollapsed ? "lg:left-0" : "lg:left-[280px]"
         )}>
           <div className="flex items-center gap-3 sm:gap-4">
             <button
@@ -1935,6 +1990,12 @@ export default function UntetheredApp() {
 
             {activeTab === 'home' && (
               <>
+                {/* ── Daily Meditation Room entry card — always visible on home ── */}
+                <MeditationHomeCard
+                  onEnter={() => onNavigate('meditation')}
+                  adminOverride={['skrmblissai@gmail.com','shrutikhungar@gmail.com','simkatyal1@gmail.com'].includes(currentUser?.email ?? '')}
+                />
+
                 <div className="lg:hidden">
                   <MobileDashboard
                     user={currentUser}
@@ -1958,7 +2019,6 @@ export default function UntetheredApp() {
                     weeklyAssignment={weeklyAssignment}
                     onNavigate={onNavigate}
                   />
-
                 </div>
               </>
             )}
@@ -1991,6 +2051,18 @@ export default function UntetheredApp() {
             {activeTab === 'music' && (
               <motion.div key="music" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
                 <MusicHub />
+              </motion.div>
+            )}
+
+            {/* ── DAILY MEDITATION ROOM ── */}
+            {activeTab === 'meditation' && currentUser && (
+              <motion.div key="meditation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                className="h-full overflow-y-auto">
+                <MeditationFeature
+                  user={currentUser}
+                  adminOverride={['skrmblissai@gmail.com','shrutikhungar@gmail.com','simkatyal1@gmail.com'].includes(currentUser?.email ?? '')}
+                  onRoomStateChange={(inRoom) => setIsSidebarCollapsed(inRoom)}
+                />
               </motion.div>
             )}
           </AnimatePresence>

@@ -6,6 +6,7 @@ import {
   getRedirectResult,
   signInAnonymously,
   linkWithPopup,
+  linkWithRedirect,
   linkWithCredential,
   EmailAuthProvider,
   onAuthStateChanged,
@@ -145,9 +146,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ── Handle Google redirect result (mobile Safari uses redirect not popup) ──
   useEffect(() => {
-    getRedirectResult(auth).then(result => {
+    getRedirectResult(auth).then(async (result) => {
       if (result?.user) {
         console.log('[Auth] Redirect sign-in completed for:', result.user.email);
+        const userRef = doc(db, 'users', result.user.uid);
+        await updateDoc(userRef, {
+          isAnonymous: false,
+          email: result.user.email,
+          displayName: result.user.displayName ?? (result.user.email ? result.user.email.split('@')[0] : null),
+          photoURL: result.user.photoURL,
+        }).catch(err => {
+          console.warn('[Auth] Failed to sync user doc after redirect:', err);
+        });
       }
     }).catch(err => {
       // Only log real errors, not the "no pending redirect" case
@@ -363,9 +373,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const linkWithGoogle = async () => {
     if (!user || !user.isAnonymous) throw new Error('Not an anonymous user');
     const provider = new GoogleAuthProvider();
+    const ua = navigator.userAgent;
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
     try {
-      await linkWithPopup(user, provider);
-      await updateDoc(doc(db, 'users', user.uid), { isAnonymous: false });
+      if (isMobile) {
+        await linkWithRedirect(user, provider);
+      } else {
+        await linkWithPopup(user, provider);
+        await updateDoc(doc(db, 'users', user.uid), { isAnonymous: false });
+      }
     } catch (err: any) {
       if (err.code === 'auth/credential-already-in-use') throw new Error('ACCOUNT_EXISTS');
       throw err;
@@ -376,11 +392,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     const ua = navigator.userAgent;
-    // Android mobile: redirect is faster (no popup tab round-trip)
-    // iOS Safari: popup only (redirect breaks on iOS 16.4+ due to ITP)
-    // Desktop: popup (no page navigation needed)
-    const isAndroid = /Android/i.test(ua);
-    if (isAndroid) {
+    // Mobile browsers (Android/iOS): redirect is reliable and avoids popup blockers
+    // Desktop: popup (no page navigation/reload needed)
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
+    if (isMobile) {
       await signInWithRedirect(auth, provider);
     } else {
       await signInWithPopup(auth, provider);
