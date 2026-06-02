@@ -2,24 +2,10 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getFunctions } from "firebase/functions";
-const getAuthDomain = () => {
-    if (typeof window === 'undefined') return "awakened-path-2026.firebaseapp.com";
-    const hostname = window.location.hostname;
-    if (
-        hostname === 'localhost' ||
-        hostname === '127.0.0.1' ||
-        hostname.startsWith('192.168.') ||
-        hostname.startsWith('10.') ||
-        hostname.startsWith('172.')
-    ) {
-        return "awakened-path-2026.firebaseapp.com";
-    }
-    return hostname;
-};
 
 const firebaseConfig = {
     apiKey: "AIzaSyDau-Q6HiBlp2NJ5H1u1GMyfLnUIoLd9aQ",
-    authDomain: getAuthDomain(),
+    authDomain: "awakened-path-2026.firebaseapp.com",
     projectId: "awakened-path-2026",
     storageBucket: "awakened-path-2026.firebasestorage.app",
     messagingSenderId: "264513105226",
