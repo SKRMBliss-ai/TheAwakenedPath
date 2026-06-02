@@ -897,6 +897,7 @@ export default function UntetheredApp() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const { progress } = useCourseTracking(currentUser?.uid);
   const [watchedParts, setWatchedParts] = useState<string[]>([]);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   const { subscribe, checkOut, isProcessing: isRazorpayProcessing } = useRazorpay();
   const [welcomeModal, setWelcomeModal] = useState<{ isOpen: boolean; plan: string }>({ isOpen: false, plan: '' });
 
@@ -1234,7 +1235,17 @@ export default function UntetheredApp() {
     }
   }, [activePractice, practiceState]);
 
-  if (loading) {
+  // If loading for too long (>5s), show auth screen instead of hanging on awakening
+  useEffect(() => {
+    if (!loading) {
+      setLoadingTimeout(false);
+      return;
+    }
+    const timer = setTimeout(() => setLoadingTimeout(true), 5000);
+    return () => clearTimeout(timer);
+  }, [loading]);
+
+  if (loading && !loadingTimeout) {
     return (
       <div className="min-h-screen w-full bg-[var(--bg-primary)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
