@@ -84,16 +84,16 @@ const ChatPanel = ({ sessionId, user, onClose }:
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-5 py-4"
+        className="flex items-start justify-between px-5 py-3 gap-3 flex-shrink-0"
         style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
-        <div>
-          <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Practice Space</h3>
-          <p className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Kind words only</p>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-black text-sm leading-tight" style={{ color: 'var(--text-primary)' }}>Practice Space</h3>
+          <p className="text-[9px] uppercase tracking-widest leading-tight mt-0.5" style={{ color: 'var(--text-muted)' }}>Kind words only</p>
         </div>
         <button
           onClick={onClose}
-          className="p-2 rounded-xl transition-colors"
+          className="p-1.5 rounded-lg transition-colors flex-shrink-0"
           style={{ color: 'var(--text-muted)' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-base)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
