@@ -80,6 +80,8 @@ const ChatPanel = ({ sessionId, user, onClose }:
         background: 'var(--bg-surface)',
         borderLeft: '1.5px solid var(--border-default)',
         boxShadow: '-20px 0 60px rgba(0,0,0,0.25)',
+        marginTop: 0,
+        paddingTop: 0,
       }}
     >
       {/* Header */}
