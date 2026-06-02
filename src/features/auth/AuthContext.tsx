@@ -406,7 +406,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     // Ensure scopes are requested
-    provider.addScopes(['profile', 'email']);
+    provider.addScope('profile');
+    provider.addScope('email');
 
     const ua = navigator.userAgent;
     // Mobile browsers (Android/iOS): redirect is reliable and avoids popup blockers
