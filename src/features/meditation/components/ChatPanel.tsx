@@ -82,15 +82,20 @@ const ChatPanel = ({ sessionId, user, onClose }:
         boxShadow: '-20px 0 60px rgba(0,0,0,0.25)',
         marginTop: 0,
         paddingTop: 0,
+        backdropFilter: 'none',
+        opacity: 1,
       }}
     >
       {/* Header */}
       <div
-        className="flex flex-col px-5 py-3 gap-2 flex-shrink-0 relative"
+        className="flex flex-col px-5 py-3 gap-2 flex-shrink-0 relative w-full"
         style={{
           borderBottom: '1px solid var(--border-subtle)',
           background: 'var(--bg-surface)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          marginLeft: 0,
+          marginRight: 0,
+          marginTop: 0,
         }}
       >
         <div className="flex items-center justify-between gap-2">
@@ -109,7 +114,7 @@ const ChatPanel = ({ sessionId, user, onClose }:
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto py-3 px-4 space-y-3">
+      <div className="flex-1 overflow-y-auto py-3 px-4 space-y-3" style={{ background: 'var(--bg-surface)' }}>
         {messages.length === 0 && (
           <p className="text-xs text-center py-8" style={{ color: 'var(--text-muted)' }}>
             Be the first to share a kind word.
@@ -121,8 +126,8 @@ const ChatPanel = ({ sessionId, user, onClose }:
 
       {/* Emoji strip */}
       <div
-        className="px-4 py-2 flex gap-2 overflow-x-auto"
-        style={{ borderTop: '1px solid var(--border-subtle)' }}
+        className="px-4 py-2 flex gap-2 overflow-x-auto flex-shrink-0"
+        style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
       >
         {EMOJIS.map(e => (
           <button
@@ -137,8 +142,8 @@ const ChatPanel = ({ sessionId, user, onClose }:
 
       {/* Input */}
       <div
-        className="px-4 pb-5 pt-2"
-        style={{ borderTop: '1px solid var(--border-subtle)' }}
+        className="px-4 pb-5 pt-2 flex-shrink-0"
+        style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
       >
         {error && <p className="text-red-400 text-[10px] mb-1">{error}</p>}
         <div className="flex gap-2 items-end">
