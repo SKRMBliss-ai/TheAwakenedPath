@@ -18,7 +18,7 @@ import SessionTimer from './components/SessionTimer';
 import ChatPanel from './components/ChatPanel';
 import InstructorMediaControls from './components/InstructorMediaControls';
 import MediaViewer from './components/MediaViewer';
-
+import { WhatsAppButton } from '../../components/ui/WhatsAppButton';
 interface AuthUser { uid: string; displayName: string | null; photoURL: string | null; email: string | null; }
 
 // Calculate responsive grid columns
@@ -57,10 +57,37 @@ const VideoTile = ({ participant, stream, isLocal = false }:
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (videoRef.current && stream) { videoRef.current.srcObject = stream; videoRef.current.muted = true; }
-  }, [stream]);
+    const video = videoRef.current;
+    if (!video) return;
+    
+    if (stream) {
+      if (video.srcObject !== stream) {
+        video.srcObject = stream;
+      }
+      
+      // If the participant just re-enabled their camera, force playback to resume.
+      // We rely on the Firestore sync state (participant.videoEnabled) because 
+      // WebRTC 'unmute' events can be unreliable on iOS/Safari.
+      if (participant.videoEnabled) {
+        video.play().catch(() => {});
+      }
 
-  const hasVideo = !!stream && participant.videoEnabled;
+      const handleUnmute = () => video.play().catch(() => {});
+      stream.getVideoTracks().forEach(t => t.addEventListener('unmute', handleUnmute));
+      return () => {
+        stream.getVideoTracks().forEach(t => t.removeEventListener('unmute', handleUnmute));
+      };
+    } else {
+      video.srcObject = null;
+    }
+  }, [stream, participant.videoEnabled]);
+
+  // For local user: trust stream existence. For remote: also check participant flag.
+  const hasVideo = isLocal
+    ? !!stream && participant.videoEnabled
+    : !!stream && participant.videoEnabled;
+
+
   const initials = (participant.displayName || 'P').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const firstName = (participant.displayName || 'Practitioner').split(' ')[0];
 
@@ -145,10 +172,48 @@ const MeditationRoom = ({
 }) => {
   const store = useMeditationStore();
   const { handleLeave, remainingMs } = useMeditationSession({ user, active: true, onNavigate });
-  const { sessionId, isCameraOn, isChatOpen, participants, emojiReactions, cameraPermission } = store;
+  const { sessionId, isCameraOn, isChatOpen, participants, emojiReactions, cameraPermission, messages, notificationsMuted } = store;
   const [showJoining, setShowJoining] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [toastMessage, setToastMessage] = useState<{ id: string; text: string; sender: string } | null>(null);
   const prevCountRef = useRef(0);
   const endWarnedRef = useRef(false);
+  const prevMessagesLengthRef = useRef(messages.length);
+
+  // ── Unread badge & Toast logic ─────────────────────────────────────────────
+  useEffect(() => {
+    if (isChatOpen) {
+      setUnreadCount(0);
+      setToastMessage(null);
+      prevMessagesLengthRef.current = messages.length;
+    } else {
+      if (messages.length > prevMessagesLengthRef.current) {
+        const newMsgs = messages.slice(prevMessagesLengthRef.current);
+        const textMsgs = newMsgs.filter(m => m.type === 'text' && m.uid !== user.uid);
+        if (textMsgs.length > 0) {
+          setUnreadCount(prev => prev + textMsgs.length);
+          const lastMsg = textMsgs[textMsgs.length - 1];
+          setToastMessage({ id: lastMsg.id, text: lastMsg.text, sender: lastMsg.displayName.split(' ')[0] });
+          if (!notificationsMuted) {
+             const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+             const osc = ctx.createOscillator();
+             const gain = ctx.createGain();
+             osc.connect(gain);
+             gain.connect(ctx.destination);
+             osc.frequency.setValueAtTime(800, ctx.currentTime);
+             osc.frequency.setValueAtTime(600, ctx.currentTime + 0.1);
+             gain.gain.setValueAtTime(0.3, ctx.currentTime);
+             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+             osc.start(ctx.currentTime);
+             osc.stop(ctx.currentTime + 0.2);
+          }
+          const t = setTimeout(() => setToastMessage(null), 4000);
+          return () => clearTimeout(t);
+        }
+      }
+      prevMessagesLengthRef.current = messages.length;
+    }
+  }, [messages, isChatOpen, user.uid, notificationsMuted]);
 
   const webrtc = useWebRTC({ sessionId: sessionId ?? '', myUid: user.uid, enabled: !!sessionId });
 
@@ -193,10 +258,14 @@ const MeditationRoom = ({
   // Camera toggle
   const handleToggleCamera = useCallback(async () => {
     if (isCameraOn) {
-      webrtc.stopCamera(); store.setCameraOn(false);
+      webrtc.stopCamera();
+      store.setCameraOn(false);
       if (sessionId) await meditationService.updateVideoEnabled(sessionId, user.uid, false);
     } else {
-      await webrtc.startCamera(); store.setCameraOn(true);
+      // Set camera on BEFORE awaiting startCamera so the video tile mounts
+      // before the stream arrives — this ensures useEffect([stream]) fires on mount
+      store.setCameraOn(true);
+      await webrtc.startCamera();
       if (sessionId) await meditationService.updateVideoEnabled(sessionId, user.uid, true);
     }
   }, [isCameraOn, webrtc, store, sessionId, user.uid]);
@@ -211,6 +280,11 @@ const MeditationRoom = ({
   if (!sessionId) return null;
 
   // Build participant list: include self in the main grid!
+  // NOTE: Do NOT filter by webrtc.disconnectedPeers here — presence (the card)
+  // is independent of the WebRTC video link. Peer connections briefly enter
+  // 'disconnected' / 'failed' states during ICE negotiation (especially on
+  // mobile↔desktop across NATs); if we hide cards on that, both users see
+  // an empty room even though they're both in the session.
   const presentParticipants = participants.filter(p => p.isPresent);
   const meParticipant = presentParticipants.find(p => p.uid === user.uid) ?? {
     uid: user.uid, displayName: user.displayName || 'You',
@@ -289,24 +363,34 @@ const MeditationRoom = ({
 
       {/* ── MAIN CONTENT (Video gallery or Media viewer) ────────────────────── */}
       {store.mediaShare.type !== 'none' ? (
-        // Media sharing layout
-        <div className="flex-1 relative p-3 overflow-hidden flex flex-col lg:flex-row gap-3">
-          {/* Main media viewer */}
-          <div className="flex-1 min-h-0">
+        // Media sharing layout — video player left, participant tiles right
+        <div className="flex-1 relative overflow-hidden flex flex-col lg:flex-row gap-2 p-2">
+          {/* Main media viewer — takes remaining space */}
+          <div className="flex-1 min-h-0 min-w-0">
             <MediaViewer
-              mediaType={store.mediaShare.type as 'youtube' | 'audio' | 'screen'}
+              mediaType={store.mediaShare.type as 'youtube' | 'audio'}
               youtubeUrl={store.mediaShare.youtubeUrl}
               audioUrl={store.mediaShare.audioUrl}
-              screenStream={store.mediaShare.screenStream}
             />
           </div>
 
-          {/* Participant sidebar */}
-          <div className="w-full lg:w-64 flex flex-col gap-3 overflow-y-auto">
-            {visibleParticipants.slice(0, 4).map(p => {
+          {/* Participant sidebar — always visible, fixed width on desktop, horizontal strip on mobile */}
+          <div className="flex-shrink-0 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto lg:overflow-x-hidden"
+               style={{ width: 'auto', minWidth: 0 }}>
+            {visibleParticipants.map(p => {
               const isMe = p.uid === user.uid;
               return (
-                <div key={p.uid} className="min-h-[120px]">
+                <div
+                  key={p.uid}
+                  className="flex-shrink-0 rounded-xl overflow-hidden border"
+                  style={{
+                    width: 130,
+                    height: 100,
+                    background: 'var(--tile-bg)',
+                    borderColor: 'var(--tile-border)',
+                    minWidth: 120,
+                  }}
+                >
                   <VideoTile
                     participant={{ ...p, videoEnabled: isMe ? isCameraOn : p.videoEnabled }}
                     stream={isMe ? (webrtc.localStream ?? undefined) : webrtc.remoteStreams.get(p.uid)}
@@ -380,12 +464,42 @@ const MeditationRoom = ({
         </AnimatePresence>
       </div>
 
+      {/* ── Floating WhatsApp (Left) ─────────────────────────────────────────── */}
+      <WhatsAppButton position="left" bottomOffset={96} />
+
       {/* ── INSTRUCTOR MEDIA CONTROLS ─────────────────────────────────────── */}
       <InstructorMediaControls userEmail={user.email} sessionId={sessionId} />
 
-      {/* ── CHAT PANEL ──────────────────────────────────────────────────────── */}
+      {/* ── CHAT PANEL & TOAST ──────────────────────────────────────────────────────── */}
       <AnimatePresence>
-        {isChatOpen && <ChatPanel sessionId={sessionId} user={user} onClose={store.toggleChat} />}
+        {isChatOpen && (
+          <>
+            {/* Invisible overlay for clicking outside to close chat */}
+            <div 
+              className="fixed inset-0 z-[10009]" 
+              onClick={store.toggleChat}
+            />
+            <ChatPanel sessionId={sessionId} user={user} onClose={store.toggleChat} />
+          </>
+        )}
+        {toastMessage && !isChatOpen && (
+          <motion.div
+            key={toastMessage.id}
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="absolute top-20 left-1/2 -translate-x-1/2 z-[10010] border border-[var(--tile-border)] rounded-2xl px-5 py-3 shadow-[0_10px_40px_rgba(0,0,0,0.3)] flex flex-col gap-1 cursor-pointer w-[90%] max-w-sm"
+            style={{ background: 'var(--room-surface)' }}
+            onClick={store.toggleChat}
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare size={12} className="text-amber-400" />
+              <span className="text-[11px] font-bold uppercase tracking-wide text-amber-400">{toastMessage.sender}</span>
+            </div>
+            <span className="text-sm sm:text-base line-clamp-2" style={{ color: 'var(--room-text)' }}>{toastMessage.text}</span>
+            <span className="text-[9px] uppercase tracking-widest mt-1 opacity-50" style={{ color: 'var(--room-text-muted)' }}>Tap to reply</span>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* ── BOTTOM CONTROLS (Zoom-style) ────────────────────────────────────── */}
@@ -437,6 +551,11 @@ const MeditationRoom = ({
             <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all
               ${isChatOpen ? 'bg-amber-500/30 border border-amber-400/40' : 'bg-white/10 group-hover:bg-white/15'}`}>
               <MessageSquare size={18} className={isChatOpen ? 'text-amber-400' : 'text-white/70'} />
+              {unreadCount > 0 && !isChatOpen && (
+                <div className="absolute top-0 right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[var(--room-surface)] flex items-center justify-center">
+                  <span className="text-[9px] font-bold text-white leading-none">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                </div>
+              )}
             </div>
             <span className="text-[9px] uppercase tracking-widest" style={{ color: 'var(--room-text-muted)' }}>Chat</span>
           </button>
