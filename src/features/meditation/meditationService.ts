@@ -16,7 +16,7 @@ type MeditationBadgeType = MeditationBadge['type'];
 const pad = (n: number) => String(n).padStart(2, '0');
 
 // DEV mode : 5-min slots (4 min live · 1 min gap) — easy to test immediately
-// PROD mode : single daily session at 9:00 AM IST (UTC+5:30 = UTC 03:30), 15 min
+// PROD mode : single daily session at 9:00 AM IST (UTC+5:30 = UTC 03:30), 30 min (9:00–9:30)
 const IS_DEV = import.meta.env.DEV;
 
 // Test users who always see live session
@@ -63,7 +63,7 @@ export function getSessionSchedule(userEmail?: string): {
   // IST = UTC+5:30 → 9:00 AM IST = 03:30 AM UTC
   const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
   const SESSION_HOUR_IST = 9, SESSION_MIN_IST = 0;
-  const LIVE_MS = 15 * 60 * 1000;
+  const LIVE_MS = 30 * 60 * 1000; // 9:00 → 9:30 AM IST
 
   // Today's 9 AM IST expressed as a UTC Date
   const todayUtcMidnight = new Date(now); todayUtcMidnight.setUTCHours(0,0,0,0);
@@ -232,7 +232,7 @@ export const meditationService = {
   async updateStreak(uid: string, sessionDate: string): Promise<MeditationStreak> {
     const existing = await this.getStreak(uid);
     if (!existing) {
-      const fresh: MeditationStreak = { uid, currentStreak:1, longestStreak:1, totalSessions:1, totalMinutes:15, lastSessionDate: sessionDate, badges:[] };
+      const fresh: MeditationStreak = { uid, currentStreak:1, longestStreak:1, totalSessions:1, totalMinutes:30, lastSessionDate: sessionDate, badges:[] };
       await setDoc(doc(db, 'meditation_streaks', uid), fresh);
       return fresh;
     }
@@ -243,7 +243,7 @@ export const meditationService = {
     const updated: MeditationStreak = {
       ...existing, currentStreak: newCurrent,
       longestStreak: Math.max(existing.longestStreak, newCurrent),
-      totalSessions: existing.totalSessions+1, totalMinutes: existing.totalMinutes+15,
+      totalSessions: existing.totalSessions+1, totalMinutes: existing.totalMinutes+30,
       lastSessionDate: sessionDate, badges: [...existing.badges],
     };
     const checks: [MeditationBadgeType, ()=>boolean][] = [

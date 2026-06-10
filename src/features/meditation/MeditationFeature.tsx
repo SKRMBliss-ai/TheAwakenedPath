@@ -219,7 +219,7 @@ const LandingScreen = ({ user, onNavigate, adminOverride = false }:
             <p className="text-white/15 text-[10px] text-center">
               {import.meta.env.DEV
                 ? '⚡ Dev mode: 5-min slots (4 min live · 1 min gap)'
-                : 'Sessions at :00 and :30 each hour · 15 min each'}
+                : 'Daily session at 9:00 AM IST · 30 min (9:00–9:30)'}
             </p>
           </>
         )}
