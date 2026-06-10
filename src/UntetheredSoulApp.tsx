@@ -219,19 +219,19 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
             className="relative rounded-full flex items-center justify-center overflow-hidden focus:outline-none w-full h-full"
             style={{
               background: mode === 'dark'
-                ? 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)'
-                : 'radial-gradient(ellipse at 37% 30%, #FFFDF7 0%, #F5E6BD 55%, #E6C57D 100%)',
-              border: mode === 'dark' ? '1px solid rgba(184,151,58,.35)' : '1px solid rgba(184,151,58,.5)',
+                ? 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 45%, #041f1e 100%)'
+                : 'radial-gradient(ellipse at 37% 30%, #FFFDF7 0%, #F5E6BD 55%, #cbf2ef 100%)',
+              border: mode === 'dark' ? '1px solid rgba(45,212,191,.25)' : '1px solid rgba(45,212,191,.4)',
               boxShadow: mode === 'dark'
-                ? '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.1)'
-                : '0 0 0 1px rgba(184,151,58,.1), 0 4px 12px rgba(0,0,0,0.05)',
+                ? '0 0 0 1px rgba(45,212,191,.15), 0 0 28px rgba(184,151,58,.25), inset 0 0 20px rgba(45,212,191,.05)'
+                : '0 0 0 1px rgba(45,212,191,.15), 0 4px 12px rgba(0,0,0,0.05), inset 0 0 20px rgba(45,212,191,.1)',
               WebkitTapHighlightColor: 'transparent',
             }}
             animate={{ 
               scale: breathActive ? currentPhase.scale : [1, 1.025, 1],
               boxShadow: breathActive 
-                ? `0 0 0 1px rgba(184,151,58,.15), 0 0 ${20 + currentPhase.glow * 40}px rgba(184,151,58,${0.15 + currentPhase.glow * 0.3})`
-                : '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.1)'
+                ? `0 0 0 1px rgba(45,212,191,.2), 0 0 ${20 + currentPhase.glow * 40}px rgba(184,151,58,${0.15 + currentPhase.glow * 0.3})`
+                : '0 0 0 1px rgba(45,212,191,.15), 0 0 28px rgba(184,151,58,.25), inset 0 0 20px rgba(45,212,191,.05)'
             }}
             transition={{ 
               duration: breathActive ? currentPhase.duration / 1000 : 6, 
@@ -939,8 +939,9 @@ export default function UntetheredApp() {
   }, [loading, isAccessValid, currentUser]);
 
   const onNavigate = (id: string, questionId?: string, view?: string) => {
-    // If not unlocked, lock everything except home, profile, paywall, music, the learning tabs, journal, and situations
-    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations'];
+    // If not unlocked, lock everything except home, profile, paywall, music, the learning tabs, journal, situations, and meditation
+    // Meditation is FREE for everyone — no paywall.
+    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation'];
     if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -998,7 +999,7 @@ export default function UntetheredApp() {
 
   // Global Access Control — on load, always start at home if the persisted tab is locked
   useEffect(() => {
-    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations'].includes(activeTab)) {
+    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation'].includes(activeTab)) {
       setActiveTab('home');
     }
   }, [isAccessValid, loading]); // intentionally exclude activeTab — only run on auth state change
@@ -1970,7 +1971,7 @@ export default function UntetheredApp() {
           <EngagementReport isOpen={true} onClose={() => setIsReportOpen(false)} />
         )}
 
-        <div className={cn("max-w-7xl mx-auto px-2 pt-2 pb-28 sm:px-4 sm:pt-4 md:px-6 md:pt-6 lg:pb-8 space-y-6 sm:space-y-8", isReportOpen && "hidden")}>
+        <div className={cn("max-w-7xl mx-auto px-2 pt-[88px] pb-28 sm:px-4 sm:pt-[96px] md:px-6 md:pt-[104px] lg:pb-8 space-y-6 sm:space-y-8", isReportOpen && "hidden")}>
           <SacredWelcomeModal
             isOpen={welcomeModal.isOpen}
             onClose={() => {
@@ -2372,6 +2373,8 @@ export default function UntetheredApp() {
           In journal/witness tabs: compact — only voice avatar + headphone shown.       */}
       <div className={cn(
         "fixed right-3 sm:right-6 z-[100] flex flex-col items-center gap-3 sm:gap-4 transition-all duration-500",
+        // Hide these floating actions completely when inside the full-screen Meditation Room
+        (activeTab === 'meditation' && isSidebarCollapsed) ? "opacity-0 pointer-events-none scale-90 translate-x-10" : "opacity-100 scale-100 translate-x-0",
         // On mobile: bottom-20 so stack clears the sticky 64px nav bar; on desktop keep existing offsets
         musicUrl
           ? "bottom-28 sm:bottom-24"
