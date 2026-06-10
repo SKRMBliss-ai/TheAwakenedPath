@@ -2,7 +2,7 @@
  * MeditationFeature — self-contained meditation room feature for AwakenedPath/MindGym.
  * Manages its own internal screen state (landing → room → journal) without react-router-dom.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { meditationService } from './meditationService';
 import { useMeditationStore } from '../../stores/meditationStore';
@@ -11,7 +11,7 @@ import AwakenOrb from './components/AwakenOrb';
 import MeditationRoom from './MeditationRoom';
 import MeditationJournal from './MeditationJournal';
 import MeditationPreJoin from './MeditationPreJoin';
-import { getSessionSchedule } from './meditationService';
+import { getSessionSchedule, getTodayMeditationSessionId } from './meditationService';
 import { useMeditationSession } from '../../hooks/useMeditationSession';
 import { Flame, BarChart2, ChevronDown } from 'lucide-react';
 
@@ -33,9 +33,14 @@ export const MeditationFeature = ({ user, adminOverride = false, onRoomStateChan
 
   const navigate = (s: MeditationScreen) => setScreen(s);
 
-  // Notify parent whenever the screen changes so it can collapse / expand sidebar
+  // Notify parent ONLY when the screen changes so it can collapse / expand sidebar,
+  // without overriding the user's manual expand/collapse actions.
+  const prevScreen = useRef(screen);
   useEffect(() => {
-    onRoomStateChange?.(screen === 'room');
+    if (prevScreen.current !== screen) {
+      onRoomStateChange?.(screen === 'room');
+      prevScreen.current = screen;
+    }
   }, [screen, onRoomStateChange]);
 
   return (
@@ -94,16 +99,29 @@ const PrejoinWrapper = ({ user, onNavigate, onCameraState, adminOverride = false
           // Admin bypasses the live-window guard — patch schedule temporarily
           const { setSession, setSessionStatus, setParticipants, setMessages } = useMeditationStore.getState();
           const now = new Date();
-          const fakeId = `admin-${now.toISOString().slice(0,10)}-09-00`;
-          const fakeEnd = new Date(now.getTime() + 15 * 60 * 1000);
-          setSession(fakeId, now.getTime(), fakeEnd.getTime());
+          // Use stable today's session ID — getSessionSchedule() returns
+          // tomorrow's ID once today's live window has passed, which would
+          // put two admins joining at different times into different sessions.
+          const realId = getTodayMeditationSessionId();
+          const fakeEnd = new Date(now.getTime() + 60 * 60 * 1000);
+          setSession(realId, now.getTime(), fakeEnd.getTime());
           setSessionStatus('joining');
           const { meditationService: svc } = await import('./meditationService');
-          await svc.joinSession(fakeId, user.uid, user.displayName || 'Admin', user.photoURL || '');
+          await svc.joinSession(realId, user.uid, user.displayName || 'Admin', user.photoURL || '');
           setSessionStatus('live');
-          const unsubP = svc.subscribeToParticipants(fakeId, setParticipants);
-          const unsubC = svc.subscribeToChat(fakeId, setMessages);
-          (window as any).__meditationUnsubs = [unsubP, unsubC];
+          const unsubP = svc.subscribeToParticipants(realId, setParticipants);
+          const unsubC = svc.subscribeToChat(realId, setMessages);
+          const unsubS = svc.subscribeToSession(realId, (data) => {
+            const { setChatEnabled, setMediaShare, clearMediaShare } = useMeditationStore.getState();
+            if (data && typeof data.chatEnabled === 'boolean') setChatEnabled(data.chatEnabled);
+            if (data?.mediaShare) {
+              const ms = data.mediaShare;
+              if (ms.type === 'youtube' && ms.url) setMediaShare({ type: 'youtube', youtubeUrl: ms.url, isPlaying: ms.isPlaying ?? false, timestamp: ms.timestamp, updatedAt: ms.updatedAt });
+              else if (ms.type === 'audio' && ms.url) setMediaShare({ type: 'audio', audioUrl: ms.url, isPlaying: ms.isPlaying ?? false, timestamp: ms.timestamp, updatedAt: ms.updatedAt });
+              else if (ms.type === 'none') clearMediaShare();
+            }
+          });
+          (window as any).__meditationUnsubs = [unsubP, unsubC, unsubS];
           onNavigate('room');
         } else {
           await handleJoin();

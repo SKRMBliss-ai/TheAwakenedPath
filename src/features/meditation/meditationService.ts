@@ -102,6 +102,24 @@ export function getSessionSchedule(userEmail?: string): {
   };
 }
 
+/**
+ * Returns a stable session ID for "today's" meditation session, regardless of
+ * whether the live window has passed. This is used by admin-override joins so
+ * that two admins joining at different points in the day still end up in the
+ * SAME session (rather than today's vs. tomorrow's, which is what
+ * getSessionSchedule does once today's live window ends).
+ *
+ * Always uses today's UTC date + 9:00 AM IST (= 03:30 UTC).
+ */
+export function getTodayMeditationSessionId(): string {
+  const now = new Date();
+  const todayUtcMidnight = new Date(now);
+  todayUtcMidnight.setUTCHours(0, 0, 0, 0);
+  // 9:00 AM IST = 03:30 UTC (IST is UTC+5:30)
+  const start = new Date(todayUtcMidnight.getTime() + (3 * 60 + 30) * 60 * 1000);
+  return `${start.getUTCFullYear()}-${pad(start.getUTCMonth() + 1)}-${pad(start.getUTCDate())}-${pad(start.getUTCHours())}-${pad(start.getUTCMinutes())}`;
+}
+
 export const meditationService = {
 
   async joinSession(sessionId: string, uid: string, displayName: string, avatarUrl: string): Promise<void> {
@@ -113,6 +131,24 @@ export const meditationService = {
       { uid, displayName, avatarUrl, joinedAt: Date.now(), videoEnabled: false, isPresent: true });
     await setDoc(doc(db, 'meditation_attendance', `${uid}_${sessionId}`),
       { uid, sessionId, joinedAt: Date.now(), date: sessionId.slice(0, 10) }, { merge: true });
+  },
+
+  async toggleRoomChat(sessionId: string, chatEnabled: boolean): Promise<void> {
+    await setDoc(doc(db, 'meditation_sessions', sessionId), { chatEnabled }, { merge: true });
+  },
+
+  async updateMediaShare(sessionId: string, type: 'youtube' | 'audio' | 'none', url?: string): Promise<void> {
+    await setDoc(doc(db, 'meditation_sessions', sessionId), {
+      mediaShare: { type, url: url ?? null, isPlaying: true, timestamp: 0, updatedAt: Date.now() }
+    }, { merge: true });
+  },
+
+  async updateMediaState(sessionId: string, isPlaying: boolean, timestamp: number): Promise<void> {
+    await updateDoc(doc(db, 'meditation_sessions', sessionId), {
+      'mediaShare.isPlaying': isPlaying,
+      'mediaShare.timestamp': timestamp,
+      'mediaShare.updatedAt': Date.now()
+    });
   },
 
   async leaveSession(sessionId: string, uid: string, durationMinutes: number): Promise<void> {
@@ -158,9 +194,23 @@ export const meditationService = {
       { ...msg, timestamp: Date.now(), sessionId });
   },
 
+  async deleteMessage(sessionId: string, messageId: string): Promise<void> {
+    await updateDoc(doc(db, 'meditation_sessions', sessionId, 'chat', messageId), {
+      isDeleted: true,
+      text: 'Message removed by moderator.',
+      type: 'text'
+    });
+  },
+
   subscribeToChat(sessionId: string, cb: (m: MeditationMessage[]) => void): Unsubscribe {
     const q = query(collection(db, 'meditation_sessions', sessionId, 'chat'), orderBy('timestamp','asc'), limit(60));
     return onSnapshot(q, snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() } as MeditationMessage))));
+  },
+
+  subscribeToSession(sessionId: string, cb: (data: any) => void): Unsubscribe {
+    return onSnapshot(doc(db, 'meditation_sessions', sessionId), snap => {
+      if (snap.exists()) cb(snap.data());
+    });
   },
 
   async saveJournalEntry(entry: Omit<MeditationJournalEntry, 'id'>): Promise<string> {
