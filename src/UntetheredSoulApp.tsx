@@ -23,7 +23,7 @@ import { GlobalSparkles } from './components/ui/GlobalSparkles';
 import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
 import { ThemeToggle, useTheme } from './theme/ThemeSystem';
 import { collection, query, orderBy, limit, onSnapshot, getDocs, doc } from 'firebase/firestore';
-import { AwakenedPathLogo } from './components/ui/AwakenedPathLogo';
+import { MindGymLogo } from './components/ui/MindGymLogo';
 import EngagementReport from './features/admin/EngagementReport';
 import { useAchievements } from './features/achievements/useAchievements';
 import { MusicMiniPlayer } from './components/ui/MusicMiniPlayer';
@@ -373,7 +373,7 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
         {/* Greeting row */}
         <div className="flex items-center justify-between mb-6 lg:mb-8">
           <div className="flex items-center gap-5">
-            <AwakenedPathLogo variant="icon" size="md" animated={true} />
+            <MindGymLogo variant="icon" size="md" animated={true} />
             <div>
               <p className="font-sans text-[11px] font-bold tracking-[.28em] uppercase mb-0.5" style={{ color: '#B8973A' }}>
                 {greeting},
@@ -981,7 +981,7 @@ export default function UntetheredApp() {
   };
 
   useEffect(() => {
-    localStorage.setItem('awakened-path-active-course', activeCourseId || '');
+    localStorage.setItem('mind-gym-active-course', activeCourseId || '');
   }, [activeCourseId]);
   const [expandedChapter1, setExpandedChapter1] = useState(true);
 
@@ -1454,7 +1454,7 @@ export default function UntetheredApp() {
 
         {/* ── Logo ── */}
         <div className="flex items-center justify-between px-6 py-[1.5vh] flex-shrink-0">
-          <AwakenedPathLogo
+          <MindGymLogo
             variant="full"
             size="sm"
             animated={true}
@@ -1993,7 +1993,7 @@ export default function UntetheredApp() {
                   hasUsedTrial={!!profile?.trialUntil}
                   onSuccess={() => {
                     localStorage.setItem('awakened-tab', JSON.stringify('home'));
-                    localStorage.setItem('awakened-path-active-tab', 'home');
+                    localStorage.setItem('mind-gym-active-tab', 'home');
                     setActiveTab('home');
                   }}
                 />
@@ -2340,7 +2340,7 @@ export default function UntetheredApp() {
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            a.download = `awakened-path-journal-${new Date().toISOString().split('T')[0]}.json`;
+                            a.download = `mind-gym-journal-${new Date().toISOString().split('T')[0]}.json`;
                             a.click();
                           }}
                           className="w-full px-6 py-4 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all flex items-center justify-center gap-3"

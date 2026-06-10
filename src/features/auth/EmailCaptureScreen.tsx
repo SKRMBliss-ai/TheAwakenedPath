@@ -103,10 +103,10 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
     if (isInIframe) {
       try {
         // Try to navigate the parent window to the standalone app
-        window.top!.location.href = 'https://awakened-path-2026.web.app/?google=1';
+        window.top!.location.href = 'https://mind-gym-2026.web.app/?google=1';
       } catch {
         // If parent access is blocked, open in new tab
-        window.open('https://awakened-path-2026.web.app/?google=1', '_blank');
+        window.open('https://mind-gym-2026.web.app/?google=1', '_blank');
       }
       return;
     }
@@ -229,18 +229,9 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
                   className="w-full space-y-4"
                 >
                   <div className="space-y-1.5">
-                    <label
-                      className="text-[10px] font-bold uppercase tracking-widest pl-2 opacity-50"
-                      style={{ color: theme.textPrimary }}
-                    >
-                      Your Email
-                    </label>
-                    <p className="text-[11px] leading-snug pl-2 pr-1 opacity-60" style={{ color: theme.textSecondary }}>
-                      Just enter your email to step straight into Mind Gym — no username or password to create.
-                    </p>
                     <input
                       type="text"
-                      placeholder="your@soul.com"
+                      placeholder="Your Email"
                       value={email}
                       onChange={(e) => handleEmailChange(e.target.value)}
                       className="w-full rounded-2xl py-3.5 px-5 text-sm transition-all outline-none"

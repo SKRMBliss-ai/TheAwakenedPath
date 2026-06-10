@@ -13,7 +13,7 @@ const DIST = path.join(__dirname, '../dist/assets');
 // Strings that must NOT appear in the final bundle
 const FORBIDDEN = [
   'Inner Freedom',
-  'The Awakened Path',   // as a brand name (not in plain sentence context)
+  'The Mind Gym',   // as a brand name (not in plain sentence context)
   'AwakenedJournal',
 ];
 

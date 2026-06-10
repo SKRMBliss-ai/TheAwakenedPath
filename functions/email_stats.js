@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-if (!admin.apps.length) admin.initializeApp({ projectId: 'awakened-path-2026' });
+if (!admin.apps.length) admin.initializeApp({ projectId: 'mind-gym-2026' });
 const db = admin.firestore();
 
 async function getStats() {
@@ -50,8 +50,8 @@ async function getStats() {
     console.log(`👁   Total open events:              ${emailOpens}`);
     console.log(`👥  Unique openers:                 ${openerEmails.size}`);
     console.log(`🔴  YouTube link clicks:            ${ytClicks}`);
-    console.log(`🟡  App link clicks (/awakenedpath):${ctaClicks}`);
-    console.log(`🟢  /aboutawakenedpath clicks:      ${aboutClicks}`);
+    console.log(`🟡  App link clicks (/mindgym):${ctaClicks}`);
+    console.log(`🟢  /aboutmindgym clicks:      ${aboutClicks}`);
     console.log(`😴  Opened — no click (unique):     ${openedOnly}`);
     if (totalSent > 0 && openerEmails.size > 0) {
         console.log('─'.repeat(50));

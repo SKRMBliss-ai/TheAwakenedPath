@@ -1,5 +1,5 @@
 {
-  "name": "awakened-path",
+  "name": "mind-gym",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -29,6 +29,7 @@
     "openai": "^6.25.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-youtube": "^10.1.0",
     "tailwind-merge": "^3.4.0",
     "three": "^0.183.0",
     "uuid": "^13.0.0",

@@ -1,4 +1,4 @@
-// Adapted for AwakenedPath — uses callback navigation instead of react-router-dom
+// Adapted for MindGym — uses callback navigation instead of react-router-dom
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { meditationService, getSessionSchedule, getTodayMeditationSessionId } from '../features/meditation/meditationService';
 import { useMeditationStore } from '../stores/meditationStore';

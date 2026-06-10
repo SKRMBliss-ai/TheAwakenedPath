@@ -2,11 +2,9 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
   getRedirectResult,
   signInAnonymously,
   linkWithPopup,
-  linkWithRedirect,
   linkWithCredential,
   EmailAuthProvider,
   onAuthStateChanged,
@@ -387,15 +385,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const linkWithGoogle = async () => {
     if (!user || !user.isAnonymous) throw new Error('Not an anonymous user');
     const provider = new GoogleAuthProvider();
-    const ua = navigator.userAgent;
-    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
     try {
-      if (isMobile) {
-        await linkWithRedirect(user, provider);
-      } else {
-        await linkWithPopup(user, provider);
-        await updateDoc(doc(db, 'users', user.uid), { isAnonymous: false });
-      }
+      await linkWithPopup(user, provider);
+      await updateDoc(doc(db, 'users', user.uid), { isAnonymous: false });
     } catch (err: any) {
       if (err.code === 'auth/credential-already-in-use') throw new Error('ACCOUNT_EXISTS');
       throw err;
@@ -409,22 +401,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     provider.addScope('profile');
     provider.addScope('email');
 
-    const ua = navigator.userAgent;
-    // Mobile browsers (Android/iOS): redirect is reliable and avoids popup blockers
-    // Desktop: popup (no page navigation/reload needed)
-    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
-
     try {
-      if (isMobile) {
-        // For mobile, use redirect with explicit handling
-        console.log('[Auth] Using redirect flow for Google sign-in (mobile)');
-        await signInWithRedirect(auth, provider);
-        // Note: Page will redirect, so code after this won't execute
-      } else {
-        // For desktop, use popup
-        console.log('[Auth] Using popup flow for Google sign-in (desktop)');
-        await signInWithPopup(auth, provider);
-      }
+      // Use popup for all platforms to avoid Safari ITP cross-domain redirect issues
+      console.log('[Auth] Using popup flow for Google sign-in');
+      await signInWithPopup(auth, provider);
     } catch (err: any) {
       console.error('[Auth] Google sign-in error:', err?.code, err?.message);
       // Re-throw with user-friendly message

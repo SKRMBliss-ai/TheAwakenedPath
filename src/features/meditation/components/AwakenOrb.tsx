@@ -42,16 +42,16 @@ const AwakenOrb = ({ size = 140 }: Props) => {
         style={{
           width: size,
           height: size,
-          background: 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)',
-          border: '1px solid rgba(184,151,58,.35)',
-          boxShadow: '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.10)',
+          background: 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 45%, #041f1e 100%)',
+          border: '1px solid rgba(45,212,191,.25)',
+          boxShadow: '0 0 0 1px rgba(45,212,191,.15), 0 0 28px rgba(184,151,58,.25), inset 0 0 20px rgba(45,212,191,.05)',
         }}
         animate={{
           scale: [1, 1.022, 1],
           boxShadow: [
-            '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.10)',
-            '0 0 0 1px rgba(184,151,58,.20), 0 0 40px rgba(184,151,58,.35), 0 0 80px rgba(184,151,58,.15)',
-            '0 0 0 1px rgba(184,151,58,.15), 0 0 28px rgba(184,151,58,.25), 0 0 60px rgba(184,151,58,.10)',
+            '0 0 0 1px rgba(45,212,191,.15), 0 0 28px rgba(184,151,58,.25), inset 0 0 20px rgba(45,212,191,.05)',
+            '0 0 0 1px rgba(45,212,191,.20), 0 0 40px rgba(184,151,58,.35), inset 0 0 30px rgba(45,212,191,.15)',
+            '0 0 0 1px rgba(45,212,191,.15), 0 0 28px rgba(184,151,58,.25), inset 0 0 20px rgba(45,212,191,.05)',
           ],
         }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}

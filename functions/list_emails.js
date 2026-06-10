@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-if (!admin.apps.length) admin.initializeApp({ projectId: 'awakened-path-2026' });
+if (!admin.apps.length) admin.initializeApp({ projectId: 'mind-gym-2026' });
 const db = admin.firestore();
 
 const BLOCKED = [

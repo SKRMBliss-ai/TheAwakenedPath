@@ -1,4 +1,4 @@
-// Meditation Room Types — AwakenedPath / MindGym
+// Meditation Room Types — MindGym / MindGym
 
 export interface MeditationParticipant {
   uid: string;
@@ -18,6 +18,7 @@ export interface MeditationMessage {
   text: string;
   type: 'text' | 'emoji' | 'system';
   timestamp: number;
+  isDeleted?: boolean;
 }
 
 export interface MeditationJournalEntry {

@@ -1134,7 +1134,7 @@ export const SituationalPractices: React.FC<{
                         activeQuestionId={activeQuestionId}
                         onStart={(id) => {
                             onQuestionSelect?.(id);
-                            localStorage.setItem('awakened-path-active-question', id);
+                            localStorage.setItem('mind-gym-active-question', id);
                         }}
                     />
                     

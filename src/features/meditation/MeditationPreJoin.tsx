@@ -45,6 +45,28 @@ const MeditationPreJoin = ({ displayName, avatarUrl, participants, onJoin, onCan
     if (videoRef.current) videoRef.current.srcObject = null;
   }, [stream]);
 
+  const [permissionState, setPermissionState] = useState<'unknown'|'granted'|'denied'|'prompt'>('unknown');
+
+  // Check existing permission state on mount — avoids asking again if already granted/denied
+  useEffect(() => {
+    if (!navigator.permissions) return;
+    navigator.permissions.query({ name: 'camera' as PermissionName }).then(status => {
+      setPermissionState(status.state as 'granted'|'denied'|'prompt');
+      if (status.state === 'granted') {
+        // Permission already granted — silently start preview (no browser prompt)
+        enableCamera();
+      } else if (status.state === 'denied') {
+        setCameraError(true);
+      }
+      // Listen for future changes (e.g. user revokes in settings)
+      status.onchange = () => setPermissionState(status.state as 'granted'|'denied'|'prompt');
+    }).catch(() => {
+      // Permissions API not supported — fall through to normal getUserMedia on click
+      setPermissionState('prompt');
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const toggleCamera = () => cameraOn ? disableCamera() : enableCamera();
 
   // Attach stream to video element when both are ready
@@ -181,7 +203,7 @@ const MeditationPreJoin = ({ displayName, avatarUrl, participants, onJoin, onCan
             }}
           >
             {cameraOn ? <Camera size={16} /> : <CameraOff size={16} />}
-            {cameraOn ? 'Camera On' : 'Camera Off'}
+            {cameraOn ? 'Camera On' : permissionState === 'denied' ? 'Blocked' : 'Camera Off'}
           </button>
 
           {/* Mic — always disabled, shown as informational */}

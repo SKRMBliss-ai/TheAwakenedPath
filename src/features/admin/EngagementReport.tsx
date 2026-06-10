@@ -617,12 +617,12 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                 <div className="px-4 sm:px-10 py-3 border-b border-[var(--border-subtle)]/50 flex flex-wrap items-center gap-3">
                                     {[
                                         { icon: <Youtube className="w-3 h-3 text-red-500" />, label: 'YouTube (from email)', value: logStats.ytClicks, color: 'text-red-400', title: 'Clicked the YouTube video link in the email' },
-                                        { icon: <Monitor className="w-3 h-3 text-amber-400" />, label: 'App clicks', value: logStats.appCtaClicks, color: 'text-amber-400', title: 'Clicked "Open Today\'s Practice" button → /awakenedpath' },
+                                        { icon: <Monitor className="w-3 h-3 text-amber-400" />, label: 'App clicks', value: logStats.appCtaClicks, color: 'text-amber-400', title: 'Clicked "Open Today\'s Practice" button → /mindgym' },
                                         { icon: <Download className="w-3 h-3 text-green-400" />, label: 'Journal CTA', value: logStats.journalCtaClicks, color: 'text-green-400', title: 'Clicked "Get Free Journal" button → /aboutmindgym' },
                                         { icon: <Eye className="w-3 h-3 text-[var(--accent-primary)]" />, label: 'Unique openers', value: logStats.uniqueOpeners, color: 'text-[var(--accent-primary)]', title: 'Distinct people who opened (regardless of how many times)' },
                                         { icon: <Target className="w-3 h-3 text-purple-400" />, label: 'Total interactions', value: logStats.interactions, color: 'text-purple-400', title: 'Any click (YouTube + App CTA + Journal CTA) — people who did more than just open' },
                                         { icon: <PlayCircle className="w-3 h-3 text-purple-300" />, label: 'Video plays (site)', value: logStats.videoPlays, color: 'text-purple-300', title: 'Played the walkthrough video on /aboutmindgym' },
-                                        { icon: <Globe className="w-3 h-3 text-teal-300" />, label: 'Page visits', value: logStats.pageVisits, color: 'text-teal-300', title: 'Visited /awakenedpath or /aboutmindgym' },
+                                        { icon: <Globe className="w-3 h-3 text-teal-300" />, label: 'Page visits', value: logStats.pageVisits, color: 'text-teal-300', title: 'Visited /mindgym or /aboutmindgym' },
                                     ].map(s => (
                                         <div key={s.label} title={s.title} className="flex items-center gap-1.5 bg-[var(--bg-surface)] rounded-lg px-2.5 py-1.5 border border-[var(--border-subtle)]/60 cursor-help">
                                             {s.icon}

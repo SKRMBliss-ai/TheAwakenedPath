@@ -65,18 +65,18 @@ const DARK = {
     #3D2640 0%,
     #261830 28%,
     #180E22 55%,
-    #0E0818 80%,
-    #080510 100%
+    #0E1b1f 80%,
+    #041f1e 100%
   )`,
   // Gold border — visible enough to separate orb from background
-  orbBorder: '1px solid rgba(184,151,58,0.28)',
+  orbBorder: '1px solid rgba(45,212,191,0.25)',
   orbShadow: [
-    '0 0 0 1px rgba(184,151,58,0.14)',
+    '0 0 0 1px rgba(45,212,191,0.15)',
     '0 0 28px rgba(184,151,58,0.18)',   // gold halo — creates separation
     '0 0 70px rgba(184,151,58,0.08)',   // wide soft gold bloom
     '0 16px 60px rgba(0,0,0,0.70)',
     'inset 0 1px 0 rgba(255,255,255,0.07)',
-    'inset 0 -1px 0 rgba(0,0,0,0.60)',
+    'inset 0 -1px 0 rgba(45,212,191,0.30)',
   ].join(', '),
   highlightBg:    'radial-gradient(ellipse at center, rgba(255,248,255,0.09) 0%, transparent 78%)',
   highlightStyle: { top:'7%', left:'13%', width:'42%', height:'30%', transform:'rotate(-18deg)' },

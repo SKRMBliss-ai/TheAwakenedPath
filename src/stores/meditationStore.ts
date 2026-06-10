@@ -11,6 +11,8 @@ interface MediaShare {
   audioUrl?: string;
   screenStream?: MediaStream;
   isPlaying?: boolean;
+  timestamp?: number;
+  updatedAt?: number;
 }
 
 interface MeditationState {
@@ -23,6 +25,7 @@ interface MeditationState {
   emojiReactions: EmojiReaction[];
   isCameraOn: boolean;
   isChatOpen: boolean;
+  chatEnabled: boolean;
   cameraPermission: 'unknown' | 'granted' | 'denied' | 'requesting';
   streak: MeditationStreak | null;
   mediaShare: MediaShare;
@@ -36,6 +39,7 @@ interface MeditationState {
   toggleCamera: () => void;
   setCameraOn: (on: boolean) => void;
   toggleChat: () => void;
+  setChatEnabled: (enabled: boolean) => void;
   setCameraPermission: (p: MeditationState['cameraPermission']) => void;
   setStreak: (s: MeditationStreak | null) => void;
   setMediaShare: (media: MediaShare) => void;
@@ -48,7 +52,7 @@ interface MeditationState {
 export const useMeditationStore = create<MeditationState>((set) => ({
   sessionId: null, sessionStartTime: null, sessionEndTime: null,
   sessionStatus: 'idle', participants: [], messages: [], emojiReactions: [],
-  isCameraOn: false, isChatOpen: false, cameraPermission: 'unknown', streak: null,
+  isCameraOn: false, isChatOpen: false, chatEnabled: true, cameraPermission: 'unknown', streak: null,
   mediaShare: { type: 'none' },
   notificationsMuted: false,
 
@@ -66,6 +70,7 @@ export const useMeditationStore = create<MeditationState>((set) => ({
   toggleCamera: () => set(s => ({ isCameraOn: !s.isCameraOn })),
   setCameraOn: on => set({ isCameraOn: on }),
   toggleChat: () => set(s => ({ isChatOpen: !s.isChatOpen })),
+  setChatEnabled: enabled => set({ chatEnabled: enabled }),
   setCameraPermission: permission => set({ cameraPermission: permission }),
   setStreak: streak => set({ streak }),
   setMediaShare: media => set({ mediaShare: media }),

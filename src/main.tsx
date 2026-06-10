@@ -18,7 +18,7 @@ try {
 }
 
 // ─── Lightweight page-visit tracker (fire-and-forget) ────────────────────────
-const LOG_URL = 'https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity';
+const LOG_URL = 'https://us-central1-mind-gym-2026.cloudfunctions.net/logWebActivity';
 function trackPageVisit(page: string, action: string) {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -39,11 +39,11 @@ const isAboutJournalRoute = (() => {
   return p === '/aboutmindgym' || p === '/aboutmindgym/index.html' || p === '/aboutmindgym';
 })();
 
-// Track /awakenedpath (main app) visits — AboutJournal tracks its own visits internally
+// Track /mindgym (main app) visits — AboutJournal tracks its own visits internally
 if (!isAboutJournalRoute && typeof window !== 'undefined') {
   const p = window.location.pathname.toLowerCase();
-  if (p === '/awakenedpath' || p === '/awakenedpath/' || p === '/') {
-    trackPageVisit('/awakenedpath', 'PAGE_VISIT_APP');
+  if (p === '/mindgym' || p === '/mindgym/' || p === '/') {
+    trackPageVisit('/mindgym', 'PAGE_VISIT_APP');
   }
 }
 

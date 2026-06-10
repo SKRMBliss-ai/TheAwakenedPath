@@ -1,19 +1,20 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { X, Send } from 'lucide-react';
+import { X, Send, Trash2 } from 'lucide-react';
 import { useTheme } from '../../../theme/ThemeSystem';
 import { meditationService } from '../meditationService';
 import { useMeditationStore } from '../../../stores/meditationStore';
 import type { MeditationMessage } from '../types';
+import { isAdminEmail } from '../../../config/admin';
 
 const EMOJIS = ['🙏','💛','✨','🌿','🕊️','🌊','🔥','🌸'];
 const BLOCKED = /https?:\/\/|www\./i;
 const COOLDOWN = 30_000, MAX = 100;
 
 const ChatPanel = ({ sessionId, user, onClose }:
-  { sessionId: string; user: { uid: string; displayName: string | null; photoURL: string | null }; onClose: () => void }) => {
+  { sessionId: string; user: { uid: string; displayName: string | null; photoURL: string | null; email?: string | null }; onClose: () => void }) => {
   const { mode } = useTheme();
-  const { messages, addEmojiReaction, notificationsMuted } = useMeditationStore();
+  const { messages, addEmojiReaction, notificationsMuted, chatEnabled } = useMeditationStore();
   const [draft, setDraft] = useState('');
   const [error, setError] = useState('');
   const [lastSent, setLastSent] = useState(0);
@@ -71,17 +72,19 @@ const ChatPanel = ({ sessionId, user, onClose }:
 
   const fmt = (ts: number) => { const d=new Date(ts); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 
+  // Determine solid background based on theme - must be fully opaque to avoid bleed-through
+  const panelBg = mode === 'dark' ? '#111827' : '#ffffff';
+  const panelBorder = mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)';
+
   return (
     <motion.div
       initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 28, stiffness: 300 }}
       className="fixed right-0 top-0 bottom-0 w-80 max-w-[92vw] z-[10010] flex flex-col"
       style={{
-        background: 'var(--bg-surface)',
-        borderLeft: '1.5px solid var(--border-default)',
-        boxShadow: '-20px 0 60px rgba(0,0,0,0.25)',
-        marginTop: 0,
-        paddingTop: 0,
+        background: panelBg,
+        borderLeft: `1.5px solid ${panelBorder}`,
+        boxShadow: '-20px 0 60px rgba(0,0,0,0.4)',
         backdropFilter: 'none',
         opacity: 1,
       }}
@@ -90,12 +93,9 @@ const ChatPanel = ({ sessionId, user, onClose }:
       <div
         className="flex flex-col px-5 py-3 gap-2 flex-shrink-0 relative w-full"
         style={{
-          borderBottom: '1px solid var(--border-subtle)',
-          background: 'var(--bg-surface)',
+          borderBottom: `1px solid ${panelBorder}`,
+          background: panelBg,
           boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          marginLeft: 0,
-          marginRight: 0,
-          marginTop: 0,
         }}
       >
         <div className="flex items-center justify-between gap-2">
@@ -114,20 +114,30 @@ const ChatPanel = ({ sessionId, user, onClose }:
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto py-3 px-4 space-y-3" style={{ background: 'var(--bg-surface)' }}>
+      <div className="flex-1 overflow-y-auto py-3 px-4 space-y-3" style={{ background: panelBg }}>
         {messages.length === 0 && (
           <p className="text-xs text-center py-8" style={{ color: 'var(--text-muted)' }}>
             Be the first to share a kind word.
           </p>
         )}
-        {messages.map(m => <Bubble key={m.id} msg={m} isOwn={m.uid===user.uid} fmt={fmt} mode={mode} />)}
+        {messages.map(m => (
+          <Bubble 
+            key={m.id} 
+            msg={m} 
+            isOwn={m.uid === user.uid} 
+            fmt={fmt} 
+            mode={mode} 
+            isAdmin={isAdminEmail(user.email)} 
+            onDelete={() => meditationService.deleteMessage(sessionId, m.id)} 
+          />
+        ))}
         <div ref={bottomRef} />
       </div>
 
       {/* Emoji strip */}
       <div
         className="px-4 py-2 flex gap-2 overflow-x-auto flex-shrink-0"
-        style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
+        style={{ borderTop: `1px solid ${panelBorder}`, background: panelBg }}
       >
         {EMOJIS.map(e => (
           <button
@@ -143,12 +153,18 @@ const ChatPanel = ({ sessionId, user, onClose }:
       {/* Input */}
       <div
         className="px-4 pb-5 pt-2 flex-shrink-0"
-        style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
+        style={{ borderTop: `1px solid ${panelBorder}`, background: panelBg }}
       >
+        {!chatEnabled && (
+          <p className="text-xs text-center py-2 text-amber-500 font-medium">
+            Room chat is currently disabled by the host.
+          </p>
+        )}
         {error && <p className="text-red-400 text-[10px] mb-1">{error}</p>}
-        <div className="flex gap-2 items-end">
+        <div className={`flex gap-2 items-end ${!chatEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
           <textarea
             value={draft}
+            disabled={!chatEnabled}
             onChange={e => { setDraft(e.target.value.slice(0, MAX)); setError(''); }}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
             placeholder="Share a kind thought…"
@@ -165,7 +181,7 @@ const ChatPanel = ({ sessionId, user, onClose }:
           />
           <button
             onClick={send}
-            disabled={cooldown > 0 || !draft.trim()}
+            disabled={cooldown > 0 || !draft.trim() || !chatEnabled}
             className="p-2.5 rounded-xl bg-amber-500/90 text-black disabled:opacity-30 hover:bg-amber-400 active:scale-95 transition-all flex-shrink-0"
           >
             {cooldown > 0 ? <span className="text-[10px] font-black w-4 text-center">{cooldown}s</span> : <Send size={14} />}
@@ -179,13 +195,18 @@ const ChatPanel = ({ sessionId, user, onClose }:
   );
 };
 
-const Bubble = ({ msg, isOwn, fmt, mode }: { msg: MeditationMessage; isOwn: boolean; fmt:(ts:number)=>string; mode: 'dark' | 'light' }) => {
+const Bubble = ({ msg, isOwn, fmt, mode, isAdmin, onDelete }: { msg: MeditationMessage; isOwn: boolean; fmt:(ts:number)=>string; mode: 'dark' | 'light', isAdmin?: boolean, onDelete?: () => void }) => {
   if (msg.type === 'emoji') return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group relative`}>
       <div className="flex items-center gap-1.5">
         {!isOwn && <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{msg.displayName.split(' ')[0]}</span>}
         <span className="text-3xl">{msg.text}</span>
         <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>{fmt(msg.timestamp)}</span>
+        {isAdmin && (
+          <button onClick={onDelete} className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-500/10 rounded ml-1 transition-opacity">
+            <Trash2 size={12} />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -199,18 +220,30 @@ const Bubble = ({ msg, isOwn, fmt, mode }: { msg: MeditationMessage; isOwn: bool
     : { background: '#f0f0f8', color: '#1a1a2e', border: '1px solid rgba(0,0,0,0.1)' };
 
   return (
-    <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+    <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} group relative`}>
       {!isOwn && (
         <span className="text-[9px] mb-0.5 ml-1" style={{ color: 'var(--text-muted)' }}>
           {msg.displayName.split(' ')[0]}
         </span>
       )}
-      <div
-        className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${isOwn ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}
-        style={isOwn ? ownBubbleStyle : otherBubbleStyle}
-      >
-        {msg.text}{' '}
-        <span className="text-[8px] ml-1" style={{ color: 'var(--text-muted)' }}>{fmt(msg.timestamp)}</span>
+      <div className="flex items-center gap-1">
+        {isAdmin && isOwn && (
+          <button onClick={onDelete} className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-500/10 rounded mr-1 transition-opacity">
+            <Trash2 size={12} />
+          </button>
+        )}
+        <div
+          className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${isOwn ? 'rounded-tr-sm' : 'rounded-tl-sm'} ${msg.isDeleted ? 'opacity-50 italic' : ''}`}
+          style={isOwn ? ownBubbleStyle : otherBubbleStyle}
+        >
+          {msg.text}{' '}
+          <span className="text-[8px] ml-1" style={{ color: 'var(--text-muted)' }}>{fmt(msg.timestamp)}</span>
+        </div>
+        {isAdmin && !isOwn && (
+          <button onClick={onDelete} className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-500/10 rounded ml-1 transition-opacity">
+            <Trash2 size={12} />
+          </button>
+        )}
       </div>
     </div>
   );

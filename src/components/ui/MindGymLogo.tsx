@@ -1,14 +1,14 @@
-// AwakenedPathLogo.tsx
+// MindGymLogo.tsx
 // Drop-in replacement for the sidebar logo in UntetheredApp.tsx
 // Three variants:
-//   <AwakenedPathLogo variant="full" />     — icon + wordmark (sidebar header)
-//   <AwakenedPathLogo variant="icon" />     — icon only (mobile header, favicon)
-//   <AwakenedPathLogo variant="wordmark" /> — text only
+//   <MindGymLogo variant="full" />     — icon + wordmark (sidebar header)
+//   <MindGymLogo variant="icon" />     — icon only (mobile header, favicon)
+//   <MindGymLogo variant="wordmark" /> — text only
 
 import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 
-interface AwakenedPathLogoProps {
+interface MindGymLogoProps {
   variant?: 'full' | 'icon' | 'wordmark';
   size?: 'sm' | 'md' | 'lg';
   animated?: boolean;
@@ -16,13 +16,13 @@ interface AwakenedPathLogoProps {
   onClick?: () => void;
 }
 
-export function AwakenedPathLogo({
+export function MindGymLogo({
   variant = 'full',
   size = 'md',
   animated = true,
   className,
   onClick,
-}: AwakenedPathLogoProps) {
+}: MindGymLogoProps) {
   const iconSizes = { sm: 28, md: 36, lg: 52 };
   const iconPx = iconSizes[size];
 
@@ -191,7 +191,7 @@ function LogoMark({ size, animated }: { size: number; animated: boolean }) {
 }
 
 // ─────────────────────────────────────────────
-// Wordmark — "Awakened Path" with sub-label
+// Wordmark — "Mind Gym" with sub-label
 // ─────────────────────────────────────────────
 function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
   const titleSize = {

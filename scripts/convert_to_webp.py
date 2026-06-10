@@ -1,7 +1,7 @@
 import os
 from PIL import Image
 
-dir_path = r"c:\Github\Bliss\AwakenedPath\public\assets\landing"
+dir_path = r"c:\Github\Bliss\MindGym\public\assets\landing"
 for filename in os.listdir(dir_path):
     if filename.endswith(".png"):
         file_path = os.path.join(dir_path, filename)

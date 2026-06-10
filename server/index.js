@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 const client = new SecretManagerServiceClient();
-const projectName = 'awakened-path-2026';
+const projectName = 'mind-gym-2026';
 
 let genAI;
 let model;
