@@ -36,6 +36,21 @@ export const IGNORED_EMAILS = [
     'skrmblissai@gmail.com'
 ];
 
+// Emails that should never be recorded by Clarity (app owners / internal team).
+// When any of these emails are logged in, BLOCK_CLARITY is set automatically in
+// localStorage so Clarity stops recording that session on that device.
+export const BLOCK_ANALYTICS_EMAILS = [
+    'shrutikhungar@gmail.com',
+    'skrmblissai@gmail.com',
+    'nysakhungar@gmail.com',
+    'simkatyal1@gmail.com',
+];
+
+export const shouldBlockAnalytics = (email: string | null | undefined): boolean => {
+    if (!email) return false;
+    return BLOCK_ANALYTICS_EMAILS.includes(email.toLowerCase());
+};
+
 export const isMonitoredEmail = (email: string | null | undefined) => {
     if (!email) return false;
     const lowerEmail = email.toLowerCase();

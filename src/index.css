@@ -32,14 +32,79 @@ html, body {
 }
 
 :root {
-  /* Default fallbacks for initial load before ThemeSystem.tsx hydrates */
-  --bg-color: #0c0910;
-  --text-main: #ede9e3;
+  /* ─── COMPLETE DARK-MODE DEFAULTS ───────────────────────────────────────────
+     These are the full dark theme values. ThemeSystem.tsx overrides them at
+     runtime for theme switching, but every variable must have a value here so
+     the first paint is never broken — even before React hydrates.
+  ──────────────────────────────────────────────────────────────────────────── */
+
+  /* Backgrounds */
+  --bg-color:             #0c0910;
+  --bg-primary:           #0c0910;
+  --bg-secondary:         #110e16;
+  --bg-body:              linear-gradient(165deg, #0c0910 0%, #110e16 100%);
+  --bg-base:              #0c0910;
+  --bg-surface:           rgba(255, 255, 255, 0.06);
+  --bg-surface-hover:     rgba(255, 255, 255, 0.08);
+  --bg-surface-active:    rgba(255, 255, 255, 0.10);
+  --bg-input:             rgba(255, 255, 255, 0.04);
+  --bg-surface-rgb:       20, 18, 26;
+
+  /* Text */
+  --text-main:      #ede9e3;
+  --text-primary:   #ede9e3;
+  --text-secondary: rgba(237, 233, 227, 0.90);
+  --text-muted:     rgba(237, 233, 227, 0.85);
+  --text-disabled:  rgba(237, 233, 227, 0.60);
+
+  /* Accents */
+  --accent-primary:          #5EC4B0;
+  --accent-secondary:        #5EC4B0;
+  --brand-primary:           #5EC4B0;
+  --brand-secondary:         #5EC4B0;
+  --teal-glow:               #5EC4B0;
+  --accent-primary-dim:      rgba(94, 196, 176, 0.08);
+  --accent-secondary-muted:  rgba(94, 196, 176, 0.10);
+  --accent-secondary-border: rgba(94, 196, 176, 0.25);
+
+  /* Borders */
+  --border-default: rgba(255, 255, 255, 0.35);
+  --border-subtle:  rgba(255, 255, 255, 0.15);
+  --border-glass:   rgba(255, 255, 255, 0.10);
+  --glass-border:   rgba(255, 255, 255, 0.10);
+  --glass-surface:  rgba(255, 255, 255, 0.06);
+
+  /* Shadows & Glows */
+  --shadow:           none;
+  --shadow-elevated:  0 8px 32px rgba(0, 0, 0, 0.5);
+  --glow-primary:     rgba(94, 196, 176, 0.25);
+  --glow-cyan:        rgba(94, 196, 176, 0.12);
+  --glow-gold:        rgba(232, 184, 122, 0.15);
+  --card-glow-base:   rgba(94, 196, 176, 0.20);
+  --card-glow-pulse:  rgba(94, 196, 176, 0.38);
+  --card-glow-surge:  rgba(94, 196, 176, 0.65);
+  --video-shadow:     0 30px 100px rgba(0,0,0,0.9), 0 0 40px rgba(94, 196, 176, 0.12);
+  --video-border:     rgba(255, 255, 255, 0.12);
+
+  /* Orb */
+  --orb-fill:     radial-gradient(circle at 40% 35%, rgba(94,196,176,0.18) 0%, rgba(60,160,140,0.10) 60%, rgba(40,130,115,0.03) 100%);
+  --orb-text:     rgba(255, 255, 255, 0.95);
+  --orb-particle: rgba(255, 255, 255, 0.50);
+  --orb-shadow:   none;
+
+  /* Navigation */
+  --nav-active-bg:     rgba(94, 196, 176, 0.15);
+  --nav-active-border: rgba(94, 196, 176, 0.45);
+
+  /* Chips */
+  --chip-bg:              rgba(255, 255, 255, 0.05);
+  --chip-border:          rgba(255, 255, 255, 0.12);
+  --chip-selected-bg:     rgba(94, 196, 176, 0.15);
+  --chip-selected-border: rgba(94, 196, 176, 0.45);
+
+  /* Fonts */
   --font-serif: "Cormorant Garamond", Georgia, serif;
-  --font-sans: "Outfit", "Inter", sans-serif;
-  --accent-primary: #5EC4B0;
-  --accent-secondary: #5EC4B0;
-  --border-glass: rgba(255, 255, 255, 0.1);
+  --font-sans:  "Outfit", "Inter", sans-serif;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));

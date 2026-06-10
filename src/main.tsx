@@ -31,6 +31,20 @@ function trackPageVisit(page: string, action: string) {
   } catch (_) { /* silent */ }
 }
 
+// ─── /block-clarity — visit this URL on any device to stop Clarity recording ─
+// Useful for dev/admin devices. Sets localStorage flag and redirects to app.
+if (typeof window !== 'undefined') {
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  if (p === '/block-clarity') {
+    try { localStorage.setItem('BLOCK_CLARITY', 'true'); } catch (_) {}
+    window.location.replace('/');
+  }
+  if (p === '/unblock-clarity') {
+    try { localStorage.removeItem('BLOCK_CLARITY'); } catch (_) {}
+    window.location.replace('/');
+  }
+}
+
 // Marketing landing route — rendered without auth/theme providers so it stays
 // fast for anonymous traffic and survives provider failures.
 const isAboutJournalRoute = (() => {

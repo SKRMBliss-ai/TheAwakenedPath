@@ -29,7 +29,7 @@ import { useAchievements } from './features/achievements/useAchievements';
 import { MusicMiniPlayer } from './components/ui/MusicMiniPlayer';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
-import { isAdminEmail, isUnlockedUser } from './config/admin';
+import { isAdminEmail, isUnlockedUser, shouldBlockAnalytics } from './config/admin';
 import { DashboardGrid } from './features/practices/DashboardGrid';
 import { QUESTION_META } from './features/practices/TodayPath';
 import { useCourseTracking } from './hooks/useCourseTracking';
@@ -1185,6 +1185,17 @@ export default function UntetheredApp() {
 
   const isAdmin = isAdminEmail(currentUser?.email);
 
+  // ── Auto-block Clarity for owner/internal emails ──────────────────────────
+  // Runs once when auth resolves. Sets BLOCK_CLARITY in localStorage so Clarity
+  // stops recording sessions from internal team members on any device.
+  useEffect(() => {
+    if (currentUser?.email && shouldBlockAnalytics(currentUser.email)) {
+      try {
+        localStorage.setItem('BLOCK_CLARITY', 'true');
+      } catch (_) { /* storage unavailable */ }
+    }
+  }, [currentUser?.email]);
+
 
   useEffect(() => {
     if (activePractice) {
@@ -1444,13 +1455,19 @@ export default function UntetheredApp() {
       <aside className={cn(
         "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70] overflow-hidden",
         "border-r border-[var(--border-default)]",
-        "bg-[var(--bg-surface)] backdrop-blur-2xl px-2",
+        "backdrop-blur-2xl px-2",
         "transition-transform duration-500",
         // Desktop: collapse based on isSidebarCollapsed
         isSidebarCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
         // Mobile: show/hide based on isSidebarOpen
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      )}
+      style={{
+        // Solid bg first — backdrop-filter is unreliable on some GPU/driver combos
+        // (seen in Edge on PC). Without a solid base, the sidebar is invisible
+        // when blur fails, causing nav items to float over main content (Clarity bug).
+        background: 'var(--bg-primary, #0c0910)',
+      }}>
 
         {/* ── Logo ── */}
         <div className="flex items-center justify-between px-6 py-[1.5vh] flex-shrink-0">

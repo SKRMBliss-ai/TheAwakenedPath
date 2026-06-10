@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "name": "Sync Docs on Source Change",
+  "description": "When TypeScript or TSX source files change, prompt the agent to update the relevant documentation files (README.md, DESIGN_SYSTEM_SPEC.md, PROJECT_SPECS.md, REQUIREMENTS.md) to reflect the changes.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "functions/**/*.js",
+      "vite.config.ts",
+      "eslint.config.js",
+      "index.html",
+      "firestore.rules",
+      "storage.rules"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A source file was just edited. Review the change and determine if any documentation needs updating. The project docs live at the root level: README.md, DESIGN_SYSTEM_SPEC.md, PROJECT_SPECS.md, and REQUIREMENTS.md. If the change affects public APIs, features, architecture, configuration, or notable behavior, update the relevant doc(s) to stay accurate and in sync. Be concise and targeted — only update sections that are actually affected by the change."
+  }
+}

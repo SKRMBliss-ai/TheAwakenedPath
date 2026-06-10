@@ -180,16 +180,25 @@ The theme is managed by `ThemeSystem.tsx` at `src/theme/ThemeSystem.tsx`.
 
 **CSS Custom Properties** (set automatically by `ThemeProvider`):
 
+> **Note:** A static seed of the dark-mode values for these tokens is also declared in `index.html` `:root` to eliminate flash-of-unstyled-content (FOUC) before React hydrates.
+
 | Token | Purpose |
 |---|---|
-| `--bg-primary`, `--bg-secondary`, `--bg-surface`, `--bg-input` | Background layers |
+| `--bg-primary`, `--bg-secondary`, `--bg-base` | Primary background layers |
+| `--bg-surface`, `--bg-surface-hover` | Elevated surface / hover state |
+| `--bg-input` | Form input background |
 | `--bg-surface-rgb` | RGB triplet for rgba() transparency |
 | `--text-primary`, `--text-secondary`, `--text-muted`, `--text-disabled` | Text hierarchy |
 | `--accent-primary`, `--accent-secondary`, `--teal-glow` | Brand accents |
+| `--accent-primary-dim`, `--accent-secondary-muted`, `--accent-secondary-border` | Dim/muted accent variants |
 | `--card-glow-base`, `--card-glow-pulse`, `--card-glow-surge` | Glow intensity levels |
+| `--glow-primary` | General purpose primary glow |
 | `--orb-fill`, `--orb-text`, `--orb-particle`, `--orb-shadow` | EtherealOrb visual tokens |
 | `--chip-bg`, `--chip-border`, `--chip-selected-bg`, `--chip-selected-border` | Chip/filter button states |
 | `--nav-active-bg`, `--nav-active-border` | Bottom nav active state |
+| `--border-default`, `--border-subtle`, `--border-glass` | Border hierarchy (high → low emphasis) |
+| `--glass-border`, `--glass-surface` | Glassmorphism surface tokens |
+| `--shadow-elevated` | Elevated element drop shadow |
 | `--glow-cyan`, `--glow-gold` | Named glow colors |
 | `--font-serif`, `--font-sans` | Typography |
 | `--blur-val` | Backdrop blur value |
