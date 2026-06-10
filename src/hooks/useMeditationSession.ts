@@ -1,6 +1,6 @@
 // Adapted for AwakenedPath — uses callback navigation instead of react-router-dom
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { meditationService, getSessionSchedule } from '../features/meditation/meditationService';
+import { meditationService, getSessionSchedule, getTodayMeditationSessionId } from '../features/meditation/meditationService';
 import { useMeditationStore } from '../stores/meditationStore';
 import type { MeditationScreen } from '../features/meditation/types';
 
@@ -8,7 +8,7 @@ interface SessionUser { uid: string; displayName: string | null; photoURL: strin
 interface Options { user: SessionUser | null; active: boolean; onNavigate: (screen: MeditationScreen) => void; }
 
 export function useMeditationSession({ user, active, onNavigate }: Options) {
-  const { setSession, setSessionStatus, setParticipants, setMessages } = useMeditationStore();
+  const { setSession, setSessionStatus, setParticipants, setMessages, setChatEnabled, setMediaShare, clearMediaShare } = useMeditationStore();
   const joinedAtRef = useRef<number | null>(null);
   const endHandledRef = useRef(false);
   // ✅ Fix: initialize from real schedule — NOT 0 — so auto-end never fires on mount
@@ -20,6 +20,13 @@ export function useMeditationSession({ user, active, onNavigate }: Options) {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
+
+  // Track when we actually become active in the room so inRoomMs works
+  useEffect(() => {
+    if (active && !joinedAtRef.current) {
+      joinedAtRef.current = Date.now();
+    }
+  }, [active]);
 
   // ── Leave ────────────────────────────────────────────────────────────────────
   const handleLeave = useCallback(async (autoEnd = false) => {
@@ -55,26 +62,49 @@ export function useMeditationSession({ user, active, onNavigate }: Options) {
     if (!user) return;
     const schedule = getSessionSchedule();
     if (schedule.status !== 'live') return;
+    // Canonical room id for today — MUST match the admin-override path
+    // (getTodayMeditationSessionId) so admins and non-admins share one room.
+    const roomId = getTodayMeditationSessionId();
+    console.log('[Session] joining room:', roomId, 'as', user.uid);
     setSessionStatus('joining');
-    setSession(schedule.sessionId, schedule.startTime.getTime(), schedule.endTime.getTime());
+    setSession(roomId, schedule.startTime.getTime(), schedule.endTime.getTime());
     try {
       await meditationService.joinSession(
-        schedule.sessionId, user.uid,
+        roomId, user.uid,
         user.displayName || 'Practitioner',
         user.photoURL || ''
       );
       joinedAtRef.current = Date.now();
       endHandledRef.current = false;
       setSessionStatus('live');
-      const unsubP = meditationService.subscribeToParticipants(schedule.sessionId, setParticipants);
-      const unsubC = meditationService.subscribeToChat(schedule.sessionId, setMessages);
-      (window as any).__meditationUnsubs = [unsubP, unsubC];
+      const unsubP = meditationService.subscribeToParticipants(roomId, (ps) => {
+        console.log('[Session] present participants:', ps.map(p => p.uid));
+        setParticipants(ps);
+      });
+      const unsubC = meditationService.subscribeToChat(roomId, setMessages);
+      const unsubS = meditationService.subscribeToSession(roomId, (data) => {
+        if (data && typeof data.chatEnabled === 'boolean') {
+          setChatEnabled(data.chatEnabled);
+        }
+        // Sync YouTube/Audio sharing state from Firestore to all participants
+        if (data?.mediaShare) {
+          const ms = data.mediaShare;
+          if (ms.type === 'youtube' && ms.url) {
+            setMediaShare({ type: 'youtube', youtubeUrl: ms.url, isPlaying: ms.isPlaying ?? false, timestamp: ms.timestamp, updatedAt: ms.updatedAt });
+          } else if (ms.type === 'audio' && ms.url) {
+            setMediaShare({ type: 'audio', audioUrl: ms.url, isPlaying: ms.isPlaying ?? false, timestamp: ms.timestamp, updatedAt: ms.updatedAt });
+          } else if (ms.type === 'none') {
+            clearMediaShare();
+          }
+        }
+      });
+      (window as any).__meditationUnsubs = [unsubP, unsubC, unsubS];
       onNavigate('room');
     } catch (err) {
       console.error('[Session] join failed:', err);
       setSessionStatus('idle');
     }
-  }, [user, setSession, setSessionStatus, setParticipants, setMessages, onNavigate]);
+  }, [user, setSession, setSessionStatus, setParticipants, setMessages, setChatEnabled, onNavigate]);
 
   return { remainingMs, handleJoin, handleLeave };
 }
