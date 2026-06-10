@@ -32,13 +32,6 @@ function toFriendlyError(err: any): string {
   return err?.message || 'Something went wrong. Please try again.';
 }
 
-const TRIAL_FEATURES = [
-  { icon: '🎙️', label: 'Voice Guidance' },
-  { icon: '🧘', label: 'All Practices' },
-  { icon: '📖', label: 'Wisdom Library' },
-  { icon: '📓', label: 'Daily Journal' },
-];
-
 export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) => {
   const { beginAnonymousPath, signInWithGoogle } = useAuth();
   const { theme, mode } = useTheme();
@@ -341,81 +334,6 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
               <span className="font-semibold" style={{ color: theme.accentPrimary }}>Sign in</span>
             </button>
 
-            {/* ── Trial teaser – sits at the bottom of the card ── */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-              className="w-full group"
-            >
-              <div
-                className="relative rounded-[24px] p-5 overflow-hidden transition-all duration-700 hover:scale-[1.01] active:scale-[0.99]"
-                style={{
-                  background: mode === 'dark'
-                    ? 'linear-gradient(165deg, rgba(20,30,28,0.9) 0%, rgba(8,10,12,0.95) 100%)'
-                    : 'linear-gradient(165deg, rgba(240,252,250,0.95) 0%, rgba(224,246,242,0.95) 100%)',
-                  border: `1px solid ${theme.borderGlass}`,
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 0 20px rgba(94,196,176,0.04)',
-                }}
-              >
-                {/* Shimmer */}
-                <div className="absolute inset-0 pointer-events-none opacity-15 group-hover:opacity-30 transition-opacity duration-1000 bg-[radial-gradient(circle_at_50%_0%,rgba(94,196,176,0.3),transparent_70%)]" />
-
-                {/* Header row */}
-                <div className="flex items-center justify-between mb-4 relative z-10">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse" />
-                    <span className="text-[11px] font-black tracking-[0.2em] uppercase opacity-85" style={{ color: theme.accentPrimary }}>
-                      Limited Trial
-                    </span>
-                  </div>
-                  <div
-                    className="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase"
-                    style={{ background: 'rgba(94,196,176,0.12)', color: theme.accentPrimary, border: '1px solid rgba(94,196,176,0.3)' }}
-                  >
-                    No Card Needed
-                  </div>
-                </div>
-
-                {/* Feature pills */}
-                <div className="grid grid-cols-2 gap-1.5 mb-4 relative z-10">
-                  {TRIAL_FEATURES.map((f, i) => (
-                    <motion.div
-                      key={f.label}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7 + (i * 0.08) }}
-                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl"
-                      style={{
-                        background: mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(94,196,176,0.05)',
-                        border: `1px solid ${mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(94,196,176,0.1)'}`,
-                      }}
-                    >
-                      <span className="text-sm">{f.icon}</span>
-                      <span className="text-[11px] font-semibold uppercase tracking-wide opacity-80" style={{ color: theme.textSecondary }}>
-                        {f.label}
-                      </span>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Token count */}
-                <div className="flex items-center justify-center gap-3 relative z-10">
-                  <span
-                    className="text-[32px] leading-none font-bold"
-                    style={{ color: theme.textPrimary }}
-                  >
-                    300
-                  </span>
-                  <div className="flex flex-col">
-                    <span className="text-[12px] font-black uppercase tracking-[0.2em] opacity-90" style={{ color: theme.accentPrimary }}>
-                      Sacred Tokens ✨
-                    </span>
-                    <span className="text-[11px] uppercase tracking-wider opacity-55" style={{ color: theme.textSecondary }}>Full Access Unlocked</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
           </div>
         </div>
       </motion.div>
