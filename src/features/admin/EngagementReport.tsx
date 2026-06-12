@@ -382,7 +382,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
     // Helper: is this CTA click a journal download link?
     const isJournalCta = (l: ActivityLog) =>
         l.activityType === 'EMAIL_CTA_CLICK' &&
-        (l.details?.toLowerCase().includes('aboutawakened') || (l as any).destination?.includes('aboutawakened'));
+        (l.details?.toLowerCase().includes('aboutmindgym') || (l as any).destination?.includes('aboutmindgym'));
 
     // Derived stats from logs
     const logStats = useMemo(() => {
