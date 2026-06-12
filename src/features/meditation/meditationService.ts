@@ -59,11 +59,11 @@ export function getSessionSchedule(userEmail?: string): {
     };
   }
 
-  // ── PROD: fixed 9:00 AM IST daily session ──────────────────────────────────
+  // ── PROD: fixed 9:00–10:00 AM IST daily session ──────────────────────────
   // IST = UTC+5:30 → 9:00 AM IST = 03:30 AM UTC
   const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
   const SESSION_HOUR_IST = 9, SESSION_MIN_IST = 0;
-  const LIVE_MS = 30 * 60 * 1000; // 9:00 → 9:30 AM IST
+  const LIVE_MS = 60 * 60 * 1000; // 9:00 → 10:00 AM IST
 
   // Today's 9 AM IST expressed as a UTC Date
   const todayUtcMidnight = new Date(now); todayUtcMidnight.setUTCHours(0,0,0,0);
