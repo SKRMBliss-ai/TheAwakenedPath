@@ -1,6 +1,6 @@
 // Adapted for MindGym — uses callback navigation instead of react-router-dom
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { meditationService, getSessionSchedule, getTodayMeditationSessionId } from '../features/meditation/meditationService';
+import { meditationService, getSessionSchedule, LIVE_MEDITATION_SESSION_ID } from '../features/meditation/meditationService';
 import { useMeditationStore } from '../stores/meditationStore';
 import type { MeditationScreen } from '../features/meditation/types';
 
@@ -62,9 +62,9 @@ export function useMeditationSession({ user, active, onNavigate }: Options) {
     if (!user) return;
     const schedule = getSessionSchedule();
     if (schedule.status !== 'live') return;
-    // Canonical room id for today — MUST match the admin-override path
-    // (getTodayMeditationSessionId) so admins and non-admins share one room.
-    const roomId = getTodayMeditationSessionId();
+    // Use the permanent live_meditation session ID (not time-based)
+    // All participants share one eternal room
+    const roomId = LIVE_MEDITATION_SESSION_ID;
     console.log('[Session] joining room:', roomId, 'as', user.uid);
     setSessionStatus('joining');
     setSession(roomId, schedule.startTime.getTime(), schedule.endTime.getTime());

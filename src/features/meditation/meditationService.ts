@@ -15,8 +15,13 @@ type MeditationBadgeType = MeditationBadge['type'];
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
+// ── Permanent session ID ────────────────────────────────────────────────────
+// All participants join the same live meditation room, forever.
+// Historical tracking happens via meditation_attendance with date-based IDs.
+export const LIVE_MEDITATION_SESSION_ID = 'live_meditation';
+
 // DEV mode : 5-min slots (4 min live · 1 min gap) — easy to test immediately
-// PROD mode : single daily session at 9:00 AM IST (UTC+5:30 = UTC 03:30), 30 min (9:00–9:30)
+// PROD mode : single daily session at 9:00 AM IST (UTC+5:30 = UTC 03:30), 1 hour (9:00–10:00)
 const IS_DEV = import.meta.env.DEV;
 
 // Test users who always see live session
@@ -122,15 +127,23 @@ export function getTodayMeditationSessionId(): string {
 
 export const meditationService = {
 
-  async joinSession(sessionId: string, uid: string, displayName: string, avatarUrl: string): Promise<void> {
+  async joinSession(_sessionId: string, uid: string, displayName: string, avatarUrl: string): Promise<void> {
     const { startTime, endTime } = getSessionSchedule();
-    await setDoc(doc(db, 'meditation_sessions', sessionId), {
-      id: sessionId, startTime: startTime.getTime(), endTime: endTime.getTime(), status: 'live',
+    // Always use the permanent live_meditation session for WebRTC & presence
+    // Parameter _sessionId is kept for backward compatibility but not used
+    const permanentSessionId = LIVE_MEDITATION_SESSION_ID;
+
+    await setDoc(doc(db, 'meditation_sessions', permanentSessionId), {
+      id: permanentSessionId, startTime: startTime.getTime(), endTime: endTime.getTime(), status: 'live',
+      lastUpdated: Date.now(),
     }, { merge: true });
-    await setDoc(doc(db, 'meditation_sessions', sessionId, 'participants', uid),
+    await setDoc(doc(db, 'meditation_sessions', permanentSessionId, 'participants', uid),
       { uid, displayName, avatarUrl, joinedAt: Date.now(), videoEnabled: false, isPresent: true });
-    await setDoc(doc(db, 'meditation_attendance', `${uid}_${sessionId}`),
-      { uid, sessionId, joinedAt: Date.now(), date: sessionId.slice(0, 10) }, { merge: true });
+
+    // Track attendance historically with date-based ID for analytics
+    const attendanceId = `${uid}_${new Date().toISOString().slice(0, 10)}`;
+    await setDoc(doc(db, 'meditation_attendance', attendanceId),
+      { uid, sessionId: permanentSessionId, joinedAt: Date.now(), date: new Date().toISOString().slice(0, 10) }, { merge: true });
   },
 
   async toggleRoomChat(sessionId: string, chatEnabled: boolean): Promise<void> {
