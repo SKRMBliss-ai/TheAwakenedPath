@@ -173,7 +173,7 @@ export function WitnessAndRelease({
 
         // Play the dedicated meditation MP3 — it already contains all four phrases
         // No TTS loop — the audio file speaks the phrases itself
-        const meditationUrl = 'https://firebasestorage.googleapis.com/v0/b/mind-gym-2026.firebasestorage.app/o/AboutJournal%2FMeditationJournal%2FsorryForgivemeThankyou.mp3?alt=media';
+        const meditationUrl = 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2FMeditationJournal%2FsorryForgivemeThankyou.mp3?alt=media';
         VoiceService.playAudioURL(meditationUrl, {
             category: 'music',
             loop: false, // play once — 60s timer runs in parallel

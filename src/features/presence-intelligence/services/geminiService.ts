@@ -4,7 +4,7 @@
  * This ensures the Gemini API Key remains secret in Google Cloud Secret Manager.
  */
 
-const API_BASE_URL = "https://mind-gym-2026.web.app";
+const API_BASE_URL = "https://awakened-path-2026.web.app";
 
 export async function getWitnessingReflection(userInput: string) {
     try {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const API_BASE_URL = "https://mind-gym-2026.web.app";
+const API_BASE_URL = "https://awakened-path-2026.web.app";
 
 export type EmotionState = 'CALM' | 'JOY' | 'FOCUS' | 'PANIC' | 'ANGER' | 'SAD' | 'NEUTRAL';
 

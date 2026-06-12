@@ -103,10 +103,10 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
     if (isInIframe) {
       try {
         // Try to navigate the parent window to the standalone app
-        window.top!.location.href = 'https://mind-gym-2026.web.app/?google=1';
+        window.top!.location.href = 'https://awakened-path-2026.web.app/?google=1';
       } catch {
         // If parent access is blocked, open in new tab
-        window.open('https://mind-gym-2026.web.app/?google=1', '_blank');
+        window.open('https://awakened-path-2026.web.app/?google=1', '_blank');
       }
       return;
     }

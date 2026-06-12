@@ -21,7 +21,7 @@ import { db } from '../../firebase';
 const PREMIUM_URL = '/?plan=wisdom_untethered';
 
 // ─── Activity Tracker ─────────────────────────────────────────────────────────
-const LOG_URL = 'https://us-central1-mind-gym-2026.cloudfunctions.net/logWebActivity';
+const LOG_URL = 'https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity';
 
 function getTrackedEmail(): string {
     if (typeof window === 'undefined') return 'anonymous';
@@ -78,7 +78,7 @@ const useLandingTheme = () => {
 };
 
 // ─── Firebase Storage helpers (used by Hero + HowItWorks + JournalFeatures) ──
-const STORAGE_BASE = "https://firebasestorage.googleapis.com/v0/b/mind-gym-2026.firebasestorage.app/o/AboutJournal%2F";
+const STORAGE_BASE = "https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2F";
 const getStorageImg = (name: string) => `${STORAGE_BASE}${name}.webp?alt=media`;
 
 // Graceful image fallback — called when Firebase Storage image fails to load.
@@ -783,7 +783,7 @@ const JournalDownload = () => {
                                 className="flex flex-col sm:flex-row gap-4 items-center justify-center md:justify-start"
                             >
                                 <a
-                                    href="https://firebasestorage.googleapis.com/v0/b/mind-gym-2026.firebasestorage.app/o/AboutJournal%2FSoulfulIntelligenceStudio-30day_journal.docx.pdf?alt=media"
+                                    href="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2FSoulfulIntelligenceStudio-30day_journal.docx.pdf?alt=media"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={handleDownloadClick}

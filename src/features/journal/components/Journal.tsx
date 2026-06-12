@@ -219,7 +219,7 @@ const Journal: React.FC<JournalProps> = ({ isAccessValid, onUpgrade }) => {
 
         setIsLoadingScript(true);
         try {
-            const API_URL = 'https://getdailymeditation-us-central1-mind-gym-2026.cloudfunctions.net/getDailyMeditation';
+            const API_URL = 'https://awakened-path-2026.web.app/api/daily-meditation';
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
