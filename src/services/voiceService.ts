@@ -65,7 +65,7 @@ export class VoiceService {
     private static _isDucked: boolean = false;
     private static _preDuckVolume: number = 1;
 
-    private static STORAGE_BUCKET = "mind-gym-2026.firebasestorage.app";
+    private static STORAGE_BUCKET = "awakened-path-2026.firebasestorage.app";
 
     /**
      * Maps local development paths to Firebase Storage Production URLs.
