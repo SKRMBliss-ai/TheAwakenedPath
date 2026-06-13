@@ -1420,9 +1420,70 @@ exports.sendDailyReminder = onSchedule({
     return runReminderLogic(geminiKey.value(), youtubeApiKey.value());
 });
 
+// 7 rotating fallback sets — used ONLY when Gemini API fails, so emails still vary by day.
+const FALLBACK_CONTENT = [
+    { // Sun
+        subject: 'One thought is running your evening. Let\'s see it.',
+        preheader: 'Tonight you get to watch the mind instead of being it.',
+        headline: 'The watcher is already here.',
+        hook: 'There is one thought that has been repeating all day — you know the one. Tonight\'s practice is not about stopping it. It is about seeing it so clearly that you realise you are not it.',
+        quote: 'You are the sky. Everything else is just weather.',
+        explanation: 'Sit for five minutes and simply name each thought as it appears. Not to fix anything — just to see it from the outside.'
+    },
+    { // Mon
+        subject: 'The radio is on. Are you listening — or just hearing?',
+        preheader: 'There is a difference — and today\'s practice shows you how to find it.',
+        headline: 'Step behind the noise.',
+        hook: 'The mental commentary has been going since you woke up. News, plans, old conversations. You did not choose any of it — it just played. Tonight\'s video shows you what it feels like to be the one who hears the radio, not the one trapped inside it.',
+        quote: 'The thinker is not who you are. The one aware of the thinker — that is you.',
+        explanation: 'Notice the stream of thought tonight as if it were a TV left on in the next room. You do not have to watch it. You just have to know it is not you.'
+    },
+    { // Tue
+        subject: 'Five minutes tonight could shift how tomorrow begins.',
+        preheader: 'A short practice this evening creates space in the morning.',
+        headline: 'Tonight changes tomorrow.',
+        hook: 'Most evenings end with the mind still running at full speed — and the next morning picks up exactly where it left off. What if five minutes of real stillness tonight broke that cycle? That is what today\'s practice is designed to do.',
+        quote: 'Rest is not absence of effort. It is the presence of awareness.',
+        explanation: 'End your evening by sitting quietly and watching the breath for five minutes. Not to relax — but to arrive fully in this one moment before the day closes.'
+    },
+    { // Wed
+        subject: 'The silence behind everything is always there.',
+        preheader: 'You do not have to create peace. You have to stop covering it.',
+        headline: 'Peace was never lost.',
+        hook: 'Beneath the noise of the day — every conversation, every plan, every small frustration — there has been a silence. It was there before you woke up and it is there right now. Tonight\'s practice is simply about returning to it.',
+        quote: 'You cannot find stillness. You can only stop moving long enough to notice it was always here.',
+        explanation: 'Close your eyes tonight and ask: what is here before the first thought arises? Stay with that question — not to answer it, but to feel into it.'
+    },
+    { // Thu
+        subject: 'The noise does not have to win this evening.',
+        preheader: 'You get to decide what has your attention tonight.',
+        headline: 'Choose your ground.',
+        hook: 'The mind has strong opinions about how this evening should go — what needs worrying about, what needs replaying, what needs planning. But you are the one who decides what gets your attention. Tonight\'s practice gives you that choice back.',
+        quote: 'Where attention goes, energy flows. Tonight, choose wisely.',
+        explanation: 'Spend a few minutes noticing what your mind keeps returning to tonight. Then gently ask: is this where I want to put my energy right now?'
+    },
+    { // Fri
+        subject: 'The one who notices the feeling was never the feeling.',
+        preheader: 'Today\'s practice shows you how to find that witness inside you.',
+        headline: 'You are the observer.',
+        hook: 'Something may have bothered you today — a comment, a situation, a frustration you can\'t name. But here is something worth sitting with: the part of you that noticed the feeling is not the feeling itself. That witness has been with you all day, quietly watching. Tonight, you meet it properly.',
+        quote: 'You are not the emotion. You are the one who is aware of it.',
+        explanation: 'Think of one feeling from today. Now notice who is aware of that feeling. Stay with that awareness — not the feeling — for a few quiet breaths.'
+    },
+    { // Sat
+        subject: 'Every time you catch yourself — that is the whole practice.',
+        preheader: 'You do not need a perfect session. Just one moment of noticing.',
+        headline: 'One catch is enough.',
+        hook: 'You do not need an hour of meditation or a perfect quiet space. Every single time today that you noticed your mind had wandered — even for a split second — that was the practice. That moment of noticing is what this path is actually about.',
+        quote: 'The moment you realise you were lost is the moment you are found.',
+        explanation: 'Tonight, look back over today and count how many times you caught yourself lost in thought. Each one is a win. That is the game — and you are already playing it.'
+    },
+];
+
 async function getDailyEmailContent(apiKey, video) {
     const videoTitle = video ? video.title : '';
     const videoFocus = video ? video.focus : '';
+    const dayIndex = new Date().getDay(); // 0=Sun … 6=Sat
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
@@ -1440,8 +1501,8 @@ Your job: write email content that:
 
 Return ONLY a valid JSON object (no markdown, no explanation):
 {
-  "subject": "A plain-text subject line (max 10 words). No emoji. Conversational. Name the problem the video solves. Make the reader think 'that is exactly what I am dealing with.' E.g. 'The part of your mind that never stops talking.'",
-  "preheader": "One short sentence (max 15 words) that teases the solution. E.g. 'Today's video shows you exactly how to step back from it.'",
+  "subject": "A plain-text subject line (max 10 words). No emoji. Conversational. Name the problem the video solves.",
+  "preheader": "One short sentence (max 15 words) that teases the solution.",
   "headline": "Short poetic headline (max 6 words) that echoes the problem/solution theme",
   "hook": "2-3 sentences. Call out the exact problem directly and personally. Make the reader feel seen. Then hint that today's video and practice is the answer.",
   "quote": "A soul-stirring quote about the witness/observer (max 20 words)",
@@ -1452,19 +1513,14 @@ Return ONLY a valid JSON object (no markdown, no explanation):
         const text = (await result.response).text().trim();
         const cleanedJson = text.replace(/```json|```/gi, '').trim();
         const parsed = JSON.parse(cleanedJson);
-        // Validate required fields
         if (!parsed.subject || !parsed.preheader || !parsed.hook) throw new Error('Missing fields');
+        // Mark as Gemini-generated so cache logic knows it is safe to store
+        parsed._fromGemini = true;
         return parsed;
     } catch (e) {
-        console.error("Gemini Content Error:", e);
-        return {
-            subject: "The part of your mind that never stops talking",
-            preheader: "Today's video shows you exactly how to step back from it.",
-            headline: "You are not the noise.",
-            hook: "There is a voice in your head that has been running non-stop today — replaying conversations, planning tomorrow, judging what happened. You have tried to stop it. It doesn't stop. Today's video and practice show you something different: what it feels like to simply step back and watch it — without being pulled in.",
-            quote: "You are the listener. Not the radio.",
-            explanation: "The voice in your head has been talking all day. You don't have to answer it. Just — step back. Notice it is there. Rest in the one who is noticing."
-        };
+        console.error(`Gemini Content Error (falling back to day-${dayIndex} static content):`, e.message);
+        // Return day-specific fallback — NOT cached so tomorrow gets a fresh Gemini attempt
+        return { ...FALLBACK_CONTENT[dayIndex], _fromGemini: false };
     }
 }
 
@@ -1519,14 +1575,20 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
             console.log(`[DailyCache] MISS — generating fresh content for ${today}.`);
             todayVideo = await getDailyYoutubeVideo(youtubeKey, db);
             daily = await getDailyEmailContent(apiKey, todayVideo);
-            // Write to cache so the remaining 23 hourly runs skip API calls
-            await cacheRef.set({
-                video: todayVideo,
-                emailContent: daily,
-                generatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                date: today,
-            });
-            console.log(`[DailyCache] Stored fresh content for ${today}.`);
+            // Only cache if Gemini actually generated the content (not a static fallback).
+            // If we cached fallback content, every hourly run today would serve the same
+            // static text AND tomorrow's first run would see a cache HIT and skip Gemini again.
+            if (daily._fromGemini) {
+                await cacheRef.set({
+                    video: todayVideo,
+                    emailContent: daily,
+                    generatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    date: today,
+                });
+                console.log(`[DailyCache] Stored Gemini-generated content for ${today}.`);
+            } else {
+                console.warn(`[DailyCache] Gemini failed — using day-specific fallback. NOT caching so next run retries Gemini.`);
+            }
         }
     } catch (cacheErr) {
         console.error('[DailyCache] Cache error, falling back to live generation:', cacheErr.message);

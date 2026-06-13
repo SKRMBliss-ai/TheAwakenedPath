@@ -229,12 +229,15 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
                   className="w-full space-y-4"
                 >
                   <div className="space-y-1.5">
-                    <p className="text-[11px] leading-snug px-1 opacity-60" style={{ color: theme.textSecondary }}>
-                      Just enter your email to step straight into Mind Gym — no username or password to create.
-                    </p>
+                    <label
+                      className="text-[10px] font-bold uppercase tracking-widest pl-2 opacity-50 block"
+                      style={{ color: theme.textPrimary }}
+                    >
+                      Your Email
+                    </label>
                     <input
                       type="text"
-                      placeholder="Your Email"
+                      placeholder="your@soul.com"
                       value={email}
                       onChange={(e) => handleEmailChange(e.target.value)}
                       className="w-full rounded-2xl py-3.5 px-5 text-sm transition-all outline-none"
