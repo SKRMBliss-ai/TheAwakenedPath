@@ -130,12 +130,12 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
     };
 
     // ── Renegotiation (fires when addTrack is called on an established PC) ─
+    // Perfect negotiation: if signaling is stable, create offer and send
     pc.onnegotiationneeded = async () => {
-      if (!isOfferingPeer(remoteUid)) return; // only the higher-uid side re-offers
-      if (pc.signalingState !== 'stable') return;
+      if (pc.signalingState !== 'stable') return; // wait for stable state
       try {
         const offer = await pc.createOffer();
-        if (pc.signalingState !== 'stable') return; // guard race condition
+        if (pc.signalingState !== 'stable') return; // guard race between offer creation and local description
         await pc.setLocalDescription(offer);
         await meditationService.sendSignal(sessionId, {
           from: myUid, to: remoteUid, type: 'offer', data: JSON.stringify(offer),
