@@ -11,7 +11,7 @@ import AwakenOrb from './components/AwakenOrb';
 import MeditationRoom from './MeditationRoom';
 import MeditationJournal from './MeditationJournal';
 import MeditationPreJoin from './MeditationPreJoin';
-import { getSessionSchedule, getTodayMeditationSessionId } from './meditationService';
+import { getSessionSchedule, LIVE_MEDITATION_SESSION_ID } from './meditationService';
 import { useMeditationSession } from '../../hooks/useMeditationSession';
 import { Flame, ChevronDown } from 'lucide-react';
 import { useTheme } from '../../theme/ThemeSystem';
@@ -100,10 +100,9 @@ const PrejoinWrapper = ({ user, onNavigate, onCameraState, adminOverride = false
           // Admin bypasses the live-window guard — patch schedule temporarily
           const { setSession, setSessionStatus, setParticipants, setMessages } = useMeditationStore.getState();
           const now = new Date();
-          // Use stable today's session ID — getSessionSchedule() returns
-          // tomorrow's ID once today's live window has passed, which would
-          // put two admins joining at different times into different sessions.
-          const realId = getTodayMeditationSessionId();
+          // Use the SINGLE permanent room ID so admins and regular users always
+          // share one room (same presence collection + signaling channel).
+          const realId = LIVE_MEDITATION_SESSION_ID;
           const fakeEnd = new Date(now.getTime() + 60 * 60 * 1000);
           setSession(realId, now.getTime(), fakeEnd.getTime());
           setSessionStatus('joining');
