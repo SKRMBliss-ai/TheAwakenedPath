@@ -58,12 +58,17 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
   // ICE candidate queue — holds candidates that arrive before remoteDescription is set.
   // Critical for mobile (iOS/Android 4G) where candidates arrive out of order.
   const pendingCandidates = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
+  // Per-peer negotiation state for the "perfect negotiation" pattern — lets BOTH
+  // peers offer (e.g. when either turns their camera on) without breaking on glare.
+  const peerMeta = useRef<Map<string, { makingOffer: boolean; polite: boolean }>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
   const facingMode = useRef<'user' | 'environment'>('user');
   const { setCameraPermission, participants } = useMeditationStore();
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  const isOfferingPeer = useCallback((remoteUid: string) => myUid > remoteUid, [myUid]);
+  // The lower-UID peer is "polite": on an offer collision it yields (rolls back),
+  // while the impolite peer ignores the colliding offer. Deterministic + symmetric.
+  const isPolite = useCallback((remoteUid: string) => myUid < remoteUid, [myUid]);
 
   // ── Create (or reuse) a peer connection ──────────────────────────────────
   const createPeerConnection = useCallback((remoteUid: string): RTCPeerConnection => {
@@ -77,15 +82,19 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
     videoSenders.current.delete(remoteUid);
     pendingCandidates.current.delete(remoteUid);
 
+    peerMeta.current.set(remoteUid, { makingOffer: false, polite: isPolite(remoteUid) });
+
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS, iceCandidatePoolSize: 10 });
 
-    // Add local video track if camera is already on
-    if (localStreamRef.current) {
-      const videoTrack = localStreamRef.current.getVideoTracks()[0];
-      if (videoTrack) {
-        const sender = pc.addTrack(videoTrack, localStreamRef.current);
-        videoSenders.current.set(remoteUid, sender);
-      }
+    // Add local video track if camera is already on, otherwise add a recvonly
+    // transceiver so a connection is still negotiated and we can RECEIVE video
+    // from peers even while our own camera is off.
+    const videoTrack = localStreamRef.current?.getVideoTracks()[0];
+    if (videoTrack) {
+      const sender = pc.addTrack(videoTrack, localStreamRef.current!);
+      videoSenders.current.set(remoteUid, sender);
+    } else {
+      pc.addTransceiver('video', { direction: 'recvonly' });
     }
 
     // ── Remote track: use event.track directly (NOT event.streams[0]) ──────
@@ -130,17 +139,22 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
     };
 
     // ── Renegotiation (fires when addTrack is called on an established PC) ─
-    // Perfect negotiation: if signaling is stable, create offer and send
+    // Perfect negotiation: EITHER peer may offer (e.g. when its camera turns on).
+    // Glare is resolved in handleSignal via the polite/impolite rule.
     pc.onnegotiationneeded = async () => {
-      if (pc.signalingState !== 'stable') return; // wait for stable state
+      const meta = peerMeta.current.get(remoteUid);
+      if (!meta) return;
       try {
-        const offer = await pc.createOffer();
-        if (pc.signalingState !== 'stable') return; // guard race between offer creation and local description
-        await pc.setLocalDescription(offer);
+        meta.makingOffer = true;
+        await pc.setLocalDescription(); // implicit createOffer
         await meditationService.sendSignal(sessionId, {
-          from: myUid, to: remoteUid, type: 'offer', data: JSON.stringify(offer),
+          from: myUid, to: remoteUid, type: 'offer', data: JSON.stringify(pc.localDescription),
         });
-      } catch (err) { console.warn('[WebRTC] onnegotiationneeded failed:', err); }
+      } catch (err) {
+        console.warn('[WebRTC] onnegotiationneeded failed:', err);
+      } finally {
+        meta.makingOffer = false;
+      }
     };
 
     // ── Connection state ─────────────────────────────────────────────────
@@ -154,15 +168,9 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
       }
 
       if (pc.connectionState === 'failed') {
-        // ICE restart — only the offerer re-initiates
-        if (isOfferingPeer(remoteUid)) {
-          pc.restartIce();
-          pc.createOffer({ iceRestart: true })
-            .then(offer => { pc.setLocalDescription(offer); return offer; })
-            .then(offer => meditationService.sendSignal(sessionId, {
-              from: myUid, to: remoteUid, type: 'offer', data: JSON.stringify(offer),
-            }))
-            .catch(err => console.warn('[WebRTC] ICE restart failed:', err));
+        // ICE restart — only the impolite (higher-UID) peer re-initiates to avoid glare
+        if (!isPolite(remoteUid)) {
+          pc.restartIce(); // onnegotiationneeded fires → perfect-negotiation offer
         }
       }
       if (pc.connectionState === 'closed') {
@@ -170,6 +178,7 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
         peerConnections.current.delete(remoteUid);
         videoSenders.current.delete(remoteUid);
         pendingCandidates.current.delete(remoteUid);
+        peerMeta.current.delete(remoteUid);
       }
     };
 
@@ -179,7 +188,7 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
 
     peerConnections.current.set(remoteUid, pc);
     return pc;
-  }, [sessionId, myUid, isOfferingPeer]);
+  }, [sessionId, myUid, isPolite]);
 
   // ── Helper to flush buffered ICE candidates ──────────────────────────────
   const flushPendingCandidates = useCallback(async (remoteUid: string, pc: RTCPeerConnection) => {
@@ -192,26 +201,36 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
     pendingCandidates.current.set(remoteUid, []);
   }, []);
 
-  // ── Handle incoming signals ──────────────────────────────────────────────
+  // ── Handle incoming signals (perfect negotiation) ────────────────────────
   const handleSignal = useCallback(async (signal: any) => {
     const { from, type, data } = signal;
     try {
-      if (type === 'offer') {
+      if (type === 'offer' || type === 'answer') {
         const pc = createPeerConnection(from);
-        await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(data)));
-        // Flush any ICE candidates that arrived before this offer
-        await flushPendingCandidates(from, pc);
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        await meditationService.sendSignal(sessionId, {
-          from: myUid, to: from, type: 'answer', data: JSON.stringify(answer),
-        });
-      } else if (type === 'answer') {
-        const pc = peerConnections.current.get(from);
-        if (pc && pc.signalingState === 'have-local-offer') {
-          await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(data)));
-          // Flush any ICE candidates that arrived before this answer
+        const meta = peerMeta.current.get(from)!;
+        const description = JSON.parse(data) as RTCSessionDescriptionInit;
+
+        if (description.type === 'offer') {
+          // Glare: an offer arrived while we're also offering / not stable.
+          const offerCollision = meta.makingOffer || pc.signalingState !== 'stable';
+          // Impolite peer ignores the colliding offer; polite peer yields (rolls back).
+          if (!meta.polite && offerCollision) {
+            console.log(`[WebRTC] ignoring colliding offer from ${from.slice(0,6)} (impolite)`);
+            return;
+          }
+          // setRemoteDescription implicitly rolls back our local offer if polite + collision
+          await pc.setRemoteDescription(new RTCSessionDescription(description));
           await flushPendingCandidates(from, pc);
+          await pc.setLocalDescription(); // implicit createAnswer
+          await meditationService.sendSignal(sessionId, {
+            from: myUid, to: from, type: 'answer', data: JSON.stringify(pc.localDescription),
+          });
+        } else {
+          // answer — apply only if we're expecting one
+          if (pc.signalingState === 'have-local-offer') {
+            await pc.setRemoteDescription(new RTCSessionDescription(description));
+            await flushPendingCandidates(from, pc);
+          }
         }
       } else if (type === 'ice_candidate') {
         const pc = peerConnections.current.get(from);
@@ -219,36 +238,27 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
         const candidate: RTCIceCandidateInit = JSON.parse(data);
         if (pc.remoteDescription && pc.remoteDescription.type) {
           // Remote description already set — add immediately
-          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {});
         } else {
           // Remote description not set yet — queue the candidate
           const queue = pendingCandidates.current.get(from) ?? [];
           queue.push(candidate);
           pendingCandidates.current.set(from, queue);
-          console.log(`[WebRTC] Queued ICE candidate for ${from.slice(0,6)} (total: ${queue.length})`);
         }
       }
     } catch (err) { console.warn('[WebRTC] signal error:', err); }
   }, [createPeerConnection, flushPendingCandidates, sessionId, myUid]);
 
-  // ── Initiate connection to a peer ────────────────────────────────────────
-  const initiateConnectionTo = useCallback(async (remoteUid: string) => {
-    if (!isOfferingPeer(remoteUid)) return;
+  // ── Ensure a connection exists to a peer ─────────────────────────────────
+  // Both peers call this; createPeerConnection + addTrack/transceiver fires
+  // onnegotiationneeded, and glare is resolved by the polite/impolite rule.
+  const initiateConnectionTo = useCallback((remoteUid: string) => {
     const existing = peerConnections.current.get(remoteUid);
     if (existing &&
         existing.connectionState !== 'failed' &&
         existing.connectionState !== 'closed') return;
-    try {
-      const pc = createPeerConnection(remoteUid);
-      // Do NOT pass offerToReceiveVideo/Audio options — addTrack already
-      // creates the correct transceivers; extra options can create duplicate ones
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      await meditationService.sendSignal(sessionId, {
-        from: myUid, to: remoteUid, type: 'offer', data: JSON.stringify(offer),
-      });
-    } catch (err) { console.warn('[WebRTC] offer error:', err); }
-  }, [createPeerConnection, sessionId, myUid, isOfferingPeer]);
+    createPeerConnection(remoteUid);
+  }, [createPeerConnection]);
 
   // ── Connect to participants when list changes ────────────────────────────
   useEffect(() => {
@@ -264,6 +274,30 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
     if (!enabled || !sessionId) return;
     return meditationService.subscribeToSignals(sessionId, myUid, handleSignal);
   }, [enabled, sessionId, myUid, handleSignal]);
+
+  // ── Attach a live video track to a peer connection ───────────────────────
+  // Reuses the existing sender (camera toggled off→on) or the recvonly
+  // transceiver created at join time (so we upgrade the existing video m-line
+  // to sendrecv instead of creating a duplicate). Triggers onnegotiationneeded.
+  const attachVideoTrack = useCallback((pc: RTCPeerConnection, remoteUid: string, track: MediaStreamTrack, stream: MediaStream) => {
+    const existingSender = videoSenders.current.get(remoteUid);
+    if (existingSender) {
+      existingSender.replaceTrack(track).catch(err => console.warn('[WebRTC] replaceTrack:', err));
+      return;
+    }
+    // Reuse the recvonly video transceiver added when the camera was off
+    const recvOnly = pc.getTransceivers().find(
+      t => !t.sender.track && (t.direction === 'recvonly' || t.receiver.track?.kind === 'video')
+    );
+    if (recvOnly) {
+      try { recvOnly.direction = 'sendrecv'; } catch { /* read-only in some states */ }
+      recvOnly.sender.replaceTrack(track).catch(err => console.warn('[WebRTC] replaceTrack:', err));
+      videoSenders.current.set(remoteUid, recvOnly.sender);
+    } else {
+      const sender = pc.addTrack(track, stream);
+      videoSenders.current.set(remoteUid, sender);
+    }
+  }, []);
 
   // ── Start camera ─────────────────────────────────────────────────────────
   const startCamera = useCallback(async () => {
@@ -281,23 +315,12 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
       if (!videoTrack) return;
 
       // Replace or add video in every peer connection
-      peerConnections.current.forEach((pc, remoteUid) => {
-        const existingSender = videoSenders.current.get(remoteUid);
-        if (existingSender) {
-          // Camera was toggled off/on — replace null track with the new live track
-          existingSender.replaceTrack(videoTrack)
-            .catch(err => console.warn('[WebRTC] replaceTrack:', err));
-        } else {
-          // First time adding video — addTrack triggers onnegotiationneeded automatically
-          const sender = pc.addTrack(videoTrack, stream);
-          videoSenders.current.set(remoteUid, sender);
-        }
-      });
+      peerConnections.current.forEach((pc, remoteUid) => attachVideoTrack(pc, remoteUid, videoTrack, stream));
     } catch (err) {
       console.error('[WebRTC] startCamera failed:', err);
       setCameraPermission('denied');
     }
-  }, [setCameraPermission]);
+  }, [setCameraPermission, attachVideoTrack]);
 
   // ── Stop camera ──────────────────────────────────────────────────────────
   const stopCamera = useCallback(() => {
@@ -328,16 +351,8 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
     setCameraPermission('granted');
     const videoTrack = stream.getVideoTracks()[0];
     if (!videoTrack) return;
-    peerConnections.current.forEach((pc, remoteUid) => {
-      const existingSender = videoSenders.current.get(remoteUid);
-      if (existingSender) {
-        existingSender.replaceTrack(videoTrack).catch(() => {});
-      } else {
-        const sender = pc.addTrack(videoTrack, stream);
-        videoSenders.current.set(remoteUid, sender);
-      }
-    });
-  }, [setCameraPermission]);
+    peerConnections.current.forEach((pc, remoteUid) => attachVideoTrack(pc, remoteUid, videoTrack, stream));
+  }, [setCameraPermission, attachVideoTrack]);
 
   // ── Cleanup on unmount ───────────────────────────────────────────────────
   const cleanup = useCallback(() => {
@@ -350,6 +365,7 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
     peerConnections.current.clear();
     videoSenders.current.clear();
     pendingCandidates.current.clear();
+    peerMeta.current.clear();
     setRemoteStreams(new Map());
     setDisconnectedPeers(new Set());
   }, []);
