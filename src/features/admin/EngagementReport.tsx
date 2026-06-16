@@ -7,6 +7,7 @@ import { httpsCallable } from 'firebase/functions';
 import { WhisperInput, AnchorButton, SacredToast } from '../../components/ui/SacredUI';
 import { isMonitoredEmail } from '../../config/admin';
 import { cn } from '../../lib/utils';
+import EmotionalHealthStats from './EmotionalHealthStats';
 
 interface ActivityLog {
     id: string;
@@ -548,6 +549,9 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
 
                         {activeTab === 'logs' ? (
                             <>
+                                <div className="px-4 sm:px-10 pt-5">
+                                    <EmotionalHealthStats />
+                                </div>
                                 {activeTab === 'logs' && (
                                     <div className="px-10 py-4 bg-[var(--bg-surface-hover)] border-b border-[var(--border-subtle)]/50">
                                         <div className="relative">

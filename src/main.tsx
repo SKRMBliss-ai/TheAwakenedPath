@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import UntetheredApp from './UntetheredSoulApp'
 import AboutJournal from './features/landing/AboutJournal'
+import EmotionalHealthCheck from './features/landing/EmotionalHealthCheck'
 import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
@@ -55,8 +56,16 @@ const isAboutJournalRoute = (() => {
     || p === '/aboutawakenedpath' || p === '/aboutawakenedpath/index.html';
 })();
 
+// Standalone emotional-health quiz landing — captures email as a lead, then
+// runs the 2-minute check. Rendered without auth/theme providers like AboutJournal.
+const isEmotionalHealthRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/knowyouremotionalhealth' || p === '/knowyouremotionalhealth/index.html';
+})();
+
 // Track /mindgym (main app) visits — AboutJournal tracks its own visits internally
-if (!isAboutJournalRoute && typeof window !== 'undefined') {
+if (!isAboutJournalRoute && !isEmotionalHealthRoute && typeof window !== 'undefined') {
   const p = window.location.pathname.toLowerCase();
   if (p === '/mindgym' || p === '/mindgym/' || p === '/') {
     trackPageVisit('/mindgym', 'PAGE_VISIT_APP');
@@ -69,6 +78,12 @@ if (isAboutJournalRoute) {
   root.render(
     <ErrorBoundary featureName="AboutJournal">
       <AboutJournal />
+    </ErrorBoundary>,
+  );
+} else if (isEmotionalHealthRoute) {
+  root.render(
+    <ErrorBoundary featureName="EmotionalHealthCheck">
+      <EmotionalHealthCheck />
     </ErrorBoundary>,
   );
 } else {
