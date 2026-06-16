@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight, Loader2, Share2, Check, Mail } from 'lucide-react';
+import { ArrowRight, Loader2, Share2, Check, Mail, Battery, Moon, Brain, Users, Flame, Heart, Bone, Activity, Utensils, Eye, Compass, Sprout } from 'lucide-react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
 
@@ -317,7 +317,8 @@ function computeResult(answers: number[]) {
             QUESTIONS[i].signs.forEach(x => { sWeight[x] = (sWeight[x] || 0) + w; });
         }
     });
-    const emotions = Object.entries(eWeight).sort((a, b) => b[1] - a[1]).map(([k]) => k);
+    const emotionsRanked = Object.entries(eWeight).sort((a, b) => b[1] - a[1]).map(([name, weight]) => ({ name, weight }));
+    const emotions = emotionsRanked.map(e => e.name);
     const signs = Object.entries(sWeight).sort((a, b) => b[1] - a[1]).map(([k]) => k);
     if (emotions.length === 0) emotions.push('Mostly at ease');
     if (signs.length === 0) signs.push('No strong signs right now');
@@ -326,11 +327,19 @@ function computeResult(answers: number[]) {
     return {
         score, tier,
         emotions,
+        emotionsRanked,
         signs,
         topTwo,
         archetype: archetypeFor(answers, score),
     };
 }
+
+// Maps each body/life sign to an icon so "where it shows up" reads at a glance.
+const SIGN_ICONS: Record<string, any> = {
+    'Energy': Battery, 'Sleep': Moon, 'Focus': Brain, 'Relationships': Users,
+    'Motivation': Flame, 'Chest tension': Heart, 'Neck and shoulders': Bone,
+    'Jaw tension': Activity, 'Digestion': Utensils,
+};
 
 // ─── Micro-practice — one tiny thing to do today, per theme ──────────────────
 const PRACTICES: Record<string, string> = {
@@ -641,6 +650,9 @@ export default function EmotionalHealthCheck() {
                 .ehc-quote-mark { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 90px; line-height: 0.4;
                     color: rgba(176,137,95,0.32); display: block; height: 34px; }
                 @media (prefers-reduced-motion: reduce) { .ehc-hero-img { animation: none; } }
+                @keyframes ehc-bar { from { width: 0; } to { width: var(--w); } }
+                .ehc-bar { width: var(--w); animation: ehc-bar 1s cubic-bezier(0.22,1,0.36,1) both; }
+                @media (prefers-reduced-motion: reduce) { .ehc-bar { animation: none; } }
             `}</style>
             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" />
 
@@ -763,11 +775,7 @@ export default function EmotionalHealthCheck() {
                                 : '.'}
                         </p>
 
-                        <div className="mt-6 space-y-4">
-                            {result.tier.summary.map((p, i) => (
-                                <p key={i} className="text-[16px] leading-relaxed" style={{ color: '#564E42' }}>{p}</p>
-                            ))}
-                        </div>
+                        <p className="mt-5 text-[16px] leading-relaxed" style={{ color: '#564E42' }}>{result.tier.summary[0]}</p>
 
                         {/* Daily insight */}
                         <div className="mt-10 rounded-3xl px-6 py-7" style={{ background: 'linear-gradient(155deg, #EFE7D8 0%, #E6DAC6 100%)', boxShadow: '0 10px 28px rgba(120,90,50,0.10)' }}>
@@ -785,15 +793,22 @@ export default function EmotionalHealthCheck() {
                         {/* Snapshot — animated gauge + dimensional cards */}
                         <div className="mt-10 rounded-3xl px-5 py-8" style={{ background: 'linear-gradient(160deg, #FBF7F0 0%, #EFE6D6 100%)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 12px 30px rgba(120,90,50,0.08)' }}>
                             <ScoreRing score={result.score} color={result.tier.color} fill={result.tier.fill} label={result.tier.weight} />
-                            <div className="grid grid-cols-2 gap-3 mt-7">
-                                <div className="rounded-2xl px-3 py-4 text-center" style={{ background: 'rgba(255,255,255,0.55)', border: '0.5px solid rgba(176,137,95,0.18)' }}>
-                                    <div className="serif text-[24px] leading-tight" style={{ color: result.tier.color }}>{result.tier.weight}</div>
-                                    <div className="text-[10px] tracking-wide mt-1.5" style={{ color: '#A99F8E' }}>emotional load</div>
+                            {/* Four-step load scale — the active band lights up */}
+                            <div className="mt-7">
+                                <div className="flex gap-1.5">
+                                    {['Light', 'Moderate', 'Heavy', 'Very Heavy'].map((t, i) => {
+                                        const active = t === result.tier.weight;
+                                        return (
+                                            <div key={i} className="flex-1 text-center">
+                                                <div className="h-2 rounded-full" style={{ background: active ? result.tier.fill : 'rgba(176,137,95,0.18)' }} />
+                                                <div className="text-[9px] mt-1.5 tracking-wide" style={{ color: active ? result.tier.color : '#BDB3A2', fontWeight: active ? 600 : 400 }}>{t}</div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                <div className="rounded-2xl px-3 py-4 text-center" style={{ background: 'rgba(255,255,255,0.55)', border: '0.5px solid rgba(176,137,95,0.18)' }}>
-                                    <div className="serif text-[24px] leading-tight" style={{ color: result.tier.color }}>{result.tier.body}</div>
-                                    <div className="text-[10px] tracking-wide mt-1.5" style={{ color: '#A99F8E' }}>body is speaking</div>
-                                </div>
+                                <p className="text-center text-[11px] mt-3" style={{ color: '#A99F8E' }}>
+                                    Your body is speaking at a <span style={{ color: result.tier.color, fontWeight: 600 }}>{result.tier.body.toLowerCase()}</span> level
+                                </p>
                             </div>
                         </div>
 
@@ -838,43 +853,47 @@ export default function EmotionalHealthCheck() {
                             <p className="text-[15px] leading-relaxed mt-2" style={{ color: '#6B6357' }}>{result.archetype.blurb}</p>
                         </div>
 
-                        {/* Top 2 — what's weighing the most right now */}
-                        {result.topTwo[0] && result.topTwo[0] !== 'Mostly at ease' && (
+                        {/* What you're carrying — ranked intensity bars (visual) */}
+                        {result.emotionsRanked.length > 0 && (
                             <div className="mt-10">
-                                <p className="text-[12px] tracking-[0.12em] uppercase mb-3" style={{ color: '#A99F8E' }}>What seems to be weighing the most</p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {result.topTwo.map((e, i) => (
-                                        <div key={i} className="rounded-2xl px-4 py-4 border" style={{ borderColor: '#D8CDBA', background: 'rgba(176,137,95,0.04)' }}>
-                                            <p className="text-[11px] tracking-[0.16em] uppercase" style={{ color: '#B0895F' }}>{i === 0 ? 'Top focus' : 'Also showing up'}</p>
-                                            <p className="serif text-[22px] leading-tight mt-1" style={{ color: '#2E2A24' }}>{e}</p>
-                                        </div>
-                                    ))}
+                                <p className="text-[12px] tracking-[0.12em] uppercase mb-4" style={{ color: '#A99F8E' }}>What you’re carrying</p>
+                                <div className="space-y-3.5">
+                                    {result.emotionsRanked.map((e, i) => {
+                                        const max = result.emotionsRanked[0].weight || 1;
+                                        const pct = Math.max(14, Math.round((e.weight / max) * 100));
+                                        return (
+                                            <div key={i}>
+                                                <div className="flex justify-between items-baseline mb-1.5">
+                                                    <span className="text-[14px]" style={{ color: i === 0 ? '#2E2A24' : '#6B6357', fontWeight: i === 0 ? 600 : 400 }}>{e.name}</span>
+                                                    {i === 0 && <span className="text-[10px] tracking-[0.14em] uppercase" style={{ color: '#B0895F' }}>Strongest</span>}
+                                                </div>
+                                                <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(176,137,95,0.12)' }}>
+                                                    <div className="ehc-bar h-2.5 rounded-full" style={{ ['--w' as any]: `${pct}%`, background: `linear-gradient(90deg, ${result.tier.fill}, ${result.tier.color})`, animationDelay: `${i * 90}ms` }} />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
 
-                        {/* All emotions */}
-                        <div className="mt-9">
-                            <p className="text-[12px] tracking-[0.12em] uppercase mb-2" style={{ color: '#A99F8E' }}>Other things you may be carrying</p>
-                            <div className="flex flex-wrap gap-2">
-                                {result.emotions.slice(2).map((e, i) => (
-                                    <span key={i} className="text-[13px] px-3 py-1 rounded-full border" style={{ borderColor: '#E2D8C5', color: '#6B6357' }}>{e}</span>
-                                ))}
-                                {result.emotions.slice(2).length === 0 && (
-                                    <span className="text-[13px]" style={{ color: '#A99F8E' }}>Just those, for today.</span>
-                                )}
+                        {/* Where it shows up — icon tiles (visual) */}
+                        {result.signs[0] !== 'No strong signs right now' && (
+                            <div className="mt-10">
+                                <p className="text-[12px] tracking-[0.12em] uppercase mb-4" style={{ color: '#A99F8E' }}>Where it tends to show up</p>
+                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                                    {result.signs.map((z, i) => {
+                                        const Icon = SIGN_ICONS[z] || Activity;
+                                        return (
+                                            <div key={i} className="rounded-2xl px-2 py-4 flex flex-col items-center gap-2 text-center" style={{ background: 'rgba(176,137,95,0.05)', border: '0.5px solid rgba(176,137,95,0.16)' }}>
+                                                <Icon className="w-5 h-5" style={{ color: '#B0895F' }} strokeWidth={1.6} />
+                                                <span className="text-[11px] leading-tight" style={{ color: '#6B6357' }}>{z}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
-
-                        {/* Where it may be showing up */}
-                        <div className="mt-9">
-                            <p className="text-[12px] tracking-[0.12em] uppercase mb-3" style={{ color: '#A99F8E' }}>Where it may be showing up</p>
-                            <div className="flex flex-wrap gap-2">
-                                {result.signs.map((z, i) => (
-                                    <span key={i} className="text-[13px] px-3 py-1 rounded-full border" style={{ borderColor: '#E2D8C5', color: '#6B6357' }}>{z}</span>
-                                ))}
-                            </div>
-                        </div>
+                        )}
 
                         {/* Educational section */}
                         <div className="mt-12 pt-8 border-t" style={{ borderColor: '#E2D8C5' }}>
@@ -942,23 +961,28 @@ export default function EmotionalHealthCheck() {
                             <h2 className="serif text-[clamp(26px,4vw,34px)] font-normal leading-[1.15]" style={{ color: '#2E2A24' }}>
                                 Begin meeting what surfaced
                             </h2>
-                            <div className="mt-6 space-y-5">
-                                <div>
-                                    <p className="text-[15px] font-medium mb-1" style={{ color: '#2E2A24' }}>Awareness is powerful — but it’s only the start.</p>
-                                    <p className="text-[15px] leading-relaxed" style={{ color: '#6B6357' }}>Seeing a pattern is the first step. On its own, though, it rarely changes what the body keeps holding.</p>
-                                </div>
-                                <div>
-                                    <p className="text-[15px] font-medium mb-1" style={{ color: '#2E2A24' }}>Patterns don’t shift by themselves.</p>
-                                    <p className="text-[15px] leading-relaxed" style={{ color: '#6B6357' }}>What goes unmet tends to repeat — until it’s finally felt and worked through, a little at a time.</p>
-                                </div>
-                                <div>
-                                    <p className="text-[15px] font-medium mb-1" style={{ color: '#2E2A24' }}>Small daily practice creates lasting change.</p>
-                                    <p className="text-[15px] leading-relaxed" style={{ color: '#6B6357' }}>MindGym is emotional fitness — short guided sessions that help you feel, name and gently release what you carry, the way a body builds strength.</p>
-                                </div>
-                                <p className="serif italic text-[19px] leading-snug pt-1" style={{ color: '#8A7F6E' }}>
-                                    You don’t have to do it all at once. You only have to begin.
-                                </p>
+                            {/* 3-step journey — visual, not a wall of text */}
+                            <div className="mt-7 space-y-3">
+                                {[
+                                    { Icon: Eye, t: 'Notice', d: 'You’ve just seen the pattern.' },
+                                    { Icon: Sprout, t: 'Practise', d: 'A few quiet minutes a day.' },
+                                    { Icon: Compass, t: 'Shift', d: 'What you carry slowly lightens.' },
+                                ].map(({ Icon, t, d }, i) => (
+                                    <div key={i} className="flex items-center gap-3.5 rounded-2xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.45)' }}>
+                                        <div className="flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 40, height: 40, background: '#2E2A24' }}>
+                                            <Icon className="w-[18px] h-[18px]" style={{ color: '#F4EFE6' }} strokeWidth={1.7} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[15px] font-medium leading-tight" style={{ color: '#2E2A24' }}>{t}</p>
+                                            <p className="text-[13px] leading-snug" style={{ color: '#6B6357' }}>{d}</p>
+                                        </div>
+                                        {i < 2 && <ArrowRight className="w-4 h-4 ml-auto" style={{ color: '#C9BCA5' }} />}
+                                    </div>
+                                ))}
                             </div>
+                            <p className="serif italic text-[18px] leading-snug mt-5" style={{ color: '#8A7F6E' }}>
+                                MindGym is emotional fitness. You don’t have to do it all at once — only begin.
+                            </p>
 
                             <a href={APP_URL}
                                 onClick={() => trackActivity('EMOTIONAL_HEALTH_CTA', `CTA — theme ${THEME.name} · load ${result.score}`)}
