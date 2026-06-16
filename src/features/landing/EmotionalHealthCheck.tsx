@@ -589,29 +589,55 @@ export default function EmotionalHealthCheck() {
         setSharing(true);
         const text = `${THEME.share} — a daily emotional check-in from MindGym`;
         const nav = navigator as any;
-        try {
-            const blob = await buildShareImage(THEME);
-            const file = blob ? new File([blob], 'mindgym-insight.png', { type: 'image/png' }) : null;
+        const isAbort = (e: any) => e && (e.name === 'AbortError' || e.name === 'NotAllowedError' && /cancel/i.test(e.message || ''));
 
-            if (file && nav.canShare && nav.canShare({ files: [file] })) {
-                await nav.share({ files: [file], text, url: SHARE_URL });
-                trackActivity('EMOTIONAL_HEALTH_SHARE', `image · ${THEME.key}`);
-            } else if (nav.share) {
-                await nav.share({ text, url: SHARE_URL });
-                trackActivity('EMOTIONAL_HEALTH_SHARE', `text · ${THEME.key}`);
-            } else if (blob) {
-                // Desktop: download the card + copy the line.
+        // Desktop / universal fallback: download the card image + copy the line.
+        const downloadFallback = async (blob: Blob | null) => {
+            if (blob) {
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
                 a.download = 'mindgym-insight.png';
+                document.body.appendChild(a); // Firefox needs it in the DOM
                 a.click();
+                a.remove();
                 URL.revokeObjectURL(a.href);
-                if (navigator.clipboard) await navigator.clipboard.writeText(`${text} ${SHARE_URL}`);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2400);
-                trackActivity('EMOTIONAL_HEALTH_SHARE', `download · ${THEME.key}`);
             }
-        } catch (_) { /* user cancelled */ }
+            try { if (navigator.clipboard) await navigator.clipboard.writeText(`${text} ${SHARE_URL}`); } catch { /* clipboard blocked */ }
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2600);
+            trackActivity('EMOTIONAL_HEALTH_SHARE', `download · ${THEME.key}`);
+        };
+
+        let blob: Blob | null = null;
+        try { blob = await buildShareImage(THEME); } catch { /* canvas failed — share text only */ }
+        const file = blob ? new File([blob], 'mindgym-insight.png', { type: 'image/png' }) : null;
+
+        // 1. Native share with the image (mobile / supported desktops)
+        if (file && nav.canShare && nav.canShare({ files: [file] })) {
+            try {
+                await nav.share({ files: [file], text, url: SHARE_URL });
+                trackActivity('EMOTIONAL_HEALTH_SHARE', `image · ${THEME.key}`);
+                setSharing(false);
+                return;
+            } catch (e) {
+                if (isAbort(e)) { setSharing(false); return; }   // user cancelled — stop
+                /* otherwise fall through to download */
+            }
+        }
+        // 2. Native share, text + link only
+        if (nav.share) {
+            try {
+                await nav.share({ text, url: SHARE_URL });
+                trackActivity('EMOTIONAL_HEALTH_SHARE', `text · ${THEME.key}`);
+                setSharing(false);
+                return;
+            } catch (e) {
+                if (isAbort(e)) { setSharing(false); return; }
+                /* fall through to download */
+            }
+        }
+        // 3. Guaranteed fallback so the button always *does* something
+        await downloadFallback(blob);
         setSharing(false);
     };
 
