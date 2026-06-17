@@ -644,8 +644,12 @@ export default function EmotionalHealthCheck() {
     const result = stage === 'result' ? computeResult(answers as number[]) : null;
 
     return (
-        <div className="ehc min-h-screen antialiased" style={{ background: '#F4EFE6', color: '#2E2A24', position: 'relative', overflow: 'hidden' }}>
+        <div className="ehc min-h-screen antialiased" style={{ background: '#F4EFE6', color: '#2E2A24', position: 'relative', overflowX: 'clip' }}>
             <style>{`
+                /* Global body has overflow-x:hidden which turns it into a scroll
+                   container and breaks the sticky side panel. clip avoids that
+                   while still preventing horizontal scroll. Scoped to this page. */
+                body { overflow-x: clip !important; }
                 .ehc { font-feature-settings: "liga" 1; }
                 .ehc .serif { font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif; }
                 @keyframes ehc-breathe { 0%,100% { transform: scale(0.82); opacity: 0.55; } 50% { transform: scale(1.12); opacity: 0.9; } }
@@ -689,10 +693,10 @@ export default function EmotionalHealthCheck() {
                 <span className="text-[12px] tracking-[0.3em] uppercase" style={{ color: '#A99F8E' }}>MindGym</span>
             </header>
 
-            <main className="max-w-xl mx-auto px-6 pb-24 relative z-10">
+            <main className="px-6 pb-24 relative z-10">
                 {/* ─── INTRO (no email — results come first) ─── */}
                 {stage === 'intro' && (
-                    <section className="pt-12 ehc-rise">
+                    <section className="pt-12 ehc-rise max-w-xl mx-auto">
                         {/* Calming theme image (nano-banana). Falls back to the breathing orb. */}
                         <div className="ehc-hero-wrap">
                             <img
@@ -739,7 +743,7 @@ export default function EmotionalHealthCheck() {
 
                 {/* ─── QUIZ ─── */}
                 {stage === 'quiz' && (
-                    <section className="pt-12" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+                    <section className="pt-12 max-w-xl mx-auto" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
                         <div className="flex items-center gap-4 mb-12">
                             <div className="flex-1 h-px relative" style={{ background: '#E2D8C5' }}>
                                 <div className="absolute left-0 top-0 h-px transition-all duration-700"
@@ -784,7 +788,81 @@ export default function EmotionalHealthCheck() {
 
                 {/* ─── RESULT ─── */}
                 {stage === 'result' && result && (
-                    <section className="pt-12 ehc-rise">
+                    <section className="pt-12 ehc-rise max-w-5xl mx-auto flex flex-col lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10 lg:items-start">
+
+                        {/* ── Pinned daily panel: insight, practice & actions ──
+                            Sticky on the left for desktop; drops below the findings on mobile. */}
+                        <aside className="order-2 lg:order-1 lg:sticky lg:top-6 space-y-4 mt-12 lg:mt-1">
+                            {/* Daily insight */}
+                            <div className="rounded-3xl px-6 py-7" style={{ background: 'linear-gradient(155deg, #EFE7D8 0%, #E6DAC6 100%)', boxShadow: '0 10px 28px rgba(120,90,50,0.10)' }}>
+                                <span className="ehc-quote-mark" aria-hidden="true">“</span>
+                                <p className="text-[11px] tracking-[0.16em] uppercase mb-3" style={{ color: '#B0895F' }}>Today’s insight</p>
+                                <p className="serif italic text-[22px] leading-snug" style={{ color: '#403A30' }}>{THEME.insight}</p>
+                            </div>
+
+                            {/* Micro-practice — one tiny thing to try today */}
+                            <div className="rounded-2xl px-5 py-5 border" style={{ borderColor: '#B0895F', background: 'rgba(176,137,95,0.06)' }}>
+                                <p className="text-[11px] tracking-[0.16em] uppercase mb-2" style={{ color: '#B0895F' }}>Try this · 60 seconds</p>
+                                <p className="text-[16px] leading-relaxed" style={{ color: '#403A30' }}>{PRACTICES[THEME.key]}</p>
+                            </div>
+
+                            {/* Save results / opt-in */}
+                            <div className="rounded-2xl px-5 py-6 border" style={{ borderColor: '#D8CDBA', background: 'rgba(176,137,95,0.05)' }}>
+                                {saved ? (
+                                    <div className="text-center">
+                                        <Check className="w-6 h-6 mx-auto mb-2" style={{ color: '#5E7D2E' }} />
+                                        <p className="serif text-[20px]" style={{ color: '#2E2A24' }}>Saved.</p>
+                                        <p className="text-[14px] mt-1" style={{ color: '#6B6357' }}>We’ll send tomorrow’s reflection your way.</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <p className="serif text-[20px] leading-tight" style={{ color: '#2E2A24' }}>Keep this — and tomorrow’s</p>
+                                        <p className="text-[14px] mt-1.5 leading-relaxed" style={{ color: '#6B6357' }}>
+                                            Save your results and get tomorrow’s reflection by email. One quiet note a day. No spam — unsubscribe in one click.
+                                        </p>
+                                        <form onSubmit={handleSave} className="mt-4">
+                                            <div className="flex flex-col gap-2.5">
+                                                <input
+                                                    type="text"
+                                                    value={email}
+                                                    onChange={(e) => { setEmail(e.target.value); setErrorMsg(''); }}
+                                                    placeholder="you@example.com"
+                                                    autoCapitalize="none"
+                                                    spellCheck={false}
+                                                    className="bg-transparent border-b pb-2.5 text-[16px] focus:outline-none transition-colors"
+                                                    style={{ borderColor: errorMsg ? '#C2664C' : '#D8CDBA', color: '#2E2A24' }}
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    disabled={submitting}
+                                                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-[14px] tracking-wide transition active:scale-[0.99] disabled:opacity-50"
+                                                    style={{ background: '#2E2A24', color: '#F4EFE6' }}
+                                                >
+                                                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save & subscribe'}
+                                                </button>
+                                            </div>
+                                            {errorMsg && <p className="mt-2 text-[13px]" style={{ color: '#C2664C' }}>{errorMsg}</p>}
+                                        </form>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Shareable insight */}
+                            <div className="rounded-2xl px-5 py-5 text-center border" style={{ borderColor: '#D8CDBA' }}>
+                                <p className="serif italic text-[18px] leading-snug" style={{ color: '#564E42' }}>“{THEME.share}”</p>
+                                <button onClick={onShare} disabled={sharing}
+                                    className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] transition active:scale-[0.98] border disabled:opacity-60"
+                                    style={{ borderColor: '#B0895F', color: '#8A6A40', background: 'transparent' }}>
+                                    {sharing ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating card…</>
+                                        : copied ? <><Check className="w-4 h-4" /> Card saved</>
+                                        : <><Share2 className="w-4 h-4" /> Share insight card</>}
+                                </button>
+                                <p className="text-[11px] mt-3" style={{ color: '#BDB3A2' }}>A beautiful image of today’s insight</p>
+                            </div>
+                        </aside>
+
+                        {/* ── Main findings column ── */}
+                        <div className="order-1 lg:order-2 min-w-0">
                         <p className="text-[12px] tracking-[0.24em] uppercase mb-5" style={{ color: '#B0895F' }}>
                             What we found · {THEME.name}
                         </p>
@@ -802,19 +880,6 @@ export default function EmotionalHealthCheck() {
                         </p>
 
                         <p className="mt-5 text-[16px] leading-relaxed" style={{ color: '#564E42' }}>{result.tier.summary[0]}</p>
-
-                        {/* Daily insight */}
-                        <div className="mt-10 rounded-3xl px-6 py-7" style={{ background: 'linear-gradient(155deg, #EFE7D8 0%, #E6DAC6 100%)', boxShadow: '0 10px 28px rgba(120,90,50,0.10)' }}>
-                            <span className="ehc-quote-mark" aria-hidden="true">“</span>
-                            <p className="text-[11px] tracking-[0.16em] uppercase mb-3" style={{ color: '#B0895F' }}>Today’s insight</p>
-                            <p className="serif italic text-[22px] leading-snug" style={{ color: '#403A30' }}>{THEME.insight}</p>
-                        </div>
-
-                        {/* Micro-practice — one tiny thing to try today */}
-                        <div className="mt-4 rounded-2xl px-5 py-5 border" style={{ borderColor: '#B0895F', background: 'rgba(176,137,95,0.06)' }}>
-                            <p className="text-[11px] tracking-[0.16em] uppercase mb-2" style={{ color: '#B0895F' }}>Try this · 60 seconds</p>
-                            <p className="text-[16px] leading-relaxed" style={{ color: '#403A30' }}>{PRACTICES[THEME.key]}</p>
-                        </div>
 
                         {/* Snapshot — animated gauge + dimensional cards */}
                         <div className="mt-10 rounded-3xl px-5 py-8" style={{ background: 'linear-gradient(160deg, #FBF7F0 0%, #EFE6D6 100%)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 12px 30px rgba(120,90,50,0.08)' }}>
@@ -928,60 +993,6 @@ export default function EmotionalHealthCheck() {
                             <p className="text-[16px] leading-relaxed" style={{ color: '#564E42' }}>{THEME.edu.body}</p>
                         </div>
 
-                        {/* Save results / opt-in (now AFTER value is given) */}
-                        <div className="mt-12 rounded-2xl px-5 py-6 border" style={{ borderColor: '#D8CDBA', background: 'rgba(176,137,95,0.05)' }}>
-                            {saved ? (
-                                <div className="text-center">
-                                    <Check className="w-6 h-6 mx-auto mb-2" style={{ color: '#5E7D2E' }} />
-                                    <p className="serif text-[20px]" style={{ color: '#2E2A24' }}>Saved.</p>
-                                    <p className="text-[14px] mt-1" style={{ color: '#6B6357' }}>We’ll send tomorrow’s reflection your way.</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <p className="serif text-[20px] leading-tight" style={{ color: '#2E2A24' }}>Keep this — and tomorrow’s</p>
-                                    <p className="text-[14px] mt-1.5 leading-relaxed" style={{ color: '#6B6357' }}>
-                                        Save your results and receive tomorrow’s theme and reflection by email. One quiet note a day. No spam, ever — unsubscribe in one click.
-                                    </p>
-                                    <form onSubmit={handleSave} className="mt-4">
-                                        <div className="flex flex-col sm:flex-row gap-2.5">
-                                            <input
-                                                type="text"
-                                                value={email}
-                                                onChange={(e) => { setEmail(e.target.value); setErrorMsg(''); }}
-                                                placeholder="you@example.com"
-                                                autoCapitalize="none"
-                                                spellCheck={false}
-                                                className="flex-1 bg-transparent border-b pb-2.5 text-[16px] focus:outline-none transition-colors"
-                                                style={{ borderColor: errorMsg ? '#C2664C' : '#D8CDBA', color: '#2E2A24' }}
-                                            />
-                                            <button
-                                                type="submit"
-                                                disabled={submitting}
-                                                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-[14px] tracking-wide transition active:scale-[0.99] disabled:opacity-50"
-                                                style={{ background: '#2E2A24', color: '#F4EFE6' }}
-                                            >
-                                                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save & subscribe'}
-                                            </button>
-                                        </div>
-                                        {errorMsg && <p className="mt-2 text-[13px]" style={{ color: '#C2664C' }}>{errorMsg}</p>}
-                                    </form>
-                                </>
-                            )}
-                        </div>
-
-                        {/* Shareable insight */}
-                        <div className="mt-10 rounded-2xl px-5 py-5 text-center border" style={{ borderColor: '#D8CDBA' }}>
-                            <p className="serif italic text-[19px] leading-snug" style={{ color: '#564E42' }}>“{THEME.share}”</p>
-                            <button onClick={onShare} disabled={sharing}
-                                className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] transition active:scale-[0.98] border disabled:opacity-60"
-                                style={{ borderColor: '#B0895F', color: '#8A6A40', background: 'transparent' }}>
-                                {sharing ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating card…</>
-                                    : copied ? <><Check className="w-4 h-4" /> Card saved</>
-                                    : <><Share2 className="w-4 h-4" /> Share insight card</>}
-                            </button>
-                            <p className="text-[11px] mt-3" style={{ color: '#BDB3A2' }}>Shares a beautiful image of today’s insight</p>
-                        </div>
-
                         {/* Conversion */}
                         <div className="mt-14 rounded-3xl px-6 py-9 sm:px-9" style={{ background: '#EBE3D5' }}>
                             <h2 className="serif text-[clamp(26px,4vw,34px)] font-normal leading-[1.15]" style={{ color: '#2E2A24' }}>
@@ -1028,6 +1039,7 @@ export default function EmotionalHealthCheck() {
                             This is a reflective check-in for wellbeing, not a medical diagnosis. If you have health
                             concerns, please speak with a doctor or licensed therapist.
                         </p>
+                        </div>{/* /main findings column */}
                     </section>
                 )}
             </main>
