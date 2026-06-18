@@ -7,6 +7,8 @@ export interface MeditationParticipant {
   joinedAt: number;
   videoEnabled: boolean;
   isPresent: boolean;
+  /** Heartbeat timestamp — presence is only honoured if this is recent. */
+  lastSeen?: number;
 }
 
 export interface MeditationMessage {

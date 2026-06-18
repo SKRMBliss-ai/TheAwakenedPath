@@ -277,6 +277,20 @@ const MeditationRoom = ({
 
   useEffect(() => () => webrtc.cleanup(), []);
 
+  // Best-effort presence cleanup if the tab is closed / app backgrounded without
+  // tapping Leave. The heartbeat staleness filter is the real safety net, but
+  // this makes our card vanish for others almost instantly in the common case.
+  useEffect(() => {
+    if (!sessionId) return;
+    const markGone = () => { meditationService.leaveSession(sessionId, user.uid, 0); };
+    window.addEventListener('beforeunload', markGone);
+    window.addEventListener('pagehide', markGone);
+    return () => {
+      window.removeEventListener('beforeunload', markGone);
+      window.removeEventListener('pagehide', markGone);
+    };
+  }, [sessionId, user.uid]);
+
   if (!sessionId) return null;
 
   // Build participant list: include self in the main grid!
@@ -286,6 +300,14 @@ const MeditationRoom = ({
   // mobile↔desktop across NATs); if we hide cards on that, both users see
   // an empty room even though they're both in the session.
   const presentParticipants = participants.filter(p => p.isPresent);
+
+  // Only treat media as "shared" if its owner is still present. If the sharer
+  // left abruptly (their card already aged out), the video stops for everyone —
+  // no more stale video playing for a participant who isn't even in the room.
+  const sharerPresent = !store.mediaShare.sharedBy
+    || presentParticipants.some(p => p.uid === store.mediaShare.sharedBy);
+  const showMedia = store.mediaShare.type !== 'none' && sharerPresent;
+
   const meParticipant = presentParticipants.find(p => p.uid === user.uid) ?? {
     uid: user.uid, displayName: user.displayName || 'You',
     videoEnabled: isCameraOn, joinedAt: Date.now(), isPresent: true
@@ -342,7 +364,7 @@ const MeditationRoom = ({
           <div>
             <p className="font-bold text-sm leading-none" style={{ color: 'var(--room-text)' }}>Daily Meditation</p>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--room-text-muted)' }}>
-              {store.mediaShare.type !== 'none' ? (
+              {showMedia ? (
                 <>🔊 {store.mediaShare.type === 'youtube' ? 'Video' : store.mediaShare.type === 'audio' ? 'Audio' : 'Screen'} Sharing · Mics Muted</>
               ) : (
                 <>Silent room · Participant mics disabled</>
@@ -362,7 +384,7 @@ const MeditationRoom = ({
       </div>
 
       {/* ── MAIN CONTENT (Video gallery or Media viewer) ────────────────────── */}
-      {store.mediaShare.type !== 'none' ? (
+      {showMedia ? (
         // Media sharing layout — video player left, participant tiles right
         <div className="flex-1 relative overflow-hidden flex flex-col lg:flex-row gap-2 p-2">
           {/* Main media viewer — takes remaining space */}
@@ -468,7 +490,7 @@ const MeditationRoom = ({
       <WhatsAppButton position="left" bottomOffset={96} />
 
       {/* ── INSTRUCTOR MEDIA CONTROLS ─────────────────────────────────────── */}
-      <InstructorMediaControls userEmail={user.email} sessionId={sessionId} />
+      <InstructorMediaControls userEmail={user.email} sessionId={sessionId} myUid={user.uid} />
 
       {/* ── CHAT PANEL & TOAST ──────────────────────────────────────────────────────── */}
       <AnimatePresence>

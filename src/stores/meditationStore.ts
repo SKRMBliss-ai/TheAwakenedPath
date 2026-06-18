@@ -13,6 +13,8 @@ interface MediaShare {
   isPlaying?: boolean;
   timestamp?: number;
   updatedAt?: number;
+  /** uid of the participant currently sharing — used to auto-clear when they leave. */
+  sharedBy?: string;
 }
 
 interface MeditationState {

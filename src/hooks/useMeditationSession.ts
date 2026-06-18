@@ -1,6 +1,6 @@
 // Adapted for MindGym — uses callback navigation instead of react-router-dom
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { meditationService, getSessionSchedule, LIVE_MEDITATION_SESSION_ID } from '../features/meditation/meditationService';
+import { meditationService, getSessionSchedule, LIVE_MEDITATION_SESSION_ID, HEARTBEAT_INTERVAL_MS, MEDIA_SHARE_MAX_AGE_MS } from '../features/meditation/meditationService';
 import { useMeditationStore } from '../stores/meditationStore';
 import type { MeditationScreen } from '../features/meditation/types';
 
@@ -31,9 +31,13 @@ export function useMeditationSession({ user, active, onNavigate }: Options) {
   // ── Leave ────────────────────────────────────────────────────────────────────
   const handleLeave = useCallback(async (autoEnd = false) => {
     if (!user) return;
-    const { sessionId, setStreak, setSessionStatus: setStatus, reset } = useMeditationStore.getState();
+    const { sessionId, setStreak, setSessionStatus: setStatus, reset, mediaShare } = useMeditationStore.getState();
     if (!sessionId) return;
     const durationMinutes = Math.round((Date.now() - (joinedAtRef.current ?? Date.now())) / 60000);
+    // If I was the one sharing media, stop it for everyone as I leave.
+    if (mediaShare.type !== 'none' && mediaShare.sharedBy === user.uid) {
+      await meditationService.updateMediaShare(sessionId, 'none').catch(() => {});
+    }
     await meditationService.leaveSession(sessionId, user.uid, durationMinutes);
     if (durationMinutes >= 5) {
       const streak = await meditationService.updateStreak(user.uid, sessionId.slice(0, 10)).catch(() => null);
@@ -86,19 +90,29 @@ export function useMeditationSession({ user, active, onNavigate }: Options) {
         if (data && typeof data.chatEnabled === 'boolean') {
           setChatEnabled(data.chatEnabled);
         }
-        // Sync YouTube/Audio sharing state from Firestore to all participants
+        // Sync YouTube/Audio sharing state from Firestore to all participants.
+        // Ignore a stale share (e.g. yesterday's video left on the permanent room)
+        // so it never auto-plays for whoever joins next.
         if (data?.mediaShare) {
           const ms = data.mediaShare;
-          if (ms.type === 'youtube' && ms.url) {
-            setMediaShare({ type: 'youtube', youtubeUrl: ms.url, isPlaying: ms.isPlaying ?? false, timestamp: ms.timestamp, updatedAt: ms.updatedAt });
-          } else if (ms.type === 'audio' && ms.url) {
-            setMediaShare({ type: 'audio', audioUrl: ms.url, isPlaying: ms.isPlaying ?? false, timestamp: ms.timestamp, updatedAt: ms.updatedAt });
-          } else if (ms.type === 'none') {
+          const isFresh = typeof ms.updatedAt === 'number' && Date.now() - ms.updatedAt < MEDIA_SHARE_MAX_AGE_MS;
+          if (isFresh && ms.type === 'youtube' && ms.url) {
+            setMediaShare({ type: 'youtube', youtubeUrl: ms.url, sharedBy: ms.sharedBy ?? undefined, isPlaying: ms.isPlaying ?? false, timestamp: ms.timestamp, updatedAt: ms.updatedAt });
+          } else if (isFresh && ms.type === 'audio' && ms.url) {
+            setMediaShare({ type: 'audio', audioUrl: ms.url, sharedBy: ms.sharedBy ?? undefined, isPlaying: ms.isPlaying ?? false, timestamp: ms.timestamp, updatedAt: ms.updatedAt });
+          } else {
             clearMediaShare();
           }
         }
       });
-      (window as any).__meditationUnsubs = [unsubP, unsubC, unsubS];
+
+      // Heartbeat: keep our presence fresh so other clients keep showing our card,
+      // and so we disappear within ~45s if this tab is closed/crashes.
+      const heartbeatId = window.setInterval(() => {
+        meditationService.heartbeat(roomId, user.uid).catch(() => {});
+      }, HEARTBEAT_INTERVAL_MS);
+
+      (window as any).__meditationUnsubs = [unsubP, unsubC, unsubS, () => clearInterval(heartbeatId)];
       onNavigate('room');
     } catch (err) {
       console.error('[Session] join failed:', err);

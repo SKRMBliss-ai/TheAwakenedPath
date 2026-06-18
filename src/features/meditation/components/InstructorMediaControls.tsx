@@ -13,11 +13,12 @@ import { meditationService } from '../meditationService';
 interface Props {
   userEmail: string | null;
   sessionId: string | null;
+  myUid: string;
 }
 
 const INSTRUCTOR_EMAIL = 'skrmblissai@gmail.com';
 
-const InstructorMediaControls = ({ userEmail, sessionId }: Props) => {
+const InstructorMediaControls = ({ userEmail, sessionId, myUid }: Props) => {
   const store = useMeditationStore();
   const { notificationsMuted, toggleNotificationsMute, chatEnabled, mediaShare, clearMediaShare } = store;
   const [showMenu, setShowMenu] = useState(false);
@@ -60,7 +61,7 @@ const InstructorMediaControls = ({ userEmail, sessionId }: Props) => {
     try {
       console.log("Updating Firestore with sessionId:", sessionId);
       // Write to Firestore — useMeditationSession propagates it to ALL participants
-      await meditationService.updateMediaShare(sessionId, 'youtube', youtubeUrl.trim());
+      await meditationService.updateMediaShare(sessionId, 'youtube', youtubeUrl.trim(), myUid);
       console.log("Firestore updated successfully!");
       setYoutubeUrl('');
       setShowMenu(false);
@@ -72,7 +73,7 @@ const InstructorMediaControls = ({ userEmail, sessionId }: Props) => {
   const handleAudioShare = async () => {
     if (!audioUrl.trim()) return;
     try {
-      await meditationService.updateMediaShare(sessionId, 'audio', audioUrl.trim());
+      await meditationService.updateMediaShare(sessionId, 'audio', audioUrl.trim(), myUid);
       setAudioUrl('');
       setShowMenu(false);
     } catch (e) {

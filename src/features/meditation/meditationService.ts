@@ -20,6 +20,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
 // Historical tracking happens via meditation_attendance with date-based IDs.
 export const LIVE_MEDITATION_SESSION_ID = 'live_meditation';
 
+// ── Liveness / heartbeat ──────────────────────────────────────────────────────
+// Because the room is permanent, presence cannot rely on a clean "leave" (tabs
+// get closed, sessions crash, users log out abruptly). Instead each participant
+// writes a `lastSeen` heartbeat; a card is only shown if the heartbeat is fresh.
+export const HEARTBEAT_INTERVAL_MS = 15 * 1000;
+export const PRESENCE_STALE_MS = 45 * 1000; // 3 missed heartbeats → considered gone
+// A shared media item older than this is ignored (kills "yesterday's video"
+// auto-playing for whoever joins the permanent room next).
+export const MEDIA_SHARE_MAX_AGE_MS = 3 * 60 * 60 * 1000;
+
 // DEV mode : 5-min slots (4 min live · 1 min gap) — easy to test immediately
 // PROD mode : single daily session at 9:00 AM IST (UTC+5:30 = UTC 03:30), 1 hour (9:00–10:00)
 const IS_DEV = import.meta.env.DEV;
@@ -138,7 +148,7 @@ export const meditationService = {
       lastUpdated: Date.now(),
     }, { merge: true });
     await setDoc(doc(db, 'meditation_sessions', permanentSessionId, 'participants', uid),
-      { uid, displayName, avatarUrl, joinedAt: Date.now(), videoEnabled: false, isPresent: true });
+      { uid, displayName, avatarUrl, joinedAt: Date.now(), videoEnabled: false, isPresent: true, lastSeen: Date.now() });
 
     // Track attendance historically with date-based ID for analytics
     const attendanceId = `${uid}_${new Date().toISOString().slice(0, 10)}`;
@@ -146,13 +156,21 @@ export const meditationService = {
       { uid, sessionId: permanentSessionId, joinedAt: Date.now(), date: new Date().toISOString().slice(0, 10) }, { merge: true });
   },
 
+  // Keep the participant's presence heartbeat fresh while they're in the room.
+  async heartbeat(sessionId: string, uid: string): Promise<void> {
+    try {
+      await updateDoc(doc(db, 'meditation_sessions', sessionId, 'participants', uid),
+        { lastSeen: Date.now(), isPresent: true });
+    } catch { /* participant doc may not exist yet — non-critical */ }
+  },
+
   async toggleRoomChat(sessionId: string, chatEnabled: boolean): Promise<void> {
     await setDoc(doc(db, 'meditation_sessions', sessionId), { chatEnabled }, { merge: true });
   },
 
-  async updateMediaShare(sessionId: string, type: 'youtube' | 'audio' | 'none', url?: string): Promise<void> {
+  async updateMediaShare(sessionId: string, type: 'youtube' | 'audio' | 'none', url?: string, sharedBy?: string): Promise<void> {
     await setDoc(doc(db, 'meditation_sessions', sessionId), {
-      mediaShare: { type, url: url ?? null, isPlaying: true, timestamp: 0, updatedAt: Date.now() }
+      mediaShare: { type, url: url ?? null, sharedBy: sharedBy ?? null, isPlaying: true, timestamp: 0, updatedAt: Date.now() }
     }, { merge: true });
   },
 
@@ -179,7 +197,16 @@ export const meditationService = {
 
   subscribeToParticipants(sessionId: string, cb: (p: MeditationParticipant[]) => void): Unsubscribe {
     const q = query(collection(db, 'meditation_sessions', sessionId, 'participants'), where('isPresent', '==', true));
-    return onSnapshot(q, snap => cb(snap.docs.map(d => d.data() as MeditationParticipant)));
+    return onSnapshot(q, snap => {
+      const now = Date.now();
+      // Only show participants with a fresh heartbeat. Docs left behind by a
+      // crashed tab / hard logout (stale or missing lastSeen) are dropped, so the
+      // permanent room never accumulates ghost cards.
+      const fresh = snap.docs
+        .map(d => d.data() as MeditationParticipant)
+        .filter(p => typeof p.lastSeen === 'number' && now - p.lastSeen < PRESENCE_STALE_MS);
+      cb(fresh);
+    });
   },
 
   async sendSignal(sessionId: string, signal: { from: string; to: string; type: 'offer'|'answer'|'ice_candidate'; data: string }): Promise<void> {
