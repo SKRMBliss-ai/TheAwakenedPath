@@ -11,7 +11,7 @@ const nodemailer = require("nodemailer");
 
 if (admin.apps.length === 0) {
     admin.initializeApp({
-        storageBucket: 'mind-gym-2026.firebasestorage.app'
+        storageBucket: 'awakened-path-2026.firebasestorage.app'
     });
 }
 
@@ -1317,11 +1317,11 @@ exports.sendMeditationReminders = onSchedule({
         <p style="margin:0 0 30px 0;font-size:14px;color:rgba(255,255,255,0.7);line-height:1.5;">
             The daily 15-minute silent practice starts in 15 minutes. No teacher. No student. Just presence.
         </p>
-        <a href="https://mind-gym-2026.web.app/meditation" style="display:inline-block;padding:14px 32px;background:linear-gradient(to right, #14b8a6, #5eead4);color:#042f2e;text-decoration:none;font-weight:bold;border-radius:24px;text-transform:uppercase;letter-spacing:2px;">
+        <a href="https://awakened-path-2026.web.app/meditation" style="display:inline-block;padding:14px 32px;background:linear-gradient(to right, #14b8a6, #5eead4);color:#042f2e;text-decoration:none;font-weight:bold;border-radius:24px;text-transform:uppercase;letter-spacing:2px;">
             JOIN MEDITATION &rarr;
         </a>
         <p style="text-align: center; margin-top: 30px;">
-            <a href="https://us-central1-mind-gym-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=MEDITATION_REMINDER" style="color: rgba(255, 255, 255, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from reminders</a>
+            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=MEDITATION_REMINDER" style="color: rgba(255, 255, 255, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from reminders</a>
         </p>
     </div>
 </body>
@@ -1383,11 +1383,11 @@ exports.testMeditationReminderEmail = onRequest({
         <p style="margin:0 0 30px 0;font-size:14px;color:rgba(255,255,255,0.7);line-height:1.5;">
             The daily 15-minute silent practice starts in 15 minutes. No teacher. No student. Just presence.
         </p>
-        <a href="https://mind-gym-2026.web.app/meditation" style="display:inline-block;padding:14px 32px;background:linear-gradient(to right, #14b8a6, #5eead4);color:#042f2e;text-decoration:none;font-weight:bold;border-radius:24px;text-transform:uppercase;letter-spacing:2px;">
+        <a href="https://awakened-path-2026.web.app/meditation" style="display:inline-block;padding:14px 32px;background:linear-gradient(to right, #14b8a6, #5eead4);color:#042f2e;text-decoration:none;font-weight:bold;border-radius:24px;text-transform:uppercase;letter-spacing:2px;">
             JOIN MEDITATION &rarr;
         </a>
         <p style="text-align: center; margin-top: 30px;">
-            <a href="https://us-central1-mind-gym-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=MEDITATION_REMINDER" style="color: rgba(255, 255, 255, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from reminders</a>
+            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=MEDITATION_REMINDER" style="color: rgba(255, 255, 255, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from reminders</a>
         </p>
     </div>
 </body>
@@ -1663,10 +1663,10 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                                 <p style="font-size:22px;font-weight:600;color:#1E1912;margin:0 0 14px;line-height:1.35;">${todayVideo.title}</p>
                                 <!-- Thumbnail with play button overlay -->
                                 <div style="position:relative;line-height:0;border-radius:10px;overflow:hidden;">
-                                    <a href="https://us-central1-mind-gym-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:block;line-height:0;">
+                                    <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:block;line-height:0;">
                                         <img src="${videoThumb}" alt="Today's Soulful Intelligence Studio video" style="display:block;width:100%;max-width:100%;border-radius:10px;border:1px solid rgba(184,151,58,0.25);" />
                                     </a>
-                                    <a href="https://us-central1-mind-gym-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent(videoUrl)}"
+                                    <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent(videoUrl)}"
                                        target="_blank" rel="noopener noreferrer"
                                        style="position:absolute;top:50%;left:50%;margin-top:-40px;margin-left:-40px;
                                               width:80px;height:80px;background:rgba(0,0,0,0.62);
@@ -1679,7 +1679,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                                                      margin-top:25px;margin-left:6px;vertical-align:top;"></span>
                                     </a>
                                 </div>
-                                <p style="font-size:15px;line-height:1.7;color:#2E261C;margin:14px 0 0;">Watch on YouTube: <a href="https://us-central1-mind-gym-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent(videoUrl)}" style="color:#8B6A1A;text-decoration:none;font-weight:600;">Soulful Intelligence Studio ↗</a></p>
+                                <p style="font-size:15px;line-height:1.7;color:#2E261C;margin:14px 0 0;">Watch on YouTube: <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent(videoUrl)}" style="color:#8B6A1A;text-decoration:none;font-weight:600;">Soulful Intelligence Studio ↗</a></p>
                             </div>
                         </td>
                     </tr>
@@ -1707,7 +1707,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                     <!-- Primary CTA -->
                     <tr>
                         <td style="padding:0 48px 20px;text-align:center;">
-                            <a href="https://us-central1-mind-gym-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/mindgym')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Open Today's Practice &rarr; (5 min)</a>
+                            <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/mindgym')}" style="display:inline-block;padding:18px 48px;background:#B8973A;color:#0C0910;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border-radius:4px;">Open Today's Practice &rarr; (5 min)</a>
                         </td>
                     </tr>
 
@@ -1717,7 +1717,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                             <div style="border:1px solid rgba(184,151,58,0.35);border-radius:12px;padding:20px 28px;background:rgba(184,151,58,0.04);display:inline-block;">
                                 <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 8px;font-weight:700;">🎁 Free Resource</p>
                                 <p style="font-size:16px;color:#1E1912;margin:0 0 14px;font-weight:500;line-height:1.4;">Download your free<br><strong>30-Day Now Practice Journal</strong></p>
-                                <a href="https://us-central1-mind-gym-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/aboutmindgym')}" style="display:inline-block;padding:12px 32px;background:transparent;color:#B8973A;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border:2px solid #B8973A;border-radius:4px;">Get Free Journal &darr;</a>
+                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent('https://www.skrmblissai.in/aboutmindgym')}" style="display:inline-block;padding:12px 32px;background:transparent;color:#B8973A;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;border:2px solid #B8973A;border-radius:4px;">Get Free Journal &darr;</a>
                             </div>
                         </td>
                     </tr>
@@ -1728,7 +1728,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                             <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.8);margin:0 0 16px;">Mind Gym</p>
                             <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:0;line-height:1.8;">
                                 <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp; 
-                                <a href="https://us-central1-mind-gym-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=DAILY_REMINDER" style="color:rgba(30, 25, 18, 0.6);text-decoration:none;">Unsubscribe from Mind Gym</a>
+                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=DAILY_REMINDER" style="color:rgba(30, 25, 18, 0.6);text-decoration:none;">Unsubscribe from Mind Gym</a>
                             </p>
                             <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:8px 0 0;line-height:1.8;">
                                 By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp; 
@@ -1741,7 +1741,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                     </tr>
                 </table>
                 <!-- TRACKING PIXEL -->
-                <img src="https://us-central1-mind-gym-2026.cloudfunctions.net/emailOpenTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}" width="1" height="1" style="display:none !important;" />
+                <img src="https://us-central1-awakened-path-2026.cloudfunctions.net/emailOpenTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}" width="1" height="1" style="display:none !important;" />
             </td>
         </tr>
     </table>
@@ -1757,6 +1757,14 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
         // Look up Firestore data for this email (timezone, uid, etc.)
         const userData = usersByEmail[emailAddr] || { email: emailAddr };
         const userDoc = userData._id ? { id: userData._id } : { id: emailAddr };
+
+        // Honour unsubscribes. The send list comes from subscribers.txt, but the
+        // unsubscribe handler flags the Firestore user doc — without this check a
+        // user who clicked "Unsubscribe" would keep receiving the daily email.
+        if (userData.unsubscribed === true || userData.notificationsEnabled === false) {
+            console.log(`Skipping ${emailAddr} — unsubscribed.`);
+            continue;
+        }
 
         // Calculate User's current local hour
         const userTimezone = userData.timezone || 'Asia/Kolkata'; // Default to India if not specified
@@ -1839,7 +1847,7 @@ With love,
 Shruti
 Mind Gym · connect@skrmblissai.in
 
-To stop receiving these emails: https://us-central1-mind-gym-2026.cloudfunctions.net/unsubscribe?userId=${userData._id || emailAddr}
+To stop receiving these emails: https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userData._id || emailAddr}
 `;
                 await transporter.sendMail({
                     from: '"Mind Gym" <connect@skrmblissai.in>',
@@ -2000,13 +2008,13 @@ exports.blastUpdateEmail = onCall({
             <p>A new chapter has been added to your course: <strong>${chapterTitle}</strong></p>
             <p>${chapterSubtitle}</p>
             <div style="text-align: center; margin-top: 40px;">
-                <a href="https://us-central1-mind-gym-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}&url=${encodeURIComponent('https://www.skrmblissai.in/mindgym/courses/wisdom-untethered')}" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 1px; font-weight: bold;">View Course →</a>
+                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}&url=${encodeURIComponent('https://www.skrmblissai.in/mindgym/courses/wisdom-untethered')}" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 1px; font-weight: bold;">View Course →</a>
             </div>
             <p style="text-align: center; margin-top: 20px;">
-                <a href="https://us-central1-mind-gym-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=${blastId}" style="color: rgba(253, 250, 244, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from these updates</a>
+                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=${blastId}" style="color: rgba(253, 250, 244, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from these updates</a>
             </p>
             <!-- TRACKING PIXEL -->
-            <img src="https://us-central1-mind-gym-2026.cloudfunctions.net/emailOpenTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}" width="1" height="1" style="display:none !important;" />
+            <img src="https://us-central1-awakened-path-2026.cloudfunctions.net/emailOpenTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}" width="1" height="1" style="display:none !important;" />
         </div>
     `;
 
@@ -2245,8 +2253,8 @@ exports.getSecureTrackUrl = onCall({
 
     try {
         const defaultBucket = admin.storage().bucket();
-        const appspotBucket = admin.storage().bucket('mind-gym-2026.appspot.com');
-        const soundscapeBucket = admin.storage().bucket('mind-gym-2026.firebasestorage.app');
+        const appspotBucket = admin.storage().bucket('awakened-path-2026.appspot.com');
+        const soundscapeBucket = admin.storage().bucket('awakened-path-2026.firebasestorage.app');
         
         const cleanPath = path.startsWith('/') ? path.substring(1) : path;
         

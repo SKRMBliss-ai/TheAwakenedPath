@@ -1,7 +1,7 @@
 const admin = require('firebase-admin');
 
 admin.initializeApp({
-  projectId: "mind-gym-2026"
+  projectId: "awakened-path-2026"
 });
 
 const db = admin.firestore();
