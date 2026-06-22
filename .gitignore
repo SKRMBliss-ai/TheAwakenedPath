@@ -27,3 +27,5 @@ dist-ssr
 # JaaS private key (never commit)
 functions/jaas-key.pem
 *.pem
+functions/jaas-key.pk
+*.pk

@@ -88,8 +88,8 @@ exports.getJitsiToken = onRequest(
         return res.status(401).json({ error: "Invalid auth token" });
       }
 
-      const appId = jaasAppId.value();
-      const kid = jaasKid.value();
+      const appId = (jaasAppId.value() || "").trim();
+      const kid = (jaasKid.value() || "").trim();
       const privateKey = jaasPrivateKey.value();
       if (!appId || !kid || !privateKey) {
         return res.status(500).json({ error: "JaaS not configured" });
