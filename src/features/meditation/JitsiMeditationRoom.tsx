@@ -15,21 +15,24 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Wind, LogOut } from 'lucide-react';
 import { useMeditationSession } from '../../hooks/useMeditationSession';
+import { auth } from '../../firebase';
 import SessionTimer from './components/SessionTimer';
 import type { MeditationScreen } from './types';
 
 interface AuthUser { uid: string; displayName: string | null; photoURL: string | null; email: string | null; }
 
-const JITSI_DOMAIN = 'meet.jit.si';
-// Long random suffix so strangers can't stumble into the public room by guessing.
-const JITSI_ROOM = 'MindGymDailyMeditation-7f3a91c4e2';
+// JaaS (8x8 hosted Jitsi). The room is created on demand and is stateless when
+// empty — no ghost participants or stale shared-video to manage. Access is gated
+// by a per-user JWT minted server-side (/api/jitsi-token), so users never log in.
+const JAAS_DOMAIN = '8x8.vc';
+const JITSI_ROOM = 'DailyMeditation';
 
 declare global {
   interface Window { JitsiMeetExternalAPI?: any; }
 }
 
-// Load Jitsi's iframe API script once, reusing it across mounts.
-function loadJitsiScript(): Promise<void> {
+// Load JaaS's iframe API script (tenant-scoped URL) once, reusing across mounts.
+function loadJitsiScript(appId: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (window.JitsiMeetExternalAPI) return resolve();
     const existing = document.getElementById('jitsi-external-api') as HTMLScriptElement | null;
@@ -40,12 +43,23 @@ function loadJitsiScript(): Promise<void> {
     }
     const s = document.createElement('script');
     s.id = 'jitsi-external-api';
-    s.src = `https://${JITSI_DOMAIN}/external_api.js`;
+    s.src = `https://${JAAS_DOMAIN}/${appId}/external_api.js`;
     s.async = true;
     s.onload = () => resolve();
     s.onerror = () => reject(new Error('Jitsi script failed'));
     document.body.appendChild(s);
   });
+}
+
+// Ask our Cloud Function for a JaaS access token for the current Firebase user.
+async function fetchJaasToken(room: string): Promise<{ jwt: string; appId: string; room: string }> {
+  const idToken = await auth.currentUser?.getIdToken();
+  if (!idToken) throw new Error('Not signed in');
+  const res = await fetch(`/api/jitsi-token?room=${encodeURIComponent(room)}`, {
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  if (!res.ok) throw new Error(`token ${res.status}`);
+  return res.json();
 }
 
 const JitsiMeditationRoom = ({
@@ -78,48 +92,51 @@ const JitsiMeditationRoom = ({
     }
 
     let disposed = false;
-    loadJitsiScript()
-      .then(() => {
-        if (disposed || !containerRef.current || !window.JitsiMeetExternalAPI) return;
-        const api = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
-          roomName: JITSI_ROOM,
-          parentNode: containerRef.current,
-          userInfo: { displayName: user.displayName || 'Practitioner' },
-          configOverwrite: {
-            startWithAudioMuted: true,      // silent meditation — mics off by default
-            startWithVideoMuted: false,
-            prejoinPageEnabled: false,      // we have our own gate; skip Jitsi's lobby
-            disableDeepLinking: true,
-            disableInviteFunctions: true,
-            enableClosePage: false,
-            disableThirdPartyRequests: true,
-            toolbarButtons: [
-              'microphone', 'camera', 'tileview', 'hangup',
-              'chat', 'raisehand', 'sharedvideo', 'select-background', 'fullscreen',
-            ],
-          },
-          interfaceConfigOverwrite: {
-            SHOW_JITSI_WATERMARK: false,
-            SHOW_WATERMARK_FOR_GUESTS: false,
-            MOBILE_APP_PROMO: false,
-            HIDE_INVITE_MORE_HEADER: true,
-            DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
-            TILE_VIEW_MAX_COLUMNS: 3,
-          },
-        });
-        apiRef.current = api;
+    (async () => {
+      const { jwt, appId, room } = await fetchJaasToken(JITSI_ROOM);
+      await loadJitsiScript(appId);
+      if (disposed || !containerRef.current || !window.JitsiMeetExternalAPI) return;
+      const api = new window.JitsiMeetExternalAPI(JAAS_DOMAIN, {
+        roomName: `${appId}/${room}`,
+        jwt,
+        parentNode: containerRef.current,
+        userInfo: { displayName: user.displayName || 'Practitioner' },
+        configOverwrite: {
+          startWithAudioMuted: true,      // silent meditation — mics off by default
+          startWithVideoMuted: false,
+          prejoinPageEnabled: false,      // we have our own gate; skip Jitsi's lobby
+          disableDeepLinking: true,
+          disableInviteFunctions: true,
+          enableClosePage: false,
+          toolbarButtons: [
+            'microphone', 'camera', 'desktop', 'tileview', 'hangup',
+            'chat', 'raisehand', 'sharedvideo', 'select-background', 'fullscreen', 'settings',
+          ],
+        },
+        interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
+          MOBILE_APP_PROMO: false,
+          HIDE_INVITE_MORE_HEADER: true,
+          DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
+          TILE_VIEW_MAX_COLUMNS: 3,
+        },
+      });
+      apiRef.current = api;
 
-        const refreshCount = () => setCount(api.getNumberOfParticipants?.() ?? 1);
-        api.addEventListener('videoConferenceJoined', () => {
-          api.executeCommand('setTileView', true);
-          refreshCount();
-        });
-        api.addEventListener('participantJoined', refreshCount);
-        api.addEventListener('participantLeft', refreshCount);
-        // User clicked Jitsi's own hangup → run our leave (attendance + nav).
-        api.addEventListener('readyToClose', () => doLeave());
-      })
-      .catch(() => setLoadError(true));
+      const refreshCount = () => setCount(api.getNumberOfParticipants?.() ?? 1);
+      api.addEventListener('videoConferenceJoined', () => {
+        api.executeCommand('setTileView', true);
+        refreshCount();
+      });
+      api.addEventListener('participantJoined', refreshCount);
+      api.addEventListener('participantLeft', refreshCount);
+      // User clicked Jitsi's own hangup → run our leave (attendance + nav).
+      api.addEventListener('readyToClose', () => doLeave());
+    })().catch((err) => {
+      console.error('[Jitsi] init failed:', err);
+      setLoadError(true);
+    });
 
     return () => {
       disposed = true;

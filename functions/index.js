@@ -47,6 +47,103 @@ const razorpayWebhookSecret = defineSecret("RAZORPAY_WEBHOOK_SECRET");
 const googleSearchKey = defineSecret("GOOGLE_SEARCH_API_KEY");
 const googleSearchCx = defineSecret("GOOGLE_SEARCH_CX");
 
+// JaaS (8x8 Jitsi-as-a-Service) — App ID + API-key id are not strictly secret, but
+// stored here for one consistent config mechanism. The private key MUST stay secret;
+// it is what lets us mint per-user access tokens so end users never log in to Jitsi.
+const jaasAppId = defineSecret("JAAS_APP_ID");
+const jaasKid = defineSecret("JAAS_KID");
+const jaasPrivateKey = defineSecret("JAAS_PRIVATE_KEY");
+
+// Meditation hosts get a moderator token (can share video/screen, mute others, etc.).
+const MEDITATION_MODERATOR_EMAILS = [
+  "skrmblissai@gmail.com",
+  "shrutikhungar@gmail.com",
+  "simkatyal1@gmail.com",
+  "smriti.duggal@gmail.com",
+  "rashmi.purbey@gmail.com",
+];
+
+const b64url = (input) =>
+  Buffer.from(input).toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+
+/**
+ * Mints a short-lived JaaS access token for the signed-in Firebase user, so the
+ * meditation room can embed Jitsi WITHOUT any separate Jitsi login. The private
+ * key never leaves the server. Hosts (MEDITATION_MODERATOR_EMAILS) get moderator
+ * rights. Called as GET /api/jitsi-token with a Firebase ID token in the
+ * Authorization: Bearer <idToken> header.
+ */
+exports.getJitsiToken = onRequest(
+  { secrets: [jaasAppId, jaasKid, jaasPrivateKey], cors: true },
+  async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization || "";
+      const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+      if (!idToken) return res.status(401).json({ error: "Missing auth token" });
+
+      let decoded;
+      try {
+        decoded = await admin.auth().verifyIdToken(idToken);
+      } catch {
+        return res.status(401).json({ error: "Invalid auth token" });
+      }
+
+      const appId = jaasAppId.value();
+      const kid = jaasKid.value();
+      const privateKey = jaasPrivateKey.value();
+      if (!appId || !kid || !privateKey) {
+        return res.status(500).json({ error: "JaaS not configured" });
+      }
+
+      const room = (req.query.room || "DailyMeditation").toString();
+      const email = (decoded.email || "").toLowerCase();
+      const isModerator = MEDITATION_MODERATOR_EMAILS.includes(email);
+      const now = Math.floor(Date.now() / 1000);
+
+      const header = { alg: "RS256", kid, typ: "JWT" };
+      const payload = {
+        aud: "jitsi",
+        iss: "chat",
+        sub: appId,
+        room: "*",
+        exp: now + 3 * 60 * 60,
+        nbf: now - 10,
+        context: {
+          user: {
+            id: decoded.uid,
+            name: decoded.name || decoded.email || "Practitioner",
+            email: decoded.email || undefined,
+            avatar: decoded.picture || undefined,
+            moderator: isModerator ? "true" : "false",
+          },
+          features: {
+            livestreaming: "false",
+            recording: isModerator ? "true" : "false",
+            transcription: "false",
+            "outbound-call": "false",
+          },
+        },
+      };
+
+      const signingInput = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`;
+      const signer = crypto.createSign("RSA-SHA256");
+      signer.update(signingInput);
+      signer.end();
+      const signature = signer
+        .sign(privateKey)
+        .toString("base64")
+        .replace(/=/g, "")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_");
+
+      return res.json({ jwt: `${signingInput}.${signature}`, appId, room, moderator: isModerator });
+    } catch (e) {
+      console.error("[getJitsiToken] error:", e);
+      return res.status(500).json({ error: "Token generation failed" });
+    }
+  }
+);
+
 // Text-to-Speech Client
 const ttsClient = new textToSpeech.TextToSpeechClient();
 

@@ -135,6 +135,13 @@
         }
       },
       {
+        "source": "/api/jitsi-token",
+        "function": {
+          "functionId": "getJitsiToken",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
