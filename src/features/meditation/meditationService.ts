@@ -207,17 +207,20 @@ export const meditationService = {
     const q = query(collection(db, 'meditation_sessions', sessionId, 'participants'), where('isPresent', '==', true));
     return onSnapshot(q, snap => {
       const docs = snap.docs.map(d => d.data() as MeditationParticipant);
-      // Reference "now" = the freshest heartbeat in the room (all server time),
-      // NOT the reader's local clock. This makes presence immune to device clock
-      // skew — previously a phone with a wrong clock filtered everyone else out,
-      // so it saw only its own tile (count = 1).
-      const times = docs.map(p => tsToMillis((p as any).lastSeen)).filter((t): t is number => t !== null);
-      const now = times.length ? Math.max(...times) : null;
-      // Drop only docs whose server heartbeat is clearly stale (crashed tab / hard
-      // logout). Pending/transitional heartbeats are kept so nobody flickers out.
+      // Reference "now" = the freshest SERVER heartbeat in the room (Timestamps
+      // only, never the reader's local clock). This makes presence immune to
+      // device clock skew — a phone with a wrong clock can't filter others out.
+      const serverTimes = docs.map(p => tsToMillis((p as any).lastSeen)).filter((t): t is number => t !== null);
+      const now = serverTimes.length ? Math.max(...serverTimes) : null;
       const fresh = docs.filter(p => {
-        const t = tsToMillis((p as any).lastSeen);
-        if (t === null || now === null) return true;
+        const v = (p as any).lastSeen;
+        if (v == null) return true;     // our own in-flight serverTimestamp write — keep
+        if (now === null) return true;  // no server heartbeat yet — don't filter anyone out
+        // Accept Firestore Timestamps AND legacy client-written epoch-ms numbers
+        // (docs from an older bundle). Without the number case, those days-old
+        // ghosts were treated as "unknown" and shown forever.
+        const t = tsToMillis(v) ?? (typeof v === 'number' ? v : null);
+        if (t === null) return true;
         return now - t < PRESENCE_STALE_MS;
       });
       cb(fresh);
