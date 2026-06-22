@@ -79,7 +79,7 @@ export const MeditationHomeCard = ({ onEnter, adminOverride = false }: Props) =>
                 Silent group session in progress
               </p>
               <p className="text-teal-200/70 font-medium text-[10px] sm:text-xs mt-1 drop-shadow">
-                {fmtCountdown(schedule.remainingMs)} remaining <span className="hidden sm:inline"><span className="opacity-50 mx-1">•</span> No teacher, no student</span>
+                {fmtCountdown(schedule.remainingMs)} remaining
               </p>
             </>
           ) : (
