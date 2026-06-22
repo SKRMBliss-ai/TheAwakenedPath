@@ -191,26 +191,12 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
             </span>
           </div>
         </div>
-        {/* Pulsing gold dot */}
-        <motion.div
-          className="rounded-full flex-shrink-0"
-          style={{ width: 8, height: 8, background: '#B8973A', boxShadow: '0 0 10px #B8973A' }}
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        />
       </div>
 
       {/* ── Orb section ── */}
       <div className="flex flex-col items-center gap-3 px-3 sm:px-4">
         {/* Orb + ring */}
         <div className="relative w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] md:w-[140px] md:h-[140px]">
-          {/* Outer ring */}
-          <motion.div
-            className="absolute rounded-full pointer-events-none"
-            style={{ inset: -8, border: '1px solid rgba(184,151,58,.25)' }}
-            animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.032, 1] }}
-            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
-          />
           {/* Orb button — always dark bg so text inside stays readable */}
           <motion.button
             onClick={() => setBreathActive(b => !b)}
@@ -219,17 +205,15 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
               background: mode === 'dark'
                 ? 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 45%, #041f1e 100%)'
                 : 'radial-gradient(ellipse at 37% 30%, #FFFDF7 0%, #F5E6BD 55%, #cbf2ef 100%)',
-              border: mode === 'dark' ? '1px solid rgba(45,212,191,.25)' : '1px solid rgba(45,212,191,.4)',
-              boxShadow: mode === 'dark'
-                ? '0 0 0 1px rgba(45,212,191,.15), 0 0 28px rgba(184,151,58,.25), inset 0 0 20px rgba(45,212,191,.05)'
-                : '0 0 0 1px rgba(45,212,191,.15), 0 4px 12px rgba(0,0,0,0.05), inset 0 0 20px rgba(45,212,191,.1)',
+              border: mode === 'dark' ? '1px solid rgba(184,151,58,.3)' : '1px solid rgba(184,151,58,.45)',
+              boxShadow: '0 0 0 1px rgba(184,151,58,.18)',
               WebkitTapHighlightColor: 'transparent',
             }}
-            animate={{ 
-              scale: breathActive ? currentPhase.scale : [1, 1.025, 1],
-              boxShadow: breathActive 
-                ? `0 0 0 1px rgba(45,212,191,.2), 0 0 ${20 + currentPhase.glow * 40}px rgba(184,151,58,${0.15 + currentPhase.glow * 0.3})`
-                : '0 0 0 1px rgba(45,212,191,.15), 0 0 28px rgba(184,151,58,.25), inset 0 0 20px rgba(45,212,191,.05)'
+            animate={{
+              scale: breathActive ? currentPhase.scale : 1,
+              boxShadow: breathActive
+                ? `0 0 0 1px rgba(184,151,58,.18), 0 0 ${18 + currentPhase.glow * 30}px rgba(184,151,58,${0.1 + currentPhase.glow * 0.22})`
+                : '0 0 0 1px rgba(184,151,58,.18)'
             }}
             transition={{ 
               duration: breathActive ? currentPhase.duration / 1000 : 6, 
@@ -368,36 +352,19 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
     >
       {/* ── Desktop hero: greeting + centered orb ── */}
       <div className="pt-6 lg:pt-8 pb-2 px-4 lg:px-8 max-w-4xl mx-auto">
-        {/* Greeting row */}
-        <div className="flex items-center justify-between mb-6 lg:mb-8">
-          <div className="flex items-center gap-5">
-            <MindGymLogo variant="icon" size="md" animated={true} />
-            <div>
-              <p className="font-sans text-[11px] font-bold tracking-[.28em] uppercase mb-0.5" style={{ color: '#B8973A' }}>
-                {greeting},
-              </p>
-              <h1 className="font-serif text-3xl font-light" style={{ color: 'var(--text-primary)' }}>
-                {user.displayName}
-              </h1>
-            </div>
-          </div>
-          <motion.div
-            className="rounded-full"
-            style={{ width: 10, height: 10, background: '#B8973A', boxShadow: '0 0 12px #B8973A' }}
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          />
+        {/* Greeting */}
+        <div className="mb-6 lg:mb-8">
+          <p className="font-sans text-[11px] font-bold tracking-[.28em] uppercase mb-0.5" style={{ color: '#B8973A' }}>
+            {greeting},
+          </p>
+          <h1 className="font-serif text-3xl font-light" style={{ color: 'var(--text-primary)' }}>
+            {user.displayName}
+          </h1>
         </div>
 
         {/* Centered orb */}
         <div className="flex flex-col items-center gap-4">
           <div className="relative" style={{ width: 140, height: 140 }}>
-            <motion.div
-              className="absolute rounded-full pointer-events-none"
-              style={{ inset: -10, border: '1px solid rgba(184,151,58,.25)' }}
-              animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.032, 1] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
-            />
             <motion.button
               onClick={() => setBreathActive(b => !b)}
               className="relative rounded-full flex items-center justify-center overflow-hidden focus:outline-none"
@@ -406,16 +373,14 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
                 background: mode === 'dark'
                   ? 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)'
                   : 'radial-gradient(ellipse at 37% 30%, #FFFDF7 0%, #F5E6BD 55%, #E6C57D 100%)',
-                border: mode === 'dark' ? '1px solid rgba(184,151,58,.35)' : '1px solid rgba(184,151,58,.5)',
-                boxShadow: mode === 'dark'
-                  ? '0 0 0 1px rgba(184,151,58,.15), 0 0 32px rgba(184,151,58,.28), 0 0 70px rgba(184,151,58,.12)'
-                  : '0 0 0 1px rgba(184,151,58,.1), 0 6px 16px rgba(0,0,0,0.05)',
+                border: mode === 'dark' ? '1px solid rgba(184,151,58,.3)' : '1px solid rgba(184,151,58,.45)',
+                boxShadow: '0 0 0 1px rgba(184,151,58,.18)',
               }}
-              animate={{ 
-                scale: breathActive ? currentPhase.scale : [1, 1.025, 1],
-                boxShadow: breathActive 
-                  ? `0 0 0 1px rgba(184,151,58,.15), 0 0 ${30 + currentPhase.glow * 50}px rgba(184,151,58,${0.2 + currentPhase.glow * 0.4})`
-                  : '0 0 0 1px rgba(184,151,58,.15), 0 0 32px rgba(184,151,58,.28), 0 0 70px rgba(184,151,58,.12)'
+              animate={{
+                scale: breathActive ? currentPhase.scale : 1,
+                boxShadow: breathActive
+                  ? `0 0 0 1px rgba(184,151,58,.18), 0 0 ${18 + currentPhase.glow * 30}px rgba(184,151,58,${0.1 + currentPhase.glow * 0.22})`
+                  : '0 0 0 1px rgba(184,151,58,.18)'
               }}
               transition={{ 
                 duration: breathActive ? currentPhase.duration / 1000 : 6, 
