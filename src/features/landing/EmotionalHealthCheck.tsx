@@ -659,34 +659,20 @@ export default function EmotionalHealthCheck() {
                     background: radial-gradient(circle at 50% 45%, rgba(176,137,95,0.45), rgba(176,137,95,0.05) 70%);
                     animation: ehc-breathe 7s ease-in-out infinite; }
                 .ehc input::placeholder { color: #B7AE9E; }
-                /* Calming ambient visuals — soft drifting warm light */
-                .ehc-aura { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-                .ehc-aura span { position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.55; }
-                .ehc-aura .a1 { width: 460px; height: 460px; background: #EAD4B4; top: -140px; left: -120px; animation: ehc-drift1 20s ease-in-out infinite; }
-                .ehc-aura .a2 { width: 400px; height: 400px; background: #DAC6AC; bottom: -160px; right: -110px; animation: ehc-drift2 26s ease-in-out infinite; }
-                .ehc-aura .a3 { width: 320px; height: 320px; background: #F0DFC8; top: 42%; left: 58%; animation: ehc-drift1 30s ease-in-out infinite; }
-                @keyframes ehc-drift1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(34px,46px); } }
-                @keyframes ehc-drift2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-44px,-32px); } }
-                @media (prefers-reduced-motion: reduce) { .ehc-aura span, .ehc-orb { animation: none; } }
                 .ehc-hero-wrap { position: relative; border-radius: 24px; overflow: hidden; margin-bottom: 28px;
-                    box-shadow: 0 14px 40px rgba(120,90,50,0.18); }
-                .ehc-hero-img { width: 100%; height: 230px; object-fit: cover; display: block;
-                    transform: scale(1.04); animation: ehc-kenburns 18s ease-in-out infinite alternate; }
-                @keyframes ehc-kenburns { from { transform: scale(1.04) translate(0,0); } to { transform: scale(1.12) translate(-2%,-2%); } }
+                    box-shadow: 0 6px 20px rgba(120,90,50,0.10); }
+                .ehc-hero-img { width: 100%; height: 230px; object-fit: cover; display: block; }
                 .ehc-hero-grad { position: absolute; inset: 0; pointer-events: none;
                     background: linear-gradient(180deg, rgba(46,42,36,0) 38%, rgba(46,42,36,0.55) 100%); }
                 .ehc-hero-tag { position: absolute; left: 18px; bottom: 16px; color: #F4EFE6;
                     font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
                 .ehc-quote-mark { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 90px; line-height: 0.4;
                     color: rgba(176,137,95,0.32); display: block; height: 34px; }
-                @media (prefers-reduced-motion: reduce) { .ehc-hero-img { animation: none; } }
                 @keyframes ehc-bar { from { width: 0; } to { width: var(--w); } }
                 .ehc-bar { width: var(--w); animation: ehc-bar 1s cubic-bezier(0.22,1,0.36,1) both; }
                 @media (prefers-reduced-motion: reduce) { .ehc-bar { animation: none; } }
             `}</style>
             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" />
-
-            <div className="ehc-aura" aria-hidden="true"><span className="a1" /><span className="a2" /><span className="a3" /></div>
 
             <header className="max-w-xl mx-auto px-6 pt-9 pb-2 flex items-center gap-2.5 relative z-10">
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#B0895F' }} />
