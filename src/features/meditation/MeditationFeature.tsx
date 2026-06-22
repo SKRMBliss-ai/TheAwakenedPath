@@ -8,7 +8,7 @@ import { meditationService } from './meditationService';
 import { useMeditationStore } from '../../stores/meditationStore';
 import type { MeditationScreen } from './types';
 import AwakenOrb from './components/AwakenOrb';
-import MeditationRoom from './MeditationRoom';
+import JitsiMeditationRoom from './JitsiMeditationRoom';
 import MeditationJournal from './MeditationJournal';
 import MeditationPreJoin from './MeditationPreJoin';
 import { getSessionSchedule, LIVE_MEDITATION_SESSION_ID } from './meditationService';
@@ -29,7 +29,7 @@ interface Props {
 
 export const MeditationFeature = ({ user, adminOverride = false, onRoomStateChange }: Props) => {
   const [screen, setScreen] = useState<MeditationScreen>('landing');
-  const [prejoinCameraOn, setPrejoinCameraOn] = useState(false);
+  const [, setPrejoinCameraOn] = useState(false);
   const [prejoinStream, setPrejoinStream] = useState<MediaStream | null>(null);
 
   const navigate = (s: MeditationScreen) => setScreen(s);
@@ -64,11 +64,10 @@ export const MeditationFeature = ({ user, adminOverride = false, onRoomStateChan
       )}
 
       {screen === 'room' && (
-        <MeditationRoom
+        <JitsiMeditationRoom
           key="room"
           user={user}
           onNavigate={navigate}
-          initialCameraOn={prejoinCameraOn}
           initialStream={prejoinStream}
         />
       )}
