@@ -3,7 +3,6 @@ import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu
 import { MeditationFeature } from './features/meditation/MeditationFeature';
 import { MeditationHomeCard } from './features/meditation/MeditationHomeCard';
 import { db } from './firebase';
-import LivingBlobs from './components/ui/LivingBlobs';
 import { CoursesHub } from './features/courses/CoursesHub';
 import { WisdomUntetheredCourse } from './features/courses/WisdomUntetheredCourse';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -19,7 +18,6 @@ import { SignInScreen } from './features/auth/SignInScreen';
 import { EmailCaptureScreen } from './features/auth/EmailCaptureScreen';
 import { TrialBadge } from './components/ui/TrialBadge';
 import { AnchorButton, NoiseOverlay } from './components/ui/SacredUI';
-import { GlobalSparkles } from './components/ui/GlobalSparkles';
 import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
 import { ThemeToggle, useTheme } from './theme/ThemeSystem';
 import { collection, query, orderBy, limit, onSnapshot, getDocs, doc } from 'firebase/firestore';
@@ -1406,8 +1404,6 @@ export default function UntetheredApp() {
       className="min-h-screen relative overflow-hidden transition-all duration-700 font-sans"
       style={{ background: theme.bgGradient, color: theme.textPrimary }}
     >
-      <LivingBlobs />
-      <GlobalSparkles />
       <NoiseOverlay />
       <div
         style={{
