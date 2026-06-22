@@ -1,7 +1,7 @@
 import {
   collection, doc, setDoc, getDoc, getDocs,
   query, where, orderBy, limit, onSnapshot,
-  updateDoc, addDoc
+  updateDoc, addDoc, serverTimestamp
 } from 'firebase/firestore';
 import type { Unsubscribe } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -25,7 +25,13 @@ export const LIVE_MEDITATION_SESSION_ID = 'live_meditation';
 // get closed, sessions crash, users log out abruptly). Instead each participant
 // writes a `lastSeen` heartbeat; a card is only shown if the heartbeat is fresh.
 export const HEARTBEAT_INTERVAL_MS = 15 * 1000;
-export const PRESENCE_STALE_MS = 45 * 1000; // 3 missed heartbeats → considered gone
+export const PRESENCE_STALE_MS = 60 * 1000; // 4 missed heartbeats → considered gone
+
+// Convert a Firestore Timestamp (server time) to epoch ms. Returns null for a
+// pending/unresolved serverTimestamp or a non-Timestamp value.
+function tsToMillis(v: any): number | null {
+  return v && typeof v.toMillis === 'function' ? v.toMillis() : null;
+}
 // A shared media item older than this is ignored (kills "yesterday's video"
 // auto-playing for whoever joins the permanent room next).
 export const MEDIA_SHARE_MAX_AGE_MS = 3 * 60 * 60 * 1000;
@@ -148,7 +154,7 @@ export const meditationService = {
       lastUpdated: Date.now(),
     }, { merge: true });
     await setDoc(doc(db, 'meditation_sessions', permanentSessionId, 'participants', uid),
-      { uid, displayName, avatarUrl, joinedAt: Date.now(), videoEnabled: false, isPresent: true, lastSeen: Date.now() });
+      { uid, displayName, avatarUrl, joinedAt: Date.now(), videoEnabled: false, isPresent: true, lastSeen: serverTimestamp() });
 
     // Track attendance historically with date-based ID for analytics
     const attendanceId = `${uid}_${new Date().toISOString().slice(0, 10)}`;
@@ -157,10 +163,12 @@ export const meditationService = {
   },
 
   // Keep the participant's presence heartbeat fresh while they're in the room.
+  // Uses serverTimestamp() so every device writes on the SAME clock — presence
+  // must never depend on a phone's possibly-wrong local clock.
   async heartbeat(sessionId: string, uid: string): Promise<void> {
     try {
       await updateDoc(doc(db, 'meditation_sessions', sessionId, 'participants', uid),
-        { lastSeen: Date.now(), isPresent: true });
+        { lastSeen: serverTimestamp(), isPresent: true });
     } catch { /* participant doc may not exist yet — non-critical */ }
   },
 
@@ -198,13 +206,20 @@ export const meditationService = {
   subscribeToParticipants(sessionId: string, cb: (p: MeditationParticipant[]) => void): Unsubscribe {
     const q = query(collection(db, 'meditation_sessions', sessionId, 'participants'), where('isPresent', '==', true));
     return onSnapshot(q, snap => {
-      const now = Date.now();
-      // Only show participants with a fresh heartbeat. Docs left behind by a
-      // crashed tab / hard logout (stale or missing lastSeen) are dropped, so the
-      // permanent room never accumulates ghost cards.
-      const fresh = snap.docs
-        .map(d => d.data() as MeditationParticipant)
-        .filter(p => typeof p.lastSeen === 'number' && now - p.lastSeen < PRESENCE_STALE_MS);
+      const docs = snap.docs.map(d => d.data() as MeditationParticipant);
+      // Reference "now" = the freshest heartbeat in the room (all server time),
+      // NOT the reader's local clock. This makes presence immune to device clock
+      // skew — previously a phone with a wrong clock filtered everyone else out,
+      // so it saw only its own tile (count = 1).
+      const times = docs.map(p => tsToMillis((p as any).lastSeen)).filter((t): t is number => t !== null);
+      const now = times.length ? Math.max(...times) : null;
+      // Drop only docs whose server heartbeat is clearly stale (crashed tab / hard
+      // logout). Pending/transitional heartbeats are kept so nobody flickers out.
+      const fresh = docs.filter(p => {
+        const t = tsToMillis((p as any).lastSeen);
+        if (t === null || now === null) return true;
+        return now - t < PRESENCE_STALE_MS;
+      });
       cb(fresh);
     });
   },

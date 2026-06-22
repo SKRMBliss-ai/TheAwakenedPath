@@ -11,6 +11,8 @@ export function useMeditationSession({ user, active, onNavigate }: Options) {
   const { setSession, setSessionStatus, setParticipants, setMessages, setChatEnabled, setMediaShare, clearMediaShare } = useMeditationStore();
   const joinedAtRef = useRef<number | null>(null);
   const endHandledRef = useRef(false);
+  // Ensures we persist a stale-media clear to Firestore at most once per session.
+  const staleMediaClearedRef = useRef(false);
   // ✅ Fix: initialize from real schedule — NOT 0 — so auto-end never fires on mount
   const [remainingMs, setRemainingMs] = useState(() => getSessionSchedule().remainingMs);
 
@@ -71,6 +73,7 @@ export function useMeditationSession({ user, active, onNavigate }: Options) {
     const roomId = LIVE_MEDITATION_SESSION_ID;
     console.log('[Session] joining room:', roomId, 'as', user.uid);
     setSessionStatus('joining');
+    staleMediaClearedRef.current = false;
     setSession(roomId, schedule.startTime.getTime(), schedule.endTime.getTime());
     try {
       await meditationService.joinSession(
@@ -101,7 +104,14 @@ export function useMeditationSession({ user, active, onNavigate }: Options) {
           } else if (isFresh && ms.type === 'audio' && ms.url) {
             setMediaShare({ type: 'audio', audioUrl: ms.url, sharedBy: ms.sharedBy ?? undefined, isPlaying: ms.isPlaying ?? false, timestamp: ms.timestamp, updatedAt: ms.updatedAt });
           } else {
+            // Stale or invalid share. Clear locally AND persist 'none' to Firestore
+            // so a video shared days ago stops showing for EVERYONE (including any
+            // client still running an older bundle). Guarded to write once.
             clearMediaShare();
+            if (ms.type && ms.type !== 'none' && !staleMediaClearedRef.current) {
+              staleMediaClearedRef.current = true;
+              meditationService.updateMediaShare(roomId, 'none').catch(() => {});
+            }
           }
         }
       });
