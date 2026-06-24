@@ -1386,12 +1386,13 @@ exports.sendMeditationReminders = onSchedule({
             const data = doc.data();
             const emailAddr = data.email;
 
-            // Exclude: missing email, unsubscribed users (checks BOTH field names for safety), hardcoded exclusions
+            // Exclude: missing email, unsubscribed users (checks BOTH field names for safety), hardcoded do-not-contact list
             if (
                 !emailAddr ||
                 data.notificationsEnabled === false ||
                 data.unsubscribed === true ||
-                emailAddr.toLowerCase() === "rashmi.purbey@gmail.com"
+                emailAddr.toLowerCase() === "rashmi.purbey@gmail.com" ||
+                emailAddr.toLowerCase() === "gerhard.niemann@gmail.com"
             ) {
                 skippedCount++;
                 return Promise.resolve();
