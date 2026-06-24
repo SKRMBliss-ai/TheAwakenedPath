@@ -19,7 +19,7 @@ import { cn } from "../lib/utils";
   - Same sacred feeling, different time of day
   
   Persistence: localStorage key "awakened-theme"
-  Default: "dark"
+  Default: "light"
   
   WCAG AAA contrast maintained in both modes.
   ═══════════════════════════════════════════════════════════════════
@@ -34,8 +34,8 @@ interface ThemeContextType {
 // ─── THEME CONTEXT ───────────────────────────────────────────
 
 const ThemeContext = createContext<ThemeContextType>({
-    theme: themes.dark,
-    mode: "dark",
+    theme: themes.light,
+    mode: "light",
     toggle: () => { },
 });
 
@@ -44,7 +44,7 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [mode, setMode] = useState<ThemeMode>("dark");
+    const [mode, setMode] = useState<ThemeMode>("light");
 
     // Load saved preference on mount
     useEffect(() => {
