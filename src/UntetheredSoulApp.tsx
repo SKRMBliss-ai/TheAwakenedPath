@@ -28,12 +28,10 @@ import { MusicMiniPlayer } from './components/ui/MusicMiniPlayer';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { MedalGrid } from './components/domain/MedalGrid';
 import { isAdminEmail, isUnlockedUser, shouldBlockAnalytics } from './config/admin';
-import { DashboardGrid } from './features/practices/DashboardGrid';
 import { QUESTION_META } from './features/practices/TodayPath';
 import { useCourseTracking } from './hooks/useCourseTracking';
 import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
 import { InfoTooltip } from './components/ui/InfoTooltip';
-import { WhatsAppButton } from './components/ui/WhatsAppButton';
 import { VoiceGuidance } from './components/ui/VoiceGuidance';
 import { VoiceService, useVoiceStatus } from './services/voiceService';
 import { usePersistedState } from './hooks/usePersistedState';
@@ -41,26 +39,6 @@ import { useRazorpay } from './hooks/useRazorpay';
 import { MusicHub } from './features/music/MusicHub';
 import { PhonePromptModal } from './components/domain/PhonePromptModal';
 import SacredWelcomeModal from './components/ui/SacredWelcomeModal';
-
-const DashboardActions = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate }: any) => {
-  return (
-    <div className="max-w-4xl mx-auto w-full px-3 sm:px-4">
-      <DashboardGrid
-        userId={user?.uid}
-        progress={progress}
-        weeklyAssignment={weeklyAssignment}
-        onNavigate={(tab, qId, view) => {
-          if (tab === 'wisdom_untethered') {
-            onNavigate('wisdom_untethered', qId, view);
-          } else {
-            onNavigate(tab);
-          }
-        }}
-        isAccessValid={isAccessValid}
-      />
-    </div>
-  );
-};
 
 interface PracticeStep {
   title: string;
@@ -131,7 +109,7 @@ const BREATH_PHASES = [
   { phase: 'rest',   label: 'Rest',   duration: 2000, color: '#7986CB', scale: 1.0,  glow: 0.1 },
 ] as const;
 
-const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyAssignment, onNavigate }: any) => {
+const MobileDashboard = ({ user, onOpenSidebar, weeklyAssignment }: any) => {
   const { mode } = useTheme();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
@@ -301,20 +279,11 @@ const MobileDashboard = ({ user, isAccessValid, onOpenSidebar, progress, weeklyA
           {breathActive ? '✕ End practice' : 'Begin breath practice'}
         </button>
       </div>
-
-      <DashboardActions
-        user={user}
-        isAccessValid={isAccessValid}
-        progress={progress}
-        weeklyAssignment={weeklyAssignment}
-        onNavigate={onNavigate}
-        onViewProgress={() => onNavigate('stats')}
-      />
     </motion.div>
   );
 };
 
-const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNavigate }: any) => {
+const BreadthDesktop = ({ user, weeklyAssignment }: any) => {
   const { mode } = useTheme();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
@@ -468,15 +437,6 @@ const BreadthDesktop = ({ user, isAccessValid, progress, weeklyAssignment, onNav
           </button>
         </div>
       </div>
-
-      <DashboardActions
-        user={user}
-        isAccessValid={isAccessValid}
-        progress={progress}
-        weeklyAssignment={weeklyAssignment}
-        onNavigate={onNavigate}
-        onViewProgress={() => onNavigate('stats')}
-      />
     </motion.div>
   );
 };
@@ -2358,11 +2318,6 @@ export default function UntetheredApp() {
           ? "bottom-28 sm:bottom-24"
           : "bottom-20 sm:bottom-12"
       )}>
-        {/* WhatsApp — hide on mobile in journal to save vertical space */}
-        <div className="hidden sm:block">
-          <WhatsAppButton bottomOffset={0} isInline />
-        </div>
-
         {/* Voice Guidance Avatar — always shown */}
         {voiceGuidanceEnabled && (
           <VoiceGuidance
