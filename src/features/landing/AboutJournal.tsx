@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, useMotionTemplate, useScroll, useTransform } from 'framer-motion';
-import { CrystalPyramid } from '../../components/ui/CrystalPyramid';
+import { PresenceBreath } from '../../components/ui/PresenceBreath';
+import { usePageSeo } from '../../lib/seo';
+import SocialFab from '../../components/ui/SocialFab';
 import {
     ArrowRight,
     Sparkles,
@@ -17,6 +19,7 @@ import presenceGuideImg from '../../assets/presence_guide_cover.png';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { getSuggestion, validateEmailLocally, checkMxRecords } from '../../utils/emailValidation';
 import { db } from '../../firebase';
+import HeroMark from '../../components/site/HeroMark';
 
 const PREMIUM_URL = '/?plan=wisdom_untethered';
 
@@ -50,7 +53,7 @@ async function trackActivity(action: string, details = '', emailOverride?: strin
 }
 
 // Gold border utility for premium look
-const GOLD_BORDER = "border border-[#D4AF37]/30 dark:border-[#D4AF37]/40";
+const GOLD_BORDER = "border border-[#A98A67]/30 dark:border-[#A98A67]/40";
 
 // ─── Theme Hook ──────────────────────────────────────────────────────────────
 const useLandingTheme = () => {
@@ -89,7 +92,7 @@ const handleImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const placeholder = document.createElement('div');
     placeholder.style.cssText = `
         width:100%;height:${Math.max(el.offsetHeight || 200, 200)}px;
-        background:linear-gradient(135deg,rgba(94,196,176,0.12) 0%,rgba(99,102,241,0.08) 100%);
+        background:linear-gradient(135deg,rgba(140,123,138,0.12) 0%,rgba(99,102,241,0.08) 100%);
         border-radius:inherit;
     `;
     el.parentNode?.insertBefore(placeholder, el);
@@ -123,7 +126,10 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
 
     // ── Shared content block (text + CTAs) ──────────────────────────────────
     const ContentText = () => (
-        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left md:pr-10">
+        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left md:pr-10 relative">
+            <div className="absolute top-1/2 left-1/2 md:left-1/3 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-25 z-0">
+                <HeroMark size={500} />
+            </div>
             {/* Badge */}
             <div
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${GOLD_BORDER} text-[10px] tracking-[0.2em] uppercase font-bold mb-6 md:mb-8`}
@@ -133,7 +139,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                     color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                 }}
             >
-                <Sparkles className="w-3 h-3 text-[#D4AF37] animate-pulse" />
+                <Sparkles className="w-3 h-3 text-[#A98A67] animate-pulse" />
                 <span>Mind Gym</span>
             </div>
 
@@ -143,7 +149,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                 style={{ color: isDark ? '#ffffff' : '#0c0910' }}
             >
                 Train your mind.<br />
-                <span className="font-medium" style={{ color: '#5EC4B0' }}>Every day.</span>
+                <span className="font-medium" style={{ color: '#8C7B8A' }}>Every day.</span>
             </h1>
 
             {/* Description */}
@@ -158,7 +164,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
             <div className="mt-8 flex flex-col sm:flex-row gap-3 items-center md:items-start">
                 <a
                     href={PREMIUM_URL}
-                    className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-xl hover:shadow-[#5EC4B0]/30"
+                    className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#8C7B8A] hover:bg-[#8C7B8A] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-xl hover:shadow-[#8C7B8A]/30"
                 >
                     Begin Journey
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -189,8 +195,8 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                     className="relative"
                     style={{
                         background: isDark
-                            ? 'radial-gradient(ellipse at 60% 30%, rgba(94,196,176,0.10) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(99,102,241,0.08) 0%, transparent 55%), #0c0910'
-                            : 'radial-gradient(ellipse at 60% 30%, rgba(94,196,176,0.18) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(99,102,241,0.10) 0%, transparent 55%), #fcf8f2',
+                            ? 'radial-gradient(ellipse at 60% 30%, rgba(140,123,138,0.10) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(99,102,241,0.08) 0%, transparent 55%), #0c0910'
+                            : 'radial-gradient(ellipse at 60% 30%, rgba(140,123,138,0.18) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(99,102,241,0.10) 0%, transparent 55%), #fcf8f2',
                     }}
                 >
                     <motion.div
@@ -199,8 +205,8 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                         transition={{ duration: 0.9, ease: 'easeOut' }}
                         className="relative z-10 flex flex-col items-center px-6 pt-20 pb-14 gap-2"
                     >
-                        {/* Crystal prominently on mobile */}
-                        <CrystalPyramid className="w-full max-w-[260px]" />
+                        {/* Breathing orb prominently on mobile */}
+                        <PresenceBreath size={240} showCaption={false} forceMode={isDark ? 'dark' : 'light'} />
 
                         {/* Text below crystal */}
                         <ContentText />
@@ -213,7 +219,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                         className="relative z-20 mx-4 mt-6 mb-8"
                     >
                         <div className="text-center mb-5 px-2">
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-[#D4AF37] mb-2 font-semibold">
+                            <p className="text-[11px] uppercase tracking-[0.22em] text-[#A98A67] mb-2 font-semibold">
                                 Mind Gym
                             </p>
                             <h2 className="font-[Outfit] text-[clamp(22px,5vw,30px)] font-light tracking-tight text-white">
@@ -232,7 +238,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                         />
                     </motion.div>
 
-                    <div className="mx-6 mb-8 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-transparent" />
+                    <div className="mx-6 mb-8 h-px bg-gradient-to-r from-transparent via-[#A98A67]/70 to-transparent" />
                 </div>
             </section>
         );
@@ -245,8 +251,8 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
             className={`relative w-full border-b ${GOLD_BORDER} overflow-hidden`}
             style={{
                 background: isDark
-                    ? 'radial-gradient(ellipse at 20% 25%, rgba(94,196,176,0.08) 0%, transparent 52%), radial-gradient(ellipse at 80% 15%, rgba(99,102,241,0.08) 0%, transparent 55%), #0c0910'
-                    : 'radial-gradient(ellipse at 20% 25%, rgba(94,196,176,0.15) 0%, transparent 52%), radial-gradient(ellipse at 80% 15%, rgba(99,102,241,0.12) 0%, transparent 55%), #fcf8f2',
+                    ? 'radial-gradient(ellipse at 20% 25%, rgba(140,123,138,0.08) 0%, transparent 52%), radial-gradient(ellipse at 80% 15%, rgba(99,102,241,0.08) 0%, transparent 55%), #0c0910'
+                    : 'radial-gradient(ellipse at 20% 25%, rgba(140,123,138,0.15) 0%, transparent 52%), radial-gradient(ellipse at 80% 15%, rgba(99,102,241,0.12) 0%, transparent 55%), #fcf8f2',
             }}
         >
             <motion.div
@@ -261,9 +267,9 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                     <div className="flex-1 min-w-0 flex flex-col items-start text-left">
                         <ContentText />
                     </div>
-                    {/* Crystal — fixed-width right column, never clips */}
+                    {/* Breathing orb — fixed-width right column */}
                     <div className="flex-shrink-0 w-[340px] xl:w-[400px] flex items-center justify-center">
-                        <CrystalPyramid className="w-full" />
+                        <PresenceBreath size={320} showCaption={false} forceMode={isDark ? 'dark' : 'light'} />
                     </div>
                 </div>
             </motion.div>
@@ -275,7 +281,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                 className="relative z-30 px-8 xl:px-16 pb-12"
             >
                 <div className="max-w-6xl mx-auto text-center mb-6">
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-[#D4AF37] mb-3 font-semibold">
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-[#A98A67] mb-3 font-semibold">
                         Mind Gym
                     </p>
                     <h2 className="font-[Outfit] text-[clamp(26px,4vw,38px)] font-light tracking-tight text-black dark:text-white">
@@ -285,7 +291,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                         Journal, reflect, track growth, and stay present through every part of your day.
                     </p>
                 </div>
-                <div className="max-w-6xl mx-auto mb-6 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-transparent" />
+                <div className="max-w-6xl mx-auto mb-6 h-px bg-gradient-to-r from-transparent via-[#A98A67]/70 to-transparent" />
                 <motion.div
                     className="max-w-6xl mx-auto mt-6 rounded-[34px] overflow-hidden border border-white/10 shadow-[0_38px_100px_-45px_rgba(0,0,0,0.85)]"
                     style={{ scale: bgScale, filter: imageFilter, opacity: imageOpacity }}
@@ -339,10 +345,10 @@ const STEPS = [
 
 // Per-step color palette — mirrors the "Your Daily Journey" infographic
 const STEP_COLORS = [
-    { accent: '#D4AF37', glow: 'rgba(212,175,55,0.35)', bg: 'rgba(212,175,55,0.08)', border: 'rgba(212,175,55,0.25)', label: 'Learn' },
+    { accent: '#A98A67', glow: 'rgba(169,138,103,0.35)', bg: 'rgba(169,138,103,0.08)', border: 'rgba(169,138,103,0.25)', label: 'Learn' },
     { accent: '#9B6DFF', glow: 'rgba(155,109,255,0.35)', bg: 'rgba(155,109,255,0.08)', border: 'rgba(155,109,255,0.25)', label: 'Practice' },
     { accent: '#F4779A', glow: 'rgba(244,119,154,0.35)', bg: 'rgba(244,119,154,0.08)', border: 'rgba(244,119,154,0.25)', label: 'Reflect' },
-    { accent: '#5EC49A', glow: 'rgba(94,196,154,0.35)', bg: 'rgba(94,196,154,0.08)', border: 'rgba(94,196,154,0.25)', label: 'Live It' },
+    { accent: '#7A5F44', glow: 'rgba(122,95,68,0.35)', bg: 'rgba(122,95,68,0.08)', border: 'rgba(122,95,68,0.25)', label: 'Live It' },
 ];
 
 // ─── Inline YouTube player: thumbnail → iframe on click ──────────────────────
@@ -360,7 +366,7 @@ function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
         >
             {/* Label */}
             <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="h-px flex-1 max-w-[60px] bg-[#D4AF37]/30" />
+                <div className="h-px flex-1 max-w-[60px] bg-[#A98A67]/30" />
                 <div className="flex items-center gap-2">
                     <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-red-500">
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
@@ -369,12 +375,12 @@ function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
                         Demo · The 4-Step Daily Process
                     </span>
                 </div>
-                <div className="h-px flex-1 max-w-[60px] bg-[#D4AF37]/30" />
+                <div className="h-px flex-1 max-w-[60px] bg-[#A98A67]/30" />
             </div>
 
             {/* Player */}
             <div
-                className="group relative rounded-[20px] overflow-hidden shadow-[0_20px_60px_-10px_rgba(0,0,0,0.25)] border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 transition-colors duration-500"
+                className="group relative rounded-[20px] overflow-hidden shadow-[0_20px_60px_-10px_rgba(0,0,0,0.25)] border border-[#A98A67]/20 hover:border-[#A98A67]/40 transition-colors duration-500"
                 style={{ aspectRatio: '16/9' }}
             >
                 {playing ? (
@@ -400,7 +406,7 @@ function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
                             aria-label="Play video"
                             className="absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer"
                         >
-                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.5)] group-hover:scale-110 group-hover:shadow-[0_0_70px_rgba(212,175,55,0.7)] group-hover:border-[#D4AF37]/60 transition-all duration-500">
+                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-[0_0_40px_rgba(169,138,103,0.5)] group-hover:scale-110 group-hover:shadow-[0_0_70px_rgba(169,138,103,0.7)] group-hover:border-[#A98A67]/60 transition-all duration-500">
                                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 md:w-9 md:h-9 text-white translate-x-0.5">
                                     <path d="M8 5v14l11-7z" />
                                 </svg>
@@ -446,7 +452,7 @@ const HowItWorks = ({ theme }: { theme: 'dark' | 'light' }) => (
         <div className="max-w-5xl mx-auto">
             {/* Heading */}
             <div className="text-center max-w-2xl mx-auto mb-14">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-[#D4AF37] mb-3 font-semibold">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#A98A67] mb-3 font-semibold">
                     How it works
                 </p>
                 <h2 className="font-[Outfit] text-[clamp(26px,4vw,38px)] font-light tracking-tight text-black dark:text-white">
@@ -486,7 +492,7 @@ const HowItWorks = ({ theme }: { theme: 'dark' | 'light' }) => (
                         >
                             {/* Background image fades on hover */}
                             <div className="absolute inset-0 z-0 opacity-100 group-hover:opacity-0 transition-opacity duration-500 overflow-hidden">
-                                <img src={s.image} alt="" loading="lazy" onError={handleImgError} className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-1000" style={{minHeight:120,background:"rgba(94,196,176,0.08)"}} />
+                                <img src={s.image} alt="" loading="lazy" onError={handleImgError} className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-1000" style={{minHeight:120,background:"rgba(140,123,138,0.08)"}} />
                                 <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${color.glow}, transparent 60%)` }} />
                             </div>
 
@@ -596,7 +602,7 @@ const JournalFeatures = () => (
     <section className={`px-6 py-12 md:py-16 border-b ${GOLD_BORDER}`}>
         <div className="max-w-6xl mx-auto">
             <div className="text-center max-w-2xl mx-auto mb-10">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-[#D4AF37] mb-3 font-semibold">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#A98A67] mb-3 font-semibold">
                     Inside the Journal
                 </p>
                 <h2 className="font-[Outfit] text-[clamp(26px,4vw,36px)] font-light tracking-tight text-black dark:text-white">
@@ -613,11 +619,11 @@ const JournalFeatures = () => (
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: '-40px' }}
                             transition={{ duration: 0.4, delay: i * 0.04 }}
-                            className={`relative aspect-square rounded-[32px] bg-black/[0.02] dark:bg-white/[0.03] border-[4px] border-white dark:border-white/5 hover:border-[#D4AF37]/40 transition-all group flex flex-col items-center justify-center text-center overflow-hidden shadow-2xl ${i % 3 === 0 ? 'rotate-1' : i % 3 === 1 ? '-rotate-1' : 'rotate-0'} hover:rotate-0 duration-500 animate-heartbeat card-surge`}
+                            className={`relative aspect-square rounded-[32px] bg-black/[0.02] dark:bg-white/[0.03] border-[4px] border-white dark:border-white/5 hover:border-[#A98A67]/40 transition-all group flex flex-col items-center justify-center text-center overflow-hidden shadow-2xl ${i % 3 === 0 ? 'rotate-1' : i % 3 === 1 ? '-rotate-1' : 'rotate-0'} hover:rotate-0 duration-500 animate-heartbeat card-surge`}
                         >
                             {/* Background Image - visible by default, hidden on hover */}
                             <div className="absolute inset-0 z-0 opacity-100 group-hover:opacity-0 transition-opacity duration-500 overflow-hidden">
-                                <img src={f.image} alt="" loading="lazy" onError={handleImgError} className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-1000" style={{minHeight:120,background:"rgba(94,196,176,0.08)"}} />
+                                <img src={f.image} alt="" loading="lazy" onError={handleImgError} className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-1000" style={{minHeight:120,background:"rgba(140,123,138,0.08)"}} />
                                 <div className="absolute inset-0 bg-black/10 dark:bg-black/30" />
                             </div>
  
@@ -713,16 +719,16 @@ const JournalDownload = () => {
     };
 
     return (
-        <section id="download" className={`px-6 py-12 md:py-16 border-b ${GOLD_BORDER} bg-[#5EC4B0]/[0.03] dark:bg-[#5EC4B0]/[0.05]`}>
+        <section id="download" className={`px-6 py-12 md:py-16 border-b ${GOLD_BORDER} bg-[#8C7B8A]/[0.03] dark:bg-[#8C7B8A]/[0.05]`}>
             <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-12">
                 <div className="flex-1 text-center md:text-left">
-                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#5EC4B0]/10 ${GOLD_BORDER} text-[10px] tracking-[0.2em] uppercase font-semibold text-[#5EC4B0] mb-6`}>
+                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#8C7B8A]/10 ${GOLD_BORDER} text-[10px] tracking-[0.2em] uppercase font-semibold text-[#8C7B8A] mb-6`}>
                         <BookOpen className="w-3 h-3" />
                         Free Resource
                     </div>
                     <h2 className="font-[Outfit] text-[clamp(28px,4vw,40px)] font-light tracking-tight text-black dark:text-white leading-[1.1]">
                         The 30-Day <br />
-                        <span className="font-medium text-[#5EC4B0]">Presence Guide.</span>
+                        <span className="font-medium text-[#8C7B8A]">Presence Guide.</span>
                     </h2>
                     <p className="mt-6 text-base text-black/60 dark:text-white/65 leading-relaxed">
                         A beautiful, printable 30-day guided journal to help you begin the practice of witnessing your thoughts. 
@@ -734,7 +740,7 @@ const JournalDownload = () => {
                             <form onSubmit={handleGrantAccess} className="max-w-md">
                                 <div className={`flex flex-col sm:flex-row gap-2 p-1.5 rounded-full bg-white dark:bg-white/5 border transition-colors shadow-sm ${
                                     errorMsg ? 'border-red-400/50' : suggestion ? 'border-amber-400/50' : GOLD_BORDER
-                                } focus-within:border-[#5EC4B0]/50`}>
+                                } focus-within:border-[#8C7B8A]/50`}>
                                     <input
                                         type="text"
                                         value={email}
@@ -747,7 +753,7 @@ const JournalDownload = () => {
                                     <button
                                         type="submit"
                                         disabled={status === 'submitting' || status === 'checking'}
-                                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] disabled:opacity-50 text-[#0c0910] text-sm font-semibold tracking-wide transition-all shadow-sm group"
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#8C7B8A] hover:bg-[#8C7B8A] disabled:opacity-50 text-[#0c0910] text-sm font-semibold tracking-wide transition-all shadow-sm group"
                                     >
                                         {status === 'checking' ? (
                                             <><Loader2 className="w-4 h-4 animate-spin" /><span>Verifying…</span></>
@@ -787,7 +793,7 @@ const JournalDownload = () => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={handleDownloadClick}
-                                    className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-[#5EC4B0] hover:bg-[#4FB3A0] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-lg hover:shadow-[#5EC4B0]/20"
+                                    className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-[#8C7B8A] hover:bg-[#8C7B8A] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-lg hover:shadow-[#8C7B8A]/20"
                                 >
                                     Download PDF Journal
                                     <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
@@ -823,11 +829,11 @@ const Footer = () => (
     <footer className={`px-6 py-8 border-t ${GOLD_BORDER}`}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-black/40 dark:text-white/40">
             <div className="flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <Sparkles className="w-3.5 h-3.5 text-[#A98A67]" />
                 <span className="tracking-wide">Mind Gym</span>
             </div>
             <div className="flex items-center gap-5">
-                <a href="/" className="hover:text-black/70 dark:hover:text-white/70 transition-colors">Journal</a>
+                <a href="/mindgym" className="hover:text-black/70 dark:hover:text-white/70 transition-colors">Journal</a>
                 <a href="mailto:connect@skrmblissai.in" className="hover:text-black/70 dark:hover:text-white/70 transition-colors">Contact</a>
             </div>
         </div>
@@ -838,26 +844,7 @@ const Footer = () => (
 // ─── Floating Actions ────────────────────────────────────────────────────────
 const FloatingActions = () => {
     return (
-        <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-3">
-            {/* WhatsApp Floating Button */}
-            <motion.a
-                href="https://wa.me/918217581238"
-                target="_blank"
-                rel="noopener noreferrer"
-                initial={{ opacity: 0, scale: 0.8, x: 20 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="w-12 h-12 rounded-full bg-[#25D366] shadow-lg flex items-center justify-center text-white cursor-pointer"
-                title="Chat on WhatsApp"
-            >
-                <div className="w-6 h-6">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.801.983 3.826 1.504 5.885 1.505h.008c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                    </svg>
-                </div>
-            </motion.a>
-
+        <div className="fixed bottom-28 right-6 z-[100] flex flex-col gap-3">
             {/* Subscribe Floating Button */}
             <motion.a
                 href="#download"
@@ -870,7 +857,7 @@ const FloatingActions = () => {
                 transition={{ delay: 0.1 }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                className="w-12 h-12 rounded-full bg-[#D4AF37] shadow-lg flex items-center justify-center text-[#0c0910] cursor-pointer"
+                className="w-12 h-12 rounded-full bg-[#A98A67] shadow-lg flex items-center justify-center text-[#0c0910] cursor-pointer"
                 title="Get Daily Reminders"
             >
                 <Bell className="w-5 h-5 focus:animate-ring" />
@@ -896,13 +883,26 @@ const HEARTBEAT_KEYFRAMES = `
     transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s cubic-bezier(0.23, 1, 0.32, 1);
   }
   .card-surge:hover {
-    box-shadow: 0 0 50px rgba(94, 196, 176, 0.5) !important;
+    box-shadow: 0 0 50px rgba(140,123,138, 0.5) !important;
     transform: translateY(-4px) scale(1.01) translateZ(0) !important;
   }
 `;
 
 export default function AboutJournal() {
     const { theme, toggle } = useLandingTheme();
+
+    usePageSeo({
+        title: 'About Mind Gym — Your Daily Practice for a Quieter Mind',
+        description: 'Mind Gym is a daily practice for presence, emotional clarity, and a calmer mind — guided courses, journaling, breathwork, and live wellness sessions.',
+        url: 'https://www.skrmblissai.in/aboutmindgym',
+        jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'Mind Gym',
+            url: 'https://www.skrmblissai.in',
+            description: 'A daily practice for a quieter mind — guided courses, journaling, breathwork, and live wellness sessions.',
+        },
+    });
 
     // Track page visit once on mount
     useEffect(() => {
@@ -919,21 +919,21 @@ export default function AboutJournal() {
             <style>{HEARTBEAT_KEYFRAMES}</style>
             <header className="fixed top-0 left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-black/10 dark:bg-black/20 backdrop-blur-md border-b border-white/5">
                 <a href="/aboutmindgym" className="flex items-center gap-3 text-black/90 dark:text-white/95 hover:text-black dark:hover:text-white transition-all group">
-                    <div className={`w-9 h-9 rounded-full bg-[#D4AF37]/15 ${GOLD_BORDER} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                    <div className={`w-9 h-9 rounded-full bg-[#A98A67]/15 ${GOLD_BORDER} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                        <Sparkles className="w-4 h-4 text-[#A98A67]" />
                     </div>
                 </a>
                 <div className="flex items-center gap-8">
                     <button 
                         onClick={toggle}
-                        className={`p-2.5 rounded-xl bg-white/5 dark:bg-white/10 ${GOLD_BORDER} text-black/80 dark:text-white/80 hover:text-[#D4AF37] transition-all hover:scale-110`}
+                        className={`p-2.5 rounded-xl bg-white/5 dark:bg-white/10 ${GOLD_BORDER} text-black/80 dark:text-white/80 hover:text-[#A98A67] transition-all hover:scale-110`}
                         aria-label="Toggle theme"
                     >
                         {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                     </button>
                     <a
-                        href="/"
-                        className="text-sm text-black/80 dark:text-white/85 hover:text-[#5EC4B0] transition-colors font-bold tracking-wide uppercase"
+                        href="/mindgym"
+                        className="text-sm text-black/80 dark:text-white/85 hover:text-[#8C7B8A] transition-colors font-bold tracking-wide uppercase"
                     >
                         Sign in
                     </a>
@@ -947,6 +947,7 @@ export default function AboutJournal() {
             <JournalDownload />
             <Footer />
             <FloatingActions />
+            <SocialFab onTrack={(e) => trackActivity(e, 'floating')} />
         </div>
     );
 }

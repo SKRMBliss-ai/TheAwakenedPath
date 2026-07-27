@@ -213,7 +213,7 @@ export function Chap1Question4({ onOpenJournal }: Chap1Question4Props) {
   return (
     <div className={cn(styles.container, "scroll-container")} ref={containerRef}>
       <motion.div 
-        className="fixed top-0 left-0 right-0 h-[2px] bg-[#B8973A] z-[110] origin-left" 
+        className="fixed top-0 left-0 right-0 h-[2px] bg-[#7A5F44] z-[110] origin-left" 
         style={{ scaleX }} 
       />
       

@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.skrmblissai.in/mindgym/sitemap.xml
+# Served from /public, so the sitemap lives at the site root. The previous
+# /mindgym/sitemap.xml path hit the SPA fallback and returned HTML, which
+# crawlers reject — the sitemap was effectively invisible.
+Sitemap: https://www.skrmblissai.in/sitemap.xml

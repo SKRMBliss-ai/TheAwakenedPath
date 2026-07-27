@@ -192,8 +192,8 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                             <div style={{
                                 marginTop: 8, display: "flex", alignItems: "center", gap: 5,
                             }}>
-                                <span style={{ fontSize: 10, color: "rgba(171,206,201,0.3)" }}>✦</span>
-                                <span style={{ fontSize: 11, color: "rgba(171,206,201,0.25)" }}>
+                                <span style={{ fontSize: 10, color: "rgba(207,194,205,0.3)" }}>✦</span>
+                                <span style={{ fontSize: 11, color: "rgba(207,194,205,0.25)" }}>
                                     Witness reflection — tap to read
                                 </span>
                             </div>
@@ -233,8 +233,8 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                                     {hasReflection && (
                                         <div style={{
                                             padding: "12px 14px", borderRadius: 12,
-                                            background: "rgba(171,206,201,0.03)",
-                                            borderLeft: "3px solid rgba(171,206,201,0.12)",
+                                            background: "rgba(207,194,205,0.03)",
+                                            borderLeft: "3px solid rgba(207,194,205,0.12)",
                                         }}>
                                             <div style={{
                                                 display: "flex", alignItems: "center", gap: 5, marginBottom: 6,
@@ -242,11 +242,11 @@ function MiniEntryCard({ entry, isOnly }: { entry: any; isOnly: boolean }) {
                                                 <span style={{ fontSize: 12 }}>✦</span>
                                                 <span style={{
                                                     fontSize: 10, fontWeight: 600, letterSpacing: "0.06em",
-                                                    textTransform: "uppercase", color: "rgba(171,206,201,0.35)",
+                                                    textTransform: "uppercase", color: "rgba(207,194,205,0.35)",
                                                 }}>WITNESS</span>
                                             </div>
                                             <p style={{
-                                                fontSize: 14, color: "rgba(171,206,201,0.55)",
+                                                fontSize: 14, color: "rgba(207,194,205,0.55)",
                                                 fontFamily: "Georgia, serif", lineHeight: 1.7, fontStyle: "italic",
                                                 whiteSpace: "pre-wrap"
                                             }}>{entry.reflections}</p>

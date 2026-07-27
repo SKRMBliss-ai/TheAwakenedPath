@@ -1,0 +1,2886 @@
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Play,
+  Check,
+  X,
+  ChevronDown,
+  Sparkles,
+  ArrowRight,
+} from 'lucide-react';
+import { getAuth } from 'firebase/auth';
+import { useRazorpay } from '../../hooks/useRazorpay';
+import { usePageSeo } from '../../lib/seo';
+import PriceSlider from '../../components/ui/PriceSlider';
+import { useSiteTheme } from '../../lib/siteTheme';
+import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
+import SacredGeometry from './components/SacredGeometry';
+import CursorGlow from './components/CursorGlow';
+import HeroMark from '../../components/site/HeroMark';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Emotion & Feelings Course Page — /feelingsandemotioncourse
+// Ultra-premium, editorial course experience inspired by Apple, MasterClass & Calm.
+// Fully responsive, accessible, with progressive sacred geometry reveal.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SERIF = "'Cormorant Garamond', Georgia, serif";
+const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
+
+const FS = (file: string) =>
+  `https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2Fsite%2F${encodeURIComponent(file)}?alt=media`;
+
+const FS_ROOT = (file: string) =>
+  `https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2F${encodeURIComponent(file)}?alt=media`;
+
+const HERO_PORTRAIT = FS('sim-portrait.webp');
+const SIM_PROFILE   = FS('SimKatyalProfile.webp');
+const COURSE_BANNER = FS('course-banner.webp');
+const JOURNAL_IMG   = FS('reflection-journal.webp');
+const CLOSING_BANNER = FS_ROOT('ClosingBanner.webp');
+
+const LOG_URL = 'https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity';
+
+function trackActivity(action: string, details = '', emailOverride?: string) {
+  try {
+    const email = emailOverride || localStorage.getItem('journal_access_email') || 'anonymous';
+    fetch(LOG_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        action,
+        page: '/feelingsandemotioncourse',
+        details,
+        source: typeof document !== 'undefined' ? document.referrer || 'direct' : 'direct',
+      }),
+    }).catch(() => {});
+  } catch (_) { /* silent */ }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA STRUCTURES
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 1. Symptom / Conditioning Cards
+interface SymptomCard {
+  id: string;
+  icon: string; // SVG path
+  title: string;
+  sub: string;
+  insightTitle: string;
+  insightText: string;
+  moduleLink: string;
+}
+
+const SYMPTOMS: SymptomCard[] = [
+  {
+    id: 'replay',
+    icon: 'M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5 M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16 M21 21v-5h-5',
+    title: 'I replay conversations',
+    sub: 'again and again.',
+    insightTitle: 'The Replaying Loop',
+    insightText: 'Replaying past moments is the ego’s attempt to rewrite history and regain lost control. In Module 2, you learn how to spot this mental movie the moment it starts and return to the present.',
+    moduleLink: 'Module 2: Awareness',
+  },
+  {
+    id: 'shutdown',
+    icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M19 8v6 M22 11h-6',
+    title: 'I shut down or overreact',
+    sub: 'without meaning to.',
+    insightTitle: 'Nervous System Hijack',
+    insightText: 'When an unaddressed past trigger is tapped, your fight-or-flight system takes the wheel before your rational mind can speak. Module 3 teaches you the somatic anatomy of triggers.',
+    moduleLink: 'Module 3: Understanding Triggers',
+  },
+  {
+    id: 'conflict',
+    icon: 'M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10Z M12 8v5 M12 16h.01',
+    title: 'I avoid conflict',
+    sub: 'and people please.',
+    insightTitle: 'The Fawn Response',
+    insightText: 'People-pleasing is a protective habit formed when staying quiet felt safer than standing in your truth. In Module 5, you learn the art of non-resistance and clear inner boundaries.',
+    moduleLink: 'Module 5: Acceptance',
+  },
+  {
+    id: 'guilt',
+    icon: 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6 11 4.6a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z',
+    title: 'I feel guilty afterwards',
+    sub: 'no matter what.',
+    insightTitle: 'The Second Wave of Suffering',
+    insightText: 'First comes the emotion, then comes judgment for having the emotion. This double burden causes 90% of chronic distress. Module 4 shows you how to dissolve self-judgment.',
+    moduleLink: 'Module 4: Recognition',
+  },
+  {
+    id: 'stuck',
+    icon: 'M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z',
+    title: 'I feel stuck in patterns',
+    sub: 'for years.',
+    insightTitle: 'Embodied Emotional Memory',
+    insightText: 'Unprocessed emotions become stored energy in the body, repeating the same life scenes. Module 6 provides guided somatic practices to safely release old trapped energy.',
+    moduleLink: 'Module 6: Emotional Freedom',
+  },
+];
+
+// 2. Conditioning Model Steps
+const CONDITIONING_MODEL = [
+  { step: 1, title: 'Event', sub: 'Something happens', icon: '⚡' },
+  { step: 2, title: 'Emotion', sub: 'We feel it deeply', icon: '🌊' },
+  { step: 3, title: 'Suppression', sub: 'We push it down', icon: '🔒' },
+  { step: 4, title: 'Pattern', sub: 'It repeats', icon: '🔄' },
+  { step: 5, title: 'Identity', sub: 'It defines us', icon: '🎭' },
+  { step: 6, title: 'Suffering', sub: 'We lose our freedom', icon: '⛈️' },
+];
+
+function ConditioningWatercolorIcon({ step }: { step: number }) {
+  if (step === 1) {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+        <defs>
+          <radialGradient id="wc1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ECE2D3" />
+            <stop offset="65%" stopColor="#D9C9B4" />
+            <stop offset="100%" stopColor="#C2AF98" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#wc1)" />
+        <path d="M 16 72 L 44 36 L 64 64 L 78 46 L 90 72 Z" fill="#8C7A6B" opacity="0.65" />
+        <path d="M 28 72 L 52 42 L 72 72 Z" fill="#6A594C" opacity="0.8" />
+        <ellipse cx="50" cy="64" rx="40" ry="8" fill="#ECE2D3" opacity="0.45" />
+      </svg>
+    );
+  }
+  if (step === 2) {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+        <defs>
+          <radialGradient id="wc2" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#E9DEC9" />
+            <stop offset="65%" stopColor="#D6C5AD" />
+            <stop offset="100%" stopColor="#BFAF96" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#wc2)" />
+        <path d="M 20 66 C 32 66, 38 46, 52 38 C 64 30, 74 36, 72 46 C 70 54, 60 56, 52 50 C 46 46, 46 40, 50 38" fill="none" stroke="#7A6856" strokeWidth="4.5" strokeLinecap="round" opacity="0.85" />
+        <path d="M 15 72 Q 45 68 85 72" stroke="#8C7B6A" strokeWidth="2.5" fill="none" opacity="0.5" />
+      </svg>
+    );
+  }
+  if (step === 3) {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+        <defs>
+          <radialGradient id="wc3" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#E2D7C8" />
+            <stop offset="65%" stopColor="#CEBFAB" />
+            <stop offset="100%" stopColor="#B6A592" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#wc3)" />
+        <path d="M 32 38 C 30 32, 40 25, 48 28 C 54 22, 66 24, 70 30 C 76 30, 80 38, 74 42 C 70 45, 32 45, 32 38 Z" fill="#756758" opacity="0.75" />
+        <circle cx="50" cy="58" r="14" fill="#5C4E42" opacity="0.85" />
+        <rect x="48" y="68" width="4" height="10" fill="#4A3D33" rx="2" />
+      </svg>
+    );
+  }
+  if (step === 4) {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+        <defs>
+          <radialGradient id="wc4" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#EDE4D5" />
+            <stop offset="65%" stopColor="#DBCBBB" />
+            <stop offset="100%" stopColor="#C4B29E" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#wc4)" />
+        <circle cx="50" cy="50" r="26" stroke="#8C7966" strokeWidth="1.5" fill="none" opacity="0.7" />
+        <circle cx="40" cy="50" r="18" stroke="#7A6856" strokeWidth="1.2" fill="none" opacity="0.55" />
+        <circle cx="60" cy="50" r="18" stroke="#7A6856" strokeWidth="1.2" fill="none" opacity="0.55" />
+        <circle cx="50" cy="40" r="18" stroke="#7A6856" strokeWidth="1.2" fill="none" opacity="0.55" />
+        <circle cx="50" cy="60" r="18" stroke="#7A6856" strokeWidth="1.2" fill="none" opacity="0.55" />
+        <circle cx="50" cy="50" r="5" fill="#8C7966" opacity="0.85" />
+      </svg>
+    );
+  }
+  if (step === 5) {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+        <defs>
+          <radialGradient id="wc5" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#E7DCD0" />
+            <stop offset="65%" stopColor="#D6C5B3" />
+            <stop offset="100%" stopColor="#C0AF9C" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#wc5)" />
+        <circle cx="50" cy="38" r="11" fill="#665648" opacity="0.85" />
+        <path d="M 28 74 C 28 58, 38 52, 50 52 C 62 52, 72 58, 72 74 Z" fill="#665648" opacity="0.85" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+      <defs>
+        <radialGradient id="wc6" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#DAD0C1" />
+          <stop offset="65%" stopColor="#C5B6A4" />
+          <stop offset="100%" stopColor="#AA9A88" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="48" fill="url(#wc6)" />
+      <path d="M 20 76 L 50 48 L 80 76 Z" fill="#4D4036" opacity="0.9" />
+      <path d="M 30 36 C 26 30, 36 22, 46 25 C 52 18, 68 20, 72 28 C 80 28, 84 38, 76 44 C 70 48, 30 48, 30 36 Z" fill="#3D322A" opacity="0.85" />
+    </svg>
+  );
+}
+
+function SymptomWatercolorIcon({ symptomId }: { symptomId: string }) {
+  if (symptomId === 'replay') {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+        <defs>
+          <radialGradient id="sw1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ECE3D4" />
+            <stop offset="70%" stopColor="#DACBBA" />
+            <stop offset="100%" stopColor="#C4B29E" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#sw1)" />
+        <path d="M 50 25 A 25 25 0 1 1 25 50 A 18 18 0 1 1 50 32 A 12 12 0 1 1 38 50" fill="none" stroke="#7A6856" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
+        <circle cx="50" cy="50" r="4" fill="#7A6856" opacity="0.9" />
+      </svg>
+    );
+  }
+  if (symptomId === 'react') {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+        <defs>
+          <radialGradient id="sw2" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#EADBCE" />
+            <stop offset="70%" stopColor="#D5C3B3" />
+            <stop offset="100%" stopColor="#BFAF9D" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#sw2)" />
+        <path d="M 32 70 L 32 46 A 18 18 0 0 1 68 46 L 68 70 Z" fill="#665648" opacity="0.8" />
+        <path d="M 40 70 L 40 50 A 10 10 0 0 1 60 50 L 60 70 Z" fill="#EADBCE" opacity="0.6" />
+      </svg>
+    );
+  }
+  if (symptomId === 'conflict') {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+        <defs>
+          <radialGradient id="sw3" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#EAE0D3" />
+            <stop offset="70%" stopColor="#D7C9B8" />
+            <stop offset="100%" stopColor="#C0B09E" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#sw3)" />
+        <path d="M 50 30 C 40 45, 30 55, 50 72 C 70 55, 60 45, 50 30 Z" fill="#7A6958" opacity="0.7" />
+        <path d="M 50 42 C 44 52, 38 60, 50 70 C 62 60, 56 52, 50 42 Z" fill="#EAE0D3" opacity="0.5" />
+      </svg>
+    );
+  }
+  if (symptomId === 'guilt') {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+        <defs>
+          <radialGradient id="sw4" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#EBDDD4" />
+            <stop offset="70%" stopColor="#D7C6BB" />
+            <stop offset="100%" stopColor="#BCAAA0" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#sw4)" />
+        <path d="M 50 68 C 30 54, 24 38, 36 28 C 44 22, 50 30, 50 30 C 50 30, 56 22, 64 28 C 76 38, 70 54, 50 68 Z" fill="#755B53" opacity="0.8" />
+      </svg>
+    );
+  }
+  if (symptomId === 'stuck') {
+    return (
+      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+        <defs>
+          <radialGradient id="sw5" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ECE3D5" />
+            <stop offset="70%" stopColor="#DACBB9" />
+            <stop offset="100%" stopColor="#C3B29E" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#sw5)" />
+        <circle cx="50" cy="50" r="32" stroke="#7A6856" strokeWidth="2" fill="none" opacity="0.5" />
+        <circle cx="50" cy="50" r="22" stroke="#7A6856" strokeWidth="2" fill="none" strokeDasharray="30 10" opacity="0.7" />
+        <circle cx="50" cy="50" r="12" stroke="#7A6856" strokeWidth="2" fill="none" opacity="0.85" />
+        <circle cx="50" cy="50" r="4" fill="#7A6856" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ borderRadius: '50%', display: 'block' }}>
+      <defs>
+        <radialGradient id="sw6" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#F5EBD9" />
+          <stop offset="70%" stopColor="#E6D4B7" />
+          <stop offset="100%" stopColor="#D4BF9A" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="48" fill="url(#sw6)" />
+      <path d="M 50 24 L 54 44 L 74 48 L 54 52 L 50 72 L 46 52 L 26 48 L 46 44 Z" fill="#99743D" opacity="0.85" />
+    </svg>
+  );
+}
+
+// 3. 7 Chapters
+interface Chapter {
+  num: number;
+  epLabel: string;
+  badgeKicker: string;
+  title: string;
+  artworkTitle: string;
+  desc: string;
+  duration: string;
+  keyPractice: string;
+  bgGradient: string;
+  imgUrl: string;
+  teaserVideoId?: string;
+  teaserStartTime?: number;
+}
+
+const CHAPTERS: Chapter[] = [
+  {
+    num: 1,
+    epLabel: 'EP 1',
+    badgeKicker: 'BECOME AWARE',
+    title: 'What Are Feelings and Emotions?',
+    artworkTitle: 'Awareness',
+    desc: 'We begin by understanding what feelings and emotions really are — not just in theory, but in how they show up in our everyday lives.',
+    duration: 'Available Immediately',
+    keyPractice: 'The 5-Minute Presence Anchor',
+    bgGradient: 'linear-gradient(135deg, #3D2D1E 0%, #1E150D 100%)',
+    imgUrl: FS_ROOT('Episode1.webp'),
+    teaserVideoId: 'fTrY9KMLhAo',
+  },
+  {
+    num: 2,
+    epLabel: 'EP 2',
+    badgeKicker: 'UNDERSTAND CHILDHOOD',
+    title: 'How Childhood Shapes Our Emotional Patterns',
+    artworkTitle: 'Understand',
+    desc: 'We look back at our childhood and explore the programming behind our emotional responses that still run the show today.',
+    duration: 'Available Immediately',
+    keyPractice: 'Childhood Conditioning Mapping',
+    bgGradient: 'linear-gradient(135deg, #382A1B 0%, #1A120B 100%)',
+    imgUrl: FS_ROOT('Episode2.webp'),
+    teaserVideoId: 'pES3x5XlJF0',
+    teaserStartTime: 90,
+  },
+  {
+    num: 3,
+    epLabel: 'EP 3',
+    badgeKicker: 'RECOGNIZE YOUR TRIGGERS',
+    title: 'Why The Past Still Controls Us',
+    artworkTitle: 'Recognize',
+    desc: "How random triggers — songs, tones, looks — can spark intense reactions from the past that we don't even realize are running us.",
+    duration: 'Available Immediately',
+    keyPractice: 'Trigger Deconstruction Inquiry',
+    bgGradient: 'linear-gradient(135deg, #33281E 0%, #17110B 100%)',
+    imgUrl: FS_ROOT('Episode3.webp'),
+  },
+  {
+    num: 4,
+    epLabel: 'EP 4',
+    badgeKicker: 'SEE YOUR ESCAPES',
+    title: 'Why We Keep Avoiding Our Feelings',
+    artworkTitle: 'See the Escape',
+    desc: 'The ways we escape and avoid — phone scrolling, busyness, over-eating, shopping, alcohol — and why avoidance never truly sets us free.',
+    duration: 'Available Immediately',
+    keyPractice: 'The Avoidance Audit',
+    bgGradient: 'linear-gradient(135deg, #3A2B1D 0%, #1A120A 100%)',
+    imgUrl: FS_ROOT('Episode4.webp'),
+  },
+  {
+    num: 5,
+    epLabel: 'EP 5',
+    badgeKicker: 'SEE YOUR MASKS',
+    title: 'Why We Keep Trying to Prove Ourselves',
+    artworkTitle: 'See Your Masks',
+    desc: "The drive to achieve, people-please, and prove ourselves — and the quiet, bottomless ache that success can't fill.",
+    duration: 'Available Immediately',
+    keyPractice: 'Mask Dissolution Practice',
+    bgGradient: 'linear-gradient(135deg, #352526 0%, #180F10 100%)',
+    imgUrl: FS_ROOT('Episode5.webp'),
+  },
+  {
+    num: 6,
+    epLabel: 'EP 6',
+    badgeKicker: 'SEE YOURSELF CLEARLY',
+    title: 'The Emotions We See in Others — And in Ourselves',
+    artworkTitle: 'See Yourself Clearly',
+    desc: "How we project, judge, and react to emotions in others that are actually the parts of us we can't accept or feel.",
+    duration: 'Available Immediately',
+    keyPractice: 'Mirror & Projection Clearing',
+    bgGradient: 'linear-gradient(135deg, #252D35 0%, #101418 100%)',
+    imgUrl: FS_ROOT('Episode6.webp'),
+  },
+  {
+    num: 7,
+    epLabel: 'EP 7',
+    badgeKicker: 'LET GO',
+    title: 'How It Gets Better — And Why Letting It Go Is The Key',
+    artworkTitle: 'Let Go',
+    desc: 'Why feeling it all the way through brings true healing — and how letting go is the doorway to freedom and lasting peace.',
+    duration: 'Available Immediately',
+    keyPractice: 'Complete Emotional Surrender',
+    bgGradient: 'linear-gradient(135deg, #3B2E1D 0%, #1A130A 100%)',
+    imgUrl: FS_ROOT('Episode7.webp'),
+  },
+];
+
+// 4. Testimonials
+const TESTIMONIALS = [
+  {
+    name: 'Priya',
+    location: 'Bengaluru',
+    quote: 'I finally understood why I react the way I do. This course gave me a gentleness with myself I never thought possible. It changed everything for me.',
+    role: 'Product Manager & Mother',
+    videoUrl: 'https://www.youtube.com/embed/nbyToUpT1_8',
+    initial: 'P',
+    color: '#8C6B9E',
+    avatarUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
+  },
+  {
+    name: 'Arjun',
+    location: 'Mumbai',
+    quote: 'The 90-second practice alone paid for the course ten times over. I feel lighter, sleep better, and no longer carry work stress into my evening.',
+    role: 'Founder & Designer',
+    videoUrl: '',
+    initial: 'A',
+    color: '#6B8C9E',
+    avatarUrl: 'https://randomuser.me/api/portraits/men/32.jpg',
+  },
+  {
+    name: 'Neha',
+    location: 'Pune',
+    quote: 'I sleep better, worry less and feel deeply connected to myself and my family. The framework is simple, practical and deeply human.',
+    role: 'Architect',
+    videoUrl: '',
+    initial: 'N',
+    color: '#9E8C6B',
+    avatarUrl: 'https://randomuser.me/api/portraits/women/68.jpg',
+  },
+];
+
+// 5. FAQs
+const FAQS = [
+  {
+    q: 'Who is this course designed for?',
+    a: 'This course is for anyone who feels overwhelmed by overthinking, emotional reactivity, anxiety, or recurring relationship patterns. No prior meditation or spiritual experience is required.',
+  },
+  {
+    q: 'How much time do I need to commit each day?',
+    a: 'Just 10 to 15 minutes a day. The course is self-paced with short, actionable video lessons and guided micro-practices designed for busy lives.',
+  },
+  {
+    q: 'What if I fall behind or need more time?',
+    a: 'You receive lifetime access to all 7 modules, future updates, and guided workbooks. You can complete it in 7 weeks or revisit it over months at your own speed.',
+  },
+  {
+    q: 'Is there a money-back guarantee?',
+    a: 'Yes, absolutely. We offer a 100% risk-free 14-day money-back guarantee. If you do not feel a genuine inner shift, simply send an email for a full refund.',
+  },
+  {
+    q: 'How does the Pay-What-You-Feel pricing work?',
+    a: 'We believe inner peace should be accessible. The suggested price is ₹4,999, but you can adjust the price slider to pay what feels right for your current circumstances.',
+  },
+];
+
+const REGION_CURRENCY: Record<string, { currency: string; symbol: string; min: number; suggested: number; max: number }> = {
+  INR: { currency: 'INR', symbol: '₹', min: 99, suggested: 4999, max: 4999 },
+  USD: { currency: 'USD', symbol: '$', min: 2, suggested: 59, max: 59 },
+  GBP: { currency: 'GBP', symbol: '£', min: 2, suggested: 49, max: 49 },
+  EUR: { currency: 'EUR', symbol: '€', min: 2, suggested: 55, max: 55 },
+  CAD: { currency: 'CAD', symbol: 'C$', min: 3, suggested: 79, max: 79 },
+  AUD: { currency: 'AUD', symbol: 'A$', min: 3, suggested: 89, max: 89 },
+  SGD: { currency: 'SGD', symbol: 'S$', min: 3, suggested: 79, max: 79 },
+  AED: { currency: 'AED', symbol: 'AED ', min: 10, suggested: 220, max: 220 },
+};
+
+function getRegionPricing() {
+  try {
+    if (typeof window !== 'undefined') {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta') return REGION_CURRENCY.INR;
+      const langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
+      for (const l of langs) {
+        const r = (l || '').split('-').pop()?.toUpperCase();
+        if (r && REGION_CURRENCY[r]) return REGION_CURRENCY[r];
+      }
+    }
+  } catch (_) {}
+  return REGION_CURRENCY.USD;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+export default function EmotionFeelingsCourse() {
+  const { palette, toggle: toggleTheme } = useSiteTheme();
+  const isDark = palette.isDark;
+
+  const pricingConfig = getRegionPricing();
+
+  const ink     = isDark ? '#EDE9E3' : '#2A2118';
+  const inkSub  = isDark ? 'rgba(237,233,227,0.6)' : '#6B5744';
+  const cardBg  = isDark ? 'rgba(30,24,18,0.72)' : 'rgba(249,245,239,0.85)';
+  const borderC = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(196,181,160,0.35)';
+
+  // Interactive states
+  const [selectedSymptom, setSelectedSymptom] = useState<string | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [reflectionInput, setReflectionInput] = useState('');
+  const [reflectionResponse, setReflectionResponse] = useState<string | null>(null);
+  const [showVideoModal, setShowVideoModal] = useState<boolean>(false);
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string>('');
+  const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Guest checkout state
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
+  const [guestName, setGuestName] = useState('');
+  const [checkoutErr, setCheckoutErr] = useState('');
+  const [customAmount, setCustomAmount] = useState(pricingConfig.suggested);
+
+  // 60-Second Teaser State
+  const [teaserVideo, setTeaserVideo] = useState<{ id: string; title: string; episodeNum: number; startTime?: number } | null>(null);
+  const [teaserTimer, setTeaserTimer] = useState<number>(60);
+  const [teaserEnded, setTeaserEnded] = useState<boolean>(false);
+
+  const startTeaser = (id: string, title: string, episodeNum: number, startTime?: number) => {
+    setTeaserVideo({ id, title, episodeNum, startTime });
+    setTeaserTimer(60);
+    setTeaserEnded(false);
+    trackActivity(`TEASER_PLAY_EPISODE_${episodeNum}`);
+  };
+
+  useEffect(() => {
+    if (!teaserVideo || teaserEnded) return;
+    const t = setInterval(() => {
+      setTeaserTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(t);
+          setTeaserEnded(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [teaserVideo, teaserEnded]);
+
+  const { checkOut, isProcessing } = useRazorpay();
+
+  // SEO setup
+  usePageSeo({
+    title: 'Understanding Feelings & Emotions Course — 7-Episode Guided Journey',
+    description: 'Break old emotional patterns, dissolve overthinking, and live with clarity, freedom, and ease. A 7-episode guided course by Soulful Intelligence Studio.',
+    url: 'https://www.skrmblissai.in/feelingsandemotioncourse',
+    image: COURSE_BANNER,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: 'Understanding Feelings & Emotions Course — 7-Episode Guided Journey',
+      description: 'A 7-episode guided journey from emotional reactivity to inner freedom.',
+      provider: {
+        '@type': 'Organization',
+        name: 'Soulful Intelligence Studio',
+        sameAs: 'https://www.skrmblissai.in',
+      },
+    },
+  });
+
+  useEffect(() => {
+    trackActivity('PAGE_VISIT_COURSE_PAGE');
+
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll<HTMLElement>('.si-reveal').forEach((el) => {
+        el.classList.add('si-visible');
+      });
+      return;
+    }
+
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          (e.target as HTMLElement).classList.add('si-visible');
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
+
+    document.querySelectorAll<HTMLElement>('.si-reveal').forEach((el) => {
+      if (el.getBoundingClientRect().top > window.innerHeight * 0.95) {
+        io.observe(el);
+      } else {
+        el.classList.add('si-visible');
+      }
+    });
+
+    return () => io.disconnect();
+  }, []);
+
+  // Reflection helper
+  const handleReflect = () => {
+    if (!reflectionInput.trim()) return;
+    const lower = reflectionInput.toLowerCase();
+    let aff = 'Whatever you are feeling right now is completely valid. Notice where this sensation lives in your body, breathe into it, and allow it to just be.';
+    if (lower.includes('anxiety') || lower.includes('anxious') || lower.includes('fear')) {
+      aff = 'Anxiety is your nervous system seeking safety. Take a deep breath. Right now, in this moment, you are safe.';
+    } else if (lower.includes('anger') || lower.includes('angry') || lower.includes('frustrated')) {
+      aff = 'Anger carries important boundary energy. Acknowledge the feeling without taking action from it. Let it pass through like weather.';
+    } else if (lower.includes('sad') || lower.includes('heavy') || lower.includes('grief')) {
+      aff = 'Sadness is the heart releasing what it no longer needs to carry. Give yourself permission to feel it gently.';
+    }
+    setReflectionResponse(aff);
+  };
+
+  // Trigger Razorpay Checkout
+  const handleStartCheckout = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!guestEmail.includes('@')) {
+      setCheckoutErr('Please enter a valid email address.');
+      return;
+    }
+    if (!guestName.trim()) {
+      setCheckoutErr('Please enter your name.');
+      return;
+    }
+    setCheckoutErr('');
+    const userId = getAuth().currentUser?.uid || 'guest_pending';
+
+    checkOut(
+      userId,
+      guestEmail.trim(),
+      guestName.trim(),
+      'emotion_feelings_course',
+      'INR',
+      () => {
+        setShowCheckoutModal(false);
+        alert('🎉 Payment successful! You now have lifetime access to Understanding Feelings & Emotions.');
+        trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ₹${customAmount}`, guestEmail);
+      },
+      guestPhone.trim(),
+      customAmount
+    );
+  };
+
+  return (
+    <div
+      style={{
+        background: isDark ? '#0D0A12' : '#F9F5EF',
+        color: ink,
+        fontFamily: SANS,
+        minHeight: '100vh',
+        overflowX: 'hidden',
+        position: 'relative',
+      }}
+    >
+      {/* ── Fixed Sacred Geometry & Cursor Glow ───────────────────────────── */}
+      <SacredGeometry isDark={isDark} />
+      <CursorGlow />
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div style={{ position: 'relative', zIndex: 50 }}>
+        <SiteHeader
+          palette={palette}
+          onToggleTheme={toggleTheme}
+          links={[
+            { label: 'Overview', href: '#overview' },
+            { label: 'Course Journey', href: '#journey' },
+            { label: 'What’s Included', href: '#whats-included' },
+            { label: 'Stories', href: '#stories' },
+            { label: 'FAQ', href: '#faq' },
+          ]}
+          cta={{
+            label: 'Join the Course',
+            href: '#pricing',
+            onClick: () => setShowCheckoutModal(true),
+          }}
+        />
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          1. HERO SECTION (Full-Bleed End-to-End)
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        id="overview"
+        style={{
+          position: 'relative',
+          width: '100%',
+          minHeight: 'clamp(620px, 90vh, 920px)',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          zIndex: 2,
+        }}
+      >
+        {/* Full-Bleed Background Image (Flipped horizontally so Sim is on the right, un-overlapped) */}
+        <img
+          src={HERO_PORTRAIT}
+          alt="Person in peaceful meditation bathed in warm sunlight"
+          fetchPriority="high"
+          decoding="async"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: '28% center',
+            transform: 'scaleX(-1)',
+            opacity: 0.82,
+            display: 'block',
+          }}
+        />
+
+        {/* Gradient Scrim Overlay for Readability */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: isDark
+              ? 'linear-gradient(90deg, #0D0A12 0%, rgba(13,10,18,0.96) 38%, rgba(13,10,18,0.65) 58%, rgba(13,10,18,0.1) 82%, transparent 100%)'
+              : 'linear-gradient(90deg, #F9F5EF 0%, rgba(249,245,239,0.96) 38%, rgba(249,245,239,0.65) 58%, rgba(249,245,239,0.1) 82%, transparent 100%)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Background HeroMark watermark graphic */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '20%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1,
+            opacity: isDark ? 0.35 : 0.22,
+            pointerEvents: 'none',
+          }}
+        >
+          <HeroMark palette={palette} size={540} />
+        </div>
+
+        {/* Overlaid Text Content Container (Kept on Left 45% so Sim remains 100% visible on right) */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 2,
+            width: '100%',
+            maxWidth: 1240,
+            margin: '0 auto',
+            padding: 'clamp(64px, 10vw, 120px) clamp(24px, 6vw, 96px)',
+          }}
+        >
+          <div style={{ maxWidth: 510 }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 14px',
+                borderRadius: 999,
+                background: isDark ? 'rgba(196,145,58,0.15)' : 'rgba(196,145,58,0.1)',
+                border: '1px solid rgba(196,145,58,0.25)',
+                fontSize: 10.5,
+                fontWeight: 800,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: isDark ? '#C4913A' : '#9C8B78',
+                marginBottom: 24,
+              }}
+            >
+              <Sparkles size={13} /> Soulful Intelligence Studio · 7-Week Guided Journey
+            </div>
+
+            <h1
+              style={{
+                fontFamily: SERIF,
+                fontSize: 'clamp(42px, 5.2vw, 74px)',
+                fontWeight: 400,
+                lineHeight: 1.08,
+                color: ink,
+                margin: '0 0 16px',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              You weren't taught how emotions work.
+              <em style={{ fontStyle: 'italic', display: 'block', color: isDark ? '#C4913A' : '#6B5744', marginTop: 4 }}>
+                That's why you keep fighting yourself.
+              </em>
+            </h1>
+
+            <p
+              style={{
+                fontFamily: SANS,
+                fontSize: 'clamp(15px, 1.8vw, 17px)',
+                lineHeight: 1.6,
+                color: inkSub,
+                margin: '0 0 36px',
+                maxWidth: 480,
+              }}
+            >
+              This course will help you understand your inner world, break old patterns, and live with clarity, freedom and ease.
+            </p>
+
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button
+                onClick={() => {
+                  setActiveVideoUrl('https://www.youtube.com/embed/nbyToUpT1_8?autoplay=1&rel=0');
+                  setShowVideoModal(true);
+                }}
+                className="si-btn-breathe"
+                style={{
+                  padding: '15px 32px',
+                  borderRadius: 999,
+                  cursor: 'pointer',
+                  background: '#4A3260',
+                  color: '#fff',
+                  border: 'none',
+                  fontFamily: SANS,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  boxShadow: '0 8px 30px rgba(74,50,96,0.3)',
+                }}
+              >
+                <Play size={16} fill="#fff" /> Watch the Course Intro (1 min)
+              </button>
+
+              <a
+                href="#guide"
+                style={{
+                  padding: '15px 24px',
+                  borderRadius: 999,
+                  color: inkSub,
+                  textDecoration: 'none',
+                  fontFamily: SANS,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  transition: 'color 0.2s ease',
+                }}
+              >
+                Read the overview <ChevronDown size={16} />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Watch Intro Badge */}
+        <button
+          onClick={() => {
+            setActiveVideoUrl('https://www.youtube.com/embed/nbyToUpT1_8?autoplay=1&rel=0');
+            setShowVideoModal(true);
+          }}
+          style={{
+            position: 'absolute',
+            bottom: 32,
+            right: 32,
+            zIndex: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '12px 20px',
+            borderRadius: 999,
+            background: isDark ? 'rgba(20,16,24,0.85)' : 'rgba(255,255,255,0.88)',
+            backdropFilter: 'blur(16px)',
+            border: `1px solid ${borderC}`,
+            cursor: 'pointer',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.2)',
+            transition: 'transform 0.3s ease',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
+        >
+          <span
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: '50%',
+              background: '#4A3260',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Play size={16} fill="#fff" style={{ marginLeft: 2 }} />
+          </span>
+          <div style={{ textAlign: 'left' }}>
+            <span style={{ display: 'block', fontFamily: SANS, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: isDark ? '#C4913A' : '#9C8B78' }}>
+              Preview
+            </span>
+            <span style={{ display: 'block', fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink }}>
+              Watch Course Intro
+            </span>
+          </div>
+        </button>
+      </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          MEET YOUR GUIDE — SIM KATYAL
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        id="guide"
+        className="si-reveal"
+        style={{
+          padding: 'clamp(80px, 11vw, 130px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+          background: isDark
+            ? 'linear-gradient(180deg, rgba(20,15,26,0.6) 0%, rgba(13,10,18,0.92) 100%)'
+            : 'linear-gradient(180deg, rgba(246,240,230,0.7) 0%, rgba(254,251,246,0.95) 100%)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1120,
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'clamp(36px, 6vw, 72px)',
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Animated Portrait Card Container */}
+          <div style={{ flex: '1 1 340px', maxWidth: 450, position: 'relative' }}>
+            {/* Glowing Golden Aura Backlight */}
+            <motion.div
+              animate={{
+                scale: [0.96, 1.04, 0.96],
+                opacity: isDark ? [0.25, 0.45, 0.25] : [0.15, 0.3, 0.15],
+              }}
+              transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
+              style={{
+                position: 'absolute',
+                inset: -20,
+                borderRadius: 40,
+                background: 'radial-gradient(circle, rgba(196,145,58,0.4) 0%, rgba(74,50,96,0.2) 60%, transparent 80%)',
+                filter: 'blur(30px)',
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Floating Glass Frame */}
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
+              whileHover={{ scale: 1.02, rotate: -0.5 }}
+              style={{
+                position: 'relative',
+                width: '100%',
+                aspectRatio: '4 / 5',
+                borderRadius: 32,
+                overflow: 'hidden',
+                boxShadow: isDark
+                  ? '0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(196,145,58,0.15)'
+                  : '0 24px 60px rgba(74,50,96,0.15), 0 0 30px rgba(196,145,58,0.2)',
+                border: '1.5px solid rgba(196,145,58,0.35)',
+                background: isDark ? '#14101A' : '#FAF6F0',
+              }}
+            >
+              <img
+                src={SIM_PROFILE}
+                alt="Sim Katyal - Creator & Lead Guide"
+                loading="lazy"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'top center',
+                  transition: 'transform 0.8s cubic-bezier(0.16,1,0.3,1)',
+                }}
+              />
+
+              {/* Subtle Gradient Vignette */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(180deg, rgba(13,10,18,0.08) 0%, rgba(13,10,18,0.2) 50%, rgba(13,10,18,0.85) 100%)',
+                  pointerEvents: 'none',
+                }}
+              />
+
+              {/* Floating Glass Tag & Name Overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 24,
+                  left: 20,
+                  right: 20,
+                  padding: '16px 20px',
+                  borderRadius: 20,
+                  background: 'rgba(19, 14, 25, 0.75)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(196,145,58,0.3)',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <span
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: '50%',
+                        background: '#FFDF9E',
+                        boxShadow: '0 0 10px #FFDF9E',
+                        display: 'inline-block',
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontFamily: SANS,
+                        fontSize: 10,
+                        fontWeight: 800,
+                        letterSpacing: '0.18em',
+                        color: '#FFDF9E',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      CREATOR & LEAD GUIDE
+                    </span>
+                  </div>
+                  <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400, color: '#EDE9E3', margin: 0, lineHeight: 1.1 }}>
+                    Sim Katyal
+                  </h3>
+                </div>
+
+                {/* Micro Lotus Graphic */}
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: '50%',
+                    background: 'rgba(196,145,58,0.18)',
+                    border: '1px solid rgba(196,145,58,0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#FFDF9E',
+                  }}
+                >
+                  <Sparkles size={18} />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Guide Bio & Video Button */}
+          <div style={{ flex: '1.2 1 400px' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 16px',
+                borderRadius: 999,
+                background: isDark ? 'rgba(196,145,58,0.15)' : 'rgba(196,145,58,0.1)',
+                border: '1px solid rgba(196,145,58,0.3)',
+                fontFamily: SANS,
+                fontSize: 10.5,
+                fontWeight: 800,
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: isDark ? '#C4913A' : '#7A5F44',
+                marginBottom: 18,
+              }}
+            >
+              <Sparkles size={12} /> MEET YOUR GUIDE
+            </span>
+            <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(32px, 4vw, 50px)', fontWeight: 400, color: ink, margin: '0 0 20px', lineHeight: 1.15 }}>
+              A compassionate space to feel, understand, and set yourself free.
+            </h2>
+            <p style={{ fontFamily: SANS, fontSize: 15.5, lineHeight: 1.7, color: inkSub, margin: '0 0 16px' }}>
+              For over a decade, Sim Katyal has guided thousands of individuals through the quiet, inner architecture of human emotion — helping people move from reactive emotional patterns into conscious presence and effortless ease.
+            </p>
+            <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: inkSub, margin: '0 0 32px', fontStyle: 'italic', borderLeft: '2.5px solid #C4913A', paddingLeft: 16 }}>
+              "True emotional freedom doesn't come from forcing yourself to be happy or pushing feelings down. It comes when you learn the art of witnessing — seeing yourself clearly without judgment."
+            </p>
+
+            {/* Animated Play Sim Intro Video Button */}
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setActiveVideoUrl('https://www.youtube.com/embed/0LoCdi1YLe0?autoplay=1&rel=0');
+                setShowVideoModal(true);
+              }}
+              className="si-btn-breathe"
+              style={{
+                padding: '16px 36px',
+                borderRadius: 999,
+                cursor: 'pointer',
+                background: 'linear-gradient(135deg, #4A3260 0%, #362248 100%)',
+                color: '#fff',
+                border: 'none',
+                fontFamily: SANS,
+                fontSize: 14,
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 12,
+                boxShadow: '0 10px 32px rgba(74,50,96,0.35)',
+              }}
+            >
+              <Play size={18} fill="#fff" /> Watch Sim's Personal Welcome (1 min)
+            </motion.button>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          2. DOES THIS SOUND FAMILIAR? (5 Symptoms)
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        id="symptoms"
+        className="si-reveal"
+        style={{
+          padding: 'clamp(72px, 10vw, 120px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: 52 }}>
+          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
+            Recognize Yourself
+          </p>
+          <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.8vw, 48px)', fontWeight: 400, color: ink, marginBottom: 8 }}>
+            Does this sound familiar?
+          </h2>
+          <p style={{ fontFamily: SANS, fontSize: 14, color: inkSub }}>
+            You're not alone. You're human.
+          </p>
+        </div>
+
+        {/* Grid of 5 Cards + Note Card */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 16,
+            maxWidth: 1100,
+            margin: '0 auto 32px',
+          }}
+        >
+          {SYMPTOMS.map((s) => {
+            const isSelected = selectedSymptom === s.id;
+            return (
+              <button
+                key={s.id}
+                onClick={() => setSelectedSymptom(isSelected ? null : s.id)}
+                style={{
+                  background: isSelected
+                    ? (isDark ? 'rgba(74,50,96,0.35)' : 'rgba(74,50,96,0.12)')
+                    : (isDark ? 'linear-gradient(145deg, rgba(38,30,22,0.85) 0%, rgba(24,18,14,0.9) 100%)' : 'linear-gradient(145deg, rgba(255,252,247,0.95) 0%, rgba(248,242,233,0.9) 100%)'),
+                  border: `1.5px solid ${isSelected ? '#C4913A' : (isDark ? 'rgba(196,145,58,0.25)' : 'rgba(196,181,160,0.5)')}`,
+                  borderRadius: 22,
+                  padding: '28px 18px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: isSelected ? '0 12px 32px rgba(196,145,58,0.25)' : '0 8px 24px rgba(0,0,0,0.04)',
+                }}
+              >
+                <div
+                  style={{
+                    width: 68,
+                    height: 68,
+                    borderRadius: '50%',
+                    margin: '0 auto 16px',
+                    boxShadow: isSelected ? '0 8px 24px rgba(196,145,58,0.35)' : '0 6px 18px rgba(0,0,0,0.08)',
+                    transition: 'all 0.3s ease',
+                    border: `1.5px solid ${isSelected ? '#C4913A' : 'rgba(196,145,58,0.3)'}`,
+                  }}
+                >
+                  <SymptomWatercolorIcon symptomId={s.id} />
+                </div>
+
+                <p style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 500, color: ink, margin: '0 0 6px', lineHeight: 1.25 }}>
+                  "{s.title}"
+                </p>
+                <p style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, margin: '0 0 14px', lineHeight: 1.35 }}>
+                  {s.sub}
+                </p>
+
+                {/* Click Me Interactive Badge */}
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '5px 14px',
+                    borderRadius: 999,
+                    background: isSelected
+                      ? 'linear-gradient(135deg, #4A3260 0%, #362248 100%)'
+                      : (isDark ? 'rgba(196,145,58,0.14)' : 'rgba(196,145,58,0.1)'),
+                    border: `1px solid ${isSelected ? '#C4913A' : 'rgba(196,145,58,0.35)'}`,
+                    fontSize: 10.5,
+                    fontWeight: 800,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: isSelected ? '#FFDF9E' : (isDark ? '#C4913A' : '#7A5F44'),
+                    boxShadow: isSelected ? '0 4px 14px rgba(74,50,96,0.3)' : 'none',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <Sparkles size={11} /> {isSelected ? 'Exploring' : 'Click Me'}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Insight Reveal Panel */}
+        <AnimatePresence>
+          {selectedSymptom && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, y: 12 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -8 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              style={{ maxWidth: 760, margin: '0 auto', overflow: 'hidden' }}
+            >
+              {(() => {
+                const s = SYMPTOMS.find((item) => item.id === selectedSymptom);
+                if (!s) return null;
+                return (
+                  <div
+                    style={{
+                      background: isDark ? 'rgba(74,50,96,0.18)' : 'rgba(74,50,96,0.06)',
+                      border: '1px solid rgba(74,50,96,0.25)',
+                      borderRadius: 24,
+                      padding: '28px 36px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#C4913A' }}>
+                        {s.moduleLink}
+                      </span>
+                      <button
+                        onClick={() => setSelectedSymptom(null)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: inkSub }}
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <h3 style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 400, color: ink, margin: 0 }}>
+                      {s.insightTitle}
+                    </h3>
+                    <p style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65, color: inkSub, margin: 0 }}>
+                      {s.insightText}
+                    </p>
+                  </div>
+                );
+              })()}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          3. WHY EMOTIONS WORK THIS WAY (Conditioning Model)
+         ════════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════════════════
+          3. WHY EMOTIONS WORK THIS WAY (Conditioning Model)
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        className="si-reveal"
+        style={{
+          padding: 'clamp(64px, 8vw, 96px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1240,
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'clamp(24px, 4vw, 48px)',
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Left Column: Heading + Subhead + Button */}
+          <div style={{ flex: '1 1 280px', maxWidth: 340 }}>
+            <h2
+              style={{
+                fontFamily: SERIF,
+                fontSize: 'clamp(32px, 3.8vw, 48px)',
+                fontWeight: 400,
+                lineHeight: 1.15,
+                color: ink,
+                margin: '0 0 16px',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              Why emotions work<br />this way
+            </h2>
+            <p style={{ fontFamily: SANS, fontSize: 15, color: inkSub, lineHeight: 1.5, margin: '0 0 28px' }}>
+              We're not broken.<br />We're just conditioned.
+            </p>
+            <a
+              href="#journey"
+              className="si-btn-breathe"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '12px 26px',
+                borderRadius: 999,
+                background: '#4A3260',
+                color: '#fff',
+                textDecoration: 'none',
+                fontFamily: SANS,
+                fontSize: 13.5,
+                fontWeight: 700,
+                boxShadow: '0 8px 24px rgba(74,50,96,0.25)',
+              }}
+            >
+              Learn the simple model
+            </a>
+          </div>
+
+          {/* Right Column: 6 Watercolor Circle Steps Flow */}
+          <div
+            style={{
+              flex: '3 1 600px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))',
+              gap: 12,
+              alignItems: 'start',
+            }}
+          >
+            {CONDITIONING_MODEL.map((m, idx) => (
+              <div key={m.step} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <div
+                    style={{
+                      width: 92,
+                      height: 92,
+                      borderRadius: '50%',
+                      margin: '0 auto 12px',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
+                      transition: 'transform 0.3s ease',
+                    }}
+                  >
+                    <ConditioningWatercolorIcon step={m.step} />
+                  </div>
+                  <p style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 800, color: ink, margin: '0 0 2px' }}>
+                    {m.title}
+                  </p>
+                  <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: 0, lineHeight: 1.3 }}>
+                    {m.sub}
+                  </p>
+                </div>
+                {idx < CONDITIONING_MODEL.length - 1 && (
+                  <span style={{ fontSize: 16, color: inkSub, opacity: 0.4, marginTop: -32 }} className="si-hide-sm">
+                    →
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          4. THE 7-STEP JOURNEY FROM REACTING TO FREEDOM (Course Chapters)
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        id="journey"
+        className="si-reveal"
+        style={{
+          padding: 'clamp(72px, 10vw, 120px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
+        {/* Centered Header */}
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(32px, 4.2vw, 54px)', fontWeight: 400, color: ink, margin: '0 0 12px' }}>
+            The 7-step journey from reacting to freedom
+          </h2>
+          <p style={{ fontFamily: SANS, fontSize: 15, color: inkSub, margin: 0 }}>
+            A structured path. <strong>Deep inner shifts.</strong> Lasting transformation.
+          </p>
+        </div>
+
+        {/* 7-Step Horizontal Flow Timeline Track (Exact Mockup Match) */}
+        <div style={{ maxWidth: 1240, margin: '0 auto 64px', position: 'relative' }}>
+          {/* Connecting Horizontal Line */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 20,
+              left: '5%',
+              right: '5%',
+              height: 1.5,
+              background: isDark ? 'rgba(196,145,58,0.3)' : 'rgba(196,145,58,0.25)',
+              zIndex: 1,
+            }}
+          />
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+              gap: 16,
+              position: 'relative',
+              zIndex: 2,
+            }}
+          >
+            {CHAPTERS.map((ch) => (
+              <div
+                key={ch.num}
+                onClick={() => setSelectedChapter(selectedChapter === ch.num ? null : ch.num)}
+                style={{
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  position: 'relative',
+                }}
+              >
+                {/* Step Number Circle Node */}
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: '50%',
+                    background: selectedChapter === ch.num ? '#4A3260' : isDark ? '#1C1524' : '#FFFDF9',
+                    border: `1.5px solid ${selectedChapter === ch.num ? '#C4913A' : borderC}`,
+                    color: selectedChapter === ch.num ? '#FFF' : ink,
+                    fontFamily: SERIF,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  {ch.num}
+                </div>
+
+                {/* Step Thumbnail Card */}
+                <div
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    aspectRatio: '4 / 4.8',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    marginBottom: 14,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    border: `1.5px solid ${selectedChapter === ch.num ? '#C4913A' : 'transparent'}`,
+                  }}
+                >
+                  <img
+                    src={ch.imgUrl}
+                    alt={`Step ${ch.num} - ${ch.artworkTitle}`}
+                    loading="lazy"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center',
+                      transition: 'transform 0.4s ease',
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.45) 100%)',
+                    }}
+                  />
+                </div>
+
+                {/* Step Title & Description (Direct 1-to-1 match with Vertical Cards below) */}
+                <h4 style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 800, color: ink, margin: '0 0 4px' }}>
+                  {ch.artworkTitle}
+                </h4>
+                <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: 0, lineHeight: 1.3 }}>
+                  {ch.badgeKicker}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Detailed Episode Drawer (Opens when user clicks any of the 7 steps) */}
+        <div style={{ maxWidth: 980, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 48 }}>
+          {CHAPTERS.map((ch, idx) => {
+            const isEven = idx % 2 === 0;
+            const isOpen = selectedChapter === ch.num;
+
+            // Artwork Card Component
+            const ImageCard = (
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 280,
+                  borderRadius: 24,
+                  background: ch.bgGradient,
+                  border: `1px solid ${borderC}`,
+                  padding: 32,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.18)',
+                }}
+              >
+                {/* Real Episode WebP Artwork Image */}
+                <img
+                  src={ch.imgUrl}
+                  alt={`Episode ${ch.num} - ${ch.artworkTitle}`}
+                  loading="lazy"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    opacity: 0.65,
+                    transition: 'transform 0.8s ease',
+                  }}
+                />
+
+                {/* Dark Scrim Overlay for Readability */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(180deg, rgba(13,10,18,0.7) 0%, rgba(13,10,18,0.35) 50%, rgba(13,10,18,0.85) 100%)',
+                    pointerEvents: 'none',
+                  }}
+                />
+
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '4px 12px',
+                      borderRadius: 999,
+                      background: 'rgba(196,145,58,0.2)',
+                      border: '1px solid rgba(196,145,58,0.4)',
+                      fontFamily: SANS,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      letterSpacing: '0.12em',
+                      color: '#FFDF9E',
+                      marginBottom: 12,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    EPISODE {ch.num}
+                  </span>
+                  <h4 style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 400, color: '#EDE9E3', margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+                    {ch.artworkTitle}
+                  </h4>
+                  <div style={{ width: 36, height: 2, background: '#C4913A', marginTop: 12, opacity: 0.8 }} />
+                </div>
+
+                <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 24 }}>
+                  <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(237,233,227,0.85)', textTransform: 'uppercase' }}>
+                    {ch.duration}
+                  </span>
+                  <span style={{ fontSize: 12, color: '#C4913A', fontWeight: 700 }}>
+                    Episode Details →
+                  </span>
+                </div>
+              </div>
+            );
+
+            // Text Content Component
+            const TextBlock = (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <p style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 8 }}>
+                  {ch.badgeKicker}
+                </p>
+                <h3 style={{ fontFamily: SERIF, fontSize: 'clamp(24px, 2.8vw, 32px)', fontWeight: 400, color: ink, margin: '0 0 12px', lineHeight: 1.25 }}>
+                  {ch.title}
+                </h3>
+                <div style={{ width: 40, height: 1.5, background: borderC, marginBottom: 16 }} />
+                <p style={{ fontFamily: SANS, fontSize: 14, lineHeight: 1.65, color: inkSub, margin: '0 0 20px' }}>
+                  {ch.desc}
+                </p>
+
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {ch.teaserVideoId && (
+                    <motion.button
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => startTeaser(ch.teaserVideoId!, ch.title, ch.num, ch.teaserStartTime)}
+                      style={{
+                        padding: '9px 20px',
+                        borderRadius: 999,
+                        background: 'linear-gradient(135deg, #4A3260 0%, #362248 100%)',
+                        color: '#fff',
+                        border: '1px solid #C4913A',
+                        fontFamily: SANS,
+                        fontSize: 12,
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        boxShadow: '0 6px 20px rgba(74,50,96,0.3)',
+                      }}
+                    >
+                      <Play size={14} fill="#fff" /> Watch 60s Free Teaser
+                    </motion.button>
+                  )}
+
+                  <button
+                    onClick={() => setSelectedChapter(isOpen ? null : ch.num)}
+                    style={{
+                      alignSelf: 'flex-start',
+                      padding: '8px 18px',
+                      borderRadius: 999,
+                      background: isOpen ? (isDark ? 'rgba(74,50,96,0.3)' : '#4A3260') : 'transparent',
+                      color: isOpen ? '#fff' : ink,
+                      border: `1px solid ${borderC}`,
+                      fontFamily: SANS,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    {isOpen ? 'Close Practice' : '✨ View Practice & Prompt'}
+                  </button>
+                </div>
+
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      style={{ overflow: 'hidden', marginTop: 14 }}
+                    >
+                      <div style={{ padding: 14, borderRadius: 14, background: isDark ? 'rgba(196,145,58,0.1)' : 'rgba(196,145,58,0.06)', border: '1px solid rgba(196,145,58,0.25)', fontSize: 12.5, fontFamily: SANS, color: ink }}>
+                        <span style={{ fontWeight: 800, color: isDark ? '#C4913A' : '#7A5F44', display: 'block', marginBottom: 4 }}>
+                          Guided Practice: {ch.keyPractice}
+                        </span>
+                        Watch the lesson and complete the reflection workbook inside your Mind Gym account.
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+
+            return (
+              <div key={ch.num} style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: isEven ? 'row' : 'row-reverse',
+                    gap: 'clamp(24px, 5vw, 64px)',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  {isEven ? (
+                    <>
+                      {ImageCard}
+                      {TextBlock}
+                    </>
+                  ) : (
+                    <>
+                      {TextBlock}
+                      {ImageCard}
+                    </>
+                  )}
+                </div>
+
+                {/* Dotted Vertical Connector Arrow */}
+                {idx < CHAPTERS.length - 1 && (
+                  <div style={{ textAlign: 'center', color: borderC, fontSize: 18, margin: '-16px 0 -16px' }}>
+                    <span style={{ display: 'block', letterSpacing: 4, opacity: 0.5 }}>┊</span>
+                    <span style={{ color: isDark ? '#C4913A' : '#7A5F44', opacity: 0.6, fontSize: 14 }}>↓</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          5. TRY THE METHOD (Interactive 90-Second Practice)
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        className="si-reveal"
+        style={{
+          padding: 'clamp(72px, 10vw, 120px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+          background: isDark ? 'rgba(12,9,16,0.4)' : 'rgba(240,232,220,0.35)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 980,
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1.3fr',
+            gap: 'clamp(32px, 5vw, 64px)',
+            alignItems: 'center',
+          }}
+        >
+          {/* Left Image */}
+          <div style={{ borderRadius: 24, overflow: 'hidden', boxShadow: '0 24px 60px rgba(60,40,20,0.12)', aspectRatio: '4/3' }}>
+            <img
+              src={JOURNAL_IMG}
+              alt="Open reflection journal with dried flowers and tea candle"
+              loading="lazy"
+              decoding="async"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          </div>
+
+          {/* Right Form */}
+          <div>
+            <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
+              Interactive Micro-Practice
+            </p>
+            <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 400, color: ink, marginBottom: 12 }}>
+              Try the method
+            </h2>
+            <p style={{ fontFamily: SANS, fontSize: 14, color: inkSub, marginBottom: 28, lineHeight: 1.6 }}>
+              Experience a powerful 90-second practice from the course.<br />
+              <strong>Understand. Reflect. Shift.</strong>
+            </p>
+
+            <AnimatePresence mode="wait">
+              {!reflectionResponse ? (
+                <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <textarea
+                    className="si-reflect-input"
+                    rows={2}
+                    placeholder="Write what you're feeling right now..."
+                    value={reflectionInput}
+                    onChange={(e) => setReflectionInput(e.target.value)}
+                    aria-label="Write what you're feeling right now"
+                  />
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, flexWrap: 'wrap', gap: 14 }}>
+                    <div style={{ display: 'flex', gap: 12, fontSize: 11, color: inkSub, fontWeight: 600 }}>
+                      <span>🔒 Private</span>
+                      <span>✓ Free</span>
+                      <span>⊘ No signup</span>
+                      <span>✨ Just for you</span>
+                    </div>
+
+                    <button
+                      onClick={handleReflect}
+                      disabled={!reflectionInput.trim()}
+                      style={{
+                        padding: '12px 28px',
+                        borderRadius: 999,
+                        cursor: reflectionInput.trim() ? 'pointer' : 'default',
+                        background: reflectionInput.trim() ? '#4A3260' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(60,40,20,0.08)'),
+                        color: reflectionInput.trim() ? '#fff' : inkSub,
+                        border: 'none',
+                        fontFamily: SANS,
+                        fontSize: 13,
+                        fontWeight: 700,
+                      }}
+                    >
+                      Begin Reflection
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="resp"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  style={{
+                    padding: '28px 32px',
+                    borderRadius: 20,
+                    background: isDark ? 'rgba(196,145,58,0.08)' : 'rgba(196,145,58,0.06)',
+                    border: '1px solid rgba(196,145,58,0.25)',
+                  }}
+                >
+                  <p style={{ fontFamily: SERIF, fontSize: 19, fontStyle: 'italic', color: isDark ? '#EDE9E3' : '#4A3C2E', margin: '0 0 20px', lineHeight: 1.6 }}>
+                    "{reflectionResponse}"
+                  </p>
+                  <button
+                    onClick={() => { setReflectionInput(''); setReflectionResponse(null); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: SANS, fontSize: 12, color: inkSub, textDecoration: 'underline', padding: 0 }}
+                  >
+                    Try another feeling →
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          6. TESTIMONIALS & STATS GRID
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        id="stories"
+        className="si-reveal"
+        style={{
+          padding: 'clamp(72px, 10vw, 120px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: 52 }}>
+          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
+            Student Stories
+          </p>
+          <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.8vw, 48px)', fontWeight: 400, color: ink, marginBottom: 8 }}>
+            Loved by thousands on their inner journey
+          </h2>
+        </div>
+
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: 20,
+          }}
+        >
+          {/* 3 Testimonials */}
+          {TESTIMONIALS.map((t, idx) => (
+            <div key={idx} className="si-testimonial-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: '50%',
+                    background: `${t.color}25`,
+                    color: t.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: SERIF,
+                    fontSize: 20,
+                    fontWeight: 600,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {t.avatarUrl ? (
+                    <img 
+                      src={t.avatarUrl} 
+                      alt={t.name} 
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        filter: 'grayscale(100%) contrast(1.1) opacity(0.85)',
+                        mixBlendMode: isDark ? 'lighten' : 'multiply'
+                      }} 
+                    />
+                  ) : (
+                    t.initial
+                  )}
+                </div>
+                <div>
+                  <h4 style={{ fontFamily: SANS, fontSize: 14, fontWeight: 800, color: ink, margin: 0 }}>
+                    {t.name}
+                  </h4>
+                  <p style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, margin: 0 }}>
+                    {t.location} · {t.role}
+                  </p>
+                </div>
+              </div>
+
+              <p style={{ fontFamily: SERIF, fontSize: 17, fontStyle: 'italic', lineHeight: 1.6, color: ink, margin: 0 }}>
+                "{t.quote}"
+              </p>
+            </div>
+          ))}
+
+          {/* Stats Card */}
+          <div
+            style={{
+              background: isDark ? 'rgba(74,50,96,0.18)' : 'rgba(74,50,96,0.06)',
+              border: '1px solid rgba(74,50,96,0.25)',
+              borderRadius: 20,
+              padding: 28,
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 20,
+            }}
+          >
+            <div>
+              <p style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 2px' }}>
+                40,000+
+              </p>
+              <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: inkSub, margin: 0 }}>
+                Students worldwide
+              </p>
+            </div>
+            <div>
+              <p style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 2px' }}>
+                1M+
+              </p>
+              <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: inkSub, margin: 0 }}>
+                Minutes of transformation
+              </p>
+            </div>
+            <div>
+              <p style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 2px' }}>
+                120+
+              </p>
+              <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: inkSub, margin: 0 }}>
+                Guided lessons
+              </p>
+            </div>
+            <div>
+              <p style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 2px' }}>
+                98%
+              </p>
+              <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: inkSub, margin: 0 }}>
+                Feel more in control
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          7. WHAT'S INCLUDED & PRICING SECTION
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        id="whats-included"
+        className="si-reveal"
+        style={{
+          padding: 'clamp(72px, 10vw, 120px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
+        <div
+          id="pricing"
+          style={{
+            maxWidth: 1100,
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1.2fr 1fr',
+            gap: 20,
+            alignItems: 'stretch',
+          }}
+        >
+          {/* Left Column: What's included */}
+          <div
+            style={{
+              background: cardBg,
+              border: `1px solid ${borderC}`,
+              borderRadius: 28,
+              padding: 32,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div>
+              <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400, color: ink, margin: '0 0 20px' }}>
+                What's included
+              </h3>
+
+              <div style={{ display: 'grid', gap: 16 }}>
+                {[
+                  { title: '7 in-depth modules', sub: 'Follow the complete transformation journey' },
+                  { title: '20+ video lessons', sub: 'Clear, practical and easy to apply' },
+                  { title: 'Guided practices & meditations', sub: 'Tools to shift your inner world' },
+                  { title: 'Workbooks & journals', sub: 'For deep reflection and clarity' },
+                  { title: 'Lifetime access', sub: 'Learn at your own pace, anytime' },
+                  { title: 'Private community', sub: 'Connect, share and grow together' },
+                  { title: 'Regular updates', sub: 'New content, meditations and practices' },
+                ].map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(196,145,58,0.15)', color: '#C4913A', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2, flexShrink: 0 }}>
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                    <div>
+                      <p style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, margin: 0 }}>{item.title}</p>
+                      <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: 0 }}>{item.sub}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Center Column: Dark Purple Pricing Card */}
+          <div
+            style={{
+              background: '#1E1426',
+              border: '1px solid rgba(196,145,58,0.3)',
+              borderRadius: 28,
+              padding: '36px 32px',
+              color: '#fff',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ textAlign: 'center' }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  padding: '5px 14px',
+                  borderRadius: 999,
+                  background: 'rgba(255,255,255,0.12)',
+                  fontFamily: SANS,
+                  fontSize: 10,
+                  fontWeight: 800,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.85)',
+                  marginBottom: 20,
+                }}
+              >
+                One-time payment. Lifetime access.
+              </span>
+
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ fontFamily: SERIF, fontSize: 48, fontWeight: 500, color: '#EDE9E3' }}>
+                  {pricingConfig.symbol}{customAmount.toLocaleString()}
+                </span>
+                <span style={{ fontFamily: SANS, fontSize: 16, textDecoration: 'line-through', opacity: 0.4 }}>
+                  {pricingConfig.symbol}{(pricingConfig.suggested * 2).toLocaleString()}
+                </span>
+              </div>
+              <p style={{ fontFamily: SANS, fontSize: 11.5, color: 'rgba(237,233,227,0.6)', margin: '0 0 24px' }}>
+                Pay-What-You-Feel Support Available
+              </p>
+
+              {/* Price Slider */}
+              <div style={{ marginBottom: 28, textAlign: 'left' }}>
+                <PriceSlider
+                  currency={pricingConfig.currency}
+                  min={pricingConfig.min}
+                  suggested={pricingConfig.suggested}
+                  max={pricingConfig.max}
+                  value={customAmount}
+                  onChange={(val) => setCustomAmount(val)}
+                  dark={true}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gap: 10, textAlign: 'left', marginBottom: 28 }}>
+                {['Lifetime access to all content', 'All future updates included', 'Works on all devices', '100% money-back guarantee'].map((checkItem) => (
+                  <div key={checkItem} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5, color: 'rgba(237,233,227,0.85)' }}>
+                    <Check size={14} color="#C4913A" />
+                    {checkItem}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowCheckoutModal(true)}
+              className="si-btn-breathe"
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: 999,
+                cursor: 'pointer',
+                background: '#fff',
+                color: '#1E1426',
+                border: 'none',
+                fontFamily: SANS,
+                fontSize: 14,
+                fontWeight: 800,
+              }}
+            >
+              Join the Course
+            </button>
+          </div>
+
+          {/* Right Column: Risk-Free & FAQ Prompts */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Our Promise To You */}
+            <div
+              style={{
+                background: cardBg,
+                border: '1.5px solid rgba(196,145,58,0.4)',
+                borderRadius: 24,
+                padding: 24,
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                boxShadow: 'var(--si-shadow-warm)',
+              }}
+            >
+              <h4 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: ink, margin: 0 }}>
+                Our Promise To You
+              </h4>
+              <span
+                style={{
+                  display: 'inline-block',
+                  padding: '4px 12px',
+                  borderRadius: 999,
+                  background: isDark ? 'rgba(196,145,58,0.18)' : 'rgba(196,145,58,0.12)',
+                  color: isDark ? '#C4913A' : '#7A5F44',
+                  fontFamily: SANS,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: '0.06em',
+                  width: 'fit-content',
+                }}
+              >
+                100% money back, no questions asked.
+              </span>
+              <p style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.6, color: inkSub, margin: 0 }}>
+                If this course doesn't resonate with you — for any reason, at any time — just tell us and we'll refund you in full. No forms, no justification needed.
+              </p>
+            </div>
+
+            {/* Have Questions? */}
+            <div
+              style={{
+                background: cardBg,
+                border: `1px solid ${borderC}`,
+                borderRadius: 24,
+                padding: 24,
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <h4 style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 400, color: ink, margin: '0 0 8px' }}>
+                  Have questions?
+                </h4>
+                <p style={{ fontFamily: SANS, fontSize: 12.5, color: inkSub, margin: 0 }}>
+                  We're here to help.
+                </p>
+              </div>
+
+              <a
+                href="#faq"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '9px 18px',
+                  borderRadius: 999,
+                  border: `1px solid ${borderC}`,
+                  color: ink,
+                  textDecoration: 'none',
+                  fontFamily: SANS,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  marginTop: 16,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                See FAQs
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          8. FAQ SECTION
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        id="faq"
+        className="si-reveal"
+        style={{
+          padding: 'clamp(72px, 10vw, 120px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: 52 }}>
+          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
+            Questions & Answers
+          </p>
+          <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.8vw, 48px)', fontWeight: 400, color: ink, marginBottom: 8 }}>
+            Frequently Asked Questions
+          </h2>
+        </div>
+
+        <div style={{ maxWidth: 760, margin: '0 auto', display: 'grid', gap: 14 }}>
+          {FAQS.map((faq, idx) => {
+            const isOpen = openFaq === idx;
+            return (
+              <div
+                key={idx}
+                style={{
+                  background: cardBg,
+                  border: `1px solid ${borderC}`,
+                  borderRadius: 20,
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <button
+                  onClick={() => setOpenFaq(isOpen ? null : idx)}
+                  style={{
+                    width: '100%',
+                    padding: '20px 24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    color: ink,
+                    fontFamily: SANS,
+                    fontSize: 15,
+                    fontWeight: 700,
+                  }}
+                >
+                  {faq.q}
+                  <ChevronDown
+                    size={18}
+                    style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease', flexShrink: 0 }}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      style={{ padding: '0 24px 20px', color: inkSub, fontFamily: SANS, fontSize: 13.5, lineHeight: 1.6 }}
+                    >
+                      {faq.a}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          9. FINAL EMOTIONAL CTA BANNER
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        className="si-reveal"
+        style={{
+          position: 'relative',
+          padding: 'clamp(96px, 14vw, 160px) clamp(24px, 6vw, 96px)',
+          textAlign: 'center',
+          zIndex: 2,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Background Banner Image */}
+        <img
+          src={CLOSING_BANNER}
+          alt="Peaceful landscape sunset"
+          loading="lazy"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            opacity: isDark ? 0.22 : 0.14,
+            pointerEvents: 'none',
+          }}
+        />
+        <h2
+          style={{
+            fontFamily: SERIF,
+            fontSize: 'clamp(30px, 4.5vw, 62px)',
+            fontWeight: 400,
+            lineHeight: 1.15,
+            color: ink,
+            maxWidth: 780,
+            margin: '0 auto 24px',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          You can keep reacting.<br />
+          <em style={{ fontStyle: 'italic', color: isDark ? '#C4913A' : '#6B5744' }}>
+            Or you can choose awareness.
+          </em>
+        </h2>
+
+        <p style={{ fontFamily: SERIF, fontSize: 'clamp(22px, 3vw, 36px)', fontWeight: 400, color: inkSub, margin: '0 0 44px' }}>
+          The choice is yours.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <button
+            onClick={() => setShowCheckoutModal(true)}
+            className="si-btn-breathe"
+            style={{
+              padding: '16px 40px',
+              borderRadius: 999,
+              cursor: 'pointer',
+              background: '#4A3260',
+              color: '#fff',
+              border: 'none',
+              fontFamily: SANS,
+              fontSize: 15,
+              fontWeight: 800,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              boxShadow: '0 12px 40px rgba(74,50,96,0.3)',
+            }}
+          >
+            Begin Your Journey Today <ArrowRight size={16} />
+          </button>
+          <p style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, margin: 0, fontWeight: 600 }}>
+            Understand. Heal. Transform.
+          </p>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          10. BOTTOM TRUST BAR
+         ════════════════════════════════════════════════════════════════════ */}
+      <div
+        style={{
+          borderTop: `1px solid ${borderC}`,
+          padding: '24px clamp(24px, 6vw, 96px)',
+          display: 'flex',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          gap: 'clamp(16px, 3vw, 36px)',
+          fontSize: 12,
+          fontFamily: SANS,
+          fontWeight: 600,
+          color: inkSub,
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
+        <span>⊙ Instant lifetime access</span>
+        <span>○ Learn at your own pace</span>
+        <span>◇ Simple, practical & powerful</span>
+        <span>△ For all backgrounds</span>
+        <span>♡ Support when you need</span>
+      </div>
+
+      {/* ── Footer ─────────────────────────────────────────────────────────── */}
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        <SiteFooter palette={palette} />
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          MODALS
+         ════════════════════════════════════════════════════════════════════ */}
+
+      {/* 0. 60-Second Teaser Modal */}
+      <AnimatePresence>
+        {teaserVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 120,
+              background: 'rgba(0,0,0,0.85)',
+              backdropFilter: 'blur(16px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 24,
+            }}
+            onClick={() => setTeaserVideo(null)}
+          >
+            <div
+              style={{
+                position: 'relative',
+                width: '100%',
+                maxWidth: 880,
+                aspectRatio: '16/9',
+                borderRadius: 24,
+                overflow: 'hidden',
+                boxShadow: '0 30px 90px rgba(0,0,0,0.6)',
+                border: '1.5px solid rgba(196,145,58,0.4)',
+                background: '#0D0A12',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setTeaserVideo(null)}
+                style={{
+                  position: 'absolute',
+                  top: 14,
+                  right: 14,
+                  zIndex: 30,
+                  background: 'rgba(0,0,0,0.6)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: 999,
+                  color: '#fff',
+                  cursor: 'pointer',
+                  padding: '6px 14px',
+                  fontSize: 12,
+                  fontFamily: SANS,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <X size={14} /> Close
+              </button>
+
+              {/* Floating Timer Badge */}
+              {!teaserEnded && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 14,
+                    left: 14,
+                    zIndex: 30,
+                    background: 'rgba(19, 14, 25, 0.85)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(196,145,58,0.4)',
+                    borderRadius: 999,
+                    padding: '6px 16px',
+                    color: '#FFDF9E',
+                    fontFamily: SANS,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
+                  }}
+                >
+                  <Sparkles size={13} color="#FFDF9E" />
+                  <span>60s Free Teaser — 00:{teaserTimer < 10 ? `0${teaserTimer}` : teaserTimer} left</span>
+                </div>
+              )}
+
+              {/* YouTube Iframe (unmounts when teaser ends to stop background audio) */}
+              {!teaserEnded && (
+                <iframe
+                  src={`https://www.youtube.com/embed/${teaserVideo.id}?autoplay=1&modestbranding=1&rel=0${teaserVideo.startTime ? `&start=${teaserVideo.startTime}` : ''}`}
+                  title={`60s Teaser - Episode ${teaserVideo.episodeNum}`}
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              )}
+
+              {/* Teaser Ended Glassmorphism Veil */}
+              <AnimatePresence>
+                {teaserEnded && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: 40,
+                      background: 'rgba(13, 10, 18, 0.92)',
+                      backdropFilter: 'blur(20px)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '36px 24px',
+                      textAlign: 'center',
+                    }}
+                  >
+                    {/* Close Button for Overlay */}
+                    <button
+                      onClick={() => setTeaserVideo(null)}
+                      style={{
+                        position: 'absolute',
+                        top: 14,
+                        right: 14,
+                        background: 'rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: 999,
+                        color: '#fff',
+                        cursor: 'pointer',
+                        padding: '6px 14px',
+                        fontSize: 12,
+                        fontFamily: SANS,
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        zIndex: 50,
+                      }}
+                    >
+                      <X size={14} /> Close
+                    </button>
+
+                    <div
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: '50%',
+                        background: 'rgba(196,145,58,0.2)',
+                        border: '1px solid #C4913A',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: 16,
+                        boxShadow: '0 8px 24px rgba(196,145,58,0.3)',
+                      }}
+                    >
+                      <Sparkles size={28} color="#FFDF9E" />
+                    </div>
+
+                    <h3 style={{ fontFamily: SERIF, fontSize: 'clamp(24px, 3.2vw, 36px)', fontWeight: 400, color: '#EDE9E3', margin: '0 0 10px', lineHeight: 1.15 }}>
+                      Hope you enjoyed this 60-second preview!
+                    </h3>
+                    <p style={{ fontFamily: SANS, fontSize: 14.5, color: 'rgba(237,233,227,0.75)', maxWidth: 500, margin: '0 0 28px', lineHeight: 1.6 }}>
+                      You&rsquo;ve completed the free teaser for Episode {teaserVideo.episodeNum} ({teaserVideo.title}). Unlock all 7 full episodes &amp; guided meditations to continue your journey.
+                    </p>
+
+                    <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <motion.button
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setTeaserVideo(null);
+                          setShowCheckoutModal(true);
+                        }}
+                        className="si-btn-breathe"
+                        style={{
+                          padding: '16px 36px',
+                          borderRadius: 999,
+                          background: 'linear-gradient(135deg, #4A3260 0%, #362248 100%)',
+                          color: '#fff',
+                          border: '1px solid #C4913A',
+                          fontFamily: SANS,
+                          fontSize: 14,
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          boxShadow: '0 10px 32px rgba(74,50,96,0.5)',
+                        }}
+                      >
+                        Unlock Full Course →
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 1. Video Modal */}
+      <AnimatePresence>
+        {showVideoModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 100,
+              background: 'rgba(0,0,0,0.85)',
+              backdropFilter: 'blur(12px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 24,
+            }}
+            onClick={() => setShowVideoModal(false)}
+          >
+            <div style={{ position: 'relative', width: '100%', maxWidth: 840, aspectRatio: '16/9' }} onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setShowVideoModal(false)}
+                style={{
+                  position: 'absolute',
+                  top: -40,
+                  right: 0,
+                  background: 'none',
+                  border: 'none',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: 14,
+                }}
+              >
+                ✕ Close
+              </button>
+              <iframe
+                src={activeVideoUrl}
+                title="Course Preview"
+                style={{ width: '100%', height: '100%', borderRadius: 16, border: 'none' }}
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 2. Checkout Modal */}
+      <AnimatePresence>
+        {showCheckoutModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 100,
+              background: 'rgba(0,0,0,0.75)',
+              backdropFilter: 'blur(12px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 24,
+            }}
+            onClick={() => setShowCheckoutModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 16 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 16 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                maxWidth: 480,
+                background: isDark ? '#1A1222' : '#F9F5EF',
+                border: `1px solid ${borderC}`,
+                borderRadius: 28,
+                padding: 36,
+                boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
+                position: 'relative',
+              }}
+            >
+              <button
+                onClick={() => setShowCheckoutModal(false)}
+                style={{
+                  position: 'absolute',
+                  top: 20,
+                  right: 20,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: inkSub,
+                }}
+              >
+                <X size={20} />
+              </button>
+
+              <h3 style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 400, color: ink, margin: '0 0 6px' }}>
+                Join the Course
+              </h3>
+              <p style={{ fontFamily: SANS, fontSize: 13, color: inkSub, margin: '0 0 24px' }}>
+                Instant lifetime access to all 7 modules & future updates.
+              </p>
+
+              <form onSubmit={handleStartCheckout} style={{ display: 'grid', gap: 14 }}>
+                <div>
+                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Your name"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 12,
+                      border: `1px solid ${borderC}`,
+                      background: 'transparent',
+                      color: ink,
+                      fontFamily: SANS,
+                      fontSize: 14,
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="you@example.com"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 12,
+                      border: `1px solid ${borderC}`,
+                      background: 'transparent',
+                      color: ink,
+                      fontFamily: SANS,
+                      fontSize: 14,
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
+                    Phone Number (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={guestPhone}
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 12,
+                      border: `1px solid ${borderC}`,
+                      background: 'transparent',
+                      color: ink,
+                      fontFamily: SANS,
+                      fontSize: 14,
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                {checkoutErr && (
+                  <p style={{ fontFamily: SANS, fontSize: 12, color: '#E53935', margin: 0 }}>
+                    {checkoutErr}
+                  </p>
+                )}
+
+                <div style={{ marginTop: 8, marginBottom: 8 }}>
+                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 8 }}>
+                    Select Contribution (Pay What You Feel)
+                  </label>
+                  <PriceSlider
+                    currency={pricingConfig.currency}
+                    min={pricingConfig.min}
+                    suggested={pricingConfig.suggested}
+                    max={pricingConfig.max}
+                    value={customAmount}
+                    onChange={(val) => setCustomAmount(val)}
+                    dark={isDark}
+                  />
+                </div>
+
+                <div style={{ marginTop: 10, padding: '14px 16px', borderRadius: 14, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink }}>Total Amount</span>
+                  <span style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260' }}>
+                    {pricingConfig.symbol}{customAmount.toLocaleString()}
+                  </span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isProcessing}
+                  style={{
+                    padding: '14px',
+                    borderRadius: 999,
+                    cursor: 'pointer',
+                    background: '#4A3260',
+                    color: '#fff',
+                    border: 'none',
+                    fontFamily: SANS,
+                    fontSize: 14,
+                    fontWeight: 800,
+                    marginTop: 8,
+                  }}
+                >
+                  {isProcessing ? 'Processing...' : 'Proceed to Secure Checkout →'}
+                </button>
+
+                <p style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub, textAlign: 'center', margin: 0 }}>
+                  🔒 256-Bit Encrypted · 14-Day Money-Back Guarantee
+                </p>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

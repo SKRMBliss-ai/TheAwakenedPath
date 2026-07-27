@@ -2,8 +2,8 @@
 
 .container {
   --gold: #8B6D1B; /* Deeper gold for light mode visibility */
-  --gold-light: #B8973A;
-  --gold-pale: #D4AE5C;
+  --gold-light: #7A5F44;
+  --gold-pale: #A98A67;
   --bg-primary: #FDFAF4;
   --bg-surface: #F5EDD8;
   --ink: #1C1814;
@@ -14,7 +14,7 @@
   --warm-white: #FDFAF4;
   --muted: #5C544E; /* Darker muted text */
   --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans: 'DM Sans', sans-serif;
+  --sans: 'Outfit', sans-serif;
   
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -349,7 +349,7 @@
 
 /* ── DARK MODE OVERRIDES ── */
 :global(.dark) .container {
-  --gold: #B8973A;
+  --gold: #7A5F44;
   --gold-light: #F0E4C0;
   --bg-primary: #0c0910;
   --bg-surface: #110e16;

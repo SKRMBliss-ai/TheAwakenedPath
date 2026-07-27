@@ -7,7 +7,7 @@ const tokens = {
     deep: "#160020",
     mid: "#2D1040",
     magenta: "#D16BA5",
-    teal: "#ABCEC9",
+    teal: "#CFC2CD",
     muted: "rgba(255,255,255,0.08)",
     border: "rgba(255,255,255,0.07)",
 };
@@ -62,7 +62,7 @@ const WhisperInput = ({ label, placeholder, multiline, value, onChange }: any) =
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 style={{
                     position: "absolute", top: 24, left: 0,
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                    fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                     textTransform: "uppercase", pointerEvents: "none",
                     transformOrigin: "left center", display: "block",
                 } as any}
@@ -150,7 +150,7 @@ const AnchorButton = ({ children, variant = "ghost", onClick, loading }: any) =>
                         ? `linear-gradient(135deg, ${tokens.teal}, #8AB5B0)`
                         : `linear-gradient(135deg, ${tokens.teal}E0, #7EB8B3)`,
                     borderRadius: 100, border: "none", cursor: "pointer",
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                    fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                     fontSize: 10, letterSpacing: "0.35em", textTransform: "uppercase",
                     color: "#0D1F1E",
                     boxShadow: hovered
@@ -203,7 +203,7 @@ const AnchorButton = ({ children, variant = "ghost", onClick, loading }: any) =>
                 background: hovered ? "rgba(255,255,255,0.03)" : "transparent",
                 border: `1px solid ${hovered ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.08)"}`,
                 borderRadius: 32, cursor: "pointer",
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                 fontSize: 10, letterSpacing: "0.5em", textTransform: "uppercase",
                 color: hovered ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.4)",
                 boxShadow: hovered ? `0 0 40px ${tokens.magenta}20, inset 0 0 30px ${tokens.magenta}05` : "none",
@@ -313,7 +313,7 @@ const SacredOrb = ({ label, active, pulse, size = 48, onClick }: any) => {
                 <span style={{
                     fontSize: 8, letterSpacing: "0.4em", textTransform: "uppercase",
                     color: active ? tokens.teal : "rgba(255,255,255,0.2)",
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                    fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                     transition: "color 0.4s",
                 } as any}>{label}</span>
             )}
@@ -363,7 +363,7 @@ const EpochCard = ({ date, preview, bucket = "today", emotions }: any) => {
                 <div style={{
                     fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase",
                     color: `rgba(255,255,255,${0.15 * intensity})`,
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 700, marginBottom: 10,
+                    fontFamily: "'Outfit', sans-serif", fontWeight: 700, marginBottom: 10,
                 } as any}>{date}</div>
 
                 <p style={{
@@ -381,10 +381,10 @@ const EpochCard = ({ date, preview, bucket = "today", emotions }: any) => {
                         {emotions.map((e: string) => (
                             <span key={e} style={{
                                 padding: "3px 10px", borderRadius: 100,
-                                border: `1px solid rgba(171,206,201,${0.2 * intensity})`,
+                                border: `1px solid rgba(207,194,205,${0.2 * intensity})`,
                                 fontSize: 8, letterSpacing: "0.3em", textTransform: "uppercase",
-                                color: `rgba(171,206,201,${0.5 * intensity})`,
-                                fontFamily: "'DM Sans', sans-serif",
+                                color: `rgba(207,194,205,${0.5 * intensity})`,
+                                fontFamily: "'Outfit', sans-serif",
                             } as any}>{e}</span>
                         ))}
                     </div>
@@ -403,7 +403,7 @@ const SacredToggle = ({ labelA, labelB, value, onChange }: any) => {
             <span style={{
                 fontSize: 9, letterSpacing: "0.4em", textTransform: "uppercase",
                 color: !value ? tokens.teal : "rgba(255,255,255,0.2)",
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                 transition: "color 0.5s",
             } as any}>{labelA}</span>
 
@@ -434,7 +434,7 @@ const SacredToggle = ({ labelA, labelB, value, onChange }: any) => {
             <span style={{
                 fontSize: 9, letterSpacing: "0.4em", textTransform: "uppercase",
                 color: value ? tokens.teal : "rgba(255,255,255,0.2)",
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                 transition: "color 0.5s",
             } as any}>{labelB}</span>
         </div>
@@ -469,7 +469,7 @@ const MoodSelector = ({ selected, onSelect }: any) => {
                             background: isSelected ? `${mood.color}20` : "rgba(255,255,255,0.03)",
                             border: `1px solid ${isSelected ? `${mood.color}60` : "rgba(255,255,255,0.06)"}`,
                             color: isSelected ? mood.color : "rgba(255,255,255,0.3)",
-                            fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                            fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                             fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase",
                             boxShadow: isSelected ? `0 0 20px ${mood.color}30` : "none",
                             transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",
@@ -493,7 +493,7 @@ const ProgressFilament = ({ progress = 0.4, label }: any) => {
                 <div style={{
                     display: "flex", justifyContent: "space-between", marginBottom: 12,
                     fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.2)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                    color: "rgba(255,255,255,0.2)", fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                 } as any}>
                     <span>{label}</span>
                     <span style={{ color: tokens.teal }}>{Math.round(progress * 100)}%</span>
@@ -536,7 +536,7 @@ const EpochDivider = ({ label }: { label: string }) => (
         <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, ${tokens.magenta}50, transparent)` }} />
         <span style={{
             fontSize: 8, letterSpacing: "0.6em", textTransform: "uppercase",
-            color: "rgba(255,255,255,0.2)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+            color: "rgba(255,255,255,0.2)", fontFamily: "'Outfit', sans-serif", fontWeight: 700,
         } as any}>{label}</span>
         <div style={{ height: 1, width: 32, background: "rgba(255,255,255,0.04)" }} />
     </div>
@@ -561,7 +561,7 @@ const SacredToast = ({ message, visible, type = "presence" }: any) => (
                     backdropFilter: "blur(20px)",
                     boxShadow: `0 20px 60px rgba(0,0,0,0.5), 0 0 30px ${type === "save" ? tokens.teal : tokens.magenta}20`,
                     display: "flex", alignItems: "center", gap: 12,
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: "'Outfit', sans-serif",
                 } as any}
             >
                 <div style={{
@@ -595,7 +595,7 @@ const NavPill = ({ children, onClick }: any) => {
                 background: hovered ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)",
                 border: `1px solid ${hovered ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)"}`,
                 color: hovered ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)",
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                 fontSize: 8, letterSpacing: "0.4em", textTransform: "uppercase",
                 transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",
                 boxShadow: hovered ? `0 0 20px rgba(255,255,255,0.04)` : "none",
@@ -664,13 +664,13 @@ export default function SacredUIShowcase() {
                         filter: "blur(60px)", pointerEvents: "none",
                     }}
                 />
-                <p style={{ fontSize: 8, letterSpacing: "0.6em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 16, fontFamily: "'DM Sans', sans-serif", fontWeight: 700 } as any}>
+                <p style={{ fontSize: 8, letterSpacing: "0.6em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 16, fontFamily: "'Outfit', sans-serif", fontWeight: 700 } as any}>
                     Journey to Inner Freedom
                 </p>
                 <h1 style={{ fontSize: 48, fontWeight: 300, letterSpacing: "-0.01em", margin: 0, color: "rgba(255,255,255,0.92)", lineHeight: 1 } as any}>
                     Sacred UI System
                 </h1>
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 16, fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em", fontWeight: 300 } as any}>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 16, fontFamily: "'Outfit', sans-serif", letterSpacing: "0.1em", fontWeight: 300 } as any}>
                     Component reference · v2.0
                 </p>
             </header>
@@ -799,7 +799,7 @@ export default function SacredUIShowcase() {
                                 padding: "10px 24px", borderRadius: 100, cursor: "pointer",
                                 border: `1px solid ${tokens.teal}30`, background: "transparent",
                                 color: tokens.teal, fontSize: 9, letterSpacing: "0.4em", textTransform: "uppercase",
-                                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                                fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                             } as any}
                         >Anchor Saved</motion.button>
                         <motion.button
@@ -809,7 +809,7 @@ export default function SacredUIShowcase() {
                                 padding: "10px 24px", borderRadius: 100, cursor: "pointer",
                                 border: `1px solid ${tokens.magenta}30`, background: "transparent",
                                 color: tokens.magenta, fontSize: 9, letterSpacing: "0.4em", textTransform: "uppercase",
-                                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                                fontFamily: "'Outfit', sans-serif", fontWeight: 700,
                             } as any}
                         >Presence Logged</motion.button>
                     </div>
@@ -820,22 +820,22 @@ export default function SacredUIShowcase() {
                     <SectionLabel>10 · Sacred Typography Scale</SectionLabel>
                     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                         <div>
-                            <p style={{ fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase", color: "rgba(255,255,255,0.15)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, marginBottom: 8 } as any}>Display / Hero</p>
+                            <p style={{ fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase", color: "rgba(255,255,255,0.15)", fontFamily: "'Outfit', sans-serif", fontWeight: 700, marginBottom: 8 } as any}>Display / Hero</p>
                             <h1 style={{ fontSize: 64, fontWeight: 300, letterSpacing: "-0.01em", margin: 0, lineHeight: 1, color: "rgba(255,255,255,0.92)", textShadow: `0 0 60px ${tokens.magenta}30` } as any}>Daily Log</h1>
                         </div>
                         <div>
-                            <p style={{ fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase", color: "rgba(255,255,255,0.15)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, marginBottom: 8 } as any}>Section Header</p>
+                            <p style={{ fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase", color: "rgba(255,255,255,0.15)", fontFamily: "'Outfit', sans-serif", fontWeight: 700, marginBottom: 8 } as any}>Section Header</p>
                             <h2 style={{ fontSize: 40, fontWeight: 300, letterSpacing: "-0.01em", margin: 0, lineHeight: 1.1, color: "rgba(255,255,255,0.85)" } as any}>Sacred Reflection</h2>
                         </div>
                         <div>
-                            <p style={{ fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase", color: "rgba(255,255,255,0.15)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, marginBottom: 8 } as any}>Journal Body</p>
+                            <p style={{ fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase", color: "rgba(255,255,255,0.15)", fontFamily: "'Outfit', sans-serif", fontWeight: 700, marginBottom: 8 } as any}>Journal Body</p>
                             <p style={{ fontSize: 22, fontWeight: 300, fontStyle: "italic", lineHeight: 1.7, color: "rgba(255,255,255,0.6)", margin: 0 } as any}>
                                 "A warmth gathered in the sternum — breath moved slower than usual, the mind settling between states of knowing."
                             </p>
                         </div>
                         <div>
-                            <p style={{ fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase", color: "rgba(255,255,255,0.15)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, marginBottom: 8 } as any}>Whisper / Caption</p>
-                            <p style={{ fontSize: 10, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, margin: 0 } as any}>
+                            <p style={{ fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase", color: "rgba(255,255,255,0.15)", fontFamily: "'Outfit', sans-serif", fontWeight: 700, marginBottom: 8 } as any}>Whisper / Caption</p>
+                            <p style={{ fontSize: 10, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", fontFamily: "'Outfit', sans-serif", fontWeight: 700, margin: 0 } as any}>
                                 The Presence Study · Day 12
                             </p>
                         </div>

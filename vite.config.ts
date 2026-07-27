@@ -3,9 +3,32 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// In production, /twinsouls is a real static directory (the Twin Souls
+// portfolio, built separately and copied into dist/). The dev server has no
+// such directory, so Vite's SPA fallback answered /twinsouls with the Mind Gym
+// shell — clicking "About Us" locally opened Mind Gym instead of the portfolio.
+// Redirect to the portfolio's own dev server so local behaviour matches live.
+const twinsoulsDevRedirect = {
+  name: 'twinsouls-dev-redirect',
+  apply: 'serve' as const,
+  configureServer(server: { middlewares: { use: (fn: (req: any, res: any, next: () => void) => void) => void } }) {
+    server.middlewares.use((req, res, next) => {
+      const url: string = req.url || '';
+      if (/^\/twinsouls(\/|$|\?)/.test(url)) {
+        res.statusCode = 302;
+        res.setHeader('Location', 'http://localhost:5174/');
+        res.end();
+        return;
+      }
+      next();
+    });
+  },
+};
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    twinsoulsDevRedirect,
     react(),
     tailwindcss(),
     VitePWA({
@@ -18,14 +41,27 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        // /twinsouls is a separate app (the Twin Souls portfolio) served from
+        // this same hosting under a subpath — never precache its bundle into the
+        // Mind Gym service worker (keeps the SW lean, respects mobile-load).
+        globIgnores: ['twinsouls/**', 'habitquest2026/**'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        skipWaiting: true
+        skipWaiting: true,
+        // Serve the app shell for ALL in-app navigations (/, /aboutmindgym,
+        // /knowyouremotionalhealth, …) so the service worker doesn't error on
+        // sub-routes. Exclude the Cloud-Function API rewrites and /twinsouls
+        // (its own app — must reach the network, not the Mind Gym shell).
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//, /^\/twinsouls/, /^\/habitquest2026/],
       },
       manifest: {
         name: 'Mind Gym',
         short_name: 'Mind Gym',
         description: 'Your daily practice for a quieter mind',
+        // Installed app opens the Mind Gym app, not the Soulful Intelligence home.
+        start_url: '/mindgym',
+        scope: '/',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',
@@ -72,10 +108,21 @@ export default defineConfig({
           if (path.startsWith('/api/grounding')) return '/getGrounding';
           if (path.startsWith('/api/emotion')) return '/analyzeEmotion';
           if (path.startsWith('/api/daily-meditation')) return '/getDailyMeditation';
+          if (path.startsWith('/api/latest-videos')) {
+            // Preserve ?max=… — without the query the endpoint returns its default.
+            const qIndex = path.indexOf('?');
+            return '/getLatestVideos' + (qIndex >= 0 ? path.slice(qIndex) : '');
+          }
           if (path.startsWith('/api/razorpay-subscription-verify')) return '/verifyRazorpaySubscription';
           if (path.startsWith('/api/razorpay-subscription')) return '/createRazorpaySubscription';
           if (path.startsWith('/api/razorpay-order')) return '/createRazorpayOrder';
           if (path.startsWith('/api/razorpay-verify')) return '/verifyRazorpayPayment';
+          if (path.startsWith('/api/playlist-videos')) {
+            // Preserve the query string (?playlistId=...) — dropping it made the
+            // function 400 with "playlistId is required" in local dev.
+            const qIndex = path.indexOf('?');
+            return '/getPlaylistVideos' + (qIndex >= 0 ? path.slice(qIndex) : '');
+          }
           return path.replace(/^\/api/, '');
         }
       }

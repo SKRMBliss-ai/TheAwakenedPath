@@ -5,8 +5,8 @@ import { Sparkles } from '@react-three/drei';
 import { useTheme } from '../../theme/ThemeSystem';
 // ─── T TOKENS ────────────────────────────────────────────────────────────────
 const T = {
-    teal: '#5EC4B0',
-    tealdim: '#36ABA3',
+    teal: '#8C7B8A',
+    tealdim: '#8C7B8A',
 };
 
 // ─── CUSTOM ETHER SHADER ─────────────────────────────────────────────────────
@@ -271,7 +271,7 @@ export const EtherealOrb: React.FC<EtherealOrbProps> = ({
                     position: 'absolute',
                     inset: -30,
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(94,196,176,0.12) 0%, rgba(60,160,140,0.07) 50%, transparent 75%)',
+                    background: 'radial-gradient(circle, rgba(140,123,138,0.12) 0%, rgba(60,160,140,0.07) 50%, transparent 75%)',
                     pointerEvents: 'none',
                     zIndex: 0,
                 }} />
@@ -292,7 +292,7 @@ export const EtherealOrb: React.FC<EtherealOrbProps> = ({
                         size={isAnimating ? 3.5 : 2}
                         speed={isAnimating ? 0.9 : 0.2}
                         opacity={isLight ? (isAnimating ? 0.4 : 0.15) : (isAnimating ? 0.6 : 0.3)}
-                        color={isLight ? '#36ABA3' : '#E1E7EF'}
+                        color={isLight ? '#8C7B8A' : '#E1E7EF'}
                         noise={3}
                     />
                 </Canvas>
@@ -311,7 +311,7 @@ export const EtherealOrb: React.FC<EtherealOrbProps> = ({
                 margin: 0,
                 userSelect: 'none',
                 textShadow: isLight
-                    ? (isAnimating ? '0 0 20px rgba(94,196,176,0.4)' : 'none')
+                    ? (isAnimating ? '0 0 20px rgba(140,123,138,0.4)' : 'none')
                     : (isAnimating
                         ? '0 0 40px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.3)'
                         : '0 0 20px rgba(255,255,255,0.2)'),

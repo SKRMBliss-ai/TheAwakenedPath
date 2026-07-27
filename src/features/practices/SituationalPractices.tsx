@@ -47,7 +47,7 @@ const SITUATIONS: Situation[] = [
         durationNum: 3, category: 'Morning', tags: ['wake up', 'body scan', 'energy', 'morning'],
         whenToUse: 'First thing in the morning, before checking your phone',
         description: 'Set your emotional state for the day by connecting with your inner body.',
-        icon: Sun, color: '#ABCEC9',
+        icon: Sun, color: '#CFC2CD',
         intro: "Good morning. Before the world rushes in, let's check in with your inner aliveness.",
         steps: [
             { title: 'Foundational Breath', instruction: 'While still in bed, lie on your back. Take three deep breaths.', audioScript: 'While still in bed, lie on your back. Take three slow, deep breaths. Feel the air filling your lungs and the gentle release as you exhale. Arrive fully in this moment.' },
@@ -67,7 +67,7 @@ const SITUATIONS: Situation[] = [
         durationNum: 0.5, category: 'Quick', tags: ['pause', 'commute', 'micro-practice', 'quick'],
         whenToUse: "Throughout the day at 'traffic lights' — moments when you naturally pause",
         description: 'Turn waiting time into presence time. Perfect for red lights or elevators.',
-        icon: Wind, color: '#ABCEC9',
+        icon: Wind, color: '#CFC2CD',
         intro: 'Let\'s use this pause to reconnect.',
         steps: [
             { title: 'Pause & Breathe', instruction: "Pause whatever you're doing. Take one deep breath.", audioScript: 'Stop for a moment. Take one conscious, deep breath. Feel the pause.' },
@@ -109,7 +109,7 @@ const SITUATIONS: Situation[] = [
         whenToUse: 'When the mind is racing or you feel disconnected from the present',
         description: 'Use the breath as an anchor to return to the internal energy body.',
         premium: false,
-        icon: Wind, color: '#5EC4B0',
+        icon: Wind, color: '#8C7B8A',
         intro: "Let's use the breath to return to the only moment that truly exists.",
         steps: [
             { title: 'The Anchor', instruction: 'Close your eyes. Feel the air entering and leaving your body.', audioScript: 'Close your eyes. Bring your full attention to your breath. Feel the cool air entering your nostrils... and the warm air leaving.' },
@@ -169,7 +169,7 @@ const SITUATIONS: Situation[] = [
         durationNum: 5, category: 'Emotions', tags: ['anxiety', 'panic', 'grounding', '5-4-3-2-1'],
         whenToUse: 'During anxiety attacks or when feeling overwhelmed and panicky',
         description: 'The 5-4-3-2-1 technique to anchor yourself in the physical world.',
-        icon: Anchor, color: '#ABCEC9',
+        icon: Anchor, color: '#CFC2CD',
         intro: 'The mind is racing, but the earth is stable. Let\'s come back to what is real.',
         steps: [
             { title: 'Physical Anchor', instruction: 'Sit or stand with feet firmly on the ground. Press them into the floor.', audioScript: 'Feet on the ground. Press them down. Feel the pressure. You are here. You are safe.' },
@@ -189,7 +189,7 @@ const SITUATIONS: Situation[] = [
         durationNum: 10, category: 'Sleep', tags: ['sleep', 'night', 'relax', 'insomnia', 'rest'],
         whenToUse: 'Every night before bed to process emotions and improve sleep',
         description: "Process the day's emotions and improve sleep by scanning your body.",
-        icon: Moon, color: '#ABCEC9',
+        icon: Moon, color: '#CFC2CD',
         intro: 'The day is over. Let\'s surrender the weight of it to the earth.',
         steps: [
             { title: 'The Breath Anchor', instruction: 'Feel the weight of your body on the mattress. Take 3 deep, slow breaths.', audioScript: 'Feel your weight on the bed. Give in to gravity. Take three slow, deep breaths... releasing the day with every exhale.' },
@@ -245,7 +245,7 @@ const SITUATIONS: Situation[] = [
         durationNum: 0.5, category: 'Quick', tags: ['quick', 'private', 'anytime', 'micro'],
         whenToUse: 'Every time you go to the bathroom',
         description: 'Use a natural biological break as a spiritual break.',
-        icon: Droplet, color: '#ABCEC9',
+        icon: Droplet, color: '#CFC2CD',
         intro: 'A private moment to return to yourself.',
         steps: [
             { title: 'Pause', instruction: 'Before leaving, close your eyes.', audioScript: 'Before you leave this private space, pause. Close your eyes.' },
@@ -443,7 +443,7 @@ const CategoryPill = ({ cat }: { cat: string }) => {
     const { mode } = useTheme();
     const isLight = mode === 'light';
     const colors: Record<string, string> = { 
-        Morning: isLight ? '#1F615D' : '#ABCEC9', 
+        Morning: isLight ? '#1F615D' : '#CFC2CD', 
         Work: isLight ? '#5E35B1' : '#9575CD', 
         Emotions: isLight ? '#E64A19' : '#FF7043', 
         Sleep: isLight ? '#303F9F' : '#5C6BC0', 
@@ -484,9 +484,9 @@ const SituationalPracticeCard = ({ situation, onClick, mode, isLocked, onUpgrade
         },
         Quick: {
             gradient: isLight
-                ? `linear-gradient(135deg, rgba(94,196,176,0.1) 0%, rgba(60,160,140,0.05) 100%)`
-                : `linear-gradient(135deg, rgba(94,196,176,0.08) 0%, rgba(94,196,176,0.01) 100%)`,
-            tint: '#5EC4B0'
+                ? `linear-gradient(135deg, rgba(140,123,138,0.1) 0%, rgba(60,160,140,0.05) 100%)`
+                : `linear-gradient(135deg, rgba(140,123,138,0.08) 0%, rgba(140,123,138,0.01) 100%)`,
+            tint: '#8C7B8A'
         },
         Work: {
             gradient: 'transparent',
@@ -1147,7 +1147,7 @@ export const SituationalPractices: React.FC<{
 
                             {COLLECTIONS.map(col => {
                                 const colItems = col.ids.map(id => SITUATIONS.find(s => s.id === id)!).filter(Boolean);
-                                const colColors: Record<string, string> = { 'start-here': '#ABCEC9', 'emotional-toolkit': '#FF7043', 'daily-anchors': '#9575CD' };
+                                const colColors: Record<string, string> = { 'start-here': '#CFC2CD', 'emotional-toolkit': '#FF7043', 'daily-anchors': '#9575CD' };
                                 const accent = colColors[col.id];
 
                                 return (

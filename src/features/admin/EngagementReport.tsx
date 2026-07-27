@@ -5,7 +5,6 @@ import { db, functions } from '../../firebase';
 import { collection, query, orderBy, limit, getDocs, where, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { WhisperInput, AnchorButton, SacredToast } from '../../components/ui/SacredUI';
-import { isMonitoredEmail } from '../../config/admin';
 import { cn } from '../../lib/utils';
 import EmotionalHealthStats from './EmotionalHealthStats';
 
@@ -27,7 +26,9 @@ interface EngagementReportProps {
 }
 
 const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) => {
-    const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'waitlist' | 'leads' | 'blast' | 'history'>('logs');
+    const [activeTab, setActiveTab] = useState<'activity' | 'logs' | 'users' | 'waitlist' | 'leads' | 'blast' | 'history' | 'errors'>('activity');
+    const [errorLogs, setErrorLogs] = useState<any[]>([]);
+    const [feedFilter, setFeedFilter] = useState<'all' | 'signup' | 'open' | 'visit' | 'interaction' | 'unsub'>('all');
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -159,23 +160,36 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         }
     };
 
+    const fetchErrors = async () => {
+        setIsLoading(true);
+        try {
+            const q = query(collection(db, 'error_logs'), orderBy('timestamp', 'desc'), limit(200));
+            const snapshot = await getDocs(q);
+            setErrorLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } catch (error) {
+            console.error("Error fetching error logs:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const fetchLogs = async () => {
         setIsLoading(true);
         try {
             const logsRef = collection(db, 'activity_logs');
-            const q = query(logsRef, orderBy('timestamp', 'desc'), limit(150));
+            const q = query(logsRef, orderBy('timestamp', 'desc'), limit(500));
             const snapshot = await getDocs(q);
-            
+
             const fetchedLogs = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             })) as ActivityLog[];
 
-            const filteredLogs = fetchedLogs
-                .filter(log => isMonitoredEmail(log.userEmail))
-                .slice(0, 100);
-
-            setLogs(filteredLogs);
+            // Previously filtered to isMonitoredEmail(), which hid every real user
+            // and made the dashboard reflect only ~5 internal accounts. Now we keep
+            // all activity; anonymous noise is toggled via `showAnonymous` in the
+            // feed/list below.
+            setLogs(fetchedLogs.slice(0, 500));
         } catch (error) {
             console.error("Error fetching admin logs:", error);
         } finally {
@@ -236,13 +250,51 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             const waitlistRef = collection(db, 'waitlist');
             const q = query(waitlistRef, orderBy('createdAt', 'desc'), limit(200));
             const snap = await getDocs(q);
-            setWaitlist(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            const entries = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+
+            // Cross-reference opt-outs (who we DON'T email) and opens (who's
+            // engaged), keyed by email, so the one table shows the full picture.
+            const unsubSet = new Set<string>();
+            const openedSet = new Set<string>();
+            try {
+                const [unsubSnap, opensSnap] = await Promise.all([
+                    getDocs(query(collection(db, 'email_unsubscribes'), limit(2000))),
+                    getDocs(query(collection(db, 'email_opens'), limit(5000))),
+                ]);
+                unsubSnap.docs.forEach(d => {
+                    const em = String(d.data().userEmail || '').toLowerCase().trim();
+                    if (em && em !== 'unknown') unsubSet.add(em);
+                });
+                opensSnap.docs.forEach(d => {
+                    const em = String(d.data().userEmail || '').toLowerCase().trim();
+                    if (em && em !== 'unknown') openedSet.add(em);
+                });
+            } catch (_) { /* collections may be empty / rules; degrade gracefully */ }
+
+            setWaitlist(entries.map(e => {
+                const em = String(e.email || '').toLowerCase().trim();
+                return { ...e, unsubscribed: unsubSet.has(em), opened: openedSet.has(em) };
+            }));
         } catch (e) {
             console.error('Error fetching waitlist:', e);
             setToast('Failed to load waitlist.');
             setTimeout(() => setToast(''), 4000);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // Friendly label for the capture source (which page/CTA the email came from).
+    const sourceLabel = (s?: string) => {
+        switch (s) {
+            case 'app_signup': return 'App Signup';
+            case 'journal_download_gate': return 'Journal Gate';
+            case 'journal_download_clicked': return '⬇ Downloaded';
+            case 'feelings_emotion_course': return 'Course · Notify';
+            case 'feelings_emotion_course_buy_intent': return 'Course · Reserve $4.99';
+            case 'lead_magnet_free_guide': return 'Free Guide';
+            case 'emotional_health_quiz': return 'Emotional Health Quiz';
+            default: return s || 'Journal Gate';
         }
     };
 
@@ -331,11 +383,12 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
 
     useEffect(() => {
         if (isOpen) {
-            if (activeTab === 'logs') fetchLogs();
+            if (activeTab === 'logs' || activeTab === 'activity') fetchLogs();
             if (activeTab === 'users') fetchUsers();
             if (activeTab === 'history') fetchHistory();
             if (activeTab === 'leads') fetchLeads();
             if (activeTab === 'waitlist') fetchWaitlist();
+            if (activeTab === 'errors') fetchErrors();
         }
     }, [isOpen, activeTab]);
 
@@ -379,6 +432,106 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         if (type === 'EMAIL_FORM_SUBMIT') return 'EMAIL SUBMIT';
         return 'EMAIL';
     };
+
+    // Turn an activity log into a plain-English sentence for the Live feed.
+    const humanizeLog = (l: ActivityLog): string => {
+        const t = l.activityType;
+        const map: Record<string, string> = {
+            EMAIL_FORM_SUBMIT: 'submitted their email',
+            BUY_INTENT_FORM_SUBMIT: 'reserved the course ($4.99)',
+            LEAD_MAGNET_SUBMIT: 'requested the free guide',
+            LEAD_MAGNET_DOWNLOAD: 'downloaded the free guide',
+            EMOTIONAL_HEALTH_START: 'started the emotional-health quiz',
+            EMOTIONAL_HEALTH_COMPLETE: 'completed the emotional-health quiz',
+            EMOTIONAL_HEALTH_SHARE: 'shared their result card',
+            EMOTIONAL_HEALTH_CTA: 'tapped the app CTA',
+            PAGE_VISIT_FEELINGS_COURSE: 'visited the Feelings & Emotions course',
+            PAGE_VISIT_EMOTIONAL_HEALTH: 'visited the emotional-health quiz',
+            PAGE_VISIT_ABOUT: 'visited the landing page',
+            PAGE_VISIT_APP: 'entered the app',
+            INTRO_VIDEO_PLAY: 'played the intro video',
+            VIDEO_PLAY: 'played a video',
+            WHATSAPP_CLICK: 'messaged us on WhatsApp',
+            WHATSAPP_GROUP_CLICK: 'opened the WhatsApp group',
+            YOUTUBE_CLICK: 'opened YouTube',
+            FACEBOOK_CLICK: 'opened Facebook',
+            CONTACT_WHATSAPP_CLICK: 'tapped WhatsApp',
+            CONTACT_EMAIL_CLICK: 'tapped the email link',
+            TEACHER_STORY_CLICK: "opened the teacher's story",
+            JOURNAL_DOWNLOAD: 'downloaded the journal',
+            EMAIL_OPEN: 'opened an email',
+            EMAIL_CTA_CLICK: 'clicked a link in an email',
+            EMAIL_YOUTUBE_CLICK: 'clicked YouTube in an email',
+            EMAIL_UNSUBSCRIBED: 'unsubscribed',
+            LOGIN: 'signed in',
+            SESSION_START: 'is present in the app',
+        };
+        return map[t] || t.replace(/_/g, ' ').toLowerCase();
+    };
+
+    const relativeTime = (ts: any): string => {
+        if (!ts) return '';
+        const d = ts.toDate ? ts.toDate() : new Date(ts);
+        const diff = Date.now() - d.getTime();
+        const m = Math.floor(diff / 60000);
+        if (m < 1) return 'just now';
+        if (m < 60) return `${m}m ago`;
+        const h = Math.floor(m / 60);
+        if (h < 24) return `${h}h ago`;
+        const days = Math.floor(h / 24);
+        return days < 7 ? `${days}d ago` : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    // Build the Live feed: email OPENS are noisy (many people, same blast), so
+    // club them into ONE row per blast ("N people opened your email update").
+    // Everything else stays as an individual event, all sorted newest-first.
+    const tsMs = (ts: any) => { if (!ts) return 0; const d = ts?.toDate ? ts.toDate() : new Date(ts); return d.getTime(); };
+    const activityFeed = useMemo(() => {
+        const out: any[] = [];
+        const groups = new Map<string, any>();
+        for (const l of logs) {
+            const isAnon = (l as any).isAnonymous || !l.userEmail || l.userEmail === 'anonymous';
+            if (isAnon && !showAnonymous) continue;
+            if (l.activityType === 'EMAIL_OPEN') {
+                const m = (l.details || '').match(/\(([^)]+)\)/);
+                const key = (l as any).blastId || (m ? m[1] : 'email');
+                let g = groups.get(key);
+                if (!g) { g = { kind: 'group', id: 'grp_' + key, latestTs: l.timestamp, openers: [] as string[] }; groups.set(key, g); out.push(g); }
+                const em = l.userEmail && l.userEmail !== 'anonymous' ? l.userEmail : null;
+                if (em && !g.openers.includes(em)) g.openers.push(em);
+                if (tsMs(l.timestamp) > tsMs(g.latestTs)) g.latestTs = l.timestamp;
+            } else {
+                out.push({ kind: 'single', id: l.id, log: l, latestTs: l.timestamp });
+            }
+        }
+        return out.sort((a, b) => tsMs(b.latestTs) - tsMs(a.latestTs));
+    }, [logs, showAnonymous]);
+
+    // Categorise a feed item for the summary tiles + filter chips.
+    const feedCategory = (item: any): 'signup' | 'open' | 'visit' | 'unsub' | 'interaction' => {
+        if (item.kind === 'group') return 'open';
+        const t = item.log.activityType as string;
+        if (['EMAIL_FORM_SUBMIT', 'BUY_INTENT_FORM_SUBMIT', 'LEAD_MAGNET_SUBMIT'].includes(t)) return 'signup';
+        if (t === 'EMAIL_UNSUBSCRIBED') return 'unsub';
+        if (t.startsWith('PAGE_VISIT')) return 'visit';
+        return 'interaction';
+    };
+
+    // At-a-glance counts for the Live overview (recent activity window).
+    const feedStats = useMemo(() => {
+        const s = { signup: 0, opens: 0, visit: 0, interaction: 0, unsub: 0 };
+        for (const item of activityFeed) {
+            const c = feedCategory(item);
+            if (c === 'open') s.opens += item.openers.length;         // unique openers
+            else s[c] += 1;
+        }
+        return s;
+    }, [activityFeed]);
+
+    const filteredFeed = useMemo(() => {
+        if (feedFilter === 'all') return activityFeed;
+        return activityFeed.filter(item => feedCategory(item) === feedFilter);
+    }, [activityFeed, feedFilter]);
 
     // Helper: is this CTA click a journal download link?
     const isJournalCta = (l: ActivityLog) =>
@@ -459,11 +612,12 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                         <div className="p-4 sm:p-8 border-b border-[#2A2A2A] flex flex-col sm:flex-row justify-between items-start gap-6">
                             <div className="flex gap-4">
                                 <div className="p-3 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] shadow-inner flex-shrink-0">
-                                    {activeTab === 'logs' ? <Mail className="w-6 h-6 text-[var(--accent-primary)]" /> : <Megaphone className="w-6 h-6 text-[var(--accent-primary)]" />}
+                                    {activeTab === 'logs' || activeTab === 'activity' ? <Mail className="w-6 h-6 text-[var(--accent-primary)]" /> : <Megaphone className="w-6 h-6 text-[var(--accent-primary)]" />}
                                 </div>
                                 <div>
                                     <h2 className="text-[18px] sm:text-[22px] font-bold text-[var(--accent-primary)] tracking-wider uppercase">
-                                        {activeTab === 'logs' ? 'Engagement Report'
+                                        {activeTab === 'activity' ? 'Live Activity'
+                                            : activeTab === 'logs' ? 'Engagement Report'
                                             : activeTab === 'users' ? 'Users'
                                             : activeTab === 'waitlist' ? 'Subscribers'
                                             : activeTab === 'leads' ? 'Lead Finder'
@@ -471,7 +625,8 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                             : 'Email History'}
                                     </h2>
                                     <p className="text-[9px] sm:text-[11px] text-[var(--text-muted)] tracking-[0.2em] font-bold uppercase mt-1">
-                                        {activeTab === 'logs' ? 'Tracking User Activity'
+                                        {activeTab === 'activity' ? 'Who interacted · newest first'
+                                            : activeTab === 'logs' ? 'Tracking User Activity'
                                             : activeTab === 'users' ? 'All registered users'
                                             : activeTab === 'waitlist' ? 'App signups · Journal gate · Downloads'
                                             : activeTab === 'leads' ? 'Daily prospect scan from Google + Reddit'
@@ -482,14 +637,23 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                             </div>
                             <div className="flex flex-row sm:flex-row gap-4 w-full sm:w-auto items-center">
                                 <div className="flex gap-1 sm:gap-2 bg-[var(--bg-surface-hover)] p-1 rounded-full border border-[var(--border-subtle)] flex-1 sm:flex-none overflow-x-auto custom-scrollbar no-scrollbar">
-                                    <button 
+                                    <button
+                                        onClick={() => setActiveTab('activity')}
+                                        className={cn(
+                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
+                                            activeTab === 'activity' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                        )}
+                                    >
+                                        Live
+                                    </button>
+                                    <button
                                         onClick={() => setActiveTab('logs')}
                                         className={cn(
                                             "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
                                             activeTab === 'logs' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
-                                        Activity
+                                        Report
                                     </button>
                                     <button 
                                         onClick={() => setActiveTab('users')}
@@ -536,6 +700,15 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     >
                                         History
                                     </button>
+                                    <button
+                                        onClick={() => setActiveTab('errors')}
+                                        className={cn(
+                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
+                                            activeTab === 'errors' ? "bg-red-500 text-white" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                        )}
+                                    >
+                                        Errors
+                                    </button>
                                 </div>
 
                                 <button
@@ -547,7 +720,104 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                             </div>
                         </div>
 
-                        {activeTab === 'logs' ? (
+                        {activeTab === 'activity' ? (
+                            <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 custom-scrollbar">
+                                <div className="flex items-center justify-between mb-5 px-2">
+                                    <div>
+                                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">Live Activity</h3>
+                                        <p className="text-[11px] text-[var(--text-muted)]">Who interacted with your pages, app &amp; emails — newest first</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setShowAnonymous(v => !v)}
+                                            className={`flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full border transition-all ${showAnonymous ? 'border-amber-400/50 text-amber-400 bg-amber-400/10' : 'border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+                                        >
+                                            {showAnonymous ? 'Hide' : 'Show'} anonymous
+                                        </button>
+                                        <button onClick={fetchLogs} disabled={isLoading} className="inline-flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-full border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors">
+                                            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* At-a-glance overview — click a tile to filter the timeline below */}
+                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-3 px-2">
+                                    {[
+                                        { key: 'signup', label: 'New signups', value: feedStats.signup, color: 'var(--accent-primary)' },
+                                        { key: 'open', label: 'Email opens', value: feedStats.opens, color: '#38bdf8' },
+                                        { key: 'visit', label: 'Page visits', value: feedStats.visit, color: '#2dd4bf' },
+                                        { key: 'interaction', label: 'Interactions', value: feedStats.interaction, color: '#a78bfa' },
+                                        { key: 'unsub', label: 'Unsubscribed', value: feedStats.unsub, color: '#FF4B4B' },
+                                    ].map((m) => (
+                                        <button key={m.key} onClick={() => setFeedFilter(feedFilter === m.key ? 'all' : (m.key as any))}
+                                            className={cn("rounded-xl p-3 text-center border transition-all", feedFilter === m.key ? "border-[var(--accent-primary)] bg-[var(--bg-surface)]" : "border-[var(--border-subtle)] hover:border-[var(--border-default)]")}>
+                                            <div className="text-[19px] font-bold leading-none mb-1" style={{ color: m.color }}>{m.value}</div>
+                                            <div className="text-[9px] sm:text-[10px]" style={{ color: 'var(--text-muted)' }}>{m.label}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                                {feedFilter !== 'all' && (
+                                    <div className="px-2 mb-3">
+                                        <button onClick={() => setFeedFilter('all')} className="text-[11px] font-semibold text-[var(--accent-primary)] hover:underline">
+                                            Showing {feedFilter} only · Show everything
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div className="space-y-1.5">
+                                    {filteredFeed.map((item) => {
+                                        if (item.kind === 'group') {
+                                            const n = item.openers.length;
+                                            return (
+                                                <motion.div key={item.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                                                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors">
+                                                    <div className="w-9 h-9 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center shrink-0 mt-0.5">
+                                                        <Eye className="w-4 h-4 text-[var(--accent-primary)]" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-[13px] leading-snug" style={{ color: 'var(--text-primary)' }}>
+                                                            <span className="font-semibold">{n} {n === 1 ? 'person' : 'people'}</span>{' '}
+                                                            <span style={{ color: 'var(--text-secondary)' }}>opened your email update</span>
+                                                        </p>
+                                                        {n > 0 && <p className="text-[11px] leading-snug mt-0.5" style={{ color: 'var(--text-muted)' }}>{item.openers.join(', ')}</p>}
+                                                    </div>
+                                                    <span className="text-[11px] whitespace-nowrap shrink-0 mt-1" style={{ color: 'var(--text-muted)' }}>{relativeTime(item.latestTs)}</span>
+                                                </motion.div>
+                                            );
+                                        }
+                                        const l = item.log;
+                                        const em = l.userEmail && l.userEmail !== 'anonymous' ? l.userEmail : 'Someone';
+                                        const isNegative = l.activityType === 'EMAIL_UNSUBSCRIBED';
+                                        return (
+                                            <motion.div key={item.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                                                className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors group">
+                                                <div className="w-9 h-9 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center shrink-0 mt-0.5">
+                                                    {getSourceIcon(l.activityType)}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-[13px] leading-snug" style={{ color: 'var(--text-primary)' }}>
+                                                        <span className="font-semibold">{em}</span>{' '}
+                                                        <span style={{ color: isNegative ? '#FF4B4B' : 'var(--text-secondary)' }}>{humanizeLog(l)}</span>
+                                                        {l.location && l.location !== 'web' && (
+                                                            <span style={{ color: 'var(--text-muted)' }}> · {l.location}</span>
+                                                        )}
+                                                    </p>
+                                                    {l.details && <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{l.details}</p>}
+                                                </div>
+                                                <span className="text-[11px] whitespace-nowrap shrink-0 mt-1" style={{ color: 'var(--text-muted)' }}>{relativeTime(l.timestamp)}</span>
+                                                <button onClick={() => handleDeleteLog(l.id)} title="Delete"
+                                                    className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 shrink-0">
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </motion.div>
+                                        );
+                                    })}
+                                    {filteredFeed.length === 0 && !isLoading && (
+                                        <div className="py-20 text-center"><p className="text-[var(--text-muted)] italic">No activity in this filter.</p></div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : activeTab === 'logs' ? (
                             <>
                                 <div className="px-4 sm:px-10 pt-5">
                                     <EmotionalHealthStats />
@@ -829,9 +1099,18 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                             </>
                         ) : activeTab === 'waitlist' ? (
                             <>
-                                <div className="px-4 sm:px-10 py-6 grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[2fr_1fr_1.5fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                {/* Summary — total / who we email / who opened / who opted out */}
+                                <div className="px-4 sm:px-10 pt-5 flex flex-wrap items-center gap-x-6 gap-y-1 text-[12px] font-bold">
+                                    <span className="text-[var(--text-secondary)]">{waitlist.length} subscribers</span>
+                                    <span className="text-emerald-400">{waitlist.filter((w: any) => !w.unsubscribed).length} active · we email these</span>
+                                    <span className="text-sky-400">{waitlist.filter((w: any) => w.opened).length} opened an email</span>
+                                    <span className="text-[#FF4B4B]">{waitlist.filter((w: any) => w.unsubscribed).length} unsubscribed</span>
+                                </div>
+                                <div className="px-4 sm:px-10 py-5 grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[1.8fr_1fr_0.9fr_0.7fr_1fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
                                     <div>Email</div>
-                                    <div className="hidden md:block">Source</div>
+                                    <div className="hidden md:block">Source / Page</div>
+                                    <div className="hidden md:block">Status</div>
+                                    <div className="hidden md:block">Opened</div>
                                     <div className="hidden md:block">Joined</div>
                                     <div className="text-right">
                                         <button onClick={fetchWaitlist} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
@@ -849,24 +1128,47 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                     key={w.id}
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
-                                                    className="grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[2fr_1fr_1.5fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                    className="grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[1.8fr_1fr_0.9fr_0.7fr_1fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-primary)] border border-[var(--border-default)] flex items-center justify-center overflow-hidden shrink-0">
                                                             <Mail className="w-4 h-4 text-[var(--text-muted)]" />
                                                         </div>
-                                                        <span className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors truncate">{w.email}</span>
+                                                        <span className={cn("text-[13px] font-medium truncate transition-colors", w.unsubscribed ? "text-[var(--text-muted)] line-through" : "text-[var(--text-primary)] group-hover:text-[var(--accent-primary)]")}>{w.email}</span>
                                                     </div>
 
                                                     <div className="hidden md:block text-[11px] font-bold uppercase tracking-tight" style={{
-                                                        color: w.source === 'app_signup' ? 'var(--accent-primary)' : w.source === 'journal_download_clicked' ? '#818cf8' : 'var(--text-secondary)'
+                                                        color: w.source === 'app_signup' ? 'var(--accent-primary)'
+                                                            : w.source === 'journal_download_clicked' ? '#818cf8'
+                                                            : String(w.source || '').startsWith('feelings_') ? '#d8a53a'
+                                                            : w.source === 'lead_magnet_free_guide' ? '#e0b341'
+                                                            : 'var(--text-secondary)'
                                                     }}>
-                                                        {w.source === 'app_signup' ? 'App Signup'
-                                                            : w.source === 'journal_download_gate' ? 'Journal Gate'
-                                                            : w.source === 'journal_download_clicked' ? '⬇ Downloaded'
-                                                            : w.source || 'Journal Gate'}
+                                                        {sourceLabel(w.source)}
                                                     </div>
-                                                    
+
+                                                    <div className="hidden md:block">
+                                                        {w.unsubscribed ? (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-[#FF4B4B]/10 text-[#FF4B4B]">
+                                                                <UserX className="w-3 h-3" /> Unsubscribed
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">
+                                                                Active
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="hidden md:block">
+                                                        {w.opened ? (
+                                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-400">
+                                                                <Eye className="w-3.5 h-3.5" /> Yes
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[11px] text-[var(--text-muted)]">—</span>
+                                                        )}
+                                                    </div>
+
                                                     <div className="hidden md:block flex flex-col">
                                                         <span className="text-[12px] text-[var(--text-secondary)]">{date}</span>
                                                         <span className="text-[10px] font-bold text-[var(--accent-primary)]">{time}</span>
@@ -1125,6 +1427,50 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                         </AnchorButton>
                                     </div>
                                 </div>
+                            </div>
+                        ) : activeTab === 'errors' ? (
+                            <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 custom-scrollbar">
+                                <div className="flex items-center justify-between mb-5 px-2">
+                                    <div>
+                                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">Crash &amp; Error Log</h3>
+                                        <p className="text-[11px] text-[var(--text-muted)]">Runtime errors caught across all users — newest first</p>
+                                    </div>
+                                    <button onClick={fetchErrors} disabled={isLoading} className="inline-flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-full border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors">
+                                        <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
+                                    </button>
+                                </div>
+                                {errorLogs.length === 0 ? (
+                                    <div className="text-center py-16 text-[13px] text-[var(--text-muted)]">
+                                        {isLoading ? 'Loading…' : 'No errors recorded 🎉'}
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {errorLogs.map((e) => {
+                                            const when = e.timestamp?.toDate ? e.timestamp.toDate() : null;
+                                            return (
+                                                <div key={e.id} className="p-4 rounded-2xl border border-red-500/20 bg-red-500/5">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <p className="text-[13px] font-bold text-[var(--text-primary)] break-words min-w-0 flex-1">{e.message}</p>
+                                                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500/15 text-red-500 flex-shrink-0">{e.kind || 'error'}</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-[var(--text-muted)]">
+                                                        {e.feature && <span>📦 {e.feature}</span>}
+                                                        {e.email && <span>👤 {e.email}</span>}
+                                                        {e.url && <span className="truncate max-w-[220px]">🔗 {String(e.url).replace(/^https?:\/\//, '')}</span>}
+                                                        {when && <span>🕐 {when.toLocaleString()}</span>}
+                                                    </div>
+                                                    {e.stack && (
+                                                        <details className="mt-2">
+                                                            <summary className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer hover:text-[var(--text-secondary)]">Stack trace</summary>
+                                                            <pre className="mt-1.5 text-[10px] text-[var(--text-secondary)] whitespace-pre-wrap break-words bg-black/20 rounded-lg p-3 overflow-x-auto max-h-48">{e.stack}</pre>
+                                                        </details>
+                                                    )}
+                                                    {e.userAgent && <p className="mt-1.5 text-[9px] text-[var(--text-muted)] truncate">{e.userAgent}</p>}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <>

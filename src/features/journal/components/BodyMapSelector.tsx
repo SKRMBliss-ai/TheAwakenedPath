@@ -178,7 +178,7 @@ export function BodyMapSelector({
                                 style={{
                                     background: 'var(--accent-primary)',
                                     color: 'var(--bg-base)',
-                                    boxShadow: '0 4px 20px rgba(94,196,176,0.35)',
+                                    boxShadow: '0 4px 20px rgba(140,123,138,0.35)',
                                 }}>
                                 <span style={{ fontSize: 18 }}>👆</span>
                                 <span>Tap a circle — where do you feel it?</span>
@@ -278,7 +278,7 @@ export function BodyMapSelector({
                                             fontSize: isSelected ? 16 : 13,
                                             fontWeight: isSelected ? 800 : 700,
                                             fill: isSelected ? zone.color : 'var(--text-main)',
-                                            fontFamily: "'Outfit', 'Inter', sans-serif",
+                                            fontFamily: "'Outfit', 'Outfit', sans-serif",
                                             opacity: isOtherSelected ? 0.3 : 1,
                                             letterSpacing: '0',
                                         }}

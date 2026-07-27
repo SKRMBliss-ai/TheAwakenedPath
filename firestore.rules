@@ -18,14 +18,63 @@ service cloud.firestore {
         );
     }
 
-    match /users/{userId}/{allPaths=**} {
-      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
-      allow write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Paid-entitlement fields on a user doc. These are set ONLY by the payment
+    // Cloud Functions (Admin SDK, which bypasses these rules). A client must
+    // never be able to grant itself access by writing them directly — otherwise
+    // anyone could unlock every paid course/premium for free from devtools.
+    function entitlementsUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['purchasedCourses', 'ownedTracks', 'subscriptionStatus', 'subscriptionId', 'membershipUntil']);
+    }
+
+    // On create, entitlement fields may only be seeded to their empty defaults
+    // (the app writes purchasedCourses: [], subscriptionStatus: 'INACTIVE'), so a
+    // user can't self-provision by pre-filling them on the very first write.
+    // membershipUntil (pay-what-you-want membership expiry) must be absent
+    // entirely — there's no legitimate "empty" value for a timestamp field.
+    function entitlementsSeedSafe() {
+      let d = request.resource.data;
+      return (!('purchasedCourses' in d) || d.purchasedCourses.size() == 0)
+        && (!('ownedTracks' in d) || d.ownedTracks.size() == 0)
+        && (!('subscriptionStatus' in d) || d.subscriptionStatus == 'INACTIVE')
+        && (!('subscriptionId' in d))
+        && (!('membershipUntil' in d));
+    }
+
+    // The user doc itself — entitlement fields are guarded here.
+    match /users/{userId} {
+      allow read:   if isOwner(userId) || isAdmin();
+      allow create: if isAdmin() || (isOwner(userId) && entitlementsSeedSafe());
+      allow update: if isAdmin() || (isOwner(userId) && entitlementsUnchanged());
       allow delete: if isAdmin();
+    }
+
+    // Subcollections (courseProgress, courseMeta, …) — owner has full access; no
+    // entitlements live here. This is a SIBLING match, scoped to paths at least
+    // one collection + doc deep, so it can NOT match the user doc above (whose
+    // permissive write would otherwise override the entitlement guard).
+    match /users/{userId}/{coll}/{doc=**} {
+      allow read, write: if isOwner(userId) || isAdmin();
     }
     
     match /activity_logs/{logId} {
       allow create: if request.auth != null;
+      allow read: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /error_logs/{errId} {
+      // Any signed-in (incl. anonymous) client can report a crash, but only with
+      // the expected shape and bounded sizes so it can't be used to spam Firestore.
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['message','stack','feature','kind','url','userAgent','uid','email','timestamp'])
+        && request.resource.data.message is string
+        && request.resource.data.message.size() < 2000
+        && request.resource.data.stack.size() < 5000;
       allow read: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -69,9 +118,12 @@ service cloud.firestore {
     }
 
     match /waitlist/{entryId} {
-      // Anonymous email captures from the marketing landing page (/aboutjournal).
-      // Strict shape validation prevents abuse and unbounded writes.
-      allow create: if request.resource.data.keys().hasOnly(['email', 'source', 'userAgent', 'createdAt'])
+      // Anonymous email captures from marketing landing pages (/aboutmindgym,
+      // /feelingsandemotioncourse). Strict shape validation prevents abuse and
+      // unbounded writes. Must match the exact fields the app actually sends —
+      // 'mailingList' and 'type' were added to app code but never allow-listed
+      // here, which silently broke every waitlist signup (permission-denied).
+      allow create: if request.resource.data.keys().hasOnly(['email', 'source', 'userAgent', 'createdAt', 'mailingList', 'type'])
         && request.resource.data.email is string
         && request.resource.data.email.size() > 3
         && request.resource.data.email.size() < 200

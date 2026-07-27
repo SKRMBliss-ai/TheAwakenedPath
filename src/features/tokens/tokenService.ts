@@ -29,7 +29,20 @@ export const TOKEN_COSTS = {
   daily_practice: 5,
   wisdom_chapter: 10,
   pow_chapter: 10,
+  video_watch: 5,
 } as const;
+
+// Human-readable labels for the token-usage toast.
+export const FEATURE_LABELS: Record<keyof typeof TOKEN_COSTS, string> = {
+  voice_guidance: 'Voice Guidance',
+  daily_journal: 'Journal Entry',
+  freestyle_journal: 'Journal',
+  situational_practice: 'Practice',
+  daily_practice: 'Practice',
+  wisdom_chapter: 'Wisdom Chapter',
+  pow_chapter: 'Power of Now',
+  video_watch: 'Video',
+};
 
 export type FeatureName = keyof typeof TOKEN_COSTS;
 
@@ -65,7 +78,14 @@ export async function deductTokens(
       if (!snap.exists()) throw new Error('USER_NOT_FOUND');
 
       const data = snap.data();
-      const remaining: number = data.tokensRemaining ?? 0;
+      // Must match the 300 default used everywhere else this field is read
+      // (getTokenBalance, AuthContext profile transform). Any account whose
+      // doc predates the token system (or is otherwise missing this field)
+      // has never had it initialized — treating that as 0 here silently and
+      // permanently breaks every token-gated feature for that account (UI
+      // shows 300/300, but every real deduction throws INSUFFICIENT_TOKENS
+      // forever, since a failed transaction never writes the field).
+      const remaining: number = data.tokensRemaining ?? 300;
 
       if (remaining < cost) throw new Error('INSUFFICIENT_TOKENS');
 

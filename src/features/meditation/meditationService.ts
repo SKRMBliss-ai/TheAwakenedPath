@@ -37,8 +37,23 @@ function tsToMillis(v: any): number | null {
 export const MEDIA_SHARE_MAX_AGE_MS = 3 * 60 * 60 * 1000;
 
 // DEV mode : 5-min slots (4 min live · 1 min gap) — easy to test immediately
-// PROD mode : single daily session at 9:00 AM IST (UTC+5:30 = UTC 03:30), 1 hour (9:00–10:00)
+// PROD mode : single daily session at 9:30 AM IST (UTC+5:30 = UTC 04:00),
+// 80 minutes (9:30–10:50) — matching the wellness session agenda below.
 const IS_DEV = import.meta.env.DEV;
+
+// ── Wellness Session agenda ──────────────────────────────────────────────────
+// The session flow shown to everyone who joins, in order. Total = 80 min, which
+// must equal the live window length below so the live segment tracker lines up.
+export const SESSION_AGENDA: { label: string; minutes: number; emoji: string }[] = [
+  { label: 'Mudra Practice', minutes: 5, emoji: '🤲' },
+  { label: 'Foot & Face Massage', minutes: 5, emoji: '💆' },
+  { label: 'Bhastrika', minutes: 10, emoji: '🌬️' },
+  { label: 'Anulom Vilom', minutes: 10, emoji: '🍃' },
+  { label: 'Kapal Bhati', minutes: 10, emoji: '✨' },
+  { label: 'Yoga', minutes: 20, emoji: '🧘' },
+  { label: 'Meditation', minutes: 20, emoji: '🪷' },
+];
+export const SESSION_TOTAL_MIN = SESSION_AGENDA.reduce((a, s) => a + s.minutes, 0); // 80
 
 // Test users who always see live session
 const TEST_EMAILS = ['simkatyal1@gmail.com'];
@@ -80,20 +95,29 @@ export function getSessionSchedule(userEmail?: string): {
     };
   }
 
-  // ── PROD: fixed 9:00–10:00 AM IST daily session ──────────────────────────
-  // IST = UTC+5:30 → 9:00 AM IST = 03:30 AM UTC
+  // ── PROD: fixed 9:30–10:50 AM IST daily wellness session ─────────────────
+  // IST = UTC+5:30 → 9:30 AM IST = 04:00 AM UTC
   const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
-  const SESSION_HOUR_IST = 9, SESSION_MIN_IST = 0;
-  const LIVE_MS = 60 * 60 * 1000; // 9:00 → 10:00 AM IST
+  const SESSION_HOUR_IST = 9, SESSION_MIN_IST = 30;
+  const LIVE_MS = SESSION_TOTAL_MIN * 60 * 1000; // 80 min: 9:30 → 10:50 AM IST
 
-  // Today's 9 AM IST expressed as a UTC Date
+  // Today's 9:30 AM IST expressed as a UTC Date
   const todayUtcMidnight = new Date(now); todayUtcMidnight.setUTCHours(0,0,0,0);
   const sessionUtcMs = todayUtcMidnight.getTime()
     + (SESSION_HOUR_IST * 60 + SESSION_MIN_IST) * 60 * 1000
     - IST_OFFSET_MS;
 
-  let start = new Date(sessionUtcMs);
-  let end   = new Date(sessionUtcMs + LIVE_MS);
+  // No sessions on weekends — skip any Sat/Sun (judged in IST) to the next weekday.
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const isWeekendIST = (ms: number) => {
+    const d = new Date(ms + IST_OFFSET_MS).getUTCDay(); // 0 Sun … 6 Sat
+    return d === 0 || d === 6;
+  };
+  const nextWeekdaySession = (ms: number) => { while (isWeekendIST(ms)) ms += DAY_MS; return ms; };
+
+  const firstCandidateMs = nextWeekdaySession(sessionUtcMs);
+  let start = new Date(firstCandidateMs);
+  let end   = new Date(firstCandidateMs + LIVE_MS);
   const nowMs = now.getTime();
 
   let status: 'live' | 'waiting';
@@ -103,15 +127,17 @@ export function getSessionSchedule(userEmail?: string): {
   if (isTestUser) {
     status = 'live';
     start = new Date(now.getTime() - 5 * 60 * 1000); // Started 5 min ago
-    end = new Date(now.getTime() + 55 * 60 * 1000);  // Ends in 55 min
+    end = new Date(start.getTime() + LIVE_MS);       // Full 80-min agenda window
     remainingMs = end.getTime() - nowMs;
   } else if (nowMs < start.getTime()) {
     status = 'waiting'; untilStartMs = start.getTime() - nowMs;
   } else if (nowMs < end.getTime()) {
     status = 'live'; remainingMs = end.getTime() - nowMs;
   } else {
-    // After today's session → tomorrow 9 AM IST
-    start = new Date(start.getTime() + 24*60*60*1000);
+    // After today's session → next weekday 9:30 AM IST (Fri → Mon)
+    const nextMs = nextWeekdaySession(firstCandidateMs + DAY_MS);
+    start = new Date(nextMs);
+    end   = new Date(nextMs + LIVE_MS);
     status = 'waiting'; untilStartMs = start.getTime() - nowMs;
   }
 
@@ -130,14 +156,14 @@ export function getSessionSchedule(userEmail?: string): {
  * SAME session (rather than today's vs. tomorrow's, which is what
  * getSessionSchedule does once today's live window ends).
  *
- * Always uses today's UTC date + 9:00 AM IST (= 03:30 UTC).
+ * Always uses today's UTC date + 9:30 AM IST (= 04:00 UTC).
  */
 export function getTodayMeditationSessionId(): string {
   const now = new Date();
   const todayUtcMidnight = new Date(now);
   todayUtcMidnight.setUTCHours(0, 0, 0, 0);
-  // 9:00 AM IST = 03:30 UTC (IST is UTC+5:30)
-  const start = new Date(todayUtcMidnight.getTime() + (3 * 60 + 30) * 60 * 1000);
+  // 9:30 AM IST = 04:00 UTC (IST is UTC+5:30)
+  const start = new Date(todayUtcMidnight.getTime() + (4 * 60) * 60 * 1000);
   return `${start.getUTCFullYear()}-${pad(start.getUTCMonth() + 1)}-${pad(start.getUTCDate())}-${pad(start.getUTCHours())}-${pad(start.getUTCMinutes())}`;
 }
 

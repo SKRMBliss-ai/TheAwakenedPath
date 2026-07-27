@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 2000" width="2000" height="2000">
+  <defs>
+    <style>
+      .geo { fill: none; stroke: #C4A882; stroke-width: 0.8; }
+      .geo-thin { fill: none; stroke: #C4A882; stroke-width: 0.4; }
+      .geo-accent { fill: none; stroke: #B8956A; stroke-width: 1.2; }
+    </style>
+  </defs>
+  
+  <!-- Outer containing circles -->
+  <circle class="geo" cx="1000" cy="1000" r="900"/>
+  <circle class="geo-thin" cx="1000" cy="1000" r="800"/>
+  <circle class="geo-thin" cx="1000" cy="1000" r="700"/>
+  
+  <!-- Flower of Life — center circle radius = 100, 7-circle core -->
+  <!-- Center circle -->
+  <circle class="geo-accent" cx="1000" cy="1000" r="100"/>
+  
+  <!-- Ring 1 - 6 circles around center -->
+  <circle class="geo" cx="1100" cy="1000" r="100"/>
+  <circle class="geo" cx="1050" cy="913.4" r="100"/>
+  <circle class="geo" cx="950" cy="913.4" r="100"/>
+  <circle class="geo" cx="900" cy="1000" r="100"/>
+  <circle class="geo" cx="950" cy="1086.6" r="100"/>
+  <circle class="geo" cx="1050" cy="1086.6" r="100"/>
+  
+  <!-- Ring 2 - 12 circles -->
+  <circle class="geo-thin" cx="1200" cy="1000" r="100"/>
+  <circle class="geo-thin" cx="1150" cy="913.4" r="100"/>
+  <circle class="geo-thin" cx="1100" cy="826.8" r="100"/>
+  <circle class="geo-thin" cx="1000" cy="826.8" r="100"/>
+  <circle class="geo-thin" cx="900" cy="826.8" r="100"/>
+  <circle class="geo-thin" cx="850" cy="913.4" r="100"/>
+  <circle class="geo-thin" cx="800" cy="1000" r="100"/>
+  <circle class="geo-thin" cx="850" cy="1086.6" r="100"/>
+  <circle class="geo-thin" cx="900" cy="1173.2" r="100"/>
+  <circle class="geo-thin" cx="1000" cy="1173.2" r="100"/>
+  <circle class="geo-thin" cx="1100" cy="1173.2" r="100"/>
+  <circle class="geo-thin" cx="1150" cy="1086.6" r="100"/>
+  
+  <!-- Ring 3 - outer petal circles -->
+  <circle class="geo-thin" cx="1300" cy="1000" r="100"/>
+  <circle class="geo-thin" cx="1250" cy="913.4" r="100"/>
+  <circle class="geo-thin" cx="1200" cy="826.8" r="100"/>
+  <circle class="geo-thin" cx="1150" cy="740.2" r="100"/>
+  <circle class="geo-thin" cx="1050" cy="740.2" r="100"/>
+  <circle class="geo-thin" cx="950" cy="740.2" r="100"/>
+  <circle class="geo-thin" cx="850" cy="740.2" r="100"/>
+  <circle class="geo-thin" cx="800" cy="826.8" r="100"/>
+  <circle class="geo-thin" cx="750" cy="913.4" r="100"/>
+  <circle class="geo-thin" cx="700" cy="1000" r="100"/>
+  <circle class="geo-thin" cx="750" cy="1086.6" r="100"/>
+  <circle class="geo-thin" cx="800" cy="1173.2" r="100"/>
+  <circle class="geo-thin" cx="850" cy="1259.8" r="100"/>
+  <circle class="geo-thin" cx="950" cy="1259.8" r="100"/>
+  <circle class="geo-thin" cx="1050" cy="1259.8" r="100"/>
+  <circle class="geo-thin" cx="1150" cy="1259.8" r="100"/>
+  <circle class="geo-thin" cx="1200" cy="1173.2" r="100"/>
+  <circle class="geo-thin" cx="1250" cy="1086.6" r="100"/>
+  
+  <!-- Metatron's Cube — connecting lines between all 13 node centers -->
+  <!-- Center to Ring 1 nodes -->
+  <line class="geo" x1="1000" y1="1000" x2="1100" y2="1000"/>
+  <line class="geo" x1="1000" y1="1000" x2="1050" y2="913.4"/>
+  <line class="geo" x1="1000" y1="1000" x2="950" y2="913.4"/>
+  <line class="geo" x1="1000" y1="1000" x2="900" y2="1000"/>
+  <line class="geo" x1="1000" y1="1000" x2="950" y2="1086.6"/>
+  <line class="geo" x1="1000" y1="1000" x2="1050" y2="1086.6"/>
+  
+  <!-- Ring 1 cross connections -->
+  <line class="geo-thin" x1="1100" y1="1000" x2="1050" y2="913.4"/>
+  <line class="geo-thin" x1="1050" y1="913.4" x2="950" y2="913.4"/>
+  <line class="geo-thin" x1="950" y1="913.4" x2="900" y2="1000"/>
+  <line class="geo-thin" x1="900" y1="1000" x2="950" y2="1086.6"/>
+  <line class="geo-thin" x1="950" y1="1086.6" x2="1050" y2="1086.6"/>
+  <line class="geo-thin" x1="1050" y1="1086.6" x2="1100" y2="1000"/>
+  <!-- Crossing diametrals -->
+  <line class="geo-thin" x1="1100" y1="1000" x2="900" y2="1000"/>
+  <line class="geo-thin" x1="1050" y1="913.4" x2="950" y2="1086.6"/>
+  <line class="geo-thin" x1="950" y1="913.4" x2="1050" y2="1086.6"/>
+  
+  <!-- Outer star connections - from center to ring 2 -->
+  <line class="geo-thin" x1="1000" y1="1000" x2="1200" y2="1000"/>
+  <line class="geo-thin" x1="1000" y1="1000" x2="1100" y2="826.8"/>
+  <line class="geo-thin" x1="1000" y1="1000" x2="900" y2="826.8"/>
+  <line class="geo-thin" x1="1000" y1="1000" x2="800" y2="1000"/>
+  <line class="geo-thin" x1="1000" y1="1000" x2="900" y2="1173.2"/>
+  <line class="geo-thin" x1="1000" y1="1000" x2="1100" y2="1173.2"/>
+  
+  <!-- Large Star of David triangles -->
+  <!-- Upward triangle -->
+  <polygon class="geo" points="1000,653.6 1300,1173.2 700,1173.2"/>
+  <!-- Downward triangle -->
+  <polygon class="geo" points="1000,1346.4 1300,826.8 700,826.8"/>
+  
+  <!-- Inner hexagon -->
+  <polygon class="geo-accent" points="1100,1000 1050,913.4 950,913.4 900,1000 950,1086.6 1050,1086.6"/>
+  
+  <!-- Outer hexagon -->
+  <polygon class="geo" points="1200,1000 1100,826.8 900,826.8 800,1000 900,1173.2 1100,1173.2"/>
+  
+  <!-- Vesica Piscis pairs — vertical -->
+  <ellipse class="geo-thin" cx="1000" cy="1000" rx="100" ry="173.2"/>
+  <!-- Vesica Piscis — horizontal -->
+  <ellipse class="geo-thin" cx="1000" cy="1000" rx="173.2" ry="100"/>
+  
+  <!-- Large outer cross lines -->
+  <line class="geo-thin" x1="1000" y1="100" x2="1000" y2="1900"/>
+  <line class="geo-thin" x1="100" y1="1000" x2="1900" y2="1000"/>
+  <line class="geo-thin" x1="292.9" y1="292.9" x2="1707.1" y2="1707.1"/>
+  <line class="geo-thin" x1="1707.1" y1="292.9" x2="292.9" y2="1707.1"/>
+  
+  <!-- Medium ring circles -->
+  <circle class="geo-thin" cx="1000" cy="1000" r="300"/>
+  <circle class="geo-thin" cx="1000" cy="1000" r="400"/>
+  <circle class="geo-thin" cx="1000" cy="1000" r="500"/>
+  <circle class="geo-thin" cx="1000" cy="1000" r="600"/>
+  
+  <!-- Outer 12-pointed star -->
+  <polygon class="geo" points="
+    1000,400 1048.7,473.2 1130,473.2 1080,540 1100,620 
+    1025.9,578.6 951.3,620 971.3,540 921.3,473.2 1000,473.2
+  "/>
+  
+  <!-- Dodecagon (12-sided) -->
+  <polygon class="geo-thin" points="
+    1200,1000 1173.2,1100 1100,1173.2 1000,1200 
+    900,1173.2 826.8,1100 800,1000 826.8,900 
+    900,826.8 1000,800 1100,826.8 1173.2,900
+  "/>
+  
+  <!-- Large outer 6-pointed star -->
+  <polygon class="geo-thin" points="1000,500 1346.4,750 1346.4,1250 1000,1500 653.6,1250 653.6,750"/>
+  <polygon class="geo-thin" points="1000,1500 1346.4,1250 1346.4,750 1000,500 653.6,750 653.6,1250"/>
+  
+  <!-- Fibonacci spiral approximation arcs -->
+  <path class="geo-thin" d="M 1000 900 A 100 100 0 0 1 1100 1000 A 200 200 0 0 1 900 1200 A 300 300 0 0 1 700 900 A 400 400 0 0 1 1100 600"/>
+  
+  <!-- Corner sacred spirals -->
+  <path class="geo-thin" d="M 200 200 A 150 150 0 0 1 350 200 A 250 250 0 0 1 350 450 A 350 350 0 0 1 50 450"/>
+  <path class="geo-thin" d="M 1800 200 A 150 150 0 0 0 1650 200 A 250 250 0 0 0 1650 450 A 350 350 0 0 0 1950 450"/>
+  <path class="geo-thin" d="M 200 1800 A 150 150 0 0 0 350 1800 A 250 250 0 0 0 350 1550 A 350 350 0 0 0 50 1550"/>
+  <path class="geo-thin" d="M 1800 1800 A 150 150 0 0 1 1650 1800 A 250 250 0 0 1 1650 1550 A 350 350 0 0 1 1950 1550"/>
+  
+  <!-- Outer decorative dotted rings -->
+  <circle class="geo-thin" cx="1000" cy="1000" r="750"/>
+  <circle class="geo-thin" cx="1000" cy="1000" r="850"/>
+</svg>

@@ -158,7 +158,7 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: {
     return (
         <div className="space-y-3">
             <div className="flex flex-col gap-1">
-                <label style={{ fontSize: 16, color: "var(--text-primary)", fontWeight: 600, fontFamily: "'Georgia', serif" }}>
+                <label style={{ fontSize: 16, color: "var(--text-primary)", fontWeight: 600, fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                     {label}
                 </label>
                 {hint && <p style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic" }}>{hint}</p>}
@@ -174,7 +174,7 @@ function GentleTextarea({ label, placeholder, value, onChange, hint }: {
                     background: 'var(--bg-input)',
                     border: '1.5px solid var(--border-subtle)',
                     color: "var(--text-primary)", outline: "none", resize: "none",
-                    fontFamily: "'Outfit', 'Inter', sans-serif",
+                    fontFamily: "'Outfit', 'Outfit', sans-serif",
                     minHeight: 100,
                     transition: "border-color 0.25s ease",
                 }}
@@ -224,7 +224,7 @@ function NavButton({
         background: disabled
           ? 'var(--bg-surface)'
           : variant === 'save'
-            ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover, #2E8F89))'
+            ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover, #695E68))'
             : isNext
               ? 'var(--accent-primary)'
               : 'var(--bg-surface)',
@@ -262,7 +262,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
         const ambients = [
           'radial-gradient(ellipse at 50% 0%, rgba(184,151,58,.08) 0%, transparent 65%)',
           'radial-gradient(ellipse at 50% 0%, rgba(92,159,212,.07) 0%, transparent 65%)',
-          'radial-gradient(ellipse at 50% 0%, rgba(171,206,201,.07) 0%, transparent 65%)',
+          'radial-gradient(ellipse at 50% 0%, rgba(207,194,205,.07) 0%, transparent 65%)',
         ];
         document.documentElement.style.setProperty(
           '--journal-ambient',
@@ -430,7 +430,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
 
     return (
         <div ref={scrollRef} className="w-full h-full relative" style={{
-            fontFamily: "'Georgia', 'Times New Roman', serif",
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
             background: 'var(--journal-ambient, transparent)',
             transition: 'background 1.5s ease'
         }}>
@@ -558,7 +558,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                 <div className="text-6xl mb-8">✨</div>
                                 <h2 style={{
                                     fontSize: 'clamp(32px, 6vw, 42px)',
-                                    fontFamily: "'Georgia', serif",
+                                    fontFamily: "'Cormorant Garamond', Georgia, serif",
                                     color: 'var(--text-main)',
                                     fontWeight: 400
                                 }}>

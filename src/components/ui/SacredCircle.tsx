@@ -13,7 +13,7 @@
 //   · Removed ALL pink/magenta bias
 //     (rgba(255,220,240), rgba(200,160,180), rgba(240,160,170) all gone)
 //   · Orb: deep plum-black with gold undertone
-//   · Ambient glow: gold (#B8973A), matches nav/logo accent
+//   · Ambient glow: gold (#7A5F44), matches nav/logo accent
 //   · Inner rings: gold, not rose
 //   · Outer ring: gold, not rose
 //   · AWAKEN: warm cream, not harsh white

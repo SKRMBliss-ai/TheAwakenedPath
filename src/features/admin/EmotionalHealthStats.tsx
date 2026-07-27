@@ -66,7 +66,16 @@ export default function EmotionalHealthStats() {
         const completedToday = byDay[todayKey] || 0;
         const peakDay = days.reduce((m, d) => Math.max(m, d.count), 0) || 1;
 
-        return { visits, starts, completes, completedToday, emails, ctaMindGym, whatsapp, emailClick, shares, completionRate, days, peakDay };
+        // The actual captured email addresses (deduped) — the email is stored on
+        // each EMAIL_FORM_SUBMIT log. These are also saved to the `waitlist`
+        // collection (source: emotional_health_quiz), visible in the Subscribers tab.
+        const capturedEmails = Array.from(new Set(
+            logs.filter(l => l.activityType === 'EMAIL_FORM_SUBMIT')
+                .map(l => String(l.userEmail || '').toLowerCase().trim())
+                .filter(e => e && e !== 'anonymous')
+        ));
+
+        return { visits, starts, completes, completedToday, emails, ctaMindGym, whatsapp, emailClick, shares, completionRate, days, peakDay, capturedEmails };
     }, [logs]);
 
     const cardStyle = 'rounded-xl p-3 text-center';
@@ -106,6 +115,24 @@ export default function EmotionalHealthStats() {
             <p className="text-[11px] mb-4" style={{ color: 'var(--text-muted)' }}>
                 Completion rate (completed ÷ started): <span style={{ color: '#B0895F', fontWeight: 600 }}>{stats.completionRate}%</span>
             </p>
+
+            {/* The actual captured emails */}
+            {stats.capturedEmails.length > 0 && (
+                <div className="rounded-xl p-3 mb-5" style={cardBg}>
+                    <p className="text-[11px] uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                        <Mail className="w-3.5 h-3.5" style={{ color: '#B0895F' }} />
+                        Captured emails ({stats.capturedEmails.length}) · also in Subscribers tab
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {stats.capturedEmails.map((em) => (
+                            <a key={em} href={`mailto:${em}`} className="text-[11px] font-medium px-2.5 py-1 rounded-full hover:opacity-80 transition-opacity"
+                                style={{ background: 'rgba(176,137,95,0.12)', color: 'var(--text-secondary)', border: '0.5px solid rgba(176,137,95,0.3)' }}>
+                                {em}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Link clicks */}
             <p className="text-[11px] uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Link clicks</p>

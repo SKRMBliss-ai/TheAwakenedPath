@@ -139,7 +139,7 @@ export function PaymentWall({ onClose, onNavigateToPlans }: PaymentWallProps) {
               style={{
                 background: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))`,
                 color: '#fff',
-                boxShadow: '0 4px 20px rgba(94,196,176,0.3)',
+                boxShadow: '0 4px 20px rgba(140,123,138,0.3)',
               }}
             >
               Secure My Journey & Choose Plan
@@ -152,7 +152,7 @@ export function PaymentWall({ onClose, onNavigateToPlans }: PaymentWallProps) {
               style={{
                 background: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))`,
                 color: '#fff',
-                boxShadow: '0 4px 20px rgba(94,196,176,0.3)',
+                boxShadow: '0 4px 20px rgba(140,123,138,0.3)',
               }}
             >
               View Plans

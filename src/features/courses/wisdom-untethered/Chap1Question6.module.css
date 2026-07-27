@@ -1,14 +1,14 @@
 /* Chap1Question6.module.css */
 
 .container {
-  --gold: #B8973A;
+  --gold: #7A5F44;
   --gold-light: #F0E4C0;
-  --gold-pale: #D4AE5C;
+  --gold-pale: #A98A67;
   --ink: #1C1814;
   --ink-soft: #3A342C;
   --warm-white: #FDFAF4;
   --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans: 'DM Sans', sans-serif;
+  --sans: 'Outfit', sans-serif;
   
   background: var(--warm-white);
   color: var(--ink);

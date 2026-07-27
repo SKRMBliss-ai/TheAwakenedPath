@@ -34,7 +34,7 @@ export function VoiceToggle({ enabled, playing, loading, onToggle, className, st
                 )}
                 style={{
                     backdropFilter: "blur(12px)",
-                    boxShadow: enabled ? "0 8px 32px rgba(171,206,201,0.15)" : "none"
+                    boxShadow: enabled ? "0 8px 32px rgba(207,194,205,0.15)" : "none"
                 }}
             >
                 {loading ? (

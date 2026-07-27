@@ -20,7 +20,7 @@ const WISDOM_PRACTICES = [
     practiceName: '"I Can Handle This"',
     practiceDesc: 'When a spiral starts today — say it slowly, three times.',
     duration: '30 sec when triggered',
-    color: '#B8973A',
+    color: '#7A5F44',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q1_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q1_dark.png'),
     audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q1.mp3',
@@ -93,7 +93,7 @@ const WISDOM_PRACTICES = [
     practiceName: 'The Clarity Sit',
     practiceDesc: 'Sit for 3 minutes. Don\'t silence the mind — just stay settled beneath it.',
     duration: '3 min',
-    color: '#2E9E7A',
+    color: '#8C7B8A',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q5_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q5_dark.png'),
     audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q5.mp3',
@@ -129,7 +129,7 @@ const WISDOM_PRACTICES = [
     practiceName: 'Letting the Thorns Be',
     practiceDesc: 'When a "thorn" of irritation appears, simply relax and let it pass.',
     duration: '1 min',
-    color: '#F59E0B',
+    color: '#A98A67',
     imageLight: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q7_light.png'),
     imageDark: VoiceService.getStorageUrl('PracticeRoom/WisdomUntethered/q7_dark.png'),
     audioPath: 'PracticeRoom/WisdomUntethered/PracticeMeditationsforQ/Prac-q7.mp3',
@@ -547,12 +547,12 @@ export function WisdomPracticeSection({
     <section className="space-y-12">
       <div className="flex flex-col items-center text-center space-y-6">
         <div className="relative group">
-          <div className="absolute inset-0 bg-[#B8973A]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-[#7A5F44]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="relative p-1 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-sm">
             <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="28" cy="28" r="16" stroke="#B8973A" strokeWidth="1.5" fill="#B8973A" fillOpacity="0.08" />
-              <circle cx="28" cy="28" r="5" fill="#B8973A" fillOpacity="0.7" />
-              <circle cx="28" cy="28" r="24" stroke="#B8973A" strokeWidth="1" strokeDasharray="3 5" opacity="0.3" />
+              <circle cx="28" cy="28" r="16" stroke="#7A5F44" strokeWidth="1.5" fill="#7A5F44" fillOpacity="0.08" />
+              <circle cx="28" cy="28" r="5" fill="#7A5F44" fillOpacity="0.7" />
+              <circle cx="28" cy="28" r="24" stroke="#7A5F44" strokeWidth="1" strokeDasharray="3 5" opacity="0.3" />
             </svg>
           </div>
         </div>

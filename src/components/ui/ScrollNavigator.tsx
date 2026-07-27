@@ -100,7 +100,7 @@ export const ScrollNavigator: React.FC<ScrollNavigatorProps> = ({ containerRef, 
           >
             <button
               onClick={() => scrollTo('bottom')}
-              className="w-12 h-12 rounded-full bg-[var(--accent-primary)] text-black flex items-center justify-center shadow-[0_0_20px_rgba(94,196,176,0.3)] hover:scale-110 active:scale-95 transition-all duration-300 group"
+              className="w-12 h-12 rounded-full bg-[var(--accent-primary)] text-black flex items-center justify-center shadow-[0_0_20px_rgba(140,123,138,0.3)] hover:scale-110 active:scale-95 transition-all duration-300 group"
               title="Scroll to Bottom"
             >
               <ChevronDown size={24} className="group-hover:translate-y-0.5 transition-transform" />

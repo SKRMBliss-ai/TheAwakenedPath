@@ -16,6 +16,7 @@ import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseT
 import { useAuth } from '../auth/AuthContext';
 import { ScrollNavigator } from '../../components/ui/ScrollNavigator';
 import { VoiceService } from '../../services/voiceService';
+import HeroMark from '../../components/site/HeroMark';
 
 interface Chapter {
   id: number;
@@ -221,7 +222,10 @@ export function WisdomUntetheredCourse({
   ];
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} relative overflow-hidden`}>
+      <div className="absolute top-12 left-1/2 -translate-x-1/2 pointer-events-none opacity-20 z-0">
+        <HeroMark size={480} />
+      </div>
       {/* ── Top Navigation Bar ── */}
       <header className={styles.topBar}>
         {/* Chapter + Question label — mobile only (desktop shows it in sidebar) */}

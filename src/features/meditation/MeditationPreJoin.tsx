@@ -8,6 +8,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, CameraOff, MicOff, Users, X } from 'lucide-react';
 import { useTheme } from '../../theme/ThemeSystem';
+import WellnessSchedule from './components/WellnessSchedule';
 import type { MeditationParticipant } from './types';
 
 interface Props {
@@ -99,7 +100,7 @@ const MeditationPreJoin = ({ displayName, avatarUrl, participants, onJoin, onCan
         initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-        className="w-full max-w-md rounded-3xl overflow-hidden"
+        className="w-full max-w-md rounded-3xl overflow-y-auto overflow-x-hidden max-h-[92vh]"
         style={{
           background: 'var(--bg-surface, #1a1a2e)',
           border: '1.5px solid var(--border-default, rgba(255,255,255,0.1))',
@@ -228,6 +229,11 @@ const MeditationPreJoin = ({ displayName, avatarUrl, participants, onJoin, onCan
             </p>
           </div>
         )}
+
+        {/* Today's session flow — so everyone knows what happens when */}
+        <div className="px-4 pb-2">
+          <WellnessSchedule dark={mode === 'dark'} />
+        </div>
 
         {/* Silent room notice */}
         <p className="text-[11px] text-center px-6 pb-4 leading-relaxed" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>

@@ -1,6 +1,6 @@
 :root {
-    --gold: #B8973A;
-    --gold-light: #D4AE5C;
+    --gold: #7A5F44;
+    --gold-light: #A98A67;
     --gold-pale: #F0E4C0;
     --ink: #1C1814;
     --ink-soft: #3A342C;
@@ -10,7 +10,7 @@
 }
 
 :global(.dark) .container {
-    --gold: #B8973A;
+    --gold: #7A5F44;
     --ink: #FDFAF4;
     --ink-soft: #E8DCC8;
     --warm-white: #0E0D0A;
@@ -60,7 +60,7 @@
     overflow-y: auto;
     background: var(--warm-white);
     color: var(--ink);
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 300;
     line-height: 1.75;
     position: relative;

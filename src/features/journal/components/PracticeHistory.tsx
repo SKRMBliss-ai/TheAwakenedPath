@@ -73,7 +73,7 @@ async function fetchUnifiedHistory(uid: string, limitCount = 50): Promise<Unifie
             title: d.situationTitle || 'Practice',
             subtitle: summary,
             date: d.createdAt?.toDate?.() || new Date(d.date || Date.now()),
-            color: '#ABCEC9', 
+            color: '#CFC2CD', 
             situationId: d.situationId,
             situationTitle: d.situationTitle,
             responses: d.responses,

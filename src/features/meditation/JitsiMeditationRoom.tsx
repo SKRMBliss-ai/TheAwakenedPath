@@ -13,10 +13,11 @@
  * or ghost-participant problem here.
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Wind, LogOut } from 'lucide-react';
+import { Wind, LogOut, ListChecks, X } from 'lucide-react';
 import { useMeditationSession } from '../../hooks/useMeditationSession';
 import { auth } from '../../firebase';
 import SessionTimer from './components/SessionTimer';
+import WellnessSchedule from './components/WellnessSchedule';
 import type { MeditationScreen } from './types';
 
 interface AuthUser { uid: string; displayName: string | null; photoURL: string | null; email: string | null; }
@@ -75,6 +76,7 @@ const JitsiMeditationRoom = ({
   const leftRef = useRef(false);
   const [count, setCount] = useState(1);
   const [loadError, setLoadError] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
 
   const doLeave = useCallback(() => {
     if (leftRef.current) return;
@@ -157,11 +159,23 @@ const JitsiMeditationRoom = ({
         <div className="flex items-center gap-2">
           <Wind size={16} className="text-amber-400" />
           <div>
-            <p className="font-bold text-sm leading-none text-white">Daily Meditation</p>
+            <p className="font-bold text-sm leading-none text-white">Wellness Session</p>
             <p className="text-[10px] mt-0.5 text-white/40">{count} present · Silent room</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* What we're doing right now (live segment + its countdown) */}
+          <div className="hidden md:block">
+            <WellnessSchedule variant="chip" userEmail={auth.currentUser?.email || undefined} />
+          </div>
+          <button
+            onClick={() => setShowSchedule((v) => !v)}
+            aria-label="Session schedule"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-white text-[11px] font-bold transition-all"
+          >
+            <ListChecks size={14} className="text-amber-400" />
+            <span className="hidden sm:inline">Schedule</span>
+          </button>
           <SessionTimer remainingMs={remainingMs} />
           <button
             onClick={doLeave}
@@ -171,6 +185,23 @@ const JitsiMeditationRoom = ({
           </button>
         </div>
       </div>
+
+      {/* Session schedule overlay */}
+      {showSchedule && (
+        <div
+          className="absolute top-14 right-3 z-20 w-[300px] max-w-[calc(100vw-24px)] max-h-[72vh] overflow-y-auto rounded-2xl p-4 shadow-2xl"
+          style={{ background: 'rgba(17,24,39,0.97)', border: '1px solid rgba(255,255,255,0.12)' }}
+        >
+          <button
+            onClick={() => setShowSchedule(false)}
+            aria-label="Close schedule"
+            className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 text-white/60"
+          >
+            <X size={14} />
+          </button>
+          <WellnessSchedule userEmail={auth.currentUser?.email || undefined} dark />
+        </div>
+      )}
 
       {/* Jitsi fills the rest */}
       <div ref={containerRef} className="flex-1 min-h-0 w-full">

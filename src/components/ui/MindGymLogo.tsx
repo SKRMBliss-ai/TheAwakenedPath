@@ -74,21 +74,21 @@ function LogoMark({ size, animated }: { size: number; animated: boolean }) {
         <defs>
           {/* Subtle gold radial glow behind the mark */}
           <radialGradient id="logo-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%"  stopColor="#B8973A" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="#B8973A" stopOpacity="0" />
+            <stop offset="0%"  stopColor="#7A5F44" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#7A5F44" stopOpacity="0" />
           </radialGradient>
 
           {/* Gold gradient for the centre dot */}
           <radialGradient id="logo-dot-grad" cx="40%" cy="35%" r="60%">
             <stop offset="0%"  stopColor="#E8C97A" />
-            <stop offset="100%" stopColor="#8B6914" />
+            <stop offset="100%" stopColor="#6B5238" />
           </radialGradient>
 
           {/* Gradient for the outer circle stroke — fades at bottom */}
           <linearGradient id="logo-ring-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#B8973A" stopOpacity="0.9" />
-            <stop offset="60%"  stopColor="#B8973A" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#B8973A" stopOpacity="0.1" />
+            <stop offset="0%"   stopColor="#7A5F44" stopOpacity="0.9" />
+            <stop offset="60%"  stopColor="#7A5F44" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#7A5F44" stopOpacity="0.1" />
           </linearGradient>
 
           {/* Clip to keep things tidy */}
@@ -117,7 +117,7 @@ function LogoMark({ size, animated }: { size: number; animated: boolean }) {
         <circle
           cx={cx} cy={cy} r={r * 0.78}
           fill="none"
-          stroke="#B8973A"
+          stroke="#7A5F44"
           strokeWidth={s * 0.008}
           strokeOpacity="0.2"
           strokeDasharray={`${2 * Math.PI * r * 0.78 * 0.6} ${2 * Math.PI * r * 0.78 * 0.4}`}
@@ -129,21 +129,21 @@ function LogoMark({ size, animated }: { size: number; animated: boolean }) {
         <line
           x1={s * 0.04} y1={pathY}
           x2={cx - r * 0.88} y2={pathY}
-          stroke="#B8973A" strokeWidth={s * 0.022}
+          stroke="#7A5F44" strokeWidth={s * 0.022}
           strokeLinecap="round" strokeOpacity="0.35"
         />
         {/* Right segment (outside circle) */}
         <line
           x1={cx + r * 0.88} y1={pathY}
           x2={s * 0.96} y2={pathY}
-          stroke="#B8973A" strokeWidth={s * 0.022}
+          stroke="#7A5F44" strokeWidth={s * 0.022}
           strokeLinecap="round" strokeOpacity="0.35"
         />
         {/* Through circle — full width inner */}
         <line
           x1={cx - r * 0.88} y1={pathY}
           x2={cx + r * 0.88} y2={pathY}
-          stroke="#B8973A" strokeWidth={s * 0.018}
+          stroke="#7A5F44" strokeWidth={s * 0.018}
           strokeLinecap="round" strokeOpacity="0.55"
         />
 
@@ -154,7 +154,7 @@ function LogoMark({ size, animated }: { size: number; animated: boolean }) {
             <motion.circle
               cx={cx} cy={pathY} r={dotR * 2.2}
               fill="none"
-              stroke="#B8973A"
+              stroke="#7A5F44"
               strokeWidth={s * 0.008}
               animate={{ r: [dotR * 2.2, dotR * 3.2, dotR * 2.2], opacity: [0.35, 0.0, 0.35] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
@@ -175,14 +175,14 @@ function LogoMark({ size, animated }: { size: number; animated: boolean }) {
         <line
           x1={cx} y1={pathY - dotR * 1.4}
           x2={cx} y2={pathY - r * 0.52}
-          stroke="#B8973A" strokeWidth={s * 0.014}
+          stroke="#7A5F44" strokeWidth={s * 0.014}
           strokeLinecap="round" strokeOpacity="0.5"
         />
         {/* Small horizontal crossbar on spark */}
         <line
           x1={cx - s * 0.04} y1={pathY - r * 0.35}
           x2={cx + s * 0.04} y2={pathY - r * 0.35}
-          stroke="#B8973A" strokeWidth={s * 0.01}
+          stroke="#7A5F44" strokeWidth={s * 0.01}
           strokeLinecap="round" strokeOpacity="0.35"
         />
       </svg>
@@ -208,7 +208,7 @@ function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
       <h1
         className={cn(
           titleSize,
-          'font-serif font-semibold text-[var(--text-primary)] tracking-wide leading-[1.1]',
+          'font-serif font-semibold text-[var(--text-primary)] tracking-wide leading-[1.1] whitespace-nowrap',
           'group-hover:text-[var(--accent-primary)] transition-colors duration-300'
         )}
         style={{ letterSpacing: '0.02em' }}

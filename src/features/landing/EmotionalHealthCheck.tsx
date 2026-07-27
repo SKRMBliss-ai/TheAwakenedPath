@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight, Loader2, Share2, Check, Mail, Battery, Moon, Brain, Users, Flame, Heart, Bone, Activity, Utensils, Eye, Compass, Sprout } from 'lucide-react';
+import { ArrowRight, Loader2, Share2, Check, Battery, Moon, Brain, Users, Flame, Heart, Bone, Activity, Utensils, Eye, Compass, Sprout } from 'lucide-react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { usePageSeo } from '../../lib/seo';
+import SocialFab from '../../components/ui/SocialFab';
+import HeroMark from '../../components/site/HeroMark';
 
 // ─── Activity Tracker (fire-and-forget, mirrors AboutJournal) ─────────────────
 const LOG_URL = 'https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity';
 const SHARE_URL = 'https://www.skrmblissai.in/knowyouremotionalhealth';
 const SITE_LABEL = 'www.skrmblissai.in';
-const WHATSAPP_URL = 'https://wa.me/918217581238';
 const CONTACT_EMAIL = 'connect@skrmblissai.in';
 
 function trackActivity(action: string, details = '', emailOverride?: string) {
@@ -496,32 +498,25 @@ export default function EmotionalHealthCheck() {
     const [locked, setLocked] = useState(false);
     const [history, setHistory] = useState<Entry[]>([]);
 
+    usePageSeo({
+        title: `Today's reflection · ${THEME.name} — Mind Gym`,
+        description: `${THEME.hook} A free, private 2-minute emotional check-in with personalized insight.`,
+        url: SHARE_URL,
+        image: `${typeof window !== 'undefined' ? window.location.origin : ''}/emotions/${THEME.key}.jpg`,
+        jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'WebApplication',
+            name: 'Emotional Health Check — Mind Gym',
+            applicationCategory: 'HealthApplication',
+            operatingSystem: 'Web',
+            description: 'A free, private 2-minute emotional health check with personalized insight.',
+            url: SHARE_URL,
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        },
+    });
+
     useEffect(() => {
         trackActivity('PAGE_VISIT_EMOTIONAL_HEALTH', `Visited — theme ${THEME.name}`);
-        // OG / Twitter meta for rich link previews when the share URL is sent.
-        const og = [
-            ['og:title', `Today's reflection · ${THEME.name} — MindGym`],
-            ['og:description', `${THEME.hook} A 2-minute daily emotional check-in.`],
-            ['og:url', SHARE_URL],
-            ['og:type', 'website'],
-            ['og:image', `${window.location.origin}/emotions/${THEME.key}.jpg`],
-            ['twitter:card', 'summary_large_image'],
-            ['twitter:title', `Today's reflection · ${THEME.name}`],
-            ['twitter:description', THEME.hook],
-            ['twitter:image', `${window.location.origin}/emotions/${THEME.key}.jpg`],
-        ];
-        const added: HTMLMetaElement[] = [];
-        og.forEach(([property, content]) => {
-            const m = document.createElement('meta');
-            const attr = property.startsWith('og:') ? 'property' : 'name';
-            m.setAttribute(attr, property);
-            m.setAttribute('content', content);
-            document.head.appendChild(m);
-            added.push(m);
-        });
-        const prevTitle = document.title;
-        document.title = `Today's reflection · ${THEME.name} — MindGym`;
-        return () => { added.forEach(m => m.remove()); document.title = prevTitle; };
     }, []);
 
     // Swipe gestures on quiz — left = back. Forward swipes are intentionally
@@ -682,7 +677,10 @@ export default function EmotionalHealthCheck() {
             <main className="px-6 pb-24 relative z-10">
                 {/* ─── INTRO (no email — results come first) ─── */}
                 {stage === 'intro' && (
-                    <section className="pt-12 ehc-rise max-w-xl mx-auto">
+                    <section className="pt-12 ehc-rise max-w-xl mx-auto relative">
+                        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-25 z-0">
+                            <HeroMark size={480} />
+                        </div>
                         {/* Calming theme image (nano-banana). Falls back to the breathing orb. */}
                         <div className="ehc-hero-wrap">
                             <img
@@ -1056,21 +1054,8 @@ export default function EmotionalHealthCheck() {
                 </div>
             )}
 
-            {/* Floating contact — WhatsApp + email */}
-            <div style={{ position: 'fixed', right: '18px', bottom: '18px', zIndex: 50, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <a href={`mailto:${CONTACT_EMAIL}`} aria-label="Email us" title={CONTACT_EMAIL}
-                    onClick={() => trackActivity('CONTACT_EMAIL_CLICK', 'floating')}
-                    style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#2E2A24', color: '#F4EFE6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }}>
-                    <Mail className="w-5 h-5" />
-                </a>
-                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp" title="WhatsApp +91 82175 81238"
-                    onClick={() => trackActivity('CONTACT_WHATSAPP_CLICK', 'floating')}
-                    style={{ width: '54px', height: '54px', borderRadius: '50%', background: '#25D366', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.22)' }}>
-                    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true">
-                        <path d="M17.5 14.38c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.27-.47-2.42-1.49-.9-.8-1.5-1.78-1.67-2.08-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.22 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35zM12.05 2.92a9.05 9.05 0 00-7.7 13.84l-1.27 4.64 4.75-1.25a9.05 9.05 0 104.22-17.23z"/>
-                    </svg>
-                </a>
-            </div>
+            {/* Shared connect menu (WhatsApp, group, Telegram, YouTube, Facebook) */}
+            <SocialFab onTrack={(e) => trackActivity(e, 'floating')} />
         </div>
     );
 }

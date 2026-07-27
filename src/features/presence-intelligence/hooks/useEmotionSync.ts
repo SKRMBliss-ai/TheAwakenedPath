@@ -6,7 +6,7 @@ export type EmotionState = 'CALM' | 'JOY' | 'FOCUS' | 'PANIC' | 'ANGER' | 'SAD' 
 
 // Color mapping for different emotional resonances
 export const EMOTION_COLORS: Record<EmotionState, string> = {
-    CALM: '#ABCEC9',    // Sage/Ethereal Cyan
+    CALM: '#CFC2CD',    // Sage/Ethereal Cyan
     JOY: '#F9A826',     // Warm Golden
     FOCUS: '#5C6BC0',   // Deep Indigo/Sapphire
     PANIC: '#EF5350',   // Alert Red/Coral

@@ -74,7 +74,7 @@ export function ThoughtJournal({ onClose, inline, defaultTab }: ThoughtJournalPr
           onClick={() => setActiveTab('example')}
           className={cn(
             "flex-1 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-all",
-            activeTab === 'example' ? "bg-[#1C1814] text-[#E6C57D]" : "bg-[#f5f0e8] text-[#8B6D1B] dark:bg-[#1a1714] dark:text-[#B8973A]/60"
+            activeTab === 'example' ? "bg-[#1C1814] text-[#E6C57D]" : "bg-[#f5f0e8] text-[#8B6D1B] dark:bg-[#1a1714] dark:text-[#7A5F44]/60"
           )}
         >
           Relationship Example
@@ -83,7 +83,7 @@ export function ThoughtJournal({ onClose, inline, defaultTab }: ThoughtJournalPr
           onClick={() => setActiveTab('journal')}
           className={cn(
             "flex-1 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-all",
-            activeTab === 'journal' ? "bg-[#1C1814] text-[#E6C57D]" : "bg-[#f5f0e8] text-[#8B6D1B] dark:bg-[#1a1714] dark:text-[#B8973A]/60"
+            activeTab === 'journal' ? "bg-[#1C1814] text-[#E6C57D]" : "bg-[#f5f0e8] text-[#8B6D1B] dark:bg-[#1a1714] dark:text-[#7A5F44]/60"
           )}
         >
           5-Min Thought Journal
@@ -106,7 +106,7 @@ export function ThoughtJournal({ onClose, inline, defaultTab }: ThoughtJournalPr
               className="p-8 space-y-8"
             >
               <div className="space-y-4">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#B8973A]">The Situation</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#7A5F44]">The Situation</span>
                 <h3 className="text-2xl font-serif font-light text-[#1C1814] dark:text-white italic">
                   "Why didn't they call me back?"
                 </h3>
@@ -160,7 +160,7 @@ export function ThoughtJournal({ onClose, inline, defaultTab }: ThoughtJournalPr
                 <div className="flex items-center gap-4">
                   <div className={cn(
                     "w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-500",
-                    isTimerRunning ? "border-[#B8973A] bg-[#B8973A]/5 shadow-[0_0_15px_rgba(184,151,58,0.2)]" : "border-[#e0d5be] opacity-50"
+                    isTimerRunning ? "border-[#7A5F44] bg-[#7A5F44]/5 shadow-[0_0_15px_rgba(184,151,58,0.2)]" : "border-[#e0d5be] opacity-50"
                   )}>
                     <span className="text-xl font-mono font-bold text-[#1C1814] dark:text-white">{formatTime(timeLeft)}</span>
                   </div>
@@ -177,7 +177,7 @@ export function ThoughtJournal({ onClose, inline, defaultTab }: ThoughtJournalPr
                     onChange={(e) => setUserThought(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddThought()}
                     placeholder="Enter a thought..."
-                    className="flex-1 bg-white dark:bg-[#0c0910] border border-[#e0d5be] dark:border-[var(--border-subtle)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#B8973A] dark:text-white"
+                    className="flex-1 bg-white dark:bg-[#0c0910] border border-[#e0d5be] dark:border-[var(--border-subtle)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#7A5F44] dark:text-white"
                   />
                   <button 
                     onClick={handleAddThought}
@@ -260,7 +260,7 @@ export function ThoughtJournal({ onClose, inline, defaultTab }: ThoughtJournalPr
                     setTimeLeft(300);
                     setIsTimerRunning(false);
                   }}
-                  className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#B8973A] hover:text-[#8B6D1B] transition-colors"
+                  className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#7A5F44] hover:text-[#8B6D1B] transition-colors"
                 >
                   <RotateCcw className="w-3 h-3" />
                   Reset Session

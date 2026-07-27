@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { meditationService } from './meditationService';
 import { useMeditationStore } from '../../stores/meditationStore';
 import type { MeditationScreen } from './types';
-import AwakenOrb from './components/AwakenOrb';
+import { PresenceBreath } from '../../components/ui/PresenceBreath';
 import JitsiMeditationRoom from './JitsiMeditationRoom';
 import MeditationJournal from './MeditationJournal';
 import MeditationPreJoin from './MeditationPreJoin';
@@ -28,7 +28,12 @@ interface Props {
 }
 
 export const MeditationFeature = ({ user, adminOverride = false, onRoomStateChange }: Props) => {
-  const [screen, setScreen] = useState<MeditationScreen>('landing');
+  // Skip the redundant landing screen when a session is live (or for admins): the
+  // home card already showed the "join" CTA, so go straight to the camera lobby.
+  // When no session is live, keep the landing screen — it shows the "next session
+  // in…" countdown, streak, and stats, so the tab isn't blank outside session hours.
+  const sessionIsLive = adminOverride || getSessionSchedule(user.email || undefined).status === 'live';
+  const [screen, setScreen] = useState<MeditationScreen>(sessionIsLive ? 'prejoin' : 'landing');
   const [, setPrejoinCameraOn] = useState(false);
   const [prejoinStream, setPrejoinStream] = useState<MediaStream | null>(null);
 
@@ -167,7 +172,7 @@ const LandingScreen = ({ user, onNavigate, adminOverride = false }:
 
       {/* Orb — the singular hero element */}
       <div className="relative flex flex-col items-center mb-10">
-        <AwakenOrb size={160} />
+        <PresenceBreath size={180} showCaption={false} />
       </div>
 
       {/* CTA — one clear action */}
@@ -175,7 +180,8 @@ const LandingScreen = ({ user, onNavigate, adminOverride = false }:
         {isLive ? (
           <>
             <button onClick={join}
-              className="w-full py-5 rounded-3xl bg-amber-500 text-black font-black text-lg active:scale-95 transition-all shadow-[0_12px_40px_rgba(212,175,55,0.4)] hover:bg-amber-400">
+              className="w-full py-5 rounded-3xl text-white font-black text-lg active:scale-95 transition-all"
+              style={{ background: 'var(--accent-primary)', boxShadow: '0 12px 40px var(--card-glow-pulse)' }}>
               Just Show Up →
             </button>
             <p className="text-base font-medium tabular-nums" style={{ color: theme.textSecondary }}>
@@ -187,7 +193,7 @@ const LandingScreen = ({ user, onNavigate, adminOverride = false }:
             <p className="text-sm uppercase tracking-widest font-semibold" style={{ color: theme.textSecondary }}>
               Next session in
             </p>
-            <p className="text-amber-500 font-black text-5xl tabular-nums tracking-tight dark:text-amber-400">
+            <p className="font-black text-5xl tabular-nums tracking-tight" style={{ color: 'var(--accent-primary)' }}>
               {String(waitMin).padStart(2,'0')}:{String(waitS).padStart(2,'0')}
             </p>
           </>

@@ -151,7 +151,7 @@ function WUQuestionStrip({
           const qp = wuProgress[qId];
           const done = qp?.read || qp?.video || qp?.practice;
           const practice = PRACTICE_LIBRARY[qId];
-          const color = practice?.color ?? '#B8973A';
+          const color = practice?.color ?? '#7A5F44';
           return (
             <button
               key={qId}
@@ -231,7 +231,7 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
 
   const { questionId: assignedQId } = weeklyAssignment;
   const practice = PRACTICE_LIBRARY[assignedQId];
-  const accentColor = practice?.color ?? '#B8973A';
+  const accentColor = practice?.color ?? '#7A5F44';
 
   const wuExploredCount = useMemo(() =>
     QUESTION_IDS.filter(qId => {

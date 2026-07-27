@@ -185,6 +185,58 @@ interface TodayPathProps {
   onViewProgress?: () => void;
   onNavigate: (tab: string, questionId?: string, view?: 'explanation' | 'video' | 'practice') => void;
   isAccessValid?: boolean;
+  /** Slim single-card layout for the home hero (4 step chips in a row). */
+  compact?: boolean;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Compact step chip — used in the home-hero compact layout
+// ─────────────────────────────────────────────────────────────────────────────
+
+function StepChip({ def }: { def: StepDef }) {
+  const { num, label, icon: Icon, status, color, onClick } = def;
+  const isDone = status === 'done';
+  const isActive = status === 'active';
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: num * 0.04, duration: 0.3 }}
+      whileTap={{ scale: 0.96 }}
+      onClick={onClick}
+      className={cn(
+        'flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-2xl border transition-all duration-300',
+        isDone ? 'opacity-70' : ''
+      )}
+      style={{
+        background: isDone ? 'transparent' : isActive ? color + '14' : 'var(--bg-surface)',
+        borderColor: isDone ? 'var(--border-subtle)' : isActive ? color + '55' : 'var(--border-subtle)',
+        boxShadow: isActive ? `0 4px 16px ${color}1a` : 'none',
+      }}
+    >
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{
+          background: isDone ? 'var(--bg-surface)' : color + (isActive ? '22' : '0d'),
+          border: `1.5px solid ${isDone ? 'var(--border-subtle)' : color + (isActive ? '55' : '25')}`,
+        }}
+      >
+        {isDone
+          ? <CheckCircle2 size={18} style={{ color }} strokeWidth={2} />
+          : <Icon size={18} style={{ color: isActive ? color : color + 'aa' }} />}
+      </div>
+      <span
+        className={cn(
+          'text-[10px] font-bold tracking-wide leading-none',
+          isDone ? 'line-through' : ''
+        )}
+        style={{ color: isDone ? 'var(--text-muted)' : isActive ? 'var(--text-primary)' : 'var(--text-secondary)' }}
+      >
+        {label}
+      </span>
+    </motion.button>
+  );
 }
 
 const FALLBACK_ASSIGNMENT: WeeklyAssignment = {
@@ -206,12 +258,13 @@ export function TodayPath({
   weeklyAssignment,
   onViewProgress,
   isAccessValid,
+  compact = false,
 }: TodayPathProps) {
   const assignment = weeklyAssignment ?? FALLBACK_ASSIGNMENT;
   const { questionId, weekLabel, daysRemaining } = assignment;
   const questionMeta = QUESTION_META[questionId] || QUESTION_META['question1'];
   const practice = PRACTICE_LIBRARY[questionId];
-  const color = practice?.color ?? '#B8973A';
+  const color = practice?.color ?? '#7A5F44';
   const requiredTriggers = questionId === 'question3' ? 3 : 1;
 
   const {
@@ -318,6 +371,125 @@ export function TodayPath({
       onClick: handleIntegrate,
     },
   ];
+
+  // ── Compact home-hero layout: slim header + 4 step chips in a row ──
+  if (compact) {
+    return (
+      <>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-1 sm:mx-3 rounded-[24px] border border-[var(--border-default)] bg-[var(--bg-surface)] relative overflow-hidden"
+        >
+          {/* Header row */}
+          <div className="flex items-center justify-between gap-3 px-4 pt-3.5 pb-2.5">
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[var(--text-muted)] mb-0.5">
+                Today's Practice
+              </p>
+              <h3 className="text-[13px] font-serif font-medium text-[var(--text-primary)] leading-snug truncate">
+                {questionMeta.shortTitle}
+              </h3>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* 4 dots */}
+              <div className="flex gap-1">
+                {[learnDone, practiceCompleted, reflectDone, integrateDone].map((done, i) => (
+                  <span
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full transition-all duration-500"
+                    style={{ background: done ? color : 'var(--border-subtle)' }}
+                  />
+                ))}
+              </div>
+              <span className="text-[11px] font-black tabular-nums" style={{ color: doneCount > 0 ? color : 'var(--text-muted)' }}>
+                {doneCount}/4
+              </span>
+              {onViewProgress && (
+                <button
+                  onClick={onViewProgress}
+                  className="flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider opacity-55 hover:opacity-100 transition-opacity"
+                  style={{ color }}
+                >
+                  Journey <ChevronRight size={9} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Step chips */}
+          <div className="grid grid-cols-4 gap-2 px-3 pb-3.5">
+            {steps.map((step) => (
+              <StepChip key={step.num} def={step} />
+            ))}
+          </div>
+
+          {/* Slim all-done shimmer band */}
+          {allDone && (
+            <div
+              className="px-4 py-1.5 text-center text-[9px] font-bold uppercase tracking-[0.25em]"
+              style={{ background: color + '14', color }}
+            >
+              ✦ All four complete — presence rewarded
+            </div>
+          )}
+        </motion.div>
+
+        {/* Commitment modal (shared) */}
+        <AnimatePresence>
+          {showCommitment && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/55 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.88, y: 24 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.88, y: 20 }}
+                transition={{ type: 'spring', stiffness: 330, damping: 26 }}
+                className="max-w-sm w-full bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[40px] p-10 text-center space-y-7 shadow-2xl relative overflow-hidden"
+              >
+                <div
+                  className="absolute inset-0 pointer-events-none rounded-[40px]"
+                  style={{ background: `radial-gradient(ellipse 80% 55% at 50% 0%, ${color}12, transparent)` }}
+                />
+                <div className="relative z-10 space-y-5">
+                  <div
+                    className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto"
+                    style={{ background: color + '18', border: `2px solid ${color}35` }}
+                  >
+                    <Heart size={28} style={{ color }} />
+                  </div>
+                  <h3 className="text-2xl font-serif font-light text-[var(--text-primary)]">
+                    Sacred Commitment
+                  </h3>
+                  <p className="text-[17px] text-[var(--text-primary)] font-sans font-medium leading-relaxed">
+                    "{questionMeta.dailyIntent}"
+                  </p>
+                  <div className="pt-2 flex flex-col gap-3">
+                    <button
+                      onClick={confirmIntegrate}
+                      className="w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all hover:scale-[1.02] active:scale-[0.98] text-white shadow-xl"
+                      style={{
+                        background: `linear-gradient(135deg, ${color}, ${color}bb)`,
+                        boxShadow: `0 8px 24px ${color}40`,
+                      }}
+                    >
+                      I Promise to Live This
+                    </button>
+                    <button
+                      onClick={() => setShowCommitment(false)}
+                      className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                    >
+                      Not yet — I need more time
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
 
   return (
     <>

@@ -146,8 +146,8 @@ export const BodyDecodingHelper: React.FC<{
                 className="w-full px-6 py-4 flex items-center justify-between text-left"
             >
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-[#abcec9]/10">
-                        <AlertCircle className="w-4 h-4 text-[#abcec9]" />
+                    <div className="p-2 rounded-lg bg-[#CFC2CD]/10">
+                        <AlertCircle className="w-4 h-4 text-[#CFC2CD]" />
                     </div>
                     <div>
                         <h4 className="text-sm font-serif text-white/90">Your Body is Talking to You</h4>
@@ -170,7 +170,7 @@ export const BodyDecodingHelper: React.FC<{
                                 Select a Physical Symptom to Decode:
                             </label>
                             <select
-                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#abcec9]/50 transition-colors"
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#CFC2CD]/50 transition-colors"
                                 value={selectedId || ''}
                                 onChange={(e) => setSelectedId(e.target.value)}
                             >
@@ -188,7 +188,7 @@ export const BodyDecodingHelper: React.FC<{
                                 >
                                     <div className="space-y-4">
                                         <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
-                                            <h5 className="text-[10px] uppercase tracking-widest text-[#abcec9] mb-2 font-bold">What Your Body Feels</h5>
+                                            <h5 className="text-[10px] uppercase tracking-widest text-[#CFC2CD] mb-2 font-bold">What Your Body Feels</h5>
                                             <p className="text-sm text-white/80 font-serif italic leading-relaxed">{selected.feels}</p>
                                         </div>
 
@@ -200,8 +200,8 @@ export const BodyDecodingHelper: React.FC<{
                                             </div>
                                         </div>
 
-                                        <div className="p-4 rounded-xl bg-[#abcec9]/5 border border-[#abcec9]/10">
-                                            <h5 className="text-[10px] uppercase tracking-widest text-[#abcec9] mb-2 font-bold flex items-center gap-2">
+                                        <div className="p-4 rounded-xl bg-[#CFC2CD]/5 border border-[#CFC2CD]/10">
+                                            <h5 className="text-[10px] uppercase tracking-widest text-[#CFC2CD] mb-2 font-bold flex items-center gap-2">
                                                 <Wind className="w-3 h-3" /> What Helps
                                             </h5>
                                             <p className="text-sm text-white/90 font-serif leading-relaxed">{selected.helps}</p>

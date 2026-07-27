@@ -28,7 +28,7 @@ export const BreathPractice: React.FC<BreathPracticeProps> = ({ practices, setAc
                     <h2 className="text-6xl font-serif font-light text-white tracking-tight">Guidance</h2>
                 </div>
                 <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-[#ABCEC9] font-bold mb-2">Sacred Mastery</p>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-[#CFC2CD] font-bold mb-2">Sacred Mastery</p>
                     <span className="text-5xl font-serif text-white/90">72%</span>
                 </div>
             </div>

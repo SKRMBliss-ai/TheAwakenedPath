@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Habit Quest — Soulful Intelligence Studio</title>
+    <meta name="description" content="Build habits that stick. Habit Quest is the daily habit tracker from Soulful Intelligence Studio." />
+    <link rel="icon" type="image/webp" href="/si-logo-light.webp" />
+
+    <!--
+      Habit Quest lives in its own Firebase project (habitquest-2026). This
+      wrapper reproduces exactly what systeme.io served at this URL before the
+      migration: a full-bleed frame of that app, so the address stays on
+      www.skrmblissai.in and the link inside the Mind Gym sidebar keeps working.
+
+      Kept as a plain static file rather than a React route so it costs nothing
+      on the app's bundle and loads instantly on a slow connection.
+    -->
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; background: #F4F1EA; }
+      html[data-si-theme="dark"], html[data-si-theme="dark"] body { background: #15120F; }
+      #hq-frame { display: block; width: 100%; height: 100%; border: 0; }
+      #hq-fallback {
+        position: fixed; inset: 0; display: none; flex-direction: column;
+        align-items: center; justify-content: center; gap: 18px; padding: 32px;
+        font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+        text-align: center; color: #2A2420;
+      }
+      html[data-si-theme="dark"] #hq-fallback { color: #F4F1EA; }
+      #hq-fallback a {
+        background: #695E68; color: #fff; text-decoration: none;
+        padding: 13px 26px; border-radius: 999px; font-weight: 800; font-size: 14px;
+      }
+    </style>
+    <script>
+      // Match the site-wide theme so the surround doesn't flash the wrong colour.
+      (function () {
+        try {
+          var v = localStorage.getItem('si-theme') || localStorage.getItem('awakened-theme');
+          if (v === 'dark' || v === 'light') document.documentElement.dataset.siTheme = v;
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <iframe
+      id="hq-frame"
+      src="https://habitquest-2026.web.app"
+      title="Habit Quest"
+      allow="clipboard-write; fullscreen"
+    ></iframe>
+
+    <!-- Shown only if the frame is refused (some browsers block third-party
+         framing, and sign-in providers block OAuth inside iframes). -->
+    <div id="hq-fallback">
+      <p style="margin:0;font-size:16px;line-height:1.6;max-width:420px">
+        Habit Quest couldn&rsquo;t load in this window. Open it directly to continue.
+      </p>
+      <a href="https://habitquest-2026.web.app">Open Habit Quest &rarr;</a>
+    </div>
+
+    <script>
+      // If the frame hasn't reported a load shortly after paint, surface the
+      // direct link rather than leaving a blank rectangle.
+      var frame = document.getElementById('hq-frame');
+      var loaded = false;
+      frame.addEventListener('load', function () { loaded = true; });
+      setTimeout(function () {
+        if (!loaded) {
+          frame.style.display = 'none';
+          document.getElementById('hq-fallback').style.display = 'flex';
+        }
+      }, 6000);
+    </script>
+  </body>
+</html>

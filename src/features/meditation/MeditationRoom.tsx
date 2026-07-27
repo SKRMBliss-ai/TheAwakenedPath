@@ -362,7 +362,7 @@ const MeditationRoom = ({
         <div className="flex items-center gap-3">
           <Wind size={16} className="text-amber-400" />
           <div>
-            <p className="font-bold text-sm leading-none" style={{ color: 'var(--room-text)' }}>Daily Meditation</p>
+            <p className="font-bold text-sm leading-none" style={{ color: 'var(--room-text)' }}>Wellness Session</p>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--room-text-muted)' }}>
               {showMedia ? (
                 <>🔊 {store.mediaShare.type === 'youtube' ? 'Video' : store.mediaShare.type === 'audio' ? 'Audio' : 'Screen'} Sharing · Mics Muted</>

@@ -23,17 +23,17 @@ export function TrialBadge({ onUpgrade, compact = false }: TrialBadgeProps) {
   const daysLeft = getDaysRemaining(trialExpiresAt);
 
   // Colors
-  const color = isEmpty || isTrialExpired ? '#EF4444' : isLow ? '#F59E0B' : '#5EC4B0';
+  const color = isEmpty || isTrialExpired ? '#EF4444' : isLow ? '#A98A67' : '#8C7B8A';
   const bg = isEmpty || isTrialExpired
     ? 'rgba(239,68,68,0.1)'
     : isLow
     ? 'rgba(245,158,11,0.1)'
-    : 'rgba(94,196,176,0.08)';
+    : 'rgba(140,123,138,0.08)';
   const border = isEmpty || isTrialExpired
     ? 'rgba(239,68,68,0.25)'
     : isLow
     ? 'rgba(245,158,11,0.25)'
-    : 'rgba(94,196,176,0.2)';
+    : 'rgba(140,123,138,0.2)';
 
   const pct = Math.max(0, Math.min(1, tokensRemaining / tokensTotal));
   const radius = 14;

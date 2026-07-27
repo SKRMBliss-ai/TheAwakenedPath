@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { RefreshCcw, AlertTriangle } from 'lucide-react';
+import { reportError } from '../../lib/errorReporter';
 
 interface Props {
   children?: ReactNode;
@@ -23,6 +24,24 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error(`Error in ${this.props.featureName || 'Component'}:`, error, errorInfo);
+
+    // Record the crash so it surfaces in the admin Engagement Report.
+    reportError(error, { feature: this.props.featureName || 'Component', kind: 'react-boundary' });
+
+    // Stale-deploy recovery: a tab opened before a deploy still references old
+    // hashed chunk URLs; the next lazy import then 404s and lands here. One
+    // reload fetches the fresh index + chunks. Rate-limited so a genuinely
+    // broken build can't reload-loop.
+    const msg = String(error?.message || '') + ' ' + String((error as any)?.name || '');
+    const isChunkError = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError|Loading chunk .* failed/i.test(msg);
+    if (isChunkError) {
+      let last = 0;
+      try { last = Number(sessionStorage.getItem('__chunk_reload_at') || 0); } catch (_) { /* ignore */ }
+      if (Date.now() - last > 60_000) {
+        try { sessionStorage.setItem('__chunk_reload_at', String(Date.now())); } catch (_) { /* ignore */ }
+        window.location.reload();
+      }
+    }
   }
 
   private handleReset = () => {

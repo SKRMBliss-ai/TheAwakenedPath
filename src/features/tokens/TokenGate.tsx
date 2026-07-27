@@ -81,13 +81,13 @@ export function TokenGate({
             className="w-full mb-3 px-4 py-2.5 rounded-xl flex items-center justify-between gap-3"
             style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)' }}
           >
-            <p className="text-[11px] font-bold" style={{ color: '#F59E0B' }}>
+            <p className="text-[11px] font-bold" style={{ color: '#A98A67' }}>
               ⚠️ {tokensRemaining} tokens remaining
             </p>
             <button
               onClick={() => setShowWall(true)}
               className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg"
-              style={{ background: '#F59E0B', color: '#fff' }}
+              style={{ background: '#A98A67', color: '#fff' }}
             >
               Top Up
             </button>

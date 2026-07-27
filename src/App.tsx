@@ -383,11 +383,11 @@ export default function UntetheredApp() {
         <header className="fixed top-0 left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5">
             <a 
                 href="/aboutmindgym" 
-                className="flex items-center gap-3 text-current hover:text-[#5EC4B0] transition-all group"
+                className="flex items-center gap-3 text-current hover:text-[#8C7B8A] transition-all group"
                 title="View About Journal"
             >
-                <div className={`w-9 h-9 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <Brain className="w-4 h-4 text-[#D4AF37]" />
+                <div className={`w-9 h-9 rounded-full bg-[#A98A67]/15 border border-[#A98A67]/30 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <Brain className="w-4 h-4 text-[#A98A67]" />
                 </div>
             </a>
 
@@ -397,7 +397,7 @@ export default function UntetheredApp() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 onClick={() => { setActiveTab('journey'); setActivePractice(null); }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-current hover:text-[#5EC4B0] transition-all hover:bg-[#5EC4B0]/10 group"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-current hover:text-[#8C7B8A] transition-all hover:bg-[#8C7B8A]/10 group"
               >
                 <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">Return</span>
@@ -407,7 +407,7 @@ export default function UntetheredApp() {
             <div className="flex items-center gap-6 sm:gap-8">
                 <button 
                     onClick={() => setDarkMode(!darkMode)}
-                    className={`p-2.5 rounded-xl bg-white/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-current hover:text-[#D4AF37] transition-all hover:scale-110`}
+                    className={`p-2.5 rounded-xl bg-white/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-current hover:text-[#A98A67] transition-all hover:scale-110`}
                     aria-label="Toggle theme"
                 >
                     {darkMode ? <Sun size={20} /> : <Moon size={20} />}
@@ -418,8 +418,8 @@ export default function UntetheredApp() {
                     className={cn(
                         "flex items-center gap-3 px-4 py-2 rounded-xl transition-all",
                         activeTab === 'profile' 
-                            ? "bg-[#5EC4B0] text-[#0c0910] font-bold shadow-lg" 
-                            : "bg-white/5 dark:bg-white/10 border border-black/10 dark:border-white/10 hover:bg-[#5EC4B0]/10"
+                            ? "bg-[#8C7B8A] text-[#0c0910] font-bold shadow-lg" 
+                            : "bg-white/5 dark:bg-white/10 border border-black/10 dark:border-white/10 hover:bg-[#8C7B8A]/10"
                     )}
                 >
                     <User className={cn("w-4 h-4", activeTab === 'profile' ? "fill-current" : "")} />

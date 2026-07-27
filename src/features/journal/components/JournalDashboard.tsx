@@ -23,17 +23,17 @@ interface JournalDashboardProps {
 const EMOTION_COLORS: Record<string, string> = {
   ANXIETY: '#FF7043', 
   SADNESS: '#5C6BC0', 
-  INSECURITY: '#5EC4B0',
+  INSECURITY: '#8C7B8A',
   ANGER: '#E53935', 
-  PEACE: '#ABCEC9', 
-  JOY: '#FFD54F', 
+  PEACE: '#CFC2CD', 
+  JOY: '#C9AE8E', 
   GUILT: '#9575CD', 
   SHAME: '#7986CB',
 };
 
 function emotionColor(str?: string) {
-  if (!str) return '#B8973A';
-  return EMOTION_COLORS[str.split(',')[0].trim().toUpperCase()] ?? '#B8973A';
+  if (!str) return '#7A5F44';
+  return EMOTION_COLORS[str.split(',')[0].trim().toUpperCase()] ?? '#7A5F44';
 }
 
 function entryDate(e: JournalEntry): Date {

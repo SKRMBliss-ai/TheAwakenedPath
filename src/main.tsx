@@ -4,11 +4,18 @@ import './index.css'
 import UntetheredApp from './UntetheredSoulApp'
 import AboutJournal from './features/landing/AboutJournal'
 import EmotionalHealthCheck from './features/landing/EmotionalHealthCheck'
+import EmotionFeelingsCourse from './features/landing/EmotionFeelingsCourse'
+import Policies from './features/landing/Policies'
+import SoulfulHome from './features/landing/SoulfulHome'
 import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
 import { AchievementsProvider } from './features/achievements/useAchievements'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
+import { installGlobalErrorReporting } from './lib/errorReporter'
+
+// Capture async/uncaught errors that never reach a React ErrorBoundary.
+installGlobalErrorReporting();
 
 // Initialize Voice System — wrapped so a throwing init (older mobile browsers
 // where some Web APIs are missing) cannot blank the entire app.
@@ -16,6 +23,24 @@ try {
   VoiceService.init();
 } catch (e) {
   console.warn('[main] VoiceService.init failed; continuing without audio:', e);
+}
+
+// ─── Stale-deploy guard ───────────────────────────────────────────────────────
+// The PWA uses autoUpdate + skipWaiting + clientsClaim + cleanupOutdatedCaches:
+// on every deploy the new service worker takes over ALREADY-OPEN tabs and
+// deletes the old precached chunks — while the tab is still running the old
+// index. Any lazy import after that 404s ("Failed to fetch dynamically
+// imported module"). Reload the instant a NEW worker claims an already-
+// controlled page so page and cache never diverge. First-ever install
+// (no previous controller) is skipped — nothing is stale then.
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    window.location.reload();
+  });
 }
 
 // ─── Lightweight page-visit tracker (fire-and-forget) ────────────────────────
@@ -64,17 +89,47 @@ const isEmotionalHealthRoute = (() => {
   return p === '/knowyouremotionalhealth' || p === '/knowyouremotionalhealth/index.html';
 })();
 
-// Track /mindgym (main app) visits — AboutJournal tracks its own visits internally
-if (!isAboutJournalRoute && !isEmotionalHealthRoute && typeof window !== 'undefined') {
+// Standalone sales page for the Emotion & Feelings course — same pattern as
+// AboutJournal: rendered without auth/theme providers, own email capture.
+const isFeelingsCourseRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/feelingsandemotioncourse' || p === '/feelingsandemotioncourse/index.html';
+})();
+
+// Standalone legal/policy pages (Privacy, Terms, Refund) — linked from the
+// course footer. Rendered without auth/theme providers like the other landings.
+const isPoliciesRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/policies' || p === '/policies/index.html';
+})();
+
+// Brand home (Soulful Intelligence umbrella) — the ROOT of skrmblissai.in. The
+// Mind Gym app now lives at /mindgym; the bare domain shows the studio home.
+const isHomeRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '' || p === '/index.html';
+})();
+
+// Track /mindgym (main app) visits — the brand home & AboutJournal track their own.
+if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute && !isPoliciesRoute && !isHomeRoute && typeof window !== 'undefined') {
   const p = window.location.pathname.toLowerCase();
-  if (p === '/mindgym' || p === '/mindgym/' || p === '/') {
+  if (p === '/mindgym' || p === '/mindgym/') {
     trackPageVisit('/mindgym', 'PAGE_VISIT_APP');
   }
 }
 
 const root = createRoot(document.getElementById('root')!);
 
-if (isAboutJournalRoute) {
+if (isHomeRoute) {
+  root.render(
+    <ErrorBoundary featureName="SoulfulHome">
+      <SoulfulHome />
+    </ErrorBoundary>,
+  );
+} else if (isAboutJournalRoute) {
   root.render(
     <ErrorBoundary featureName="AboutJournal">
       <AboutJournal />
@@ -84,6 +139,18 @@ if (isAboutJournalRoute) {
   root.render(
     <ErrorBoundary featureName="EmotionalHealthCheck">
       <EmotionalHealthCheck />
+    </ErrorBoundary>,
+  );
+} else if (isFeelingsCourseRoute) {
+  root.render(
+    <ErrorBoundary featureName="EmotionFeelingsCourse">
+      <EmotionFeelingsCourse />
+    </ErrorBoundary>,
+  );
+} else if (isPoliciesRoute) {
+  root.render(
+    <ErrorBoundary featureName="Policies">
+      <Policies />
     </ErrorBoundary>,
   );
 } else {

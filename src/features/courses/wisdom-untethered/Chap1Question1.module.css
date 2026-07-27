@@ -3,8 +3,8 @@
 .container {
   --gold: #8B6D1B;
   /* Deeper gold for light mode */
-  --gold-light: #B8973A;
-  --gold-pale: #D4AE5C;
+  --gold-light: #7A5F44;
+  --gold-pale: #A98A67;
   --ink: #1C1814;
   --ink-soft: #3A342C;
   --parchment: #F5EDD8;
@@ -12,7 +12,7 @@
   --muted: #433C37;
   /* Darkened for better contrast in light mode */
   --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans: 'DM Sans', sans-serif;
+  --sans: 'Outfit', sans-serif;
 
   background: var(--warm-white);
   color: var(--ink);
@@ -1115,7 +1115,7 @@
 
 /* ── DARK MODE OVERRIDES ── */
 :global(.dark) .container {
-  --gold: #B8973A;
+  --gold: #7A5F44;
   --gold-light: #F0E4C0;
   --text-primary: #FDFAF4;
   --text-secondary: rgba(253, 250, 244, 0.8);
@@ -1139,7 +1139,7 @@
 }
 
 :global(.dark) .heroTitle strong {
-  color: #D4AE5C;
+  color: #A98A67;
 }
 
 :global(.dark) .heroSub {
@@ -1452,7 +1452,7 @@
 
 /* ── DARK MODE OVERRIDES ── */
 :global(.dark) .container {
-  --gold: #B8973A;
+  --gold: #7A5F44;
   --gold-light: #F0E4C0;
   --text-primary: #FDFAF4;
   --text-secondary: rgba(253, 250, 244, 0.8);
@@ -1476,7 +1476,7 @@
 }
 
 :global(.dark) .heroTitle strong {
-  color: #D4AE5C;
+  color: #A98A67;
 }
 
 
@@ -1626,4 +1626,4 @@
 
 :global(.dark) .closingTitle {
   color: #FDFAF4;
-}
+}

@@ -1,16 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight } from 'lucide-react';
-import { MeditationFeature } from './features/meditation/MeditationFeature';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy } from 'lucide-react';
 import { MeditationHomeCard } from './features/meditation/MeditationHomeCard';
 import { db } from './firebase';
-import { CoursesHub } from './features/courses/CoursesHub';
-import { WisdomUntetheredCourse } from './features/courses/WisdomUntetheredCourse';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { cn } from './lib/utils';
-import Journal from './features/journal/components/Journal';
-import { BreathPractice } from './features/breath/components/BreathPractice';
-import StatsDashboard from './features/stats/StatsDashboard';
-import { SituationalPractices } from './features/practices/SituationalPractices';
 import { useAuth } from './features/auth/AuthContext';
 import { MeditationPortal } from './components/ui/MeditationPortal';
 import { SacredCircle } from './components/ui/SacredCircle';
@@ -22,13 +15,12 @@ import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
 import { ThemeToggle, useTheme } from './theme/ThemeSystem';
 import { collection, query, orderBy, limit, onSnapshot, getDocs, doc } from 'firebase/firestore';
 import { MindGymLogo } from './components/ui/MindGymLogo';
-import EngagementReport from './features/admin/EngagementReport';
 import { useAchievements } from './features/achievements/useAchievements';
 import { MusicMiniPlayer } from './components/ui/MusicMiniPlayer';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
-import { MedalGrid } from './components/domain/MedalGrid';
+import { AchievementsDrawer } from './features/achievements/AchievementsDrawer';
+import { TokenToast } from './components/ui/TokenToast';
 import { isAdminEmail, isUnlockedUser, shouldBlockAnalytics } from './config/admin';
-import { QUESTION_META } from './features/practices/TodayPath';
 import { useCourseTracking } from './hooks/useCourseTracking';
 import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
 import { InfoTooltip } from './components/ui/InfoTooltip';
@@ -36,9 +28,37 @@ import { VoiceGuidance } from './components/ui/VoiceGuidance';
 import { VoiceService, useVoiceStatus } from './services/voiceService';
 import { usePersistedState } from './hooks/usePersistedState';
 import { useRazorpay } from './hooks/useRazorpay';
-import { MusicHub } from './features/music/MusicHub';
 import { PhonePromptModal } from './components/domain/PhonePromptModal';
 import SacredWelcomeModal from './components/ui/SacredWelcomeModal';
+import { PresenceBreath } from './components/ui/PresenceBreath';
+import { FirstRunWelcome } from './components/ui/FirstRunWelcome';
+import { DashboardGrid } from './features/practices/DashboardGrid';
+import PriceSlider from './components/ui/PriceSlider';
+import SILogoMark from './components/ui/SILogoMark';
+import SocialFab from './components/ui/SocialFab';
+
+// ─── Lazy-loaded feature tabs ───────────────────────────────────────────────
+// None of these are needed for the first paint of the home screen, so they are
+// split into separate chunks and fetched only when their tab is opened. This
+// keeps the initial mobile payload small on slow networks.
+const MeditationFeature = lazy(() => import('./features/meditation/MeditationFeature').then(m => ({ default: m.MeditationFeature })));
+const CoursesHub = lazy(() => import('./features/courses/CoursesHub').then(m => ({ default: m.CoursesHub })));
+const WisdomUntetheredCourse = lazy(() => import('./features/courses/WisdomUntetheredCourse').then(m => ({ default: m.WisdomUntetheredCourse })));
+const EmotionFeelingsCourseView = lazy(() => import('./features/courses/EmotionFeelingsCourseView').then(m => ({ default: m.EmotionFeelingsCourseView })));
+const Journal = lazy(() => import('./features/journal/components/Journal'));
+const BreathPractice = lazy(() => import('./features/breath/components/BreathPractice').then(m => ({ default: m.BreathPractice })));
+const StatsDashboard = lazy(() => import('./features/stats/StatsDashboard'));
+const SituationalPractices = lazy(() => import('./features/practices/SituationalPractices').then(m => ({ default: m.SituationalPractices })));
+const MusicHub = lazy(() => import('./features/music/MusicHub').then(m => ({ default: m.MusicHub })));
+const VideosHub = lazy(() => import('./features/videos/VideosHub').then(m => ({ default: m.VideosHub })));
+const EngagementReport = lazy(() => import('./features/admin/EngagementReport'));
+
+// Lightweight centered fallback shown while a feature chunk loads.
+const TabFallback = () => (
+  <div className="w-full flex items-center justify-center py-24">
+    <div className="w-9 h-9 rounded-full border-2 border-[var(--brand-primary)] border-t-transparent animate-spin" />
+  </div>
+);
 
 interface PracticeStep {
   title: string;
@@ -67,19 +87,19 @@ interface Reward {
 }
 
 const themeColors: any = {
-  inhale: { text: 'INHALE', scale: 1.3, glow: '0 0 100px rgba(171, 206, 201, 0.4)', duration: 4 },
+  inhale: { text: 'INHALE', scale: 1.3, glow: '0 0 100px rgba(207,194,205, 0.4)', duration: 4 },
   hold: { text: 'HOLD', scale: 1.0, glow: '0 0 60px rgba(198, 95, 157, 0.3)', duration: 2 },
-  exhale: { text: 'EXHALE', scale: 0.6, glow: '0 0 40px rgba(171, 206, 201, 0.2)', duration: 4 },
+  exhale: { text: 'EXHALE', scale: 0.6, glow: '0 0 40px rgba(207,194,205, 0.2)', duration: 4 },
   rest: { text: 'REST', scale: 0.5, glow: 'none', duration: 2 }
 };
 
 const EMOTION_MAP: Record<string, string> = {
   ANXIETY: '#FF7043',
   SADNESS: '#5C6BC0',
-  INSECURITY: '#5EC4B0',
+  INSECURITY: '#8C7B8A',
   ANGER: '#E53935',
-  PEACE: '#ABCEC9',
-  JOY: '#FFD54F',
+  PEACE: '#CFC2CD',
+  JOY: '#C9AE8E',
   GUILT: '#9575CD',
   SHAME: '#7986CB',
 };
@@ -102,216 +122,45 @@ function getDominantEmotionColor(emotionsStr?: string) {
 
 // --- Sub-components moved outside for stability ---
 
-const BREATH_PHASES = [
-  { phase: 'inhale', label: 'Inhale', duration: 4000, color: '#5EC4B0', scale: 1.25, glow: 0.5 },
-  { phase: 'hold',   label: 'Hold',   duration: 2000, color: '#9575CD', scale: 1.25, glow: 0.4 },
-  { phase: 'exhale', label: 'Exhale', duration: 4000, color: '#B8973A', scale: 1.0,  glow: 0.2 },
-  { phase: 'rest',   label: 'Rest',   duration: 2000, color: '#7986CB', scale: 1.0,  glow: 0.1 },
-] as const;
-
-const MobileDashboard = ({ user, onOpenSidebar, weeklyAssignment }: any) => {
-  const { mode } = useTheme();
+const MobileDashboard = ({ user }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
       : 'Good evening';
-
-  const [breathActive, setBreathActive] = useState(false);
-  const [breathIdx, setBreathIdx] = useState(0);
-
-  useEffect(() => {
-    if (!breathActive) { setBreathIdx(0); return; }
-    let idx = 0;
-    setBreathIdx(0);
-    let t: ReturnType<typeof setTimeout>;
-    function advance() {
-      t = setTimeout(() => {
-        idx = (idx + 1) % BREATH_PHASES.length;
-        setBreathIdx(idx);
-        advance();
-      }, BREATH_PHASES[idx].duration);
-    }
-    advance();
-    return () => clearTimeout(t);
-  }, [breathActive]);
-
-  const questionId = weeklyAssignment?.questionId ?? 'question1';
-  const questionMeta = QUESTION_META[questionId] ?? QUESTION_META['question1'];
-  const currentPhase = BREATH_PHASES[breathIdx];
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="space-y-6"
+      className="space-y-4"
     >
-      {/* ── Greeting row ── */}
-      <div className="flex items-center justify-between px-3 sm:px-4 pt-4 sm:pt-5">
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Menu button hidden on mobile — top fixed header already has one */}
-          <button
-            onClick={onOpenSidebar}
-            className="hidden lg:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full items-center justify-center active:scale-90 transition-all flex-shrink-0"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
-          >
-            <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: 'var(--text-muted)' }} />
-          </button>
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <span
-              className="font-sans text-[9px] font-bold tracking-[.28em] uppercase"
-              style={{ color: '#B8973A' }}
-            >
-              {greeting},
-            </span>
-            <span className="font-serif text-[17px] sm:text-[20px] font-normal truncate" style={{ color: 'var(--text-primary)' }}>
-              {user.displayName || 'Friend'}
-            </span>
-          </div>
-        </div>
+      {/* ── Breathing hero — first thing under the fixed nav bar ── */}
+      <div className="flex flex-col items-center gap-2 px-3 sm:px-4 pt-1">
+        <PresenceBreath size={190} showCaption={false} />
       </div>
 
-      {/* ── Orb section ── */}
-      <div className="flex flex-col items-center gap-3 px-3 sm:px-4">
-        {/* Orb + ring */}
-        <div className="relative w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] md:w-[140px] md:h-[140px]">
-          {/* Orb button — always dark bg so text inside stays readable */}
-          <motion.button
-            onClick={() => setBreathActive(b => !b)}
-            className="relative rounded-full flex items-center justify-center overflow-hidden focus:outline-none w-full h-full"
-            style={{
-              background: mode === 'dark'
-                ? 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 45%, #041f1e 100%)'
-                : 'radial-gradient(ellipse at 37% 30%, #FFFDF7 0%, #F5E6BD 55%, #cbf2ef 100%)',
-              border: mode === 'dark' ? '1px solid rgba(184,151,58,.3)' : '1px solid rgba(184,151,58,.45)',
-              boxShadow: '0 0 0 1px rgba(184,151,58,.18)',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-            animate={{
-              scale: breathActive ? currentPhase.scale : 1,
-              boxShadow: breathActive
-                ? `0 0 0 1px rgba(184,151,58,.18), 0 0 ${18 + currentPhase.glow * 30}px rgba(184,151,58,${0.1 + currentPhase.glow * 0.22})`
-                : '0 0 0 1px rgba(184,151,58,.18)'
-            }}
-            transition={{ 
-              duration: breathActive ? currentPhase.duration / 1000 : 6, 
-              ease: breathActive ? "easeInOut" : "easeInOut",
-              repeat: breathActive ? 0 : Infinity 
-            }}
-            aria-label={breathActive ? 'End breath practice' : 'Begin breath practice'}
-          >
-            <div
-              className="absolute pointer-events-none rounded-full"
-              style={{
-                top: '8%', left: '12%', width: '42%', height: '30%',
-                background: 'radial-gradient(ellipse, rgba(255,248,255,.07) 0%, transparent 78%)',
-                transform: 'rotate(-18deg)',
-              }}
-            />
-            <AnimatePresence mode="wait">
-              {breathActive ? (
-                <motion.span
-                  key={currentPhase.phase}
-                  initial={{ opacity: 0, scale: 0.85 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.1 }}
-                  transition={{ duration: 0.35 }}
-                  className="font-sans text-[11px] tracking-[.3em] uppercase font-bold"
-                  style={{ color: currentPhase.color }}
-                >
-                  {currentPhase.label}
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="awaken"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="font-sans text-[11px] tracking-[.3em] uppercase font-black"
-                  style={{ color: mode === 'dark' ? 'rgba(225,205,215,.75)' : '#B8973A' }}
-                >
-                  AWAKEN
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        </div>
-
-        {/* Intent / breath text — use theme var for legibility on both themes */}
-        <AnimatePresence mode="wait">
-          {breathActive ? (
-            <motion.p
-              key="breath-text"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.25 }}
-              className="font-sans text-[10px] italic text-center leading-relaxed"
-              style={{ color: 'var(--text-muted)', maxWidth: 240 }}
-            >
-              Inhale… hold… exhale… rest
-            </motion.p>
-          ) : (
-            <motion.p
-              key="intent-text"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.25 }}
-              className="font-sans text-[12px] sm:text-[13px] font-semibold text-center leading-relaxed"
-              style={{ color: 'var(--text-primary)', maxWidth: 280 }}
-            >
-              "{questionMeta.dailyIntent}"
-            </motion.p>
-          )}
-        </AnimatePresence>
-
-        {/* Breath button */}
-        <button
-          onClick={() => setBreathActive(b => !b)}
-          className="font-sans text-[9px] font-bold tracking-[.22em] uppercase px-4 py-1.5 rounded-[20px] transition-all duration-200"
-          style={{
-            border: '1px solid rgba(184,151,58,.4)',
-            background: breathActive ? 'rgba(184,151,58,.2)' : 'rgba(184,151,58,.12)',
-            color: '#B8973A',
-          }}
+      {/* ── Greeting — centered, just beneath the hero ── */}
+      <div className="text-center px-4">
+        <span
+          className="font-sans text-[10px] font-bold tracking-[.28em] uppercase"
+          style={{ color: 'var(--accent-primary)' }}
         >
-          {breathActive ? '✕ End practice' : 'Begin breath practice'}
-        </button>
+          {greeting},
+        </span>
+        <p className="font-serif text-[18px] font-normal mt-0.5 truncate" style={{ color: 'var(--text-primary)' }}>
+          {user.displayName || 'Friend'}
+        </p>
       </div>
     </motion.div>
   );
 };
 
-const BreadthDesktop = ({ user, weeklyAssignment }: any) => {
-  const { mode } = useTheme();
+const BreadthDesktop = ({ user }: any) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
       : 'Good evening';
-
-  const [breathActive, setBreathActive] = useState(false);
-  const [breathIdx, setBreathIdx] = useState(0);
-
-  useEffect(() => {
-    if (!breathActive) { setBreathIdx(0); return; }
-    let idx = 0;
-    setBreathIdx(0);
-    let t: ReturnType<typeof setTimeout>;
-    function advance() {
-      t = setTimeout(() => {
-        idx = (idx + 1) % BREATH_PHASES.length;
-        setBreathIdx(idx);
-        advance();
-      }, BREATH_PHASES[idx].duration);
-    }
-    advance();
-    return () => clearTimeout(t);
-  }, [breathActive]);
-
-  const questionId = weeklyAssignment?.questionId ?? 'question1';
-  const questionMeta = QUESTION_META[questionId] ?? QUESTION_META['question1'];
-  const currentPhase = BREATH_PHASES[breathIdx];
 
   return (
     <motion.div
@@ -319,122 +168,17 @@ const BreadthDesktop = ({ user, weeklyAssignment }: any) => {
       animate={{ opacity: 1 }}
       className="space-y-8 max-w-5xl mx-auto"
     >
-      {/* ── Desktop hero: greeting + centered orb ── */}
+      {/* ── Desktop hero: centered greeting + diamond ── */}
       <div className="pt-6 lg:pt-8 pb-2 px-4 lg:px-8 max-w-4xl mx-auto">
-        {/* Greeting */}
-        <div className="mb-6 lg:mb-8">
-          <p className="font-sans text-[11px] font-bold tracking-[.28em] uppercase mb-0.5" style={{ color: '#B8973A' }}>
+        {/* Centered hero column */}
+        <div className="flex flex-col items-center text-center">
+          <p className="font-sans text-[11px] font-bold tracking-[.28em] uppercase mb-1" style={{ color: 'var(--accent-primary)' }}>
             {greeting},
           </p>
-          <h1 className="font-serif text-3xl font-light" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="font-serif text-3xl lg:text-4xl font-light mb-1" style={{ color: 'var(--text-primary)' }}>
             {user.displayName}
           </h1>
-        </div>
-
-        {/* Centered orb */}
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative" style={{ width: 140, height: 140 }}>
-            <motion.button
-              onClick={() => setBreathActive(b => !b)}
-              className="relative rounded-full flex items-center justify-center overflow-hidden focus:outline-none"
-              style={{
-                width: 140, height: 140,
-                background: mode === 'dark'
-                  ? 'radial-gradient(ellipse at 37% 30%, #3D2640 0%, #180E22 55%, #090510 100%)'
-                  : 'radial-gradient(ellipse at 37% 30%, #FFFDF7 0%, #F5E6BD 55%, #E6C57D 100%)',
-                border: mode === 'dark' ? '1px solid rgba(184,151,58,.3)' : '1px solid rgba(184,151,58,.45)',
-                boxShadow: '0 0 0 1px rgba(184,151,58,.18)',
-              }}
-              animate={{
-                scale: breathActive ? currentPhase.scale : 1,
-                boxShadow: breathActive
-                  ? `0 0 0 1px rgba(184,151,58,.18), 0 0 ${18 + currentPhase.glow * 30}px rgba(184,151,58,${0.1 + currentPhase.glow * 0.22})`
-                  : '0 0 0 1px rgba(184,151,58,.18)'
-              }}
-              transition={{ 
-                duration: breathActive ? currentPhase.duration / 1000 : 6, 
-                ease: "easeInOut",
-                repeat: breathActive ? 0 : Infinity 
-              }}
-              aria-label={breathActive ? 'End breath practice' : 'Begin breath practice'}
-            >
-              <div
-                className="absolute pointer-events-none rounded-full"
-                style={{
-                  top: '8%', left: '12%', width: '42%', height: '30%',
-                  background: 'radial-gradient(ellipse, rgba(255,248,255,.07) 0%, transparent 78%)',
-                  transform: 'rotate(-18deg)',
-                }}
-              />
-              <AnimatePresence mode="wait">
-                {breathActive ? (
-                  <motion.span
-                    key={currentPhase.phase}
-                    initial={{ opacity: 0, scale: 0.85 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.1 }}
-                    transition={{ duration: 0.35 }}
-                    className="font-sans text-[12px] tracking-[.3em] uppercase font-bold"
-                    style={{ color: currentPhase.color }}
-                  >
-                    {currentPhase.label}
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="awaken"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="font-sans text-[12px] tracking-[.3em] uppercase font-black"
-                    style={{ color: mode === 'dark' ? 'rgba(225,205,215,.8)' : '#B8973A' }}
-                  >
-                    AWAKEN
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          </div>
-
-          {/* Intent / phase text */}
-          <AnimatePresence mode="wait">
-            {breathActive ? (
-              <motion.p
-                key="breath-text"
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.25 }}
-                className="font-sans text-[11px] italic text-center leading-relaxed"
-                style={{ color: 'var(--text-muted)', maxWidth: 280 }}
-              >
-                Inhale… hold… exhale… rest
-              </motion.p>
-            ) : (
-              <motion.p
-                key="intent-text"
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.25 }}
-                className="font-sans text-[11px] italic text-center leading-relaxed"
-                style={{ color: 'var(--text-muted)', maxWidth: 280 }}
-              >
-                "{questionMeta.dailyIntent}"
-              </motion.p>
-            )}
-          </AnimatePresence>
-
-          <button
-            onClick={() => setBreathActive(b => !b)}
-            className="font-sans text-[10px] font-bold tracking-[.22em] uppercase px-5 py-2 rounded-[20px] transition-all duration-200"
-            style={{
-              border: '1px solid rgba(184,151,58,.3)',
-              background: breathActive ? 'rgba(184,151,58,.2)' : 'rgba(184,151,58,.1)',
-              color: '#B8973A',
-            }}
-          >
-            {breathActive ? '✕ End practice' : 'Begin breath practice'}
-          </button>
+          <PresenceBreath size={220} showCaption={false} />
         </div>
       </div>
     </motion.div>
@@ -496,10 +240,13 @@ const WatcherPauseButton = () => {
 // --- Sacred Welcome Modal ---
 
 // --- Premium Paywall Component ---
-const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, onSuccess }: any) => {
+const PremiumPaywall = ({ user, checkOut, isProcessing, onSuccess }: any) => {
+  const { mode } = useTheme();
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  // May is Mental Health Awareness Month — 70% off all plans
+  // Everything below is pay-what-you-want — these fixed reference prices are
+  // no longer charged (kept only so pricingConfig's shape/detection logic is
+  // untouched); the actual charge comes from the sliders further down.
   const DISCOUNT = 0.70;
   const disc = (n: number) => Math.round(n * (1 - DISCOUNT));
 
@@ -529,16 +276,52 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, onSuccess }: 
   }, [timezone]);
 
   const currency = pricingConfig.currency;
-  const prices = {
-    monthly: `${pricingConfig.symbol}${pricingConfig.monthly}`,
-    annuallyStrikethrough: `${pricingConfig.symbol}${pricingConfig.strike}`,
-    // Discounted (70% off — Mental Health Awareness Month)
-    dMonthly:  `${pricingConfig.symbol}${pricingConfig.dMonthly}`,
-    dAnnual:   `${pricingConfig.symbol}${pricingConfig.dAnnual}`,
-    dLifetime: `${pricingConfig.symbol}${pricingConfig.dLifetime}`,
-    annually: `${pricingConfig.symbol}${pricingConfig.annual}`,
-    lifetime: `${pricingConfig.symbol}${pricingConfig.lifetime}`,
+
+  // ── Pay-what-you-want pricing — floors + suggested amounts, one slider each
+  // for the standalone course and for monthly/yearly Mind Gym membership.
+  // Keep in sync with functions/index.js PWYW_PRODUCTS (the server re-clamps
+  // regardless, but these should match what the slider promises the buyer).
+  const COURSE_MIN: Record<string, number> = { INR: 99, USD: 2, EUR: 2, GBP: 2, CAD: 3, AUD: 3, AED: 8, SGD: 3 };
+  const COURSE_SUGGESTED: Record<string, number> = { INR: 415, USD: 4.99, EUR: 4.99, GBP: 3.99, CAD: 6.99, AUD: 7.99, AED: 18, SGD: 6.99 };
+  const MEMBERSHIP_MIN: Record<string, { monthly: number; yearly: number }> = {
+    INR: { monthly: 99, yearly: 999 }, USD: { monthly: 2, yearly: 12 }, EUR: { monthly: 2, yearly: 12 },
+    GBP: { monthly: 2, yearly: 10 }, CAD: { monthly: 3, yearly: 16 }, AUD: { monthly: 3, yearly: 18 },
+    AED: { monthly: 8, yearly: 44 }, SGD: { monthly: 3, yearly: 16 },
   };
+  const MEMBERSHIP_SUGGESTED: Record<string, { monthly: number; yearly: number }> = {
+    INR: { monthly: 240, yearly: 2400 }, USD: { monthly: 3, yearly: 30 }, EUR: { monthly: 3, yearly: 30 },
+    GBP: { monthly: 3, yearly: 25 }, CAD: { monthly: 4, yearly: 40 }, AUD: { monthly: 4, yearly: 45 },
+    AED: { monthly: 12, yearly: 110 }, SGD: { monthly: 4, yearly: 40 },
+  };
+  const [courseAmt, setCourseAmt] = useState(() => COURSE_SUGGESTED[currency] ?? COURSE_SUGGESTED.USD);
+  const [monthlyAmt, setMonthlyAmt] = useState(() => MEMBERSHIP_SUGGESTED[currency]?.monthly ?? MEMBERSHIP_SUGGESTED.USD.monthly);
+  const [yearlyAmt, setYearlyAmt] = useState(() => MEMBERSHIP_SUGGESTED[currency]?.yearly ?? MEMBERSHIP_SUGGESTED.USD.yearly);
+
+  // ── Dynamic monthly promo — the awareness theme + month rotate automatically
+  // each month, so the banner never reads as a stale "May 2026" offer. ──
+  const promo = useMemo(() => {
+    const AWARENESS = [
+      { emoji: '🌱', label: 'New Beginnings Month' },        // Jan
+      { emoji: '💛', label: 'Self-Compassion Month' },       // Feb
+      { emoji: '🧠', label: 'Brain & Mind Awareness Month' },// Mar
+      { emoji: '🌤️', label: 'Stress Awareness Month' },      // Apr
+      { emoji: '🌿', label: 'Mental Health Awareness Month' },// May
+      { emoji: '🧘', label: 'Mindfulness Month' },           // Jun
+      { emoji: '☀️', label: 'Self-Care Month' },             // Jul
+      { emoji: '🌊', label: 'Inner Calm Month' },            // Aug
+      { emoji: '🕊️', label: 'Emotional Wellness Month' },    // Sep
+      { emoji: '🍂', label: 'World Mental Health Month' },    // Oct
+      { emoji: '🙏', label: 'Gratitude Month' },             // Nov
+      { emoji: '❄️', label: 'Rest & Reflection Month' },     // Dec
+    ];
+    const now = new Date();
+    const m = now.getMonth();
+    const monthName = now.toLocaleString('en-US', { month: 'long' });
+    const year = now.getFullYear();
+    const lastDay = new Date(year, m + 1, 0).getDate();
+    const t = AWARENESS[m];
+    return { emoji: t.emoji, label: t.label, monthName, year, lastDay };
+  }, []);
 
   const features = [
     { name: "Deep Wisdom Courses", basic: "All lessons free for 3 days", premium: "All Chapters & Content", icon: BookOpen },
@@ -600,7 +383,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, onSuccess }: 
           </div>
 
           {/* Sacred Promise */}
-          <div className="flex flex-col items-center gap-6 py-10 px-8 rounded-[40px] bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 text-center shadow-[0_0_50px_rgba(94,196,176,0.05)]">
+          <div className="flex flex-col items-center gap-6 py-10 px-8 rounded-[40px] bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 text-center shadow-[0_0_50px_rgba(140,123,138,0.05)]">
             <div className="flex items-center justify-center gap-4 text-[var(--accent-primary)]">
               <Sparkles size={20} className="filter drop-shadow-[0_0_8px_var(--glow-primary)]" />
               <h5 className="text-[14px] font-bold uppercase tracking-[0.4em] text-[var(--accent-primary)] drop-shadow-sm">Our Sacred Promise</h5>
@@ -612,129 +395,123 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, onSuccess }: 
           </div>
         </div>
 
-        {/* Choose Your Commitment */}
-        <div className="text-center space-y-4">
-          <h3 className="text-2xl font-sans font-medium text-[var(--text-primary)]">Choose Your Commitment</h3>
-          <p className="text-sm text-[var(--text-secondary)] font-sans font-medium">The path that resonates with your current depth.</p>
+        {/* Name Your Own Price — pay-what-you-want, no fixed tiers */}
+        <div className="text-center space-y-3">
+          <h3 className="text-2xl font-sans font-medium text-[var(--text-primary)]">Name Your Own Price</h3>
+          <p className="text-sm text-[var(--text-secondary)] font-sans font-medium max-w-md mx-auto">
+            {promo.emoji} {promo.label} — give what feels right this {promo.monthName}. No fixed tiers, no pressure.
+          </p>
         </div>
 
-        {/* 🌿 Mental Health Awareness Month Discount Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-3xl mx-auto rounded-[20px] border border-amber-400/40 bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 px-6 py-4 text-center shadow-[0_0_30px_rgba(245,158,11,0.15)]"
-        >
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400 mb-1">🌿 Mental Health Awareness Month — May 2026</p>
-          <p className="text-[18px] font-bold text-amber-300">70% Off All Plans — This Month Only</p>
-          <p className="text-[12px] text-amber-200/70 mt-1">Offer ends May 31 · No code needed · Prices already applied below</p>
-        </motion.div>
-
-        {/* Pricing Grid — 3 paid plans (trial is automatic on sign-up) */}
+        {/* Pricing Grid — 3 pay-what-you-want options (trial is automatic on sign-up) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-4xl items-stretch">
 
-          {/* 1. Monthly */}
-          <div className="p-6 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/40 transition-all shadow-lg flex flex-col justify-between">
-            <div className="text-left">
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Step by Step</p>
-              <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Monthly Flow</h4>
-              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">Recurring Journey</p>
+          {/* 1. Course only */}
+          <div className="p-6 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/40 transition-all shadow-lg flex flex-col">
+            <div className="text-left mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Just One Course</p>
+              <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Feelings &amp; Emotions</h4>
+              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-4">One-time · lifetime access</p>
             </div>
-            <div className="w-full space-y-4">
-              <div>
-                <p className="text-[12px] line-through text-[var(--text-muted)] opacity-50">{prices.monthly}/mo</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[28px] font-bold text-amber-400">{prices.dMonthly}</span>
-                  <span className="text-xs text-[var(--text-muted)]">/ month</span>
-                </div>
-                <p className="text-[10px] text-amber-400/80 font-bold uppercase tracking-wide mt-0.5">70% off this May</p>
-              </div>
-              <AnchorButton
-                variant="ghost"
-                onClick={() => {
-                  if (user?.uid) {
-                    subscribe(user.uid, user.email || '', user.displayName || 'Traveler', 'premium_monthly', currency, () => {
-                      localStorage.setItem('show-welcome-modal', 'Monthly Flow');
-                      onSuccess?.();
-                    });
-                  }
-                }}
-                disabled={isProcessing}
-                className="w-full"
-              >
-                {isProcessing ? 'Opening Portal...' : 'Unlock Monthly'}
-              </AnchorButton>
+            <div className="flex-1 flex flex-col justify-center py-2">
+              <PriceSlider
+                currency={currency}
+                min={COURSE_MIN[currency] ?? COURSE_MIN.USD}
+                suggested={COURSE_SUGGESTED[currency] ?? COURSE_SUGGESTED.USD}
+                value={courseAmt}
+                onChange={setCourseAmt}
+                accent="#7A5F44"
+                dark={mode === 'dark'}
+              />
             </div>
+            <AnchorButton
+              variant="ghost"
+              onClick={() => {
+                if (user?.uid) {
+                  checkOut?.(user.uid, user.email || '', user.displayName || 'Traveler', 'emotion_feelings_course', currency, () => {
+                    localStorage.setItem('show-welcome-modal', 'Feelings & Emotions Course');
+                    onSuccess?.();
+                  }, undefined, courseAmt);
+                }
+              }}
+              disabled={isProcessing}
+              className="w-full mt-4"
+            >
+              {isProcessing ? 'Opening Portal...' : 'Enroll Now'}
+            </AnchorButton>
           </div>
 
-          {/* 3. Yearly */}
-          <div className="relative p-6 rounded-[32px] border-2 border-[var(--accent-primary)] bg-[var(--bg-surface)] shadow-[0_0_40px_rgba(94,196,176,0.15)] flex flex-col justify-between transform lg:scale-105 z-10">
+          {/* 2. Monthly membership */}
+          <div className="p-6 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/40 transition-all shadow-lg flex flex-col">
+            <div className="text-left mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Step by Step</p>
+              <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Monthly Membership</h4>
+              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-4">Full access for 30 days</p>
+            </div>
+            <div className="flex-1 flex flex-col justify-center py-2">
+              <PriceSlider
+                currency={currency}
+                min={MEMBERSHIP_MIN[currency]?.monthly ?? MEMBERSHIP_MIN.USD.monthly}
+                suggested={MEMBERSHIP_SUGGESTED[currency]?.monthly ?? MEMBERSHIP_SUGGESTED.USD.monthly}
+                value={monthlyAmt}
+                onChange={setMonthlyAmt}
+                accent="#8C7B8A"
+                dark={mode === 'dark'}
+              />
+            </div>
+            <AnchorButton
+              variant="ghost"
+              onClick={() => {
+                if (user?.uid) {
+                  checkOut?.(user.uid, user.email || '', user.displayName || 'Traveler', 'membership_monthly', currency, () => {
+                    localStorage.setItem('show-welcome-modal', 'Monthly Membership');
+                    onSuccess?.();
+                  }, undefined, monthlyAmt);
+                }
+              }}
+              disabled={isProcessing}
+              className="w-full mt-4"
+            >
+              {isProcessing ? 'Opening Portal...' : 'Unlock Monthly'}
+            </AnchorButton>
+          </div>
+
+          {/* 3. Yearly membership */}
+          <div className="relative p-6 rounded-[32px] border-2 border-[var(--accent-primary)] bg-[var(--bg-surface)] shadow-[0_0_40px_rgba(140,123,138,0.15)] flex flex-col transform lg:scale-105 z-10">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-[var(--accent-primary)] rounded-full text-[10px] font-bold uppercase tracking-widest text-black whitespace-nowrap shadow-xl">
               Most Devoted Path
             </div>
-            <div className="text-left mt-2">
+            <div className="text-left mt-2 mb-2">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Annual Immersion</p>
-              <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Sacred Commitment</h4>
-              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">2 Months Free Included</p>
+              <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Yearly Membership</h4>
+              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-4">Full access for 12 months</p>
             </div>
-            <div className="w-full space-y-4">
-              <div>
-                <p className="text-[12px] line-through text-[var(--text-muted)] opacity-50">{prices.annually}/yr</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[32px] font-bold text-amber-400">{prices.dAnnual}</span>
-                  <span className="text-xs text-amber-400/70">/ year</span>
-                </div>
-                <p className="text-[10px] text-amber-400/80 font-bold uppercase tracking-wide mt-0.5">70% off this May</p>
-              </div>
-              <AnchorButton
-                variant="solid"
-                onClick={() => {
-                  if (user?.uid) {
-                    subscribe(user.uid, user.email || '', user.displayName || 'Traveler', 'premium_yearly', currency, () => {
-                      localStorage.setItem('show-welcome-modal', 'Sacred Commitment (Annual)');
-                      onSuccess?.();
-                    });
-                  }
-                }}
-                disabled={isProcessing}
-                className="w-full shadow-[0_4px_20px_var(--glow-primary)]"
-              >
-                {isProcessing ? 'Opening Portal...' : 'Unlock Annually'}
-              </AnchorButton>
+            <div className="flex-1 flex flex-col justify-center py-2">
+              <PriceSlider
+                currency={currency}
+                min={MEMBERSHIP_MIN[currency]?.yearly ?? MEMBERSHIP_MIN.USD.yearly}
+                suggested={MEMBERSHIP_SUGGESTED[currency]?.yearly ?? MEMBERSHIP_SUGGESTED.USD.yearly}
+                value={yearlyAmt}
+                onChange={setYearlyAmt}
+                accent="#7A5F44"
+                dark={mode === 'dark'}
+              />
             </div>
-          </div>
-
-          {/* 4. Lifetime */}
-          <div className="p-6 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-primary)]/40 transition-all shadow-lg flex flex-col justify-between">
-            <div className="text-left">
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Everlasting</p>
-              <h4 className="text-[20px] font-bold text-[var(--text-primary)]">Eternal Traveler</h4>
-              <p className="text-[11px] text-[var(--text-secondary)] font-sans font-medium mb-6">One-Time Offering</p>
-            </div>
-            <div className="w-full space-y-4">
-              <div>
-                <p className="text-[12px] line-through text-[var(--text-muted)] opacity-50">{prices.lifetime}</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[28px] font-bold text-amber-400">{prices.dLifetime}</span>
-                  <span className="text-xs text-[var(--text-muted)]">/ forever</span>
-                </div>
-                <p className="text-[10px] text-amber-400/80 font-bold uppercase tracking-wide mt-0.5">70% off this May</p>
-              </div>
-              <AnchorButton
-                variant="ghost"
-                onClick={() => {
-                  if (user?.uid) {
-                    checkOut?.(user.uid, user.email || '', user.displayName || 'Traveler', 'all_access', currency, () => {
-                      localStorage.setItem('show-welcome-modal', 'Eternal Traveler (Lifetime)');
-                      onSuccess?.();
-                    });
-                  }
-                }}
-                disabled={isProcessing}
-                className="w-full"
-              >
-                {isProcessing ? 'Opening Portal...' : 'Unlock Forever'}
-              </AnchorButton>
-            </div>
+            <AnchorButton
+              variant="solid"
+              onClick={() => {
+                if (user?.uid) {
+                  checkOut?.(user.uid, user.email || '', user.displayName || 'Traveler', 'membership_yearly', currency, () => {
+                    localStorage.setItem('show-welcome-modal', 'Yearly Membership');
+                    onSuccess?.();
+                  }, undefined, yearlyAmt);
+                }
+              }}
+              disabled={isProcessing}
+              className="w-full mt-4 shadow-[0_4px_20px_var(--glow-primary)]"
+            >
+              {isProcessing ? 'Opening Portal...' : 'Unlock Yearly'}
+            </AnchorButton>
           </div>
         </div>
       </div>
@@ -745,7 +522,7 @@ const PremiumPaywall = ({ user, subscribe, checkOut, isProcessing, onSuccess }: 
 // --- Main App Component ---
 
 export default function UntetheredApp() {
-  const { user: currentUser, profile, loading, signOut, isAccessValid, activateTrial, deductTokens } = useAuth();
+  const { user: currentUser, profile, loading, signOut, isAccessValid, isPremiumUser, tokenBalance, activateTrial, deductTokens } = useAuth();
   const { theme } = useTheme();
   const { musicUrl } = useVoiceStatus();
 
@@ -786,7 +563,7 @@ export default function UntetheredApp() {
     (v) => ['explanation', 'practice', 'video'].includes(v)
   );
   const [activeCourseId, setActiveCourseId] = usePersistedState<string | null>('awakened-course', null);
-  const [voiceGuidanceEnabled, setVoiceGuidanceEnabled] = usePersistedState<boolean>('voice-guidance-enabled', true);
+  const [voiceGuidanceEnabled] = usePersistedState<boolean>('voice-guidance-enabled', true);
   const [preferredVoice, setPreferredVoice] = usePersistedState<string>('preferred-voice', 'en-GB-Chirp3-HD-Despina');
 
   // ── Force voice migration to Despina — Ensure consistent sacred experience ──
@@ -815,6 +592,7 @@ export default function UntetheredApp() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -907,6 +685,8 @@ export default function UntetheredApp() {
     localStorage.setItem('mind-gym-active-course', activeCourseId || '');
   }, [activeCourseId]);
   const [expandedChapter1, setExpandedChapter1] = useState(true);
+  // Learn group is collapsed by default; opens automatically if a course is active.
+  const [learnOpen, setLearnOpen] = useState(() => ['intelligence', 'wisdom_untethered'].includes(activeTab));
 
   const timeOfDayGradient = useMemo(() => {
     const hour = new Date().getHours();
@@ -1108,6 +888,27 @@ export default function UntetheredApp() {
 
   const isAdmin = isAdminEmail(currentUser?.email);
 
+  // Owns the Feelings & Emotions course (direct purchase, all-access, or admin)
+  const ownsEmotionCourse = !!(
+    profile?.purchasedCourses?.includes('emotion_feelings_course') ||
+    profile?.purchasedCourses?.includes('all_access') ||
+    isAdmin
+  );
+
+  // New-course announcement bar — dismissible, remembered across sessions.
+  const [courseAnnounceDismissed, setCourseAnnounceDismissed] = useState(() => {
+    try { return localStorage.getItem('emotion_announce_dismissed') === '1'; } catch { return false; }
+  });
+  const dismissCourseAnnounce = () => {
+    try { localStorage.setItem('emotion_announce_dismissed', '1'); } catch { /* ignore */ }
+    setCourseAnnounceDismissed(true);
+  };
+  // Shown to non-owners on the standard padded tabs — hidden on the immersive
+  // full-frame views (meditation room, wisdom course) which manage their own chrome.
+  const showCourseAnnounce =
+    !ownsEmotionCourse && !courseAnnounceDismissed &&
+    !['meditation', 'wisdom_untethered'].includes(activeTab);
+
   // ── Auto-block Clarity for owner/internal emails ──────────────────────────
   // Runs once when auth resolves. Sets BLOCK_CLARITY in localStorage so Clarity
   // stops recording sessions from internal team members on any device.
@@ -1196,6 +997,52 @@ export default function UntetheredApp() {
       return <SignInScreen />;
     }
     return <EmailCaptureScreen onShowSignIn={() => setShowSignIn(true)} />;
+  }
+
+  // ── Full-app lock: once the 300 free tokens are used up, the entire app is
+  // replaced by the upgrade screen — this overrides any trial days still
+  // remaining. Genuinely paid/admin users (isPremiumUser) are always exempt.
+  // Requires `profile` to have actually loaded: `loading` flips false as soon
+  // as auth resolves, but the Firestore profile snapshot (which carries
+  // tokensRemaining) arrives slightly later — without this guard, tokenBalance
+  // briefly reads as 0 for EVERY user on EVERY load, flashing this lock
+  // screen before their real balance is known.
+  if (profile && tokenBalance <= 0 && !isPremiumUser) {
+    return (
+      <div className="min-h-screen w-full bg-[var(--bg-primary)] overflow-y-auto">
+        <div className="max-w-md mx-auto text-center pt-12 px-6">
+          <div
+            className="w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4"
+            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}
+          >
+            <Lock className="w-6 h-6 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-serif text-[var(--text-primary)] mb-1">Your 300 free tokens are used up</h1>
+          <p className="text-sm text-[var(--text-secondary)]">Upgrade for unlimited access, or sign out below.</p>
+        </div>
+        <PremiumPaywall
+          user={currentUser}
+          subscribe={subscribe}
+          checkOut={checkOut}
+          isProcessing={isRazorpayProcessing}
+          activateTrial={activateTrial}
+          hasUsedTrial={!!profile?.trialUntil}
+          onSuccess={() => {
+            localStorage.setItem('awakened-tab', JSON.stringify('home'));
+            localStorage.setItem('mind-gym-active-tab', 'home');
+            setActiveTab('home');
+          }}
+        />
+        <div className="text-center pb-10">
+          <button
+            onClick={async () => { if (window.confirm('Sign out?')) await signOut(); }}
+            className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-rose-400 transition-colors"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const practices: Practice[] = [
@@ -1314,7 +1161,7 @@ export default function UntetheredApp() {
   if (showReward) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95">
-        <div className="p-12 rounded-3xl bg-gradient-to-br from-[#ABCEC9] to-[#C3B8D5] text-center text-black shadow-[0_0_50px_rgba(171,206,201,0.5)]">
+        <div className="p-12 rounded-3xl bg-gradient-to-br from-[#CFC2CD] to-[#C3B8D5] text-center text-black shadow-[0_0_50px_rgba(207,194,205,0.5)]">
           <Sparkles className="w-20 h-20 mx-auto mb-4" />
           <h2 className="text-3xl font-bold">+{showReward.xp} XP</h2>
           <p className="opacity-60">{showReward.title}</p>
@@ -1360,6 +1207,7 @@ export default function UntetheredApp() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           onClick={() => setIsSidebarCollapsed(false)}
+          aria-label="Open sidebar"
           className="hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-[75] w-8 h-14 items-center justify-center rounded-r-2xl transition-all hover:w-10 group"
           style={{
             background: 'var(--bg-surface)',
@@ -1404,6 +1252,7 @@ export default function UntetheredApp() {
             onClick={() => setIsSidebarCollapsed(true)}
             className="hidden lg:flex w-8 h-8 rounded-xl items-center justify-center transition-all hover:bg-[var(--bg-base)] group"
             title="Collapse sidebar"
+            aria-label="Collapse sidebar"
           >
             <ChevronLeft size={15} style={{ color: 'var(--text-muted)' }} className="group-hover:scale-110 transition-transform" />
           </button>
@@ -1411,6 +1260,7 @@ export default function UntetheredApp() {
           <button
             onClick={() => setIsSidebarOpen(false)}
             className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all"
+            aria-label="Close menu"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1443,7 +1293,7 @@ export default function UntetheredApp() {
                   className={isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"}
                 />
                 <span className={cn(
-                  "text-[12px] uppercase tracking-[0.25em] font-sans transition-colors flex-1 text-left",
+                  "text-[12px] uppercase tracking-[0.18em] font-sans transition-colors flex-1 text-left",
                   isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
                 )}>
                   Dashboard
@@ -1455,28 +1305,38 @@ export default function UntetheredApp() {
 
           {/* ── Courses group ── */}
           <div className="pt-1 pb-0.5">
-            {/* Group label */}
-            <div className="flex items-center gap-3 px-4 py-[0.5vh] mb-0">
-              <Sparkles
+            {/* Group label — tap to expand / collapse */}
+            <button
+              onClick={() => setLearnOpen(o => !o)}
+              className="w-full flex items-center gap-3 px-4 py-[0.5vh] mb-0"
+            >
+              <BookOpen
                 size={14}
                 strokeWidth={1.5}
                 className={cn(
                   "transition-colors flex-shrink-0",
-                  ['intelligence', 'wisdom_untethered'].includes(activeTab)
+                  ['intelligence', 'wisdom_untethered', 'emotion-course'].includes(activeTab)
                     ? "text-[var(--accent-primary)]"
                     : "text-[var(--text-muted)]"
                 )}
               />
-              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)]">
+              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] flex-1 text-left">
                 Courses
               </span>
-            </div>
+              <ChevronRight
+                size={13}
+                className="text-[var(--text-muted)] transition-transform duration-300 flex-shrink-0"
+                style={{ transform: learnOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
+              />
+            </button>
 
             {/* Course items */}
-            <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40">
+            {learnOpen && (
+            <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
               {[
-                { id: 'intelligence', label: 'The Power of Now', locked: !isAccessValid },
-                { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: false },
+                { id: 'intelligence', label: 'The Power of Now', locked: !isAccessValid, badge: 'Free' as const },
+                { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: false, badge: 'Free' as const },
+                { id: 'emotion-course', label: 'Feelings & Emotions', locked: false, badge: 'Paid' as const },
               ].map(sub => {
                 const isActive = activeTab === sub.id;
                 return (
@@ -1498,6 +1358,16 @@ export default function UntetheredApp() {
                         {sub.label}
                       </span>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {sub.badge && (
+                          <span
+                            className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full leading-none"
+                            style={sub.badge === 'Paid'
+                              ? { color: '#A98A67', background: 'rgba(169,138,103,0.15)', border: '1px solid rgba(169,138,103,0.35)' }
+                              : { color: 'var(--text-muted)', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+                          >
+                            {sub.badge}
+                          </span>
+                        )}
                         {sub.locked && <Lock size={9} className="text-[var(--text-muted)] opacity-50" />}
                         {isActive && <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)]" />}
                       </div>
@@ -1577,48 +1447,15 @@ export default function UntetheredApp() {
                 );
               })}
             </div>
-
-            {/* ── Sanctuary group ── */}
-            <div className="pt-2 pb-0.5">
-              <div className="flex items-center gap-3 px-4 py-[0.5vh] mb-0">
-                <Sparkles
-                  size={14}
-                  className={activeTab === 'music' ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]"}
-                />
-                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text-muted)]">
-                  Soundscapes
-                </span>
-              </div>
-              <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40">
-                <button
-                  onClick={() => onNavigate('music')}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all duration-300 group relative text-left",
-                    activeTab === 'music' ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/40"
-                  )}
-                >
-                  {activeTab === 'music' && (
-                    <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-[var(--accent-primary)]" />
-                  )}
-                  <span className={cn(
-                    "text-[12px] tracking-[0.12em] font-sans transition-colors flex-1 whitespace-nowrap",
-                    activeTab === 'music' ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
-                  )}>
-                    Sacred Sounds
-                  </span>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <div className="text-[7px] border border-[var(--accent-primary)]/40 text-[var(--accent-primary)] px-1 rounded uppercase font-bold tracking-tighter">New</div>
-                    {activeTab === 'music' && <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)]" />}
-                  </div>
-                </button>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* ── Standalone nav items ── */}
           {[
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
-            { id: 'situations', icon: Flame, label: 'The Practice Room', locked: !isAccessValid },
+            { id: 'situations', icon: Flame, label: 'Practice', locked: !isAccessValid },
+            { id: 'music', icon: Headphones, label: 'Sacred Sounds', locked: false },
+            { id: 'videos', icon: Youtube, label: 'Videos', locked: false },
             { id: 'stats', icon: BarChart2, label: 'Progress', locked: !isAccessValid },
           ].map(item => {
             const isActive = activeTab === item.id;
@@ -1641,7 +1478,7 @@ export default function UntetheredApp() {
                   className={isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"}
                 />
                 <span className={cn(
-                  "text-[12px] uppercase tracking-[0.25em] font-sans transition-colors flex-1 text-left whitespace-nowrap",
+                  "text-[12px] uppercase tracking-[0.18em] font-sans transition-colors flex-1 text-left whitespace-nowrap",
                   isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
                 )}>
                   {item.label}
@@ -1664,7 +1501,7 @@ export default function UntetheredApp() {
             )}
           >
             <Wind size={16} className={cn("flex-shrink-0 transition-transform group-hover:scale-110", activeTab==='meditation'?'text-amber-400':'')} />
-            <span className="text-[12px] font-sans tracking-[0.1em] font-medium">Daily Meditation</span>
+            <span className="text-[12px] font-sans tracking-[0.1em] font-medium">Wellness Session</span>
             {activeTab !== 'meditation' && (
               <span className="ml-auto relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
@@ -1735,53 +1572,40 @@ export default function UntetheredApp() {
               </span>
             </div>
           )}
-          {/* Membership Status */}
+          {/* Membership Status — compact */}
           {membershipInfo && (
-            <div className="mx-2 mb-1 p-2 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1 shadow-lg overflow-hidden relative group">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+            <div className="mx-2 mb-1 p-2.5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2">
+              {/* One-line header: status · plan · days left */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <div className={cn(
-                    "w-2 h-2 rounded-full",
-                    membershipInfo.type === 'Premium' ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" :
-                      membershipInfo.type === 'Trial' ? "bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]" : "bg-[var(--text-muted)]"
+                    "w-2 h-2 rounded-full flex-shrink-0",
+                    membershipInfo.type === 'Premium' ? "bg-[var(--accent-primary)]" :
+                      membershipInfo.type === 'Trial' ? "bg-orange-400" : "bg-[var(--text-muted)]"
                   )} />
-                  <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[var(--text-primary)]">
-                    {membershipInfo.type} Tier
+                  <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[var(--text-primary)] truncate">
+                    {membershipInfo.type}{membershipInfo.plan ? ` · ${membershipInfo.plan}` : ''}
                   </span>
                 </div>
                 {membershipInfo.type === 'Trial' && (
-                  <span className="text-[9px] font-bold text-orange-400 uppercase tracking-widest bg-orange-400/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[9px] font-bold text-orange-400 uppercase tracking-widest bg-orange-400/10 px-2 py-0.5 rounded-full flex-shrink-0">
                     {membershipInfo.daysLeft}d left
                   </span>
                 )}
               </div>
 
-              <div className="space-y-2 py-0.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--accent-primary)]/70">Plan Type</span>
-                  <span className="text-[12px] font-bold text-[var(--text-primary)] tracking-tight">{membershipInfo.plan || 'Free Traveler'}</span>
-                </div>
-                {membershipInfo.expiresAt && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--accent-secondary)]/70">Expires</span>
-                    <span className="text-[11px] font-black text-[var(--accent-secondary)] px-2.5 py-1 rounded-lg bg-[var(--accent-secondary)]/10 border border-[var(--accent-secondary)]/20 shadow-sm">
-                      {membershipInfo.expiresAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </span>
-                  </div>
+              {/* Compact token pill + upgrade */}
+              <div className="flex items-center justify-between gap-2">
+                <TrialBadge compact onUpgrade={() => onNavigate('paywall')} />
+                {membershipInfo.type !== 'Premium' && (
+                  <button
+                    onClick={() => onNavigate('paywall')}
+                    className="px-3 py-1 rounded-lg border border-[var(--accent-primary)] text-[var(--accent-primary)] text-[9px] font-bold uppercase tracking-[0.16em] hover:bg-[var(--accent-primary)]/10 active:scale-95 transition-all flex-shrink-0"
+                  >
+                    Upgrade
+                  </button>
                 )}
               </div>
-
-              {/* Token / trial badge */}
-              <TrialBadge onUpgrade={() => onNavigate('paywall')} />
-
-              {membershipInfo.type !== 'Premium' && (
-                <button
-                  onClick={() => onNavigate('paywall')}
-                  className="w-full mt-1.5 py-2 rounded-xl bg-[var(--accent-primary)] text-black text-[9px] font-bold uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
-                >
-                  Upgrade Journey
-                </button>
-              )}
             </div>
           )}
 
@@ -1794,7 +1618,7 @@ export default function UntetheredApp() {
               className="w-full flex items-center gap-3 px-4 py-[0.8vh] rounded-xl group hover:bg-[var(--bg-surface)] transition-all"
             >
               <LogIn size={14} className="text-[var(--accent-primary)] group-hover:text-[var(--accent-secondary)] transition-colors flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.35em] text-[var(--accent-primary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent-primary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
                 Sign In
               </span>
             </button>
@@ -1806,21 +1630,21 @@ export default function UntetheredApp() {
               className="w-full flex items-center gap-3 px-4 py-[0.8vh] rounded-xl group hover:bg-[var(--bg-surface)] transition-all"
             >
               <LogOut size={14} className="text-[var(--text-secondary)] group-hover:text-rose-400 transition-colors flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.35em] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] font-bold transition-colors font-sans">
                 Log Out
               </span>
             </button>
           )}
 
-          {/* Brand credit */}
-          <div className="px-4 pt-1">
-            <p className="text-[10px] font-serif italic text-[var(--text-secondary)] opacity-90 leading-relaxed">
+          {/* Brand credit — subtle */}
+          <div className="px-4 pt-0.5">
+            <p className="text-[8px] font-sans not-italic text-[var(--text-muted)] opacity-50 leading-relaxed">
               Designed by{' '}
               <a
                 href="https://www.skrmblissai.in/twinsouls"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:opacity-80 transition-opacity underline underline-offset-2 font-medium"
+                className="hover:opacity-90 transition-opacity underline underline-offset-2"
               >
                 skrmblissai.in
               </a>
@@ -1844,26 +1668,70 @@ export default function UntetheredApp() {
           {/* Moved back/medals into fixed header below to prevent overlap */}
         </AnimatePresence>
 
+        {/* ── New-course announcement bar — fixed, full-width, dismissible ── */}
+        {showCourseAnnounce && (
+          <div
+            className={cn(
+              "fixed top-0 right-0 z-[120] h-10 flex items-center overflow-hidden transition-all duration-500",
+              isSidebarCollapsed ? "left-0" : "left-0 lg:left-[280px]"
+            )}
+            style={{ background: 'linear-gradient(90deg, #1b1508 0%, #3a2e12 45%, #7a611f 100%)', boxShadow: '0 1px 12px rgba(0,0,0,0.25)' }}
+          >
+            {/* shimmer sweep (self-contained keyframe) */}
+            <style>{`@keyframes annShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+            <span className="pointer-events-none absolute inset-0 opacity-40" style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%)', backgroundSize: '200% 100%', animation: 'annShimmer 3.5s linear infinite' }} />
+            <a
+              href="/feelingsandemotioncourse"
+              className="relative flex-1 min-w-0 h-full flex items-center justify-center gap-2 sm:gap-3 px-3 group"
+            >
+              <span className="hidden sm:inline text-[9px] font-black uppercase tracking-[0.28em] flex items-center gap-1.5 flex-shrink-0" style={{ color: '#C9AE8E' }}>
+                <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#C9AE8E' }} />
+                New Course
+              </span>
+              <span className="text-[12px] sm:text-[13px] font-semibold truncate" style={{ color: '#F5ECD2' }}>
+                <span className="font-bold text-white">Understanding Feelings &amp; Emotions</span>
+                <span className="hidden sm:inline" style={{ color: 'rgba(245,236,210,0.7)' }}> — watch the first lessons free</span>
+              </span>
+              <span
+                className="flex items-center gap-1 px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[12px] font-black flex-shrink-0 group-hover:brightness-105 transition-all"
+                style={{ background: 'linear-gradient(to right, #C9AE8E, #A98A67)', color: '#241C14' }}
+              >
+                Enroll <span aria-hidden>→</span>
+              </span>
+            </a>
+            <button
+              onClick={dismissCourseAnnounce}
+              aria-label="Dismiss announcement"
+              className="relative flex-shrink-0 w-10 h-full flex items-center justify-center text-white/50 hover:text-white/90 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {/* Premium Ribbon Header Overlay */}
         <header className={cn(
-          "fixed top-0 left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 transition-all duration-500",
+          "fixed left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 transition-all duration-500",
+          showCourseAnnounce ? "top-10" : "top-0",
           isSidebarCollapsed ? "lg:left-0" : "lg:left-[280px]"
         )}>
           <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
+              aria-label="Open menu"
               className="lg:hidden w-10 h-10 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all shadow-xl active:scale-95"
             >
               <Menu size={16} />
             </button>
             
-            <a 
-                href="/aboutmindgym" 
-                className="flex items-center gap-3 text-current hover:text-[var(--accent-primary)] transition-all group"
-                title="View About Journal"
+            {/* Soulful Intelligence mark — ties Mind Gym back to the studio brand */}
+            <a
+                href="/"
+                className="flex items-center gap-2.5 text-current hover:opacity-80 transition-all group"
+                title="Soulful Intelligence"
             >
-                <div className={`w-9 h-9 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                <div className="w-9 h-9 rounded-full overflow-hidden border border-[#A98A67]/40 group-hover:scale-110 transition-transform flex items-center justify-center">
+                    <SILogoMark />
                 </div>
             </a>
 
@@ -1881,35 +1749,51 @@ export default function UntetheredApp() {
             )}
           </div>
 
-          <div className="flex items-center gap-4 sm:gap-6 md:gap-8">
+          <div className="flex items-center gap-3 sm:gap-5 md:gap-6">
+              {/* Achievements — trophy opens the slide-out drawer */}
+              <button
+                  onClick={() => setAchievementsOpen(true)}
+                  aria-label="Achievements"
+                  className="relative w-9 h-9 rounded-full flex items-center justify-center bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)]/40 transition-all active:scale-95"
+              >
+                  <Trophy className="w-4 h-4" />
+                  {unlocked.length > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[var(--accent-primary)] text-black text-[8px] font-black flex items-center justify-center rounded-full border border-[var(--bg-base)]">
+                      {unlocked.length}
+                    </span>
+                  )}
+              </button>
+
               <ThemeToggle />
-              
+
               <button
                   onClick={() => setActiveTab('profile')}
+                  aria-label="Your profile"
                   className={cn(
                       "flex items-center gap-3 px-4 py-2 rounded-xl transition-all relative overflow-hidden",
-                      activeTab === 'profile' 
-                          ? "bg-[var(--accent-primary)] text-black font-bold shadow-lg" 
+                      activeTab === 'profile'
+                          ? "bg-[var(--accent-primary)] text-black font-bold shadow-lg"
                           : "bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-muted)] hover:bg-[var(--accent-primary)]/10 hover:text-[var(--text-primary)]"
                   )}
               >
                   <User className={cn("w-4 h-4", activeTab === 'profile' ? "fill-current" : "")} />
                   <span className="text-[10px] font-black tracking-widest uppercase hidden xs:block">Your Journey</span>
-                  {unlocked.length > 0 && activeTab !== 'profile' && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--accent-primary)] text-black text-[8px] font-black flex items-center justify-center rounded-full border border-[var(--bg-base)]">
-                      {unlocked.length}
-                    </span>
-                  )}
               </button>
           </div>
         </header>
 
         {/* Engagement Report — renders inline, replacing main content */}
         {isReportOpen && (
-          <EngagementReport isOpen={true} onClose={() => setIsReportOpen(false)} />
+          <Suspense fallback={<TabFallback />}>
+            <EngagementReport isOpen={true} onClose={() => setIsReportOpen(false)} />
+          </Suspense>
         )}
 
-        <div className={cn("max-w-7xl mx-auto px-2 pt-[88px] pb-28 sm:px-4 sm:pt-[96px] md:px-6 md:pt-[104px] lg:pb-8 space-y-6 sm:space-y-8", isReportOpen && "hidden")}>
+        <div className={cn(
+          "max-w-7xl mx-auto px-2 pb-28 sm:px-4 md:px-6 lg:pb-8 space-y-6 sm:space-y-8",
+          showCourseAnnounce ? "pt-[128px] sm:pt-[136px] md:pt-[144px]" : "pt-[88px] sm:pt-[96px] md:pt-[104px]",
+          isReportOpen && "hidden"
+        )}>
           <SacredWelcomeModal
             isOpen={welcomeModal.isOpen}
             onClose={() => {
@@ -1919,6 +1803,10 @@ export default function UntetheredApp() {
             planName={welcomeModal.plan}
             userEmail={currentUser?.email}
           />
+
+          {/* First-run orientation — shows once for new users */}
+          <FirstRunWelcome />
+
           <AnimatePresence mode="wait">
             {activeTab === 'paywall' && (
               <motion.div key="paywall-lock" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -1940,12 +1828,7 @@ export default function UntetheredApp() {
 
             {activeTab === 'home' && (
               <>
-                {/* ── Daily Meditation Room entry card — always visible on home ── */}
-                <MeditationHomeCard
-                  onEnter={() => onNavigate('meditation')}
-                  adminOverride={['skrmblissai@gmail.com','shrutikhungar@gmail.com','simkatyal1@gmail.com'].includes(currentUser?.email ?? '')}
-                />
-
+                {/* ── Greeting + breathing hero — the calm welcome comes first ── */}
                 <div className="lg:hidden">
                   <MobileDashboard
                     user={currentUser}
@@ -1970,37 +1853,113 @@ export default function UntetheredApp() {
                     onNavigate={onNavigate}
                   />
                 </div>
+
+                {/* ── Daily Meditation Room entry card — aligned with the journey column ── */}
+                <div className="mt-4 max-w-2xl mx-auto w-full">
+                  <MeditationHomeCard
+                    onEnter={() => onNavigate('meditation')}
+                    adminOverride={['skrmblissai@gmail.com','shrutikhungar@gmail.com','simkatyal1@gmail.com'].includes(currentUser?.email ?? '')}
+                  />
+                </div>
+
+                {/* ── Feelings & Emotions — owner's continue-course card ── */}
+                {ownsEmotionCourse && (
+                  <div className="mt-4 max-w-2xl mx-auto w-full">
+                    <button
+                      onClick={() => setActiveTab('emotion-course')}
+                      className="group relative w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-3xl border text-left overflow-hidden transition-all active:scale-[0.99]"
+                      style={{ borderColor: 'rgba(169,138,103,0.45)', background: 'linear-gradient(105deg, rgba(169,138,103,0.12), rgba(169,138,103,0.04))' }}
+                    >
+                      {/* soft glow */}
+                      <div className="absolute -top-14 -right-10 w-40 h-40 rounded-full blur-[60px] pointer-events-none" style={{ background: 'rgba(169,138,103,0.20)' }} />
+                      <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 border" style={{ background: 'rgba(169,138,103,0.18)', borderColor: 'rgba(169,138,103,0.4)' }}>
+                        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 dark:text-amber-300" />
+                      </div>
+                      <div className="relative min-w-0 flex-1">
+                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-700 dark:text-amber-300">Your Course</p>
+                        <p className="text-[15px] sm:text-lg font-bold text-[var(--text-primary)] truncate">Feelings &amp; Emotions</p>
+                        <p className="text-[11px] sm:text-xs text-[var(--text-muted)] mt-0.5">Pick up where you left off</p>
+                      </div>
+                      <span
+                        className="relative inline-flex items-center gap-1 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-[12px] font-black flex-shrink-0 shadow group-hover:brightness-105 group-hover:gap-1.5 transition-all"
+                        style={{ background: 'linear-gradient(to right, #C9AE8E, #A98A67)', color: '#241C14' }}
+                      >
+                        Continue <span aria-hidden>→</span>
+                      </span>
+                    </button>
+                  </div>
+                )}
+
+                {/* ── Today's Journey — full step cards with artwork ── */}
+                <div className="mt-4 max-w-2xl mx-auto w-full">
+                  <DashboardGrid
+                    userId={currentUser?.uid}
+                    progress={progress}
+                    weeklyAssignment={weeklyAssignment}
+                    onNavigate={onNavigate}
+                    isAccessValid={isAccessValid}
+                  />
+                </div>
               </>
             )}
 
             {activeTab === 'journey' && (
               <motion.div key="journey" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
-                <BreathPractice practices={practices} setActivePractice={setActivePractice} />
+                <Suspense fallback={<TabFallback />}>
+                  <BreathPractice practices={practices} setActivePractice={setActivePractice} />
+                </Suspense>
               </motion.div>
             )}
 
             {activeTab === 'situations' && (
               <motion.div key="situations" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
-                <SituationalPractices
-                  onBack={() => setActiveTab('home')}
-                  isAdmin={isAdmin}
-                  activeQuestionId={activeQuestionId}
-                  onQuestionSelect={setActiveQuestionId}
-                  isAccessValid={isAccessValid}
-                  onUpgrade={() => setActiveTab('paywall')}
-                />
+                <Suspense fallback={<TabFallback />}>
+                  <SituationalPractices
+                    onBack={() => setActiveTab('home')}
+                    isAdmin={isAdmin}
+                    activeQuestionId={activeQuestionId}
+                    onQuestionSelect={setActiveQuestionId}
+                    isAccessValid={isAccessValid}
+                    onUpgrade={() => setActiveTab('paywall')}
+                  />
+                </Suspense>
               </motion.div>
             )}
 
             {activeTab === 'intelligence' && (
               <motion.div key="intelligence" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }}>
-                <CoursesHub onCourseSelect={(id) => { if (id) setActiveTab(id); }} />
+                <Suspense fallback={<TabFallback />}>
+                  <CoursesHub onCourseSelect={(id) => { if (id) setActiveTab(id); }} />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {activeTab === 'emotion-course' && (
+              <motion.div key="emotion-course" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <EmotionFeelingsCourseView owns={ownsEmotionCourse} adminPreview={isAdmin} onReturn={() => setActiveTab('home')} />
+                </Suspense>
               </motion.div>
             )}
 
             {activeTab === 'music' && (
               <motion.div key="music" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
-                <MusicHub />
+                <Suspense fallback={<TabFallback />}>
+                  <MusicHub />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {activeTab === 'videos' && (
+              <motion.div key="videos" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <VideosHub
+                    isAccessValid={isAccessValid}
+                    isPremiumUser={isPremiumUser}
+                    deductTokens={deductTokens}
+                    onUpgrade={() => setActiveTab('paywall')}
+                  />
+                </Suspense>
               </motion.div>
             )}
 
@@ -2008,11 +1967,13 @@ export default function UntetheredApp() {
             {activeTab === 'meditation' && currentUser && (
               <motion.div key="meditation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                 className="h-full overflow-y-auto">
-                <MeditationFeature
-                  user={currentUser}
-                  adminOverride={['skrmblissai@gmail.com','shrutikhungar@gmail.com','simkatyal1@gmail.com'].includes(currentUser?.email ?? '')}
-                  onRoomStateChange={(inRoom) => setIsSidebarCollapsed(inRoom)}
-                />
+                <Suspense fallback={<TabFallback />}>
+                  <MeditationFeature
+                    user={currentUser}
+                    adminOverride={['skrmblissai@gmail.com','shrutikhungar@gmail.com','simkatyal1@gmail.com'].includes(currentUser?.email ?? '')}
+                    onRoomStateChange={(inRoom) => setIsSidebarCollapsed(inRoom)}
+                  />
+                </Suspense>
               </motion.div>
             )}
           </AnimatePresence>
@@ -2028,15 +1989,17 @@ export default function UntetheredApp() {
               exit={{ opacity: 0 }}
               className="flex-1 min-h-0 h-[calc(100vh-5rem)] overflow-hidden"
             >
-              <WisdomUntetheredCourse
-                activeQuestionId={activeQuestionId}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                onOpenJournal={() => setActiveTab('chapters')}
-                onNavigateToPractice={() => setActiveTab('situations')}
-                onReturn={() => setActiveTab('dashboard')}
-                onNavigateToQuestion={(id) => setActiveQuestionId(id)}
-              />
+              <Suspense fallback={<TabFallback />}>
+                <WisdomUntetheredCourse
+                  activeQuestionId={activeQuestionId}
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                  onOpenJournal={() => setActiveTab('chapters')}
+                  onNavigateToPractice={() => setActiveTab('situations')}
+                  onReturn={() => setActiveTab('dashboard')}
+                  onNavigateToQuestion={(id) => setActiveQuestionId(id)}
+                />
+              </Suspense>
             </motion.div>
           )}
         </AnimatePresence>
@@ -2046,19 +2009,23 @@ export default function UntetheredApp() {
           <AnimatePresence mode="wait">
             {activeTab === 'chapters' && (
               <motion.div key="chapters" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <Journal 
-                  isAccessValid={isAccessValid} 
-                  onUpgrade={() => setActiveTab('paywall')}
-                />
+                <Suspense fallback={<TabFallback />}>
+                  <Journal
+                    isAccessValid={isAccessValid}
+                    onUpgrade={() => setActiveTab('paywall')}
+                  />
+                </Suspense>
               </motion.div>
             )}
 
             {activeTab === 'stats' && (
               <motion.div key="stats" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }}>
-                <StatsDashboard
-                  onNavigate={onNavigate}
-                  accountCreatedAt={currentUser?.metadata?.creationTime ?? null}
-                />
+                <Suspense fallback={<TabFallback />}>
+                  <StatsDashboard
+                    onNavigate={onNavigate}
+                    accountCreatedAt={currentUser?.metadata?.creationTime ?? null}
+                  />
+                </Suspense>
               </motion.div>
             )}
 
@@ -2100,7 +2067,7 @@ export default function UntetheredApp() {
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <p className="text-[12px] font-bold uppercase tracking-[0.5em] text-[var(--accent-primary)]">Level {user.level} · {points} Points</p>
+                          <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-[var(--accent-primary)]">Level {user.level} · {points} Points</p>
                           <InfoTooltip
                             title="Points & Level"
                             description="Points (XP) are earned by engaging with the course, practices, and reflections. Accumulating points increases your level."
@@ -2138,134 +2105,15 @@ export default function UntetheredApp() {
                   </div>
                 </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Reflections Count */}
-                  <div className="p-8 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex flex-col justify-between h-48 group hover:border-[var(--accent-secondary)]/30 transition-all">
-                    <div className="w-10 h-10 rounded-xl bg-[var(--accent-secondary)]/10 border border-[var(--accent-secondary)]/10 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-[var(--accent-secondary)]" />
-                    </div>
-                    <div>
-                      <div className="text-4xl font-serif font-light text-[var(--text-primary)] mb-2">{user.nowMoments}</div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Reflections</span>
-                        <InfoTooltip
-                          title="Reflections"
-                          description="The total number of times you have journalled, completed a practice, or recorded a thought in this Journal."
-                          howCalculated="Counts every journal entry, completed situational practice, and daily practice session."
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Streak Stats */}
-                  <div className="p-8 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex flex-col justify-between h-48 group hover:border-orange-400/30 transition-all">
-                    <div className="w-10 h-10 rounded-xl bg-orange-400/10 border border-orange-400/10 flex items-center justify-center">
-                      <Flame className="w-5 h-5 text-orange-400/70" />
-                    </div>
-                    <div>
-                      <div className="text-4xl font-serif font-light text-[var(--text-primary)] mb-2">{user.streak} Days</div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Practice Streak</span>
-                        <InfoTooltip
-                          title="Practice Streak"
-                          description="The number of days in a row that you have completed at least one practice or journal entry."
-                          howCalculated="A streak continues as long as you complete something each day. Missing a day resets it to zero."
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* XP Progress */}
-                  <div className="p-8 rounded-[32px] border border-[var(--border-default)] bg-[var(--bg-surface)] flex flex-col justify-between h-48 md:col-span-2 lg:col-span-1 border-dashed">
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">Your Journey</span>
-                        <InfoTooltip
-                          title="Your Journey (XP)"
-                          description="Experience Points you've earned by practising, journalling, and completing courses. Each activity adds to your total."
-                          howCalculated="Journal entries earn 10 XP. Completed practices earn 15 XP. Videos earn 20 XP. A full day earns bonus XP."
-                        />
-                      </div>
-                      <span className="text-[11px] font-bold text-[var(--accent-primary)]">{stats.xp % 1000} / 1000 XP</span>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="h-1.5 w-full bg-[var(--border-subtle)] rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(stats.xp % 1000) / 10}%` }}
-                          className="h-full bg-[var(--accent-primary)] shadow-[0_0_10px_var(--glow-primary)]"
-                        />
-                      </div>
-                      <p className="text-[11px] text-[var(--text-secondary)] italic">Keep going — each practice deepens your presence.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ethereal Medals Rack */}
-                <div className="p-10 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] space-y-8">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-serif font-light text-[var(--text-secondary)]">Journey Milestones</h3>
-                    <span className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{unlocked.length} of 16 Unlocked</span>
-                  </div>
-
-                  <MedalGrid unlocked={unlocked} />
-                </div>
+                {/* Stats & badges live on the Progress tab to avoid duplication.
+                    Profile is your account + settings only. */}
 
                 {/* Account Settings */}
-                <div className="p-10 rounded-[40px] border border-[var(--border-default)] bg-[var(--bg-surface)] space-y-10">
-                  <h3 className="text-xl font-serif font-light text-[var(--text-secondary)] border-b border-[var(--border-subtle)] pb-4">Data & Support</h3>
+                <div className="p-6 sm:p-8 rounded-[28px] border border-[var(--border-default)] bg-[var(--bg-surface)] space-y-8">
+                  <h3 className="text-xl font-serif font-light text-[var(--text-primary)] border-b border-[var(--border-subtle)] pb-4">Settings</h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Guidance Voice</p>
-                        <button
-                          onClick={() => setVoiceGuidanceEnabled(!voiceGuidanceEnabled)}
-                          className={cn(
-                            "px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
-                            voiceGuidanceEnabled 
-                              ? "bg-[var(--accent-primary)] text-black" 
-                              : "bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[var(--text-muted)]"
-                          )}
-                        >
-                          {voiceGuidanceEnabled ? 'Enabled' : 'Disabled'}
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        {[
-                          { id: 'en-US-Chirp3-HD-Despina', label: 'Despina (Ethereal Presence)', gender: 'FEMALE' },
-                          { id: 'en-GB-Chirp3-HD-Vindemiatrix', label: 'Vindemiatrix (British Sophistication)', gender: 'FEMALE' },
-                          { id: 'en-US-Chirp3-HD-Algenib', label: 'Algenib (Cosmic Presence)', gender: 'FEMALE' },
-                          { id: 'en-US-Neural2-F', label: 'Gentle Presence (Female)', gender: 'FEMALE' },
-                          { id: 'en-US-Neural2-D', label: 'Warm Wisdom (Male)', gender: 'MALE' },
-                        ].map((v) => (
-                          <button
-                            key={v.id}
-                            disabled={!voiceGuidanceEnabled}
-                            onClick={() => {
-                              setPreferredVoice(v.id);
-                              // Preview voice
-                              VoiceService.speak("I am ready to guide you.", { voice: v.id, gender: v.gender as any });
-                            }}
-                            className={cn(
-                              "flex items-center justify-between px-4 py-3 rounded-xl border transition-all",
-                              preferredVoice === v.id
-                                ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] text-[var(--text-primary)]"
-                                : "bg-[var(--bg-surface-hover)] border-[var(--border-default)] text-[var(--text-muted)] hover:border-[var(--accent-primary)]/30",
-                              !voiceGuidanceEnabled && "opacity-40 cursor-not-allowed"
-                            )}
-                          >
-                            <span className="text-xs font-medium">{v.label}</span>
-                            {preferredVoice === v.id && <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]" />}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-[10px] text-[var(--text-muted)] italic leading-relaxed">
-                        Our guidance is dynamically generated using high-fidelity AI. While you can't record your own voice yet, you can choose the presence that resonates most with your spirit.
-                      </p>
-                    </div>
-
-                    <div className="space-y-6">
+                  <div className="pt-2">
+                    <div className="space-y-4 max-w-sm">
                       <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-2">Data Portability</p>
                       <div className="flex flex-col gap-3">
                         <button
@@ -2281,17 +2129,14 @@ export default function UntetheredApp() {
                             a.download = `mind-gym-journal-${new Date().toISOString().split('T')[0]}.json`;
                             a.click();
                           }}
-                          className="w-full px-6 py-4 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all flex items-center justify-center gap-3"
+                          className="w-full px-6 py-4 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-default)] text-[11px] font-bold uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all flex items-center justify-center gap-3"
                         >
-                          <Mail size={14} /> Download Journal Export
-                        </button>
-                        <button
-                          onClick={() => alert("Archive functionality coming soon. Your data is safely persisted in the cloud.")}
-                          className="w-full px-6 py-4 rounded-xl bg-transparent border border-rose-400/20 text-[11px] font-bold uppercase tracking-widest text-rose-400/60 hover:bg-rose-400/5 transition-all"
-                        >
-                          Archive Session History
+                          <Download size={14} /> Download Journal Export
                         </button>
                       </div>
+                      <p className="text-[10px] text-[var(--text-muted)] italic leading-relaxed">
+                        Your entries export as a JSON file you can keep. Your data stays safely backed up in the cloud.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -2305,6 +2150,13 @@ export default function UntetheredApp() {
       <AchievementToast
         achievement={toastQueue[0] || null}
         onDismiss={dismissToast}
+      />
+      <TokenToast />
+      <AchievementsDrawer
+        open={achievementsOpen}
+        onClose={() => setAchievementsOpen(false)}
+        unlocked={unlocked}
+        points={points}
       />
       {/* Floating Action Stack
           On mobile (< sm): pushed higher to avoid the sticky journal Cancel/Next bar.
@@ -2358,6 +2210,41 @@ export default function UntetheredApp() {
       </div>
       <PhonePromptModal />
       <MusicMiniPlayer />
+
+      {/* Connect menu — hidden on the immersive full-frame views, and raised so
+          it clears the mobile bottom nav / mini-player. */}
+      {!['meditation', 'wisdom_untethered'].includes(activeTab) && <SocialFab raised />}
+
+      {/* ── Mobile bottom navigation — thumb-reachable core tabs (hidden on desktop) ── */}
+      {!(activeTab === 'meditation' && isSidebarCollapsed) && activeTab !== 'wisdom_untethered' && (
+        <nav
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-stretch justify-around border-t border-[var(--border-subtle)] bg-[var(--bg-primary)]/95 backdrop-blur-xl"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          {[
+            { id: 'home', icon: Home, label: 'Home' },
+            { id: 'situations', icon: Flame, label: 'Practice' },
+            { id: 'chapters', icon: BookOpen, label: 'Journal' },
+            { id: 'stats', icon: BarChart2, label: 'Progress' },
+            { id: 'profile', icon: User, label: 'You' },
+          ].map(({ id, icon: Icon, label }) => {
+            const active = activeTab === id;
+            return (
+              <button
+                key={id}
+                onClick={() => onNavigate(id)}
+                className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 active:scale-95 transition-transform"
+                style={{ color: active ? 'var(--accent-primary)' : 'var(--text-muted)' }}
+                aria-label={label}
+                aria-current={active ? 'page' : undefined}
+              >
+                <Icon size={20} strokeWidth={active ? 2.4 : 1.8} />
+                <span className="text-[9px] font-bold uppercase tracking-wider">{label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }

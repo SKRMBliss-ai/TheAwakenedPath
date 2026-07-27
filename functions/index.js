@@ -1,6 +1,7 @@
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
+const functionsV1 = require("firebase-functions/v1");
 const { defineSecret } = require("firebase-functions/params");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const textToSpeech = require("@google-cloud/text-to-speech");
@@ -149,6 +150,7 @@ const ttsClient = new textToSpeech.TextToSpeechClient();
 
 // Pricing Configuration (Keep in sync with frontend)
 const COURSE_PRICES = {
+    "emotion_feelings_course": 4.99,
     "wisdom_untethered": 9,
     "all_access": 199.99,
     "track_1": 14.99,
@@ -167,6 +169,7 @@ const COURSE_PRICES = {
 };
 
 const COURSE_PRICES_INR = {
+    "emotion_feelings_course": 415,
     "wisdom_untethered": 799,
     "all_access": 14999,
     "track_1": 899,
@@ -183,6 +186,84 @@ const COURSE_PRICES_INR = {
     "track_2": 899,
     "you-are-space": 899
 };
+
+// Multi-currency pricing. INR/USD tables above cover every course; the extra
+// currencies below are for the actively-sold course(s). Any course/currency not
+// listed falls back to USD so checkout can never break. Keep the VALUES in sync
+// with the frontend (checkoutPriceLabel in EmotionFeelingsCourse.tsx).
+const COURSE_PRICES_BY_CURRENCY = {
+    INR: COURSE_PRICES_INR,
+    USD: COURSE_PRICES,
+    EUR: { "emotion_feelings_course": 4.99 },
+    GBP: { "emotion_feelings_course": 3.99 },
+    CAD: { "emotion_feelings_course": 6.99 },
+    AUD: { "emotion_feelings_course": 7.99 },
+    AED: { "emotion_feelings_course": 18 },
+    SGD: { "emotion_feelings_course": 6.99 },
+};
+
+// Resolve the charge currency + amount for a course. Falls back to USD when the
+// requested currency isn't priced for that course.
+function resolveCoursePrice(courseId, requestedCurrency) {
+    const cur = String(requestedCurrency || "USD").toUpperCase();
+    const table = COURSE_PRICES_BY_CURRENCY[cur];
+    if (table && table[courseId] != null) return { currency: cur, amount: table[courseId] };
+    return { currency: "USD", amount: COURSE_PRICES[courseId] };
+}
+
+// ─── Pay-What-You-Want products ────────────────────────────────────────────
+// The buyer picks their own amount (a slider on the frontend); the server only
+// enforces a floor per currency so checkout can never be $0 or negative. Two
+// grant shapes: 'course' (permanent unlock, same as fixed-price courses) and
+// 'membership' (adds/extends a time-limited membershipUntil on the profile —
+// Mind Gym premium without a recurring Razorpay subscription, so any amount
+// works and renewal is just "buy again").
+const PWYW_PRODUCTS = {
+    emotion_feelings_course: {
+        grantType: "course",
+        suggested: { USD: 4.99, INR: 415, EUR: 4.99, GBP: 3.99, CAD: 6.99, AUD: 7.99, AED: 18, SGD: 6.99 },
+        min: { USD: 2, INR: 99, EUR: 2, GBP: 2, CAD: 3, AUD: 3, AED: 8, SGD: 3 },
+    },
+    membership_monthly: {
+        grantType: "membership",
+        days: 30,
+        suggested: { USD: 3, INR: 240, EUR: 3, GBP: 3, CAD: 4, AUD: 4, AED: 12, SGD: 4 },
+        min: { USD: 2, INR: 99, EUR: 2, GBP: 2, CAD: 3, AUD: 3, AED: 8, SGD: 3 },
+    },
+    membership_yearly: {
+        grantType: "membership",
+        days: 365,
+        suggested: { USD: 30, INR: 2400, EUR: 30, GBP: 25, CAD: 40, AUD: 45, AED: 110, SGD: 40 },
+        min: { USD: 12, INR: 999, EUR: 12, GBP: 10, CAD: 16, AUD: 18, AED: 44, SGD: 16 },
+    },
+};
+
+// Clamp a client-chosen amount to the product's floor for the resolved charge
+// currency. Falls back to the currency's suggested amount if none/invalid was
+// sent, and to USD if the requested currency isn't priced for this product.
+function resolvePwywAmount(productId, requestedCurrency, requestedAmount) {
+    const product = PWYW_PRODUCTS[productId];
+    if (!product) return null;
+    const reqCur = String(requestedCurrency || "USD").toUpperCase();
+    const chargeCurrency = product.min[reqCur] != null ? reqCur : "USD";
+    const min = product.min[chargeCurrency];
+    let amount = Number(requestedAmount);
+    if (!Number.isFinite(amount) || amount <= 0) amount = product.suggested[chargeCurrency] ?? min;
+    amount = Math.max(amount, min);
+    amount = chargeCurrency === "INR" || chargeCurrency === "JPY" ? Math.round(amount) : Math.round(amount * 100) / 100;
+    return { currency: chargeCurrency, amount, grantType: product.grantType, days: product.days || null };
+}
+
+// Extend (not replace) a membership: stacks from the LATER of "now" or the
+// current expiry, so buying more time before/after lapsing both work as
+// expected instead of a second purchase ever shortening access.
+function extendMembershipUntilMs(currentTimestamp, days) {
+    const now = Date.now();
+    const base = currentTimestamp && typeof currentTimestamp.toMillis === "function"
+        ? Math.max(currentTimestamp.toMillis(), now)
+        : now;
+    return base + days * 24 * 60 * 60 * 1000;
+}
 
 const SUBSCRIPTION_PLANS = {
     "premium_monthly": {
@@ -375,6 +456,129 @@ function httpsGetJsonWithHeaders(url, headers) {
     });
 }
 
+// Resolve the studio's YouTube handle to its "uploads" playlist id. Handles
+// the case where forHandle returns nothing by falling back to channel search.
+async function resolveUploadsPlaylistId(youtubeKey, handle) {
+    const ua = { 'User-Agent': 'MindGym/1.0' };
+    const channelsUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forHandle=${encodeURIComponent(handle)}&key=${encodeURIComponent(youtubeKey)}`;
+    const channelsData = await httpsGetJsonWithHeaders(channelsUrl, ua);
+    const item = channelsData && channelsData.items && channelsData.items[0];
+    let uploads = item && item.contentDetails && item.contentDetails.relatedPlaylists && item.contentDetails.relatedPlaylists.uploads;
+    if (uploads) return uploads;
+
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&maxResults=1&q=${encodeURIComponent('Soulful Intelligence Studio')}&key=${encodeURIComponent(youtubeKey)}`;
+    const searchData = await httpsGetJsonWithHeaders(searchUrl, ua);
+    const channelId = searchData && searchData.items && searchData.items[0] && searchData.items[0].snippet && searchData.items[0].snippet.channelId;
+    if (!channelId) return null;
+    const byIdUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${encodeURIComponent(channelId)}&key=${encodeURIComponent(youtubeKey)}`;
+    const byId = await httpsGetJsonWithHeaders(byIdUrl, ua);
+    const byIdItem = byId && byId.items && byId.items[0];
+    return (byIdItem && byIdItem.contentDetails && byIdItem.contentDetails.relatedPlaylists && byIdItem.contentDetails.relatedPlaylists.uploads) || null;
+}
+
+/**
+ * Latest public uploads for the studio channel, for the "Latest from YouTube"
+ * strip on the home page.
+ *
+ * Cached in Firestore for 6h: the YouTube Data API has a hard daily quota, and
+ * this is called on every anonymous home-page view — uncached it would burn the
+ * quota within hours and start returning empty. On any API failure we serve the
+ * last good cache (even if stale) rather than showing an empty section.
+ */
+exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, async (req, res) => {
+    const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+    const max = Math.min(Math.max(parseInt(req.query.max, 10) || 6, 1), 12);
+    const cacheRef = db.collection('cache').doc('latest_youtube_videos');
+
+    let cached = null;
+    try {
+        const snap = await cacheRef.get();
+        if (snap.exists) cached = snap.data();
+    } catch (e) {
+        console.warn('[getLatestVideos] cache read failed:', e.message);
+    }
+
+    const cacheAge = cached && cached.fetchedAt && cached.fetchedAt.toMillis
+        ? Date.now() - cached.fetchedAt.toMillis()
+        : Infinity;
+    // A payload written before a field was added is stale regardless of age —
+    // otherwise a schema change silently serves the old shape for a full TTL.
+    const cacheHasCurrentShape = !!(cached && Array.isArray(cached.videos)
+        && cached.videos.length && 'durationSec' in cached.videos[0]);
+    if (cached && Array.isArray(cached.videos) && cached.videos.length
+        && cacheAge < CACHE_TTL_MS && cacheHasCurrentShape) {
+        res.set('Cache-Control', 'public, max-age=1800');
+        return res.json({ videos: cached.videos.slice(0, max), cached: true });
+    }
+
+    try {
+        const key = youtubeApiKey.value();
+        if (!key) throw new Error('YOUTUBE_API_KEY not configured');
+
+        const uploads = await resolveUploadsPlaylistId(key, '@SoulfulIntelligenceStudio');
+        if (!uploads) throw new Error('Could not resolve uploads playlist');
+
+        const ua = { 'User-Agent': 'MindGym/1.0' };
+        const listUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${encodeURIComponent(uploads)}&maxResults=20&key=${encodeURIComponent(key)}`;
+        const listData = await httpsGetJsonWithHeaders(listUrl, ua);
+
+        const candidates = ((listData && listData.items) || []).map((it) => {
+            const s = it && it.snippet;
+            const vid = s && s.resourceId && s.resourceId.videoId;
+            const t = s && s.thumbnails;
+            return vid ? {
+                id: vid,
+                title: (s && s.title) || '',
+                publishedAt: (s && s.publishedAt) || null,
+                thumb: (t && t.maxres && t.maxres.url) || (t && t.high && t.high.url)
+                    || (t && t.medium && t.medium.url) || (t && t.default && t.default.url) || null,
+            } : null;
+        }).filter(Boolean);
+
+        if (!candidates.length) throw new Error('No playlist items returned');
+
+        // Keep only public, non-live, non-Shorts videos (same rules the daily
+        // email uses) so the home strip shows real long-form content.
+        const ids = candidates.map(v => v.id).slice(0, 20);
+        const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=status,snippet,contentDetails&id=${encodeURIComponent(ids.join(','))}&key=${encodeURIComponent(key)}`;
+        const videosData = await httpsGetJsonWithHeaders(videosUrl, ua);
+
+        const allowed = new Set();
+        // Duration is already parsed here for the Shorts filter, so keep it and
+        // hand it to the client — the videos section shows a runtime badge.
+        const durations = new Map();
+        ((videosData && videosData.items) || []).forEach((v) => {
+            const isPublic = v.status && v.status.privacyStatus === 'public';
+            const broadcast = (v.snippet && v.snippet.liveBroadcastContent) || 'none';
+            const title = ((v.snippet && v.snippet.title) || '').toLowerCase();
+            const durationSec = parseYouTubeDurationToSeconds(v.contentDetails && v.contentDetails.duration);
+            const isShort = title.includes('#shorts') || (durationSec > 0 && durationSec <= 75);
+            if (isPublic && broadcast === 'none' && !isShort) {
+                allowed.add(v.id);
+                durations.set(v.id, durationSec);
+            }
+        });
+
+        const videos = candidates
+            .filter(v => allowed.has(v.id))
+            .map(v => ({ ...v, durationSec: durations.get(v.id) || 0 }))
+            .slice(0, 12);
+        if (!videos.length) throw new Error('No eligible videos after filtering');
+
+        await cacheRef.set({ videos, fetchedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+
+        res.set('Cache-Control', 'public, max-age=1800');
+        return res.json({ videos: videos.slice(0, max), cached: false });
+    } catch (err) {
+        console.error('[getLatestVideos] failed:', err.message);
+        // Stale cache beats an empty section.
+        if (cached && Array.isArray(cached.videos) && cached.videos.length) {
+            return res.json({ videos: cached.videos.slice(0, max), cached: true, stale: true });
+        }
+        return res.status(200).json({ videos: [], error: 'unavailable' });
+    }
+});
+
 async function getDailyYoutubeVideo(youtubeKey, firestoreDb) {
     if (!youtubeKey) return getTodaysVideo();
 
@@ -542,13 +746,26 @@ async function getDailyYoutubeVideo(youtubeKey, firestoreDb) {
  * Creates a Razorpay Order
  */
 exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret], cors: true }, async (req, res) => {
-    const { courseId, userId, currency = "USD" } = req.body;
+    const { courseId, userId, currency = "USD", guestEmail, guestPhone, amount: clientAmount } = req.body;
 
-    // 1. Get official price from server-side map based on currency
-    const priceMap = currency === "INR" ? COURSE_PRICES_INR : COURSE_PRICES;
-    const amount = priceMap[courseId];
-    
-    if (!amount) {
+    // 1. Resolve price + charge currency. PWYW products (course-only donation,
+    //    membership monthly/yearly) take the buyer's own amount, clamped to a
+    //    floor; everything else keeps its fixed server-side price — no
+    //    regression for wisdom_untethered, all_access, soundscape tracks, etc.
+    const pwyw = resolvePwywAmount(courseId, currency, clientAmount);
+    let chargeCurrency, amount, grantType = "course", membershipDays = null;
+    if (pwyw) {
+        chargeCurrency = pwyw.currency;
+        amount = pwyw.amount;
+        grantType = pwyw.grantType;
+        membershipDays = pwyw.days;
+    } else {
+        const resolved = resolveCoursePrice(courseId, currency);
+        chargeCurrency = resolved.currency;
+        amount = resolved.amount;
+    }
+
+    if (amount == null) {
         return res.status(400).send("Invalid or missing courseId");
     }
 
@@ -558,19 +775,43 @@ exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySe
             key_secret: razorpayKeySecret.value(),
         });
 
-        const options = {
-            amount: Math.round(amount * 100), // In cents/paise
-            currency: currency,
+        const buildOptions = (cur, amt) => ({
+            amount: Math.round(amt * 100), // In cents/paise
+            currency: cur,
             receipt: `r_${courseId.substring(0, 20)}_${Date.now()}`,
             notes: {
                 courseId: courseId,
                 userId: userId || "anonymous",
-                currency: currency
+                currency: cur,
+                grantType,
+                membershipDays: membershipDays ? String(membershipDays) : "",
+                // Captured on our page → reliable guest key even if the buyer skips
+                // the email field inside the Razorpay widget (e.g. UPI-only).
+                guestEmail: String(guestEmail || "").toLowerCase().trim(),
+                guestPhone: String(guestPhone || "").trim()
             }
-        };
+        });
 
-        const order = await razorpay.orders.create(options);
-        res.json(order);
+        let order;
+        try {
+            order = await razorpay.orders.create(buildOptions(chargeCurrency, amount));
+        } catch (curErr) {
+            // A presentment currency the Razorpay account isn't enabled for will
+            // fail here — fall back to USD so checkout still completes instead of
+            // erroring out. (Enable the currency in Razorpay to charge it natively.)
+            if (chargeCurrency !== "USD") {
+                console.warn(`Currency ${chargeCurrency} rejected by Razorpay; falling back to USD.`, curErr?.error?.description || curErr?.message);
+                chargeCurrency = "USD";
+                amount = pwyw ? resolvePwywAmount(courseId, "USD", clientAmount).amount : COURSE_PRICES[courseId];
+                order = await razorpay.orders.create(buildOptions("USD", amount));
+            } else {
+                throw curErr;
+            }
+        }
+
+        // Return the publishable key_id (from Secret Manager) so the browser
+        // never needs it baked in at build time via a .env / VITE_ var.
+        res.json({ ...order, key_id: razorpayKeyId.value() });
     } catch (error) {
         console.error("Razorpay Order Error:", error);
         res.status(500).send("Failed to create payment order");
@@ -614,37 +855,94 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
         const rzpOrder = await razorpay.orders.fetch(razorpay_order_id);
         
         // Ensure the paid order was indeed for this user and this course
-        if (rzpOrder.notes.userId !== userId || rzpOrder.notes.courseId !== courseId) {
+        // (Bypass userId check if they are guest_pending)
+        if ((rzpOrder.notes.userId !== userId && userId !== 'guest_pending') || rzpOrder.notes.courseId !== courseId) {
             return res.status(400).send("Order data mismatch. Discrepancy detected.");
         }
 
-        // 3. Grant Access in Firestore
-        const userRef = db.collection("users").doc(userId);
-        
-        // Fetch user to get email for welcome notification
-        const userDoc = await userRef.get();
-        const userEmail = userDoc.exists ? userDoc.data().email : null;
+        // 3. Grant Access in Firestore — 'membership' extends membershipUntil
+        //    (Mind Gym premium, any PWYW amount); 'course' unlocks permanently
+        //    via purchasedCourses (unchanged, fixed-price and PWYW course alike).
+        let userEmail = null;
+        const grantType = rzpOrder.notes.grantType === 'membership' ? 'membership' : 'course';
+        const membershipDays = parseInt(rzpOrder.notes.membershipDays || '0', 10) || null;
+        const isGuest = userId === 'guest_pending' || userId.startsWith('guest_');
+        if (isGuest) {
+            const rzpPayment = await razorpay.payments.fetch(razorpay_payment_id);
+            // Prefer the email WE captured on our page (order notes) — reliable even
+            // if the buyer skipped the email field in the widget. Fall back to
+            // Razorpay's, ignoring its "void@razorpay.com" placeholder. Normalised
+            // (lowercase) so it matches the email at signup for account-linking.
+            const notesEmail = String(rzpOrder.notes.guestEmail || '').toLowerCase().trim();
+            const rzpEmail = String(rzpPayment.email || '').toLowerCase().trim();
+            userEmail = notesEmail || (rzpEmail !== 'void@razorpay.com' ? rzpEmail : '');
+            const guestPhone = String(rzpOrder.notes.guestPhone || rzpPayment.contact || '').trim();
 
-        const updateData = {
-            purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        };
-        
-        // If it's a soundscape track, also add to ownedTracks
-        if (COURSE_PRICES[courseId] && courseId !== 'wisdom_untethered' && courseId !== 'all_access') {
-            updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
+            if (userEmail) {
+                const guestRef = db.collection("guestPurchases").doc(userEmail);
+                if (grantType === 'membership' && membershipDays) {
+                    const guestSnap = await guestRef.get();
+                    const newUntilMs = extendMembershipUntilMs(guestSnap.exists ? guestSnap.data().membershipUntil : null, membershipDays);
+                    await guestRef.set({
+                        email: userEmail,
+                        phone: guestPhone,
+                        membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } else {
+                    const updateData = {
+                        email: userEmail,
+                        phone: guestPhone,
+                        purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    };
+                    if (COURSE_PRICES[courseId] && courseId !== 'wisdom_untethered' && courseId !== 'all_access') {
+                        updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
+                    }
+                    await guestRef.set(updateData, { merge: true });
+                }
+            }
+        } else {
+            const userRef = db.collection("users").doc(userId);
+
+            // Fetch user to get email for welcome notification (and current
+            // membershipUntil, when extending).
+            const userDoc = await userRef.get();
+            userEmail = userDoc.exists ? userDoc.data().email : null;
+
+            if (grantType === 'membership' && membershipDays) {
+                const newUntilMs = extendMembershipUntilMs(userDoc.exists ? userDoc.data().membershipUntil : null, membershipDays);
+                await userRef.set({
+                    membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } else {
+                const updateData = {
+                    purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                };
+                // If it's a soundscape track, also add to ownedTracks
+                if (COURSE_PRICES[courseId] && courseId !== 'wisdom_untethered' && courseId !== 'all_access') {
+                    updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
+                }
+                await userRef.set(updateData, { merge: true });
+            }
         }
 
-        await userRef.set(updateData, { merge: true });
-
-        // Send Welcome Email
+        // Send the right email: guests must be told to sign up with THIS email
+        // to unlock; existing users get the standard welcome.
         if (userEmail) {
             try {
-                // If the courseId is all_access we consider it a Premium Lifetime mapping
-                const planName = courseId === 'all_access' ? 'Premium (Lifetime)' : courseId;
-                await sendWelcomeEmail(userEmail, planName);
+                if (isGuest) {
+                    await sendGuestAccessEmail(userEmail);
+                } else {
+                    const planName = grantType === 'membership'
+                        ? (membershipDays && membershipDays >= 300 ? 'Mind Gym Membership (Yearly)' : 'Mind Gym Membership (Monthly)')
+                        : (courseId === 'all_access' ? 'Premium (Lifetime)' : courseId);
+                    await sendWelcomeEmail(userEmail, planName);
+                }
             } catch (emailErr) {
-                console.error("Failed to send welcome email:", emailErr);
+                console.error("Failed to send access email:", emailErr);
             }
         }
 
@@ -729,7 +1027,7 @@ exports.createRazorpaySubscription = onRequest({ secrets: [razorpayKeyId, razorp
             }
         });
 
-        res.json(subscription);
+        res.json({ ...subscription, key_id: razorpayKeyId.value() });
     } catch (error) {
         console.error("Razorpay Subscription Error:", error);
         res.status(500).send("Failed to create subscription");
@@ -834,7 +1132,7 @@ exports.verifyRazorpaySubscription = onRequest({ secrets: [razorpayKeyId, razorp
  * Optional: Razorpay Webhook for async capture (Robustness)
  * You would point https://your-app.web.app/api/razorpay-webhook to this in Razorpay Dashboard
  */
-exports.razorpayWebhook = onRequest({ secrets: [razorpayKeySecret, razorpayWebhookSecret], cors: false }, async (req, res) => {
+exports.razorpayWebhook = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret, razorpayWebhookSecret, emailUser, emailPass], cors: false }, async (req, res) => {
     let secret = '';
     try { secret = razorpayWebhookSecret.value(); } catch (_) { secret = ''; }
     if (!secret) {
@@ -843,9 +1141,12 @@ exports.razorpayWebhook = onRequest({ secrets: [razorpayKeySecret, razorpayWebho
     }
     const signature = req.headers["x-razorpay-signature"];
 
-    // 1. Verify Webhook Signature
+    // 1. Verify Webhook Signature against the RAW request body. Razorpay signs
+    //    the exact bytes it sent; re-serializing req.body (JSON.stringify) can
+    //    differ and fail verification. Firebase exposes req.rawBody as a Buffer.
+    const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
     const shasum = crypto.createHmac("sha256", secret);
-    shasum.update(JSON.stringify(req.body));
+    shasum.update(rawBody);
     const digest = shasum.digest("hex");
 
     if (signature !== digest) {
@@ -857,19 +1158,84 @@ exports.razorpayWebhook = onRequest({ secrets: [razorpayKeySecret, razorpayWebho
 
     if (event === "payment.captured") {
         const payment = payload.payment.entity;
-        const { userId, courseId } = payment.notes;
-        
-        if (userId && courseId) {
-            // Grant access if not already granted
-            const userRef = db.collection("users").doc(userId);
-            await userRef.set({
-                purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
 
-            await db.collection("transactions").doc(payment.id).set({
+        // For Razorpay Checkout, our identifying data (userId/courseId/guest info)
+        // lives on the ORDER notes, not the payment — payment.notes is usually
+        // empty. Fetch the order so the safety-net actually has what it needs.
+        let notes = payment.notes || {};
+        if ((!notes.courseId || !notes.userId) && payment.order_id) {
+            try {
+                const rp = new Razorpay({ key_id: razorpayKeyId.value(), key_secret: razorpayKeySecret.value() });
+                const order = await rp.orders.fetch(payment.order_id);
+                notes = { ...(order.notes || {}), ...notes };
+            } catch (e) { console.error("[razorpayWebhook] order fetch failed:", e); }
+        }
+        const { userId, courseId, guestEmail, guestPhone } = notes;
+        const grantType = notes.grantType === 'membership' ? 'membership' : 'course';
+        const membershipDays = parseInt(notes.membershipDays || '0', 10) || null;
+
+        if (userId && courseId) {
+            // Idempotency: Razorpay may retry the webhook. Only run side effects
+            // (esp. the guest email) the FIRST time we see this payment id.
+            const txRef = db.collection("transactions").doc(payment.id);
+            const alreadyProcessed = (await txRef.get()).exists;
+
+            const isGuest = userId === 'guest_pending' || userId.startsWith('guest_');
+            if (isGuest) {
+                // Prefer the email WE captured (order notes); fall back to Razorpay's,
+                // ignoring its "void@razorpay.com" placeholder.
+                const rzpEmail = String(payment.email || '').toLowerCase().trim();
+                const customerEmail = String(guestEmail || '').toLowerCase().trim()
+                    || (rzpEmail !== 'void@razorpay.com' ? rzpEmail : '');
+                const customerPhone = String(guestPhone || payment.contact || '').trim();
+                if (customerEmail) {
+                    const guestRef = db.collection("guestPurchases").doc(customerEmail);
+                    if (grantType === 'membership' && membershipDays && !alreadyProcessed) {
+                        const guestSnap = await guestRef.get();
+                        const newUntilMs = extendMembershipUntilMs(guestSnap.exists ? guestSnap.data().membershipUntil : null, membershipDays);
+                        await guestRef.set({
+                            email: customerEmail,
+                            phone: customerPhone,
+                            membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                    } else if (grantType !== 'membership') {
+                        await guestRef.set({
+                            email: customerEmail,
+                            phone: customerPhone,
+                            purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                    }
+                    // Tell the guest to sign up with this email — but only once.
+                    if (!alreadyProcessed) {
+                        try { await sendGuestAccessEmail(customerEmail); }
+                        catch (e) { console.error("[razorpayWebhook] guest email failed:", e); }
+                    }
+                }
+            } else if (grantType === 'membership' && membershipDays) {
+                // Only extend once per payment — a retried webhook must not double-add days.
+                if (!alreadyProcessed) {
+                    const userRef = db.collection("users").doc(userId);
+                    const userDoc = await userRef.get();
+                    const newUntilMs = extendMembershipUntilMs(userDoc.exists ? userDoc.data().membershipUntil : null, membershipDays);
+                    await userRef.set({
+                        membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                }
+            } else {
+                const userRef = db.collection("users").doc(userId);
+                await userRef.set({
+                    purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            }
+
+            await txRef.set({
                 userId,
                 courseId,
+                grantType,
                 razorpayOrderId: payment.order_id,
                 razorpayPaymentId: payment.id,
                 amount: payment.amount / 100,
@@ -1339,6 +1705,37 @@ async function sendWelcomeEmail(toEmail, planName) {
     });
 }
 
+/**
+ * Guest checkout confirmation — the buyer has no account yet, so the ONE thing
+ * they must do is create an account with THIS SAME email to unlock the course.
+ */
+async function sendGuestAccessEmail(toEmail) {
+    const transporter = getTransporter();
+    const signupUrl = 'https://www.skrmblissai.in/mindgym';
+    await transporter.sendMail({
+        from: '"Mind Gym" <connect@skrmblissai.in>',
+        to: toEmail,
+        subject: "Your purchase is confirmed — one step to unlock it",
+        html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0ece4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
+      <tr><td align="center" style="padding:24px 16px;">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#FDFAF4;border:1px solid #E6C57D;">
+          <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+          <tr><td style="padding:36px 40px;text-align:center;">
+            <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Mind Gym &middot; Payment Confirmed</p>
+            <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:300;font-style:italic;color:#1C1814;margin:0 0 8px;line-height:1.3;">Thank you — you're in.</h1>
+            <div style="width:40px;height:1px;background:#B8973A;margin:16px auto 24px;"></div>
+            <p style="font-family:Georgia,serif;font-size:16px;color:#3A342C;line-height:1.6;margin:0 0 8px;">Your Emotion &amp; Feelings Course purchase is confirmed.</p>
+            <p style="font-family:Georgia,serif;font-size:16px;color:#3A342C;line-height:1.6;margin:0 0 28px;"><strong>One step to unlock it:</strong> create your free account using <strong>this exact email address</strong> (${toEmail}) and the course will appear automatically.</p>
+            <a href="${signupUrl}" style="display:inline-block;padding:14px 34px;background:#1C1814;color:#E6C57D;text-decoration:none;font-family:Georgia,serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Create My Account</a>
+            <p style="font-family:Georgia,serif;font-size:12px;color:#8A8272;line-height:1.6;margin:28px 0 0;">The introduction is available immediately, and a new episode unlocks each week. Questions? Just reply to this email or WhatsApp us at +91 82175 81238.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table></body></html>`
+    });
+}
+
 exports.forceTriggerEmail = onRequest({
     secrets: [emailUser, emailPass, geminiKey, youtubeApiKey],
     timeoutSeconds: 300
@@ -1354,11 +1751,12 @@ exports.forceTriggerEmail = onRequest({
 });
 
 /**
- * Scheduled Reminder: Once daily at 8:45 AM IST (3:15 AM UTC).
- * Notifies all registered users 15 minutes before the 9:00 AM IST live meditation session.
+ * Scheduled Reminder: Weekdays at 9:15 AM IST (3:45 AM UTC).
+ * Notifies all registered users 15 minutes before the 9:30 AM IST live wellness
+ * session. No sessions (and no reminders) on Saturday/Sunday.
  */
 exports.sendMeditationReminders = onSchedule({
-    schedule: "15 3 * * *", // 3:15 AM UTC = 8:45 AM IST daily
+    schedule: "45 3 * * 1-5", // 3:45 AM UTC = 9:15 AM IST, Monday–Friday
     timeZone: "UTC",
     secrets: [emailUser, emailPass]
 }, async (event) => {
@@ -2694,4 +3092,59 @@ exports.scanLeads = onCall({
         googleDailyCap: GOOGLE_DAILY_BUDGET,
         budgetCapped: desiredGoogleCalls > grantedGoogle
     };
+});
+
+/**
+ * Automatically link guest purchases to new accounts based on email address.
+ */
+// Shared linker: merge any guestPurchases (keyed by lowercased email) into the
+// user's account, then delete the guest doc so it isn't re-applied.
+async function linkGuestPurchasesForUser(uid, rawEmail) {
+    const email = String(rawEmail || '').toLowerCase().trim();
+    if (!email) return false;
+
+    const guestRef = db.collection('guestPurchases').doc(email);
+    const guestDoc = await guestRef.get();
+    if (!guestDoc.exists) return false;
+
+    const guestData = guestDoc.data();
+    const updateData = { updatedAt: admin.firestore.FieldValue.serverTimestamp() };
+    if (guestData.purchasedCourses && guestData.purchasedCourses.length > 0) {
+        updateData.purchasedCourses = admin.firestore.FieldValue.arrayUnion(...guestData.purchasedCourses);
+    }
+    if (guestData.ownedTracks && guestData.ownedTracks.length > 0) {
+        updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(...guestData.ownedTracks);
+    }
+    // A guest PWYW membership purchase carries a single timestamp, not an array
+    // — extend the (soon-to-exist) user's membership from whichever is later.
+    if (guestData.membershipUntil) {
+        const userDoc = await db.collection('users').doc(uid).get();
+        const currentUntil = userDoc.exists ? userDoc.data().membershipUntil : null;
+        const guestUntilMs = guestData.membershipUntil.toMillis ? guestData.membershipUntil.toMillis() : 0;
+        const currentUntilMs = currentUntil && currentUntil.toMillis ? currentUntil.toMillis() : 0;
+        updateData.membershipUntil = admin.firestore.Timestamp.fromMillis(Math.max(guestUntilMs, currentUntilMs));
+    }
+    if (Object.keys(updateData).length <= 1) return false; // nothing to link
+
+    await db.collection('users').doc(uid).set(updateData, { merge: true });
+    await guestRef.delete().catch(() => {}); // consumed — avoid re-linking
+    console.log(`Linked guest purchases to user ${uid} (${email})`);
+    return true;
+}
+
+// Fires only for BRAND-NEW accounts.
+exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
+    try { await linkGuestPurchasesForUser(user.uid, user.email); }
+    catch (e) { console.error('onUserCreated link failed:', e); }
+});
+
+// Callable for EXISTING users: the client calls this after sign-in so someone
+// who already had an account (created before their guest purchase) still gets
+// the course unlocked. Uses the authenticated token's email — cannot be spoofed.
+exports.linkGuestPurchases = onCall(async (request) => {
+    const auth = request.auth;
+    if (!auth) throw new HttpsError('unauthenticated', 'Sign in required.');
+    const email = auth.token.email;
+    const linked = await linkGuestPurchasesForUser(auth.uid, email);
+    return { linked };
 });

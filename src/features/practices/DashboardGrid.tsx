@@ -17,7 +17,7 @@ import { useTheme } from '../../theme/ThemeSystem';
 
 
 // ─── Per-step fixed colors (Learn · Practice · Reflect · Live It) ─────────────
-const STEP_COLORS = ['#B8973A', '#9575CD', '#C65F9D', '#2E9E7A'] as const;
+const STEP_COLORS = ['#7A5F44', '#9575CD', '#C65F9D', '#8C7B8A'] as const;
 
 const CARD_IMAGES_DARK = [
   'learn_dark.webp',
@@ -466,7 +466,7 @@ function InlineReflectPanel({
             <PenLine size={14} style={{ color }} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#B8973A]">Reflection Logged</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#7A5F44]">Reflection Logged</p>
             <p className="text-[14px] font-serif italic text-[var(--text-primary)]">"{prompt}"</p>
           </div>
         </div>
@@ -685,7 +685,7 @@ export function DashboardGrid({
   const { questionId } = assignment;
   const questionMeta = QUESTION_META[questionId] ?? QUESTION_META['question1'];
   const practice = PRACTICE_LIBRARY[questionId];
-  const color = practice?.color ?? '#B8973A';
+  const color = practice?.color ?? '#7A5F44';
   const requiredTriggers = questionId === 'question3' ? 3 : 1;
 
   const {
@@ -748,7 +748,7 @@ export function DashboardGrid({
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center gap-2"
             >
-              <span className="font-sans text-[12px] font-semibold tracking-wide" style={{ color: '#B8973A' }}>
+              <span className="font-sans text-[12px] font-semibold tracking-wide" style={{ color: '#7A5F44' }}>
                 ✦ Your presence is your gift today.
               </span>
             </motion.div>
@@ -785,7 +785,7 @@ export function DashboardGrid({
           {/* Count */}
           <span
             className="font-sans text-[13px] font-bold tabular-nums"
-            style={{ color: doneCount > 0 ? '#B8973A' : 'var(--text-disabled)', letterSpacing: '-0.01em' }}
+            style={{ color: doneCount > 0 ? '#7A5F44' : 'var(--text-disabled)', letterSpacing: '-0.01em' }}
           >
             {doneCount}<span className="opacity-35 mx-px text-[11px]">/</span>4
           </span>

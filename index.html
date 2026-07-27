@@ -6,28 +6,39 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- SEO & Discovery -->
-    <title>Mind Gym | Train your mind daily</title>
-    <meta name="description" content="A sacred, structured journey to inner freedom based on the core teachings of 'The Untethered Soul' by Michael Singer and 'The Power of Now' by Eckhart Tolle. Experience daily presence practices, witnessing, and spiritual growth." />
-    <meta name="keywords" content="Michael Singer, Eckhart Tolle, Untethered Soul, Power of Now, Meditation, Presence, Witness Consciousness, Spirituality, Inner Freedom, Mindfulness App" />
-    <meta name="author" content="Mind Gym" />
-    
+    <!-- SEO & Discovery ────────────────────────────────────────────────────
+         These are the defaults for the SPA shell, which is served at the ROOT
+         of www.skrmblissai.in — so they describe the Soulful Intelligence
+         studio home, not the app. Individual routes (the course page, the
+         quiz, /aboutmindgym) override title/description/canonical at runtime
+         via usePageSeo; before that runs, a crawler should be told the root is
+         the studio home rather than /mindgym.
+
+         og:image points at the logo because the previous og-preview.png did
+         not exist — both /og-preview.png and /mindgym/og-preview.png returned
+         the SPA's HTML, so every social share had a broken preview. -->
+    <title>Soulful Intelligence — Where Soul Meets Intelligence</title>
+    <meta name="description" content="A studio for a quieter mind and braver ideas. Home of Mind Gym, guided courses on emotions and presence, free wellbeing tools, and pay-what-you-feel digital services for brands and startups." />
+    <meta name="keywords" content="Soulful Intelligence, Mind Gym, meditation app, emotional health, feelings and emotions course, mindfulness, presence, habit tracker, digital services, pay what you feel" />
+    <meta name="author" content="Soulful Intelligence Studio" />
+
     <!-- AI & Social Media (OpenGraph) -->
-    <meta property="og:title" content="Mind Gym | Train your mind daily" />
-    <meta property="og:description" content="A sacred, structured journey based on Michael Singer and Eckhart Tolle's teachings. Master the art of witnessing and find true inner peace." />
-    <meta property="og:image" content="https://www.skrmblissai.in/mindgym/og-preview.png" />
-    <meta property="og:url" content="https://www.skrmblissai.in/mindgym" />
+    <meta property="og:site_name" content="Soulful Intelligence Studio" />
+    <meta property="og:title" content="Soulful Intelligence — Where Soul Meets Intelligence" />
+    <meta property="og:description" content="A studio for a quieter mind and braver ideas — a daily wellbeing app, guided courses, free tools, and digital services. All pay-what-you-feel." />
+    <meta property="og:image" content="https://www.skrmblissai.in/si-logo-light.webp" />
+    <meta property="og:url" content="https://www.skrmblissai.in/" />
     <meta property="og:type" content="website" />
-    
+
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Mind Gym" />
-    <meta name="twitter:description" content="Daily practices for spiritual liberation based on the Untethered Soul and Power of Now." />
-    <meta name="twitter:image" content="https://www.skrmblissai.in/mindgym/og-preview.png" />
-    
+    <meta name="twitter:title" content="Soulful Intelligence — Where Soul Meets Intelligence" />
+    <meta name="twitter:description" content="A studio for a quieter mind and braver ideas. Mind Gym, guided courses, free tools — all pay-what-you-feel." />
+    <meta name="twitter:image" content="https://www.skrmblissai.in/si-logo-light.webp" />
+
     <!-- Search Engine Controls -->
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://www.skrmblissai.in/mindgym" />
+    <link rel="canonical" href="https://www.skrmblissai.in/" />
     
     <!-- Structured Data for Google/AI (JSON-LD) -->
     <script type="application/ld+json">
@@ -67,38 +78,76 @@
         --text-secondary: rgba(237,233,227,0.90);
         --text-muted: rgba(237,233,227,0.85);
         --text-disabled: rgba(237,233,227,0.60);
-        --brand-primary: #5EC4B0;
-        --accent-primary: #5EC4B0;
-        --accent-secondary: #5EC4B0;
-        --accent-primary-dim: rgba(94,196,176,0.08);
-        --accent-secondary-muted: rgba(94,196,176,0.10);
-        --accent-secondary-border: rgba(94,196,176,0.25);
+        --brand-primary: #8C7B8A;
+        --accent-primary: #8C7B8A;
+        --accent-secondary: #8C7B8A;
+        --accent-primary-dim: rgba(140,123,138,0.08);
+        --accent-secondary-muted: rgba(140,123,138,0.10);
+        --accent-secondary-border: rgba(140,123,138,0.25);
         --border-default: rgba(255,255,255,0.35);
         --border-subtle: rgba(255,255,255,0.15);
         --border-glass: rgba(255,255,255,0.10);
         --glass-border: rgba(255,255,255,0.10);
         --glass-surface: rgba(255,255,255,0.06);
-        --nav-active-bg: rgba(94,196,176,0.15);
-        --nav-active-border: rgba(94,196,176,0.45);
+        --nav-active-bg: rgba(140,123,138,0.15);
+        --nav-active-border: rgba(140,123,138,0.45);
         --chip-bg: rgba(255,255,255,0.05);
         --chip-border: rgba(255,255,255,0.12);
-        --chip-selected-bg: rgba(94,196,176,0.15);
-        --chip-selected-border: rgba(94,196,176,0.45);
-        --card-glow-base: rgba(94,196,176,0.20);
-        --card-glow-pulse: rgba(94,196,176,0.38);
-        --card-glow-surge: rgba(94,196,176,0.65);
-        --glow-primary: rgba(94,196,176,0.25);
+        --chip-selected-bg: rgba(140,123,138,0.15);
+        --chip-selected-border: rgba(140,123,138,0.45);
+        --card-glow-base: rgba(140,123,138,0.20);
+        --card-glow-pulse: rgba(140,123,138,0.38);
+        --card-glow-surge: rgba(140,123,138,0.65);
+        --glow-primary: rgba(140,123,138,0.25);
         --shadow-elevated: 0 8px 32px rgba(0,0,0,0.5);
-        --teal-glow: #5EC4B0;
+        --teal-glow: #8C7B8A;
+      }
+      /* Light mode for the pages that render without the app's theme provider
+         (the brand home, the sales pages, the policy pages). When the Mind Gym
+         app mounts it sets these same variables as inline styles on <html>,
+         which take precedence — so the app keeps full control of its own theme. */
+      html[data-si-theme="light"] {
+        --bg-color: #F4F1EA;
+        --bg-primary: #F4F1EA;
+        --bg-secondary: #EAE6DC;
+        --bg-body: #F4F1EA;
+        --text-main: #2A2420;
+        --text-primary: #2A2420;
+        --text-secondary: rgba(42,36,32,0.86);
+        --text-muted: rgba(42,36,32,0.72);
+        --border-default: rgba(140,123,138,0.34);
+        --border-subtle: rgba(140,123,138,0.20);
       }
       body {
         margin: 0;
         padding: 0;
-        background-color: #0c0910;
-        color: #ede9e3;
-        font-family: system-ui, -apple-system, sans-serif;
+        /* --boot-* are set by the theme bootstrap above; the literals are the
+           dark fallback for the case where the script did not run. */
+        background-color: var(--boot-bg, #0c0910);
+        color: var(--boot-fg, #ede9e3);
+        font-family: 'Outfit', system-ui, -apple-system, sans-serif;
       }
     </style>
+
+    <!-- Theme bootstrap. Runs before first paint so a visitor who chose a mode
+         on any page of skrmblissai.in (home, course, app, /twinsouls) lands on
+         the next one already in that mode, with no flash of the wrong one.
+         The key is duplicated in src/lib/siteTheme.ts and the portfolio repo. -->
+    <script>
+      (function () {
+        var m = 'light';
+        try {
+          var v = localStorage.getItem('si-theme') || localStorage.getItem('awakened-theme');
+          if (v === 'dark' || v === 'light') m = v;
+        } catch (e) {}
+        var d = document.documentElement;
+        d.dataset.siTheme = m;
+        if (m === 'dark') d.classList.add('dark');
+        // Paint the pre-React splash in the matching colour.
+        d.style.setProperty('--boot-bg', m === 'dark' ? '#0c0910' : '#F4F1EA');
+        d.style.setProperty('--boot-fg', m === 'dark' ? '#ede9e3' : '#2A2420');
+      })();
+    </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>

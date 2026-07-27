@@ -476,7 +476,7 @@ export const VoiceGuidance = ({
               {/* Speaking: teal overlay with pause icon */}
               {(isSpeaking || isPaused) && (
                 <div className="absolute inset-0 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(94,196,176,0.72)' }}>
+                  style={{ background: 'rgba(140,123,138,0.72)' }}>
                   {isSpeaking
                     ? <Pause size={22} className="text-white drop-shadow" fill="white" />
                     : <Play  size={22} className="text-white drop-shadow" fill="white" />}

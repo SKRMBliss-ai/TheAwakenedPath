@@ -118,7 +118,7 @@ export const PhonePromptModal: React.FC = () => {
                             {isSuccess ? (
                                 <div className="py-8 space-y-4 animate-in fade-in zoom-in duration-500">
                                     <div className="flex justify-center">
-                                        <CheckCircle2 size={64} className="text-[#5EC4B0]" />
+                                        <CheckCircle2 size={64} className="text-[#8C7B8A]" />
                                     </div>
                                     <h2 className="text-2xl font-serif text-[var(--text-primary)]">Path Connected.</h2>
                                     <p className="text-sm text-[var(--text-secondary)] opacity-80">We shall walk this journey together.</p>

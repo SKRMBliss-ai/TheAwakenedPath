@@ -35,7 +35,7 @@ export const BodyTruthTest: React.FC<BodyTruthTestProps> = ({ onComplete }) => {
 
     return (
         <div className="p-6 md:p-8 space-y-6 relative overflow-hidden rounded-[32px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#ABCEC9]/5 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#CFC2CD]/5 to-transparent pointer-events-none" />
             {/* Background Ambiance for Numbness State */}
             {testState === 'numbness_guidance' && (
                 <div className="absolute inset-0 bg-[var(--bg-secondary)]/90 backdrop-blur-md z-10 flex items-center justify-center p-8 text-center animate-in fade-in duration-500">
@@ -60,8 +60,8 @@ export const BodyTruthTest: React.FC<BodyTruthTestProps> = ({ onComplete }) => {
             )}
 
             <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-[#ABCEC9]/10">
-                    <Shield className="w-5 h-5 text-[#ABCEC9]" />
+                <div className="p-2 rounded-lg bg-[#CFC2CD]/10">
+                    <Shield className="w-5 h-5 text-[#CFC2CD]" />
                 </div>
                 <div>
                     <h3 className="text-lg font-serif font-bold text-[var(--text-primary)]">The Body's Truth Test</h3>
@@ -98,11 +98,11 @@ export const BodyTruthTest: React.FC<BodyTruthTestProps> = ({ onComplete }) => {
                             opacity: [0.3, 0.6, 0.3]
                         }}
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-32 h-32 rounded-full bg-[#ABCEC9]/10 blur-3xl absolute"
+                        className="w-32 h-32 rounded-full bg-[#CFC2CD]/10 blur-3xl absolute"
                     />
                     <p className="text-lg font-serif text-[var(--text-primary)] relative z-10 text-center">
                         Hold the thought: <br />
-                        <span className="italic text-[#ABCEC9]">"{thought}"</span>
+                        <span className="italic text-[#CFC2CD]">"{thought}"</span>
                     </p>
                     <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)] mt-8 animate-pulse font-bold">
                         Feel your chest...

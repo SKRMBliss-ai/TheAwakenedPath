@@ -307,13 +307,13 @@ const PatternBubble = ({
                     minWidth: 70,
                     maxWidth: 150,
                     background: isSelected
-                        ? 'radial-gradient(circle at 30% 30%, rgba(171,206,201,0.3), rgba(171,206,201,0.1))'
+                        ? 'radial-gradient(circle at 30% 30%, rgba(207,194,205,0.3), rgba(207,194,205,0.1))'
                         : 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
                     border: isSelected
-                        ? '1px solid rgba(171,206,201,0.5)'
+                        ? '1px solid rgba(207,194,205,0.5)'
                         : '1px solid rgba(255,255,255,0.08)',
                     boxShadow: isSelected
-                        ? '0 0 30px rgba(171,206,201,0.15), inset 0 1px 1px rgba(255,255,255,0.1)'
+                        ? '0 0 30px rgba(207,194,205,0.15), inset 0 1px 1px rgba(255,255,255,0.1)'
                         : '0 4px 20px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05)',
                     backdropFilter: 'blur(12px)',
                 }}
@@ -323,7 +323,7 @@ const PatternBubble = ({
                         animate={{ opacity: [0.1, 0.25, 0.1] }}
                         transition={{ duration: 2.5, repeat: Infinity }}
                         className="absolute inset-[-4px] rounded-full"
-                        style={{ background: 'radial-gradient(circle, rgba(171,206,201,0.2), transparent)' }}
+                        style={{ background: 'radial-gradient(circle, rgba(207,194,205,0.2), transparent)' }}
                     />
                 )}
                 <span
@@ -331,7 +331,7 @@ const PatternBubble = ({
                     style={{
                         fontSize: 10,
                         lineHeight: 1.3,
-                        color: isSelected ? 'rgba(171,206,201,0.95)' : 'rgba(255,255,255,0.45)',
+                        color: isSelected ? 'rgba(207,194,205,0.95)' : 'rgba(255,255,255,0.45)',
                     }}
                 >
                     {pattern}
@@ -379,7 +379,7 @@ const InsightPanel = ({ area, selectedPatterns, onClose }: {
             </div>
 
             <div className="space-y-2">
-                <p className="text-[9px] uppercase tracking-[0.5em] text-[#ABCEC9]/50 font-bold">What your body feels</p>
+                <p className="text-[9px] uppercase tracking-[0.5em] text-[#CFC2CD]/50 font-bold">What your body feels</p>
                 <p className="text-white/50 font-serif italic text-sm leading-relaxed">{area.bodyFeels}</p>
             </div>
 
@@ -403,12 +403,12 @@ const InsightPanel = ({ area, selectedPatterns, onClose }: {
                 <p className="text-white/25 font-serif italic text-xs leading-relaxed">{area.example}</p>
             </div>
 
-            <div className="rounded-2xl p-5" style={{ background: 'rgba(171,206,201,0.04)', border: '1px solid rgba(171,206,201,0.1)' }}>
+            <div className="rounded-2xl p-5" style={{ background: 'rgba(207,194,205,0.04)', border: '1px solid rgba(207,194,205,0.1)' }}>
                 <div className="flex items-center gap-2 mb-2">
-                    <Heart size={12} className="text-[#ABCEC9]/50" />
-                    <p className="text-[9px] uppercase tracking-[0.5em] text-[#ABCEC9]/50 font-bold">What helps</p>
+                    <Heart size={12} className="text-[#CFC2CD]/50" />
+                    <p className="text-[9px] uppercase tracking-[0.5em] text-[#CFC2CD]/50 font-bold">What helps</p>
                 </div>
-                <p className="font-serif leading-relaxed text-[13px] text-[#ABCEC9]/65">{area.whatHelps}</p>
+                <p className="font-serif leading-relaxed text-[13px] text-[#CFC2CD]/65">{area.whatHelps}</p>
             </div>
         </div>
     </motion.div>

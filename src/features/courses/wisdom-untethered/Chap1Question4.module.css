@@ -3,9 +3,9 @@
 .container {
   --ink: var(--text-main);
   --white: var(--bg-color);
-  --gold: #B8973A;
+  --gold: #7A5F44;
   --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans: 'DM Sans', sans-serif;
+  --sans: 'Outfit', sans-serif;
   
   background: var(--white);
   color: var(--ink);

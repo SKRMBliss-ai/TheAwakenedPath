@@ -87,9 +87,9 @@ export default function PracticeLedger() {
     if (dates.length === 0) {
         return (
             <div className="py-12 text-center rounded-[24px] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-surface)]/30">
-                <Calendar size={24} className="mx-auto text-[var(--text-muted)] opacity-20 mb-3" />
-                <p className="text-sm font-serif italic text-[var(--text-muted)]">Your practice ledger is empty.</p>
-                <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mt-1 opacity-40">Complete a daily practice to see your history here.</p>
+                <Calendar size={24} className="mx-auto text-[var(--text-muted)] opacity-30 mb-3" />
+                <p className="text-sm font-serif italic text-[var(--text-secondary)]">Your history starts today.</p>
+                <p className="text-[11px] text-[var(--text-muted)] mt-1">Complete a daily practice and it will show up here.</p>
             </div>
         );
     }

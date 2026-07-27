@@ -165,7 +165,7 @@
   font-weight: 600;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: #D4AE5C; /* Brighter gold by default */
+  color: #A98A67; /* Brighter gold by default */
   margin-bottom: 0.5rem;
 }
 
@@ -181,7 +181,7 @@
 .heroTitle strong {
   font-style: italic;
   font-weight: 400;
-  color: #D4AE5C;
+  color: #A98A67;
 }
 
 :global(.dark) :local(.heroTitle) {
@@ -189,11 +189,11 @@
 }
 
 :global(.dark) :local(.heroTitle) strong {
-  color: #D4AE5C !important;
+  color: #A98A67 !important;
 }
 
 :global(:not(.dark)) .heroTitle strong {
-  color: #B8973A;
+  color: #7A5F44;
 }
 
 .heroRule {
@@ -283,7 +283,7 @@
 }
 
 .pull {
-  border-left: 2px solid #B8973A;
+  border-left: 2px solid #7A5F44;
   padding-left: 2rem;
   margin: 2rem 0;
   font-family: var(--font-serif);
@@ -295,10 +295,10 @@
 
 :global(.dark) .pull {
   color: #FDFAF4;
-  border-color: #D4AE5C;
+  border-color: #A98A67;
 }
 
 :global(:not(.dark)) .pull {
   color: #1C1814;
-  border-color: #B8973A;
+  border-color: #7A5F44;
 }

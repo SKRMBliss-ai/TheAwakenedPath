@@ -43,7 +43,7 @@ export const CourseHero: React.FC<CourseHeroProps> = ({ chapter, question, title
         height: ${size}px;
         left: ${Math.random() * 100}%;
         top: ${Math.random() * 100}%;
-        background: ${isDark ? 'white' : '#B8973A'};
+        background: ${isDark ? 'white' : '#7A5F44'};
         --min-op: ${(Math.random() * 0.2 + 0.1).toFixed(2)};
         --max-op: ${(Math.random() * 0.6 + 0.3).toFixed(2)};
         --d: ${(Math.random() * 4 + 2).toFixed(1)}s;

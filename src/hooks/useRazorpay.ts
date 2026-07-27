@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { showToast } from '../lib/toast';
 
 interface RazorpayOptions {
     key: string;
@@ -11,6 +12,7 @@ interface RazorpayOptions {
     prefill: {
         name: string;
         email: string;
+        contact?: string;
     };
     theme: {
         color: string;
@@ -35,7 +37,12 @@ export const useRazorpay = () => {
         userName: string,
         courseId: string,
         currency: string = "USD",
-        onSuccess: () => void
+        onSuccess: () => void,
+        userPhone?: string,
+        // Pay-what-you-want amount, in `currency` major units (e.g. 240 for ₹240).
+        // Only meaningful for PWYW products (course/membership); the backend
+        // ignores it — and clamps it to a floor — for anything else.
+        amount?: number
     ) => {
         setIsProcessing(true);
         try {
@@ -43,7 +50,14 @@ export const useRazorpay = () => {
             const orderRes = await fetch('/api/razorpay-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ courseId, userId, currency })
+                // Pass the captured guest email/phone so the backend stores them in
+                // the order notes — reliable delivery even if the buyer skips the
+                // email field inside the Razorpay widget (e.g. UPI-only).
+                body: JSON.stringify({
+                    courseId, userId, currency,
+                    guestEmail: userEmail || '', guestPhone: userPhone || '',
+                    ...(amount != null ? { amount } : {}),
+                })
             });
 
             if (!orderRes.ok) {
@@ -54,7 +68,9 @@ export const useRazorpay = () => {
             const order = await orderRes.json();
 
             const options: RazorpayOptions = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
+                // Publishable key comes from the backend (Secret Manager) via the
+                // order response — no build-time .env / VITE_ var needed.
+                key: order.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || '',
                 amount: order.amount,
                 currency: order.currency,
                 name: "Mind Gym",
@@ -74,18 +90,20 @@ export const useRazorpay = () => {
 
                     const verification = await verifyRes.json();
                     if (verification.success) {
+                        showToast('Payment confirmed — unlocking your access.', { type: 'success' });
                         onSuccess();
                     } else {
-                        alert("Payment verification failed. Please contact support.");
+                        showToast('Payment verification failed. Please contact support.', { type: 'error' });
                     }
                     setIsProcessing(false);
                 },
                 prefill: {
                     name: userName || '',
-                    email: userEmail || ''
+                    email: userEmail || '',
+                    contact: userPhone || ''
                 },
                 theme: {
-                    color: "#B8973A"
+                    color: "#7A5F44"
                 },
                 modal: {
                     ondismiss: () => {
@@ -97,13 +115,13 @@ export const useRazorpay = () => {
             const rzp = new window.Razorpay(options);
             rzp.on('payment.failed', (response: any) => {
                 console.error("Payment Failed:", response.error);
-                alert("Payment cancelled or failed.");
+                showToast('Payment could not be completed. Please try again.', { type: 'error' });
                 setIsProcessing(false);
             });
             rzp.open();
         } catch (error) {
             console.error("Razorpay Error:", error);
-            alert("Could not initialize payment.");
+            showToast('Could not start payment. Please try again.', { type: 'error' });
             setIsProcessing(false);
         }
     };
@@ -133,7 +151,8 @@ export const useRazorpay = () => {
             const subscription = await subRes.json();
 
             const options: any = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
+                // Publishable key from the backend (Secret Manager) — see checkOut.
+                key: subscription.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || '',
                 subscription_id: subscription.id,
                 name: "Mind Gym",
                 description: planId.includes('yearly') ? "Annual Premium Access" : "Monthly Premium Access",
@@ -150,9 +169,10 @@ export const useRazorpay = () => {
 
                     const verification = await verifyRes.json();
                     if (verification.success) {
+                        showToast('Subscription active — welcome to premium.', { type: 'success' });
                         onSuccess();
                     } else {
-                        alert("Subscription verification failed. Please contact support.");
+                        showToast('Subscription verification failed. Please contact support.', { type: 'error' });
                     }
                     setIsProcessing(false);
                 },
@@ -161,7 +181,7 @@ export const useRazorpay = () => {
                     email: userEmail || ''
                 },
                 theme: {
-                    color: "#B8973A"
+                    color: "#7A5F44"
                 },
                 modal: {
                     ondismiss: () => {
@@ -173,13 +193,13 @@ export const useRazorpay = () => {
             const rzp = new window.Razorpay(options);
             rzp.on('payment.failed', (response: any) => {
                 console.error("Subscription Payment Failed:", response.error);
-                alert("Subscription payment failed.");
+                showToast('Subscription payment could not be completed. Please try again.', { type: 'error' });
                 setIsProcessing(false);
             });
             rzp.open();
         } catch (error) {
             console.error("Razorpay Subscription Error:", error);
-            alert("Could not initialize subscription.");
+            showToast('Could not start subscription. Please try again.', { type: 'error' });
             setIsProcessing(false);
         }
     };

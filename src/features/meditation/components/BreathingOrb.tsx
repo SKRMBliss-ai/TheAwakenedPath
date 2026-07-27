@@ -23,7 +23,7 @@ const BreathingOrb = ({ size = 200, participantCount = 0 }: { size?: number; par
       for (let i = 3; i >= 1; i--) {
         const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * (1 + i * 0.4));
         g.addColorStop(0, `rgba(212,175,55,${alpha * 0.08 / i})`);
-        g.addColorStop(0.5, `rgba(94,196,176,${alpha * 0.05 / i})`);
+        g.addColorStop(0.5, `rgba(140,123,138,${alpha * 0.05 / i})`);
         g.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.beginPath(); ctx.arc(cx, cy, r * (1 + i * 0.4), 0, Math.PI * 2);
         ctx.fillStyle = g; ctx.fill();
@@ -31,7 +31,7 @@ const BreathingOrb = ({ size = 200, participantCount = 0 }: { size?: number; par
       const core = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.2, 0, cx, cy, r);
       core.addColorStop(0, `rgba(255,240,180,${alpha})`);
       core.addColorStop(0.4, `rgba(212,175,55,${alpha * 0.9})`);
-      core.addColorStop(0.75, `rgba(94,196,176,${alpha * 0.7})`);
+      core.addColorStop(0.75, `rgba(140,123,138,${alpha * 0.7})`);
       core.addColorStop(1, `rgba(15,23,42,${alpha * 0.3})`);
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
       ctx.fillStyle = core; ctx.fill();

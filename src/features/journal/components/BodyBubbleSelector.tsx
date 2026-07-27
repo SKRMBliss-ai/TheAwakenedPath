@@ -293,13 +293,13 @@ function PatternBubble({ pattern, index, total, isSelected, onClick, centerX, ce
                     minWidth: 80,
                     maxWidth: 160,
                     background: isSelected
-                        ? "radial-gradient(circle at 30% 30%, rgba(171,206,201,0.3), rgba(171,206,201,0.1))"
+                        ? "radial-gradient(circle at 30% 30%, rgba(207,194,205,0.3), rgba(207,194,205,0.1))"
                         : "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
                     border: isSelected
-                        ? "1px solid rgba(171,206,201,0.5)"
+                        ? "1px solid rgba(207,194,205,0.5)"
                         : "1px solid rgba(255,255,255,0.08)",
                     boxShadow: isSelected
-                        ? "0 0 30px rgba(171,206,201,0.15), inset 0 1px 1px rgba(255,255,255,0.1)"
+                        ? "0 0 30px rgba(207,194,205,0.15), inset 0 1px 1px rgba(255,255,255,0.1)"
                         : "0 4px 20px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05)",
                     backdropFilter: "blur(12px)",
                 }}
@@ -309,7 +309,7 @@ function PatternBubble({ pattern, index, total, isSelected, onClick, centerX, ce
                         animate={{ opacity: [0.1, 0.25, 0.1] }}
                         transition={{ duration: 2.5, repeat: Infinity }}
                         className="absolute inset-[-4px] rounded-full"
-                        style={{ background: "radial-gradient(circle, rgba(171,206,201,0.2), transparent)" }}
+                        style={{ background: "radial-gradient(circle, rgba(207,194,205,0.2), transparent)" }}
                     />
                 )}
                 <span
@@ -317,7 +317,7 @@ function PatternBubble({ pattern, index, total, isSelected, onClick, centerX, ce
                     style={{
                         fontSize: 11,
                         lineHeight: 1.3,
-                        color: isSelected ? "rgba(171,206,201,0.95)" : "rgba(255,255,255,0.45)",
+                        color: isSelected ? "rgba(207,194,205,0.95)" : "rgba(255,255,255,0.45)",
                     }}
                 >
                     {pattern}
@@ -377,7 +377,7 @@ function InsightPanel({ area, selectedPatterns, onClose }: any) {
                             fontSize: 9,
                             textTransform: "uppercase",
                             letterSpacing: "0.5em",
-                            color: "rgba(171,206,201,0.5)",
+                            color: "rgba(207,194,205,0.5)",
                             fontWeight: 700,
                         }}
                     >
@@ -446,18 +446,18 @@ function InsightPanel({ area, selectedPatterns, onClose }: any) {
                 <div
                     className="rounded-2xl p-5"
                     style={{
-                        background: "rgba(171,206,201,0.04)",
-                        border: "1px solid rgba(171,206,201,0.1)",
+                        background: "rgba(207,194,205,0.04)",
+                        border: "1px solid rgba(207,194,205,0.1)",
                     }}
                 >
                     <div className="flex items-center gap-2 mb-2">
-                        <span style={{ color: "rgba(171,206,201,0.5)", fontSize: 14 }}>♡</span>
+                        <span style={{ color: "rgba(207,194,205,0.5)", fontSize: 14 }}>♡</span>
                         <p
                             style={{
                                 fontSize: 9,
                                 textTransform: "uppercase",
                                 letterSpacing: "0.5em",
-                                color: "rgba(171,206,201,0.5)",
+                                color: "rgba(207,194,205,0.5)",
                                 fontWeight: 700,
                             }}
                         >
@@ -466,7 +466,7 @@ function InsightPanel({ area, selectedPatterns, onClose }: any) {
                     </div>
                     <p
                         className="font-serif leading-relaxed"
-                        style={{ fontSize: 13, color: "rgba(171,206,201,0.65)" }}
+                        style={{ fontSize: 13, color: "rgba(207,194,205,0.65)" }}
                     >
                         {area.whatHelps}
                     </p>
@@ -536,7 +536,7 @@ export default function BodyBubbleSelector() {
             className="w-full min-h-screen flex flex-col items-center justify-start p-4 overflow-hidden relative"
             style={{
                 background: "radial-gradient(ellipse at 50% 30%, #1a0a2e 0%, #0d0014 50%, #050008 100%)",
-                fontFamily: "'Georgia', 'Times New Roman', serif",
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
             }}
         >
             {/* Ambient glow */}
@@ -570,7 +570,7 @@ export default function BodyBubbleSelector() {
                         fontSize: 9,
                         textTransform: "uppercase",
                         letterSpacing: "0.6em",
-                        color: "rgba(171,206,201,0.4)",
+                        color: "rgba(207,194,205,0.4)",
                         fontWeight: 700,
                         marginBottom: 12,
                     }}

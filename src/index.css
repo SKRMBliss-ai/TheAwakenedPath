@@ -58,14 +58,14 @@ html, body {
   --text-disabled:  rgba(237, 233, 227, 0.60);
 
   /* Accents */
-  --accent-primary:          #5EC4B0;
-  --accent-secondary:        #5EC4B0;
-  --brand-primary:           #5EC4B0;
-  --brand-secondary:         #5EC4B0;
-  --teal-glow:               #5EC4B0;
-  --accent-primary-dim:      rgba(94, 196, 176, 0.08);
-  --accent-secondary-muted:  rgba(94, 196, 176, 0.10);
-  --accent-secondary-border: rgba(94, 196, 176, 0.25);
+  --accent-primary:          #8C7B8A;
+  --accent-secondary:        #8C7B8A;
+  --brand-primary:           #8C7B8A;
+  --brand-secondary:         #8C7B8A;
+  --teal-glow:               #8C7B8A;
+  --accent-primary-dim:      rgba(140,123,138, 0.08);
+  --accent-secondary-muted:  rgba(140,123,138, 0.10);
+  --accent-secondary-border: rgba(140,123,138, 0.25);
 
   /* Borders */
   --border-default: rgba(255, 255, 255, 0.35);
@@ -77,30 +77,30 @@ html, body {
   /* Shadows & Glows */
   --shadow:           none;
   --shadow-elevated:  0 8px 32px rgba(0, 0, 0, 0.5);
-  --glow-primary:     rgba(94, 196, 176, 0.25);
-  --glow-cyan:        rgba(94, 196, 176, 0.12);
+  --glow-primary:     rgba(140,123,138, 0.25);
+  --glow-cyan:        rgba(140,123,138, 0.12);
   --glow-gold:        rgba(232, 184, 122, 0.15);
-  --card-glow-base:   rgba(94, 196, 176, 0.20);
-  --card-glow-pulse:  rgba(94, 196, 176, 0.38);
-  --card-glow-surge:  rgba(94, 196, 176, 0.65);
-  --video-shadow:     0 30px 100px rgba(0,0,0,0.9), 0 0 40px rgba(94, 196, 176, 0.12);
+  --card-glow-base:   rgba(140,123,138, 0.20);
+  --card-glow-pulse:  rgba(140,123,138, 0.38);
+  --card-glow-surge:  rgba(140,123,138, 0.65);
+  --video-shadow:     0 30px 100px rgba(0,0,0,0.9), 0 0 40px rgba(140,123,138, 0.12);
   --video-border:     rgba(255, 255, 255, 0.12);
 
   /* Orb */
-  --orb-fill:     radial-gradient(circle at 40% 35%, rgba(94,196,176,0.18) 0%, rgba(60,160,140,0.10) 60%, rgba(40,130,115,0.03) 100%);
+  --orb-fill:     radial-gradient(circle at 40% 35%, rgba(140,123,138,0.18) 0%, rgba(60,160,140,0.10) 60%, rgba(40,130,115,0.03) 100%);
   --orb-text:     rgba(255, 255, 255, 0.95);
   --orb-particle: rgba(255, 255, 255, 0.50);
   --orb-shadow:   none;
 
   /* Navigation */
-  --nav-active-bg:     rgba(94, 196, 176, 0.15);
-  --nav-active-border: rgba(94, 196, 176, 0.45);
+  --nav-active-bg:     rgba(140,123,138, 0.15);
+  --nav-active-border: rgba(140,123,138, 0.45);
 
   /* Chips */
   --chip-bg:              rgba(255, 255, 255, 0.05);
   --chip-border:          rgba(255, 255, 255, 0.12);
-  --chip-selected-bg:     rgba(94, 196, 176, 0.15);
-  --chip-selected-border: rgba(94, 196, 176, 0.45);
+  --chip-selected-bg:     rgba(140,123,138, 0.15);
+  --chip-selected-border: rgba(140,123,138, 0.45);
 
   /* Fonts */
   --font-serif: "Cormorant Garamond", Georgia, serif;
@@ -327,10 +327,10 @@ h6 {
 
 .card-glow:hover .light-dot {
     opacity: 1;
-    background: #ABCEC9;
-    box-shadow: 0 0 20px #ABCEC9, 0 0 40px rgba(171, 206, 201, 0.4);
+    background: #CFC2CD;
+    box-shadow: 0 0 20px #CFC2CD, 0 0 40px rgba(207,194,205, 0.4);
     transform: scale(1.1);
-    border-color: #ABCEC9;
+    border-color: #CFC2CD;
 }
 
 .card-glow:hover .card-graphic {
@@ -345,7 +345,7 @@ h6 {
     width: 14px;
     height: 14px;
     background: transparent;
-    border: 2px solid rgba(171, 206, 201, 0.4);
+    border: 2px solid rgba(207,194,205, 0.4);
     border-radius: 50%;
     transition: all 0.5s var(--ease-fluid);
     pointer-events: none;
@@ -506,7 +506,7 @@ h6 {
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 8px 16px;
     border-radius: 12px;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 700;
     letter-spacing: 1px;
     color: var(--text-main);
@@ -530,9 +530,9 @@ h6 {
 .practicing-now .pulse-dot {
     width: 6px;
     height: 6px;
-    background: #ABCEC9;
+    background: #CFC2CD;
     border-radius: 50%;
-    box-shadow: 0 0 10px #ABCEC9;
+    box-shadow: 0 0 10px #CFC2CD;
     animation: dot-pulse 2s infinite;
 }
 
@@ -543,7 +543,7 @@ h6 {
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), transparent);
     box-shadow: inset 0 0 60px rgba(255, 255, 255, 0.1),
-        0 0 100px rgba(171, 206, 201, 0.15);
+        0 0 100px rgba(207,194,205, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -628,3 +628,351 @@ body.dark-mode .mouse-glow {
 
 /* Hide default cursor only if we want a fully custom one, but here we just want a glow behind it */
 /* body.dark-mode { cursor: none; } */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SOULFUL HOME — IMMERSIVE EXPERIENCE LAYER
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Design tokens: warm ivory palette ─────────────────────────────────── */
+:root {
+  --si-ivory:       #F9F5EF;
+  --si-beige:       #F0E8DC;
+  --si-beige-mid:   #E8DDD0;
+  --si-taupe:       #C4B5A0;
+  --si-taupe-dark:  #9C8B78;
+  --si-lavender:    #D4CDE8;
+  --si-lavender-dk: #8C7B9E;
+  --si-ink:         #2A2118;
+  --si-ink-mid:     #4A3C2E;
+  --si-ink-warm:    #6B5744;
+  --si-ink-soft:    #9C8B78;
+  --si-gold:        #C4913A;
+  --si-gold-soft:   #D4A85A;
+  --si-geo-light:   rgba(180, 145, 110, 0.055);   /* light mode geo stroke */
+  --si-geo-dark:    rgba(245, 235, 220, 0.055);   /* dark mode geo stroke */
+  --si-card-bg:     rgba(249, 245, 239, 0.72);
+  --si-card-border: rgba(196, 181, 160, 0.35);
+  --si-shadow-warm: 0 8px 40px rgba(60, 40, 20, 0.07);
+  --si-shadow-lift: 0 20px 60px rgba(60, 40, 20, 0.12);
+}
+
+/* ── Sacred geometry: one giant drift across the whole scroll ───────────── */
+/* ── Sacred geometry: progressive scroll-reveal ─────────────────────────────
+   All animation (clip-path, opacity, transform, filter) is driven by the
+   SacredGeometry RAF loop. CSS provides only layout and will-change hints.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.si-geo-bg {
+  position: fixed;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;        /* clip children so the over-sized wrapper is invisible */
+}
+
+/* The img uses inline styles entirely from the RAF loop.
+   Only structural props live here. */
+.si-geo-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  will-change: clip-path, opacity, transform, filter;
+  /* Start invisible — RAF loop takes over on first tick */
+  clip-path: circle(13% at 50% 50%);
+  opacity: 0.04;
+}
+
+/* ── Section entrance animation ─────────────────────────────────────────── */
+@keyframes si-rise {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.si-reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.si-reveal.si-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Button breathing pulse ─────────────────────────────────────────────── */
+@keyframes btn-breathe {
+  0%, 100% { transform: scale(1);     box-shadow: 0 4px 24px rgba(60, 40, 20, 0.18); }
+  50%       { transform: scale(1.015); box-shadow: 0 8px 36px rgba(60, 40, 20, 0.26); }
+}
+
+.si-btn-breathe {
+  animation: btn-breathe 4s ease-in-out infinite;
+}
+.si-btn-breathe:hover {
+  animation: none;
+  transform: scale(1.02);
+}
+
+/* ── Cursor glow ─────────────────────────────────────────────────────────── */
+.si-cursor-glow {
+  position: fixed;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(196, 145, 58, 0.07) 0%,
+    rgba(196, 145, 58, 0.03) 40%,
+    transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.4s ease;
+  will-change: transform;
+  mix-blend-mode: multiply;
+}
+
+@media (hover: none) {
+  .si-cursor-glow { display: none; }
+}
+
+/* ── Feature card hover system ───────────────────────────────────────────── */
+.si-feature-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid var(--si-card-border);
+  background: var(--si-card-bg);
+  backdrop-filter: blur(12px);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s ease;
+  box-shadow: var(--si-shadow-warm);
+  cursor: default;
+}
+
+.si-feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--si-shadow-lift);
+  border-color: rgba(196, 145, 58, 0.3);
+}
+
+.si-feature-card .si-card-img {
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.si-feature-card:hover .si-card-img {
+  transform: scale(1.05);
+}
+
+/* ── Video card hover ───────────────────────────────────────────────────── */
+.si-video-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--si-card-border);
+  background: var(--si-card-bg);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s ease;
+  box-shadow: var(--si-shadow-warm);
+  text-decoration: none;
+  display: block;
+}
+
+.si-video-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--si-shadow-lift);
+}
+
+.si-video-card .si-thumb-img {
+  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.si-video-card:hover .si-thumb-img {
+  transform: scale(1.04);
+}
+
+.si-play-btn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.si-play-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, background 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.si-video-card:hover .si-play-circle {
+  transform: scale(1.1);
+  background: rgba(255,255,255,1);
+}
+
+/* ── Testimonial card ────────────────────────────────────────────────────── */
+.si-testimonial-card {
+  background: var(--si-card-bg);
+  border: 1px solid var(--si-card-border);
+  border-radius: 20px;
+  padding: 32px;
+  backdrop-filter: blur(12px);
+  box-shadow: var(--si-shadow-warm);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+
+.si-testimonial-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--si-shadow-lift);
+}
+
+/* ── Stat number animation ──────────────────────────────────────────────── */
+@keyframes si-count-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Chip / intent selector ─────────────────────────────────────────────── */
+.si-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: 1.5px solid var(--si-card-border);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--si-ink-mid);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.si-chip:hover {
+  border-color: var(--si-gold-soft);
+  background: rgba(196, 145, 58, 0.06);
+  transform: translateY(-2px);
+}
+
+.si-chip.si-chip--active {
+  border-color: var(--si-gold);
+  background: rgba(196, 145, 58, 0.10);
+  color: var(--si-ink);
+  box-shadow: 0 4px 16px rgba(196, 145, 58, 0.15);
+}
+
+/* ── Interactive reflection textarea ─────────────────────────────────────── */
+.si-reflect-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--si-taupe);
+  outline: none;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 15px;
+  color: var(--si-ink);
+  padding: 12px 0;
+  transition: border-color 0.3s ease;
+  resize: none;
+}
+
+.si-reflect-input:focus {
+  border-color: var(--si-gold);
+}
+
+.si-reflect-input::placeholder {
+  color: var(--si-taupe);
+  font-style: italic;
+}
+
+/* ── Horizontal scroll carousel ─────────────────────────────────────────── */
+.si-carousel {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 12px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.si-carousel::-webkit-scrollbar { display: none; }
+
+.si-carousel > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* ── Section divider ─────────────────────────────────────────────────────── */
+.si-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right,
+    transparent 0%,
+    var(--si-beige-mid) 20%,
+    var(--si-taupe) 50%,
+    var(--si-beige-mid) 80%,
+    transparent 100%);
+  margin: 0 auto;
+  max-width: 640px;
+  opacity: 0.6;
+}
+
+/* ── Dark mode overrides ─────────────────────────────────────────────────── */
+.dark .si-geo-img {
+  --si-geo-opacity: 0.045;
+  filter: blur(0.4px) invert(1) sepia(0.1) brightness(0.9);
+}
+
+.dark .si-feature-card,
+.dark .si-video-card,
+.dark .si-testimonial-card {
+  background: rgba(30, 24, 18, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .si-chip {
+  color: rgba(237, 233, 227, 0.8);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .si-chip:hover,
+.dark .si-chip.si-chip--active {
+  color: #ede9e3;
+}
+
+.dark .si-reflect-input {
+  color: #ede9e3;
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ── Reduced motion: kill all animations safely ─────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .si-geo-img            { animation: none !important; }
+  .si-btn-breathe        { animation: none !important; }
+  .si-reveal             { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .si-feature-card,
+  .si-video-card,
+  .si-testimonial-card   { transition: none !important; }
+  .si-feature-card .si-card-img,
+  .si-video-card .si-thumb-img { transition: none !important; }
+}

@@ -182,11 +182,11 @@ const EmptyState: React.FC<{ type: ActiveTab }> = ({ type }) => (
     <div className="py-10 flex flex-col items-center gap-3 text-center">
         <Inbox size={20} className="text-[var(--text-muted)] opacity-30" />
         <div>
-            <p className="text-sm font-serif italic text-[var(--text-muted)]">
-                {type === 'journal' ? 'No journal entries yet.' : 'No practice reflections yet.'}
+            <p className="text-sm font-serif italic text-[var(--text-secondary)]">
+                {type === 'journal' ? 'Your first reflection will appear here.' : 'Your first practice will appear here.'}
             </p>
-            <p className="text-[9px] text-[var(--text-muted)] opacity-40 uppercase tracking-widest mt-0.5">
-                {type === 'journal' ? 'Begin a journal session to see your reflections here.' : 'Complete a situational practice to see it here.'}
+            <p className="text-[10px] text-[var(--text-muted)] mt-1">
+                {type === 'journal' ? 'Open Journal to write one — it only takes a minute.' : 'Try a practice from the Practice tab to begin.'}
             </p>
         </div>
     </div>

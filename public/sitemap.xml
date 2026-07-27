@@ -1,9 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Public routes on www.skrmblissai.in. The root is the Soulful Intelligence
+  studio home; /mindgym is the app. Keep this in step with the routes wired in
+  src/main.tsx — anything not listed here is far slower for Google to discover.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.skrmblissai.in/mindgym/</loc>
-    <lastmod>2026-04-12</lastmod>
-    <changefreq>daily</changefreq>
+    <loc>https://www.skrmblissai.in/</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.skrmblissai.in/feelingsandemotioncourse</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.skrmblissai.in/mindgym</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.skrmblissai.in/knowyouremotionalhealth</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.skrmblissai.in/aboutmindgym</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.skrmblissai.in/twinsouls/</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.skrmblissai.in/policies</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>

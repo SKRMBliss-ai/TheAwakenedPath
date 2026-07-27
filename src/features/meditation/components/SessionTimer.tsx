@@ -8,7 +8,7 @@ const SessionTimer = ({ remainingMs, totalMs = 15 * 60 * 1000 }: { remainingMs: 
   const progress = 1 - remainingMs / totalMs;
   const isWarn   = remainingMs < 3 * 60 * 1000;
   const isUrgent = remainingMs < 60 * 1000;
-  const color    = isUrgent ? '#f87171' : isWarn ? '#fbbf24' : '#D4AF37';
+  const color    = isUrgent ? '#f87171' : isWarn ? '#fbbf24' : '#A98A67';
   const R = 20, circ = 2 * Math.PI * R;
 
   // Live clock — ticks every second

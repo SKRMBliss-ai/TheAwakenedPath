@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './AuthContext';
 import { useTheme } from '../../theme/ThemeSystem';
 import { ArrowRight, LayoutGrid } from 'lucide-react';
-import appLogo from '../../assets/logo.webp';
-import { CrystalPyramid } from '../../components/ui/CrystalPyramid';
+import { PresenceBreath } from '../../components/ui/PresenceBreath';
+import SILogoMark from '../../components/ui/SILogoMark';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
 import {
@@ -96,17 +96,22 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
   const handleGoogle = async () => {
     setError('');
 
-    // If running inside an iframe (e.g. embedded on skrmblissai.in via Systeme.io),
-    // Google OAuth will fail — Google blocks auth in cross-origin iframes.
-    // Break out to the standalone app URL so sign-in works correctly.
+    // Google blocks OAuth inside cross-origin iframes, so if we're framed we
+    // break out to the top-level app first. This dates from the Systeme.io
+    // embed; that's gone now, but the guard is kept for any future embed.
+    //
+    // The target is derived from the current origin rather than hard-coded —
+    // it used to point at awakened-path-2026.web.app, which would have thrown
+    // visitors off www.skrmblissai.in onto the raw Firebase URL.
     const isInIframe = window.self !== window.top;
     if (isInIframe) {
+      const breakoutUrl = `${window.location.origin}/mindgym?google=1`;
       try {
         // Try to navigate the parent window to the standalone app
-        window.top!.location.href = 'https://awakened-path-2026.web.app/?google=1';
+        window.top!.location.href = breakoutUrl;
       } catch {
         // If parent access is blocked, open in new tab
-        window.open('https://awakened-path-2026.web.app/?google=1', '_blank');
+        window.open(breakoutUrl, '_blank');
       }
       return;
     }
@@ -151,9 +156,11 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
         transition={{ duration: 0.8 }}
         className="relative z-10 flex flex-col items-center mb-8"
       >
-        <div className="w-20 h-20 mb-4 rounded-2xl p-1 bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] shadow-xl flex items-center justify-center">
-          <img src={appLogo} alt="Logo" className="w-full h-full object-contain rounded-xl bg-black/20" />
-        </div>
+        {/* Studio mark — this is the first screen a visitor sees, so it carries
+            the same badge as the website, the sales pages and the portfolio. */}
+        <a href="/" title="Soulful Intelligence Studio" className="mb-4 block w-14 h-14">
+          <SILogoMark />
+        </a>
         <h1
           className="text-2xl font-serif font-bold tracking-[0.15em] uppercase text-center"
           style={{ color: theme.textPrimary }}
@@ -278,7 +285,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
                     style={{
                       background: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))`,
                       color: '#fff',
-                      boxShadow: '0 4px 20px rgba(94,196,176,0.3)',
+                      boxShadow: '0 4px 20px rgba(140,123,138,0.3)',
                     }}
                   >
                     {mxChecking ? (
@@ -351,7 +358,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
 
         {/* ── Right column: Crystal (desktop only) ── */}
         <div className="hidden md:flex flex-col items-center justify-center w-[48%] px-10 relative">
-          <CrystalPyramid className="w-full max-w-[360px]" />
+          <PresenceBreath size={320} showCaption={false} />
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

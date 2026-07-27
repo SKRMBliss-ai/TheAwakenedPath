@@ -142,6 +142,13 @@
         }
       },
       {
+        "source": "/api/latest-videos",
+        "function": {
+          "functionId": "getLatestVideos",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

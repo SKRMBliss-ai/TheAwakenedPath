@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sim · A Journey From Within</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;600;700&family=Cormorant:ital,wght@0,400;0,600;1,300;1,400;1,600&family=DM+Serif+Display:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:16px;scroll-behavior:auto}
+:root{--ink:#050508;--ink2:#0D0D14;--ink3:#13131D;--gold:#C9A84C;--gold2:#E8C96D;--gold3:#F7E4A0;--ember:#D4541A;--ember2:#F07C3A;--cream:#F2EBD9;--fog:#8A8070;--sage:#7A9E7E;}
+body{background:var(--ink);color:var(--cream);font-family:'Cormorant',Georgia,serif;overflow-x:hidden;cursor:none;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(201,168,76,.08) 0%,transparent 280px);pointer-events:none;z-index:9980;}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9990;opacity:.5;}
+#cur,#cur2{position:fixed;border-radius:50%;pointer-events:none;z-index:9999;will-change:transform}
+#cur{width:10px;height:10px;background:var(--gold);mix-blend-mode:difference}
+#cur2{width:38px;height:38px;border:1px solid rgba(201,168,76,.45);top:-14px;left:-14px;transition:width .35s,height .35s,border-color .35s}
+body.hovering #cur2{width:56px;height:56px;border-color:var(--gold)}
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--ember),var(--gold),var(--gold3));z-index:1000;width:0;box-shadow:0 0 14px var(--gold);transition:width .07s linear}
+#particleCanvas{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.35}
+#intro{position:fixed;inset:0;z-index:5000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1.8s cubic-bezier(.77,0,.175,1),transform 1.8s cubic-bezier(.77,0,.175,1);}
+#intro.exit{opacity:0;transform:scale(1.04);pointer-events:none}
+.intro-bars{position:absolute;inset:0;display:flex}
+.intro-bar{flex:1;background:#0f0f0f;transform:scaleY(1);transform-origin:top;transition:transform 1.3s cubic-bezier(.77,0,.175,1)}
+.intro-bar:nth-child(even){transform-origin:bottom}
+#intro.exit .intro-bar{transform:scaleY(0)}
+.intro-inner{position:relative;z-index:2;text-align:center;padding:2rem}
+.intro-pre{font-family:'Space Mono',monospace;font-size:.56rem;letter-spacing:.7em;color:var(--gold);text-transform:uppercase;opacity:0;animation:ri .8s ease .4s forwards}
+.intro-rule{width:0;height:1px;background:var(--gold);margin:.8rem auto;animation:rw 1s ease .9s forwards}
+.intro-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,12vw,9rem);line-height:.88;color:#fff;letter-spacing:.04em;opacity:0;animation:ri 1s ease 1.1s forwards;text-shadow:0 0 100px rgba(201,168,76,.18)}
+.intro-name span{color:var(--gold)}
+.intro-tag{font-family:'Cormorant',serif;font-style:italic;font-size:clamp(.9rem,2vw,1.4rem);color:var(--gold2);opacity:0;animation:ri .8s ease 1.5s forwards;margin-top:.5rem}
+.intro-rule2{width:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:.8rem auto;animation:rw 1s ease 1.9s forwards}
+.intro-cta{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.5em;text-transform:uppercase;color:var(--fog);opacity:0;animation:ri .8s ease 2.3s forwards;cursor:none;padding:.65rem 2.2rem;border:1px solid rgba(201,168,76,.22);background:none;transition:color .3s,border-color .3s,box-shadow .3s}
+.intro-cta:hover{color:var(--gold);border-color:var(--gold);box-shadow:0 0 30px rgba(201,168,76,.1)}
+@keyframes ri{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes rw{from{width:0}to{width:220px}}
+nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;justify-content:space-between;align-items:center;padding:1.2rem 4vw;background:linear-gradient(to bottom,rgba(5,5,8,.96),transparent);transition:background .4s;}
+nav.solid{background:rgba(5,5,8,.98);backdrop-filter:blur(10px)}
+.nav-logo{font-family:'Cinzel',serif;font-size:.82rem;letter-spacing:.35em;color:var(--gold);font-weight:700}
+.nav-items{display:flex;gap:2.5rem;list-style:none}
+.nav-items a{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--fog);text-decoration:none;transition:color .3s;cursor:none}
+.nav-items a:hover{color:var(--gold)}
+#hero{height:100vh;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:7rem 6vw 4rem;}
+.hero-mesh{position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 15% 60%,rgba(122,158,126,.06) 0%,transparent 70%),radial-gradient(ellipse 80% 60% at 85% 30%,rgba(201,168,76,.07) 0%,transparent 70%),radial-gradient(ellipse 50% 50% at 50% 50%,rgba(13,13,20,.7) 0%,var(--ink) 100%);}
+.hero-rings{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.hero-ring{position:absolute;border-radius:50%;border:1px solid rgba(201,168,76,.06);animation:ringPulse 9s ease-out infinite}
+.hero-ring:nth-child(1){width:280px;height:280px}
+.hero-ring:nth-child(2){width:580px;height:580px;animation-delay:1.8s}
+.hero-ring:nth-child(3){width:900px;height:900px;animation-delay:3.6s}
+.hero-ring:nth-child(4){width:1300px;height:1300px;animation-delay:5.4s}
+@keyframes ringPulse{0%{transform:scale(.7);opacity:0}20%{opacity:1}100%{transform:scale(1);opacity:0}}
+.hero-stars{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.star{position:absolute;border-radius:50%;background:var(--gold);animation:twinkle var(--d,3s) ease-in-out infinite;opacity:0}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(0)}50%{opacity:var(--op,.8);transform:scale(1)}}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:1100px;padding:2rem}
+.hero-eyebrow{font-family:'Space Mono',monospace;font-size:.56rem;letter-spacing:.7em;color:var(--gold);text-transform:uppercase;display:inline-block;margin-bottom:2rem;border-bottom:1px solid rgba(201,168,76,.3);padding-bottom:.5rem;opacity:0;animation:ri 1s ease .3s forwards}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(4.5rem,15vw,13rem);line-height:.82;letter-spacing:.03em;opacity:0;animation:ri 1.2s ease .5s forwards}
+.hero-title .line1{display:block;color:var(--cream)}
+.hero-title .line2{display:block;-webkit-text-stroke:2px var(--gold);color:transparent}
+.hero-subtitle{font-family:'Cormorant',serif;font-style:italic;font-size:clamp(1rem,2.5vw,1.8rem);color:var(--gold2);margin-top:2rem;opacity:0;animation:ri 1s ease .8s forwards}
+.hero-divider{display:flex;align-items:center;gap:1.5rem;justify-content:center;margin:2.5rem 0;opacity:0;animation:ri 1s ease 1s forwards}
+.hero-divider-line{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);flex:1;max-width:150px}
+.hero-divider-diamond{width:8px;height:8px;background:var(--gold);transform:rotate(45deg);box-shadow:0 0 18px var(--gold)}
+.hero-pillars{display:flex;justify-content:center;gap:4rem;opacity:0;animation:ri 1s ease 1.2s forwards;flex-wrap:wrap}
+.hp-item{text-align:center}
+.hp-n{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--gold);line-height:1}
+.hp-l{font-family:'Space Mono',monospace;font-size:.45rem;letter-spacing:.4em;color:var(--fog);text-transform:uppercase;margin-top:.3rem}
+.scroll-cue{position:absolute;bottom:3rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;opacity:0;animation:ri 1s ease 2s forwards;cursor:none}
+.scroll-cue-text{font-family:'Space Mono',monospace;font-size:.45rem;letter-spacing:.5em;color:var(--fog);text-transform:uppercase}
+.scroll-cue-mouse{width:22px;height:36px;border:1px solid rgba(201,168,76,.4);border-radius:11px;position:relative}
+.scroll-cue-mouse::after{content:'';position:absolute;top:5px;left:50%;transform:translateX(-50%);width:3px;height:8px;border-radius:2px;background:var(--gold);animation:scrollDot 2s ease infinite}
+@keyframes scrollDot{0%{top:5px;opacity:1}100%{top:20px;opacity:0}}
+.part-screen{position:relative;padding:8rem 6vw;overflow:hidden;display:flex;align-items:center;background:var(--ink);}
+.part-screen-bg{position:absolute;inset:0;background:linear-gradient(to right,rgba(122,158,126,.05) 0%,transparent 60%)}
+.part-number{position:absolute;right:6vw;top:50%;transform:translateY(-50%);font-family:'Bebas Neue',sans-serif;font-size:clamp(10rem,25vw,22rem);color:rgba(201,168,76,.035);line-height:1;user-select:none;pointer-events:none;letter-spacing:-.02em;}
+.part-inner{position:relative;z-index:2}
+.part-label{font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.6em;color:var(--sage);text-transform:uppercase;display:block;margin-bottom:1.5rem}
+.part-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,10vw,9rem);letter-spacing:.03em;line-height:.85;color:var(--cream)}
+.part-subtitle{font-family:'Cormorant',serif;font-style:italic;font-size:clamp(1rem,2vw,1.5rem);color:var(--fog);margin-top:1.5rem;max-width:500px;line-height:1.7}
+.part-rule{width:80px;height:2px;background:linear-gradient(90deg,var(--sage),var(--gold));margin:1.5rem 0}
+.chapter{position:relative;overflow:hidden;padding:10rem 6vw;}
+.section-label{font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.6em;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:1rem}
+.section-heading{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,8vw,7rem);letter-spacing:.04em;line-height:.9;color:var(--cream)}
+.section-heading em{color:var(--gold);font-style:normal}
+.section-body{font-family:'Cormorant',serif;font-style:italic;font-size:clamp(1rem,2vw,1.4rem);color:var(--fog);line-height:1.9;max-width:560px}
+.bio-grid{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;max-width:1100px;margin:0 auto}
+.bio-text p{font-family:'Cormorant',serif;font-style:italic;font-size:clamp(1rem,1.8vw,1.3rem);color:var(--fog);line-height:2;margin-bottom:1.5rem}
+.bio-text p strong{color:var(--cream);font-style:normal;font-weight:600}
+.bio-visual{position:relative}
+.ornament-box{padding:3rem;background:linear-gradient(135deg,rgba(122,158,126,.06),rgba(201,168,76,.04));border:1px solid rgba(201,168,76,.12);position:relative;overflow:hidden;}
+.ornament-box::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:linear-gradient(to bottom,var(--sage),var(--gold))}
+.ornament-box-label{font-family:'Space Mono',monospace;font-size:.45rem;letter-spacing:.5em;color:var(--sage);text-transform:uppercase;margin-bottom:1.5rem;display:block}
+.ornament-box-quote{font-family:'DM Serif Display',serif;font-style:italic;font-size:clamp(1rem,1.8vw,1.35rem);color:var(--cream);line-height:1.65}
+.ornament-box-quote em{color:var(--gold);font-style:normal}
+.quote-break{position:relative;padding:8rem 6vw;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;background:var(--ink2);}
+.quote-bg{position:absolute;inset:0;background:linear-gradient(135deg,var(--ink3) 0%,var(--ink2) 100%)}
+.quote-mark{position:absolute;font-family:'Cinzel',serif;font-size:clamp(12rem,35vw,30rem);color:rgba(201,168,76,.025);line-height:1;top:-3rem;left:2vw;pointer-events:none;user-select:none;}
+.quote-text{position:relative;z-index:2;font-family:'DM Serif Display',serif;font-style:italic;font-size:clamp(1.4rem,3.5vw,3rem);color:var(--cream);max-width:850px;line-height:1.45;}
+.quote-text em{color:var(--gold);font-style:normal}
+.quote-source{position:relative;z-index:2;font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.5em;color:var(--fog);text-transform:uppercase;margin-top:2rem}
+#timeline-section{padding:8rem 0;background:var(--ink);position:relative;overflow:hidden}
+#timeline-section::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent,var(--gold),transparent);transform:translateX(-50%) scaleY(0);transform-origin:top;transition:transform 2.5s cubic-bezier(.22,1,.36,1);opacity:.35;}
+#timeline-section.tl-active::before{transform:translateX(-50%) scaleY(1)}
+.tl-container{max-width:1100px;margin:0 auto;padding:0 4vw}
+.tl-header{text-align:center;margin-bottom:6rem}
+.tl-item{display:grid;grid-template-columns:1fr 60px 1fr;margin-bottom:4rem;align-items:start}
+.tl-content-left{grid-column:1;padding-right:3rem;text-align:right}
+.tl-content-right{grid-column:3;padding-left:3rem}
+.tl-spine{grid-column:2;display:flex;flex-direction:column;align-items:center;padding-top:.3rem}
+.tl-dot{width:18px;height:18px;border-radius:50%;background:var(--gold);border:3px solid var(--ink);flex-shrink:0;margin-top:.3rem;box-shadow:0 0 0 1px var(--gold),0 0 25px rgba(201,168,76,.4);}
+.tl-dot.sage{background:var(--sage);box-shadow:0 0 0 1px var(--sage),0 0 25px rgba(122,158,126,.4)}
+.tl-dot.ember{background:var(--ember);box-shadow:0 0 0 1px var(--ember),0 0 25px rgba(212,84,26,.4)}
+.tl-dot.big{width:26px;height:26px;box-shadow:0 0 0 1px var(--gold),0 0 50px rgba(201,168,76,.8)}
+.tl-year{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:.3em;color:var(--gold);margin-top:.4rem;white-space:nowrap}
+.tl-chip{font-family:'Space Mono',monospace;font-size:.46rem;letter-spacing:.4em;color:var(--ember2);text-transform:uppercase;margin-bottom:.5rem}
+.tl-title{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--cream);margin-bottom:.6rem;line-height:1.2}
+.tl-body{font-family:'Cormorant',serif;font-style:italic;font-size:1rem;color:var(--fog);line-height:1.8}
+.tl-icon{font-size:1.6rem;margin-bottom:.5rem}
+#teachings{background:var(--ink2);padding:10rem 6vw;position:relative;overflow:hidden}
+.teachings-bg{position:absolute;right:-2vw;top:50%;transform:translateY(-50%);font-family:'Bebas Neue',sans-serif;font-size:clamp(8rem,20vw,18rem);color:rgba(201,168,76,.02);line-height:1;user-select:none;pointer-events:none;white-space:nowrap}
+.teachings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;max-width:1100px;background:rgba(201,168,76,.07);margin:5rem auto 0;}
+.teaching-card{background:var(--ink2);padding:2.2rem 1.8rem;text-align:center;position:relative;overflow:hidden;transition:background .4s;cursor:none;}
+.teaching-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);transform:scaleX(0);transition:transform .5s cubic-bezier(.22,1,.36,1)}
+.teaching-card:hover{background:rgba(201,168,76,.04)}
+.teaching-card:hover::before{transform:scaleX(1)}
+.teaching-icon{font-size:1.8rem;display:block;margin-bottom:.8rem}
+.teaching-name{font-family:'DM Serif Display',serif;font-size:.95rem;color:var(--cream);margin-bottom:.3rem;line-height:1.3}
+.teaching-book{font-family:'Cormorant',serif;font-style:italic;font-size:.82rem;color:var(--fog)}
+#philosophy{background:var(--ink);padding:10rem 6vw;position:relative;overflow:hidden}
+.phil-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;max-width:900px;background:rgba(201,168,76,.07);margin:5rem auto 0;}
+.phil-cell{background:var(--ink);padding:3rem;position:relative;overflow:hidden;transition:background .4s;cursor:none}
+.phil-cell:hover{background:rgba(201,168,76,.03)}
+.phil-cell::before{content:'';position:absolute;top:0;left:0;width:2px;height:0;background:linear-gradient(to bottom,var(--sage),var(--gold));transition:height .5s cubic-bezier(.22,1,.36,1)}
+.phil-cell:hover::before{height:100%}
+.phil-num{font-family:'Bebas Neue',sans-serif;font-size:4rem;color:rgba(201,168,76,.07);line-height:1;position:absolute;top:1rem;right:1.5rem}
+.phil-heading{font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--cream);margin-bottom:.8rem}
+.phil-body{font-family:'Cormorant',serif;font-style:italic;font-size:1rem;color:var(--fog);line-height:1.9}
+.phil-icon{font-size:1.5rem;margin-bottom:.8rem;display:block}
+#impact{background:var(--ink2);padding:8rem 6vw;}
+.impact-row{display:grid;grid-template-columns:repeat(4,1fr);max-width:1000px;margin:5rem auto 0}
+.impact-cell{padding:3.5rem 2rem;text-align:center;border-right:1px solid rgba(201,168,76,.08);}
+.impact-cell:last-child{border-right:none}
+.impact-n{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,5.5vw,4.5rem);color:var(--gold);line-height:1}
+.impact-l{font-family:'Space Mono',monospace;font-size:.45rem;letter-spacing:.35em;color:var(--fog);text-transform:uppercase;margin-top:.6rem}
+#closing{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8rem 4vw;overflow:hidden;background:var(--ink);text-align:center;}
+.closing-rings{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.closing-ring{position:absolute;border-radius:50%;border:1px solid rgba(201,168,76,.05);animation:cRingPulse 6s ease-out infinite}
+.closing-ring:nth-child(1){width:200px;height:200px}
+.closing-ring:nth-child(2){width:500px;height:500px;animation-delay:1.5s}
+.closing-ring:nth-child(3){width:900px;height:900px;animation-delay:3s}
+.closing-ring:nth-child(4){width:1300px;height:1300px;animation-delay:4.5s}
+@keyframes cRingPulse{0%{opacity:0;transform:scale(.5)}30%{opacity:1}100%{opacity:0;transform:scale(1)}}
+.closing-emoji{font-size:4.5rem;display:block;animation:closePulse 2.5s ease-in-out infinite;position:relative;z-index:2;margin-bottom:2rem}
+@keyframes closePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.closing-quote{font-family:'DM Serif Display',serif;font-style:italic;font-size:clamp(1.4rem,3.8vw,3.2rem);color:var(--cream);max-width:800px;line-height:1.35;position:relative;z-index:2;margin-bottom:2rem}
+.closing-quote em{color:var(--gold);font-style:normal}
+.closing-rule{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:2rem auto;position:relative;z-index:2}
+.closing-line{font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.6em;color:var(--fog);text-transform:uppercase;position:relative;z-index:2}
+.closing-sig{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5.5vw,4.5rem);color:transparent;-webkit-text-stroke:1px rgba(201,168,76,.4);letter-spacing:.2em;margin-top:.5rem;position:relative;z-index:2}
+.reveal{opacity:0;transform:translateY(50px);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1)}
+.reveal-left{opacity:0;transform:translateX(-60px);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1)}
+.reveal-right{opacity:0;transform:translateX(60px);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1)}
+.reveal.in,.reveal-left.in,.reveal-right.in{opacity:1;transform:none}
+.d1{transition-delay:.1s!important}.d2{transition-delay:.2s!important}.d3{transition-delay:.3s!important}
+@media(max-width:768px){.nav-items{display:none}.chapter{padding:6rem 5vw}.bio-grid{grid-template-columns:1fr!important;gap:3rem}.teachings-grid{grid-template-columns:repeat(2,1fr)}.phil-grid{grid-template-columns:1fr}.impact-row{grid-template-columns:repeat(2,1fr)}.tl-item{grid-template-columns:40px 1fr}.tl-spine{grid-column:1}.tl-content-left{display:none}.tl-content-right{grid-column:2;padding-left:1.5rem}#timeline-section::before{left:20px}.part-number{display:none}.hero-pillars{gap:2rem}}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="cur2"></div>
+<div id="prog"></div>
+<canvas id="particleCanvas"></canvas>
+
+<div id="intro">
+  <div class="intro-bars"><div class="intro-bar"></div><div class="intro-bar"></div><div class="intro-bar"></div><div class="intro-bar"></div><div class="intro-bar"></div><div class="intro-bar"></div><div class="intro-bar"></div><div class="intro-bar"></div></div>
+  <div class="intro-inner">
+    <p class="intro-pre">A Journey From Within</p>
+    <div class="intro-rule"></div>
+    <h1 class="intro-name">AWAKEN<span> &amp; HEAL</span></h1>
+    <p class="intro-tag">The Journey of Sim</p>
+    <div class="intro-rule2"></div>
+    <button class="intro-cta" onclick="launchExperience()">Enter Her World</button>
+  </div>
+</div>
+
+<nav id="nav">
+  <div class="nav-logo" style="display:flex;align-items:center;">
+    <a href="/" style="color:var(--gold);text-decoration:none;margin-right:1rem;font-size:0.9rem;display:flex;align-items:center;gap:0.4rem;border:1px solid rgba(201,168,76,0.3);padding:0.3rem 0.8rem;border-radius:20px;letter-spacing:0.1em;text-transform:uppercase;" title="Back to Coin">&#8592; Back to Coin</a>
+    <span style="margin-left: 0.5rem;">S I M</span>
+  </div>
+  <ul class="nav-items">
+    <li><a href="#journey">Journey</a></li>
+    <li><a href="#timeline-section">Timeline</a></li>
+    <li><a href="#teachings">Teachings</a></li>
+    <li><a href="#philosophy">Philosophy</a></li>
+    <li><a href="#closing">Connect</a></li>
+  </ul>
+</nav>
+
+<section id="hero">
+  <div class="hero-mesh"></div>
+  <div class="hero-rings"><div class="hero-ring"></div><div class="hero-ring"></div><div class="hero-ring"></div><div class="hero-ring"></div></div>
+  <div class="hero-stars" id="heroStars"></div>
+  <div class="hero-content">
+    <span class="hero-eyebrow">Presence · Healing · Transformation</span>
+    <h1 class="hero-title"><span class="line1">S I M</span></h1>
+    <p class="hero-subtitle">From struggle to stillness — a life lived from the inside out</p>
+    <div class="hero-divider"><div class="hero-divider-line"></div><div class="hero-divider-diamond"></div><div class="hero-divider-line"></div></div>
+    <div class="hero-pillars">
+      <div class="hp-item"><div class="hp-n">🌿</div><div class="hp-l">Presence</div></div>
+      <div class="hp-item"><div class="hp-n">🕯️</div><div class="hp-l">Awareness</div></div>
+      <div class="hp-item"><div class="hp-n">🌸</div><div class="hp-l">Healing</div></div>
+      <div class="hp-item"><div class="hp-n">✨</div><div class="hp-l">Freedom</div></div>
+    </div>
+  </div>
+  <div class="scroll-cue"><span class="scroll-cue-text">Scroll to begin</span><div class="scroll-cue-mouse"></div></div>
+</section>
+
+<div class="part-screen"><div class="part-screen-bg"></div><div class="part-number">I</div>
+  <div class="part-inner reveal"><span class="part-label">Part One</span><h2 class="part-title">THE<br>SEED</h2><div class="part-rule"></div><p class="part-subtitle">Deeply authentic. Quietly ambitious. A spirit that always knew there was more.</p></div>
+</div>
+
+<section id="journey" class="chapter" style="background:var(--ink)">
+  <div class="bio-grid">
+    <div class="bio-text reveal-left">
+      <span class="section-label">Her Nature</span>
+      <h2 class="section-heading">DEEPLY<br><em>AUTHENTIC</em></h2><br>
+      <p>From a young age, Sim was <strong>highly sensitive to emotions and the energy around her</strong>. This heightened awareness shaped her understanding of relationships, human behavior, and the invisible threads that connect us all.</p>
+      <p>Growing up, she witnessed emotional challenges within her family. These early experiences left a deep imprint, quietly guiding her toward emotional resilience and inner strength.</p>
+      <p>Despite everything, <strong>a natural inclination toward spirituality</strong> served as her compass — a quiet inner voice that never stopped pointing forward.</p>
+    </div>
+    <div class="reveal-right">
+      <div class="bio-visual">
+        <div class="ornament-box">
+          <span class="ornament-box-label">Her Essence</span>
+          <blockquote class="ornament-box-quote">"She carried <em>a fire that burns inward</em> — not consuming, but illuminating. Even in her silence, there was something radiant, something becoming."</blockquote>
+        </div>
+        <br>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div style="padding:1.5rem;background:rgba(201,168,76,.04);border:1px solid rgba(201,168,76,.1);text-align:center"><div style="font-size:2.5rem">🌱</div><div style="font-family:'Space Mono',monospace;font-size:.42rem;letter-spacing:.35em;color:var(--fog);text-transform:uppercase;margin-top:.4rem">Inner Compass</div></div>
+          <div style="padding:1.5rem;background:rgba(201,168,76,.04);border:1px solid rgba(201,168,76,.1);text-align:center"><div style="font-size:2.5rem">🔮</div><div style="font-family:'Space Mono',monospace;font-size:.42rem;letter-spacing:.35em;color:var(--fog);text-transform:uppercase;margin-top:.4rem">Spiritual Seeker</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="quote-break"><div class="quote-bg"></div><div class="quote-mark">"</div>
+  <p class="quote-text reveal">"Her pain was not a wound to be hidden — it was a <em>doorway</em>, not a destination."</p>
+  <p class="quote-source reveal d2">The Turning Point</p>
+</div>
+
+<div class="part-screen"><div class="part-screen-bg"></div><div class="part-number">II</div>
+  <div class="part-inner reveal"><span class="part-label">Part Two</span><h2 class="part-title">THE<br>CROSSING</h2><div class="part-rule"></div><p class="part-subtitle">A new country. Unprocessed pain. A body that began to speak what words could not.</p></div>
+</div>
+
+<section class="chapter" style="background:var(--ink)">
+  <div class="bio-grid">
+    <div class="reveal-left">
+      <div class="bio-visual">
+        <div style="padding:4rem 3rem;background:linear-gradient(135deg,rgba(122,158,126,.05),rgba(201,168,76,.04));border:1px solid rgba(201,168,76,.12);text-align:center">
+          <div style="font-size:5rem;margin-bottom:1.5rem">🌍</div>
+          <p style="font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.25em;color:var(--cream);font-weight:600;margin-bottom:.5rem">INDIA → UNITED KINGDOM</p>
+          <p style="font-family:'Cormorant',serif;font-style:italic;font-size:1rem;color:var(--fog)">A marriage that carried her across oceans</p>
+          <div style="width:50px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:1.5rem auto"></div>
+          <p style="font-family:'Space Mono',monospace;font-size:.45rem;letter-spacing:.4em;color:var(--sage);text-transform:uppercase">New Opportunities · New Challenges</p>
+        </div>
+      </div>
+    </div>
+    <div class="bio-text reveal-right">
+      <span class="section-label">Life Abroad</span>
+      <h2 class="section-heading">A NEW<br><em>WORLD</em></h2><br>
+      <p>Her marriage carried her to the UK — a decision rooted in her family's belief that she would <strong>thrive beyond India's borders</strong>. While this transition opened new horizons, it also surfaced something deeper.</p>
+      <p>Unprocessed emotional experiences began to manifest within the body, leading to <strong>autoimmune challenges and unexplained fertility struggles</strong> — marking one of the most difficult chapters of her life.</p>
+      <p>She endured <strong>multiple miscarriages, including one that was life-threatening</strong>. Yet her response to these challenges defines her story — not the falling, but the returning to herself, again and again.</p>
+    </div>
+  </div>
+</section>
+
+<div class="quote-break"><div class="quote-bg"></div><div class="quote-mark">"</div>
+  <p class="quote-text reveal">"Rather than <em>breaking down</em>, she held her family together. Even in her most vulnerable moments, she remained grounded in <em>strength and responsibility</em>."</p>
+  <p class="quote-source reveal d2">On Adversity</p>
+</div>
+
+<div class="part-screen"><div class="part-screen-bg"></div><div class="part-number">III</div>
+  <div class="part-inner reveal"><span class="part-label">Part Three</span><h2 class="part-title">THE<br>AWAKENING</h2><div class="part-rule"></div><p class="part-subtitle">A book. A teacher. A spark that became an unquenchable fire of inner knowing.</p></div>
+</div>
+
+<section class="chapter" style="background:var(--ink)">
+  <div class="bio-grid">
+    <div class="bio-text reveal-left">
+      <span class="section-label">The Shift</span>
+      <h2 class="section-heading">INNER<br><em>LIGHT</em></h2><br>
+      <p>During her journey, Sim discovered the teachings of <strong>Wayne Dyer</strong> — and something shifted profoundly. For the first time, she felt truly aligned. Like she was stepping into something meaningful and real.</p>
+      <p>This ignited a deep exploration of consciousness, presence, and emotional freedom. What began as a search for healing <strong>gradually transformed into a path of awakening</strong>.</p>
+      <p>She absorbed wisdom from the world's most transformational thinkers — not as an intellectual pursuit, but as <strong>a lived, embodied practice</strong>. Every teaching was tested in the crucible of her own experience.</p>
+    </div>
+    <div class="reveal-right">
+      <div class="ornament-box">
+        <span class="ornament-box-label">The Turning Point</span>
+        <blockquote class="ornament-box-quote">"The moment she found Wayne Dyer's words, she felt as though someone had turned on a light in a room she'd been navigating in darkness for years. <em>She was home.</em>"</blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="timeline-section">
+  <div class="tl-container">
+    <div class="tl-header"><span class="section-label" style="display:block;text-align:center;margin-bottom:1rem">Her Journey Through Time</span><h2 class="section-heading" style="text-align:center;font-size:clamp(2.5rem,7vw,6rem)">THE <em>TIMELINE</em></h2></div>
+    <div class="tl-item reveal"><div class="tl-content-left"><div class="tl-icon">🌱</div><div class="tl-chip">Origin</div><h3 class="tl-title">The Sensitive Child</h3><p class="tl-body">Born with rare emotional intelligence, deeply attuned to the energies and feelings of those around her. Her sensitivity was both her gift and her earliest challenge.</p></div><div class="tl-spine"><div class="tl-dot"></div><div class="tl-year">Early Years</div></div><div class="tl-content-right"></div></div>
+    <div class="tl-item reveal d2"><div class="tl-content-left"></div><div class="tl-spine"><div class="tl-dot ember"></div><div class="tl-year">Family</div></div><div class="tl-content-right"><div class="tl-icon">🏠</div><div class="tl-chip">Foundation</div><h3 class="tl-title">Witnessing, Learning</h3><p class="tl-body">Early family experiences became her first classroom in resilience, building a quiet, unbreakable inner core.</p></div></div>
+    <div class="tl-item reveal d1"><div class="tl-content-left"><div class="tl-icon">✈️</div><div class="tl-chip">The Crossing</div><h3 class="tl-title">India to the UK</h3><p class="tl-body">Marriage brought her to Britain — new country, new opportunities, and slowly, the emergence of unprocessed pain into the body.</p></div><div class="tl-spine"><div class="tl-dot sage"></div><div class="tl-year">Marriage</div></div><div class="tl-content-right"></div></div>
+    <div class="tl-item reveal d2"><div class="tl-content-left"></div><div class="tl-spine"><div class="tl-dot ember"></div><div class="tl-year">Adversity</div></div><div class="tl-content-right"><div class="tl-icon">🌧️</div><div class="tl-chip">Darkest Chapter</div><h3 class="tl-title">Through Fire &amp; Loss</h3><p class="tl-body">Multiple miscarriages and autoimmune challenges. Yet she chose awareness over despair, grounding herself in strength.</p></div></div>
+    <div class="tl-item reveal d1"><div class="tl-content-left"><div class="tl-icon">📖</div><div class="tl-chip">The Spark</div><h3 class="tl-title">Wayne Dyer Changes Everything</h3><p class="tl-body">She discovered Wayne Dyer's teachings and felt truly aligned for the first time — stepping into something real, something hers.</p></div><div class="tl-spine"><div class="tl-dot big"></div><div class="tl-year">Awakening</div></div><div class="tl-content-right"></div></div>
+    <div class="tl-item reveal d2"><div class="tl-content-left"></div><div class="tl-spine"><div class="tl-dot sage"></div><div class="tl-year">Today</div></div><div class="tl-content-right"><div class="tl-icon">🌸</div><div class="tl-chip">Living the Teaching</div><h3 class="tl-title">Guide, Healer, Presence</h3><p class="tl-body">Today she guides others toward presence, awareness, and emotional freedom — not from theory, but from hard-won wisdom of a life truly lived.</p></div></div>
+  </div>
+</section>
+
+<section id="teachings">
+  <div class="teachings-bg">WISDOM</div>
+  <div style="max-width:1100px;margin:0 auto"><span class="section-label reveal">The Library of Her Soul</span><h2 class="section-heading reveal d1">TEACHINGS<br>THAT <em>SHAPED HER</em></h2><p class="section-body reveal d2" style="margin-top:1.5rem">Each book a mirror. Each teacher a guide. She did not just read these words — she <em>lived</em> them.</p></div>
+  <div class="teachings-grid">
+    <div class="teaching-card reveal"><span class="teaching-icon">✨</span><div class="teaching-name">Wayne Dyer</div><div class="teaching-book">The Catalyst</div></div>
+    <div class="teaching-card reveal d1"><span class="teaching-icon">🌿</span><div class="teaching-name">Eckhart Tolle</div><div class="teaching-book">A New Earth</div></div>
+    <div class="teaching-card reveal d2"><span class="teaching-icon">🦋</span><div class="teaching-name">Michael A. Singer</div><div class="teaching-book">The Untethered Soul</div></div>
+    <div class="teaching-card reveal d3"><span class="teaching-icon">🌻</span><div class="teaching-name">Louise Hay</div><div class="teaching-book">Heal Your Life</div></div>
+    <div class="teaching-card reveal"><span class="teaching-icon">🔮</span><div class="teaching-name">Linda Howe</div><div class="teaching-book">Akashic Records</div></div>
+    <div class="teaching-card reveal d1"><span class="teaching-icon">🌌</span><div class="teaching-name">Robert Schwartz</div><div class="teaching-book">Your Soul's Plan</div></div>
+    <div class="teaching-card reveal d2"><span class="teaching-icon">💪</span><div class="teaching-name">David Goggins</div><div class="teaching-book">Can't Hurt Me</div></div>
+    <div class="teaching-card reveal d3"><span class="teaching-icon">🌙</span><div class="teaching-name">Neville Goddard</div><div class="teaching-book">The Power of Awareness</div></div>
+    <div class="teaching-card reveal"><span class="teaching-icon">⚙️</span><div class="teaching-name">James Clear</div><div class="teaching-book">Atomic Habits</div></div>
+    <div class="teaching-card reveal d1"><span class="teaching-icon">🕊️</span><div class="teaching-name">David R. Hawkins</div><div class="teaching-book">Letting Go</div></div>
+    <div class="teaching-card reveal d2"><span class="teaching-icon">🌈</span><div class="teaching-name">Gabrielle Bernstein</div><div class="teaching-book">The Universe Has Your Back</div></div>
+    <div class="teaching-card reveal d3"><span class="teaching-icon">🙏</span><div class="teaching-name">Sister Shivani</div><div class="teaching-book">Inner Peace &amp; Clarity</div></div>
+  </div>
+</section>
+
+<div class="quote-break"><div class="quote-bg"></div><div class="quote-mark">"</div>
+  <p class="quote-text reveal">"What began as a search for healing gradually transformed into a path of <em>deep presence</em> and <em>inner awakening</em>."</p>
+  <p class="quote-source reveal d2">On Her Path</p>
+</div>
+
+<section id="impact">
+  <div style="max-width:1000px;margin:0 auto;text-align:center"><span class="section-label reveal">The Ripple</span><h2 class="section-heading reveal d1" style="text-align:center">HER <em>IMPACT</em></h2></div>
+  <div class="impact-row">
+    <div class="impact-cell reveal"><div class="impact-n" data-count="12">0</div><div class="impact-l">Transformative Teachers</div></div>
+    <div class="impact-cell reveal d1"><div class="impact-n">🌍</div><div class="impact-l">Lives Touched Worldwide</div></div>
+    <div class="impact-cell reveal d2"><div class="impact-n">∞</div><div class="impact-l">Years of Inner Work</div></div>
+    <div class="impact-cell reveal d3"><div class="impact-n">1</div><div class="impact-l">Unshakeable Truth</div></div>
+  </div>
+</section>
+
+<section id="philosophy">
+  <div style="max-width:900px;margin:0 auto;text-align:center"><span class="section-label reveal">Her Core Pillars</span><h2 class="section-heading reveal d1" style="text-align:center">THE <em>PHILOSOPHY</em></h2></div>
+  <div class="phil-grid">
+    <div class="phil-cell reveal"><div class="phil-num">01</div><span class="phil-icon">🌿</span><h3 class="phil-heading">Presence Is the Practice</h3><p class="phil-body">Healing does not happen in the past or the future. It happens in the singular aliveness of this moment — a lived, breathing practice.</p></div>
+    <div class="phil-cell reveal d2"><div class="phil-num">02</div><span class="phil-icon">💧</span><h3 class="phil-heading">Pain Is a Doorway</h3><p class="phil-body">Her deepest wounds became her most profound teachers. Suffering carries within it the seeds of our greatest growth.</p></div>
+    <div class="phil-cell reveal d1"><div class="phil-num">03</div><span class="phil-icon">🌸</span><h3 class="phil-heading">Joy as Liberation</h3><p class="phil-body">Genuine joy is not the absence of pain — it is the presence of freedom. She invites others to reconnect with an inner aliveness no circumstance can extinguish.</p></div>
+    <div class="phil-cell reveal d3"><div class="phil-num">04</div><span class="phil-icon">🌺</span><h3 class="phil-heading">The Body Remembers</h3><p class="phil-body">Her own journey taught her that the body speaks what the mind suppresses. True healing requires honoring the body's messages.</p></div>
+  </div>
+</section>
+
+<section id="closing">
+  <div class="closing-rings"><div class="closing-ring"></div><div class="closing-ring"></div><div class="closing-ring"></div><div class="closing-ring"></div></div>
+  <span class="closing-emoji">🌸</span>
+  <blockquote class="closing-quote reveal">"She continues to evolve while helping others <em>reconnect with the present moment</em> and their true inner state."</blockquote>
+  <div class="closing-rule"></div>
+  <p class="closing-line reveal d1">Still learning · Still growing · Still becoming</p>
+  <p class="closing-sig reveal d2">SIM</p>
+  <div style="margin-top:4rem;display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap" class="reveal d3">
+    <div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);padding:.9rem 2.2rem;font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.2em;color:var(--gold);font-weight:600">🌿 PRESENCE</div>
+    <div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);padding:.9rem 2.2rem;font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.2em;color:var(--gold);font-weight:600">🕯️ AWARENESS</div>
+    <div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);padding:.9rem 2.2rem;font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.2em;color:var(--gold);font-weight:600">🌸 INNER FREEDOM</div>
+  </div>
+</section>
+
+<!-- Floating WhatsApp Button -->
+<a 
+  href="https://wa.me/918217581238" 
+  target="_blank" 
+  rel="noopener noreferrer"
+  style="
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    background-color: rgba(20, 30, 20, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #C9A84C;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    z-index: 9999;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  "
+  onmouseover="this.style.transform='scale(1.1)'; this.style.borderColor='rgba(201, 168, 76, 0.8)'; this.style.boxShadow='0 0 20px rgba(201, 168, 76, 0.3)';"
+  onmouseout="this.style.transform='scale(1)'; this.style.borderColor='rgba(201, 168, 76, 0.3)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.5)';"
+  aria-label="Chat on WhatsApp"
+  title="Chat on WhatsApp"
+>
+  <svg viewBox="0 0 24 24" fill="currentColor" width="34" height="34">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+  </svg>
+</a>
+
+<script>
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.transform=`translate(${mx-5}px,${my-5}px)`;document.body.style.setProperty('--mx',mx+'px');document.body.style.setProperty('--my',my+'px');});
+(function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;cur2.style.transform=`translate(${rx-5}px,${ry-5}px)`;requestAnimationFrame(loop);})();
+document.querySelectorAll('a,button,.teaching-card,.phil-cell,.tl-dot').forEach(el=>{el.addEventListener('mouseenter',()=>document.body.classList.add('hovering'));el.addEventListener('mouseleave',()=>document.body.classList.remove('hovering'));});
+const prog=document.getElementById('prog');
+window.addEventListener('scroll',()=>{prog.style.width=(window.scrollY/(document.documentElement.scrollHeight-window.innerHeight)*100)+'%';document.getElementById('nav').classList.toggle('solid',window.scrollY>80);});
+let launched=false;setTimeout(()=>{if(!launched)launchExperience();},4500);
+function launchExperience(){if(launched)return;launched=true;document.getElementById('intro').classList.add('exit');}
+window.launchExperience=launchExperience;
+const sc=document.getElementById('heroStars');for(let i=0;i<90;i++){const s=document.createElement('div');s.className='star';const z=Math.random()*2.5+.5;s.style.cssText=`width:${z}px;height:${z}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${Math.random()*4+2}s;--op:${Math.random()*.7+.3};animation-delay:${Math.random()*5}s;`;sc.appendChild(s);}
+const cv=document.getElementById('particleCanvas'),cx=cv.getContext('2d');let W,H;
+function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;}rs();window.addEventListener('resize',rs);
+class P{constructor(){this.r();}r(){this.x=Math.random()*W;this.y=Math.random()*H;this.vx=(Math.random()-.5)*.3;this.vy=(Math.random()-.5)*.3;this.sz=Math.random()*1.5+.3;this.life=0;this.max=200+Math.random()*300;this.g=Math.random()>.7;}u(){this.x+=this.vx;this.y+=this.vy;this.life++;if(this.life>this.max||this.x<0||this.x>W||this.y<0||this.y>H)this.r();}d(){const a=Math.sin(this.life/this.max*Math.PI)*.5;cx.beginPath();cx.arc(this.x,this.y,this.sz,0,Math.PI*2);cx.fillStyle=this.g?`rgba(201,168,76,${a})`:`rgba(242,235,217,${a*.3})`;cx.fill();}}
+const ps=Array.from({length:100},()=>new P());
+(function pl(){cx.clearRect(0,0,W,H);ps.forEach(p=>{p.u();p.d();});requestAnimationFrame(pl);})();
+const tl=document.querySelector('#timeline-section');
+new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)tl.classList.add('tl-active');});},{threshold:.15}).observe(tl);
+const re=document.querySelectorAll('.reveal,.reveal-left,.reveal-right');
+const ob=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');ob.unobserve(x.target);}});},{threshold:.1});
+re.forEach(el=>ob.observe(el));
+document.querySelectorAll('.impact-n[data-count]').forEach(el=>{new IntersectionObserver(e=>{e.forEach(x=>{if(!x.isIntersecting)return;const t=parseInt(x.target.dataset.count);let c=0;const s=t/40;const i=setInterval(()=>{c=Math.min(c+s,t);x.target.textContent=Math.floor(c);if(c>=t)clearInterval(i);},30);});},{threshold:.5}).observe(el);});
+document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();document.querySelector(a.getAttribute('href'))?.scrollIntoView({behavior:'smooth'});});});
+</script>
+</body>
+</html>

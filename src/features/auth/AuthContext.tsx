@@ -14,7 +14,7 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { auth, db } from '../../firebase';
+import { auth, db, functions } from '../../firebase';
 import {
   doc,
   setDoc,
@@ -28,6 +28,7 @@ import {
 import { hasWisdomAccess, isMonitoredEmail } from '../../config/admin';
 import { deductTokens as _deductTokens, buildInitialTokenFields } from '../tokens/tokenService';
 import type { FeatureName, DeductResult } from '../tokens/tokenService';
+import { useTokenToastStore } from '../../stores/tokenToastStore';
 
 // ─── UserProfile ─────────────────────────────────────────────────────────────
 
@@ -42,6 +43,9 @@ export interface UserProfile {
   purchasedCourses: string[];
   subscriptionStatus?: 'ACTIVE' | 'INACTIVE';
   subscriptionId?: string;
+  // Pay-what-you-want Mind Gym membership — extended (not replaced) by each
+  // membership_monthly/yearly purchase; premium while this is in the future.
+  membershipUntil?: any;
   trialUntil?: any;
   createdAt?: any;
   visitCount?: number;
@@ -73,6 +77,11 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   activateTrial: () => Promise<void>;
   isAccessValid: boolean;
+  /** True only for genuinely paid/admin users (active subscription, all-access
+   *  purchase, or admin email) — NOT merely "within the trial window". Paid
+   *  users bypass the token system entirely; trial users do not, even while
+   *  isAccessValid is still true from time remaining. */
+  isPremiumUser: boolean;
   // ── Token system ──
   tokenBalance: number;
   deductTokens: (cost: number, featureName: FeatureName) => Promise<DeductResult>;
@@ -94,6 +103,7 @@ const AuthContext = createContext<AuthContextType>({
   resetPassword: async () => {},
   activateTrial: async () => {},
   isAccessValid: false,
+  isPremiumUser: false,
   tokenBalance: 0,
   deductTokens: async () => ({ success: false, newBalance: 0, error: 'USER_NOT_FOUND' }),
   beginAnonymousPath: async () => {},
@@ -113,19 +123,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ── Activity logger (monitored accounts only) ─────────────────────────────
   const logActivity = async (currentUser: User, type = 'SESSION_START', overrideEmail?: string) => {
     const emailToCheck = overrideEmail ?? currentUser.email;
-    if (!isMonitoredEmail(emailToCheck)) return;
+    // NOTE: every user's session is now logged (previously only monitored/internal
+    // accounts were), so the admin dashboard reflects real usage. It's fire-and-
+    // forget upstream, so it never sits on the login critical path.
     try {
+      // Geo-locate ONLY internal/monitored accounts: the ipapi.co free tier is
+      // rate-limited, and we don't want to store coarse location for the whole
+      // user base. Everyone else logs with location 'Unknown'.
       let location = 'Unknown';
-      try {
-        const locRes = await fetch('https://ipapi.co/json/');
-        if (locRes.ok) {
-          const locData = await locRes.json();
-          location =
-            `${locData.city || ''}, ${locData.region || ''}, ${locData.country_name || ''}`.trim() ||
-            'Unknown';
+      if (isMonitoredEmail(emailToCheck)) {
+        try {
+          const ac = new AbortController();
+          const to = setTimeout(() => ac.abort(), 2500);
+          const locRes = await fetch('https://ipapi.co/json/', { signal: ac.signal });
+          clearTimeout(to);
+          if (locRes.ok) {
+            const locData = await locRes.json();
+            location =
+              `${locData.city || ''}, ${locData.region || ''}, ${locData.country_name || ''}`.trim() ||
+              'Unknown';
+          }
+        } catch (e) {
+          console.warn('Location fetch failed/timed out:', e);
         }
-      } catch (e) {
-        console.warn('Location fetch failed:', e);
       }
       await addDoc(collection(db, 'activity_logs'), {
         userId: currentUser.uid,
@@ -207,6 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 purchasedCourses: d.purchasedCourses ?? [],
                 subscriptionStatus: d.subscriptionStatus,
                 subscriptionId: d.subscriptionId,
+                membershipUntil: d.membershipUntil,
                 trialUntil: d.trialUntil,
                 createdAt: d.createdAt,
                 visitCount: d.visitCount ?? 0,
@@ -255,13 +276,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           try { timezone = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (_) {}
 
           if (!currentUser.isAnonymous) {
-            await updateDoc(userRef, {
+            // These three are all fire-and-forget: the profile is already set
+            // (above), so nothing here should sit on the critical path to a
+            // usable, correctly-entitled session. Awaiting them made logins wait
+            // on a third-party geo-IP fetch (logActivity → ipapi.co) and a
+            // possible Cloud-Function cold start (linkGuestPurchases).
+
+            // Kick off guest-purchase linking FIRST so entitlements resolve as
+            // early as possible — not queued behind the geo fetch below. The
+            // onSnapshot callback re-fires on every profile change, so guard with
+            // a per-session flag: at most one call per browser session (a guest
+            // purchase made between sessions still links on the next login).
+            let alreadyLinkedThisSession = false;
+            try { alreadyLinkedThisSession = sessionStorage.getItem('__guest_link_done') === currentUser.uid; } catch (_) {}
+            if (!alreadyLinkedThisSession) {
+              try { sessionStorage.setItem('__guest_link_done', currentUser.uid); } catch (_) {}
+              import('firebase/functions')
+                .then(({ httpsCallable }) => httpsCallable(functions, 'linkGuestPurchases')())
+                .catch(() => { /* nothing to link, or offline */ });
+            }
+
+            updateDoc(userRef, {
               lastLogin: serverTimestamp(),
               timezone,
               visitCount: increment(1),
             }).catch((err) => console.warn('visitCount increment failed:', err));
 
-            await logActivity(currentUser, 'SESSION_START');
+            // logActivity resolves location via ipapi.co internally; not awaited,
+            // so that fetch stays off the critical path.
+            void logActivity(currentUser, 'SESSION_START');
           } else {
             // Anonymous path — only track returning visits (not the initial sign-up,
             // which is already handled in beginAnonymousPath)
@@ -272,12 +315,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const visitCount = snap.data()?.visitCount ?? 1;
 
               if (entryEmail && visitCount > 1) {
-                // Returning visit — update metadata and log
-                await updateDoc(userRef, {
+                // Returning visit — update metadata and log (both fire-and-forget)
+                updateDoc(userRef, {
                   lastLogin: serverTimestamp(),
                   visitCount: increment(1),
                 }).catch(() => {});
-                await logActivity(currentUser, 'SESSION_START', entryEmail);
+                void logActivity(currentUser, 'SESSION_START', entryEmail);
               }
             } catch (_) {}
           }
@@ -298,12 +341,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Pay-what-you-want membership (extended by membership_monthly/yearly
+  // purchases) — premium while membershipUntil is in the future.
+  const hasActiveMembership = (p: UserProfile | null) => {
+    if (!p?.membershipUntil) return false;
+    const untilMs = typeof p.membershipUntil.toDate === 'function'
+      ? p.membershipUntil.toDate().getTime()
+      : new Date(p.membershipUntil).getTime();
+    return untilMs > Date.now();
+  };
+
   // ── isAccessValid ─────────────────────────────────────────────────────────
   const isAccessValid = React.useMemo(() => {
     if (!user || !profile) return false;
     if (hasWisdomAccess(user.email)) return true;
     if (profile.purchasedCourses?.includes('all_access')) return true;
     if (profile.subscriptionStatus === 'ACTIVE') return true;
+    if (hasActiveMembership(profile)) return true;
 
     // Legacy 3-day trial (existing users)
     if (profile.trialUntil) {
@@ -326,13 +380,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   }, [user, profile]);
 
+  // ── isPremiumUser — genuinely paid/admin only, excludes the trial window ──
+  // (isAccessValid intentionally stays true through the trial period even at
+  // 0 tokens; this narrower flag is what actually exempts someone from the
+  // token system and the full-app lock.)
+  const isPremiumUser = React.useMemo(() => {
+    if (!user || !profile) return false;
+    if (hasWisdomAccess(user.email)) return true;
+    if (profile.purchasedCourses?.includes('all_access')) return true;
+    if (profile.subscriptionStatus === 'ACTIVE') return true;
+    if (hasActiveMembership(profile)) return true;
+    return false;
+  }, [user, profile]);
+
   // ── Computed token balance ────────────────────────────────────────────────
   const tokenBalance = profile?.tokensRemaining ?? 0;
 
   // ── Token deduction (wraps service, injects uid) ──────────────────────────
+  // Centralised here so every call site (voice guidance, journal, practices,
+  // chapters, videos, …) automatically gets: (1) a premium bypass — paid/admin
+  // users never spend tokens, and (2) the "tokens used" toast notification.
   const deductTokens = async (cost: number, featureName: FeatureName): Promise<DeductResult> => {
     if (!user) return { success: false, newBalance: 0, error: 'USER_NOT_FOUND' };
-    return _deductTokens(user.uid, cost, featureName);
+
+    if (isPremiumUser) {
+      return { success: true, newBalance: tokenBalance };
+    }
+
+    const result = await _deductTokens(user.uid, cost, featureName);
+    if (result.success) {
+      useTokenToastStore.getState().show(featureName, cost, result.newBalance);
+    }
+    return result;
   };
 
   // ── Anonymous entry (email-only onboarding) ───────────────────────────────
@@ -455,6 +534,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resetPassword,
         activateTrial,
         isAccessValid,
+        isPremiumUser,
         tokenBalance,
         deductTokens,
         beginAnonymousPath,

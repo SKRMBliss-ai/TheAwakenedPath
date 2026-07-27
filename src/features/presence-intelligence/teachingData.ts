@@ -12,7 +12,7 @@ export const CHAPTERS = [
         subtitle: 'You Are Not Your Mind',
         desc: 'Witness the voice in your head and discover the gap of awareness behind it.',
         icon: Mic,
-        color: '#5EC4B0',
+        color: '#8C7B8A',
         parts: [
             { id: '1.1', title: 'Stop Overthinking', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=S79_XZAaBII'), duration: '14:32' },
             { id: '1.2a', title: "You Are Not Your Thoughts (Here's Proof)", youtubeId: 'CyByxCxMZLk', duration: '11:45' },
@@ -29,7 +29,7 @@ export const CHAPTERS = [
         subtitle: 'The Way Out of Pain',
         desc: 'Discover how consciousness itself dissolves suffering when you stop identifying with the mind.',
         icon: Activity,
-        color: '#36ABA3',
+        color: '#8C7B8A',
         parts: [
             { id: '2.1', title: 'Stop Fighting Reality', youtubeId: extractYouTubeId('https://www.youtube.com/watch?v=hHJAoVYARqw'), duration: '12:10' },
             { id: '2.2', title: 'How to Accept an Awful Moment', youtubeId: '73WJo3-4TxE', duration: '9:45' },
@@ -79,7 +79,7 @@ export const CHAPTERS = [
         subtitle: 'Bonus Sections & Practice',
         desc: 'Deepen your journey with advanced insights and guided practice tools.',
         icon: Sparkles,
-        color: '#ABCEC9',
+        color: '#CFC2CD',
         parts: [
             { id: 'B1', title: 'Why do we forget who we are?', youtubeId: 'zKvSH7H1qo4', duration: '5:24' },
             { id: 'B2', title: 'Stop Overthinking', youtubeId: 'S79_XZAaBII', duration: '14:32' },
