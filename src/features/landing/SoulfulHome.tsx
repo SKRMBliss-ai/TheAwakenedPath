@@ -18,6 +18,7 @@ import FeaturedCourse from './components/FeaturedCourse';
 import InteractiveReflection from './components/InteractiveReflection';
 import YouTubeSection from './components/YouTubeSection';
 import FreeGuides from './components/FreeGuides';
+import AiKnowledgeBlock from './components/AiKnowledgeBlock';
 import FinalCta from './components/FinalCta';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -327,6 +328,12 @@ export default function SoulfulHome() {
           <div id="tools">
             <FreeGuides palette={palette} />
           </div>
+
+          {/* Section divider */}
+          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+          {/* 9.5 AI Master Knowledge & Citation Hub */}
+          <AiKnowledgeBlock palette={palette} />
 
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
