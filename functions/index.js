@@ -172,6 +172,14 @@ const COURSE_PRICES = {
     "you-are-space": 14.99
 };
 
+// COURSE_PRICES mixes real courses with individually-purchasable soundscape
+// tracks. `ownedTracks` is the soundscape library only — courses belong in
+// `purchasedCourses`. List the courses explicitly rather than excluding them
+// one by one, so a new course added above cannot silently leak into the
+// track library (which is how emotion_feelings_course ended up there).
+const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access']);
+const isSoundscapeTrack = (id) => !!COURSE_PRICES[id] && !COURSE_IDS.has(id);
+
 const COURSE_PRICES_INR = {
     "emotion_feelings_course": 415,
     "wisdom_untethered": 799,
@@ -903,7 +911,7 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
                         purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
                         updatedAt: admin.firestore.FieldValue.serverTimestamp()
                     };
-                    if (COURSE_PRICES[courseId] && courseId !== 'wisdom_untethered' && courseId !== 'all_access') {
+                    if (isSoundscapeTrack(courseId)) {
                         updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
                     }
                     await guestRef.set(updateData, { merge: true });
@@ -929,7 +937,7 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 };
                 // If it's a soundscape track, also add to ownedTracks
-                if (COURSE_PRICES[courseId] && courseId !== 'wisdom_untethered' && courseId !== 'all_access') {
+                if (isSoundscapeTrack(courseId)) {
                     updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
                 }
                 await userRef.set(updateData, { merge: true });
