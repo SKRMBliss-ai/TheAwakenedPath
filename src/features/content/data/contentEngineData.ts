@@ -316,6 +316,49 @@ export const ARTICLES_REGISTRY: Record<string, ContentArticle> = {
     ],
     relatedSlugs: ['power-of-now-presence-guide', 'stopping-overthinking-naturally'],
     tags: ['meditation', 'beginners', 'mindfulness', 'mindgym', 'daily-habit']
+  },
+
+  'how-to-stop-overthinking-at-night': {
+    slug: 'how-to-stop-overthinking-at-night',
+    type: 'guide',
+    title: 'How to Stop Overthinking at Night: 4 Somatic Steps to Quiet Your Mind Before Sleep',
+    subtitle: 'Falling asleep when your mind won\'t stop racing. A practical somatic relaxation guide.',
+    description: 'Stuck in bed with racing thoughts? Learn why overthinking spikes at night and how 4 somatic relaxation steps release nighttime anxiety for restful sleep.',
+    category: 'Mindfulness',
+    author: 'Sim Katyal',
+    publishDate: '2026-07-28',
+    readTime: '6 min read',
+    quickAnswer: 'Overthinking spikes at night because without daytime distractions, unprocessed somatic stress signals reach conscious awareness. Relaxing the physical body releases these signals so sleep can occur naturally.',
+    definition: 'Nighttime overthinking is unexpressed emotional tension rising when external sensory input drops.',
+    keyTakeaways: [
+      'Nighttime overthinking is not a sleep disorder—it is unexpressed nervous system tension.',
+      'Trying to force your mind to go quiet creates more pressure. Focus on physical relaxation instead.',
+      'Use 4-7-8 extended exhale breathing to trigger the parasympathetic rest-and-digest system.'
+    ],
+    sections: [
+      {
+        heading: 'Why Does Overthinking Worse at Night?',
+        content: 'During the day, your focus is occupied by work, screens, conversations, and tasks. When you lie in bed in the quiet dark, sensory input drops to zero. Your brain finally has space to process accumulated emotional tension from the day.'
+      },
+      {
+        heading: 'The 4-Step Somatic Wind-Down Ritual',
+        content: 'Follow this 4-step practice when lying in bed:',
+        bulletPoints: [
+          '1. Brain Dump: Write down 3 top thoughts on paper before getting into bed.',
+          '2. Feet Grounding: Direct 100% of your attention down into the soles of your feet for 60 seconds.',
+          '3. 4-7-8 Breathing: Inhale 4s, hold 7s, exhale 8s for 4 full breath cycles.',
+          '4. Body Scan: Soften your jaw, drop your shoulders away from your ears, and release your abdominal muscles.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        q: 'What if I wake up overthinking at 3 AM?',
+        a: 'Do not stay in bed arguing with thoughts. Get up, drink a warm sip of water, do 2 minutes of gentle breathwork in MindGym, and return to bed when sleepy.'
+      }
+    ],
+    relatedSlugs: ['why-do-i-overthink', 'stopping-overthinking-naturally', 'meditation-for-beginners'],
+    tags: ['sleep', 'overthinking', 'anxiety', 'somatic-relaxation', 'breathwork']
   }
 };
 
