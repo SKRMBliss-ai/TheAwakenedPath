@@ -26,7 +26,7 @@
     <meta property="og:site_name" content="Soulful Intelligence Studio" />
     <meta property="og:title" content="Soulful Intelligence — Where Soul Meets Intelligence" />
     <meta property="og:description" content="A studio for a quieter mind and braver ideas — a daily wellbeing app, guided courses, free tools, and digital services. All pay-what-you-feel." />
-    <meta property="og:image" content="https://www.skrmblissai.in/si-logo-light.webp" />
+    <meta property="og:image" content="https://www.skrmblissai.in/og/home.png" />
     <meta property="og:url" content="https://www.skrmblissai.in/" />
     <meta property="og:type" content="website" />
 
@@ -34,7 +34,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Soulful Intelligence — Where Soul Meets Intelligence" />
     <meta name="twitter:description" content="A studio for a quieter mind and braver ideas. Mind Gym, guided courses, free tools — all pay-what-you-feel." />
-    <meta name="twitter:image" content="https://www.skrmblissai.in/si-logo-light.webp" />
+    <meta name="twitter:image" content="https://www.skrmblissai.in/og/home.png" />
 
     <!-- Search Engine Controls -->
     <meta name="robots" content="index, follow" />
@@ -57,11 +57,18 @@
           "https://www.skrmblissai.in/mindgym"
         ],
         "description": "An editorial studio dedicated to presence, emotional intelligence, mindfulness practices, and digital wellbeing apps.",
-        "founder": {
-          "@type": "Person",
-          "name": "Sim Katyal",
-          "jobTitle": "Emotional Intelligence & Presence Guide"
-        }
+        "founder": [
+          {
+            "@type": "Person",
+            "name": "Shruti Khungar",
+            "jobTitle": "Co-Founder"
+          },
+          {
+            "@type": "Person",
+            "name": "Sim Katyal",
+            "jobTitle": "Co-Founder · Emotional Intelligence & Presence Guide"
+          }
+        ]
       },
       {
         "@context": "https://schema.org",
@@ -204,23 +211,10 @@
     </script>
   </head>
   <body>
-    <!-- AI Discovery & Search Context (Hidden from layout, visible to crawlers) -->
-    <section style="display:none;" aria-hidden="true">
-      <h2>Mind Gym: Core Philosophy & Practice</h2>
-      <p>Mind Gym is a specialized spiritual journaling experience and journey designed by Mind Gym. It is based exclusively on the modern spiritual teachings of <strong>Michael A. Singer</strong> (The Untethered Soul) and <strong>Eckhart Tolle</strong> (The Power of Now).</p>
-      
-      <h3>Core Practice: Witness Consciousness</h3>
-      <p>The primary practice is the art of <strong>Witnessing</strong> — becoming the objective observer of the mind, thoughts, and emotions. This is not traditional meditation or "Light & Sound" meditation; it is the practice of <strong>staying behind the noise of the mind</strong>.</p>
-      
-      <ul>
-        <li><strong>Relax and Release:</strong> The Michael Singer method of letting go of inner disturbances (Samskaras) as they arise.</li>
-        <li><strong>Presence:</strong> The Eckhart Tolle method of anchoring attention in the Now to dissolve the egoic mind.</li>
-        <li><strong>Objective Observation:</strong> Identifying as the consciousness that hears the thoughts, rather than the thoughts themselves.</li>
-      </ul>
-      
-      <h3>Project Identity</h3>
-      <p>This project is independent and focused on secular, experiential spiritual growth through the frameworks of 'The Untethered Soul' and 'The Power of Now'. It is hosted at skrmblissai.in/mindgym.</p>
-    </section>
+    <!-- Routes are prerendered to static HTML at build time (scripts/prerender.mjs),
+         so crawlers and AI answer-engines get real per-page content, titles,
+         canonicals and schema. The previous display:none "AI discovery" block was
+         removed — hidden text is a discounted/risky SEO signal and is now redundant. -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

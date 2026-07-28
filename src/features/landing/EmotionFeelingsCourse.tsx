@@ -36,7 +36,6 @@ const FS_ROOT = (file: string) =>
 
 const HERO_PORTRAIT = FS('sim-portrait.webp');
 const SIM_PROFILE   = FS('SimKatyalProfile.webp');
-const COURSE_BANNER = FS('course-banner.webp');
 const JOURNAL_IMG   = FS('reflection-journal.webp');
 const CLOSING_BANNER = FS_ROOT('ClosingBanner.webp');
 
@@ -570,7 +569,7 @@ export default function EmotionFeelingsCourse() {
     title: 'Understanding Feelings & Emotions Course — 7-Episode Guided Journey | SKRM Bliss AI',
     description: 'Break old emotional patterns, dissolve overthinking, and live with clarity, freedom, and ease. A 7-episode guided course by Sim Katyal & Soulful Intelligence Studio.',
     url: 'https://www.skrmblissai.in/feelingsandemotioncourse',
-    image: COURSE_BANNER,
+    image: 'https://www.skrmblissai.in/og/course.png',
     jsonLd: {
       '@context': 'https://schema.org',
       '@graph': [

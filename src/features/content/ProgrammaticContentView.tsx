@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { Sparkles, Clock, ArrowRight, ChevronRight, HelpCircle, Compass } from 'lucide-react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { auth } from '../../firebase';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { ARTICLES_REGISTRY, type ContentArticle } from './data/contentEngineData';
+import { BLOCK_ANALYTICS_EMAILS, IGNORED_EMAILS } from '../../config/admin';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
@@ -27,6 +29,17 @@ export default function ProgrammaticContentView({ slug }: Props) {
   const article: ContentArticle | undefined = ARTICLES_REGISTRY[slug] || ARTICLES_REGISTRY['feelings-vs-emotions'];
 
   useEffect(() => {
+    // Skip tracking for team / admin members so internal visits
+    // don't inflate the Page Visits counter in the Engagement Report.
+    const currentEmail = (auth.currentUser?.email ?? '').toLowerCase();
+    const isTeamVisit =
+      BLOCK_ANALYTICS_EMAILS.includes(currentEmail) ||
+      IGNORED_EMAILS.includes(currentEmail) ||
+      currentEmail.includes('skrm') ||
+      currentEmail.includes('shruti') ||
+      currentEmail.includes('simk');
+    if (isTeamVisit) return;
+
     try {
       addDoc(collection(db, 'activity_logs'), {
         eventType: 'PAGE_VISIT_GUIDE',
@@ -42,6 +55,7 @@ export default function ProgrammaticContentView({ slug }: Props) {
     title: `${article.title} | SKRM Bliss AI`,
     description: article.description,
     url: `https://www.skrmblissai.in/guides/${article.slug}`,
+    image: `https://www.skrmblissai.in/og/guide-${article.slug}.png`,
     jsonLd: {
       '@context': 'https://schema.org',
       '@graph': [

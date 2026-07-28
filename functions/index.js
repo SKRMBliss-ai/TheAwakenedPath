@@ -33,6 +33,10 @@ function isAdminRequest(request) {
     if (tok.email_verified !== true) return false;
     return ADMIN_EMAILS.includes((tok.email || '').toLowerCase());
 }
+// Admin/team addresses must never be suppressed — they monitor and test the
+// system, so the unsubscribe endpoint refuses them and the senders ignore any
+// stale unsubscribed flag on them (self-heals an admin unsubscribed by testing).
+const isAdminEmail = (e) => !!e && ADMIN_EMAILS.includes(String(e).toLowerCase());
 
 // Define the secrets created in Google Cloud Secret Manager
 const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
@@ -394,15 +398,15 @@ function getTodaysPractice() {
 
 // 7 rotating subject lines — one per day of week
 // No emojis in subjects — emoji is a strong Gmail Promotions classifier.
-// Personal, conversational tone signals Primary inbox.
+// Clear, direct — tells the reader what they get, not a riddle.
 const DAILY_SUBJECTS = [
-    'One thought is running your evening. Let\'s see it.',     // Sun
-    'The radio is on. Are you listening — or just hearing?',   // Mon
-    'Five minutes tonight could change tomorrow morning.',     // Tue
-    'The silence behind everything is waiting for you.',       // Wed
-    'The noise does not have to win this evening.',            // Thu
-    'The one who notices the feeling was never the feeling.',  // Fri
-    'Every time you catch yourself — that is the practice.',   // Sat
+    'Your Sunday guide: How to quiet your mind tonight',           // Sun
+    'Today\'s article: Why your brain won\'t stop overthinking',   // Mon
+    'This week\'s practice: 4 steps to feel calmer in 5 minutes', // Tue
+    'New guide: How to stop anxiety before it starts',             // Wed
+    'Today\'s read: The science of being present',                 // Thu
+    'Your Friday guide: How to process emotions without being overwhelmed', // Fri
+    'Weekend practice: Meditation for people who can\'t sit still', // Sat
 ];
 
 // Daily YouTube rotation (Sun->Sat) from Soulful Intelligence Studio.
@@ -1787,10 +1791,12 @@ exports.sendMeditationReminders = onSchedule({
             // Exclude: missing email, unsubscribed users (checks BOTH field names for safety), hardcoded do-not-contact list
             if (
                 !emailAddr ||
-                data.notificationsEnabled === false ||
-                data.unsubscribed === true ||
-                emailAddr.toLowerCase() === "rashmi.purbey@gmail.com" ||
-                emailAddr.toLowerCase() === "gerhard.niemann@gmail.com"
+                (!isAdminEmail(emailAddr) && (
+                    data.notificationsEnabled === false ||
+                    data.unsubscribed === true ||
+                    emailAddr.toLowerCase() === "rashmi.purbey@gmail.com" ||
+                    emailAddr.toLowerCase() === "gerhard.niemann@gmail.com"
+                ))
             ) {
                 skippedCount++;
                 return Promise.resolve();
@@ -1976,6 +1982,25 @@ const FALLBACK_CONTENT = [
     },
 ];
 
+// Rotating "Today's Guide" for the daily email — mirrors the prerendered guide
+// pages in the content engine (src/features/content/data/contentEngineData.ts).
+// Keep slugs in sync with that registry, the sitemap, and scripts/prerender.mjs.
+const DAILY_GUIDES = [
+    { slug: 'feelings-vs-emotions', title: 'Feelings vs Emotions: The Guide to Inner Freedom', teaser: 'The one distinction that changes how every emotion lands.' },
+    { slug: 'witness-consciousness-guide', title: 'Witness Consciousness: The Seat of the Observer', teaser: 'How to watch the mind instead of being run by it.' },
+    { slug: 'stopping-overthinking-naturally', title: 'How to Stop Overthinking: 5 Somatic Rituals', teaser: 'Five body-first ways to quiet a racing mind.' },
+    { slug: 'power-of-now-presence-guide', title: 'The Power of Now: Key Practices for Presence', teaser: 'Simple ways to come back to this moment, today.' },
+    { slug: 'why-do-i-overthink', title: 'Why Do I Overthink Everything?', teaser: 'The causes — and a 5-minute path to relief.' },
+    { slug: 'meditation-for-beginners', title: 'Meditation for Beginners', teaser: 'How to start without sitting still for hours.' },
+    { slug: 'how-to-stop-overthinking-at-night', title: 'How to Stop Overthinking at Night', teaser: '4 somatic steps to quiet the mind before sleep.' },
+];
+function getTodaysGuide() {
+    // Rotate by day-of-year so it's stable within a day and cycles through all guides.
+    const now = new Date();
+    const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    return DAILY_GUIDES[dayOfYear % DAILY_GUIDES.length];
+}
+
 async function getDailyEmailContent(apiKey, video) {
     const videoTitle = video ? video.title : '';
     const videoFocus = video ? video.focus : '';
@@ -2093,6 +2118,8 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
     }
 
     const todayPractice = getTodaysPractice();
+    const todayGuide = getTodaysGuide();
+    const guideUrl = `https://www.skrmblissai.in/guides/${todayGuide.slug}`;
     // Use Gemini-generated subject; fallback to static array
     const todaySubject = daily.subject || DAILY_SUBJECTS[new Date().getDay()];
     const todayPreheader = daily.preheader || '';
@@ -2193,6 +2220,18 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                         </td>
                     </tr>
 
+                    <!-- Today's Guide (rotating article from the content engine) -->
+                    <tr>
+                        <td style="padding:0 48px 24px;">
+                            <div style="padding:24px; background: rgba(184, 151, 58, 0.04); border: 1px solid rgba(184, 151, 58, 0.25); border-radius: 12px;">
+                                <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 12px;font-weight:700;">Today's Guide</p>
+                                <p style="font-size:20px;font-weight:600;color:#1E1912;margin:0 0 8px;line-height:1.35;">${todayGuide.title}</p>
+                                <p style="font-size:15px;line-height:1.7;color:#2E261C;margin:0 0 16px; opacity: 0.95;">${todayGuide.teaser}</p>
+                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=DAILY_REMINDER&email={{USER_EMAIL_TRACK}}&url=${encodeURIComponent(guideUrl)}" style="display:inline-block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8B6A1A;text-decoration:none;font-weight:700;">Read Today's Guide &rarr;</a>
+                            </div>
+                        </td>
+                    </tr>
+
                     <!-- Curiosity Gap -->
                     <tr>
                         <td style="padding:0 48px 32px;text-align:center;">
@@ -2257,7 +2296,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
         // Honour unsubscribes. The send list comes from subscribers.txt, but the
         // unsubscribe handler flags the Firestore user doc — without this check a
         // user who clicked "Unsubscribe" would keep receiving the daily email.
-        if (userData.unsubscribed === true || userData.notificationsEnabled === false) {
+        if ((userData.unsubscribed === true || userData.notificationsEnabled === false) && !isAdminEmail(emailAddr)) {
             console.log(`Skipping ${emailAddr} — unsubscribed.`);
             continue;
         }
@@ -2332,6 +2371,10 @@ ${todayPractice.teaser}
 
 Begin your practice → https://www.skrmblissai.in/mindgym
 
+TODAY'S GUIDE: ${todayGuide.title}
+${todayGuide.teaser}
+Read → ${guideUrl}
+
 ──────────────────────────────
 FREE: Download your 30-Day Now Practice Journal
 → https://www.skrmblissai.in/aboutmindgym
@@ -2394,6 +2437,28 @@ exports.unsubscribe = onRequest({ cors: true }, async (req, res) => {
     if (!userId) return res.status(400).send("Invalid request.");
 
     try {
+        // Look up the email BEFORE mutating, so admin/team accounts can never be
+        // suppressed (e.g. an admin testing the unsubscribe button on themselves).
+        let unscEmail = "Unknown";
+        const preDoc = await db.collection("users").doc(userId).get();
+        if (preDoc.exists) unscEmail = preDoc.data().email || "Unknown";
+
+        if (isAdminEmail(unscEmail)) {
+            // Heal any stale flag and keep the admin subscribed.
+            await db.collection("users").doc(userId).set({
+                notificationsEnabled: true,
+                unsubscribed: false,
+            }, { merge: true });
+            return res.send(`
+                <html><head><title>Admin account</title></head>
+                <body style="font-family: Georgia, serif; text-align: center; padding: 80px 20px; background: #FDFAF4; color: #1C1814;">
+                    <h1 style="font-weight: 300; font-style: italic;">This is a team account.</h1>
+                    <p style="color: #3A342C; margin: 20px 0 40px;">Admin/team addresses stay subscribed so you can monitor and test the emails. Nothing was changed.</p>
+                    <a href="https://www.skrmblissai.in/mindgym" style="display: inline-block; padding: 12px 30px; background: #1C1814; color: #E6C57D; text-decoration: none; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Return to Presence</a>
+                </body></html>
+            `);
+        }
+
         await db.collection("users").doc(userId).set({
             notificationsEnabled: false,
             unsubscribed: true,
@@ -2401,9 +2466,6 @@ exports.unsubscribe = onRequest({ cors: true }, async (req, res) => {
         }, { merge: true });
 
         try {
-            let unscEmail = "Unknown";
-            const userDoc = await db.collection("users").doc(userId).get();
-            if (userDoc.exists) unscEmail = userDoc.data().email || "Unknown";
 
             await db.collection("activity_logs").add({
                 userId: userId,
@@ -2479,35 +2541,50 @@ exports.blastUpdateEmail = onCall({
         throw new HttpsError("permission-denied", "Unauthorized");
     }
 
-    const { chapterTitle, chapterSubtitle, youtubeId } = request.data;
+    const { chapterTitle, chapterSubtitle, articleUrl, videoUrl } = request.data;
     const usersSnap = await db.collection("users").get();
     const transporter = getTransporter();
     const recipientEmails = [];
     
+    const targetArticleUrl = articleUrl || 'https://www.skrmblissai.in/guides/how-to-stop-overthinking-at-night';
+    const targetVideoUrl = videoUrl || 'https://www.skrmblissai.in/videos/ep1-feelings-and-emotions';
+
     // 1. Create Blast History Record
     const blastRef = await db.collection("email_blasts").add({
-        subject: `Course Update: ${chapterTitle}`,
+        subject: `Daily Presence Guide: ${chapterTitle}`,
         chapterTitle,
         chapterSubtitle,
+        articleUrl: targetArticleUrl,
+        videoUrl: targetVideoUrl,
         sentAt: admin.firestore.FieldValue.serverTimestamp(),
         totalRecipients: usersSnap.size,
         adminEmail: request.auth.token.email,
-        type: 'COURSE_UPDATE_BLAST'
+        type: 'DAILY_ARTICLE_BLAST'
     });
 
     const updateTemplate = (recipientEmail, blastId) => `
-        <div style="font-family: Arial, sans-serif; padding: 40px; background: #0C0910; color: #FDFAF4; border: 1px solid rgba(184,151,58,0.2);">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <span style="font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.6;">Course Update</span>
-                <h1 style="color: #E6C57D; margin-top: 10px;">${chapterTitle}</h1>
+        <div style="font-family: Georgia, serif; padding: 40px; background: #0C0910; color: #FDFAF4; border: 1px solid rgba(184,151,58,0.2); max-width: 520px; margin: auto; border-radius: 16px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <span style="font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E6C57D; opacity: 0.85;">Daily Presence &amp; Mindfulness Guide</span>
+                <h1 style="color: #E6C57D; margin-top: 10px; font-weight: 400; font-size: 24px;">${chapterTitle}</h1>
             </div>
-            <p>A new chapter has been added to your course: <strong>${chapterTitle}</strong></p>
-            <p>${chapterSubtitle}</p>
-            <div style="text-align: center; margin-top: 40px;">
-                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}&url=${encodeURIComponent('https://www.skrmblissai.in/mindgym/courses/wisdom-untethered')}" style="display: inline-block; padding: 15px 40px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 1px; font-weight: bold;">View Course →</a>
+
+            <p style="font-size: 14.5px; line-height: 1.65; color: #E0D6C3; margin-bottom: 28px;">${chapterSubtitle}</p>
+            
+            <!-- READ DAILY ARTICLE BUTTON -->
+            <div style="text-align: center; margin-top: 24px; margin-bottom: 28px;">
+                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}&url=${encodeURIComponent(targetArticleUrl)}" style="display: inline-block; padding: 14px 36px; background: #E6C57D; color: #1C1814; text-decoration: none; font-size: 14px; letter-spacing: 1px; font-weight: bold; border-radius: 999px;">Read Today's Article Guide →</a>
             </div>
-            <p style="text-align: center; margin-top: 20px;">
-                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=${blastId}" style="color: rgba(253, 250, 244, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from these updates</a>
+
+            <!-- 60-SECOND TEASER VIDEO CALLOUT -->
+            <div style="margin-top: 32px; padding: 20px; background: rgba(230,197,125,0.08); border-radius: 14px; border: 1px solid rgba(230,197,125,0.2); text-align: center;">
+                <p style="font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase; color: #E6C57D; margin: 0 0 6px; font-weight: bold;">🎬 60-Second Masterclass Teaser</p>
+                <p style="font-size: 13px; color: #FDFAF4; margin: 0 0 14px;">Watch Episode 1: "Feelings vs Emotions: How We Learned to Hide Our Feelings"</p>
+                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}&url=${encodeURIComponent(targetVideoUrl)}" style="display: inline-block; padding: 10px 24px; background: transparent; border: 1px solid #E6C57D; color: #E6C57D; text-decoration: none; font-size: 12px; font-weight: bold; border-radius: 999px;">Watch 60s Video Teaser 🍿</a>
+            </div>
+
+            <p style="text-align: center; margin-top: 32px;">
+                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=${blastId}" style="color: rgba(253, 250, 244, 0.4); text-decoration: none; font-size: 10.5px;">Unsubscribe from daily wisdom updates</a>
             </p>
             <!-- TRACKING PIXEL -->
             <img src="https://us-central1-awakened-path-2026.cloudfunctions.net/emailOpenTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}" width="1" height="1" style="display:none !important;" />
@@ -2516,15 +2593,29 @@ exports.blastUpdateEmail = onCall({
 
     for (const userDoc of usersSnap.docs) {
         const userData = userDoc.data();
-        if (!emailAddr || userData.notificationsEnabled === false) continue;
-        
-        await transporter.sendMail({
-            from: '"Mind Gym" <connect@skrmblissai.in>',
-            to: emailAddr,
-            subject: `Course Update: ${chapterTitle}`,
-            html: updateTemplate(emailAddr, blastRef.id).replace(/{{USER_ID}}/g, userData._id || emailAddr)
-        });
-        recipientEmails.push(emailAddr);
+        const recipientEmail = (userData.email || '').trim();
+
+        // Skip: no email, unsubscribed, notifications disabled, or team/internal accounts
+        if (!recipientEmail) continue;
+        if (userData.unsubscribed === true) continue;
+        if (userData.notificationsEnabled === false) continue;
+        if (['skrmblissai@gmail.com', 'shrutikhungar@gmail.com', 'simkatyal1@gmail.com',
+             'smriti.duggal@gmail.com', 'rashmi.purbey@gmail.com'].includes(recipientEmail.toLowerCase())) continue;
+
+        // Use Firestore doc ID as userId so unsubscribe handler can find the right document
+        const userId = userDoc.id;
+
+        try {
+            await transporter.sendMail({
+                from: '"Mind Gym" <connect@skrmblissai.in>',
+                to: recipientEmail,
+                subject: `Daily Presence Guide: ${chapterTitle}`,
+                html: updateTemplate(recipientEmail, blastRef.id).replace(/{{USER_ID}}/g, userId)
+            });
+            recipientEmails.push(recipientEmail);
+        } catch (sendErr) {
+            console.error(`Failed to send to ${recipientEmail}:`, sendErr.message);
+        }
     }
 
     // Update blast with recipients
@@ -2579,9 +2670,12 @@ exports.emailClickTracker = onRequest({ cors: true }, async (req, res) => {
 
     // Detect link type for richer logging
     const isYouTube = typeof target === 'string' && (target.includes('youtube.com') || target.includes('youtu.be'));
-    const activityType = isYouTube ? 'EMAIL_YOUTUBE_CLICK' : 'EMAIL_CTA_CLICK';
+    const isGuideArticle = typeof target === 'string' && target.includes('/guides/');
+    const activityType = isYouTube ? 'EMAIL_YOUTUBE_CLICK' : isGuideArticle ? 'EMAIL_ARTICLE_CLICK' : 'EMAIL_CTA_CLICK';
     const clickDetails = isYouTube
         ? `Clicked YouTube video link from email${blastId ? ` (blast ${blastId})` : ''}`
+        : isGuideArticle
+        ? `Clicked Daily Article Link from email → ${target}`
         : `Clicked CTA button in email${blastId ? ` (blast ${blastId})` : ''} → ${target}`;
 
     if (blastId && email) {

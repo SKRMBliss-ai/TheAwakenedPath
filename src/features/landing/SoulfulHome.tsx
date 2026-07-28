@@ -91,7 +91,7 @@ export default function SoulfulHome() {
     title: 'Soulful Intelligence — Where Soul Meets Intelligence | SKRM Bliss AI',
     description: 'A studio for a quieter mind and braver ideas. Home of Mind Gym, guided courses on emotions and presence, free wellbeing tools, and pay-what-you-feel digital services for brands & startups.',
     url: 'https://www.skrmblissai.in',
-    image: SI_LOGO,
+    image: 'https://www.skrmblissai.in/og/home.png',
     jsonLd: {
       '@context': 'https://schema.org',
       '@graph': [

@@ -320,7 +320,8 @@ export function EmotionFeelingsCourseView({ owns = false, adminPreview = false, 
   usePageSeo({
     title: 'Feelings & Emotions Course — Guided Video Lessons | Mind Gym',
     description: 'A 7-episode guided journey inside Mind Gym. Understand emotional conditioning, break reactivity, and cultivate presence.',
-    url: 'https://www.skrmblissai.in/mindgym',
+    url: 'https://www.skrmblissai.in/feelingsandemotioncourse',
+    image: 'https://www.skrmblissai.in/og/course.png',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Course',

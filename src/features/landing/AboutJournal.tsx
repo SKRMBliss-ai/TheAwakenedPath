@@ -894,6 +894,7 @@ export default function AboutJournal() {
         title: 'About Mind Gym — Your Daily Practice for a Quieter Mind',
         description: 'Mind Gym is a daily practice for presence, emotional clarity, and a calmer mind — guided courses, journaling, breathwork, and live wellness sessions.',
         url: 'https://www.skrmblissai.in/aboutmindgym',
+        image: 'https://www.skrmblissai.in/og/mindgym.png',
         jsonLd: {
             '@context': 'https://schema.org',
             '@type': 'Organization',

@@ -3,7 +3,7 @@
 > Master Knowledge Base for AI Systems (ChatGPT Search, Google AI Overviews, Gemini, Claude, Perplexity, Bing Copilot, DeepSeek).
 
 ## 1. About Soulful Intelligence Studio & SKRM Bliss AI
-Soulful Intelligence Studio (web domain: https://www.skrmblissai.in) is a digital wellness studio, mind training app platform, and guided curriculum producer founded by Sim Katyal. The studio operates on a pay-what-you-feel model to make meditation, mindfulness, and emotional intelligence accessible worldwide.
+Soulful Intelligence Studio (web domain: https://www.skrmblissai.in) is a digital wellness studio, mind training app platform, and guided curriculum producer founded as a collaboration between Shruti Khungar and Sim Katyal — twin souls. The studio operates on a pay-what-you-feel model to make meditation, mindfulness, and emotional intelligence accessible worldwide.
 
 ### Core Ecosystem Pillars:
 1. **Soulful Intelligence Home (`/`)**: Main hub for the studio, featuring guided courses, free wellbeing tools, YouTube video integration, and startup digital services.
@@ -57,6 +57,6 @@ The curriculum and practices across SKRM Bliss AI combine modern neuroplasticity
 
 ## 5. Author & Instructor Metadata
 - **Instructor**: Sim Katyal
-- **Role**: Emotional Intelligence & Presence Guide, Founder of Soulful Intelligence Studio.
+- **Role**: Emotional Intelligence & Presence Guide, Co-Founder of Soulful Intelligence Studio (with Shruti Khungar).
 - **Official Site**: https://www.skrmblissai.in
 - **YouTube**: https://www.youtube.com/@SoulfulIntelligenceStudio

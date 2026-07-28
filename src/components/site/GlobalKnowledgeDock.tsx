@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { Search, Compass, BookOpen, Sparkles, X, ChevronRight, Play, Heart, ArrowRight } from 'lucide-react';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { searchKnowledgeBase, type SearchResultItem, GLOSSARY_REGISTRY, LEARNING_JOURNEYS } from '../../features/content/data/contentEngineData';
+import { useAuth } from '../../features/auth/AuthContext';
+import { isAdminEmail } from '../../config/admin';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
 
 export default function GlobalKnowledgeDock() {
+  const { user } = useAuth();
   const { palette } = useSiteTheme();
   const isDark = palette.isDark;
   const ink = isDark ? '#EDE9E3' : '#2A2118';
@@ -42,44 +45,20 @@ export default function GlobalKnowledgeDock() {
 
   return (
     <>
-      {/* Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Open Knowledge Dock & Search (Ctrl+K)"
+        className="group fixed bottom-[80px] lg:bottom-6 left-4 lg:left-[296px] z-[90] flex items-center gap-0 p-3 hover:gap-2.5 hover:px-4 rounded-full text-[#FFDF9E] border border-[#FFDF9E]/30 shadow-[0_8px_24px_rgba(0,0,0,0.35)] cursor-pointer font-sans text-xs font-bold backdrop-blur-xl transition-all duration-300 hover:scale-105"
         style={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          zIndex: 90,
-          background: 'linear-gradient(135deg, #4A3260 0%, #2A1B38 100%)',
-          color: '#FFDF9E',
-          border: '1px solid rgba(255,223,158,0.35)',
-          borderRadius: 999,
-          padding: '12px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          boxShadow: '0 12px 36px rgba(0,0,0,0.4)',
-          cursor: 'pointer',
-          fontFamily: SANS,
-          fontSize: 13,
-          fontWeight: 700,
-          backdropFilter: 'blur(12px)',
-          transition: 'all 0.2s ease',
+          background: 'linear-gradient(135deg, #3A234E 0%, #1E122A 100%)',
         }}
+        title="Knowledge Hub & Search (⌘K)"
       >
-        <Compass size={18} color="#FFDF9E" />
-        <span className="si-dock-text">Knowledge Dock</span>
-        <span
-          style={{
-            background: 'rgba(255,255,255,0.15)',
-            padding: '2px 7px',
-            borderRadius: 6,
-            fontSize: 10,
-            color: '#fff',
-            fontWeight: 800,
-          }}
-        >
+        <Compass size={18} color="#FFDF9E" className="flex-shrink-0 transition-transform duration-300 group-hover:rotate-45" />
+        <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 group-hover:max-w-[140px] group-hover:opacity-100 transition-all duration-300 text-[11px] uppercase tracking-wider text-[#FFDF9E]">
+          Knowledge Hub
+        </span>
+        <span className="hidden group-hover:inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold text-white/80 bg-white/10 transition-colors">
           ⌘K
         </span>
       </button>
@@ -176,6 +155,31 @@ export default function GlobalKnowledgeDock() {
                   {tab === 'search' ? '🔍 Search' : tab === 'journeys' ? '📚 Journeys' : '📖 Glossary'}
                 </button>
               ))}
+              {isAdminEmail(user?.email) && (
+                <a
+                  href="/editorial"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: 999,
+                    border: '1px solid rgba(196,145,58,0.4)',
+                    background: 'rgba(196,145,58,0.15)',
+                    color: gold,
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    fontFamily: SANS,
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    marginLeft: 'auto',
+                  }}
+                >
+                  <span>🧠 Editorial Hub</span>
+                </a>
+              )}
             </div>
 
             {/* Tab 1: Instant Search Results or Quick Actions */}

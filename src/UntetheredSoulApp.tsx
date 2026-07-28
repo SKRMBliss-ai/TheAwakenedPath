@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy } from 'lucide-react';
+import { usePageSeo } from './lib/seo';
 import { MeditationHomeCard } from './features/meditation/MeditationHomeCard';
 import { db } from './firebase';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -524,6 +525,13 @@ export default function UntetheredApp() {
   const { user: currentUser, profile, loading, signOut, isAccessValid, isPremiumUser, tokenBalance, activateTrial, deductTokens } = useAuth();
   const { theme } = useTheme();
   const { musicUrl } = useVoiceStatus();
+
+  usePageSeo({
+    title: 'Mind Gym — Daily Meditation, Breathwork & Witness Journaling | SKRM Bliss AI',
+    description: 'A daily practice space for mindfulness, presence, guided breathwork, and witness reflection journaling. Train your mind in 5 minutes a day.',
+    url: 'https://www.skrmblissai.in/mindgym',
+    image: 'https://www.skrmblissai.in/og/mindgym.png',
+  });
 
   const membershipInfo = useMemo(() => {
     if (!profile) return null;
@@ -1229,7 +1237,7 @@ export default function UntetheredApp() {
       )}
 
       <aside className={cn(
-        "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70] overflow-hidden",
+        "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70]",
         "border-r border-[var(--border-default)]",
         "backdrop-blur-2xl px-2",
         "transition-transform duration-500",
@@ -1246,24 +1254,22 @@ export default function UntetheredApp() {
       }}>
 
         {/* ── Logo ── */}
-        <div className="flex items-center justify-between px-4 py-[1.5vh] flex-shrink-0 min-w-0 w-full overflow-hidden">
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <MindGymLogo
-              variant="full"
-              size="sm"
-              animated={true}
-              onClick={() => setActiveTab('home')}
-              className="group"
-            />
-          </div>
-          {/* Desktop collapse button */}
+        <div className="flex items-center justify-between px-3 py-[1.5vh] flex-shrink-0 w-full">
+          <MindGymLogo
+            variant="full"
+            size="sm"
+            animated={true}
+            onClick={() => setActiveTab('home')}
+            className="group"
+          />
+          {/* Desktop collapse button — sits at absolute far right */}
           <button
             onClick={() => setIsSidebarCollapsed(true)}
-            className="hidden lg:flex w-8 h-8 rounded-xl items-center justify-center transition-all hover:bg-[var(--bg-base)] group flex-shrink-0 ml-1"
+            className="hidden lg:flex w-7 h-7 rounded-xl items-center justify-center transition-all hover:bg-[var(--bg-base)] flex-shrink-0 ml-2 group"
             title="Collapse sidebar"
             aria-label="Collapse sidebar"
           >
-            <ChevronLeft size={15} style={{ color: 'var(--text-muted)' }} className="group-hover:scale-110 transition-transform" />
+            <ChevronLeft size={14} style={{ color: 'var(--text-muted)' }} className="group-hover:scale-110 transition-transform" />
           </button>
           {/* Mobile close button */}
           <button

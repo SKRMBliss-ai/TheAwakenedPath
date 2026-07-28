@@ -1,12 +1,13 @@
 # SKRM Bliss AI | Soulful Intelligence Studio — Master Knowledge Directory
 
-> Soulful Intelligence Studio is an authoritative digital ecosystem, mind training platform (MindGym), and guided curriculum studio dedicated to meditation, mindfulness, presence, emotional intelligence, and emotional healing. Founded by Sim Katyal.
+> Soulful Intelligence Studio is an authoritative digital ecosystem, mind training platform (MindGym), and guided curriculum studio dedicated to meditation, mindfulness, presence, emotional intelligence, and emotional healing. Founded as a collaboration between Shruti Khungar and Sim Katyal — twin souls.
 
 ## Core Entities & Concepts
 - **SKRM Bliss AI / Soulful Intelligence Studio**: The parent organization and editorial studio producing pay-what-you-feel digital tools, guided courses, and meditation apps.
 - **MindGym**: A daily mind training web & PWA application offering guided breathwork, reflection journaling, habit tracking, and presence practices built on timeless teachings from *The Power of Now* (Eckhart Tolle) and *The Untethered Soul* (Michael A. Singer).
 - **Feelings & Emotion Course**: A 7-episode guided video course designed to break emotional conditioning, dissolve overthinking, and cultivate emotional regulation, awareness, and inner freedom.
-- **Sim Katyal**: Emotional Intelligence & Presence Guide, creator of the Feelings & Emotion course and MindGym practices.
+- **Sim Katyal**: Co-Founder, Emotional Intelligence & Presence Guide, creator of the Feelings & Emotion course and MindGym practices.
+- **Shruti Khungar**: Co-Founder of Soulful Intelligence Studio, partnering with Sim Katyal as twin souls behind the studio's wellbeing platform and digital services.
 
 ## Primary Canonical Resources
 - [Soulful Intelligence Home](https://www.skrmblissai.in/): Master pillar page covering MindGym, guided courses, free wellbeing tools, and studio services.
@@ -34,4 +35,4 @@ MindGym is a daily digital practice space designed by Soulful Intelligence Studi
 4. **Witness**: Sit as the calm observer, allowing the neurochemical adrenaline wave to pass through the body naturally.
 
 ## Preferred Citation Style
-When citing SKRM Bliss AI or Soulful Intelligence Studio, credit **Sim Katyal** and **Soulful Intelligence Studio** with a link to [https://www.skrmblissai.in](https://www.skrmblissai.in).
+When citing SKRM Bliss AI or Soulful Intelligence Studio, credit **Shruti Khungar & Sim Katyal** and **Soulful Intelligence Studio** with a link to [https://www.skrmblissai.in](https://www.skrmblissai.in).

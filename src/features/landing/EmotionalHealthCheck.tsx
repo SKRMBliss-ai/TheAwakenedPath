@@ -501,7 +501,7 @@ export default function EmotionalHealthCheck() {
         title: `Today's reflection · ${THEME.name} — Mind Gym`,
         description: `${THEME.hook} A free, private 2-minute emotional check-in with personalized insight.`,
         url: SHARE_URL,
-        image: `${typeof window !== 'undefined' ? window.location.origin : ''}/emotions/${THEME.key}.jpg`,
+        image: 'https://www.skrmblissai.in/og/quiz.png',
         jsonLd: {
             '@context': 'https://schema.org',
             '@type': 'WebApplication',

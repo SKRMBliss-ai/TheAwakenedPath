@@ -28,7 +28,7 @@ export function MindGymLogo({
 
   return (
     <div
-      className={cn('flex items-center gap-2.5 cursor-pointer select-none min-w-0 overflow-hidden', className)}
+      className={cn('flex items-center gap-2 cursor-pointer select-none flex-shrink-0', className)}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
     >
@@ -195,33 +195,33 @@ function LogoMark({ size, animated }: { size: number; animated: boolean }) {
 // ─────────────────────────────────────────────
 function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
   const titleSize = {
-    sm: 'text-[17px] sm:text-[18px]',
-    md: 'text-[21px]',
-    lg: 'text-[26px]',
+    sm: 'text-[13px]',
+    md: 'text-[17px] sm:text-[19px]',
+    lg: 'text-[22px] sm:text-[24px]',
   }[size];
 
-  const subFontSize = { sm: '8.5px', md: '10px', lg: '11.5px' }[size];
+  const subFontSize = { sm: '7px', md: '8.5px', lg: '10px' }[size];
 
   return (
-    <div className="flex flex-col gap-0.5 ml-0.5 min-w-0 flex-1 overflow-hidden">
-      {/* Main wordmark — clean, elegant serif, fitting perfectly within boundary */}
+    <div className="flex flex-col gap-0.5 ml-1 flex-shrink-0 pr-1">
+      {/* Main wordmark — clean, elegant serif, fitting perfectly without truncation */}
       <h1
         className={cn(
           titleSize,
-          'font-serif font-medium text-[var(--text-primary)] leading-[1.15] truncate max-w-full',
+          'font-serif font-medium text-[var(--text-primary)] leading-[1.1] whitespace-nowrap',
           'group-hover:text-[var(--accent-primary)] transition-colors duration-300'
         )}
-        style={{ letterSpacing: '0.01em' }}
+        style={{ letterSpacing: '0.02em' }}
       >
         Mind Gym
       </h1>
 
-      {/* Tagline — tight tracking to prevent overflow */}
+      {/* Tagline — tight tracking to fit perfectly */}
       <span
-        className="font-sans font-bold uppercase text-[var(--accent-primary)] truncate max-w-full"
+        className="font-sans font-bold uppercase text-[var(--accent-primary)] whitespace-nowrap"
         style={{
           fontSize: subFontSize,
-          letterSpacing: '0.14em',
+          letterSpacing: '0.12em',
           opacity: 0.85,
           lineHeight: 1.1,
         }}

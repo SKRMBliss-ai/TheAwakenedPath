@@ -39,6 +39,8 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
     // Blast Form State
     const [blastTitle, setBlastTitle] = useState('');
     const [blastSubtitle, setBlastSubtitle] = useState('');
+    const [blastArticleUrl, setBlastArticleUrl] = useState('https://www.skrmblissai.in/guides/how-to-stop-overthinking-at-night');
+    const [blastVideoUrl, setBlastVideoUrl] = useState('https://www.skrmblissai.in/videos/ep1-feelings-and-emotions');
     const [isBlasting, setIsBlasting] = useState(false);
     const [toast, setToast] = useState('');
 
@@ -369,9 +371,11 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             const blastFn = httpsCallable(functions, 'blastUpdateEmail');
             await blastFn({
                 chapterTitle: blastTitle,
-                chapterSubtitle: blastSubtitle
+                chapterSubtitle: blastSubtitle,
+                articleUrl: blastArticleUrl,
+                videoUrl: blastVideoUrl
             });
-            setToast('Course update email sent successfully.');
+            setToast('Daily article update email sent successfully.');
             setBlastTitle('');
             setBlastSubtitle('');
             setTimeout(() => setToast(''), 4000);
@@ -461,10 +465,10 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             CONTACT_WHATSAPP_CLICK: 'tapped WhatsApp',
             CONTACT_EMAIL_CLICK: 'tapped the email link',
             TEACHER_STORY_CLICK: "opened the teacher's story",
-            JOURNAL_DOWNLOAD: 'downloaded the journal',
             EMAIL_OPEN: 'opened an email',
+            EMAIL_ARTICLE_CLICK: 'clicked the article guide link in email 📖',
             EMAIL_CTA_CLICK: 'clicked a link in an email',
-            EMAIL_YOUTUBE_CLICK: 'clicked YouTube in an email',
+            EMAIL_YOUTUBE_CLICK: 'clicked YouTube in an email 🍿',
             EMAIL_UNSUBSCRIBED: 'unsubscribed',
             LOGIN: 'signed in',
             SESSION_START: 'is present in the app',
@@ -712,6 +716,15 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     >
                                         Errors
                                     </button>
+                                    <a
+                                        href="/editorial"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-black border border-[var(--accent-primary)]/40 flex items-center gap-1.5"
+                                    >
+                                        <span>Editorial 🧠</span>
+                                        <ExternalLink className="w-3 h-3" />
+                                    </a>
                                 </div>
 
                                 <button
@@ -1384,23 +1397,41 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                         </div>
                                     </div>
 
-                                    <div className="space-y-12 py-4">
+                                    <div className="space-y-6 py-4">
                                         <div className="relative p-6 rounded-2xl bg-[var(--bg-surface)]/30 border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 transition-colors">
                                             <WhisperInput 
-                                                label="1. Email Subject / Chapter Title"
-                                                placeholder="Example: New Lesson added: The Observer"
+                                                label="1. Email Subject / Daily Article Title"
+                                                placeholder="Example: How to Stop Overthinking at Night"
                                                 value={blastTitle}
                                                 onChange={setBlastTitle}
                                             />
                                         </div>
                                         <div className="relative p-6 rounded-2xl bg-[var(--bg-surface)]/30 border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 transition-colors">
                                             <WhisperInput 
-                                                label="2. Description / Details"
-                                                placeholder="Example: We have added a new deep-dive lesson on the Witnessing Presence."
+                                                label="2. Summary / Key Takeaway"
+                                                placeholder="Example: Discover 4 simple somatic steps to calm your nervous system before sleep..."
                                                 multiline
                                                 value={blastSubtitle}
                                                 onChange={setBlastSubtitle}
                                             />
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="relative p-6 rounded-2xl bg-[var(--bg-surface)]/30 border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 transition-colors">
+                                                <WhisperInput 
+                                                    label="3. Article Post Link (Public, Zero Login)"
+                                                    placeholder="https://www.skrmblissai.in/guides/how-to-stop-overthinking-at-night"
+                                                    value={blastArticleUrl}
+                                                    onChange={setBlastArticleUrl}
+                                                />
+                                            </div>
+                                            <div className="relative p-6 rounded-2xl bg-[var(--bg-surface)]/30 border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 transition-colors">
+                                                <WhisperInput 
+                                                    label="4. 60s Video Teaser Link"
+                                                    placeholder="https://www.skrmblissai.in/videos/ep1-feelings-and-emotions"
+                                                    value={blastVideoUrl}
+                                                    onChange={setBlastVideoUrl}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 

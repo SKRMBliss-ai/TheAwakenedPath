@@ -23,6 +23,7 @@ export default function ContentHub() {
     title: 'Mindfulness & Presence Knowledge Hub | SKRM Bliss AI',
     description: 'Explore authoritative guides, masterclasses, and definitions on meditation, presence, witness consciousness, and emotional regulation by Soulful Intelligence Studio.',
     url: 'https://www.skrmblissai.in/guides',
+    image: 'https://www.skrmblissai.in/og/guides.png',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',

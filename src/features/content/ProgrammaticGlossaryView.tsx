@@ -27,6 +27,7 @@ export default function ProgrammaticGlossaryView({ termSlug }: Props) {
     title: `${term.term} — Meaning, Principles & Daily Practice | SKRM Bliss AI`,
     description: term.shortDefinition,
     url: `https://www.skrmblissai.in/glossary/${term.slug}`,
+    image: 'https://www.skrmblissai.in/og/guides.png',
     jsonLd: {
       '@context': 'https://schema.org',
       '@graph': [
