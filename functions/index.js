@@ -398,15 +398,18 @@ function getTodaysPractice() {
 
 // 7 rotating subject lines — one per day of week
 // No emojis in subjects — emoji is a strong Gmail Promotions classifier.
-// Clear, direct — tells the reader what they get, not a riddle.
+// Personal, conversational tone signals Primary inbox.
+// These must NOT name a specific article: the subject rotates by day-of-week
+// while the featured guide rotates by day-of-year, so any title promised here
+// would systematically not match the guide actually in the email.
 const DAILY_SUBJECTS = [
-    'Your Sunday guide: How to quiet your mind tonight',           // Sun
-    'Today\'s article: Why your brain won\'t stop overthinking',   // Mon
-    'This week\'s practice: 4 steps to feel calmer in 5 minutes', // Tue
-    'New guide: How to stop anxiety before it starts',             // Wed
-    'Today\'s read: The science of being present',                 // Thu
-    'Your Friday guide: How to process emotions without being overwhelmed', // Fri
-    'Weekend practice: Meditation for people who can\'t sit still', // Sat
+    'One thought is running your evening. Let\'s see it.',     // Sun
+    'The radio is on. Are you listening — or just hearing?',   // Mon
+    'Five minutes tonight could change tomorrow morning.',     // Tue
+    'The silence behind everything is waiting for you.',       // Wed
+    'The noise does not have to win this evening.',            // Thu
+    'The one who notices the feeling was never the feeling.',  // Fri
+    'Every time you catch yourself — that is the practice.',   // Sat
 ];
 
 // Daily YouTube rotation (Sun->Sat) from Soulful Intelligence Studio.
