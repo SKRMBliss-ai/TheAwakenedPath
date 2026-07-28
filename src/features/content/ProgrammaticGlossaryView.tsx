@@ -19,7 +19,11 @@ export default function ProgrammaticGlossaryView({ termSlug }: Props) {
   const bg = isDark ? '#0D0A12' : '#F9F5EF';
   const cardBg = isDark ? 'rgba(26,20,30,0.7)' : 'rgba(255,255,255,0.85)';
   const borderC = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(196,181,160,0.35)';
-  const gold = '#C4913A';
+  // #C4913A is tuned for the dark background (6.98:1). On the light cream it
+  // drops to 2.59:1, so small uppercase labels using this token failed WCAG AA.
+  // #8B6A1A is the same amber family (already the gold used in the daily email)
+  // and reaches 4.63:1 on #F9F5EF.
+  const gold = isDark ? '#C4913A' : '#8B6A1A';
 
   const term: GlossaryTerm = GLOSSARY_REGISTRY[termSlug] || GLOSSARY_REGISTRY['presence'];
 

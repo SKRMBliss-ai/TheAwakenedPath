@@ -68,13 +68,13 @@ function DottedPath({ isDark }: { isDark: boolean }) {
 export default function TinyTransformation({ palette }: { palette: Palette }) {
   const isDark = palette.isDark;
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78';
+  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
 return (
     <section
       className="si-reveal"
       style={{ padding: 'clamp(64px, 8vw, 96px) clamp(24px, 6vw, 96px)', textAlign: 'center', position: 'relative', zIndex: 2 }}
     >
-      <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 16 }}>
+      <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 16 }}>
         The Science of Small Shifts
       </p>
       <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3vw, 42px)', fontWeight: 400, color: ink, marginBottom: 56, letterSpacing: '-0.01em' }}>
@@ -111,7 +111,7 @@ return (
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
           }}>
             <MindGymLogo size={48} />
-            <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: isDark ? 'rgba(237,233,227,0.5)' : '#9C8B78', margin: 0 }}>5 minutes</p>
+            <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: isDark ? 'rgba(237,233,227,0.5)' : '#7A5F44', margin: 0 }}>5 minutes</p>
             <p style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, margin: 0 }}>of Mind Gym</p>
           </div>
         </div>

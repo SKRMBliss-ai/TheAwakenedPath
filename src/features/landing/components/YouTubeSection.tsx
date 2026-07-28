@@ -107,7 +107,7 @@ function PlayCircle({ size = 52, dark = false }: { size?: number; dark?: boolean
 }
 
 function FeaturedCard({ video, isDark }: { video: Video; isDark: boolean }) {
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78';
+  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
 
   return (
     <a
@@ -185,7 +185,7 @@ function FeaturedCard({ video, isDark }: { video: Video; isDark: boolean }) {
 
 function SmallCard({ video, isDark }: { video: Video; isDark: boolean }) {
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78';
+  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
 
   return (
     <a
@@ -254,7 +254,7 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
   const [status, setStatus] = useState<'loading' | 'ready' | 'fallback'>('loading');
   const isDark = palette.isDark;
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78';
+  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
 
   useEffect(() => {
     let cancelled = false;
@@ -297,7 +297,7 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 36, gap: 20, flexWrap: 'wrap' }}>
         <div>
-          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
+          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 14 }}>
             From the Studio
           </p>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3vw, 42px)', fontWeight: 400, color: ink, marginBottom: 8, letterSpacing: '-0.01em' }}>
@@ -374,12 +374,12 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
           onClick={() => onTrack?.('HOME_YOUTUBE_CHANNEL')}
           style={{
             fontFamily: SANS, fontSize: 13, fontWeight: 700,
-            color: isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78',
+            color: isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44',
             textDecoration: 'none', borderBottom: '1px solid currentColor',
             paddingBottom: 2, transition: 'color 0.2s ease',
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = isDark ? '#EDE9E3' : '#4A3260'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44'; }}
           aria-label="Visit Soulful Intelligence YouTube channel"
         >
           Visit Channel →

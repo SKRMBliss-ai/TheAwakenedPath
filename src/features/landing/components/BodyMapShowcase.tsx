@@ -124,7 +124,10 @@ export default function BodyMapShowcase({ isDark }: { isDark: boolean }) {
 
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
   const inkSub = isDark ? 'rgba(237,233,227,0.62)' : '#6B5744';
-  const gold   = '#C4913A';
+  // #C4913A reads well on the dark background but only hits 2.6:1 on cream,
+  // and this token is used for small uppercase labels. #8B6A1A is the same
+  // amber family at 4.6:1 in light mode.
+  const gold   = isDark ? '#C4913A' : '#8B6A1A';
   const bodyFill   = isDark ? 'rgba(255,247,235,0.05)' : 'rgba(74,50,96,0.05)';
   const bodyStroke = isDark ? 'rgba(196,145,58,0.3)' : 'rgba(122,95,68,0.28)';
 
@@ -138,7 +141,7 @@ export default function BodyMapShowcase({ isDark }: { isDark: boolean }) {
       }}
     >
       <div style={{ textAlign: 'center', marginBottom: 44 }}>
-        <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? gold : '#9C8B78', marginBottom: 14 }}>
+        <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? gold : '#7A5F44', marginBottom: 14 }}>
           Emotions Live in the Body
         </p>
         <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.8vw, 48px)', fontWeight: 400, color: ink, marginBottom: 10 }}>

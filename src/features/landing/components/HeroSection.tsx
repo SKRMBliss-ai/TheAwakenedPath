@@ -147,7 +147,7 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
               fontWeight: 800,
               letterSpacing: '0.24em',
               textTransform: 'uppercase',
-              color: isDark ? '#C4913A' : '#9C8B78',
+              color: isDark ? '#C4913A' : '#7A5F44',
               margin: '0 0 24px',
             }}
           >

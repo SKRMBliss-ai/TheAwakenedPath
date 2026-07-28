@@ -50,7 +50,7 @@ export default function InteractiveReflection({ palette }: { palette: Palette })
   const [affirmation, setAffirmation] = useState<string | null>(null);
   const isDark = palette.isDark;
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78';
+  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
 
   const reflect = () => {
     if (!value.trim()) return;
@@ -97,7 +97,7 @@ export default function InteractiveReflection({ palette }: { palette: Palette })
 
         {/* Right: reflection prompt */}
         <div>
-          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 16 }}>
+          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 16 }}>
             30 Seconds for You
           </p>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 400, color: ink, marginBottom: 12, letterSpacing: '-0.01em' }}>
@@ -172,7 +172,7 @@ export default function InteractiveReflection({ palette }: { palette: Palette })
                   onClick={reset}
                   style={{
                     background: 'none', border: 'none', cursor: 'pointer',
-                    fontFamily: SANS, fontSize: 12, color: isDark ? 'rgba(237,233,227,0.4)' : '#9C8B78',
+                    fontFamily: SANS, fontSize: 12, color: isDark ? 'rgba(237,233,227,0.4)' : '#7A5F44',
                     textDecoration: 'underline', padding: 0,
                   }}
                   aria-label="Share something else"

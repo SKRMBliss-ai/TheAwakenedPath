@@ -77,7 +77,7 @@ function GuideCard({ guide, palette }: { guide: Guide; palette: Palette }) {
   const [err, setErr] = useState('');
   const isDark = palette.isDark;
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78';
+  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
   const bg     = isDark ? 'rgba(30,24,18,0.72)' : 'rgba(249,245,239,0.92)';
   const bdColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(196,181,160,0.35)';
   // One accent for every guide button, matching the theme (gold in dark, plum
@@ -227,7 +227,7 @@ function GuideCard({ guide, palette }: { guide: Guide; palette: Palette }) {
 export default function FreeGuides({ palette }: { palette: Palette }) {
   const isDark = palette.isDark;
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78';
+  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
 
   return (
     <section
@@ -235,7 +235,7 @@ export default function FreeGuides({ palette }: { palette: Palette }) {
       style={{ padding: 'clamp(72px, 10vw, 120px) clamp(24px, 6vw, 96px)', position: 'relative', zIndex: 2 }}
     >
       <div style={{ textAlign: 'center', marginBottom: 52 }}>
-        <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
+        <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 14 }}>
           Complimentary
         </p>
         <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.5vw, 48px)', fontWeight: 400, color: ink, marginBottom: 10, letterSpacing: '-0.01em' }}>

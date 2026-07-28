@@ -88,7 +88,7 @@ export default function FeaturedCourse({ palette: _palette }: { palette: Palette
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'grid', gap: 8 }}>
               {FEATURES.map((f) => (
                 <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(237,233,227,0.75)', fontFamily: SANS, fontSize: 13, fontWeight: 600 }}>
-                  <span style={{ color: '#C4913A', flexShrink: 0 }}><Check /></span>
+                  <span style={{ color: isDark ? '#C4913A' : '#8B6A1A', flexShrink: 0 }}><Check /></span>
                   {f}
                 </li>
               ))}

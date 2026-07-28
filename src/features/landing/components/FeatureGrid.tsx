@@ -63,7 +63,7 @@ function FeatureIcon({ d, size = 20 }: { d: string; size?: number }) {
 export default function FeatureGrid({ palette, onExplore }: { palette: Palette; onExplore?: () => void }) {
   const isDark = palette.isDark;
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78';
+  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
 
   return (
     <section
@@ -76,7 +76,7 @@ export default function FeatureGrid({ palette, onExplore }: { palette: Palette; 
     >
       {/* Section header */}
       <div style={{ textAlign: 'center', marginBottom: 56 }}>
-        <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 16 }}>
+        <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 16 }}>
           Tools for Your Journey
         </p>
         <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.5vw, 48px)', fontWeight: 400, color: ink, marginBottom: 12, letterSpacing: '-0.01em' }}>
@@ -120,7 +120,7 @@ export default function FeatureGrid({ palette, onExplore }: { palette: Palette; 
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 marginBottom: 10,
-                color: isDark ? '#C4913A' : '#9C8B78',
+                color: isDark ? '#C4913A' : '#7A5F44',
               }}>
                 <FeatureIcon d={feat.icon} />
                 <h3 style={{ fontFamily: SANS, fontSize: 14, fontWeight: 800, color: ink, margin: 0 }}>

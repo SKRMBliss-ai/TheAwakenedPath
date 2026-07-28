@@ -12,7 +12,7 @@ const SANS  = "'Outfit', system-ui, sans-serif";
 export default function FinalCta({ palette, onCta }: { palette: Palette; onCta?: () => void }) {
   const isDark = palette.isDark;
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78';
+  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
 
   return (
     <section
@@ -38,7 +38,7 @@ export default function FinalCta({ palette, onCta }: { palette: Palette; onCta?:
 
       <p style={{
         fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.24em',
-        textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 28,
+        textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 28,
         position: 'relative',
       }}>
         Begin Your Journey

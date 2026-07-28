@@ -19,7 +19,9 @@ export default function EditorialIntelligenceView() {
   const bg = isDark ? '#0D0A12' : '#F9F5EF';
   const cardBg = isDark ? 'rgba(26,20,30,0.7)' : 'rgba(255,255,255,0.85)';
   const borderC = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(196,181,160,0.35)';
-  const gold = '#C4913A';
+  // Gold #C4913A is tuned for the dark background; on cream it is 2.6:1.
+  // #8B6A1A is the same amber family and reaches 4.6:1 in light mode.
+  const gold = isDark ? '#C4913A' : '#8B6A1A';
 
   const isAuthorized = isAdminEmail(user?.email) || user?.email === 'skrmblissai@gmail.com';
 

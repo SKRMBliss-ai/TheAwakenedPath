@@ -827,7 +827,7 @@ export default function EmotionFeelingsCourse() {
                 fontWeight: 800,
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
-                color: isDark ? '#C4913A' : '#9C8B78',
+                color: isDark ? '#C4913A' : '#7A5F44',
                 marginBottom: 24,
               }}
             >
@@ -952,7 +952,7 @@ export default function EmotionFeelingsCourse() {
             <Play size={16} fill="#fff" style={{ marginLeft: 2 }} />
           </span>
           <div style={{ textAlign: 'left' }}>
-            <span style={{ display: 'block', fontFamily: SANS, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: isDark ? '#C4913A' : '#9C8B78' }}>
+            <span style={{ display: 'block', fontFamily: SANS, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: isDark ? '#C4913A' : '#7A5F44' }}>
               Preview
             </span>
             <span style={{ display: 'block', fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink }}>
@@ -1197,7 +1197,7 @@ export default function EmotionFeelingsCourse() {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 52 }}>
-          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
+          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 14 }}>
             Recognize Yourself
           </p>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.8vw, 48px)', fontWeight: 400, color: ink, marginBottom: 8 }}>
@@ -1313,7 +1313,7 @@ export default function EmotionFeelingsCourse() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#C4913A' }}>
+                      <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#8B6A1A' }}>
                         {s.moduleLink}
                       </span>
                       <button
@@ -1779,7 +1779,7 @@ export default function EmotionFeelingsCourse() {
 
           {/* Right Form */}
           <div>
-            <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
+            <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 14 }}>
               Interactive Micro-Practice
             </p>
             <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 400, color: ink, marginBottom: 12 }}>
@@ -1874,7 +1874,7 @@ export default function EmotionFeelingsCourse() {
         }}
       >
         <div style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto 48px' }}>
-          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
+          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 14 }}>
             Honest &amp; grounded
           </p>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.8vw, 48px)', fontWeight: 400, color: ink, marginBottom: 12 }}>
@@ -1977,7 +1977,7 @@ export default function EmotionFeelingsCourse() {
                   { title: 'Regular updates', sub: 'New content, meditations and practices' },
                 ].map((item, idx) => (
                   <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(196,145,58,0.15)', color: '#C4913A', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2, flexShrink: 0 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(196,145,58,0.15)', color: isDark ? '#C4913A' : '#8B6A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2, flexShrink: 0 }}>
                       <Check size={12} strokeWidth={3} />
                     </div>
                     <div>
@@ -2234,7 +2234,7 @@ export default function EmotionFeelingsCourse() {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 52 }}>
-          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
+          <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 14 }}>
             Questions & Answers
           </p>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.8vw, 48px)', fontWeight: 400, color: ink, marginBottom: 8 }}>
@@ -2713,7 +2713,7 @@ export default function EmotionFeelingsCourse() {
                     <label style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub }}>
                       Select Contribution (Pay What You Feel)
                     </label>
-                    <span style={{ fontSize: 10, fontWeight: 800, color: '#C4913A', textTransform: 'uppercase', background: isDark ? 'rgba(196,145,58,0.15)' : 'rgba(74,50,96,0.08)', padding: '2px 8px', borderRadius: 999 }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: isDark ? '#C4913A' : '#8B6A1A', textTransform: 'uppercase', background: isDark ? 'rgba(196,145,58,0.15)' : 'rgba(74,50,96,0.08)', padding: '2px 8px', borderRadius: 999 }}>
                       {selectedPlan === 'course' ? 'Course Only' : 'Whole App + Course 🔥'}
                     </span>
                   </div>

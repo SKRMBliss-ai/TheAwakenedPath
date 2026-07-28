@@ -355,7 +355,7 @@ export default function SoulfulHome() {
               }}>
                 "Take what you need. Give what you can. Everything here is offered pay-what-you-feel."
               </p>
-              <p style={{ fontFamily: SANS, fontSize: 13, color: isDark ? 'rgba(237,233,227,0.5)' : '#9C8B78', fontWeight: 600 }}>— The Soulful Intelligence promise</p>
+              <p style={{ fontFamily: SANS, fontSize: 13, color: isDark ? 'rgba(237,233,227,0.5)' : '#7A5F44', fontWeight: 600 }}>— The Soulful Intelligence promise</p>
             </div>
           </section>
 
@@ -457,7 +457,7 @@ export default function SoulfulHome() {
               }}
             >
               <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 700, color: INK }}>
-                And you <span style={{ color: '#C4913A', fontWeight: 800 }}>pay what you feel</span> it&rsquo;s worth.
+                And you <span style={{ color: isDark ? '#C4913A' : '#8B6A1A', fontWeight: 800 }}>pay what you feel</span> it&rsquo;s worth.
               </span>
             </motion.div>
 
@@ -621,7 +621,7 @@ export default function SoulfulHome() {
                     boxShadow: '0 8px 24px rgba(0,0,0,0.03)',
                   }}
                 >
-                  <div style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 400, color: '#C4913A', marginBottom: 8 }}>
+                  <div style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 400, color: isDark ? '#C4913A' : '#8B6A1A', marginBottom: 8 }}>
                     {stepItem.n}
                   </div>
                   <h4 style={{ fontSize: 16.5, fontWeight: 700, margin: '0 0 6px', color: INK, fontFamily: SANS }}>
