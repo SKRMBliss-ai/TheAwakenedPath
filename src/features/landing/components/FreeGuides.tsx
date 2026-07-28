@@ -80,6 +80,11 @@ function GuideCard({ guide, palette }: { guide: Guide; palette: Palette }) {
   const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#9C8B78';
   const bg     = isDark ? 'rgba(30,24,18,0.72)' : 'rgba(249,245,239,0.92)';
   const bdColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(196,181,160,0.35)';
+  // One accent for every guide button, matching the theme (gold in dark, plum
+  // in light) — the per-guide colours drifted off-palette (one was blue). Text
+  // colour flips so contrast stays strong on either background.
+  const btnBg   = isDark ? '#C4913A' : '#4A3260';
+  const btnText = isDark ? '#1A140F' : '#FFFFFF';
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13.5,
     border: `1px solid ${bdColor}`, background: 'transparent', color: ink,
@@ -111,15 +116,17 @@ function GuideCard({ guide, palette }: { guide: Guide; palette: Palette }) {
       onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 20px 60px rgba(60,40,20,0.12)'; }}
       onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 40px rgba(60,40,20,0.07)'; }}
     >
-      {/* Cover */}
+      {/* Cover — the finished covers are 2:3 portrait books with the title
+          printed on them, so the frame is portrait too (was cropping them to a
+          landscape strip) and the redundant heading below is suppressed. */}
       <div style={{
-        position: 'relative', aspectRatio: '3/2', overflow: 'hidden',
+        position: 'relative', aspectRatio: '2/3', overflow: 'hidden',
         background: guide.cover ? (isDark ? '#1A1018' : '#EDE0CC')
           : `linear-gradient(135deg, ${guide.accent}22 0%, ${guide.accent}44 100%)`,
       }}>
         {guide.cover ? (
           <img src={guide.cover} alt={guide.title} loading="lazy" decoding="async"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
             onError={(e) => {
               (e.currentTarget.parentElement as HTMLElement).style.background =
                 `linear-gradient(135deg, ${guide.accent}22 0%, ${guide.accent}44 100%)`;
@@ -151,9 +158,13 @@ function GuideCard({ guide, palette }: { guide: Guide; palette: Palette }) {
 
       {/* Body */}
       <div style={{ padding: '20px 22px 24px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
-        <h3 style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 400, color: ink, margin: 0, lineHeight: 1.2 }}>
-          {guide.title}
-        </h3>
+        {/* Title heading only when the cover has no printed title (the
+            placeholder card) — otherwise it duplicates the cover art. */}
+        {!guide.cover && (
+          <h3 style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 400, color: ink, margin: 0, lineHeight: 1.2 }}>
+            {guide.title}
+          </h3>
+        )}
         <p style={{ fontFamily: SANS, fontSize: 12.5, color: inkSub, margin: 0, lineHeight: 1.6 }}>
           {guide.subtitle}
         </p>
@@ -164,7 +175,7 @@ function GuideCard({ guide, palette }: { guide: Guide; palette: Palette }) {
             style={{
               marginTop: 'auto', alignSelf: 'flex-start',
               padding: '9px 18px', borderRadius: 999, cursor: 'pointer',
-              border: 'none', background: guide.accent, color: '#fff',
+              border: 'none', background: btnBg, color: btnText,
               fontFamily: SANS, fontSize: 12.5, fontWeight: 800,
               transition: 'filter 0.2s, transform 0.2s',
             }}
@@ -184,7 +195,7 @@ function GuideCard({ guide, palette }: { guide: Guide; palette: Palette }) {
             {err && <span style={{ fontFamily: SANS, fontSize: 11.5, color: '#B4453B', fontWeight: 700 }}>{err}</span>}
             <button type="submit" style={{
               padding: '10px 18px', borderRadius: 999, cursor: 'pointer', border: 'none',
-              background: guide.accent, color: '#fff', fontFamily: SANS, fontSize: 13, fontWeight: 800,
+              background: btnBg, color: btnText, fontFamily: SANS, fontSize: 13, fontWeight: 800,
             }}>
               Get my free PDF →
             </button>
@@ -197,7 +208,7 @@ function GuideCard({ guide, palette }: { guide: Guide; palette: Palette }) {
             <a href={guide.href} target="_blank" rel="noopener noreferrer" download style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '9px 18px', borderRadius: 999,
-              background: guide.accent, color: '#fff',
+              background: btnBg, color: btnText,
               fontFamily: SANS, fontSize: 12.5, fontWeight: 800, textDecoration: 'none', alignSelf: 'flex-start',
             }}>
               ↓ Download PDF

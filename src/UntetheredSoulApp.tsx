@@ -888,10 +888,18 @@ export default function UntetheredApp() {
 
   const isAdmin = isAdminEmail(currentUser?.email);
 
-  // Owns the Feelings & Emotions course (direct purchase, all-access, or admin)
+  // Owns the Feelings & Emotions course. Unlocks for:
+  //  • a direct course purchase (the course-only buyer, who is NOT premium), or
+  //  • any premium tier — active membership, subscription, or all-access
+  //    (isPremiumUser), so members get courses included, or
+  //  • admin.
+  // Note the one-way split: a course-only purchase unlocks the course but never
+  // the full app (isPremiumUser stays false for it) — course and app pricing
+  // remain separate.
   const ownsEmotionCourse = !!(
     profile?.purchasedCourses?.includes('emotion_feelings_course') ||
     profile?.purchasedCourses?.includes('all_access') ||
+    isPremiumUser ||
     isAdmin
   );
 

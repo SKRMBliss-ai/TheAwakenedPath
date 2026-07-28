@@ -40,27 +40,59 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://www.skrmblissai.in/" />
     
-    <!-- Structured Data for Google/AI (JSON-LD) -->
+    <!-- Master Knowledge Graph Structured Data for Google & AI Search (JSON-LD) -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Mind Gym",
-      "applicationCategory": "SpiritualGuidance",
-      "description": "A structured journey into the seat of the witness, based on 'The Untethered Soul' and 'The Power of Now'. Unlike general meditation, this focuses on the art of letting go (Michael Singer) and the power of presence (Eckhart Tolle).",
-      "about": [
-        "Michael A. Singer",
-        "Eckhart Tolle",
-        "The Untethered Soul",
-        "The Power of Now",
-        "Witness Consciousness",
-        "Inner Freedom"
-      ],
-      "author": {
+    [
+      {
+        "@context": "https://schema.org",
         "@type": "Organization",
-        "name": "Mind Gym"
+        "@id": "https://www.skrmblissai.in/#organization",
+        "name": "Soulful Intelligence Studio",
+        "alternateName": ["SKRM Bliss AI", "Soulful Intelligence"],
+        "url": "https://www.skrmblissai.in",
+        "logo": "https://www.skrmblissai.in/si-logo-light.webp",
+        "sameAs": [
+          "https://www.youtube.com/@SoulfulIntelligenceStudio",
+          "https://www.skrmblissai.in/feelingsandemotioncourse",
+          "https://www.skrmblissai.in/mindgym"
+        ],
+        "description": "An editorial studio dedicated to presence, emotional intelligence, mindfulness practices, and digital wellbeing apps.",
+        "founder": {
+          "@type": "Person",
+          "name": "Sim Katyal",
+          "jobTitle": "Emotional Intelligence & Presence Guide"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://www.skrmblissai.in/#website",
+        "url": "https://www.skrmblissai.in/",
+        "name": "SKRM Bliss AI | Soulful Intelligence Studio",
+        "publisher": {
+          "@id": "https://www.skrmblissai.in/#organization"
+        },
+        "inLanguage": "en-US"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "@id": "https://www.skrmblissai.in/mindgym/#app",
+        "name": "MindGym",
+        "applicationCategory": "HealthApplication",
+        "operatingSystem": "Web, iOS, Android (PWA)",
+        "url": "https://www.skrmblissai.in/mindgym",
+        "description": "A daily mind training app for presence, emotional mastery, guided breathwork, reflection journaling, and habit tracking. Built on timeless teachings from 'The Power of Now' and 'The Untethered Soul'.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@id": "https://www.skrmblissai.in/#organization"
+        }
       }
-    }
+    ]
     </script>
 
     <!-- Critical CSS Fallback for older mobile browsers (Samsung Internet compatibility) -->

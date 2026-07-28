@@ -1,7 +1,29 @@
+# Traditional Search Engines
 User-agent: *
 Allow: /
 
-# Served from /public, so the sitemap lives at the site root. The previous
-# /mindgym/sitemap.xml path hit the SPA fallback and returned HTML, which
-# crawlers reject — the sitemap was effectively invisible.
+# AI Search & Answer Engine Bots (AEO & GEO Optimization)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# XML Sitemap
 Sitemap: https://www.skrmblissai.in/sitemap.xml
+

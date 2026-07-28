@@ -14,8 +14,8 @@ export interface PageSeo {
   description: string;
   url: string;
   image?: string;
-  /** Optional schema.org object rendered as <script type="application/ld+json"> */
-  jsonLd?: Record<string, unknown>;
+  /** Optional schema.org object or array rendered as <script type="application/ld+json"> */
+  jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 export function usePageSeo({ title, description, url, image, jsonLd }: PageSeo) {

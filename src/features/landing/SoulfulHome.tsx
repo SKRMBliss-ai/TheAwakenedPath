@@ -86,21 +86,53 @@ export default function SoulfulHome() {
     } catch (_) { /* ignore */ }
   };
 
-  // ── SEO ─────────────────────────────────────────────────────────────────
+  // Master SEO + AEO + GEO Schema Graph setup
   usePageSeo({
-    title: 'Soulful Intelligence — Where Soul Meets Intelligence',
-    description: 'A studio for a quieter mind and braver ideas. Home of Mind Gym, guided courses, free wellbeing tools, and pay-what-you-feel digital services for brands & startups.',
+    title: 'Soulful Intelligence — Where Soul Meets Intelligence | SKRM Bliss AI',
+    description: 'A studio for a quieter mind and braver ideas. Home of Mind Gym, guided courses on emotions and presence, free wellbeing tools, and pay-what-you-feel digital services for brands & startups.',
     url: 'https://www.skrmblissai.in',
     image: SI_LOGO,
     jsonLd: {
       '@context': 'https://schema.org',
-      '@type': 'Organization',
-      name: 'Soulful Intelligence',
-      alternateName: 'Soulful Intelligence Studio',
-      url: 'https://www.skrmblissai.in',
-      logo: SI_LOGO,
-      sameAs: [YOUTUBE],
-      description: 'Home of Mind Gym, guided courses, free wellbeing tools, and pay-what-you-feel digital services.',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          '@id': 'https://www.skrmblissai.in/#organization',
+          name: 'Soulful Intelligence Studio',
+          alternateName: ['SKRM Bliss AI', 'Soulful Intelligence'],
+          url: 'https://www.skrmblissai.in',
+          logo: SI_LOGO,
+          sameAs: [YOUTUBE, 'https://www.skrmblissai.in/feelingsandemotioncourse', 'https://www.skrmblissai.in/mindgym'],
+          description: 'Home of Mind Gym, guided courses on presence and emotions, free wellbeing tools, and pay-what-you-feel digital studio services.',
+          founder: {
+            '@type': 'Person',
+            name: 'Sim Katyal',
+            jobTitle: 'Mindfulness & Emotional Intelligence Guide',
+          },
+        },
+        {
+          '@type': 'WebSite',
+          '@id': 'https://www.skrmblissai.in/#website',
+          url: 'https://www.skrmblissai.in',
+          name: 'SKRM Bliss AI | Soulful Intelligence Studio',
+          publisher: {
+            '@id': 'https://www.skrmblissai.in/#organization',
+          },
+          inLanguage: 'en-US',
+        },
+        {
+          '@type': 'SoftwareApplication',
+          '@id': 'https://www.skrmblissai.in/mindgym/#app',
+          name: 'MindGym',
+          applicationCategory: 'HealthApplication',
+          operatingSystem: 'Web, iOS, Android (PWA)',
+          url: 'https://www.skrmblissai.in/mindgym',
+          description: 'A daily mind training app for presence, emotional mastery, guided breathwork, reflection journaling, and habit tracking.',
+          author: {
+            '@id': 'https://www.skrmblissai.in/#organization',
+          },
+        },
+      ],
     },
   });
 

@@ -17,6 +17,7 @@ import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SacredGeometry from './components/SacredGeometry';
 import CursorGlow from './components/CursorGlow';
 import HeroMark from '../../components/site/HeroMark';
+import BodyMapShowcase from './components/BodyMapShowcase';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Emotion & Feelings Course Page — /feelingsandemotioncourse
@@ -524,48 +525,93 @@ export default function EmotionFeelingsCourse() {
   // 60-Second Teaser State
   const [teaserVideo, setTeaserVideo] = useState<{ id: string; title: string; episodeNum: number; startTime?: number } | null>(null);
   const [teaserTimer, setTeaserTimer] = useState<number>(60);
-  const [teaserEnded, setTeaserEnded] = useState<boolean>(false);
 
   const startTeaser = (id: string, title: string, episodeNum: number, startTime?: number) => {
     setTeaserVideo({ id, title, episodeNum, startTime });
     setTeaserTimer(60);
-    setTeaserEnded(false);
     trackActivity(`TEASER_PLAY_EPISODE_${episodeNum}`);
   };
 
   useEffect(() => {
-    if (!teaserVideo || teaserEnded) return;
+    if (!teaserVideo) return;
     const t = setInterval(() => {
       setTeaserTimer((prev) => {
         if (prev <= 1) {
           clearInterval(t);
-          setTeaserEnded(true);
+          // 60s up — return to the main screen (teaser button visible again).
+          setTeaserVideo(null);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [teaserVideo, teaserEnded]);
+  }, [teaserVideo]);
 
   const { checkOut, isProcessing } = useRazorpay();
 
-  // SEO setup
+  // Master SEO + AEO + GEO Schema setup
   usePageSeo({
-    title: 'Understanding Feelings & Emotions Course — 7-Episode Guided Journey',
-    description: 'Break old emotional patterns, dissolve overthinking, and live with clarity, freedom, and ease. A 7-episode guided course by Soulful Intelligence Studio.',
+    title: 'Understanding Feelings & Emotions Course — 7-Episode Guided Journey | SKRM Bliss AI',
+    description: 'Break old emotional patterns, dissolve overthinking, and live with clarity, freedom, and ease. A 7-episode guided course by Sim Katyal & Soulful Intelligence Studio.',
     url: 'https://www.skrmblissai.in/feelingsandemotioncourse',
     image: COURSE_BANNER,
     jsonLd: {
       '@context': 'https://schema.org',
-      '@type': 'Course',
-      name: 'Understanding Feelings & Emotions Course — 7-Episode Guided Journey',
-      description: 'A 7-episode guided journey from emotional reactivity to inner freedom.',
-      provider: {
-        '@type': 'Organization',
-        name: 'Soulful Intelligence Studio',
-        sameAs: 'https://www.skrmblissai.in',
-      },
+      '@graph': [
+        {
+          '@type': 'Course',
+          '@id': 'https://www.skrmblissai.in/feelingsandemotioncourse/#course',
+          name: 'Understanding Feelings & Emotions Course — 7-Episode Guided Journey',
+          description: 'A 7-episode guided journey from emotional reactivity to inner freedom, emotional regulation, and presence.',
+          provider: {
+            '@type': 'Organization',
+            name: 'Soulful Intelligence Studio',
+            sameAs: ['https://www.skrmblissai.in', 'https://www.youtube.com/@SoulfulIntelligenceStudio'],
+          },
+          instructor: {
+            '@type': 'Person',
+            name: 'Sim Katyal',
+            jobTitle: 'Emotional Intelligence & Presence Guide',
+          },
+          offers: {
+            '@type': 'Offer',
+            price: '4999',
+            priceCurrency: 'INR',
+            availability: 'https://schema.org/InStock',
+            url: 'https://www.skrmblissai.in/feelingsandemotioncourse',
+          },
+          hasCourseInstance: {
+            '@type': 'CourseInstance',
+            courseMode: 'Online / Self-Paced',
+            instructor: {
+              '@type': 'Person',
+              name: 'Sim Katyal',
+            },
+          },
+        },
+        {
+          '@type': 'FAQPage',
+          '@id': 'https://www.skrmblissai.in/feelingsandemotioncourse/#faq',
+          mainEntity: FAQS.map((f) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: f.a,
+            },
+          })),
+        },
+        {
+          '@type': 'VideoObject',
+          '@id': 'https://www.skrmblissai.in/feelingsandemotioncourse/#video-ep1',
+          name: 'What Are Feelings and Emotions? — Episode 1',
+          description: 'Explore the fundamental difference between physical feelings and mental emotional conditioning in Episode 1 of the Feelings & Emotions series.',
+          thumbnailUrl: 'https://img.youtube.com/vi/fTrY9KMLhAo/maxresdefault.jpg',
+          embedUrl: 'https://www.youtube.com/embed/fTrY9KMLhAo',
+          uploadDate: '2026-01-01T00:00:00Z',
+        },
+      ],
     },
   });
 
@@ -1281,8 +1327,13 @@ export default function EmotionFeelingsCourse() {
       <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
       {/* ════════════════════════════════════════════════════════════════════
-          3. WHY EMOTIONS WORK THIS WAY (Conditioning Model)
+          2b. WHERE DO YOU FEEL IT — body-emotion map (from the journal)
          ════════════════════════════════════════════════════════════════════ */}
+      <BodyMapShowcase isDark={isDark} />
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
       {/* ════════════════════════════════════════════════════════════════════
           3. WHY EMOTIONS WORK THIS WAY (Conditioning Model)
          ════════════════════════════════════════════════════════════════════ */}
@@ -1542,7 +1593,7 @@ export default function EmotionFeelingsCourse() {
                 {/* Real Episode WebP Artwork Image */}
                 <img
                   src={ch.imgUrl}
-                  alt={`Episode ${ch.num} - ${ch.artworkTitle}`}
+                  alt={`Episode ${ch.num} — ${ch.title}`}
                   loading="lazy"
                   style={{
                     position: 'absolute',
@@ -1551,54 +1602,9 @@ export default function EmotionFeelingsCourse() {
                     height: '100%',
                     objectFit: 'cover',
                     objectPosition: 'center',
-                    opacity: 0.65,
                     transition: 'transform 0.8s ease',
                   }}
                 />
-
-                {/* Dark Scrim Overlay for Readability */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(180deg, rgba(13,10,18,0.7) 0%, rgba(13,10,18,0.35) 50%, rgba(13,10,18,0.85) 100%)',
-                    pointerEvents: 'none',
-                  }}
-                />
-
-                <div style={{ position: 'relative', zIndex: 2 }}>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      padding: '4px 12px',
-                      borderRadius: 999,
-                      background: 'rgba(196,145,58,0.2)',
-                      border: '1px solid rgba(196,145,58,0.4)',
-                      fontFamily: SANS,
-                      fontSize: 11,
-                      fontWeight: 800,
-                      letterSpacing: '0.12em',
-                      color: '#FFDF9E',
-                      marginBottom: 12,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    EPISODE {ch.num}
-                  </span>
-                  <h4 style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 400, color: '#EDE9E3', margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
-                    {ch.artworkTitle}
-                  </h4>
-                  <div style={{ width: 36, height: 2, background: '#C4913A', marginTop: 12, opacity: 0.8 }} />
-                </div>
-
-                <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 24 }}>
-                  <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(237,233,227,0.85)', textTransform: 'uppercase' }}>
-                    {ch.duration}
-                  </span>
-                  <span style={{ fontSize: 12, color: '#C4913A', fontWeight: 700 }}>
-                    Episode Details →
-                  </span>
-                </div>
               </div>
             );
 
@@ -2405,155 +2411,49 @@ export default function EmotionFeelingsCourse() {
               </button>
 
               {/* Floating Timer Badge */}
-              {!teaserEnded && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 14,
-                    left: 14,
-                    zIndex: 30,
-                    background: 'rgba(19, 14, 25, 0.85)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(196,145,58,0.4)',
-                    borderRadius: 999,
-                    padding: '6px 16px',
-                    color: '#FFDF9E',
-                    fontFamily: SANS,
-                    fontSize: 11,
-                    fontWeight: 800,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
-                  }}
-                >
-                  <Sparkles size={13} color="#FFDF9E" />
-                  <span>60s Free Teaser — 00:{teaserTimer < 10 ? `0${teaserTimer}` : teaserTimer} left</span>
-                </div>
-              )}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 14,
+                  left: 14,
+                  zIndex: 30,
+                  background: 'rgba(19, 14, 25, 0.85)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(196,145,58,0.4)',
+                  borderRadius: 999,
+                  padding: '6px 16px',
+                  color: '#FFDF9E',
+                  fontFamily: SANS,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
+                }}
+              >
+                <Sparkles size={13} color="#FFDF9E" />
+                <span>60s Free Teaser — 00:{teaserTimer < 10 ? `0${teaserTimer}` : teaserTimer} left</span>
+              </div>
 
               {/* YouTube Iframe (controls disabled & pointer shield to prevent seeking/forwarding) */}
-              {!teaserEnded && (
-                <>
-                  <iframe
-                    src={`https://www.youtube.com/embed/${teaserVideo.id}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0${teaserVideo.startTime ? `&start=${teaserVideo.startTime}` : ''}`}
-                    title={`60s Teaser - Episode ${teaserVideo.episodeNum}`}
-                    style={{ width: '100%', height: '100%', border: 'none' }}
-                    allow="autoplay; encrypted-media"
-                  />
-                  {/* Invisible pointer shield preventing video scrubbing / fast-forwarding */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      zIndex: 25,
-                      background: 'transparent',
-                    }}
-                  />
-                </>
-              )}
-
-              {/* Teaser Ended Glassmorphism Veil */}
-              <AnimatePresence>
-                {teaserEnded && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      zIndex: 40,
-                      background: 'rgba(13, 10, 18, 0.92)',
-                      backdropFilter: 'blur(20px)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '36px 24px',
-                      textAlign: 'center',
-                    }}
-                  >
-                    {/* Close Button for Overlay */}
-                    <button
-                      onClick={() => setTeaserVideo(null)}
-                      style={{
-                        position: 'absolute',
-                        top: 14,
-                        right: 14,
-                        background: 'rgba(255,255,255,0.1)',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        borderRadius: 999,
-                        color: '#fff',
-                        cursor: 'pointer',
-                        padding: '6px 14px',
-                        fontSize: 12,
-                        fontFamily: SANS,
-                        fontWeight: 700,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        zIndex: 50,
-                      }}
-                    >
-                      <X size={14} /> Close
-                    </button>
-
-                    <div
-                      style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: '50%',
-                        background: 'rgba(196,145,58,0.2)',
-                        border: '1px solid #C4913A',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginBottom: 16,
-                        boxShadow: '0 8px 24px rgba(196,145,58,0.3)',
-                      }}
-                    >
-                      <Sparkles size={28} color="#FFDF9E" />
-                    </div>
-
-                    <h3 style={{ fontFamily: SERIF, fontSize: 'clamp(24px, 3.2vw, 36px)', fontWeight: 400, color: '#EDE9E3', margin: '0 0 10px', lineHeight: 1.15 }}>
-                      Hope you enjoyed this 60-second preview!
-                    </h3>
-                    <p style={{ fontFamily: SANS, fontSize: 14.5, color: 'rgba(237,233,227,0.75)', maxWidth: 500, margin: '0 0 28px', lineHeight: 1.6 }}>
-                      You&rsquo;ve completed the free teaser for Episode {teaserVideo.episodeNum} ({teaserVideo.title}). Unlock all 7 full episodes &amp; guided meditations to continue your journey.
-                    </p>
-
-                    <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <motion.button
-                        whileHover={{ scale: 1.04 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          setTeaserVideo(null);
-                          setShowCheckoutModal(true);
-                        }}
-                        className="si-btn-breathe"
-                        style={{
-                          padding: '16px 36px',
-                          borderRadius: 999,
-                          background: 'linear-gradient(135deg, #4A3260 0%, #362248 100%)',
-                          color: '#fff',
-                          border: '1px solid #C4913A',
-                          fontFamily: SANS,
-                          fontSize: 14,
-                          fontWeight: 800,
-                          cursor: 'pointer',
-                          boxShadow: '0 10px 32px rgba(74,50,96,0.5)',
-                        }}
-                      >
-                        Unlock Full Course →
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <iframe
+                src={`https://www.youtube.com/embed/${teaserVideo.id}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0${teaserVideo.startTime ? `&start=${teaserVideo.startTime}` : ''}`}
+                title={`60s Teaser - Episode ${teaserVideo.episodeNum}`}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                allow="autoplay; encrypted-media"
+              />
+              {/* Invisible pointer shield preventing video scrubbing / fast-forwarding */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 25,
+                  background: 'transparent',
+                }}
+              />
             </div>
           </motion.div>
         )}

@@ -7,6 +7,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useCourseTracking } from '../../hooks/useCourseTracking';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { VoiceService } from '../../services/voiceService';
+import { usePageSeo } from '../../lib/seo';
 
 // Charge currency for in-app checkout — a subset matching the backend's
 // COURSE_PRICES_BY_CURRENCY. Anything else bills in USD (backend also falls
@@ -315,6 +316,23 @@ export function EmotionFeelingsCourseView({ owns = false, adminPreview = false, 
   const { user } = useAuth();
   const { progress = {}, updateProgress } = useCourseTracking(user?.uid, EMOTION_COURSE_ID);
   const { checkOut, isProcessing } = useRazorpay();
+
+  usePageSeo({
+    title: 'Feelings & Emotions Course — Guided Video Lessons | Mind Gym',
+    description: 'A 7-episode guided journey inside Mind Gym. Understand emotional conditioning, break reactivity, and cultivate presence.',
+    url: 'https://www.skrmblissai.in/mindgym',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: 'Understanding Feelings & Emotions Course',
+      description: 'A 7-episode guided video journey for emotional intelligence and mindfulness.',
+      provider: {
+        '@type': 'Organization',
+        name: 'Soulful Intelligence Studio',
+        sameAs: 'https://www.skrmblissai.in',
+      },
+    },
+  });
 
   // Launch Razorpay checkout in-app. On success the profile snapshot flips
   // `owns` → true, which re-renders the locked lesson as the playable video.
