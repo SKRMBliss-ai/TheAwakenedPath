@@ -7,6 +7,7 @@ import { httpsCallable } from 'firebase/functions';
 import { WhisperInput, AnchorButton, SacredToast } from '../../components/ui/SacredUI';
 import { cn } from '../../lib/utils';
 import EmotionalHealthStats from './EmotionalHealthStats';
+import { shouldBlockAnalytics } from '../../config/admin';
 
 interface ActivityLog {
     id: string;
@@ -185,11 +186,13 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                 ...doc.data()
             })) as ActivityLog[];
 
-            // Previously filtered to isMonitoredEmail(), which hid every real user
-            // and made the dashboard reflect only ~5 internal accounts. Now we keep
-            // all activity; anonymous noise is toggled via `showAnonymous` in the
-            // feed/list below.
-            setLogs(fetchedLogs.slice(0, 500));
+            // Exclude internal team / admin logins so feed reflects real visitor traffic
+            const realUserLogs = fetchedLogs.filter(log => 
+                !shouldBlockAnalytics(log.userEmail) && 
+                !shouldBlockAnalytics(log.entryEmail)
+            );
+
+            setLogs(realUserLogs.slice(0, 500));
         } catch (error) {
             console.error("Error fetching admin logs:", error);
         } finally {

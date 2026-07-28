@@ -25,7 +25,7 @@ import {
   onSnapshot,
   increment,
 } from 'firebase/firestore';
-import { hasWisdomAccess, isMonitoredEmail } from '../../config/admin';
+import { hasWisdomAccess, isMonitoredEmail, shouldBlockAnalytics } from '../../config/admin';
 import { deductTokens as _deductTokens, buildInitialTokenFields } from '../tokens/tokenService';
 import type { FeatureName, DeductResult } from '../tokens/tokenService';
 import { useTokenToastStore } from '../../stores/tokenToastStore';
@@ -123,13 +123,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ── Activity logger (monitored accounts only) ─────────────────────────────
   const logActivity = async (currentUser: User, type = 'SESSION_START', overrideEmail?: string) => {
     const emailToCheck = overrideEmail ?? currentUser.email;
-    // NOTE: every user's session is now logged (previously only monitored/internal
-    // accounts were), so the admin dashboard reflects real usage. It's fire-and-
-    // forget upstream, so it never sits on the login critical path.
+    if (shouldBlockAnalytics(emailToCheck)) {
+      return; // Do NOT log sessions or activity for internal team / admin accounts
+    }
     try {
-      // Geo-locate ONLY internal/monitored accounts: the ipapi.co free tier is
-      // rate-limited, and we don't want to store coarse location for the whole
-      // user base. Everyone else logs with location 'Unknown'.
       let location = 'Unknown';
       if (isMonitoredEmail(emailToCheck)) {
         try {

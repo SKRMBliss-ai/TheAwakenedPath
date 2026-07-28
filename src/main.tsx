@@ -210,9 +210,11 @@ if (isHomeRoute) {
 } else if (knowledgeInfo.type === 'editorial') {
   root.render(
     <ErrorBoundary featureName="EditorialIntelligenceView">
-      <EditorialIntelligenceView />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <AuthProvider>
+        <EditorialIntelligenceView />
+        <GlobalKnowledgeDock />
+        <SocialFab />
+      </AuthProvider>
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'knowledgeHub') {

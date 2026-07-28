@@ -1,7 +1,9 @@
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Lock, LogIn } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import { useSiteTheme } from '../../lib/siteTheme';
+import { useAuth } from '../auth/AuthContext';
+import { isAdminEmail } from '../../config/admin';
 import { auditAllContentPages } from './services/contentIntelligenceService';
 import { ENTITY_REGISTRY } from './data/entityRegistry';
 
@@ -10,6 +12,7 @@ const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
 
 export default function EditorialIntelligenceView() {
   const { palette, toggle: toggleTheme } = useSiteTheme();
+  const { user, signInWithGoogle } = useAuth();
   const isDark = palette.isDark;
   const ink = isDark ? '#EDE9E3' : '#2A2118';
   const inkSub = isDark ? 'rgba(237,233,227,0.72)' : '#6B5744';
@@ -17,6 +20,8 @@ export default function EditorialIntelligenceView() {
   const cardBg = isDark ? 'rgba(26,20,30,0.7)' : 'rgba(255,255,255,0.85)';
   const borderC = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(196,181,160,0.35)';
   const gold = '#C4913A';
+
+  const isAuthorized = isAdminEmail(user?.email) || user?.email === 'skrmblissai@gmail.com';
 
   const audits = auditAllContentPages();
   const entities = Object.values(ENTITY_REGISTRY);
@@ -26,6 +31,47 @@ export default function EditorialIntelligenceView() {
     description: 'Autonomous Content Intelligence Dashboard monitoring topical authority scores, AI citation readiness, entity registries, and quality audits.',
     url: 'https://www.skrmblissai.in/editorial',
   });
+
+  if (!isAuthorized) {
+    return (
+      <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>
+        <SiteHeader palette={palette} onToggleTheme={toggleTheme} links={[{ label: 'Home', href: '/' }]} />
+        <main style={{ maxWidth: 560, margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(196,145,58,0.15)', border: '1.5px solid #C4913A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <Lock size={28} color="#C4913A" />
+          </div>
+          <h1 style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 500, color: ink, marginBottom: 12 }}>
+            Admin Access Restricted
+          </h1>
+          <p style={{ fontFamily: SANS, fontSize: 14.5, color: inkSub, lineHeight: 1.6, marginBottom: 28 }}>
+            This Editorial Intelligence System is restricted to studio administrators (<strong>skrmblissai@gmail.com</strong>). Please sign in with your authorized admin account to continue.
+          </p>
+          <button
+            onClick={() => signInWithGoogle()}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '14px 28px',
+              borderRadius: 999,
+              background: '#C4913A',
+              color: '#1E1426',
+              border: 'none',
+              fontFamily: SANS,
+              fontSize: 14,
+              fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(196,145,58,0.3)',
+            }}
+          >
+            <LogIn size={18} />
+            <span>Sign In with Admin Google Account</span>
+          </button>
+        </main>
+        <SiteFooter palette={palette} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>
