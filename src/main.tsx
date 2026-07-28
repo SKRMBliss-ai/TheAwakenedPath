@@ -9,6 +9,10 @@ import Policies from './features/landing/Policies'
 import SoulfulHome from './features/landing/SoulfulHome'
 import ContentHub from './features/content/ContentHub'
 import ProgrammaticContentView from './features/content/ProgrammaticContentView'
+import MasterKnowledgeHub from './features/content/MasterKnowledgeHub'
+import ProgrammaticGlossaryView from './features/content/ProgrammaticGlossaryView'
+import ProgrammaticVideoView from './features/content/ProgrammaticVideoView'
+import GlobalKnowledgeDock from './components/site/GlobalKnowledgeDock'
 import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
@@ -107,19 +111,30 @@ const isPoliciesRoute = (() => {
   return p === '/policies' || p === '/policies/index.html';
 })();
 
-// Programmatic Content Engine route matching (/guides, /guides/:slug, /learn)
-const guidesInfo = (() => {
-  if (typeof window === 'undefined') return { isHub: false, slug: null };
+// Master Knowledge Platform route matching (/knowledge, /learn, /glossary/:term, /videos/:id, /guides/:slug)
+const knowledgeInfo = (() => {
+  if (typeof window === 'undefined') return { type: 'none', slug: null };
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  if (p === '/guides' || p === '/guides/index.html' || p === '/learn' || p === '/learn/index.html') {
-    return { isHub: true, slug: null };
+
+  if (p === '/knowledge' || p === '/knowledge/index.html' || p === '/learn' || p === '/learn/index.html') {
+    return { type: 'knowledgeHub', slug: null };
+  }
+  if (p === '/guides' || p === '/guides/index.html') {
+    return { type: 'contentHub', slug: null };
+  }
+  if (p.startsWith('/glossary/')) {
+    const slug = p.split('/').pop() || null;
+    return { type: 'glossary', slug };
+  }
+  if (p.startsWith('/videos/')) {
+    const slug = p.split('/').pop() || null;
+    return { type: 'video', slug };
   }
   if (p.startsWith('/guides/') || p.startsWith('/learn/')) {
-    const parts = p.split('/');
-    const slug = parts[parts.length - 1];
-    return { isHub: false, slug: slug || null };
+    const slug = p.split('/').pop() || null;
+    return { type: 'guide', slug };
   }
-  return { isHub: false, slug: null };
+  return { type: 'none', slug: null };
 })();
 
 // Brand home (Soulful Intelligence umbrella) — the ROOT of skrmblissai.in. The
@@ -144,42 +159,70 @@ if (isHomeRoute) {
   root.render(
     <ErrorBoundary featureName="SoulfulHome">
       <SoulfulHome />
+      <GlobalKnowledgeDock />
     </ErrorBoundary>,
   );
 } else if (isAboutJournalRoute) {
   root.render(
     <ErrorBoundary featureName="AboutJournal">
       <AboutJournal />
+      <GlobalKnowledgeDock />
     </ErrorBoundary>,
   );
 } else if (isEmotionalHealthRoute) {
   root.render(
     <ErrorBoundary featureName="EmotionalHealthCheck">
       <EmotionalHealthCheck />
+      <GlobalKnowledgeDock />
     </ErrorBoundary>,
   );
 } else if (isFeelingsCourseRoute) {
   root.render(
     <ErrorBoundary featureName="EmotionFeelingsCourse">
       <EmotionFeelingsCourse />
+      <GlobalKnowledgeDock />
     </ErrorBoundary>,
   );
 } else if (isPoliciesRoute) {
   root.render(
     <ErrorBoundary featureName="Policies">
       <Policies />
+      <GlobalKnowledgeDock />
     </ErrorBoundary>,
   );
-} else if (guidesInfo.isHub) {
+} else if (knowledgeInfo.type === 'knowledgeHub') {
+  root.render(
+    <ErrorBoundary featureName="MasterKnowledgeHub">
+      <MasterKnowledgeHub />
+      <GlobalKnowledgeDock />
+    </ErrorBoundary>,
+  );
+} else if (knowledgeInfo.type === 'contentHub') {
   root.render(
     <ErrorBoundary featureName="ContentHub">
       <ContentHub />
+      <GlobalKnowledgeDock />
     </ErrorBoundary>,
   );
-} else if (guidesInfo.slug) {
+} else if (knowledgeInfo.type === 'glossary' && knowledgeInfo.slug) {
+  root.render(
+    <ErrorBoundary featureName="ProgrammaticGlossaryView">
+      <ProgrammaticGlossaryView termSlug={knowledgeInfo.slug} />
+      <GlobalKnowledgeDock />
+    </ErrorBoundary>,
+  );
+} else if (knowledgeInfo.type === 'video' && knowledgeInfo.slug) {
+  root.render(
+    <ErrorBoundary featureName="ProgrammaticVideoView">
+      <ProgrammaticVideoView videoId={knowledgeInfo.slug} />
+      <GlobalKnowledgeDock />
+    </ErrorBoundary>,
+  );
+} else if (knowledgeInfo.type === 'guide' && knowledgeInfo.slug) {
   root.render(
     <ErrorBoundary featureName="ProgrammaticContentView">
-      <ProgrammaticContentView slug={guidesInfo.slug} />
+      <ProgrammaticContentView slug={knowledgeInfo.slug} />
+      <GlobalKnowledgeDock />
     </ErrorBoundary>,
   );
 } else {
@@ -189,6 +232,7 @@ if (isHomeRoute) {
         <ThemeProvider>
           <AchievementsProvider>
             <UntetheredApp />
+            <GlobalKnowledgeDock />
           </AchievementsProvider>
         </ThemeProvider>
       </AuthProvider>

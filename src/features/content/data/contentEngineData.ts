@@ -7,11 +7,12 @@ export interface Section {
 export interface FAQItem {
   q: string;
   a: string;
+  topic?: string;
 }
 
 export interface ContentArticle {
   slug: string;
-  type: 'guide' | 'glossary' | 'article' | 'video';
+  type: 'guide' | 'glossary' | 'article' | 'video' | 'practice' | 'book-summary';
   title: string;
   subtitle: string;
   description: string;
@@ -27,8 +28,62 @@ export interface ContentArticle {
   sections: Section[];
   faqs: FAQItem[];
   relatedSlugs: string[];
+  tags: string[];
 }
 
+export interface GlossaryTerm {
+  slug: string;
+  term: string;
+  phonetic?: string;
+  shortDefinition: string;
+  fullDefinition: string;
+  etymology?: string;
+  keyPrinciples: string[];
+  commonMisconceptions: string[];
+  dailyPractice: string;
+  category: string;
+  relatedArticleSlugs: string[];
+}
+
+export interface VideoResource {
+  id: string;
+  title: string;
+  description: string;
+  youtubeId: string;
+  duration: string;
+  uploadDate: string;
+  transcriptSummary: string;
+  keyTakeaways: string[];
+  relatedGuideSlugs: string[];
+}
+
+export interface LearningJourney {
+  id: string;
+  title: string;
+  description: string;
+  targetGoal: string;
+  estimatedDays: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  steps: {
+    title: string;
+    description: string;
+    resourceSlug: string;
+    resourceType: 'guide' | 'glossary' | 'video' | 'mindgym';
+  }[];
+}
+
+export interface TopicHubInfo {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  iconName: string;
+  featuredArticleSlugs: string[];
+  featuredGlossarySlugs: string[];
+  featuredVideoIds: string[];
+}
+
+// ─── ARTICLES REGISTRY ────────────────────────────────────────────────────────
 export const ARTICLES_REGISTRY: Record<string, ContentArticle> = {
   'feelings-vs-emotions': {
     slug: 'feelings-vs-emotions',
@@ -84,7 +139,8 @@ export const ARTICLES_REGISTRY: Record<string, ContentArticle> = {
         a: 'Witness journaling separates what happened in reality from how your mind interpreted it, breaking the automatic trigger-reaction cycle.'
       }
     ],
-    relatedSlugs: ['witness-consciousness-guide', 'stopping-overthinking-naturally', 'power-of-now-presence-guide']
+    relatedSlugs: ['witness-consciousness-guide', 'stopping-overthinking-naturally', 'power-of-now-presence-guide'],
+    tags: ['feelings', 'emotions', 'emotional-intelligence', 'somatic-awareness', 'overthinking']
   },
 
   'witness-consciousness-guide': {
@@ -120,7 +176,8 @@ export const ARTICLES_REGISTRY: Record<string, ContentArticle> = {
         a: 'Meditation is a specific practice session, whereas witness consciousness is a continuous state of present awareness that can be maintained during daily activities.'
       }
     ],
-    relatedSlugs: ['feelings-vs-emotions', 'power-of-now-presence-guide', 'stopping-overthinking-naturally']
+    relatedSlugs: ['feelings-vs-emotions', 'power-of-now-presence-guide', 'stopping-overthinking-naturally'],
+    tags: ['witness-consciousness', 'observer', 'presence', 'mindfulness', 'awareness']
   },
 
   'stopping-overthinking-naturally': {
@@ -151,7 +208,8 @@ export const ARTICLES_REGISTRY: Record<string, ContentArticle> = {
         a: 'MindGym provides guided 5-minute daily presence rituals, breathwork timers, and witness journaling to break mental chatter.'
       }
     ],
-    relatedSlugs: ['feelings-vs-emotions', 'witness-consciousness-guide']
+    relatedSlugs: ['feelings-vs-emotions', 'witness-consciousness-guide'],
+    tags: ['overthinking', 'anxiety', 'somatic-tracking', 'breathwork', 'mindgym']
   },
 
   'power-of-now-presence-guide': {
@@ -182,6 +240,306 @@ export const ARTICLES_REGISTRY: Record<string, ContentArticle> = {
         a: 'Direct your attention into your hands, feet, or chest. Feel the subtle tingling life-force energy within your physical form.'
       }
     ],
-    relatedSlugs: ['feelings-vs-emotions', 'witness-consciousness-guide']
+    relatedSlugs: ['feelings-vs-emotions', 'witness-consciousness-guide'],
+    tags: ['presence', 'power-of-now', 'pain-body', 'eckhart-tolle', 'ego']
   }
 };
+
+// ─── GLOSSARY DICTIONARY REGISTRY ─────────────────────────────────────────────
+export const GLOSSARY_REGISTRY: Record<string, GlossaryTerm> = {
+  'presence': {
+    slug: 'presence',
+    term: 'Presence',
+    phonetic: '/ˈprez.əns/',
+    shortDefinition: 'The state of complete, un-distracted awareness in the current moment, free from psychological time and mental chatter.',
+    fullDefinition: 'Presence is the foundational state of consciousness wherein attention is entirely anchored in the immediate Now. Unlike ordinary mind states dominated by memories of the past or anticipations of the future, presence operates as calm, silent awareness.',
+    etymology: 'From Latin praesentia (being at hand, instant).',
+    keyPrinciples: [
+      'Presence is accessed through body awareness, breath focus, and sensory perception.',
+      'Presence dissolves anxiety because anxiety requires psychological projection into the future.',
+      'In presence, you are not reacting to life; you are witnessing life unfold.'
+    ],
+    commonMisconceptions: [
+      'Misconception: Presence means having no thoughts. Reality: Presence means not being attached to thoughts.',
+      'Misconception: Presence takes hours of seated meditation. Reality: Presence can be accessed in a single conscious breath.'
+    ],
+    dailyPractice: 'Take 3 slow abdominal breaths. Feel the physical sensation of air moving through your nostrils and expand your chest.',
+    category: 'Presence & Awareness',
+    relatedArticleSlugs: ['power-of-now-presence-guide', 'witness-consciousness-guide']
+  },
+
+  'witness-consciousness': {
+    slug: 'witness-consciousness',
+    term: 'Witness Consciousness',
+    phonetic: '/ˈwɪt.nəs ˈkɒn.ʃəs.nəs/',
+    shortDefinition: 'The transcendent awareness that observes all thoughts, emotions, and physical sensations without judgment or identification.',
+    fullDefinition: 'Witness Consciousness (Sakshi Bhava in Eastern philosophy) refers to the realization that your true essence is the quiet, observing awareness behind mental activity, rather than the noisy thoughts themselves.',
+    keyPrinciples: [
+      'The Witness remains calm even during intense emotional surges.',
+      'Abiding as the Witness breaks the automatic link between thought triggers and reactive behaviors.',
+      'It is the core practice advocated in Michael Singer\'s The Untethered Soul.'
+    ],
+    commonMisconceptions: [
+      'Misconception: Witnessing makes you emotionally numb. Reality: Witnessing allows you to feel emotions deeply without being swept away by them.'
+    ],
+    dailyPractice: 'Silently ask yourself: "Who is observing this thought?" and feel the quiet space that opens up behind your mind.',
+    category: 'Presence & Awareness',
+    relatedArticleSlugs: ['witness-consciousness-guide', 'feelings-vs-emotions']
+  },
+
+  'pain-body': {
+    slug: 'pain-body',
+    term: 'Pain-Body',
+    phonetic: '/peɪn ˈbɒd.i/',
+    shortDefinition: 'An accumulated energy field of past unexpressed emotional suffering that periodically activates to trigger mental drama.',
+    fullDefinition: 'Coined by Eckhart Tolle, the pain-body is an energetic structure formed by unresolved emotional wounds from childhood and past experiences. When triggered, it compels the mind to generate negative thoughts that perpetuate emotional pain.',
+    keyPrinciples: [
+      'The pain-body feeds on negative thinking and emotional conflict.',
+      'Brought into the light of conscious presence, the pain-body cannot survive and turns back into pure awareness.'
+    ],
+    commonMisconceptions: [
+      'Misconception: The pain-body is a permanent personality flaw. Reality: It is merely unintegrated emotional energy.'
+    ],
+    dailyPractice: 'When an irrational wave of grief or anger arises, refrain from telling a story. Just feel the physical ache directly until it subsides.',
+    category: 'Emotional Intelligence',
+    relatedArticleSlugs: ['power-of-now-presence-guide', 'feelings-vs-emotions']
+  },
+
+  'somatic-tracking': {
+    slug: 'somatic-tracking',
+    term: 'Somatic Tracking',
+    phonetic: '/səˈmæt.ɪk ˈtræk.ɪŋ/',
+    shortDefinition: 'The mind-body practice of paying light, objective attention to raw physical sensations without fear or judgment.',
+    fullDefinition: 'Somatic Tracking is a neuroplastic technique used to re-train the brain\'s threat detection system. By observing bodily sensations (tightness, heat, tingling) with curious neutrality, you signal to your nervous system that the sensations are safe.',
+    keyPrinciples: [
+      'Safety is communicated through non-judgmental observation.',
+      'It deactivates the amygdala\'s fight-or-flight alert mechanism.'
+    ],
+    commonMisconceptions: [
+      'Misconception: Somatic tracking is trying to make pain go away. Reality: It is observing sensation without caring if it changes.'
+    ],
+    dailyPractice: 'Scan your body from head to toe in MindGym, naming sensations (e.g. "warmth in shoulders") with warm curiosity.',
+    category: 'Emotional Regulation',
+    relatedArticleSlugs: ['stopping-overthinking-naturally', 'feelings-vs-emotions']
+  }
+};
+
+// ─── VIDEO RESOURCES REGISTRY ────────────────────────────────────────────────
+export const VIDEO_REGISTRY: Record<string, VideoResource> = {
+  'ep1-feelings-and-emotions': {
+    id: 'ep1-feelings-and-emotions',
+    title: 'What Are Feelings & Emotions? — Episode 1 Preview',
+    description: 'Explore the fundamental difference between raw physical feelings and mental emotional conditioning in Episode 1 of the Feelings & Emotions course series.',
+    youtubeId: 'fTrY9KMLhAo',
+    duration: '6:12',
+    uploadDate: '2026-01-01',
+    transcriptSummary: 'In this introductory video, Sim Katyal explains why emotions become trapped in the human body and how mental stories prolong physical suffering. Learn how to observe sensations directly.',
+    keyTakeaways: [
+      'Physical feelings arise directly in the nervous system.',
+      'Mental stories turn short feelings into long-lasting emotional suffering.',
+      'Presence breaks the cycle of emotional reactivity.'
+    ],
+    relatedGuideSlugs: ['feelings-vs-emotions', 'witness-consciousness-guide']
+  },
+
+  'ep2-art-of-witnessing': {
+    id: 'ep2-art-of-witnessing',
+    title: 'The Art of Witnessing — Episode 2 Preview',
+    description: 'Learn how to sit in the seat of the observer and watch your thoughts and feelings pass by like clouds in the sky.',
+    youtubeId: 'pES3x5XlJF0',
+    duration: '5:45',
+    uploadDate: '2026-01-15',
+    transcriptSummary: 'Sim Katyal guides viewers through the practice of Witness Consciousness based on The Untethered Soul, demonstrating how to dis-identify from racing thoughts.',
+    keyTakeaways: [
+      'You are the observer, not the noisy thoughts.',
+      'Non-judgmental awareness dissolves mental tension.',
+      'Daily 5-minute practice builds unshakeable peace.'
+    ],
+    relatedGuideSlugs: ['witness-consciousness-guide', 'stopping-overthinking-naturally']
+  }
+};
+
+// ─── GUIDED LEARNING JOURNEYS ─────────────────────────────────────────────────
+export const LEARNING_JOURNEYS: LearningJourney[] = [
+  {
+    id: 'overthinking-recovery',
+    title: 'Overthinking Recovery Journey',
+    description: 'A 3-step guided pathway to quiet racing thoughts, break mental loops, and ground your awareness in the body.',
+    targetGoal: 'Dissolve mental chatter & cultivate instant calm',
+    estimatedDays: '3 Days',
+    level: 'Beginner',
+    steps: [
+      {
+        title: 'Step 1: Understand Feelings vs Emotions',
+        description: 'Learn why overthinking happens and how to shift attention from thoughts to body signals.',
+        resourceSlug: 'feelings-vs-emotions',
+        resourceType: 'guide'
+      },
+      {
+        title: 'Step 2: Learn Somatic Tracking',
+        description: 'Explore how somatic tracking deactivates the brain\'s stress network.',
+        resourceSlug: 'somatic-tracking',
+        resourceType: 'glossary'
+      },
+      {
+        title: 'Step 3: Practice in MindGym',
+        description: 'Complete your first 5-minute presence breathwork and witness reflection in MindGym.',
+        resourceSlug: '/mindgym',
+        resourceType: 'mindgym'
+      }
+    ]
+  },
+  {
+    id: 'witness-consciousness-mastery',
+    title: 'Witness Consciousness & Presence Journey',
+    description: 'Master the seat of the observer and learn to abide as quiet awareness during daily life.',
+    targetGoal: 'Freedom from emotional reactivity & deep presence',
+    estimatedDays: '5 Days',
+    level: 'Intermediate',
+    steps: [
+      {
+        title: 'Step 1: The Observer Principle',
+        description: 'Discover the core teachings of Eckhart Tolle and Michael Singer.',
+        resourceSlug: 'witness-consciousness-guide',
+        resourceType: 'guide'
+      },
+      {
+        title: 'Step 2: Dissolving the Pain-Body',
+        description: 'Learn how to recognize and disarm old emotional patterns.',
+        resourceSlug: 'pain-body',
+        resourceType: 'glossary'
+      },
+      {
+        title: 'Step 3: Watch Episode 1 Preview',
+        description: 'Watch Sim Katyal explain emotional regulation in action.',
+        resourceSlug: 'ep1-feelings-and-emotions',
+        resourceType: 'video'
+      }
+    ]
+  }
+];
+
+// ─── TOPIC HUBS ──────────────────────────────────────────────────────────────
+export const TOPIC_HUBS: TopicHubInfo[] = [
+  {
+    id: 'presence',
+    name: 'Presence & Awareness',
+    tagline: 'Living in the Now free from psychological time & overthinking.',
+    description: 'Discover authoritative resources on present moment awareness, Eckhart Tolle\'s teachings, and grounding rituals.',
+    iconName: 'Compass',
+    featuredArticleSlugs: ['power-of-now-presence-guide', 'witness-consciousness-guide'],
+    featuredGlossarySlugs: ['presence', 'pain-body'],
+    featuredVideoIds: ['ep2-art-of-witnessing']
+  },
+  {
+    id: 'emotional-intelligence',
+    name: 'Emotional Intelligence & Healing',
+    tagline: 'Transform emotional reactivity into somatic awareness & inner freedom.',
+    description: 'Comprehensive guides on physical feelings vs mental emotions, somatic tracking, and breaking anxiety loops.',
+    iconName: 'Heart',
+    featuredArticleSlugs: ['feelings-vs-emotions', 'stopping-overthinking-naturally'],
+    featuredGlossarySlugs: ['witness-consciousness', 'somatic-tracking'],
+    featuredVideoIds: ['ep1-feelings-and-emotions']
+  }
+];
+
+// ─── AUTOMATED RECOMMENDATION ENGINE ─────────────────────────────────────────
+export function getRelatedContent(currentSlug: string, limit = 4): ContentArticle[] {
+  const current = ARTICLES_REGISTRY[currentSlug];
+  const allArticles = Object.values(ARTICLES_REGISTRY);
+
+  if (!current) return allArticles.slice(0, limit);
+
+  // Score articles by matching category, tags, or explicit relatedSlugs
+  const scored = allArticles
+    .filter((a) => a.slug !== currentSlug)
+    .map((a) => {
+      let score = 0;
+      if (a.category === current.category) score += 3;
+      if (current.relatedSlugs.includes(a.slug)) score += 5;
+      const sharedTags = a.tags.filter((t) => current.tags.includes(t));
+      score += sharedTags.length * 2;
+      return { article: a, score };
+    });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit).map((s) => s.article);
+}
+
+// ─── GLOBAL SITE-WIDE SEARCH INDEX ───────────────────────────────────────────
+export interface SearchResultItem {
+  title: string;
+  subtitle: string;
+  url: string;
+  type: 'Guide' | 'Glossary' | 'Video' | 'Journey' | 'App';
+  category: string;
+}
+
+export function searchKnowledgeBase(query: string): SearchResultItem[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+
+  const results: SearchResultItem[] = [];
+
+  // Search Guides & Articles
+  Object.values(ARTICLES_REGISTRY).forEach((art) => {
+    if (art.title.toLowerCase().includes(q) || art.description.toLowerCase().includes(q) || art.tags.some(t => t.toLowerCase().includes(q))) {
+      results.push({
+        title: art.title,
+        subtitle: art.subtitle,
+        url: `/guides/${art.slug}`,
+        type: 'Guide',
+        category: art.category
+      });
+    }
+  });
+
+  // Search Glossary Terms
+  Object.values(GLOSSARY_REGISTRY).forEach((term) => {
+    if (term.term.toLowerCase().includes(q) || term.shortDefinition.toLowerCase().includes(q)) {
+      results.push({
+        title: `Glossary: ${term.term}`,
+        subtitle: term.shortDefinition,
+        url: `/glossary/${term.slug}`,
+        type: 'Glossary',
+        category: term.category
+      });
+    }
+  });
+
+  // Search Videos
+  Object.values(VIDEO_REGISTRY).forEach((vid) => {
+    if (vid.title.toLowerCase().includes(q) || vid.description.toLowerCase().includes(q)) {
+      results.push({
+        title: vid.title,
+        subtitle: vid.description,
+        url: `/videos/${vid.id}`,
+        type: 'Video',
+        category: 'YouTube Masterclass'
+      });
+    }
+  });
+
+  // Always append MindGym & Feelings Course if relevant
+  if ('mindgym'.includes(q) || 'app'.includes(q) || 'practice'.includes(q) || 'meditation'.includes(q)) {
+    results.push({
+      title: 'MindGym Daily Mind Training App',
+      subtitle: '5-minute presence breathwork, somatic body tracking & witness journaling.',
+      url: '/mindgym',
+      type: 'App',
+      category: 'Daily Practice'
+    });
+  }
+
+  if ('course'.includes(q) || 'feelings'.includes(q) || 'episodes'.includes(q)) {
+    results.push({
+      title: 'Understanding Feelings & Emotions Course',
+      subtitle: '7-episode guided video course by Sim Katyal & Soulful Intelligence Studio.',
+      url: '/feelingsandemotioncourse',
+      type: 'Guide',
+      category: 'Guided Course'
+    });
+  }
+
+  return results.slice(0, 8);
+}
