@@ -29,7 +29,7 @@ const GUIDES: Guide[] = [
     title: 'Living in the Now',
     subtitle: "A plain-English guide to the key ideas of Eckhart Tolle\u2019s The Power of Now.",
     cover: GUIDE_COVER('living-in-the-now.webp'),
-    href: null,
+    href: GUIDE_COVER('Living-in-the-Now%20(1).pdf'),
     accent: '#8C7B9E',
   },
   {
@@ -37,7 +37,7 @@ const GUIDES: Guide[] = [
     title: 'Set Yourself Free',
     subtitle: "The core practices from Michael Singer\u2019s The Untethered Soul, made simple.",
     cover: GUIDE_COVER('SetYourSelfFree.webp'),
-    href: null,
+    href: GUIDE_COVER('Set-Yourself-Free%20(1).pdf'),
     accent: '#9E8C6B',
   },
   {
@@ -45,7 +45,7 @@ const GUIDES: Guide[] = [
     title: 'Understanding Your Emotions',
     subtitle: 'A gentle starter guide — the first ideas from the Feelings & Emotions course.',
     cover: GUIDE_COVER('UnderstandingEmotions.webp'),
-    href: null,
+    href: GUIDE_COVER('Understanding-Feelings-and-Emotions.pdf'),
     accent: '#6B8C9E',
   },
   {
@@ -53,7 +53,7 @@ const GUIDES: Guide[] = [
     title: 'Daily Practice Starter Kit',
     subtitle: 'Begin your daily practice — 5-minute rituals for presence, clarity and calm.',
     cover: null,
-    href: null,
+    href: GUIDE_COVER('Daily-Practice-Starter-Kit.pdf'),
     accent: '#8C6B7E',
   },
 ];
@@ -95,9 +95,7 @@ function GuideCard({ guide, palette }: { guide: Guide; palette: Palette }) {
     setStep('done');
     if (guide.href) {
       try {
-        const a = document.createElement('a');
-        a.href = guide.href; a.download = ''; a.target = '_blank'; a.rel = 'noopener';
-        document.body.appendChild(a); a.click(); a.remove();
+        window.open(guide.href, '_blank', 'noopener,noreferrer');
       } catch (_) {}
     }
   };

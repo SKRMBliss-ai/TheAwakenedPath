@@ -2640,20 +2640,20 @@ exports.logWebActivity = onRequest({ cors: true }, async (req, res) => {
             timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        // Notify admin for high-value events (email submit, download)
-        const notifyEvents = ['EMAIL_FORM_SUBMIT', 'JOURNAL_DOWNLOAD'];
+        // Notify admin for high-value lead events (email submit, guide download, checkout)
+        const notifyEvents = ['EMAIL_FORM_SUBMIT', 'JOURNAL_DOWNLOAD', 'GUIDE_LEAD', 'LEAD_MAGNET_SUBMIT', 'LEAD_MAGNET_DOWNLOAD', 'BUY_INTENT_FORM_SUBMIT', 'CHECKOUT_INTEREST'];
         if (notifyEvents.includes(action) && userEmail !== 'anonymous') {
             try {
                 const transporter = getTransporter();
-                const actionLabel = action === 'EMAIL_FORM_SUBMIT' ? 'submitted their email on' : 'downloaded the journal from';
+                const actionLabel = action.replace(/_/g, ' ').toLowerCase();
                 await transporter.sendMail({
                     from: '"Awakened Presence" <connect@skrmblissai.in>',
-                    to: 'shrutikhungar@gmail.com',
-                    subject: `✨ Presence: ${userEmail} ${actionLabel} ${page || 'the website'}`,
+                    to: 'skrmblissai@gmail.com, shrutikhungar@gmail.com',
+                    subject: `✨ New Lead: ${userEmail} (${actionLabel}) on ${page || 'the website'}`,
                     html: `<div style="font-family:Georgia,serif;padding:32px;background:#0C0910;color:#FDFAF4;border-radius:12px;max-width:480px;margin:auto;">
-                        <p style="color:#B8973A;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 16px;">Live Notification</p>
-                        <h2 style="font-weight:300;font-style:italic;margin:0 0 20px;font-size:22px;">A Witness has Arrived</h2>
-                        <p style="margin:6px 0;"><strong>User:</strong> ${userEmail}</p>
+                        <p style="color:#B8973A;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 16px;">Live Lead Notification</p>
+                        <h2 style="font-weight:300;font-style:italic;margin:0 0 20px;font-size:22px;">New Lead Captured</h2>
+                        <p style="margin:6px 0;"><strong>User / Contact:</strong> ${userEmail}</p>
                         <p style="margin:6px 0;"><strong>Action:</strong> ${action.replace(/_/g, ' ')}</p>
                         <p style="margin:6px 0;"><strong>Page:</strong> ${page || 'unknown'}</p>
                         <p style="margin:6px 0;"><strong>Details:</strong> ${details || '-'}</p>
@@ -2699,7 +2699,7 @@ exports.notifyAdminOnPresence = onDocumentCreated({
 
             await transporter.sendMail({
                 from: '"Awakened Presence" <connect@skrmblissai.in>',
-                to: 'shrutikhungar@gmail.com',
+                to: 'skrmblissai@gmail.com, shrutikhungar@gmail.com',
                 subject: `✨ Presence: ${logData.userEmail} is ${actionLabel}`,
                 html: `
                     <div style="font-family: Georgia, serif; padding: 40px; background: #0C0910; color: #FDFAF4; border: 1px solid rgba(184,151,58,0.2); border-radius: 12px; max-width: 500px; margin: auto;">

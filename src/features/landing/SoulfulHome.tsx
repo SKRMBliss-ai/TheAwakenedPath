@@ -14,7 +14,6 @@ import HeroSection from './components/HeroSection';
 import WhatBringsYou from './components/WhatBringsYou';
 import TinyTransformation from './components/TinyTransformation';
 import FeatureGrid from './components/FeatureGrid';
-import TestimonialsSection from './components/TestimonialsSection';
 import FeaturedCourse from './components/FeaturedCourse';
 import InteractiveReflection from './components/InteractiveReflection';
 import YouTubeSection from './components/YouTubeSection';
@@ -268,8 +267,9 @@ export default function SoulfulHome() {
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
-          {/* 5. Testimonials + stats */}
-          <TestimonialsSection palette={palette} />
+          {/* Testimonials + stats section removed — it was fabricated social
+              proof (invented people and numbers). It goes back only with real,
+              consented testimonials and truthful figures. */}
 
           {/* 6. Featured Course banner */}
           <FeaturedCourse palette={palette} />

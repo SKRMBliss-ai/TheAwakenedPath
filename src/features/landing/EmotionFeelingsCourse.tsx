@@ -437,39 +437,8 @@ const CHAPTERS: Chapter[] = [
   },
 ];
 
-// 4. Testimonials
-const TESTIMONIALS = [
-  {
-    name: 'Priya',
-    location: 'Bengaluru',
-    quote: 'I finally understood why I react the way I do. This course gave me a gentleness with myself I never thought possible. It changed everything for me.',
-    role: 'Product Manager & Mother',
-    videoUrl: 'https://www.youtube.com/embed/nbyToUpT1_8',
-    initial: 'P',
-    color: '#8C6B9E',
-    avatarUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    name: 'Arjun',
-    location: 'Mumbai',
-    quote: 'The 90-second practice alone paid for the course ten times over. I feel lighter, sleep better, and no longer carry work stress into my evening.',
-    role: 'Founder & Designer',
-    videoUrl: '',
-    initial: 'A',
-    color: '#6B8C9E',
-    avatarUrl: 'https://randomuser.me/api/portraits/men/32.jpg',
-  },
-  {
-    name: 'Neha',
-    location: 'Pune',
-    quote: 'I sleep better, worry less and feel deeply connected to myself and my family. The framework is simple, practical and deeply human.',
-    role: 'Architect',
-    videoUrl: '',
-    initial: 'N',
-    color: '#9E8C6B',
-    avatarUrl: 'https://randomuser.me/api/portraits/women/68.jpg',
-  },
-];
+// (Testimonials removed — they were fabricated people with stock-photo faces.
+//  Real, consented testimonials go here when they exist.)
 
 // 5. FAQs
 const FAQS = [
@@ -699,7 +668,7 @@ export default function EmotionFeelingsCourse() {
             { label: 'Overview', href: '#overview' },
             { label: 'Course Journey', href: '#journey' },
             { label: 'What’s Included', href: '#whats-included' },
-            { label: 'Stories', href: '#stories' },
+            { label: 'Why it works', href: '#stories' },
             { label: 'FAQ', href: '#faq' },
           ]}
           cta={{
@@ -1251,7 +1220,7 @@ export default function EmotionFeelingsCourse() {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  <Sparkles size={11} /> {isSelected ? 'Exploring' : 'Click Me'}
+                  <Sparkles size={11} /> {isSelected ? 'Exploring' : 'Tap to explore'}
                 </div>
               </button>
             );
@@ -1884,121 +1853,53 @@ export default function EmotionFeelingsCourse() {
           zIndex: 2,
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: 52 }}>
+        <div style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto 48px' }}>
           <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#9C8B78', marginBottom: 14 }}>
-            Student Stories
+            Honest &amp; grounded
           </p>
-          <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.8vw, 48px)', fontWeight: 400, color: ink, marginBottom: 8 }}>
-            Loved by thousands on their inner journey
+          <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.8vw, 48px)', fontWeight: 400, color: ink, marginBottom: 12 }}>
+            Real practice — not hype.
           </h2>
+          <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: inkSub, margin: 0 }}>
+            No inflated numbers, no borrowed quotes. This course is built on lived experience and the
+            teachings that genuinely helped — and you can watch the first lessons free before you decide.
+          </p>
         </div>
 
+        {/* Honest facts about the course — every figure here is true. */}
         <div
           style={{
-            maxWidth: 1100,
+            maxWidth: 900,
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 20,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 16,
           }}
         >
-          {/* 3 Testimonials */}
-          {TESTIMONIALS.map((t, idx) => (
-            <div key={idx} className="si-testimonial-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: '50%',
-                    background: `${t.color}25`,
-                    color: t.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: SERIF,
-                    fontSize: 20,
-                    fontWeight: 600,
-                    overflow: 'hidden',
-                  }}
-                >
-                  {t.avatarUrl ? (
-                    <img 
-                      src={t.avatarUrl} 
-                      alt={t.name} 
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover',
-                        filter: 'grayscale(100%) contrast(1.1) opacity(0.85)',
-                        mixBlendMode: isDark ? 'lighten' : 'multiply'
-                      }} 
-                    />
-                  ) : (
-                    t.initial
-                  )}
-                </div>
-                <div>
-                  <h4 style={{ fontFamily: SANS, fontSize: 14, fontWeight: 800, color: ink, margin: 0 }}>
-                    {t.name}
-                  </h4>
-                  <p style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, margin: 0 }}>
-                    {t.location} · {t.role}
-                  </p>
-                </div>
-              </div>
-
-              <p style={{ fontFamily: SERIF, fontSize: 17, fontStyle: 'italic', lineHeight: 1.6, color: ink, margin: 0 }}>
-                "{t.quote}"
+          {[
+            { value: '7', label: 'Episodes, released weekly' },
+            { value: 'Free', label: 'First lessons to watch' },
+            { value: '15-day', label: 'Money-back guarantee' },
+            { value: 'Yours', label: 'Pay what you feel' },
+          ].map((s, i) => (
+            <div
+              key={i}
+              style={{
+                background: isDark ? 'rgba(74,50,96,0.18)' : 'rgba(74,50,96,0.06)',
+                border: '1px solid rgba(74,50,96,0.25)',
+                borderRadius: 18,
+                padding: '26px 20px',
+                textAlign: 'center',
+              }}
+            >
+              <p style={{ fontFamily: SERIF, fontSize: 'clamp(26px,3vw,34px)', fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 6px' }}>
+                {s.value}
+              </p>
+              <p style={{ fontFamily: SANS, fontSize: 11.5, fontWeight: 700, color: inkSub, margin: 0 }}>
+                {s.label}
               </p>
             </div>
           ))}
-
-          {/* Stats Card */}
-          <div
-            style={{
-              background: isDark ? 'rgba(74,50,96,0.18)' : 'rgba(74,50,96,0.06)',
-              border: '1px solid rgba(74,50,96,0.25)',
-              borderRadius: 20,
-              padding: 28,
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 20,
-            }}
-          >
-            <div>
-              <p style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 2px' }}>
-                40,000+
-              </p>
-              <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: inkSub, margin: 0 }}>
-                Students worldwide
-              </p>
-            </div>
-            <div>
-              <p style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 2px' }}>
-                1M+
-              </p>
-              <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: inkSub, margin: 0 }}>
-                Minutes of transformation
-              </p>
-            </div>
-            <div>
-              <p style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 2px' }}>
-                120+
-              </p>
-              <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: inkSub, margin: 0 }}>
-                Guided lessons
-              </p>
-            </div>
-            <div>
-              <p style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 2px' }}>
-                98%
-              </p>
-              <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: inkSub, margin: 0 }}>
-                Feel more in control
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -2533,15 +2434,25 @@ export default function EmotionFeelingsCourse() {
                 </div>
               )}
 
-              {/* YouTube Iframe (unmounts when teaser ends to stop background audio) */}
+              {/* YouTube Iframe (controls disabled & pointer shield to prevent seeking/forwarding) */}
               {!teaserEnded && (
-                <iframe
-                  src={`https://www.youtube.com/embed/${teaserVideo.id}?autoplay=1&modestbranding=1&rel=0${teaserVideo.startTime ? `&start=${teaserVideo.startTime}` : ''}`}
-                  title={`60s Teaser - Episode ${teaserVideo.episodeNum}`}
-                  style={{ width: '100%', height: '100%', border: 'none' }}
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                />
+                <>
+                  <iframe
+                    src={`https://www.youtube.com/embed/${teaserVideo.id}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0${teaserVideo.startTime ? `&start=${teaserVideo.startTime}` : ''}`}
+                    title={`60s Teaser - Episode ${teaserVideo.episodeNum}`}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                    allow="autoplay; encrypted-media"
+                  />
+                  {/* Invisible pointer shield preventing video scrubbing / fast-forwarding */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: 25,
+                      background: 'transparent',
+                    }}
+                  />
+                </>
               )}
 
               {/* Teaser Ended Glassmorphism Veil */}

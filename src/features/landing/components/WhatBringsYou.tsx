@@ -242,7 +242,7 @@ export default function WhatBringsYou({ palette }: { palette: Palette }) {
                   transition: 'all 0.3s ease',
                 }}
               >
-                <Sparkles size={11} /> {isSelected ? 'Exploring' : 'Click Me'}
+                <Sparkles size={11} /> {isSelected ? 'Exploring' : 'Tap to explore'}
               </div>
             </motion.button>
           );
