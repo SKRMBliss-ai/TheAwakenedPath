@@ -54,4 +54,34 @@
     <changefreq>yearly</changefreq>
     <priority>0.40</priority>
   </url>
+  <url>
+    <loc>https://www.skrmblissai.in/guides</loc>
+    <lastmod>2026-07-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.skrmblissai.in/guides/feelings-vs-emotions</loc>
+    <lastmod>2026-07-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.skrmblissai.in/guides/witness-consciousness-guide</loc>
+    <lastmod>2026-07-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.skrmblissai.in/guides/stopping-overthinking-naturally</loc>
+    <lastmod>2026-07-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.skrmblissai.in/guides/power-of-now-presence-guide</loc>
+    <lastmod>2026-07-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
 </urlset>

@@ -7,6 +7,8 @@ import EmotionalHealthCheck from './features/landing/EmotionalHealthCheck'
 import EmotionFeelingsCourse from './features/landing/EmotionFeelingsCourse'
 import Policies from './features/landing/Policies'
 import SoulfulHome from './features/landing/SoulfulHome'
+import ContentHub from './features/content/ContentHub'
+import ProgrammaticContentView from './features/content/ProgrammaticContentView'
 import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
@@ -105,6 +107,21 @@ const isPoliciesRoute = (() => {
   return p === '/policies' || p === '/policies/index.html';
 })();
 
+// Programmatic Content Engine route matching (/guides, /guides/:slug, /learn)
+const guidesInfo = (() => {
+  if (typeof window === 'undefined') return { isHub: false, slug: null };
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  if (p === '/guides' || p === '/guides/index.html' || p === '/learn' || p === '/learn/index.html') {
+    return { isHub: true, slug: null };
+  }
+  if (p.startsWith('/guides/') || p.startsWith('/learn/')) {
+    const parts = p.split('/');
+    const slug = parts[parts.length - 1];
+    return { isHub: false, slug: slug || null };
+  }
+  return { isHub: false, slug: null };
+})();
+
 // Brand home (Soulful Intelligence umbrella) — the ROOT of skrmblissai.in. The
 // Mind Gym app now lives at /mindgym; the bare domain shows the studio home.
 const isHomeRoute = (() => {
@@ -151,6 +168,18 @@ if (isHomeRoute) {
   root.render(
     <ErrorBoundary featureName="Policies">
       <Policies />
+    </ErrorBoundary>,
+  );
+} else if (guidesInfo.isHub) {
+  root.render(
+    <ErrorBoundary featureName="ContentHub">
+      <ContentHub />
+    </ErrorBoundary>,
+  );
+} else if (guidesInfo.slug) {
+  root.render(
+    <ErrorBoundary featureName="ProgrammaticContentView">
+      <ProgrammaticContentView slug={guidesInfo.slug} />
     </ErrorBoundary>,
   );
 } else {
