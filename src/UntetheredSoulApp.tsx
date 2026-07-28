@@ -1247,18 +1247,20 @@ export default function UntetheredApp() {
       }}>
 
         {/* ── Logo ── */}
-        <div className="flex items-center justify-between px-6 py-[1.5vh] flex-shrink-0">
-          <MindGymLogo
-            variant="full"
-            size="sm"
-            animated={true}
-            onClick={() => setActiveTab('home')}
-            className="group"
-          />
+        <div className="flex items-center justify-between px-4 py-[1.5vh] flex-shrink-0 min-w-0 w-full overflow-hidden">
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <MindGymLogo
+              variant="full"
+              size="sm"
+              animated={true}
+              onClick={() => setActiveTab('home')}
+              className="group"
+            />
+          </div>
           {/* Desktop collapse button */}
           <button
             onClick={() => setIsSidebarCollapsed(true)}
-            className="hidden lg:flex w-8 h-8 rounded-xl items-center justify-center transition-all hover:bg-[var(--bg-base)] group"
+            className="hidden lg:flex w-8 h-8 rounded-xl items-center justify-center transition-all hover:bg-[var(--bg-base)] group flex-shrink-0 ml-1"
             title="Collapse sidebar"
             aria-label="Collapse sidebar"
           >
@@ -1267,7 +1269,7 @@ export default function UntetheredApp() {
           {/* Mobile close button */}
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all"
+            className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all flex-shrink-0 ml-1"
             aria-label="Close menu"
           >
             <X className="w-4 h-4" />
@@ -1732,14 +1734,15 @@ export default function UntetheredApp() {
               <Menu size={16} />
             </button>
             
-            {/* Soulful Intelligence mark — ties Mind Gym back to the studio brand */}
+            {/* Soulful Intelligence mark — takes user directly to www.skrmblissai.in */}
             <a
-                href="/"
-                className="flex items-center gap-2.5 text-current hover:opacity-80 transition-all group"
-                title="Soulful Intelligence"
+                href="https://www.skrmblissai.in"
+                className="flex items-center gap-2.5 text-current transition-all group flex-shrink-0"
+                title="Soulful Intelligence Studio — Visit www.skrmblissai.in"
+                aria-label="Visit Soulful Intelligence Studio website at www.skrmblissai.in"
             >
-                <div className="w-9 h-9 rounded-full overflow-hidden border border-[#A98A67]/40 group-hover:scale-110 transition-transform flex items-center justify-center">
-                    <SILogoMark />
+                <div className="w-12 h-12 sm:w-[50px] sm:h-[50px] rounded-full p-0.5 border-2 border-[#C4913A]/70 dark:border-[#FFDF9E]/80 bg-gradient-to-br from-[#C4913A]/20 via-[#4A3260]/15 to-transparent shadow-[0_0_16px_rgba(196,145,58,0.35)] group-hover:shadow-[0_0_24px_rgba(196,145,58,0.65)] group-hover:border-[#FFDF9E] group-hover:scale-105 transition-all flex items-center justify-center overflow-hidden">
+                    <SILogoMark size={44} />
                 </div>
             </a>
 

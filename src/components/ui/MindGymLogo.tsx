@@ -28,7 +28,7 @@ export function MindGymLogo({
 
   return (
     <div
-      className={cn('flex items-center gap-3 cursor-pointer select-none', className)}
+      className={cn('flex items-center gap-2.5 cursor-pointer select-none min-w-0 overflow-hidden', className)}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
     >
@@ -195,35 +195,35 @@ function LogoMark({ size, animated }: { size: number; animated: boolean }) {
 // ─────────────────────────────────────────────
 function Wordmark({ size }: { size: 'sm' | 'md' | 'lg' }) {
   const titleSize = {
-    sm: 'text-[15px]',
-    md: 'text-[22px]',
-    lg: 'text-[28px]',
+    sm: 'text-[17px] sm:text-[18px]',
+    md: 'text-[21px]',
+    lg: 'text-[26px]',
   }[size];
 
-  const subFontSize = { sm: '8px', md: '10px', lg: '12px' }[size];
+  const subFontSize = { sm: '8.5px', md: '10px', lg: '11.5px' }[size];
 
   return (
-    <div className="flex flex-col gap-1.5 ml-1">
-      {/* Main wordmark — larger, stronger, clearly legible */}
+    <div className="flex flex-col gap-0.5 ml-0.5 min-w-0 flex-1 overflow-hidden">
+      {/* Main wordmark — clean, elegant serif, fitting perfectly within boundary */}
       <h1
         className={cn(
           titleSize,
-          'font-serif font-semibold text-[var(--text-primary)] tracking-wide leading-[1.1] whitespace-nowrap',
+          'font-serif font-medium text-[var(--text-primary)] leading-[1.15] truncate max-w-full',
           'group-hover:text-[var(--accent-primary)] transition-colors duration-300'
         )}
-        style={{ letterSpacing: '0.02em' }}
+        style={{ letterSpacing: '0.01em' }}
       >
         Mind Gym
       </h1>
 
-      {/* Tagline — tighter tracking, slightly brighter */}
+      {/* Tagline — tight tracking to prevent overflow */}
       <span
-        className="font-sans font-bold uppercase text-[var(--accent-primary)]"
+        className="font-sans font-bold uppercase text-[var(--accent-primary)] truncate max-w-full"
         style={{
           fontSize: subFontSize,
-          letterSpacing: '0.22em',
+          letterSpacing: '0.14em',
           opacity: 0.85,
-          lineHeight: 1,
+          lineHeight: 1.1,
         }}
       >
         Train your mind daily
