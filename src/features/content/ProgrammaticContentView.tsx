@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
 import { Sparkles, Clock, ArrowRight, ChevronRight, HelpCircle, Compass } from 'lucide-react';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebase';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import { useSiteTheme } from '../../lib/siteTheme';
@@ -22,6 +25,17 @@ export default function ProgrammaticContentView({ slug }: Props) {
   const gold = '#C4913A';
 
   const article: ContentArticle | undefined = ARTICLES_REGISTRY[slug] || ARTICLES_REGISTRY['feelings-vs-emotions'];
+
+  useEffect(() => {
+    try {
+      addDoc(collection(db, 'activity_logs'), {
+        eventType: 'PAGE_VISIT_GUIDE',
+        details: article.slug,
+        path: window.location.pathname,
+        timestamp: serverTimestamp(),
+      });
+    } catch (_) {}
+  }, [article.slug]);
 
   // SEO & Schema Setup
   usePageSeo({
