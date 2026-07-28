@@ -3,7 +3,6 @@ import { ArrowRight, Loader2, Share2, Check, Battery, Moon, Brain, Users, Flame,
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { usePageSeo } from '../../lib/seo';
-import SocialFab from '../../components/ui/SocialFab';
 import HeroMark from '../../components/site/HeroMark';
 
 // ─── Activity Tracker (fire-and-forget, mirrors AboutJournal) ─────────────────
@@ -1053,9 +1052,6 @@ export default function EmotionalHealthCheck() {
                     </a>
                 </div>
             )}
-
-            {/* Shared connect menu (WhatsApp, group, Telegram, YouTube, Facebook) */}
-            <SocialFab onTrack={(e) => trackActivity(e, 'floating')} />
         </div>
     );
 }

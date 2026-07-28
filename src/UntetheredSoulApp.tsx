@@ -35,7 +35,6 @@ import { FirstRunWelcome } from './components/ui/FirstRunWelcome';
 import { DashboardGrid } from './features/practices/DashboardGrid';
 import PriceSlider from './components/ui/PriceSlider';
 import SILogoMark from './components/ui/SILogoMark';
-import SocialFab from './components/ui/SocialFab';
 
 // ─── Lazy-loaded feature tabs ───────────────────────────────────────────────
 // None of these are needed for the first paint of the home screen, so they are
@@ -2221,10 +2220,6 @@ export default function UntetheredApp() {
       </div>
       <PhonePromptModal />
       <MusicMiniPlayer />
-
-      {/* Connect menu — hidden on the immersive full-frame views, and raised so
-          it clears the mobile bottom nav / mini-player. */}
-      {!['meditation', 'wisdom_untethered'].includes(activeTab) && <SocialFab raised />}
 
       {/* ── Mobile bottom navigation — thumb-reachable core tabs (hidden on desktop) ── */}
       {!(activeTab === 'meditation' && isSidebarCollapsed) && activeTab !== 'wisdom_untethered' && (

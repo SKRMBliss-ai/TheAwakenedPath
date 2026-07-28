@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, useMotionTemplate, useScroll, useTransform } from 'framer-motion';
 import { PresenceBreath } from '../../components/ui/PresenceBreath';
 import { usePageSeo } from '../../lib/seo';
-import SocialFab from '../../components/ui/SocialFab';
 import {
     ArrowRight,
     Sparkles,
@@ -947,7 +946,6 @@ export default function AboutJournal() {
             <JournalDownload />
             <Footer />
             <FloatingActions />
-            <SocialFab onTrack={(e) => trackActivity(e, 'floating')} />
         </div>
     );
 }

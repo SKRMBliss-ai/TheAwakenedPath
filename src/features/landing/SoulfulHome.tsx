@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, MessageCircle } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
-import SocialFab from '../../components/ui/SocialFab';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter, SI_LOGO_SRC } from '../../components/site/SiteChrome';
 import HeroMark from '../../components/site/HeroMark';
@@ -668,8 +667,6 @@ export default function SoulfulHome() {
       <div style={{ position: 'relative', zIndex: 2 }}>
         <SiteFooter palette={palette} />
       </div>
-
-      <SocialFab onTrack={track} />
 
       {/* ── Responsive breakpoints ────────────────────────────────────────── */}
       <style>{`

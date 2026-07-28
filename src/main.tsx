@@ -13,6 +13,7 @@ import MasterKnowledgeHub from './features/content/MasterKnowledgeHub'
 import ProgrammaticGlossaryView from './features/content/ProgrammaticGlossaryView'
 import ProgrammaticVideoView from './features/content/ProgrammaticVideoView'
 import GlobalKnowledgeDock from './components/site/GlobalKnowledgeDock'
+import SocialFab from './components/ui/SocialFab'
 import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
@@ -160,6 +161,7 @@ if (isHomeRoute) {
     <ErrorBoundary featureName="SoulfulHome">
       <SoulfulHome />
       <GlobalKnowledgeDock />
+      <SocialFab />
     </ErrorBoundary>,
   );
 } else if (isAboutJournalRoute) {
@@ -167,6 +169,7 @@ if (isHomeRoute) {
     <ErrorBoundary featureName="AboutJournal">
       <AboutJournal />
       <GlobalKnowledgeDock />
+      <SocialFab />
     </ErrorBoundary>,
   );
 } else if (isEmotionalHealthRoute) {
@@ -174,6 +177,7 @@ if (isHomeRoute) {
     <ErrorBoundary featureName="EmotionalHealthCheck">
       <EmotionalHealthCheck />
       <GlobalKnowledgeDock />
+      <SocialFab />
     </ErrorBoundary>,
   );
 } else if (isFeelingsCourseRoute) {
@@ -181,6 +185,7 @@ if (isHomeRoute) {
     <ErrorBoundary featureName="EmotionFeelingsCourse">
       <EmotionFeelingsCourse />
       <GlobalKnowledgeDock />
+      <SocialFab />
     </ErrorBoundary>,
   );
 } else if (isPoliciesRoute) {
@@ -188,6 +193,7 @@ if (isHomeRoute) {
     <ErrorBoundary featureName="Policies">
       <Policies />
       <GlobalKnowledgeDock />
+      <SocialFab />
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'knowledgeHub') {
@@ -195,6 +201,7 @@ if (isHomeRoute) {
     <ErrorBoundary featureName="MasterKnowledgeHub">
       <MasterKnowledgeHub />
       <GlobalKnowledgeDock />
+      <SocialFab />
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'contentHub') {
@@ -202,6 +209,7 @@ if (isHomeRoute) {
     <ErrorBoundary featureName="ContentHub">
       <ContentHub />
       <GlobalKnowledgeDock />
+      <SocialFab />
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'glossary' && knowledgeInfo.slug) {
@@ -209,6 +217,7 @@ if (isHomeRoute) {
     <ErrorBoundary featureName="ProgrammaticGlossaryView">
       <ProgrammaticGlossaryView termSlug={knowledgeInfo.slug} />
       <GlobalKnowledgeDock />
+      <SocialFab />
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'video' && knowledgeInfo.slug) {
@@ -216,6 +225,7 @@ if (isHomeRoute) {
     <ErrorBoundary featureName="ProgrammaticVideoView">
       <ProgrammaticVideoView videoId={knowledgeInfo.slug} />
       <GlobalKnowledgeDock />
+      <SocialFab />
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'guide' && knowledgeInfo.slug) {
@@ -223,6 +233,7 @@ if (isHomeRoute) {
     <ErrorBoundary featureName="ProgrammaticContentView">
       <ProgrammaticContentView slug={knowledgeInfo.slug} />
       <GlobalKnowledgeDock />
+      <SocialFab />
     </ErrorBoundary>,
   );
 } else {
@@ -233,6 +244,7 @@ if (isHomeRoute) {
           <AchievementsProvider>
             <UntetheredApp />
             <GlobalKnowledgeDock />
+            <SocialFab />
           </AchievementsProvider>
         </ThemeProvider>
       </AuthProvider>

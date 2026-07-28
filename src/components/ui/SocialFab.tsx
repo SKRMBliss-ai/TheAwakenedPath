@@ -40,13 +40,18 @@ interface Props {
 export default function SocialFab({ raised = false, onTrack }: Props) {
   const [open, setOpen] = useState(false);
 
+  // Determine bottom spacing: raised for mobile app nav bar, else standard 24px
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  const isAppRoute = typeof window !== 'undefined' && (window.location.pathname.startsWith('/mindgym') || window.location.pathname === '/app');
+  const effectiveRaised = raised || (isMobile && isAppRoute);
+
   return (
     <div
       style={{
         position: 'fixed',
-        right: 20,
-        bottom: raised ? 96 : 20,
-        zIndex: 120,
+        right: isMobile ? 16 : 24,
+        bottom: effectiveRaised ? 88 : 24,
+        zIndex: 130,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-end',
