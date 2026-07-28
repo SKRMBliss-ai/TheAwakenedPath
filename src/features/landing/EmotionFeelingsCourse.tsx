@@ -461,34 +461,46 @@ const FAQS = [
   },
   {
     q: 'How does the Pay-What-You-Feel pricing work?',
-    a: 'We believe inner peace should be accessible. The suggested price is ₹4,999, but you can adjust the price slider to pay what feels right for your current circumstances.',
+    a: 'We believe inner peace should be accessible. You can choose between the standalone Course Only plan (suggested ₹1,499) or the Whole App + Course All-Access Pass (suggested ₹2,499), and adjust the price slider to pay what feels right for your current circumstances.',
   },
 ];
 
-const REGION_CURRENCY: Record<string, { currency: string; symbol: string; min: number; suggested: number; max: number }> = {
-  INR: { currency: 'INR', symbol: '₹', min: 99, suggested: 4999, max: 4999 },
-  USD: { currency: 'USD', symbol: '$', min: 2, suggested: 59, max: 59 },
-  GBP: { currency: 'GBP', symbol: '£', min: 2, suggested: 49, max: 49 },
-  EUR: { currency: 'EUR', symbol: '€', min: 2, suggested: 55, max: 55 },
-  CAD: { currency: 'CAD', symbol: 'C$', min: 3, suggested: 79, max: 79 },
-  AUD: { currency: 'AUD', symbol: 'A$', min: 3, suggested: 89, max: 89 },
-  SGD: { currency: 'SGD', symbol: 'S$', min: 3, suggested: 79, max: 79 },
-  AED: { currency: 'AED', symbol: 'AED ', min: 10, suggested: 220, max: 220 },
+const REGION_CURRENCY: Record<string, { currency: string; symbol: string; min: number; suggested: number; max: number; strike: number }> = {
+  INR: { currency: 'INR', symbol: '₹', min: 99, suggested: 1499, max: 4999, strike: 4999 },
+  USD: { currency: 'USD', symbol: '$', min: 2, suggested: 19, max: 59, strike: 59 },
+  GBP: { currency: 'GBP', symbol: '£', min: 2, suggested: 15, max: 49, strike: 49 },
+  EUR: { currency: 'EUR', symbol: '€', min: 2, suggested: 17, max: 55, strike: 55 },
+  CAD: { currency: 'CAD', symbol: 'C$', min: 3, suggested: 24, max: 79, strike: 79 },
+  AUD: { currency: 'AUD', symbol: 'A$', min: 3, suggested: 29, max: 89, strike: 89 },
+  SGD: { currency: 'SGD', symbol: 'S$', min: 3, suggested: 24, max: 79, strike: 79 },
+  AED: { currency: 'AED', symbol: 'AED ', min: 10, suggested: 75, max: 220, strike: 220 },
 };
 
-function getRegionPricing() {
+const ALL_ACCESS_REGION_CURRENCY: Record<string, { currency: string; symbol: string; min: number; suggested: number; max: number; strike: number }> = {
+  INR: { currency: 'INR', symbol: '₹', min: 499, suggested: 2499, max: 7999, strike: 9998 },
+  USD: { currency: 'USD', symbol: '$', min: 9, suggested: 39, max: 99, strike: 119 },
+  GBP: { currency: 'GBP', symbol: '£', min: 8, suggested: 29, max: 89, strike: 99 },
+  EUR: { currency: 'EUR', symbol: '€', min: 9, suggested: 35, max: 89, strike: 109 },
+  CAD: { currency: 'CAD', symbol: 'C$', min: 12, suggested: 49, max: 129, strike: 149 },
+  AUD: { currency: 'AUD', symbol: 'A$', min: 14, suggested: 59, max: 139, strike: 169 },
+  SGD: { currency: 'SGD', symbol: 'S$', min: 12, suggested: 49, max: 129, strike: 149 },
+  AED: { currency: 'AED', symbol: 'AED ', min: 35, suggested: 149, max: 350, strike: 440 },
+};
+
+function getRegionPricing(isAllAccess = false) {
+  const dict = isAllAccess ? ALL_ACCESS_REGION_CURRENCY : REGION_CURRENCY;
   try {
     if (typeof window !== 'undefined') {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta') return REGION_CURRENCY.INR;
+      if (tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta') return dict.INR;
       const langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
       for (const l of langs) {
         const r = (l || '').split('-').pop()?.toUpperCase();
-        if (r && REGION_CURRENCY[r]) return REGION_CURRENCY[r];
+        if (r && dict[r]) return dict[r];
       }
     }
   } catch (_) {}
-  return REGION_CURRENCY.USD;
+  return dict.USD;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -498,7 +510,10 @@ export default function EmotionFeelingsCourse() {
   const { palette, toggle: toggleTheme } = useSiteTheme();
   const isDark = palette.isDark;
 
-  const pricingConfig = getRegionPricing();
+  const [selectedPlan, setSelectedPlan] = useState<'course' | 'allAccess'>('course');
+  const coursePricingConfig = getRegionPricing(false);
+  const allAccessPricingConfig = getRegionPricing(true);
+  const activePricingConfig = selectedPlan === 'course' ? coursePricingConfig : allAccessPricingConfig;
 
   const ink     = isDark ? '#EDE9E3' : '#2A2118';
   const inkSub  = isDark ? 'rgba(237,233,227,0.6)' : '#6B5744';
@@ -518,9 +533,9 @@ export default function EmotionFeelingsCourse() {
   // Guest checkout state
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [customAmount, setCustomAmount] = useState<number>(coursePricingConfig.suggested);
   const [guestName, setGuestName] = useState('');
   const [checkoutErr, setCheckoutErr] = useState('');
-  const [customAmount, setCustomAmount] = useState(pricingConfig.suggested);
 
   // 60-Second Teaser State
   const [teaserVideo, setTeaserVideo] = useState<{ id: string; title: string; episodeNum: number; startTime?: number } | null>(null);
@@ -1993,43 +2008,84 @@ export default function EmotionFeelingsCourse() {
             }}
           >
             <div style={{ textAlign: 'center' }}>
-              <span
-                style={{
-                  display: 'inline-block',
-                  padding: '5px 14px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.12)',
-                  fontFamily: SANS,
-                  fontSize: 10,
-                  fontWeight: 800,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.85)',
-                  marginBottom: 20,
-                }}
-              >
-                One-time payment. Lifetime access.
-              </span>
+              {/* Plan Selector Toggle Tabs */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20, padding: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedPlan('course');
+                    setCustomAmount(coursePricingConfig.suggested);
+                  }}
+                  style={{
+                    padding: '10px 8px',
+                    borderRadius: 12,
+                    border: selectedPlan === 'course' ? '1.5px solid #C4913A' : '1px solid transparent',
+                    background: selectedPlan === 'course' ? 'rgba(196,145,58,0.25)' : 'transparent',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    fontFamily: SANS,
+                    textAlign: 'center',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: selectedPlan === 'course' ? '#FFDF9E' : 'rgba(255,255,255,0.7)' }}>
+                    Course Only
+                  </div>
+                  <div style={{ fontSize: 10.5, color: 'rgba(237,233,227,0.6)', marginTop: 2 }}>
+                    Suggested {coursePricingConfig.symbol}{coursePricingConfig.suggested.toLocaleString()}
+                  </div>
+                </button>
 
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
-                <span style={{ fontFamily: SERIF, fontSize: 48, fontWeight: 500, color: '#EDE9E3' }}>
-                  {pricingConfig.symbol}{customAmount.toLocaleString()}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedPlan('allAccess');
+                    setCustomAmount(allAccessPricingConfig.suggested);
+                  }}
+                  style={{
+                    padding: '10px 8px',
+                    borderRadius: 12,
+                    border: selectedPlan === 'allAccess' ? '1.5px solid #C4913A' : '1px solid transparent',
+                    background: selectedPlan === 'allAccess' ? 'rgba(196,145,58,0.3)' : 'transparent',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    fontFamily: SANS,
+                    textAlign: 'center',
+                    transition: 'all 0.2s ease',
+                    position: 'relative',
+                  }}
+                >
+                  <span style={{ position: 'absolute', top: -7, right: 6, fontSize: 8.5, fontWeight: 900, background: '#C4913A', color: '#1E1426', padding: '2px 6px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    Whole App 🔥
+                  </span>
+                  <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: selectedPlan === 'allAccess' ? '#FFDF9E' : 'rgba(255,255,255,0.7)' }}>
+                    App + Course
+                  </div>
+                  <div style={{ fontSize: 10.5, color: 'rgba(237,233,227,0.6)', marginTop: 2 }}>
+                    Suggested {allAccessPricingConfig.symbol}{allAccessPricingConfig.suggested.toLocaleString()}
+                  </div>
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10, marginBottom: 6 }}>
+                <span style={{ fontFamily: SERIF, fontSize: 44, fontWeight: 500, color: '#EDE9E3' }}>
+                  {activePricingConfig.symbol}{customAmount.toLocaleString()}
                 </span>
-                <span style={{ fontFamily: SANS, fontSize: 16, textDecoration: 'line-through', opacity: 0.4 }}>
-                  {pricingConfig.symbol}{(pricingConfig.suggested * 2).toLocaleString()}
+                <span style={{ fontFamily: SANS, fontSize: 15, textDecoration: 'line-through', opacity: 0.45 }}>
+                  {activePricingConfig.symbol}{activePricingConfig.strike.toLocaleString()}
                 </span>
               </div>
-              <p style={{ fontFamily: SANS, fontSize: 11.5, color: 'rgba(237,233,227,0.6)', margin: '0 0 24px' }}>
+              <p style={{ fontFamily: SANS, fontSize: 11, color: 'rgba(237,233,227,0.6)', margin: '0 0 20px' }}>
                 Pay-What-You-Feel Support Available
               </p>
 
               {/* Price Slider */}
-              <div style={{ marginBottom: 28, textAlign: 'left' }}>
+              <div style={{ marginBottom: 24, textAlign: 'left' }}>
                 <PriceSlider
-                  currency={pricingConfig.currency}
-                  min={pricingConfig.min}
-                  suggested={pricingConfig.suggested}
-                  max={pricingConfig.max}
+                  currency={activePricingConfig.currency}
+                  min={activePricingConfig.min}
+                  suggested={activePricingConfig.suggested}
+                  max={activePricingConfig.max}
                   value={customAmount}
                   onChange={(val) => setCustomAmount(val)}
                   dark={true}
@@ -2037,10 +2093,20 @@ export default function EmotionFeelingsCourse() {
               </div>
 
               <div style={{ display: 'grid', gap: 10, textAlign: 'left', marginBottom: 28 }}>
-                {['Lifetime access to all content', 'All future updates included', 'Works on all devices', '100% money-back guarantee'].map((checkItem) => (
-                  <div key={checkItem} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5, color: 'rgba(237,233,227,0.85)' }}>
+                {(selectedPlan === 'course' ? [
+                  '18 Video Masterclasses & Worksheets',
+                  'Lifetime Course Access & All Future Updates',
+                  'Works on all mobile & desktop devices',
+                  '100% 14-Day Money-Back Guarantee'
+                ] : [
+                  '✨ EVERYTHING in Feelings & Emotions Course',
+                  '🧠 Full MindGym App Access (Journal, Breathwork & Audio)',
+                  '🏆 Personal Growth Analytics & Daily Tracker',
+                  '⚡ Lifetime Access to All Future App Courses & Updates'
+                ]).map((checkItem) => (
+                  <div key={checkItem} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5, color: selectedPlan === 'allAccess' && checkItem.startsWith('✨') ? '#FFDF9E' : 'rgba(237,233,227,0.85)' }}>
                     <Check size={14} color="#C4913A" />
-                    {checkItem}
+                    <span>{checkItem}</span>
                   </div>
                 ))}
               </div>
@@ -2644,14 +2710,19 @@ export default function EmotionFeelingsCourse() {
                 )}
 
                 <div style={{ marginTop: 8, marginBottom: 8 }}>
-                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 8 }}>
-                    Select Contribution (Pay What You Feel)
-                  </label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <label style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub }}>
+                      Select Contribution (Pay What You Feel)
+                    </label>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: '#C4913A', textTransform: 'uppercase', background: isDark ? 'rgba(196,145,58,0.15)' : 'rgba(74,50,96,0.08)', padding: '2px 8px', borderRadius: 999 }}>
+                      {selectedPlan === 'course' ? 'Course Only' : 'Whole App + Course 🔥'}
+                    </span>
+                  </div>
                   <PriceSlider
-                    currency={pricingConfig.currency}
-                    min={pricingConfig.min}
-                    suggested={pricingConfig.suggested}
-                    max={pricingConfig.max}
+                    currency={activePricingConfig.currency}
+                    min={activePricingConfig.min}
+                    suggested={activePricingConfig.suggested}
+                    max={activePricingConfig.max}
                     value={customAmount}
                     onChange={(val) => setCustomAmount(val)}
                     dark={isDark}
@@ -2659,9 +2730,12 @@ export default function EmotionFeelingsCourse() {
                 </div>
 
                 <div style={{ marginTop: 10, padding: '14px 16px', borderRadius: 14, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink }}>Total Amount</span>
+                  <div>
+                    <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>Total Amount</span>
+                    <span style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub }}>{selectedPlan === 'course' ? 'Feelings & Emotions Course' : 'Whole App All-Access Pass'}</span>
+                  </div>
                   <span style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260' }}>
-                    {pricingConfig.symbol}{customAmount.toLocaleString()}
+                    {activePricingConfig.symbol}{customAmount.toLocaleString()}
                   </span>
                 </div>
 
