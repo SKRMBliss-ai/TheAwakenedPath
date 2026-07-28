@@ -242,6 +242,80 @@ export const ARTICLES_REGISTRY: Record<string, ContentArticle> = {
     ],
     relatedSlugs: ['feelings-vs-emotions', 'witness-consciousness-guide'],
     tags: ['presence', 'power-of-now', 'pain-body', 'eckhart-tolle', 'ego']
+  },
+
+  'why-do-i-overthink': {
+    slug: 'why-do-i-overthink',
+    type: 'guide',
+    title: 'Why Do I Overthink Everything? Causes, Neuroscience & 5-Minute Relief',
+    subtitle: 'Understand the root cause of racing thoughts and how to ground your attention in 5 minutes.',
+    description: 'Overthinking is not a personality flaw. Learn why your brain creates racing thoughts and how to stop mental loops using somatic tracking and MindGym.',
+    category: 'Mindfulness',
+    author: 'Sim Katyal',
+    publishDate: '2026-07-28',
+    readTime: '6 min read',
+    quickAnswer: 'Overthinking occurs when your brain\'s Default Mode Network (DMN) becomes hyperactive in response to unexpressed emotional energy stored in the physical body.',
+    definition: 'Overthinking is a protective mental loop triggered by somatic stress signals.',
+    keyTakeaways: [
+      'Overthinking is your brain\'s attempt to solve a physical feeling using mental logic.',
+      'You cannot think your way out of overthinking—you must drop attention into the physical body.',
+      '5 minutes of conscious breathwork shifts your nervous system out of fight-or-flight mode.'
+    ],
+    sections: [
+      {
+        heading: 'Why Does the Brain Overthink?',
+        content: 'When your body experiences an emotional surge (such as fear, inadequacy, or anxiety) that you do not consciously allow or feel, your nervous system triggers an alert. The brain interprets this alert as an immediate problem to solve and launches a barrage of "what if" thoughts.'
+      },
+      {
+        heading: 'The 3-Step Overthinking Circuit Breaker',
+        content: 'Break mental loops in under 2 minutes:',
+        bulletPoints: [
+          '1. Notice: Catch yourself overthinking and say silently: "My brain is trying to protect me."',
+          '2. Drop Down: Shift awareness from your forehead down into your feet or palms.',
+          '3. Breathe: Take 4 slow, deep abdominal breaths in MindGym.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        q: 'Is overthinking a sign of anxiety?',
+        a: 'Yes, overthinking is one of the most common cognitive symptoms of high somatic anxiety.'
+      }
+    ],
+    relatedSlugs: ['feelings-vs-emotions', 'stopping-overthinking-naturally'],
+    tags: ['overthinking', 'anxiety', 'mindfulness', 'mindgym', 'stress-relief']
+  },
+
+  'meditation-for-beginners': {
+    slug: 'meditation-for-beginners',
+    type: 'guide',
+    title: 'Meditation for Beginners: How to Start Without Sitting Still for Hours',
+    subtitle: 'A simple, practical approach to meditation that fits into a busy daily life.',
+    description: 'New to meditation? Learn how to start a daily 5-minute meditation habit without fighting your thoughts or sitting in uncomfortable positions.',
+    category: 'Meditation',
+    author: 'Sim Katyal',
+    publishDate: '2026-07-28',
+    readTime: '5 min read',
+    quickAnswer: 'Meditation for beginners is not about forcing your mind to be empty. It is simply the practice of gently returning your attention to your breath whenever you notice your mind has wandered.',
+    keyTakeaways: [
+      'Wandering thoughts are a natural part of meditation, not a failure.',
+      'Consistency matters far more than duration—5 minutes daily beats 1 hour once a month.',
+      'Using structured apps like MindGym builds momentum without friction.'
+    ],
+    sections: [
+      {
+        heading: 'The Biggest Beginner Myth: "I Can\'t Stop My Thoughts"',
+        content: 'The goal of meditation is not to stop thoughts; it is to change your relationship with thoughts. When a thought arises during practice, notice it, label it ("thinking"), and softly return to your breath.'
+      }
+    ],
+    faqs: [
+      {
+        q: 'How long should a beginner meditate?',
+        a: 'Start with just 3 to 5 minutes a day. Build consistency before extending your practice.'
+      }
+    ],
+    relatedSlugs: ['power-of-now-presence-guide', 'stopping-overthinking-naturally'],
+    tags: ['meditation', 'beginners', 'mindfulness', 'mindgym', 'daily-habit']
   }
 };
 
