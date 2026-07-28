@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Sparkles, Play, ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
@@ -51,6 +52,23 @@ export default function ProgrammaticVideoView({ videoId }: Props) {
     },
   });
 
+  const [timeLeft, setTimeLeft] = useState<number>(60);
+  const [isPreviewEnded, setIsPreviewEnded] = useState<boolean>(false);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(t);
+          setIsPreviewEnded(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+
   return (
     <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>
       <SiteHeader
@@ -76,10 +94,16 @@ export default function ProgrammaticVideoView({ videoId }: Props) {
 
         {/* Video Header */}
         <header style={{ marginBottom: 32 }}>
-          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: gold, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-            <Play size={14} color={gold} />
-            <span>YouTube Masterclass • {video.duration}</span>
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: gold, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Play size={14} color={gold} />
+              <span>YouTube Masterclass • {video.duration}</span>
+            </span>
+
+            <span style={{ fontSize: 11, fontWeight: 800, background: isPreviewEnded ? '#E53935' : 'rgba(196,145,58,0.2)', color: isPreviewEnded ? '#fff' : gold, padding: '4px 12px', borderRadius: 999, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {isPreviewEnded ? '🔒 60s Preview Ended' : `⏱️ Free 60s Preview • 0:${timeLeft < 10 ? '0' : ''}${timeLeft}`}
+            </span>
+          </div>
 
           <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 400, color: ink, margin: '0 0 16px', lineHeight: 1.15 }}>
             {video.title}
@@ -90,15 +114,32 @@ export default function ProgrammaticVideoView({ videoId }: Props) {
           </p>
         </header>
 
-        {/* YouTube Video Player Embed */}
+        {/* YouTube Video Player Embed with 60s Lock Overlay */}
         <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', borderRadius: 24, overflow: 'hidden', marginBottom: 40, boxShadow: '0 16px 48px rgba(0,0,0,0.4)', border: `1px solid ${borderC}` }}>
-          <iframe
-            src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=0&rel=0&modestbranding=1`}
-            title={video.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-          />
+          {!isPreviewEnded ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=1&rel=0&modestbranding=1&controls=0`}
+              title={video.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }}
+            />
+          ) : (
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(135deg, rgba(26,20,30,0.95) 0%, rgba(13,10,18,0.98) 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24, zIndex: 10, backdropFilter: 'blur(16px)' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(196,145,58,0.2)', border: '1.5px solid #C4913A', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <span style={{ fontSize: 24 }}>🔒</span>
+              </div>
+              <h3 style={{ fontFamily: SERIF, fontSize: 26, color: '#EDE9E3', margin: '0 0 8px', fontWeight: 500 }}>
+                60-Second Free Preview Ended
+              </h3>
+              <p style={{ fontFamily: SANS, fontSize: 14, color: 'rgba(237,233,227,0.72)', maxWidth: 480, margin: '0 0 24px', lineHeight: 1.5, textAlign: 'center' }}>
+                You have reached the end of the 60-second preview. Enroll in the Feelings &amp; Emotions course to unlock all 7 full video masterclasses, worksheets, and lifetime app access.
+              </p>
+              <a href="/feelingsandemotioncourse" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', borderRadius: 999, background: '#C4913A', color: '#1E1426', fontWeight: 800, textDecoration: 'none', fontSize: 14.5, boxShadow: '0 8px 24px rgba(196,145,58,0.4)' }}>
+                <span>Unlock Full Course &amp; App →</span>
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Key Takeaways */}

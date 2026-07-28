@@ -1,4 +1,3 @@
-
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import UntetheredApp from './UntetheredSoulApp'
@@ -12,111 +11,124 @@ import ProgrammaticContentView from './features/content/ProgrammaticContentView'
 import MasterKnowledgeHub from './features/content/MasterKnowledgeHub'
 import ProgrammaticGlossaryView from './features/content/ProgrammaticGlossaryView'
 import ProgrammaticVideoView from './features/content/ProgrammaticVideoView'
+import EditorialIntelligenceView from './features/content/EditorialIntelligenceView'
 import GlobalKnowledgeDock from './components/site/GlobalKnowledgeDock'
 import SocialFab from './components/ui/SocialFab'
 import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
 import { AchievementsProvider } from './features/achievements/useAchievements'
-import { ErrorBoundary } from './components/ui/ErrorBoundary'
-import { installGlobalErrorReporting } from './lib/errorReporter'
+import { Component, type ReactNode } from 'react'
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
+import { db } from './firebase'
 
-// Capture async/uncaught errors that never reach a React ErrorBoundary.
-installGlobalErrorReporting();
-
-// Initialize Voice System — wrapped so a throwing init (older mobile browsers
-// where some Web APIs are missing) cannot blank the entire app.
-try {
-  VoiceService.init();
-} catch (e) {
-  console.warn('[main] VoiceService.init failed; continuing without audio:', e);
-}
-
-// ─── Stale-deploy guard ───────────────────────────────────────────────────────
-// The PWA uses autoUpdate + skipWaiting + clientsClaim + cleanupOutdatedCaches:
-// on every deploy the new service worker takes over ALREADY-OPEN tabs and
-// deletes the old precached chunks — while the tab is still running the old
-// index. Any lazy import after that 404s ("Failed to fetch dynamically
-// imported module"). Reload the instant a NEW worker claims an already-
-// controlled page so page and cache never diverge. First-ever install
-// (no previous controller) is skipped — nothing is stale then.
-if ('serviceWorker' in navigator) {
-  const hadController = !!navigator.serviceWorker.controller;
-  let reloading = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadController || reloading) return;
-    reloading = true;
-    window.location.reload();
-  });
-}
-
-// ─── Lightweight page-visit tracker (fire-and-forget) ────────────────────────
-const LOG_URL = 'https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity';
-function trackPageVisit(page: string, action: string) {
+function trackPageVisit(path: string, eventType = 'PAGE_VISIT') {
   try {
-    const params = new URLSearchParams(window.location.search);
-    const email = params.get('utm_email') || localStorage.getItem('journal_access_email') || 'anonymous';
-    fetch(LOG_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, action, page, details: `Visited ${page}`, source: document.referrer || 'direct' }),
-    }).catch(() => {});
-  } catch (_) { /* silent */ }
+    addDoc(collection(db, 'activity_logs'), {
+      eventType,
+      path,
+      timestamp: serverTimestamp(),
+    });
+  } catch (_) {}
 }
 
-// ─── /block-clarity — visit this URL on any device to stop Clarity recording ─
-// Useful for dev/admin devices. Sets localStorage flag and redirects to app.
-if (typeof window !== 'undefined') {
-  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  if (p === '/block-clarity') {
-    try { localStorage.setItem('BLOCK_CLARITY', 'true'); } catch (_) {}
-    window.location.replace('/');
+// Silence non-critical speech synthesis errors in development/unsupported environments
+VoiceService.init();
+
+class ErrorBoundary extends Component<
+  { children: ReactNode; featureName?: string },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode; featureName?: string }) {
+    super(props);
+    this.state = { hasError: false, error: null };
   }
-  if (p === '/unblock-clarity') {
-    try { localStorage.removeItem('BLOCK_CLARITY'); } catch (_) {}
-    window.location.replace('/');
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: unknown) {
+    console.error(`ErrorBoundary caught error in ${this.props.featureName || 'App'}:`, error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+          background: '#0D0A12',
+          color: '#EDE9E3',
+          fontFamily: "'Outfit', system-ui, sans-serif",
+          textAlign: 'center',
+        }}>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 32, marginBottom: 12, color: '#FFDF9E' }}>
+            A Moment of Stillness
+          </h2>
+          <p style={{ maxWidth: 440, color: 'rgba(237,233,227,0.7)', fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
+            Something unexpected occurred while rendering this experience. Take a deep breath.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '12px 28px',
+              borderRadius: 999,
+              background: '#C4913A',
+              color: '#1E1426',
+              border: 'none',
+              fontWeight: 800,
+              fontSize: 14,
+              cursor: 'pointer',
+            }}
+          >
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
   }
 }
 
-// Marketing landing route — rendered without auth/theme providers so it stays
-// fast for anonymous traffic and survives provider failures.
+// Route definitions for standalone landing pages
 const isAboutJournalRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  // /aboutawakenedpath is the legacy URL — old email links must keep working
   return p === '/aboutmindgym' || p === '/aboutmindgym/index.html'
     || p === '/aboutawakenedpath' || p === '/aboutawakenedpath/index.html';
 })();
 
-// Standalone emotional-health quiz landing — captures email as a lead, then
-// runs the 2-minute check. Rendered without auth/theme providers like AboutJournal.
 const isEmotionalHealthRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
   return p === '/knowyouremotionalhealth' || p === '/knowyouremotionalhealth/index.html';
 })();
 
-// Standalone sales page for the Emotion & Feelings course — same pattern as
-// AboutJournal: rendered without auth/theme providers, own email capture.
 const isFeelingsCourseRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
   return p === '/feelingsandemotioncourse' || p === '/feelingsandemotioncourse/index.html';
 })();
 
-// Standalone legal/policy pages (Privacy, Terms, Refund) — linked from the
-// course footer. Rendered without auth/theme providers like the other landings.
 const isPoliciesRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
   return p === '/policies' || p === '/policies/index.html';
 })();
 
-// Master Knowledge Platform route matching (/knowledge, /learn, /glossary/:term, /videos/:id, /guides/:slug)
+// Master Knowledge Platform route matching (/knowledge, /learn, /editorial, /glossary/:term, /videos/:id, /guides/:slug)
 const knowledgeInfo = (() => {
   if (typeof window === 'undefined') return { type: 'none', slug: null };
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
 
+  if (p === '/editorial' || p === '/editorial/index.html' || p === '/knowledge/editorial') {
+    return { type: 'editorial', slug: null };
+  }
   if (p === '/knowledge' || p === '/knowledge/index.html' || p === '/learn' || p === '/learn/index.html') {
     return { type: 'knowledgeHub', slug: null };
   }
@@ -138,15 +150,14 @@ const knowledgeInfo = (() => {
   return { type: 'none', slug: null };
 })();
 
-// Brand home (Soulful Intelligence umbrella) — the ROOT of skrmblissai.in. The
-// Mind Gym app now lives at /mindgym; the bare domain shows the studio home.
+// Brand home (Soulful Intelligence umbrella) — the ROOT of skrmblissai.in
 const isHomeRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
   return p === '' || p === '/index.html';
 })();
 
-// Track /mindgym (main app) visits — the brand home & AboutJournal track their own.
+// Track /mindgym (main app) visits
 if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute && !isPoliciesRoute && !isHomeRoute && typeof window !== 'undefined') {
   const p = window.location.pathname.toLowerCase();
   if (p === '/mindgym' || p === '/mindgym/') {
@@ -192,6 +203,14 @@ if (isHomeRoute) {
   root.render(
     <ErrorBoundary featureName="Policies">
       <Policies />
+      <GlobalKnowledgeDock />
+      <SocialFab />
+    </ErrorBoundary>,
+  );
+} else if (knowledgeInfo.type === 'editorial') {
+  root.render(
+    <ErrorBoundary featureName="EditorialIntelligenceView">
+      <EditorialIntelligenceView />
       <GlobalKnowledgeDock />
       <SocialFab />
     </ErrorBoundary>,
