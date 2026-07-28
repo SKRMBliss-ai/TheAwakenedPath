@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { usePageSeo } from '../../lib/seo';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Standalone policy pages — Privacy, Terms, Refund — rendered at /policies
@@ -39,6 +40,15 @@ const H3 = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default function Policies() {
+    // Without this the prerendered page inherits the shell's title/description,
+    // making /policies a duplicate of the home page in Google's eyes.
+    usePageSeo({
+        title: 'Privacy, Terms & Refund Policy — Soulful Intelligence Studio',
+        description:
+            'Privacy policy, terms of service and refund policy for Soulful Intelligence Studio — Mind Gym, guided courses and digital services.',
+        url: 'https://www.skrmblissai.in/policies',
+    });
+
     useEffect(() => {
         // Standalone pages don't auto-scroll to the hash reliably before render,
         // so nudge it once the content is mounted.

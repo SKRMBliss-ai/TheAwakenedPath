@@ -20,6 +20,11 @@ const PORT = 5199;
 // and the separately-built portfolio (/twinsouls) are intentionally excluded.
 const ROUTES = [
   '/',
+  // The app itself. Prerendered only so crawlers get its own title/description/
+  // canonical — without this it falls through to the SPA shell and reads as a
+  // duplicate of the home page. Visitors still get the live app (createRoot
+  // re-renders over whatever was baked in).
+  '/mindgym',
   '/feelingsandemotioncourse',
   '/knowyouremotionalhealth',
   '/aboutmindgym',
@@ -102,9 +107,17 @@ async function run() {
     const page = await browser.newPage();
     try {
       await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'networkidle2', timeout: 30000 });
-      // Wait until React has rendered substantial content into #root.
+      // Wait until React has rendered substantial content into #root, OR until
+      // usePageSeo has stamped this page's own canonical. Content routes hit the
+      // first condition; app routes (which sit behind auth and never paint much
+      // headless) hit the second — enough to give crawlers a correct, unique
+      // title/description/canonical instead of the shared SPA shell.
       await page.waitForFunction(
-        () => { const r = document.querySelector('#root'); return r && r.innerText.trim().length > 250; },
+        () => {
+          const r = document.querySelector('#root');
+          if (r && r.innerText.trim().length > 250) return true;
+          return !!document.querySelector('link[rel="canonical"][data-seo-dynamic="1"]');
+        },
         { timeout: 20000 },
       );
       // Give usePageSeo's effect a beat to inject title/canonical/JSON-LD.
