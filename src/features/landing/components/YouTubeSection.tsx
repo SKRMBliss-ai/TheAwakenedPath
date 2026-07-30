@@ -375,14 +375,20 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
           style={{
             fontFamily: SANS, fontSize: 13, fontWeight: 700,
             color: isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44',
-            textDecoration: 'none', borderBottom: '1px solid currentColor',
-            paddingBottom: 2, transition: 'color 0.2s ease',
+            textDecoration: 'none', transition: 'color 0.2s ease',
+            // WCAG 2.2 §2.5.8: this rendered ~19px tall. The underline lives on
+            // the inner span so it still hugs the text instead of dropping to
+            // the bottom of the enlarged box.
+            display: 'inline-flex', alignItems: 'center',
+            minHeight: 32, padding: '6px 4px',
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = isDark ? '#EDE9E3' : '#4A3260'; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44'; }}
           aria-label="Visit Soulful Intelligence YouTube channel"
         >
-          Visit Channel →
+          <span style={{ borderBottom: '1px solid currentColor', paddingBottom: 2 }}>
+            Visit Channel →
+          </span>
         </a>
       </div>
     </section>

@@ -167,6 +167,10 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
             display: 'none', width: 34, height: 34, borderRadius: 9, cursor: 'pointer',
             background: 'transparent', border: `1px solid ${palette.BORDER}`, color: palette.INK,
             alignItems: 'center', justifyContent: 'center',
+            // Without this the flex row shrinks the button to ~19px wide on a
+            // 375px viewport, putting the primary mobile nav control under the
+            // 24px minimum (WCAG 2.2 §2.5.8). Height was never the problem.
+            flexShrink: 0, minWidth: 34,
           }}
         >
           <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -305,14 +309,28 @@ export function SiteFooter({ palette }: { palette: Palette }) {
               }}>
                 {col.title}
               </h3>
-              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
+              {/* gap is tight because each link now carries its own vertical
+                  padding to reach the 32px tap target — without this the column
+                  rhythm would jump from 28px to 42px. */}
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 }}>
                 {col.items.map((it) => (
                   <li key={it.label}>
                     <a
                       className="si-foot-link"
                       href={it.href}
                       {...(it.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                      style={{ color: palette.INK2, textDecoration: 'none', fontSize: 13.5 }}
+                      style={{
+                        color: palette.INK2,
+                        textDecoration: 'none',
+                        fontSize: 13.5,
+                        // WCAG 2.2 §2.5.8 Target Size (Minimum). These rendered
+                        // ~18px tall. Padding is vertical-only so the column
+                        // stays flush-left; widths were already over 24px.
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        minHeight: 32,
+                        padding: '6px 0',
+                      }}
                     >
                       {it.label}
                     </a>
