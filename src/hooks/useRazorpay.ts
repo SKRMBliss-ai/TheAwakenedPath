@@ -88,6 +88,13 @@ export const useRazorpay = () => {
                         })
                     });
 
+                    if (!verifyRes.ok) {
+                        console.error('[Razorpay] Verification request failed:', verifyRes.status, verifyRes.statusText);
+                        showToast('Payment verification failed. Please try again or contact support.', { type: 'error' });
+                        setIsProcessing(false);
+                        return;
+                    }
+
                     const verification = await verifyRes.json();
                     if (verification.success) {
                         showToast('Payment confirmed — unlocking your access.', { type: 'success' });

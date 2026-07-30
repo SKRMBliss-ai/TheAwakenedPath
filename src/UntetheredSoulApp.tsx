@@ -598,6 +598,7 @@ export default function UntetheredApp() {
   const [showReward, setShowReward] = useState<Reward | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1024 : true);
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
@@ -616,6 +617,61 @@ export default function UntetheredApp() {
       localStorage.removeItem('show-welcome-modal');
     }
   }, []);
+
+  // ── Responsive Layout Safeguard ───────────────────────────────────────────
+  // Ensures sidebar behaves correctly across all device sizes by:
+  // 1. Tracking mobile/desktop breakpoint changes
+  // 2. Auto-closing sidebar when resizing to mobile
+  // 3. Resetting sidebar state on orientation changes
+  useEffect(() => {
+    const handleResize = () => {
+      const wasDesktop = !isMobile;
+      const isNowMobile = window.innerWidth < 1024;
+      const isSwitchingToMobile = wasDesktop && isNowMobile;
+
+      // Update mobile state
+      setIsMobile(isNowMobile);
+
+      // Close sidebar when switching from desktop to mobile
+      if (isSwitchingToMobile && isSidebarOpen) {
+        setIsSidebarOpen(false);
+        console.log('[ResponsiveLayout] Closed sidebar on desktop→mobile transition');
+      }
+
+      // Reset collapsed state on mobile
+      if (isNowMobile && isSidebarCollapsed) {
+        setIsSidebarCollapsed(false);
+      }
+
+      // Safety check: ensure sidebar is always closed on mobile load
+      if (isNowMobile) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    // Handle orientation change
+    const handleOrientationChange = () => {
+      setTimeout(() => {
+        if (window.innerWidth < 1024) {
+          setIsSidebarOpen(false);
+          setIsSidebarCollapsed(false);
+          console.log('[ResponsiveLayout] Reset sidebar on orientation change');
+        }
+      }, 100);
+    };
+
+    // Add listeners with passive flag for better scrolling performance
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('orientationchange', handleOrientationChange, { passive: true });
+
+    // Initial check on mount
+    handleResize();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, [isMobile, isSidebarOpen, isSidebarCollapsed]);
 
   // ── Deep-link from email CTA ───────────────────────────────────────────────
   // Handles ?practice=questionX&source=email — navigates directly into the
@@ -1201,15 +1257,23 @@ export default function UntetheredApp() {
       />
       {renderPracticeModal()}
 
-      {/* MOBILE SIDEBAR OVERLAY */}
+      {/* MOBILE SIDEBAR OVERLAY — Safeguard: only show on mobile, closes sidebar on click/touch */}
       <AnimatePresence>
-        {isSidebarOpen && (
+        {isSidebarOpen && isMobile && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setIsSidebarOpen(false)}
+            onClick={() => {
+              setIsSidebarOpen(false);
+              console.log('[Overlay] Closed sidebar via backdrop click');
+            }}
+            onTouchStart={() => {
+              // Ensure touch events also close sidebar on mobile
+              setIsSidebarOpen(false);
+            }}
             className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden"
+            style={{ pointerEvents: 'auto', cursor: 'pointer' }}
           />
         )}
       </AnimatePresence>
@@ -1241,16 +1305,21 @@ export default function UntetheredApp() {
         "border-r border-[var(--border-default)]",
         "backdrop-blur-2xl px-2",
         "transition-transform duration-500",
+        // Safety: always hide sidebar on mobile unless explicitly opened
+        isMobile && !isSidebarOpen ? "-translate-x-full" : "",
         // Desktop: collapse based on isSidebarCollapsed
-        isSidebarCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
+        !isMobile && isSidebarCollapsed ? "lg:-translate-x-full" : "",
+        !isMobile && !isSidebarCollapsed ? "lg:translate-x-0" : "",
         // Mobile: show/hide based on isSidebarOpen
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        isMobile && isSidebarOpen ? "translate-x-0" : ""
       )}
       style={{
         // Solid bg first — backdrop-filter is unreliable on some GPU/driver combos
         // (seen in Edge on PC). Without a solid base, the sidebar is invisible
         // when blur fails, causing nav items to float over main content (Clarity bug).
         background: 'var(--bg-primary, #0c0910)',
+        // Ensure sidebar never exceeds viewport width on ultra-narrow screens
+        maxWidth: '90vw',
       }}>
 
         {/* ── Logo ── */}
@@ -1671,6 +1740,8 @@ export default function UntetheredApp() {
       {/* MAIN CONTENT AREA */}
       <main className={cn(
         "relative z-10 min-h-screen transition-all duration-500",
+        // Mobile: don't shift content when sidebar is open (overlay instead)
+        // Desktop: shift content based on collapsed state
         isSidebarCollapsed ? "lg:pl-0" : "lg:pl-[280px]"
       )}>
         {/* Time of Day Ambient Tint */}
@@ -1731,13 +1802,27 @@ export default function UntetheredApp() {
           isSidebarCollapsed ? "lg:left-0" : "lg:left-[280px]"
         )}>
           <div className="flex items-center gap-3 sm:gap-4">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              aria-label="Open menu"
-              className="lg:hidden w-10 h-10 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all shadow-xl active:scale-95"
-            >
-              <Menu size={16} />
-            </button>
+            {/* Menu button — only functional on mobile */}
+            {isMobile && (
+              <button
+                onClick={() => {
+                  setIsSidebarOpen(true);
+                  console.log('[MenuButton] Opened sidebar on mobile');
+                }}
+                onKeyDown={(e) => {
+                  // Ensure keyboard accessibility — close on Escape
+                  if (e.key === 'Escape') {
+                    setIsSidebarOpen(false);
+                  }
+                }}
+                aria-label="Open navigation menu"
+                aria-expanded={isSidebarOpen}
+                className="lg:hidden w-10 h-10 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all shadow-xl active:scale-95"
+                disabled={!isMobile}
+              >
+                <Menu size={16} />
+              </button>
+            )}
             
             {/* Soulful Intelligence mark — takes user directly to www.skrmblissai.in */}
             <a

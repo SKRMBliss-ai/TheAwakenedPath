@@ -51,7 +51,9 @@ export default function ProgrammaticContentView({ slug }: Props) {
         path: window.location.pathname,
         timestamp: serverTimestamp(),
       });
-    } catch (_) {}
+    } catch (error) {
+      console.error('[GuideView] Failed to log page visit:', error);
+    }
   }, [article.slug]);
 
   // SEO & Schema Setup
@@ -142,7 +144,7 @@ export default function ProgrammaticContentView({ slug }: Props) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, color: inkSub, borderTop: `1px solid ${borderC}`, borderBottom: `1px solid ${borderC}`, padding: '12px 0' }}>
             <span>By <strong style={{ color: ink }}>{article.author}</strong></span>
             <span>•</span>
-            <span>Published {article.publishDate}</span>
+            <span>Published {new Date(article.publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
             <span>•</span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Clock size={14} /> {article.readTime}</span>
           </div>

@@ -725,9 +725,11 @@ export default function EmotionFeelingsCourse() {
           palette={palette}
           onToggleTheme={toggleTheme}
           links={[
+            { label: 'Home', href: '/' },
             { label: 'Overview', href: '#overview' },
             { label: 'Course Journey', href: '#journey' },
             { label: 'What’s Included', href: '#whats-included' },
+            { label: 'About the Guide', href: '#guide' },
             { label: 'Why it works', href: '#stories' },
             { label: 'FAQ', href: '#faq' },
           ]}
@@ -846,7 +848,7 @@ export default function EmotionFeelingsCourse() {
               }}
             >
               You weren't taught how emotions work.
-              <em style={{ fontStyle: 'italic', display: 'block', color: isDark ? '#C4913A' : '#6B5744', marginTop: 4 }}>
+              <em style={{ fontStyle: 'italic', display: 'block', color: isDark ? '#C4913A' : '#6B5744', marginTop: 4, fontWeight: 500 }}>
                 That's why you keep fighting yourself.
               </em>
             </h1>
@@ -1146,7 +1148,7 @@ export default function EmotionFeelingsCourse() {
             <p style={{ fontFamily: SANS, fontSize: 15.5, lineHeight: 1.7, color: inkSub, margin: '0 0 16px' }}>
               For over a decade, Sim Katyal has guided thousands of individuals through the quiet, inner architecture of human emotion — helping people move from reactive emotional patterns into conscious presence and effortless ease.
             </p>
-            <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: inkSub, margin: '0 0 32px', fontStyle: 'italic', borderLeft: '2.5px solid #C4913A', paddingLeft: 16 }}>
+            <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: inkSub, margin: '0 0 32px', fontStyle: 'italic', fontWeight: 500, borderLeft: '2.5px solid #C4913A', paddingLeft: 16 }}>
               "True emotional freedom doesn't come from forcing yourself to be happy or pushing feelings down. It comes when you learn the art of witnessing — seeing yourself clearly without judgment."
             </p>
 
@@ -1842,7 +1844,7 @@ export default function EmotionFeelingsCourse() {
                     border: '1px solid rgba(196,145,58,0.25)',
                   }}
                 >
-                  <p style={{ fontFamily: SERIF, fontSize: 19, fontStyle: 'italic', color: isDark ? '#EDE9E3' : '#4A3C2E', margin: '0 0 20px', lineHeight: 1.6 }}>
+                  <p style={{ fontFamily: SERIF, fontSize: 19, fontStyle: 'italic', fontWeight: 500, color: isDark ? '#EDE9E3' : '#4A3C2E', margin: '0 0 20px', lineHeight: 1.6 }}>
                     "{reflectionResponse}"
                   </p>
                   <button
@@ -1854,6 +1856,88 @@ export default function EmotionFeelingsCourse() {
                 </motion.div>
               )}
             </AnimatePresence>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          5b. ABOUT THE GUIDE (Sim Katyal)
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        id="guide"
+        className="si-reveal"
+        style={{
+          padding: 'clamp(64px, 8vw, 96px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+          background: isDark ? 'rgba(74,50,96,0.12)' : 'rgba(74,50,96,0.03)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1040,
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 'clamp(32px, 5vw, 64px)',
+            alignItems: 'center',
+          }}
+        >
+          <div style={{ position: 'relative', textAlign: 'center' }}>
+            <div
+              style={{
+                width: 'clamp(200px, 24vw, 280px)',
+                height: 'clamp(200px, 24vw, 280px)',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                margin: '0 auto',
+                border: '3px solid #C4913A',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.2), 0 0 30px rgba(196,145,58,0.25)',
+              }}
+            >
+              <img
+                src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FSimWriting.png?alt=media"
+                alt="Sim Katyal — Presence & Awareness Guide"
+                loading="lazy"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44' }}>
+              About the Guide
+            </span>
+            <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 400, color: ink, margin: '8px 0 16px', lineHeight: 1.2 }}>
+              Guided by Sim Katyal
+            </h2>
+            <p style={{ fontFamily: SERIF, fontSize: 18, fontStyle: 'italic', color: isDark ? '#EDE9E3' : '#4A3C2E', margin: '0 0 20px', lineHeight: 1.5 }}>
+              "From struggle to stillness — a life lived from the inside out."
+            </p>
+            <p style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.7, color: inkSub, margin: '0 0 24px' }}>
+              Sim is a Presence &amp; Awareness Guide and co-founder of Soulful Intelligence Studio. Having spent years walking the path of inner transformation, she created this course to share simple, grounded somatic practices that help you quiet overthinking, release emotional blockages, and live in deep presence.
+            </p>
+            <a
+              href="/twinsouls"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 22px',
+                borderRadius: 999,
+                border: `1px solid ${borderC}`,
+                color: ink,
+                textDecoration: 'none',
+                fontFamily: SANS,
+                fontSize: 12.5,
+                fontWeight: 700,
+              }}
+            >
+              Learn More About Twin Souls →
+            </a>
           </div>
         </div>
       </section>

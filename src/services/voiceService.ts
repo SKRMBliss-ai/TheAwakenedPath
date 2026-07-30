@@ -340,6 +340,11 @@ export class VoiceService {
             const audioUrl = await this.audioCache[key];
             if (this.currentRequestId !== requestId) {
                 console.log(`[VoiceService] speak ${requestId} cancelled, currentRequestId is now ${this.currentRequestId}`);
+                // Stop any currently playing audio from this request
+                if (this.ttsAudio) {
+                    this.ttsAudio.pause();
+                    this.ttsAudio.currentTime = 0;
+                }
                 return;
             }
 
@@ -489,15 +494,27 @@ export class VoiceService {
                 // Subtle volume ramp
                 let currentVol = 0;
                 const targetVol = this._volume;
-                const ramp = setInterval(() => {
+                let ramp: ReturnType<typeof setInterval> | null = null;
+
+                ramp = setInterval(() => {
+                    if (!audio || audio.paused) {
+                        if (ramp) clearInterval(ramp);
+                        return;
+                    }
                     currentVol += 0.1;
                     if (currentVol >= targetVol) {
                         audio.volume = targetVol;
-                        clearInterval(ramp);
+                        if (ramp) clearInterval(ramp);
+                        ramp = null;
                     } else {
                         audio.volume = currentVol;
                     }
                 }, 50);
+
+                // Ensure ramp is cleared when audio ends
+                audio.addEventListener('ended', () => {
+                    if (ramp) clearInterval(ramp);
+                }, { once: true });
             }
         } catch (error: any) {
             if (error.name === 'AbortError') return;

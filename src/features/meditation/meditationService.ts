@@ -149,24 +149,6 @@ export function getSessionSchedule(userEmail?: string): {
   };
 }
 
-/**
- * Returns a stable session ID for "today's" meditation session, regardless of
- * whether the live window has passed. This is used by admin-override joins so
- * that two admins joining at different points in the day still end up in the
- * SAME session (rather than today's vs. tomorrow's, which is what
- * getSessionSchedule does once today's live window ends).
- *
- * Always uses today's UTC date + 9:30 AM IST (= 04:00 UTC).
- */
-export function getTodayMeditationSessionId(): string {
-  const now = new Date();
-  const todayUtcMidnight = new Date(now);
-  todayUtcMidnight.setUTCHours(0, 0, 0, 0);
-  // 9:30 AM IST = 04:00 UTC (IST is UTC+5:30)
-  const start = new Date(todayUtcMidnight.getTime() + (4 * 60) * 60 * 1000);
-  return `${start.getUTCFullYear()}-${pad(start.getUTCMonth() + 1)}-${pad(start.getUTCDate())}-${pad(start.getUTCHours())}-${pad(start.getUTCMinutes())}`;
-}
-
 export const meditationService = {
 
   async joinSession(_sessionId: string, uid: string, displayName: string, avatarUrl: string): Promise<void> {
@@ -222,7 +204,17 @@ export const meditationService = {
         { isPresent: false, leftAt: Date.now() });
       await updateDoc(doc(db, 'meditation_attendance', `${uid}_${sessionId}`),
         { leftAt: Date.now(), durationMinutes });
-    } catch { }
+    } catch (error) {
+      console.error('[MeditationService] Failed to leave session:', error);
+      // Retry once after a short delay
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await updateDoc(doc(db, 'meditation_sessions', sessionId, 'participants', uid),
+          { isPresent: false, leftAt: Date.now() });
+      } catch (retryError) {
+        console.error('[MeditationService] Retry failed to leave session:', retryError);
+      }
+    }
   },
 
   async updateVideoEnabled(sessionId: string, uid: string, videoEnabled: boolean): Promise<void> {

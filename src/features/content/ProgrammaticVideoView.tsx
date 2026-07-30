@@ -26,6 +26,10 @@ export default function ProgrammaticVideoView({ videoId }: Props) {
 
   const video: VideoResource = VIDEO_REGISTRY[videoId] || VIDEO_REGISTRY['ep1-feelings-and-emotions'];
 
+  useEffect(() => {
+    console.log(`[VideoView] Loading video: ${video.title} (${video.youtubeId})`);
+  }, [video]);
+
   usePageSeo({
     title: `${video.title} | Soulful Intelligence Studio`,
     description: video.description,
@@ -124,6 +128,8 @@ export default function ProgrammaticVideoView({ videoId }: Props) {
               title={video.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+              onLoad={() => console.log(`[VideoView] iframe loaded: ${video.youtubeId}`)}
+              onError={() => console.error(`[VideoView] iframe failed to load: ${video.youtubeId}`)}
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }}
             />
           ) : (

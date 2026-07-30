@@ -21,7 +21,8 @@ export default function ContentHub() {
   // and reaches 4.63:1 on #F9F5EF.
   const gold = isDark ? '#C4913A' : '#8B6A1A';
 
-  const articles = Object.values(ARTICLES_REGISTRY);
+  const articles = Object.values(ARTICLES_REGISTRY)
+    .sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
 
   usePageSeo({
     title: 'Mindfulness & Presence Knowledge Hub | SKRM Bliss AI',
@@ -105,10 +106,15 @@ export default function ContentHub() {
                 </p>
               </div>
 
-              <div style={{ borderTop: `1px dashed ${borderC}`, paddingTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: ink }}>Read Full Guide</span>
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <ArrowRight size={14} color={gold} />
+              <div>
+                <div style={{ fontSize: 11, color: inkSub, marginBottom: 12 }}>
+                  Published {new Date(art.publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </div>
+                <div style={{ borderTop: `1px dashed ${borderC}`, paddingTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: ink }}>Read Full Guide</span>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ArrowRight size={14} color={gold} />
+                  </div>
                 </div>
               </div>
             </a>

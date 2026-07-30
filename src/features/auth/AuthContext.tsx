@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   getRedirectResult,
   signInAnonymously,
   linkWithPopup,
@@ -210,6 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (currentUser) {
           const userRef = doc(db, 'users', currentUser.uid);
 
+          let userDocCreated = false;
           unsubscribeProfile = onSnapshot(userRef, async (snapshot) => {
             if (snapshot.exists()) {
               const d = snapshot.data();
@@ -242,27 +244,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 entryEmail: d.entryEmail,
                 isAnonymousUser: d.isAnonymous ?? false,
               });
-            } else {
-              // New user doc — create with token grant
-              const tokenFields = buildInitialTokenFields(7);
-              const userData = {
-                uid: currentUser.uid,
-                email: currentUser.email,
-                displayName: currentUser.displayName,
-                photoURL: currentUser.photoURL,
-                createdAt: serverTimestamp(),
-                lastLogin: serverTimestamp(),
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
-                level: 1,
-                xp: 0,
-                streak: 0,
-                visitCount: 1,
-                purchasedCourses: [],
-                subscriptionStatus: 'INACTIVE',
-                isAnonymous: currentUser.isAnonymous,
-                ...tokenFields,
-              };
-              await setDoc(userRef, userData);
+            } else if (!userDocCreated) {
+              // New user doc — create with token grant (only once)
+              userDocCreated = true;
+              try {
+                const tokenFields = buildInitialTokenFields(7);
+                const userData = {
+                  uid: currentUser.uid,
+                  email: currentUser.email,
+                  displayName: currentUser.displayName,
+                  photoURL: currentUser.photoURL,
+                  createdAt: serverTimestamp(),
+                  lastLogin: serverTimestamp(),
+                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
+                  level: 1,
+                  xp: 0,
+                  streak: 0,
+                  visitCount: 1,
+                  purchasedCourses: [],
+                  subscriptionStatus: 'INACTIVE',
+                  isAnonymous: currentUser.isAnonymous,
+                  ...tokenFields,
+                };
+                await setDoc(userRef, userData);
+              } catch (error) {
+                console.error('[Auth] Failed to create user document:', error);
+                userDocCreated = false;
+              }
             }
           });
 
@@ -478,15 +486,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     provider.addScope('email');
 
     try {
-      // Use popup for all platforms to avoid Safari ITP cross-domain redirect issues
+      // Try popup first (better UX on desktop)
       console.log('[Auth] Using popup flow for Google sign-in');
       await signInWithPopup(auth, provider);
     } catch (err: any) {
+      // If popup blocked, fall back to redirect (works on all browsers/platforms)
+      if (err?.code === 'auth/popup-blocked') {
+        console.log('[Auth] Popup blocked, switching to redirect flow');
+        try {
+          await signInWithRedirect(auth, provider);
+          // Redirect will cause page to reload, so execution stops here
+          return;
+        } catch (redirectErr: any) {
+          console.error('[Auth] Redirect sign-in error:', redirectErr?.code, redirectErr?.message);
+          throw new Error('Google sign-in failed. Please try again.');
+        }
+      }
+
       console.error('[Auth] Google sign-in error:', err?.code, err?.message);
       // Re-throw with user-friendly message
-      if (err?.code === 'auth/popup-blocked') {
-        throw new Error('Google sign-in popup was blocked. Please allow popups and try again.');
-      } else if (err?.code === 'auth/cancelled-popup-request') {
+      if (err?.code === 'auth/cancelled-popup-request') {
         throw new Error('Google sign-in was cancelled. Please try again.');
       } else if (err?.code === 'auth/network-request-failed') {
         throw new Error('Network error. Please check your connection and try again.');

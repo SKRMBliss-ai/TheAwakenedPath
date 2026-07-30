@@ -114,8 +114,8 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
         maxWidth: 1120, margin: '0 auto', padding: '12px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
       }}>
-        <a href="/" onClick={onLogoClick} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', minWidth: 0 }}>
-          <SiteLogo palette={palette} />
+        <a href="/" onClick={onLogoClick} style={{ display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none', minWidth: 0 }}>
+          <SiteLogo palette={palette} size={64} />
         </a>
 
         <nav className="si-nav-row" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
@@ -125,7 +125,17 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
               href={l.href}
               onClick={l.onClick}
               className={`si-nav${l.secondary ? ' si-hide-sm' : ''}`}
-              style={{ color: palette.INK2, textDecoration: 'none', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}
+              style={{
+                color: palette.INK2,
+                textDecoration: 'none',
+                fontSize: 13,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                padding: '6px 10px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                minHeight: 32,
+              }}
             >
               {l.label}
             </a>

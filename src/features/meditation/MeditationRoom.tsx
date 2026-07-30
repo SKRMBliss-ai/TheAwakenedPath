@@ -187,6 +187,7 @@ const MeditationRoom = ({
       setToastMessage(null);
       prevMessagesLengthRef.current = messages.length;
     } else {
+      let toastTimeout: ReturnType<typeof setTimeout> | null = null;
       if (messages.length > prevMessagesLengthRef.current) {
         const newMsgs = messages.slice(prevMessagesLengthRef.current);
         const textMsgs = newMsgs.filter(m => m.type === 'text' && m.uid !== user.uid);
@@ -207,11 +208,11 @@ const MeditationRoom = ({
              osc.start(ctx.currentTime);
              osc.stop(ctx.currentTime + 0.2);
           }
-          const t = setTimeout(() => setToastMessage(null), 4000);
-          return () => clearTimeout(t);
+          toastTimeout = setTimeout(() => setToastMessage(null), 4000);
         }
       }
       prevMessagesLengthRef.current = messages.length;
+      return () => { if (toastTimeout) clearTimeout(toastTimeout); };
     }
   }, [messages, isChatOpen, user.uid, notificationsMuted]);
 
