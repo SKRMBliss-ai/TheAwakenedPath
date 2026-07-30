@@ -359,6 +359,72 @@ export const ARTICLES_REGISTRY: Record<string, ContentArticle> = {
     ],
     relatedSlugs: ['why-do-i-overthink', 'stopping-overthinking-naturally', 'meditation-for-beginners'],
     tags: ['sleep', 'overthinking', 'anxiety', 'somatic-relaxation', 'breathwork']
+  },
+  'breaking-overthinking-anxiety-cycle': {
+    slug: 'breaking-overthinking-anxiety-cycle',
+    type: 'guide',
+    title: 'Breaking the Overthinking-Anxiety Cycle: Complete Guide to Calming Your Nervous System',
+    subtitle: 'Understand the neuroscience of the overthinking-anxiety spiral and 9 proven techniques to interrupt it.',
+    description: 'Discover why overthinking triggers anxiety, how the cycle self-perpetuates, and 9 science-backed techniques to break free. Includes daily practices and when to seek professional help.',
+    category: 'Emotional Intelligence',
+    author: 'Sim Katyal',
+    publishDate: new Date().toISOString().split('T')[0],
+    readTime: '12 min read',
+    quickAnswer: 'Overthinking activates your threat-detection system. Repeated worried thinking looks like persistent danger to your brain, triggering anxiety. The cycle locks when you become anxious about your anxiety. Breaking it requires interrupting at one of four stages using specific techniques.',
+    definition: 'The overthinking-anxiety cycle: a self-reinforcing loop where repetitive worried thinking activates your nervous system, which generates more anxiety, which increases rumination—creating a spiral that feels inescapable.',
+    keyTakeaways: [
+      'Overthinking and anxiety aren\'t separate—overthinking is often the doorway into anxiety.',
+      'Your brain can\'t distinguish real threats from imagined ones, so it treats worried thinking as evidence of danger.',
+      'The cycle has four stages: trigger, repetitive analysis, anxiety activation, and defensive overthinking.',
+      'Nine specific techniques can interrupt the cycle at different stages—one technique, used consistently, creates measurable change within 2-3 weeks.',
+      'The fastest breakthroughs come from working with your body (breathing, movement) rather than trying to think your way out.'
+    ],
+    sections: [
+      {
+        heading: 'The Neuroscience: Why Overthinking Triggers Anxiety',
+        content: 'Your brain has an ancient threat-detection system designed to keep you safe. When it senses danger—real or imagined—it activates your fight-or-flight response. The problem: your threat-detection system can\'t tell the difference between a real predator and a worried thought. When you overthink, your brain interprets repeated worried thinking as evidence that something is wrong, so it activates anxiety.'
+      },
+      {
+        heading: 'The Four Stages of the Overthinking-Anxiety Spiral',
+        content: 'Understanding the structure of the cycle helps you know where to interrupt it.',
+        bulletPoints: [
+          'Stage 1: The Trigger (external or internal thought)',
+          'Stage 2: Repetitive Analysis (mind gets stuck in the loop)',
+          'Stage 3: Anxiety Activation (body shifts into fight-or-flight)',
+          'Stage 4: Defensive Overthinking (anxiety about your anxiety)'
+        ]
+      },
+      {
+        heading: 'Nine Techniques to Break the Cycle',
+        content: 'Different techniques work at different stages. Pick one and use it consistently.',
+        bulletPoints: [
+          'Stage 1: The 10-Minute Rule, Cognitive Defusion',
+          'Stage 2: The Worry Dump, Thought-Stopping',
+          'Stage 3: Box Breathing, Progressive Muscle Relaxation, Opposite Action',
+          'Stage 4: Self-Compassion Protocol, Meta-Awareness Practice'
+        ]
+      },
+      {
+        heading: 'Daily Practices to Rewire Your Nervous System',
+        content: 'Knowing the techniques is one thing. Using them consistently is how you rewire your brain. Start with a 5-minute morning reset, a 15-minute evening wind-down, and a weekly check-in to notice patterns.'
+      }
+    ],
+    faqs: [
+      {
+        q: 'How quickly will these techniques work?',
+        a: 'Most people see noticeable improvement within 2-3 weeks of consistent practice. One technique, used daily, is more effective than knowing all nine but using them inconsistently.'
+      },
+      {
+        q: 'When should I seek professional help?',
+        a: 'If anxiety prevents you from work or relationships, if techniques help temporarily but intensity returns, or if you\'ve experienced trauma, consult a therapist trained in CBT or ACT. These techniques complement professional support but aren\'t a substitute when you need it.'
+      },
+      {
+        q: 'Why does box breathing work so fast?',
+        a: 'Box breathing activates your vagus nerve, which is part of your parasympathetic nervous system (your "brake" on stress). It directly counteracts adrenaline and cortisol, signaling safety to your nervous system in minutes.'
+      }
+    ],
+    relatedSlugs: ['why-do-i-overthink', 'stopping-overthinking-naturally', 'witness-consciousness-guide', 'meditation-for-beginners'],
+    tags: ['anxiety', 'overthinking', 'nervous-system', 'neuroscience', 'breathing', 'emotional-regulation']
   }
 };
 

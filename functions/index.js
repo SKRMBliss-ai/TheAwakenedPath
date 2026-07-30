@@ -2004,6 +2004,7 @@ const DAILY_GUIDES = [
     { slug: 'why-do-i-overthink', title: 'Why Do I Overthink Everything?', teaser: 'The causes — and a 5-minute path to relief.' },
     { slug: 'meditation-for-beginners', title: 'Meditation for Beginners', teaser: 'How to start without sitting still for hours.' },
     { slug: 'how-to-stop-overthinking-at-night', title: 'How to Stop Overthinking at Night', teaser: '4 somatic steps to quiet the mind before sleep.' },
+    { slug: 'breaking-overthinking-anxiety-cycle', title: 'Breaking the Overthinking-Anxiety Cycle', teaser: '9 neuroscience-backed techniques to interrupt the spiral.' },
 ];
 function getTodaysGuide() {
     // Rotate by day-of-year so it's stable within a day and cycles through all guides.

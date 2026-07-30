@@ -37,6 +37,7 @@ const ROUTES = [
   '/guides/why-do-i-overthink',
   '/guides/meditation-for-beginners',
   '/guides/how-to-stop-overthinking-at-night',
+  '/guides/breaking-overthinking-anxiety-cycle',
   '/knowledge',
   '/glossary/presence',
   '/glossary/witness-consciousness',
