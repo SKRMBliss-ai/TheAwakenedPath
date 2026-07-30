@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import type { Palette } from '../../lib/siteTheme';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -47,6 +47,15 @@ export default function HeroMark({ palette, size = 380, opacity = 1, className =
   const stroke = palette?.PURPLE || (isDark ? '#D4CDE8' : '#4A3260');
   const accent = palette?.BROWN  || (isDark ? '#C4913A' : '#7A5F44');
 
+  // Gradient ids must be unique per instance. HeroMark renders more than once on
+  // a page; with hardcoded ids every instance's url(#…) resolved to the FIRST
+  // gradient in the document, so a second instance with a different palette
+  // silently rendered the first one's colours (and the duplicate ids made the
+  // document invalid). useId gives each instance its own namespace.
+  const uid = useId().replace(/:/g, '');
+  const glowId = `hm-glow-${uid}`;
+  const lineId = `hm-line-${uid}`;
+
   return (
     <div
       aria-hidden="true"
@@ -65,19 +74,19 @@ export default function HeroMark({ palette, size = 380, opacity = 1, className =
     >
       <svg viewBox="-72 -72 144 144" width="100%" height="100%" style={{ display: 'block', overflow: 'visible' }}>
         <defs>
-          <radialGradient id="hm-glow" cx="50%" cy="50%" r="50%">
+          <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor={accent} stopOpacity={isDark ? 0.30 : 0.20} />
             <stop offset="55%" stopColor={stroke} stopOpacity={isDark ? 0.13 : 0.09} />
             <stop offset="100%" stopColor={stroke} stopOpacity="0" />
           </radialGradient>
-          <linearGradient id="hm-line" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={lineId} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={stroke} stopOpacity="0.85" />
             <stop offset="100%" stopColor={accent} stopOpacity="0.85" />
           </linearGradient>
         </defs>
 
         {/* Soft halo */}
-        <circle cx="0" cy="0" r="70" fill="url(#hm-glow)" />
+        <circle cx="0" cy="0" r="70" fill={`url(#${glowId})`} />
 
         {/* Slow counter-rotating guide rings */}
         <g className="hm-spin-slow" style={{ transformOrigin: 'center' }}>
@@ -93,7 +102,7 @@ export default function HeroMark({ palette, size = 380, opacity = 1, className =
             <line
               key={i}
               x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]}
-              stroke="url(#hm-line)" strokeOpacity="0.42" strokeWidth="0.42" strokeLinecap="round"
+              stroke={`url(#${lineId})`} strokeOpacity="0.42" strokeWidth="0.42" strokeLinecap="round"
             />
           ))}
           {nodes.map(([x, y], i) => (

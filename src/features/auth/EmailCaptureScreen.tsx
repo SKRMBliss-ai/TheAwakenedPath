@@ -237,12 +237,25 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
                 >
                   <div className="space-y-1.5">
                     <label
+                      htmlFor="entry-email"
                       className="text-[10px] font-bold uppercase tracking-widest pl-2 opacity-50 block"
                       style={{ color: theme.textPrimary }}
                     >
                       Your Email
                     </label>
+                    {/* Tells a first-time visitor that this box IS the way in —
+                        no account to create. Without it the email field reads as
+                        a newsletter signup and people bounce to "Sign in". */}
+                    <p
+                      id="entry-email-hint"
+                      className="text-[11px] leading-snug pl-2 pr-1 opacity-60"
+                      style={{ color: theme.textSecondary }}
+                    >
+                      No password needed — enter your email and you&rsquo;re straight into Mind Gym.
+                    </p>
                     <input
+                      id="entry-email"
+                      aria-describedby="entry-email-hint"
                       type="text"
                       placeholder="your@soul.com"
                       value={email}

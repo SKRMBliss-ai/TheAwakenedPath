@@ -14,6 +14,7 @@ import ProgrammaticVideoView from './features/content/ProgrammaticVideoView'
 import EditorialIntelligenceView from './features/content/EditorialIntelligenceView'
 import GlobalKnowledgeDock from './components/site/GlobalKnowledgeDock'
 import SocialFab from './components/ui/SocialFab'
+import NotFoundView from './components/site/NotFoundView'
 import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
@@ -29,11 +30,34 @@ function trackPageVisit(path: string, eventType = 'PAGE_VISIT') {
       path,
       timestamp: serverTimestamp(),
     });
-  } catch (_) {}
+  } catch (error) {
+    console.error('[PageVisit] Failed to log activity:', error);
+  }
 }
 
 // Silence non-critical speech synthesis errors in development/unsupported environments
 VoiceService.init();
+
+// Monitor service worker registration for errors
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistration().then((reg) => {
+    if (reg) {
+      console.log('[ServiceWorker] Registered and ready');
+      reg.onupdatefound = () => {
+        const newWorker = reg.installing;
+        if (newWorker) {
+          newWorker.onstatechange = () => {
+            if (newWorker.state === 'activated') {
+              console.log('[ServiceWorker] Updated and activated');
+            }
+          };
+        }
+      };
+    }
+  }).catch((err) => {
+    console.error('[ServiceWorker] Registration failed:', err);
+  });
+}
 
 class ErrorBoundary extends Component<
   { children: ReactNode; featureName?: string },
@@ -157,6 +181,18 @@ const isHomeRoute = (() => {
   return p === '' || p === '/index.html';
 })();
 
+// The Mind Gym app itself. This is the ONLY path that should fall through to the
+// app render below — every other real path is either matched explicitly above or
+// shipped as a static file (/twinsouls, /emotions, /habitquest2026, /og,
+// /assets), which Hosting serves directly without ever reaching this bundle.
+// Anything else is a bad URL and must render NotFoundView rather than silently
+// showing the app on top of the home page's prerendered HTML.
+const isMindGymRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/mindgym' || p === '/mindgym/index.html';
+})();
+
 // Track /mindgym (main app) visits
 if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute && !isPoliciesRoute && !isHomeRoute && typeof window !== 'undefined') {
   const p = window.location.pathname.toLowerCase();
@@ -257,7 +293,7 @@ if (isHomeRoute) {
       <SocialFab />
     </ErrorBoundary>,
   );
-} else {
+} else if (isMindGymRoute) {
   root.render(
     <ErrorBoundary featureName="Root">
       <AuthProvider>
@@ -269,6 +305,16 @@ if (isHomeRoute) {
           </AchievementsProvider>
         </ThemeProvider>
       </AuthProvider>
+    </ErrorBoundary>,
+  );
+} else {
+  // Unrecognised path — render an honest 404 (and noindex it) instead of
+  // quietly showing the app over the home page's prerendered markup.
+  root.render(
+    <ErrorBoundary featureName="NotFound">
+      <ThemeProvider>
+        <NotFoundView />
+      </ThemeProvider>
     </ErrorBoundary>,
   );
 }

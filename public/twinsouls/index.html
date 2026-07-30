@@ -2,13 +2,51 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/twinsouls/vite.svg" />
+    <link rel="icon" type="image/webp" href="/twinsouls/si-logo-light.webp" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>shrutiportfolio</title>
-    <script type="module" crossorigin src="/twinsouls/assets/index-CqzwTCiG.js"></script>
-    <link rel="stylesheet" crossorigin href="/twinsouls/assets/index-DeWVKsJH.css">
+    <title>About Us — Soulful Intelligence Studio</title>
+    <meta name="description" content="The two people behind Soulful Intelligence Studio — Shruti and Sim. Twin souls, one studio: mindfulness practice and digital craft." />
+
+    <!-- This page is listed in sitemap.xml, so it is submitted for indexing and
+         gets shared like any other page. Without these it shared as a bare link
+         with no preview card, and had no canonical. Mirrored from
+         ShrutiPortfolio/index.html — keep the two in sync. -->
+    <link rel="canonical" href="https://www.skrmblissai.in/twinsouls" />
+    <meta property="og:site_name" content="Soulful Intelligence Studio" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.skrmblissai.in/twinsouls" />
+    <meta property="og:title" content="About Us — Soulful Intelligence Studio" />
+    <meta property="og:description" content="The two people behind Soulful Intelligence Studio — Shruti and Sim. Twin souls, one studio: mindfulness practice and digital craft." />
+    <meta property="og:image" content="https://www.skrmblissai.in/og/home.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="About Us — Soulful Intelligence Studio" />
+    <meta name="twitter:description" content="The two people behind Soulful Intelligence Studio — Shruti and Sim. Twin souls, one studio: mindfulness practice and digital craft." />
+    <meta name="twitter:image" content="https://www.skrmblissai.in/og/home.png" />
+
+    <!-- Theme bootstrap. Runs before first paint so a visitor who chose a mode
+         elsewhere on skrmblissai.in (home, course, Mind Gym) lands here already
+         in that mode, with no flash of the wrong one. The key is duplicated in
+         src/siteTheme.ts and in the main site's index.html — keep them equal. -->
+    <script>
+      (function () {
+        var m = 'light';
+        try {
+          var v = localStorage.getItem('si-theme') || localStorage.getItem('awakened-theme');
+          if (v === 'dark' || v === 'light') m = v;
+        } catch (e) {}
+        var d = document.documentElement;
+        d.dataset.siTheme = m;
+        if (m === 'dark') { d.classList.add('dark'); }
+        d.style.setProperty('--boot-bg', m === 'dark' ? '#15120F' : '#F4F1EA');
+      })();
+    </script>
+    <style>
+      html { background: var(--boot-bg, #F4F1EA); }
+    </style>
+    <script type="module" crossorigin src="/twinsouls/assets/index-Cw23Cm0n.js"></script>
+    <link rel="stylesheet" crossorigin href="/twinsouls/assets/index-Dbdd0mvZ.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
   </body>
 </html>
