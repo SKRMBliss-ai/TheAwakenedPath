@@ -257,6 +257,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
                       id="entry-email"
                       aria-describedby="entry-email-hint"
                       type="text"
+                      inputMode="email"
                       placeholder="your@soul.com"
                       value={email}
                       onChange={(e) => handleEmailChange(e.target.value)}

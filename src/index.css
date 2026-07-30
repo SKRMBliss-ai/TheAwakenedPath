@@ -965,6 +965,46 @@ body.dark-mode .mouse-glow {
   border-color: rgba(255,255,255,0.2);
 }
 
+/* ── Focus visibility (WCAG 2.4.7 Focus Visible, AA) ─────────────────────
+   The site had no global focus style, so keyboard and switch users had no way
+   to tell where they were — including on the email field that is the primary
+   signup action. :focus-visible is used (not :focus) so mouse and touch users
+   never see a ring; it appears only for keyboard/AT navigation.
+   currentColor keeps it legible in both light and dark themes without needing
+   a theme-specific value. */
+/* NOTE ON SPECIFICITY: many controls here carry Tailwind's `outline-none`
+   utility (specificity 0,1,0). A :where(...) rule has ZERO specificity and
+   loses to it, so the ring silently never appears — that is exactly what the
+   audit measured. These selectors are therefore unwrapped, and the outline is
+   marked !important so an `outline-none` utility anywhere in the codebase
+   cannot suppress the focus indicator. This is scoped to :focus-visible only,
+   so mouse and touch users are never shown a ring. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid #B8973A !important;
+  outline-offset: 2px !important;
+}
+
+/* Inputs sit inside rounded containers; a tighter offset reads better. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline-offset: 1px !important;
+}
+
+/* Windows High Contrast / forced-colors: let the OS draw the indicator. */
+@media (forced-colors: active) {
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid Highlight;
+  }
+}
+
 /* ── Reduced motion: kill all animations safely ─────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .si-geo-img            { animation: none !important; }
