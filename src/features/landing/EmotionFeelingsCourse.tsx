@@ -2601,8 +2601,10 @@ export default function EmotionFeelingsCourse() {
               </div>
 
               {/* YouTube Iframe (controls disabled & pointer shield to prevent seeking/forwarding) */}
+              {/* cc_load_policy=0 keeps YouTube's auto-captions off — they were
+                  overlapping the teaser's own on-screen text. */}
               <iframe
-                src={`https://www.youtube.com/embed/${teaserVideo.id}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0${teaserVideo.startTime ? `&start=${teaserVideo.startTime}` : ''}`}
+                src={`https://www.youtube.com/embed/${teaserVideo.id}?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&cc_load_policy=0${teaserVideo.startTime ? `&start=${teaserVideo.startTime}` : ''}`}
                 title={`60s Teaser - Episode ${teaserVideo.episodeNum}`}
                 style={{ width: '100%', height: '100%', border: 'none' }}
                 allow="autoplay; encrypted-media"
