@@ -920,7 +920,9 @@ export default function AboutJournal() {
         >
             <style>{HEARTBEAT_KEYFRAMES}</style>
             <header className="fixed top-0 left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-black/10 dark:bg-black/20 backdrop-blur-md border-b border-white/5">
-                <a href="/aboutmindgym" className="flex items-center gap-3 text-black/90 dark:text-white/95 hover:text-black dark:hover:text-white transition-all group">
+                {/* The only child is a decorative icon, so without an explicit
+                    label a screen reader announces this as just "link". */}
+                <a href="/aboutmindgym" aria-label="About Mind Gym" className="flex items-center gap-3 text-black/90 dark:text-white/95 hover:text-black dark:hover:text-white transition-all group">
                     <div className={`w-9 h-9 rounded-full bg-[#A98A67]/15 ${GOLD_BORDER} flex items-center justify-center group-hover:scale-110 transition-transform`}>
                         <Sparkles className="w-4 h-4 text-[#A98A67]" />
                     </div>

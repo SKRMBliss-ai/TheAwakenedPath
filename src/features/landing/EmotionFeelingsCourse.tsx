@@ -1095,9 +1095,14 @@ export default function EmotionFeelingsCourse() {
                       CREATOR & LEAD GUIDE
                     </span>
                   </div>
-                  <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400, color: '#EDE9E3', margin: 0, lineHeight: 1.1 }}>
+                  {/* h2, not h3: this is the first heading after the page h1, so
+                      an h3 here skipped a level and broke the outline for screen
+                      reader users. letterSpacing is pinned to normal because the
+                      base h2 rule adds tracking that h3 does not — without it the
+                      tag change would visibly alter the spacing. */}
+                  <h2 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400, color: '#EDE9E3', margin: 0, lineHeight: 1.1, letterSpacing: 'normal' }}>
                     Sim Katyal
-                  </h3>
+                  </h2>
                 </div>
 
                 {/* Micro Lotus Graphic */}
