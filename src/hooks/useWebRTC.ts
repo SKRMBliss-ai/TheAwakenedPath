@@ -204,6 +204,13 @@ export function useWebRTC({ sessionId, myUid, enabled }: UseWebRTCOptions): UseW
   // ── Handle incoming signals (perfect negotiation) ────────────────────────
   const handleSignal = useCallback(async (signal: any) => {
     const { from, type, data } = signal;
+
+    // NOTE: deliberately NOT gated on the sender being in the current roster.
+    // That looks like a sensible guard but races on join: when A arrives, B's
+    // roster can still be just [B], so B would drop A's offer and mark it
+    // processed — reproducing the "we can't see each other" bug. Stale signals
+    // are handled by the age filter in subscribeToSignals instead, which has no
+    // such race because it keys off the signal's own timestamp.
     try {
       if (type === 'offer' || type === 'answer') {
         const pc = createPeerConnection(from);

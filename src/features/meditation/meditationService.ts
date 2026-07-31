@@ -27,6 +27,15 @@ export const LIVE_MEDITATION_SESSION_ID = 'live_meditation';
 export const HEARTBEAT_INTERVAL_MS = 15 * 1000;
 export const PRESENCE_STALE_MS = 60 * 1000; // 4 missed heartbeats → considered gone
 
+// WebRTC signals are only ever marked processed:true — they are never deleted
+// (the rules don't grant delete). In the old per-day rooms that was harmless
+// because each room was abandoned within the hour. The room is now PERMANENT,
+// so a signal written while its recipient was offline stays processed:false
+// forever and is replayed to them on their next join — possibly days later —
+// making them negotiate with a peer who is long gone. Anything older than this
+// is ignored on read. Kept well above a plausible negotiation round-trip.
+export const SIGNAL_MAX_AGE_MS = 2 * 60 * 1000;
+
 // Convert a Firestore Timestamp (server time) to epoch ms. Returns null for a
 // pending/unresolved serverTimestamp or a non-Timestamp value.
 function tsToMillis(v: any): number | null {
@@ -257,10 +266,22 @@ export const meditationService = {
     );
     return onSnapshot(q, snap => {
       snap.docChanges().forEach(change => {
-        if (change.type === 'added') {
-          cb({ id: change.doc.id, ...change.doc.data() });
+        if (change.type !== 'added') return;
+        const data = change.doc.data() as any;
+
+        // Drop stale signals rather than replaying them. Filtered here in the
+        // client, not as a range clause on the query, so this needs no new
+        // composite index — a missing index would make the query throw and
+        // silently kill all signalling (i.e. break video for everyone).
+        const age = Date.now() - (typeof data.timestamp === 'number' ? data.timestamp : 0);
+        if (age > SIGNAL_MAX_AGE_MS) {
+          // Still mark it processed so it stops matching this query forever.
           updateDoc(change.doc.ref, { processed: true }).catch(() => {});
+          return;
         }
+
+        cb({ id: change.doc.id, ...data });
+        updateDoc(change.doc.ref, { processed: true }).catch(() => {});
       });
     });
   },
