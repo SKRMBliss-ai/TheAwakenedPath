@@ -729,7 +729,7 @@ export default function EmotionFeelingsCourse() {
             { label: 'Overview', href: '#overview' },
             { label: 'Course Journey', href: '#journey' },
             { label: 'What’s Included', href: '#whats-included' },
-            { label: 'About the Guide', href: '#guide' },
+            { label: 'About the Guide', href: '#about-the-guide' },
             { label: 'Why it works', href: '#stories' },
             { label: 'FAQ', href: '#faq' },
           ]}
@@ -1866,8 +1866,13 @@ export default function EmotionFeelingsCourse() {
       {/* ════════════════════════════════════════════════════════════════════
           5b. ABOUT THE GUIDE (Sim Katyal)
          ════════════════════════════════════════════════════════════════════ */}
+      {/* NOT id="guide": the "MEET YOUR GUIDE" section above already owns that
+          id, and the hero's "Read the overview" CTA links to it. Two elements
+          sharing an id is invalid, and getElementById resolves to the FIRST —
+          so the header's "About the Guide" item silently jumped to the short
+          blurb near the top instead of landing here. */}
       <section
-        id="guide"
+        id="about-the-guide"
         className="si-reveal"
         style={{
           padding: 'clamp(64px, 8vw, 96px) clamp(24px, 6vw, 96px)',
