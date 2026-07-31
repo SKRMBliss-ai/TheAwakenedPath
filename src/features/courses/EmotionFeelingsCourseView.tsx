@@ -137,7 +137,11 @@ const LESSONS: Lesson[] = [
     kicker: 'Episode 3 — Recognize Your Triggers',
     title: 'Why The Past Still Controls Us',
     desc: "How random triggers — songs, tones, looks — can spark intense reactions from the past that we don't even realize are running us.",
-    videoId: 'APzxUQtWFTw',
+    // TODO: still a placeholder — this is ep1-part2's video, so paying users
+    // currently get the wrong lesson here. APzxUQtWFTw is NOT the right value:
+    // that is the 60-second teaser used on the sales page. Needs the real
+    // full-length Episode 3 upload.
+    videoId: 'j3xiMiqnrf4',
     // Intentionally has no preview flag, so getLessonState() returns 'paywall'
     // and this stays locked for unpaid users while ep1/ep2 stay previewable.
     week: 0,
