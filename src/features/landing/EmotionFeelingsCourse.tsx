@@ -869,7 +869,7 @@ export default function EmotionFeelingsCourse() {
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
               <button
                 onClick={() => {
-                  setActiveVideoUrl('https://www.youtube.com/embed/nbyToUpT1_8?autoplay=1&rel=0');
+                  setActiveVideoUrl('https://www.youtube.com/embed/APzxUQtWFTw?autoplay=1&rel=0');
                   setShowVideoModal(true);
                 }}
                 className="si-btn-breathe"
@@ -917,7 +917,7 @@ export default function EmotionFeelingsCourse() {
         {/* Floating Watch Intro Badge */}
         <button
           onClick={() => {
-            setActiveVideoUrl('https://www.youtube.com/embed/nbyToUpT1_8?autoplay=1&rel=0');
+            setActiveVideoUrl('https://www.youtube.com/embed/APzxUQtWFTw?autoplay=1&rel=0');
             setShowVideoModal(true);
           }}
           style={{

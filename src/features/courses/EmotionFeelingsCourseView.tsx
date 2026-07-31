@@ -137,7 +137,9 @@ const LESSONS: Lesson[] = [
     kicker: 'Episode 3 — Recognize Your Triggers',
     title: 'Why The Past Still Controls Us',
     desc: "How random triggers — songs, tones, looks — can spark intense reactions from the past that we don't even realize are running us.",
-    videoId: 'j3xiMiqnrf4',
+    videoId: 'APzxUQtWFTw',
+    // Intentionally has no preview flag, so getLessonState() returns 'paywall'
+    // and this stays locked for unpaid users while ep1/ep2 stay previewable.
     week: 0,
   },
   {
