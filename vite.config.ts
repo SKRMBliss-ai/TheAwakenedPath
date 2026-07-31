@@ -37,7 +37,13 @@ export default defineConfig({
       // Only list files that actually exist in /public — VitePWA precache will fail
       // (or silently 404 in offline mode) on missing assets. Sacred-bg files removed
       // because they're no longer present in /public.
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.png'],
+      // logo.png was removed here when the unused 613KB public/logo.png was
+      // deleted — it was referenced by nothing in src, index.html or the web
+      // manifest, but WAS still listed here. Leaving a non-existent file in
+      // includeAssets is exactly what the note above warns about: the entry
+      // lands in the precache manifest and then 404s for anyone still running
+      // the older service worker.
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
