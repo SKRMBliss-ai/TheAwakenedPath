@@ -831,9 +831,11 @@ const Footer = () => (
                 <Sparkles className="w-3.5 h-3.5 text-[#A98A67]" />
                 <span className="tracking-wide">Mind Gym</span>
             </div>
+            {/* inline-flex + min-h reaches the 24px minimum tap target
+                (WCAG 2.2 §2.5.8); these rendered ~16px tall. */}
             <div className="flex items-center gap-5">
-                <a href="/mindgym" className="hover:text-black/70 dark:hover:text-white/70 transition-colors">Journal</a>
-                <a href="mailto:connect@skrmblissai.in" className="hover:text-black/70 dark:hover:text-white/70 transition-colors">Contact</a>
+                <a href="/mindgym" className="inline-flex items-center min-h-[32px] py-1.5 hover:text-black/70 dark:hover:text-white/70 transition-colors">Journal</a>
+                <a href="mailto:connect@skrmblissai.in" className="inline-flex items-center min-h-[32px] py-1.5 hover:text-black/70 dark:hover:text-white/70 transition-colors">Contact</a>
             </div>
         </div>
     </footer>
@@ -933,7 +935,7 @@ export default function AboutJournal() {
                     </button>
                     <a
                         href="/mindgym"
-                        className="text-sm text-black/80 dark:text-white/85 hover:text-[#8C7B8A] transition-colors font-bold tracking-wide uppercase"
+                        className="inline-flex items-center min-h-[32px] px-2 text-sm text-black/80 dark:text-white/85 hover:text-[#8C7B8A] transition-colors font-bold tracking-wide uppercase"
                     >
                         Sign in
                     </a>
