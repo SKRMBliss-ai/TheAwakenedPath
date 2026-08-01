@@ -1650,6 +1650,42 @@ exports.previewReminderEmail = onRequest({
 });
 
 /**
+ * Shared human signature for the footer of every email.
+ *
+ * Until now every template signed off as the brand only ("Mind Gym", "By Twin
+ * Souls"). Newsletters that read as coming from a named person consistently do
+ * better, so this puts a face and a name at the end of each one.
+ *
+ * Notes for anyone editing this:
+ *  - The name is real TEXT, never baked into the image. Most clients block
+ *    remote images by default, so the signature has to still read with images
+ *    off — that's also why the img carries alt text and a fixed width/height.
+ *  - The photo is a public Firebase Storage URL. Email clients cannot see
+ *    anything behind auth, so it must stay publicly readable.
+ *  - `dark` switches the palette: some templates are on a dark background
+ *    (meditation reminders) and some on cream (daily reminder).
+ */
+const signatureBlock = ({ dark = false } = {}) => {
+    const name = dark ? '#FDFAF4' : '#1E1912';
+    const role = dark ? 'rgba(253,250,244,0.55)' : 'rgba(30,25,18,0.6)';
+    const rule = dark ? 'rgba(253,250,244,0.15)' : 'rgba(184,151,58,0.25)';
+    return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px;">
+      <tr>
+        <td style="padding-right:12px;vertical-align:middle;">
+          <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FSimWriting.png?alt=media"
+               width="44" height="44" alt="Sim Katyal"
+               style="width:44px;height:44px;border-radius:50%;object-fit:cover;display:block;border:1px solid ${rule};" />
+        </td>
+        <td style="vertical-align:middle;text-align:left;">
+          <p style="margin:0;font-size:13px;font-weight:600;color:${name};line-height:1.3;">Sim Katyal</p>
+          <p style="margin:2px 0 0;font-size:11px;color:${role};line-height:1.3;">Creator &amp; Guide &middot; Mind Gym</p>
+        </td>
+      </tr>
+    </table>`;
+};
+
+/**
  * Helper to get nodemailer transporter
  */
 const getTransporter = () => {
@@ -1833,6 +1869,7 @@ exports.sendMeditationReminders = onSchedule({
         <a href="https://awakened-path-2026.web.app/meditation" style="display:inline-block;padding:14px 32px;background:linear-gradient(to right, #14b8a6, #5eead4);color:#042f2e;text-decoration:none;font-weight:bold;border-radius:24px;text-transform:uppercase;letter-spacing:2px;">
             JOIN MEDITATION &rarr;
         </a>
+        ${signatureBlock({ dark: true })}
         <p style="text-align: center; margin-top: 30px;">
             <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=MEDITATION_REMINDER" style="color: rgba(255, 255, 255, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from reminders</a>
         </p>
@@ -1899,6 +1936,7 @@ exports.testMeditationReminderEmail = onRequest({
         <a href="https://awakened-path-2026.web.app/meditation" style="display:inline-block;padding:14px 32px;background:linear-gradient(to right, #14b8a6, #5eead4);color:#042f2e;text-decoration:none;font-weight:bold;border-radius:24px;text-transform:uppercase;letter-spacing:2px;">
             JOIN MEDITATION &rarr;
         </a>
+        ${signatureBlock({ dark: true })}
         <p style="text-align: center; margin-top: 30px;">
             <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=MEDITATION_REMINDER" style="color: rgba(255, 255, 255, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from reminders</a>
         </p>
@@ -2272,6 +2310,7 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                     <!-- Footer -->
                     <tr>
                         <td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
+                            ${signatureBlock({ dark: false })}
                             <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.8);margin:0 0 16px;">Mind Gym</p>
                             <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:0;line-height:1.8;">
                                 <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp; 
@@ -2595,6 +2634,7 @@ exports.blastUpdateEmail = onCall({
                 <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}&url=${encodeURIComponent(targetVideoUrl)}" style="display: inline-block; padding: 10px 24px; background: transparent; border: 1px solid #E6C57D; color: #E6C57D; text-decoration: none; font-size: 12px; font-weight: bold; border-radius: 999px;">Watch 60s Video Teaser 🍿</a>
             </div>
 
+            ${signatureBlock({ dark: true })}
             <p style="text-align: center; margin-top: 32px;">
                 <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=${blastId}" style="color: rgba(253, 250, 244, 0.4); text-decoration: none; font-size: 10.5px;">Unsubscribe from daily wisdom updates</a>
             </p>
