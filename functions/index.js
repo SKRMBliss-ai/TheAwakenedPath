@@ -1674,8 +1674,8 @@ const signatureBlock = ({ dark = false } = {}) => {
       <tr>
         <td style="padding-right:12px;vertical-align:middle;">
           <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FSimWriting.png?alt=media"
-               width="44" height="44" alt="Sim"
-               style="width:44px;height:44px;border-radius:50%;object-fit:cover;display:block;border:1px solid ${rule};" />
+               width="72" height="72" alt="Sim"
+               style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;border:1px solid ${rule};" />
         </td>
         <td style="vertical-align:middle;text-align:left;">
           <p style="margin:0;font-size:13px;font-weight:600;color:${name};line-height:1.3;">Sim (Guide)</p>
