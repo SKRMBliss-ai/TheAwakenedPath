@@ -1672,14 +1672,14 @@ const signatureBlock = ({ dark = false } = {}) => {
     return `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px;">
       <tr>
-        <td style="padding-right:12px;vertical-align:middle;">
+        <td style="padding-right:16px;vertical-align:middle;">
           <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FSimWriting.png?alt=media"
-               width="72" height="72" alt="Sim"
-               style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;border:1px solid ${rule};" />
+               width="104" height="104" alt="Sim Katyal"
+               style="width:104px;height:104px;border-radius:50%;object-fit:cover;display:block;border:1px solid ${rule};" />
         </td>
         <td style="vertical-align:middle;text-align:left;">
-          <p style="margin:0;font-size:13px;font-weight:600;color:${name};line-height:1.3;">Sim (Guide)</p>
-          <p style="margin:2px 0 0;font-size:11px;color:${role};line-height:1.3;">Mind Gym</p>
+          <p style="margin:0;font-size:13px;font-weight:600;color:${name};line-height:1.3;">Sim Katyal</p>
+          <p style="margin:2px 0 0;font-size:11px;color:${role};line-height:1.3;">Guide &middot; Mind Gym</p>
         </td>
       </tr>
     </table>`;
@@ -1806,11 +1806,22 @@ exports.forceTriggerEmail = onRequest({
  * Notifies all registered users 15 minutes before the 9:30 AM IST live wellness
  * session. No sessions (and no reminders) on Saturday/Sunday.
  */
+// PAUSED. The 9:15 AM IST weekday meditation reminder is switched off while the
+// overall email volume is being reduced. The guard lives in code rather than as
+// a paused Cloud Scheduler job because redeploying the function re-creates and
+// resumes that job, which would silently switch sending back on.
+// To resume: set this to true and redeploy sendMeditationReminders.
+const MEDITATION_REMINDERS_ENABLED = false;
+
 exports.sendMeditationReminders = onSchedule({
     schedule: "45 3 * * 1-5", // 3:45 AM UTC = 9:15 AM IST, Monday–Friday
     timeZone: "UTC",
     secrets: [emailUser, emailPass]
 }, async (event) => {
+    if (!MEDITATION_REMINDERS_ENABLED) {
+        console.log("sendMeditationReminders: paused (MEDITATION_REMINDERS_ENABLED=false) — no emails sent.");
+        return;
+    }
     try {
         const usersSnap = await db.collection("users").where("email", "!=", null).get();
         if (usersSnap.empty) { console.log("No users found."); return; }
