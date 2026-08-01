@@ -1975,10 +1975,21 @@ exports.testMeditationReminderEmail = onRequest({
 /**
  * Scheduled Reminder: Hourly Check for 8:00 PM Local Time
  */
+// PAUSED. Daily sending is off: the programme is moving to a single weekly
+// essay on Fridays instead. Guarded in code rather than by pausing the Cloud
+// Scheduler job, because redeploying re-creates and resumes that job and would
+// silently start daily sending again.
+// To resume: set this to true and redeploy sendDailyReminder.
+const DAILY_REMINDER_ENABLED = false;
+
 exports.sendDailyReminder = onSchedule({
     schedule: "0 * * * *", // Runs every hour
     secrets: [emailUser, emailPass, geminiKey, youtubeApiKey]
 }, async (event) => {
+    if (!DAILY_REMINDER_ENABLED) {
+        console.log("sendDailyReminder: paused (DAILY_REMINDER_ENABLED=false) — no emails sent.");
+        return;
+    }
     return runReminderLogic(geminiKey.value(), youtubeApiKey.value());
 });
 
