@@ -386,11 +386,10 @@ const CHAPTERS: Chapter[] = [
     keyPractice: 'Trigger Deconstruction Inquiry',
     bgGradient: 'linear-gradient(135deg, #33281E 0%, #17110B 100%)',
     imgUrl: FS_ROOT('Episode3.webp'),
-    // No teaser: APzxUQtWFTw was here but has been REMOVED FROM YOUTUBE
-    // ("removed by the uploader"), so the button played a Video unavailable
-    // screen. Leaving teaserVideoId unset simply hides the button, which is
-    // better than offering a preview that cannot play. Restore it when there
-    // is a live Episode 3 upload.
+    // Teaser restored with the live Episode 3 upload. Same id as the in-app
+    // lesson, matching how EP1 and EP2 pair up: the teaser plays the full
+    // episode and simply stops after 60s via teaserTimer.
+    teaserVideoId: 'nAf0fSs8dto',
   },
   {
     num: 4,
