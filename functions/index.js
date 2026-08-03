@@ -2270,7 +2270,7 @@ function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
 
 // PAUSED until there are enough essays queued and a test send has been checked
 // in a real inbox. Set to true and redeploy to go live.
-const WEEKLY_ESSAY_ENABLED = true;
+const WEEKLY_ESSAY_ENABLED = false;
 
 exports.sendWeeklyEssay = onSchedule({
     // Friday evening, US Eastern. timeZone is set so Cloud Scheduler handles the
@@ -2278,6 +2278,10 @@ exports.sendWeeklyEssay = onSchedule({
     schedule: "0 18 * * 5",
     timeZone: "America/New_York",
     secrets: [emailUser, emailPass],
+    // Same reason as the manual sender: the default timeout cannot cover a
+    // full-list send and would be killed partway through.
+    timeoutSeconds: 3600,
+    memory: '512MiB',
 }, async () => {
     if (!WEEKLY_ESSAY_ENABLED) {
         console.log("sendWeeklyEssay: paused (WEEKLY_ESSAY_ENABLED=false) — no emails sent.");
@@ -2305,6 +2309,13 @@ async function runWeeklyEssay({ onlyEmail = null } = {}) {
             return { skipped: true, reason: 'already-sent-this-week', week };
         }
     }
+
+    // fs/path are required here, not at module top level, because the existing
+    // runReminderLogic does the same and its copies are function-scoped consts.
+    // Relying on those threw "fs is not defined" at runtime, which the catch
+    // below silently swallowed into the Firestore fallback.
+    const fs = require('fs');
+    const path = require('path');
 
     // Same recipient source as the daily did: subscribers.txt, Firestore fallback.
     let subscriberEmails = [];
@@ -2384,7 +2395,13 @@ async function runWeeklyEssay({ onlyEmail = null } = {}) {
  * runWeeklyEssay means calling this and then letting Friday run cannot
  * double-send. Requires ?confirm=SEND so it can't fire by accident.
  */
-exports.sendWeeklyEssayNow = onRequest({ secrets: [emailUser, emailPass] }, async (req, res) => {
+exports.sendWeeklyEssayNow = onRequest({
+    secrets: [emailUser, emailPass],
+    // The default 60s is nowhere near enough: the first attempt was killed
+    // mid-run before it had sent anything. 964 recipients need real headroom.
+    timeoutSeconds: 3600,
+    memory: '512MiB',
+}, async (req, res) => {
     if (req.query.confirm !== 'SEND') {
         res.status(400).send('Refusing: add ?confirm=SEND to send this week\'s essay to the whole list.');
         return;
