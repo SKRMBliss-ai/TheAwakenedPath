@@ -2052,6 +2052,138 @@ const WEEKLY_ESSAYS = [
         psUrl: 'https://www.skrmblissai.in/feelingsandemotioncourse',
         psCta: 'Watch the teaser',
     },
+    {
+        id: 'naming',
+        subject: 'Why can\'t I tell what I\'m actually feeling?',
+        preheader: 'Most of us were never taught the words.',
+        story: [
+            'Someone asked me how I was doing last year, and properly meant it — they waited for the answer.',
+            'I said "busy." Then "tired." Then I stopped, because I realised I had described my schedule twice and my state not once. I genuinely did not know what I was feeling. I only knew what I had been doing.',
+            'That gap is not a personal failing. Most of us were simply never taught the vocabulary.',
+        ],
+        points: [
+            {
+                h: 'We learned to report behaviour, not feeling',
+                p: [
+                    '"How was your day?" is answered with events. Where we went, what got finished, who said what. Nobody ever asked what any of it felt like in the body — so we never built the habit of checking.',
+                ],
+            },
+            {
+                h: 'A feeling is in the body. An emotion is the story wrapped around it',
+                p: [
+                    'The feeling is simple and physical: heat, tightness, heaviness, a hollow. The emotion is what the mind builds on top — the reason, the blame, the case. We usually skip straight to the story and never touch the sensation underneath.',
+                    'This is why "I\'m fine" can be technically true and completely useless. It describes the story, not the body.',
+                ],
+            },
+            {
+                h: '"Fine" is a place to hide',
+                p: [
+                    'It ends the conversation, including the one with ourselves. It is the most efficient word we have for not looking. I still use it more often than I would like.',
+                ],
+            },
+            {
+                h: 'Naming is not analysing',
+                p: [
+                    'You do not need to understand why the feeling is there, or whether it is justified, or what to do about it. Naming is just pointing. "Tight." "Heavy." "Restless." One word is enough — and one word is often the whole shift.',
+                ],
+            },
+        ],
+        sourceTitle: 'Feelings vs Emotions: How We Learned to Hide Our Feelings',
+        sourceUrl: 'https://www.youtube.com/watch?v=fTrY9KMLhAo',
+        practiceIntro: 'Once a day this week, before you explain anything to yourself, find one word for what is happening in your body:',
+        practiceQuote: '"Where is it, and what is it like?"',
+        practiceOutro: 'Not why. Just where, and what. One word will do.',
+        ps: 'Episode 1 of the Feelings &amp; Emotions course starts exactly here — with learning to feel before naming.',
+        psUrl: 'https://www.skrmblissai.in/feelingsandemotioncourse',
+        psCta: 'See the course',
+    },
+    {
+        id: 'childhood',
+        subject: 'Why do I react the way my parents did?',
+        preheader: 'The rules nobody ever said out loud.',
+        story: [
+            'I heard myself say something once, in a particular tone, and knew immediately where it came from. Not from me. From a kitchen, thirty years earlier.',
+            'I had spent a long time being sure I would never sound like that. And there it was, arriving without any decision from me at all.',
+            'That is usually how it works. These patterns do not feel inherited while they are running. They feel like personality.',
+        ],
+        points: [
+            {
+                h: 'We absorbed rules nobody stated',
+                p: [
+                    'Do not make a fuss. Do not be too much. Keep the peace. Achieve, and you will be safe. Nobody sat us down and taught these — we watched what got approval and what got silence, and we drew conclusions before we had language.',
+                ],
+            },
+            {
+                h: 'What was unsafe to feel then still feels unsafe now',
+                p: [
+                    'If anger was dangerous in that house, anger still registers as dangerous in your body today, decades later, in a completely different room with completely different people. The nervous system did not get the update.',
+                ],
+            },
+            {
+                h: 'The pattern was protection, not a flaw',
+                p: [
+                    'This matters, because most of us meet these patterns with shame. But every one of them worked at the time. Keeping quiet, achieving, smoothing things over — those were intelligent responses to the situation a child was actually in. They are only a problem now because the situation changed and the response did not.',
+                ],
+            },
+            {
+                h: 'Seeing it is most of the work',
+                p: [
+                    'You cannot decide your way out of something you have not noticed. But once a pattern is genuinely seen — not judged, just seen — it stops being automatic. There starts to be a gap. And the gap is where the choice lives.',
+                ],
+            },
+        ],
+        sourceTitle: 'How Childhood Shapes Our Emotional Patterns',
+        sourceUrl: 'https://www.youtube.com/watch?v=pES3x5XlJF0',
+        practiceIntro: 'This week, notice one rule you follow that nobody ever actually told you:',
+        practiceQuote: '"Who taught me this — and is it still true?"',
+        practiceOutro: 'You do not have to break the rule. Just see that it is a rule, and not simply the way things are.',
+        ps: 'Episode 2 goes into this properly — mapping the conditioning underneath the reactions.',
+        psUrl: 'https://www.skrmblissai.in/feelingsandemotioncourse',
+        psCta: 'See the course',
+    },
+    {
+        id: 'escapes',
+        subject: 'Why do I reach for my phone the second I feel uncomfortable?',
+        preheader: 'The escape arrives before the feeling does.',
+        story: [
+            'I caught myself unlocking my phone once with no reason at all. No notification, nothing I needed. I had opened it mid-thought, and the thought had been slightly uncomfortable.',
+            'What struck me was the speed. There was no decision. The phone was simply in my hand before I had finished registering that I did not want to feel what was arriving.',
+        ],
+        points: [
+            {
+                h: 'The escape is faster than the feeling',
+                p: [
+                    'We rarely decide to avoid. The reach happens first, and the discomfort is only identified afterwards, if at all. Which is why "I will just stop doing it" almost never works — you are trying to out-decide something that moves before deciding starts.',
+                ],
+            },
+            {
+                h: 'Every escape is a small "not now"',
+                p: [
+                    'The phone, the fridge, the extra task, the second glass, the tidying that suddenly feels urgent. They look unrelated. They are doing the same job: putting a small distance between you and something you would rather not sit with.',
+                ],
+            },
+            {
+                h: 'Avoiding does not remove the feeling. It stores it',
+                p: [
+                    'This is the expensive part. What we do not feel does not leave — it waits, and it comes back with interest, usually at a moment that has nothing to do with where it started. The avoidance is not free. It is a loan.',
+                ],
+            },
+            {
+                h: 'You do not have to stop. Just notice the reach',
+                p: [
+                    'This is the only instruction that actually works at first. Do not try to give anything up. Simply catch the moment your hand moves — and know what it is. Awareness first. Everything else follows from there, and nothing follows without it.',
+                ],
+            },
+        ],
+        sourceTitle: 'Why We Keep Avoiding Our Feelings',
+        sourceUrl: 'https://www.youtube.com/watch?v=nbyToUpT1_8',
+        practiceIntro: 'Once this week, catch the reach — for the phone, the food, the distraction — and before you follow it, wait ten seconds:',
+        practiceQuote: '"What was I about to not feel?"',
+        practiceOutro: 'You are still allowed to reach. Just arrive there knowingly.',
+        ps: 'Episode 4 is entirely about this — the escapes, and why they never quite work.',
+        psUrl: 'https://www.skrmblissai.in/feelingsandemotioncourse',
+        psCta: 'See the course',
+    },
 ];
 
 /** ISO week number — used to advance the essay once a week. */
