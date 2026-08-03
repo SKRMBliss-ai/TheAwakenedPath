@@ -1993,6 +1993,238 @@ exports.sendDailyReminder = onSchedule({
     return runReminderLogic(geminiKey.value(), youtubeApiKey.value());
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// WEEKLY ESSAY — the single email the programme now sends.
+//
+// Replaces the daily reminder. Format: a reader's real question as the subject,
+// a short first-person story, a few numbered points, the source video, ONE
+// small practice, and the offer only as a P.S.
+//
+// Content rotates by ISO week so it advances on its own and wraps when the list
+// runs out. ADD ESSAYS BEFORE ENABLING — with a single entry the same email
+// would repeat every week.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const WEEKLY_ESSAYS = [
+    {
+        id: 'triggers',
+        subject: 'Why do small things set me off so much?',
+        preheader: 'A look at where the reaction is actually coming from.',
+        story: [
+            'A few years ago someone corrected me mid-sentence. Gently, in front of two other people, about something that genuinely didn\'t matter. I laughed it off and carried on.',
+            'And then I spent the rest of that evening rehearsing what I should have said.',
+            'What stayed with me afterwards wasn\'t the irritation. It was the disproportion — that something so small had taken up so much room. I wasn\'t defending a point. I was defending something much older than that moment.',
+        ],
+        points: [
+            {
+                h: 'The size of the reaction is the clue',
+                p: [
+                    'When the response doesn\'t match the situation — a small remark, a certain look, a song in a shop — that gap is information. Something old just got touched. The present moment didn\'t create that much feeling. It only opened the door to feeling that was already stored.',
+                    'So the useful question isn\'t <em>"why am I like this?"</em> It\'s <em>"how old is this feeling?"</em>',
+                ],
+            },
+            {
+                h: 'The body knows before the mind does',
+                p: [
+                    'Notice the order. The chest tightens, the jaw sets, the stomach drops — <em>then</em> the thoughts arrive to explain it. We usually treat the thoughts as the cause. They\'re the commentary.',
+                    'I still catch this in myself. I\'ll be halfway through building a case in my head before I realise my shoulders went up two minutes ago. The body was already reacting while I was busy justifying.',
+                ],
+            },
+            {
+                h: 'We argue with the trigger instead of feeling what it opened',
+                p: [
+                    'Most of our energy goes into the wrong place: was I right, were they unfair, what should I have said. All of it keeps us in the head and out of the feeling. Meanwhile the emotion stays exactly where it was — stored, waiting for the next door to open.',
+                ],
+            },
+            {
+                h: 'Stored feeling doesn\'t need analysing. It needs allowing',
+                p: [
+                    'This is the part most of us skip. We want to <em>understand</em> the emotion so we don\'t have to <em>feel</em> it. But understanding is another way of standing outside it. What actually moves it is letting it be there, in the body, without the story attached — even for thirty seconds.',
+                ],
+            },
+        ],
+        sourceTitle: 'How the stored emotions run our life',
+        sourceUrl: 'https://youtu.be/APzxUQtWFTw',
+        practiceIntro: 'The next time your reaction feels bigger than the moment, pause before explaining it — and ask one question:',
+        practiceQuote: '"How old is this feeling?"',
+        practiceOutro: 'Don\'t answer with your mind. Just notice what comes. That\'s all.',
+        ps: 'This is the ground Episode 3 covers in the Feelings &amp; Emotions course — there\'s a 60-second preview on the course page if you\'d like a look.',
+        psUrl: 'https://www.skrmblissai.in/feelingsandemotioncourse',
+        psCta: 'Watch the teaser',
+    },
+];
+
+/** ISO week number — used to advance the essay once a week. */
+function isoWeekNumber(d = new Date()) {
+    const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
+}
+
+function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
+    const click = (url) =>
+        `https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(trackEmail)}&url=${encodeURIComponent(url)}`;
+
+    const story = essay.story
+        .map(p => `<p style="font-size:16px;line-height:1.85;color:#2E261C;margin:0 0 22px;font-family:Georgia,serif;">${p}</p>`)
+        .join('');
+
+    const points = essay.points.map((pt, i) => `
+        <p style="font-size:17px;line-height:1.5;color:#1E1912;margin:0 0 8px;font-family:Georgia,serif;"><strong>${i + 1}. ${pt.h}</strong></p>
+        ${pt.p.map((p, j) => `<p style="font-size:16px;line-height:1.85;color:#2E261C;margin:0 0 ${j === pt.p.length - 1 ? '28' : '8'}px;font-family:Georgia,serif;">${p}</p>`).join('')}
+    `).join('');
+
+    return `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background-color:#F6F2EA;font-family:'Georgia',serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F6F2EA;">
+  <tr><td align="center" style="padding:24px 12px 40px;">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#FFFCF6;border:1px solid rgba(184,151,58,0.35);border-radius:12px;overflow:hidden;">
+
+      <tr><td style="padding:28px 48px 0;text-align:center;">
+        <p style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(184,151,58,0.9);margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-weight:700;">Mind Gym</p>
+      </td></tr>
+
+      <tr><td style="padding:26px 48px 0;">
+        <h1 style="font-size:26px;line-height:1.3;color:#1E1912;margin:0 0 10px;font-family:Georgia,serif;font-weight:normal;">${essay.subject}</h1>
+        <p style="font-size:14px;color:#8B6A1A;margin:0 0 22px;font-style:italic;">Sim answers this one below.</p>
+        <hr style="border:none;border-top:1px solid rgba(184,151,58,0.25);margin:0 0 24px;" />
+      </td></tr>
+
+      <tr><td style="padding:0 48px;">
+        ${story}
+        <p style="font-size:16px;line-height:1.85;color:#2E261C;margin:0 0 30px;font-family:Georgia,serif;">If that sounds familiar, here's what's usually happening.</p>
+        ${points}
+      </td></tr>
+
+      <tr><td style="padding:0 48px 30px;">
+        <hr style="border:none;border-top:1px solid rgba(184,151,58,0.25);margin:0 0 18px;" />
+        <p style="font-size:15px;line-height:1.7;color:#2E261C;margin:0;font-family:Georgia,serif;">
+          From Sim's video, <em>"${essay.sourceTitle}."</em>
+          &nbsp;<a href="${click(essay.sourceUrl)}" style="color:#8B6A1A;text-decoration:none;font-weight:600;">Watch on YouTube &#8599;</a>
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:0 48px 34px;">
+        <div style="border:1px solid rgba(184,151,58,0.35);border-radius:12px;padding:22px 26px;background:rgba(184,151,58,0.05);">
+          <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#B8973A;margin:0 0 10px;font-weight:700;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">This week's practice</p>
+          <p style="font-size:16px;line-height:1.8;color:#2E261C;margin:0 0 12px;font-family:Georgia,serif;">${essay.practiceIntro}</p>
+          <p style="font-size:19px;line-height:1.5;color:#1E1912;margin:0 0 12px;font-family:Georgia,serif;font-style:italic;text-align:center;">${essay.practiceQuote}</p>
+          <p style="font-size:15px;line-height:1.8;color:rgba(46,38,28,0.75);margin:0;font-family:Georgia,serif;">${essay.practiceOutro}</p>
+        </div>
+      </td></tr>
+
+      <tr><td style="padding:0 48px 34px;">
+        <p style="font-size:14px;line-height:1.8;color:rgba(46,38,28,0.72);margin:0;font-family:Georgia,serif;font-style:italic;">
+          P.S. ${essay.ps}
+          &nbsp;<a href="${click(essay.psUrl)}" style="color:#8B6A1A;text-decoration:none;font-weight:600;font-style:normal;">${essay.psCta} &rarr;</a>
+        </p>
+      </td></tr>
+
+      <tr><td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
+        ${signatureBlock({ dark: false })}
+        <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184,151,58,0.8);margin:0 0 16px;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">Mind Gym</p>
+        <p style="font-size:10px;color:rgba(30,25,18,0.6);margin:0;line-height:1.8;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
+          <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp;
+          <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=${blastId}" style="color:rgba(30,25,18,0.6);text-decoration:none;">Unsubscribe</a>
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+<img src="https://us-central1-awakened-path-2026.cloudfunctions.net/emailOpenTracker?blastId=${blastId}&email=${encodeURIComponent(trackEmail)}" width="1" height="1" style="display:none !important;" />
+</body></html>`;
+}
+
+// PAUSED until there are enough essays queued and a test send has been checked
+// in a real inbox. Set to true and redeploy to go live.
+const WEEKLY_ESSAY_ENABLED = false;
+
+exports.sendWeeklyEssay = onSchedule({
+    // Friday evening, US Eastern. timeZone is set so Cloud Scheduler handles the
+    // EST/EDT switch itself — a fixed UTC cron would drift by an hour each spring.
+    schedule: "0 18 * * 5",
+    timeZone: "America/New_York",
+    secrets: [emailUser, emailPass],
+}, async () => {
+    if (!WEEKLY_ESSAY_ENABLED) {
+        console.log("sendWeeklyEssay: paused (WEEKLY_ESSAY_ENABLED=false) — no emails sent.");
+        return;
+    }
+    return runWeeklyEssay();
+});
+
+async function runWeeklyEssay({ onlyEmail = null } = {}) {
+    const essay = WEEKLY_ESSAYS[isoWeekNumber() % WEEKLY_ESSAYS.length];
+    const blastId = `WEEKLY_${essay.id.toUpperCase()}`;
+    console.log(`[WeeklyEssay] essay="${essay.id}" blastId=${blastId}`);
+
+    // Same recipient source as the daily did: subscribers.txt, Firestore fallback.
+    let subscriberEmails = [];
+    try {
+        subscriberEmails = fs.readFileSync(path.join(__dirname, 'subscribers.txt'), 'utf8')
+            .split('\n').map(l => l.trim())
+            .filter(l => l && !l.startsWith('#'))
+            .map(l => l.toLowerCase());
+    } catch (e) {
+        console.error('[WeeklyEssay] subscribers.txt unreadable, using Firestore:', e.message);
+        const snap = await db.collection("users").get();
+        snap.docs.forEach(d => { if (d.data().email) subscriberEmails.push(d.data().email.toLowerCase()); });
+    }
+
+    const usersSnap = await db.collection("users").get();
+    const usersByEmail = {};
+    usersSnap.docs.forEach(d => {
+        const data = d.data();
+        if (data.email) usersByEmail[data.email.toLowerCase()] = { ...data, _id: d.id };
+    });
+
+    if (onlyEmail) subscriberEmails = [onlyEmail.toLowerCase()];
+
+    const transporter = getTransporter();
+    try {
+        await transporter.verify();
+    } catch (smtpErr) {
+        console.error('[WeeklyEssay] SMTP auth failed — nothing sent.', smtpErr.message);
+        return;
+    }
+
+    let sent = 0, skipped = 0, failed = 0;
+    for (const emailAddr of subscriberEmails) {
+        const userData = usersByEmail[emailAddr] || { email: emailAddr };
+        const userId = userData._id || emailAddr;
+
+        // Same unsubscribe gate as the daily: the send list is a flat file, but
+        // the unsubscribe handler flags the Firestore user doc.
+        if ((userData.unsubscribed === true || userData.notificationsEnabled === false) && !isAdminEmail(emailAddr)) {
+            skipped++;
+            continue;
+        }
+
+        try {
+            await transporter.sendMail({
+                from: `"Sim at Mind Gym" <${emailUser.value()}>`,
+                to: emailAddr,
+                subject: essay.subject,
+                html: buildWeeklyEssayHtml(essay, userId, emailAddr, blastId),
+            });
+            sent++;
+        } catch (err) {
+            failed++;
+            console.error(`[WeeklyEssay] send failed for ${emailAddr}:`, err.message);
+        }
+    }
+    console.log(`[WeeklyEssay] sent=${sent} skipped=${skipped} failed=${failed}`);
+}
+
+/** Manual test send — hit with ?email=you@example.com. Never touches the list. */
+exports.testWeeklyEssay = onRequest({ secrets: [emailUser, emailPass] }, async (req, res) => {
+    const to = req.query.email;
+    if (!to) { res.status(400).send('Pass ?email=you@example.com'); return; }
+    await runWeeklyEssay({ onlyEmail: String(to) });
+    res.send(`Weekly essay test sent to ${to}`);
+});
+
 // 7 rotating fallback sets — used ONLY when Gemini API fails, so emails still vary by day.
 const FALLBACK_CONTENT = [
     { // Sun
