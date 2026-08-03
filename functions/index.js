@@ -2278,9 +2278,10 @@ exports.sendWeeklyEssay = onSchedule({
     schedule: "0 18 * * 5",
     timeZone: "America/New_York",
     secrets: [emailUser, emailPass],
-    // Same reason as the manual sender: the default timeout cannot cover a
-    // full-list send and would be killed partway through.
-    timeoutSeconds: 3600,
+    // 540s is the ceiling for a scheduled trigger (only HTTP can go higher).
+    // The send loop batches, so a full list finishes well inside this rather
+    // than racing the limit the way the first attempt did.
+    timeoutSeconds: 540,
     memory: '512MiB',
 }, async () => {
     if (!WEEKLY_ESSAY_ENABLED) {
@@ -2347,30 +2348,42 @@ async function runWeeklyEssay({ onlyEmail = null } = {}) {
         return;
     }
 
-    let sent = 0, skipped = 0, failed = 0;
+    // Filter first, then send in small parallel batches. Sending ~1000 messages
+    // strictly one at a time is what pushed the first attempt past its timeout;
+    // batching keeps a full run to well under a minute while staying gentle
+    // enough on the SMTP host to avoid rate limiting.
+    const recipients = [];
+    let skipped = 0;
     for (const emailAddr of subscriberEmails) {
         const userData = usersByEmail[emailAddr] || { email: emailAddr };
-        const userId = userData._id || emailAddr;
-
         // Same unsubscribe gate as the daily: the send list is a flat file, but
         // the unsubscribe handler flags the Firestore user doc.
         if ((userData.unsubscribed === true || userData.notificationsEnabled === false) && !isAdminEmail(emailAddr)) {
             skipped++;
             continue;
         }
+        recipients.push({ emailAddr, userId: userData._id || emailAddr });
+    }
+    console.log(`[WeeklyEssay] ${recipients.length} to send, ${skipped} skipped (unsubscribed)`);
 
-        try {
-            await transporter.sendMail({
-                from: `"Sim at Mind Gym" <${emailUser.value()}>`,
-                to: emailAddr,
-                subject: essay.subject,
-                html: buildWeeklyEssayHtml(essay, userId, emailAddr, blastId),
-            });
-            sent++;
-        } catch (err) {
-            failed++;
-            console.error(`[WeeklyEssay] send failed for ${emailAddr}:`, err.message);
-        }
+    let sent = 0, failed = 0;
+    const BATCH = 12;
+    for (let i = 0; i < recipients.length; i += BATCH) {
+        await Promise.all(recipients.slice(i, i + BATCH).map(async ({ emailAddr, userId }) => {
+            try {
+                await transporter.sendMail({
+                    from: `"Sim at Mind Gym" <${emailUser.value()}>`,
+                    to: emailAddr,
+                    subject: essay.subject,
+                    html: buildWeeklyEssayHtml(essay, userId, emailAddr, blastId),
+                });
+                sent++;
+            } catch (err) {
+                failed++;
+                console.error(`[WeeklyEssay] send failed for ${emailAddr}:`, err.message);
+            }
+        }));
+        if (i && i % 120 === 0) console.log(`[WeeklyEssay] progress ${sent}/${recipients.length}`);
     }
     // Record the week only for real list sends, so the Friday schedule knows
     // this issue already went out and skips instead of sending it again.
