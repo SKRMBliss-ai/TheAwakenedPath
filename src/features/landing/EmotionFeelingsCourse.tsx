@@ -386,9 +386,11 @@ const CHAPTERS: Chapter[] = [
     keyPractice: 'Trigger Deconstruction Inquiry',
     bgGradient: 'linear-gradient(135deg, #33281E 0%, #17110B 100%)',
     imgUrl: FS_ROOT('Episode3.webp'),
-    // Purpose-made 60s teaser, so it plays from the start — unlike EP 2, which
-    // seeks 90s into the full episode to reach an interesting moment.
-    teaserVideoId: 'APzxUQtWFTw',
+    // No teaser: APzxUQtWFTw was here but has been REMOVED FROM YOUTUBE
+    // ("removed by the uploader"), so the button played a Video unavailable
+    // screen. Leaving teaserVideoId unset simply hides the button, which is
+    // better than offering a preview that cannot play. Restore it when there
+    // is a live Episode 3 upload.
   },
   {
     num: 4,

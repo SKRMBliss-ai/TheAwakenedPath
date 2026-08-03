@@ -2043,13 +2043,11 @@ const WEEKLY_ESSAYS = [
                 ],
             },
         ],
-        sourceTitle: 'How the stored emotions run our life',
-        sourceUrl: 'https://youtu.be/APzxUQtWFTw',
-        // This upload is UNLISTED: it plays fine, but img.youtube.com returns
-        // 404 for its thumbnail at every size. Using an image we host so the
-        // card doesn't render broken. Remove this line if the video is ever
-        // made public and the YouTube still becomes available.
-        thumb: 'https://www.skrmblissai.in/og/course.png',
+        // Titles here are the ACTUAL YouTube titles, verified via oEmbed. The
+        // earlier values were taken from the course episode data and named
+        // videos that did not match the ids they linked to.
+        sourceTitle: 'Why You Keep Reacting the Same Way (Hidden Emotional Patterns)',
+        sourceUrl: 'https://www.youtube.com/watch?v=nbyToUpT1_8',
         practiceIntro: 'The next time your reaction feels bigger than the moment, pause before explaining it — and ask one question:',
         practiceQuote: '"How old is this feeling?"',
         practiceOutro: 'Don\'t answer with your mind. Just notice what comes. That\'s all.',
@@ -2093,8 +2091,8 @@ const WEEKLY_ESSAYS = [
                 ],
             },
         ],
-        sourceTitle: 'Feelings vs Emotions: How We Learned to Hide Our Feelings',
-        sourceUrl: 'https://www.youtube.com/watch?v=fTrY9KMLhAo',
+        sourceTitle: 'How We Learned to Hide Our Feelings',
+        sourceUrl: 'https://www.youtube.com/watch?v=pES3x5XlJF0',
         practiceIntro: 'Once a day this week, before you explain anything to yourself, find one word for what is happening in your body:',
         practiceQuote: '"Where is it, and what is it like?"',
         practiceOutro: 'Not why. Just where, and what. One word will do.',
@@ -2137,8 +2135,8 @@ const WEEKLY_ESSAYS = [
                 ],
             },
         ],
-        sourceTitle: 'How Childhood Shapes Our Emotional Patterns',
-        sourceUrl: 'https://www.youtube.com/watch?v=pES3x5XlJF0',
+        sourceTitle: 'The Hidden Reason You Can\'t Let Go of the Past | E1.1',
+        sourceUrl: 'https://www.youtube.com/watch?v=fTrY9KMLhAo',
         practiceIntro: 'This week, notice one rule you follow that nobody ever actually told you:',
         practiceQuote: '"Who taught me this — and is it still true?"',
         practiceOutro: 'You do not have to break the rule. Just see that it is a rule, and not simply the way things are.',
@@ -2180,8 +2178,8 @@ const WEEKLY_ESSAYS = [
                 ],
             },
         ],
-        sourceTitle: 'Why We Keep Avoiding Our Feelings',
-        sourceUrl: 'https://www.youtube.com/watch?v=nbyToUpT1_8',
+        sourceTitle: 'How Body Pays Price Of Stuck Emotions | E1.2',
+        sourceUrl: 'https://www.youtube.com/watch?v=j3xiMiqnrf4',
         practiceIntro: 'Once this week, catch the reach — for the phone, the food, the distraction — and before you follow it, wait ten seconds:',
         practiceQuote: '"What was I about to not feel?"',
         practiceOutro: 'You are still allowed to reach. Just arrive there knowingly.',

@@ -137,10 +137,11 @@ const LESSONS: Lesson[] = [
     kicker: 'Episode 3 — Recognize Your Triggers',
     title: 'Why The Past Still Controls Us',
     desc: "How random triggers — songs, tones, looks — can spark intense reactions from the past that we don't even realize are running us.",
-    // Same id as the sales page's EP3 teaser, which is the intended pattern:
-    // a teaser plays this very video and simply stops after 60s (see
-    // teaserTimer). EP1 and EP2 pair up the same way.
-    videoId: 'APzxUQtWFTw',
+    // TODO: needs the real Episode 3 upload. APzxUQtWFTw was set here but has
+    // since been REMOVED FROM YOUTUBE ("removed by the uploader"), which showed
+    // paying users a Video unavailable screen. Reverted to a video that at
+    // least plays; it is E1.2 content, so the lesson is still the wrong one.
+    videoId: 'j3xiMiqnrf4',
     // Intentionally has no preview flag, so getLessonState() returns 'paywall'
     // and this stays locked for unpaid users while ep1/ep2 stay previewable.
     week: 0,
