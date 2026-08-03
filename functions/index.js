@@ -2045,6 +2045,11 @@ const WEEKLY_ESSAYS = [
         ],
         sourceTitle: 'How the stored emotions run our life',
         sourceUrl: 'https://youtu.be/APzxUQtWFTw',
+        // This upload is UNLISTED: it plays fine, but img.youtube.com returns
+        // 404 for its thumbnail at every size. Using an image we host so the
+        // card doesn't render broken. Remove this line if the video is ever
+        // made public and the YouTube still becomes available.
+        thumb: 'https://www.skrmblissai.in/og/course.png',
         practiceIntro: 'The next time your reaction feels bigger than the moment, pause before explaining it — and ask one question:',
         practiceQuote: '"How old is this feeling?"',
         practiceOutro: 'Don\'t answer with your mind. Just notice what comes. That\'s all.',
@@ -2194,9 +2199,36 @@ function isoWeekNumber(d = new Date()) {
     return Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
 }
 
+/** Pull the video id out of either a youtu.be/ID or a watch?v=ID link. */
+function ytId(url = '') {
+    const short = url.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);
+    if (short) return short[1];
+    const long = url.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
+    return long ? long[1] : '';
+}
+
 function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
     const click = (url) =>
         `https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(trackEmail)}&url=${encodeURIComponent(url)}`;
+
+    // hqdefault rather than maxresdefault: not every upload has a maxres still,
+    // and a missing one renders as a broken image in mail clients.
+    //
+    // An essay can override this. UNLISTED videos still play fine in the app and
+    // in an embed, but img.youtube.com refuses thumbnails for them and returns
+    // 404 at every size — which would render as a broken image for the whole
+    // list. Those essays point `thumb` at an image we host instead. Keep any
+    // override in PNG or JPG: Outlook does not render WebP.
+    const videoId = ytId(essay.sourceUrl);
+    const thumbUrl = essay.thumb || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+    // Each essay can name its own guide; otherwise fall back to the hub so the
+    // card is never empty and never links nowhere.
+    const guide = essay.guide || {
+        title: 'The Power of Now: Key Practices for Presence',
+        teaser: 'Simple ways to come back to this moment, today.',
+        url: 'https://www.skrmblissai.in/guides/power-of-now-presence-guide',
+    };
 
     const story = essay.story
         .map(p => `<p style="font-size:16px;line-height:1.85;color:#2E261C;margin:0 0 22px;font-family:Georgia,serif;">${p}</p>`)
@@ -2229,12 +2261,40 @@ function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
         ${points}
       </td></tr>
 
-      <tr><td style="padding:0 48px 30px;">
-        <hr style="border:none;border-top:1px solid rgba(184,151,58,0.25);margin:0 0 18px;" />
-        <p style="font-size:15px;line-height:1.7;color:#2E261C;margin:0;font-family:Georgia,serif;">
-          From Sim's video, <em>"${essay.sourceTitle}."</em>
-          &nbsp;<a href="${click(essay.sourceUrl)}" style="color:#8B6A1A;text-decoration:none;font-weight:600;">Watch on YouTube &#8599;</a>
-        </p>
+      <tr><td style="padding:0 48px 24px;">
+        <hr style="border:none;border-top:1px solid rgba(184,151,58,0.25);margin:0 0 22px;" />
+        <div style="padding:24px;background:rgba(184,151,58,0.04);border:1px solid rgba(184,151,58,0.25);border-radius:12px;">
+          <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 14px;font-weight:700;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">This Week's Video</p>
+          <p style="font-size:22px;font-weight:600;color:#1E1912;margin:0 0 14px;line-height:1.35;font-family:Georgia,serif;">${essay.sourceTitle}</p>
+          <!-- Thumbnail with play button overlay -->
+          <div style="position:relative;line-height:0;border-radius:10px;overflow:hidden;">
+            <a href="${click(essay.sourceUrl)}" target="_blank" rel="noopener noreferrer" style="display:block;line-height:0;">
+              <img src="${thumbUrl}" alt="${essay.sourceTitle}" style="display:block;width:100%;max-width:100%;border-radius:10px;border:1px solid rgba(184,151,58,0.25);" />
+            </a>
+            <a href="${click(essay.sourceUrl)}" target="_blank" rel="noopener noreferrer"
+               style="position:absolute;top:50%;left:50%;margin-top:-40px;margin-left:-40px;
+                      width:80px;height:80px;background:rgba(0,0,0,0.62);
+                      border-radius:50%;border:3px solid rgba(255,255,255,0.92);
+                      display:block;text-align:center;line-height:80px;text-decoration:none;">
+              <span style="display:inline-block;width:0;height:0;
+                           border-top:15px solid transparent;
+                           border-bottom:15px solid transparent;
+                           border-left:26px solid #ffffff;
+                           margin-top:25px;margin-left:6px;vertical-align:top;"></span>
+            </a>
+          </div>
+          <p style="font-size:15px;line-height:1.7;color:#2E261C;margin:14px 0 0;font-family:Georgia,serif;">Watch on YouTube: <a href="${click(essay.sourceUrl)}" style="color:#8B6A1A;text-decoration:none;font-weight:600;">Soulful Intelligence Studio &#8599;</a></p>
+        </div>
+      </td></tr>
+
+      <!-- Today's Guide -->
+      <tr><td style="padding:0 48px 28px;">
+        <div style="padding:24px;background:rgba(184,151,58,0.04);border:1px solid rgba(184,151,58,0.25);border-radius:12px;">
+          <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 12px;font-weight:700;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">Today's Guide</p>
+          <p style="font-size:20px;font-weight:600;color:#1E1912;margin:0 0 8px;line-height:1.35;font-family:Georgia,serif;">${guide.title}</p>
+          <p style="font-size:15px;line-height:1.7;color:#2E261C;margin:0 0 16px;opacity:0.95;font-family:Georgia,serif;">${guide.teaser}</p>
+          <a href="${click(guide.url)}" style="display:inline-block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8B6A1A;text-decoration:none;font-weight:700;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">Read Today's Guide &rarr;</a>
+        </div>
       </td></tr>
 
       <tr><td style="padding:0 48px 34px;">
@@ -2259,6 +2319,12 @@ function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
         <p style="font-size:10px;color:rgba(30,25,18,0.6);margin:0;line-height:1.8;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
           <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp;
           <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=${blastId}" style="color:rgba(30,25,18,0.6);text-decoration:none;">Unsubscribe</a>
+        </p>
+        <p style="font-size:10px;color:rgba(30,25,18,0.6);margin:8px 0 0;line-height:1.8;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
+          By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp;
+          <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" style="color:#B8973A;text-decoration:none;">
+            <img src="https://img.icons8.com/material-rounded/24/B8973A/youtube-play.png" width="14" height="14" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;" alt="YouTube" />Soulful Intelligence Studio
+          </a>
         </p>
       </td></tr>
     </table>
