@@ -2046,8 +2046,11 @@ const WEEKLY_ESSAYS = [
         // Titles here are the ACTUAL YouTube titles, verified via oEmbed. The
         // earlier values were taken from the course episode data and named
         // videos that did not match the ids they linked to.
-        sourceTitle: 'Why You Keep Reacting the Same Way (Hidden Emotional Patterns)',
-        sourceUrl: 'https://www.youtube.com/watch?v=nbyToUpT1_8',
+        //
+        // This is the Episode 3 upload, so the essay, the video and the P.S.
+        // all point at the same lesson.
+        sourceTitle: 'Your Anger & Sadness Are Stuck In Your Body—Here\'s Why',
+        sourceUrl: 'https://youtu.be/nAf0fSs8dto',
         practiceIntro: 'The next time your reaction feels bigger than the moment, pause before explaining it — and ask one question:',
         practiceQuote: '"How old is this feeling?"',
         practiceOutro: 'Don\'t answer with your mind. Just notice what comes. That\'s all.',
