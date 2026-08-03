@@ -2270,7 +2270,7 @@ function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
 
 // PAUSED until there are enough essays queued and a test send has been checked
 // in a real inbox. Set to true and redeploy to go live.
-const WEEKLY_ESSAY_ENABLED = false;
+const WEEKLY_ESSAY_ENABLED = true;
 
 exports.sendWeeklyEssay = onSchedule({
     // Friday evening, US Eastern. timeZone is set so Cloud Scheduler handles the
@@ -2287,9 +2287,24 @@ exports.sendWeeklyEssay = onSchedule({
 });
 
 async function runWeeklyEssay({ onlyEmail = null } = {}) {
-    const essay = WEEKLY_ESSAYS[isoWeekNumber() % WEEKLY_ESSAYS.length];
+    const week = isoWeekNumber();
+    const essay = WEEKLY_ESSAYS[week % WEEKLY_ESSAYS.length];
     const blastId = `WEEKLY_${essay.id.toUpperCase()}`;
-    console.log(`[WeeklyEssay] essay="${essay.id}" blastId=${blastId}`);
+    console.log(`[WeeklyEssay] week=${week} essay="${essay.id}" blastId=${blastId}`);
+
+    // Once-per-week guard. The first issue is sent by hand, and the Friday
+    // schedule is switched on the same day — without this the scheduled run
+    // would fire hours later and every subscriber would get it twice. Applies
+    // to every future week too, so a redeploy or a manual re-run can never
+    // double-send. Test sends (onlyEmail) bypass it and never record.
+    const stateRef = db.collection('email_config').doc('weeklyEssay');
+    if (!onlyEmail) {
+        const snap = await stateRef.get();
+        if (snap.exists && snap.data().lastSentWeek === week) {
+            console.log(`[WeeklyEssay] week ${week} already sent — skipping to avoid a duplicate blast.`);
+            return { skipped: true, reason: 'already-sent-this-week', week };
+        }
+    }
 
     // Same recipient source as the daily did: subscribers.txt, Firestore fallback.
     let subscriberEmails = [];
@@ -2346,8 +2361,38 @@ async function runWeeklyEssay({ onlyEmail = null } = {}) {
             console.error(`[WeeklyEssay] send failed for ${emailAddr}:`, err.message);
         }
     }
+    // Record the week only for real list sends, so the Friday schedule knows
+    // this issue already went out and skips instead of sending it again.
+    if (!onlyEmail) {
+        await stateRef.set({
+            lastSentWeek: week,
+            lastEssayId: essay.id,
+            lastSentAt: new Date().toISOString(),
+            sent, skipped, failed,
+        }, { merge: true });
+    }
+
     console.log(`[WeeklyEssay] sent=${sent} skipped=${skipped} failed=${failed}`);
+    return { week, essay: essay.id, sent, skipped, failed };
 }
+
+/**
+ * Manual one-off send of the current week's essay to the full list.
+ *
+ * Deliberately separate from the schedule so the first issue can go out
+ * mid-week without waiting for Friday. The once-per-week guard inside
+ * runWeeklyEssay means calling this and then letting Friday run cannot
+ * double-send. Requires ?confirm=SEND so it can't fire by accident.
+ */
+exports.sendWeeklyEssayNow = onRequest({ secrets: [emailUser, emailPass] }, async (req, res) => {
+    if (req.query.confirm !== 'SEND') {
+        res.status(400).send('Refusing: add ?confirm=SEND to send this week\'s essay to the whole list.');
+        return;
+    }
+    const result = await runWeeklyEssay();
+    console.log('[WeeklyEssayNow]', JSON.stringify(result));
+    res.json(result);
+});
 
 /** Manual test send — hit with ?email=you@example.com. Never touches the list. */
 exports.testWeeklyEssay = onRequest({ secrets: [emailUser, emailPass] }, async (req, res) => {
