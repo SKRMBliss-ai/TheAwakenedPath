@@ -2005,6 +2005,16 @@ exports.sendDailyReminder = onSchedule({
 // would repeat every week.
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Hard bounces. Removing an address from subscribers.txt is not enough on its
+// own: the sender falls back to the Firestore users collection if that file
+// cannot be read, and the address would come straight back. Anything here is
+// filtered no matter which source the recipient list came from.
+// guptadivya1989@gmail.com — permanent DSN from secureserver.net, "in queue too
+// long, will not attempt delivery again" (3 Aug 2026).
+const BOUNCED_EMAILS = new Set([
+    'guptadivya1989@gmail.com',
+]);
+
 const WEEKLY_ESSAYS = [
     {
         id: 'triggers',
@@ -2425,6 +2435,11 @@ async function runWeeklyEssay({ onlyEmail = null } = {}) {
     let skipped = 0;
     for (const emailAddr of subscriberEmails) {
         const userData = usersByEmail[emailAddr] || { email: emailAddr };
+        // Hard bounces are dropped first — never retried, not even for admins.
+        if (BOUNCED_EMAILS.has(emailAddr)) {
+            skipped++;
+            continue;
+        }
         // Same unsubscribe gate as the daily: the send list is a flat file, but
         // the unsubscribe handler flags the Firestore user doc.
         if ((userData.unsubscribed === true || userData.notificationsEnabled === false) && !isAdminEmail(emailAddr)) {
