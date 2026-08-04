@@ -2335,9 +2335,11 @@ function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
 </body></html>`;
 }
 
-// PAUSED until there are enough essays queued and a test send has been checked
-// in a real inbox. Set to true and redeploy to go live.
-const WEEKLY_ESSAY_ENABLED = false;
+// LIVE. Friday 18:00 America/New_York.
+// Week 32 is recorded as sent (partially — 396 of 964 delivered before the SMTP
+// host began rejecting auth), so Fri 7 Aug is correctly skipped and the next
+// send is Fri 14 Aug with the "naming" essay, which goes to everyone.
+const WEEKLY_ESSAY_ENABLED = true;
 
 exports.sendWeeklyEssay = onSchedule({
     // Friday evening, US Eastern. timeZone is set so Cloud Scheduler handles the
@@ -2433,25 +2435,49 @@ async function runWeeklyEssay({ onlyEmail = null } = {}) {
     }
     console.log(`[WeeklyEssay] ${recipients.length} to send, ${skipped} skipped (unsubscribed)`);
 
-    let sent = 0, failed = 0;
-    const BATCH = 12;
-    for (let i = 0; i < recipients.length; i += BATCH) {
-        await Promise.all(recipients.slice(i, i + BATCH).map(async ({ emailAddr, userId }) => {
-            try {
-                await transporter.sendMail({
-                    from: `"Sim at Mind Gym" <${emailUser.value()}>`,
-                    to: emailAddr,
-                    subject: essay.subject,
-                    html: buildWeeklyEssayHtml(essay, userId, emailAddr, blastId),
-                });
-                sent++;
-            } catch (err) {
-                failed++;
-                console.error(`[WeeklyEssay] send failed for ${emailAddr}:`, err.message);
+    // Per-recipient delivery record, keyed by week. THIS is what was missing:
+    // the first run recorded only counts, so when the SMTP host began rejecting
+    // auth partway through (535, rate limiting) there was no way to tell who had
+    // actually received it, and the remainder could not be resumed safely.
+    // Anyone already recorded for this week is skipped, so re-running is safe
+    // and picks up exactly where a failed run stopped.
+    const deliveredRef = db.collection('email_config').doc(`weeklyEssay_w${week}`);
+    const deliveredSnap = await deliveredRef.get();
+    const already = new Set((deliveredSnap.exists && deliveredSnap.data().delivered) || []);
+    if (already.size) console.log(`[WeeklyEssay] resuming — ${already.size} already delivered this week`);
+
+    let sent = 0, failed = 0, resumed = 0;
+    const justSent = [];
+    // Sequential with a small gap rather than 12 in parallel. The parallel
+    // version tripped the provider's send-rate limit after ~396 messages.
+    const GAP_MS = 120;
+    for (const { emailAddr, userId } of recipients) {
+        if (already.has(emailAddr)) { resumed++; continue; }
+        try {
+            await transporter.sendMail({
+                from: `"Sim at Mind Gym" <${emailUser.value()}>`,
+                to: emailAddr,
+                subject: essay.subject,
+                html: buildWeeklyEssayHtml(essay, userId, emailAddr, blastId),
+            });
+            sent++;
+            justSent.push(emailAddr);
+            // Flush the record periodically so a crash or timeout still leaves
+            // an accurate picture of who got it.
+            if (justSent.length >= 25) {
+                await deliveredRef.set({ delivered: admin.firestore.FieldValue.arrayUnion(...justSent) }, { merge: true });
+                justSent.length = 0;
             }
-        }));
-        if (i && i % 120 === 0) console.log(`[WeeklyEssay] progress ${sent}/${recipients.length}`);
+        } catch (err) {
+            failed++;
+            console.error(`[WeeklyEssay] send failed for ${emailAddr}:`, err.message);
+        }
+        await new Promise(r => setTimeout(r, GAP_MS));
     }
+    if (justSent.length) {
+        await deliveredRef.set({ delivered: admin.firestore.FieldValue.arrayUnion(...justSent) }, { merge: true });
+    }
+    console.log(`[WeeklyEssay] sent=${sent} failed=${failed} alreadyHad=${resumed}`);
     // Record the week only for real list sends, so the Friday schedule knows
     // this issue already went out and skips instead of sending it again.
     if (!onlyEmail) {
