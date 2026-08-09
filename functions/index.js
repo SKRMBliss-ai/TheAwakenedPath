@@ -2346,9 +2346,10 @@ function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
 }
 
 // LIVE. Friday 18:00 America/New_York.
-// Week 32 is recorded as sent (partially — 396 of 964 delivered before the SMTP
-// host began rejecting auth), so Fri 7 Aug is correctly skipped and the next
-// send is Fri 14 Aug with the "naming" essay, which goes to everyone.
+// Week 32 delivered only 396 of 964 before the SMTP host began rejecting auth.
+// It was recorded as "sent" all the same, which made the once-per-week guard
+// skip Fri 7 Aug entirely and left the remaining ~568 subscribers with nothing.
+// The guard now requires a *complete* week, so a part-finished run resumes.
 const WEEKLY_ESSAY_ENABLED = true;
 
 exports.sendWeeklyEssay = onSchedule({
@@ -2378,15 +2379,26 @@ async function runWeeklyEssay({ onlyEmail = null } = {}) {
 
     // Once-per-week guard. The first issue is sent by hand, and the Friday
     // schedule is switched on the same day — without this the scheduled run
-    // would fire hours later and every subscriber would get it twice. Applies
-    // to every future week too, so a redeploy or a manual re-run can never
-    // double-send. Test sends (onlyEmail) bypass it and never record.
+    // would fire hours later and every subscriber would get it twice.
+    //
+    // It requires the week to have finished, not merely to have started. Week 32
+    // recorded lastSentWeek after a run that stopped at 396 of 964 (SMTP auth
+    // rejected mid-run), and a week-number-only check read that as done: the
+    // Friday schedule returned early and the other ~568 never received the
+    // essay at all. Nothing re-opens a week that genuinely completed, and the
+    // per-recipient record below — not this flag — is what stops anyone getting
+    // a second copy when a part-finished week is resumed.
+    // Test sends (onlyEmail) bypass the guard and never record.
     const stateRef = db.collection('email_config').doc('weeklyEssay');
     if (!onlyEmail) {
         const snap = await stateRef.get();
-        if (snap.exists && snap.data().lastSentWeek === week) {
-            console.log(`[WeeklyEssay] week ${week} already sent — skipping to avoid a duplicate blast.`);
+        const state = snap.exists ? snap.data() : null;
+        if (state && state.lastSentWeek === week && state.complete === true) {
+            console.log(`[WeeklyEssay] week ${week} already sent in full — skipping to avoid a duplicate blast.`);
             return { skipped: true, reason: 'already-sent-this-week', week };
+        }
+        if (state && state.lastSentWeek === week) {
+            console.log(`[WeeklyEssay] week ${week} started but did not finish — resuming the remainder.`);
         }
     }
 
@@ -2495,17 +2507,24 @@ async function runWeeklyEssay({ onlyEmail = null } = {}) {
     console.log(`[WeeklyEssay] sent=${sent} failed=${failed} alreadyHad=${resumed}`);
     // Record the week only for real list sends, so the Friday schedule knows
     // this issue already went out and skips instead of sending it again.
+    // "complete" is the bit the guard reads: true only when every recipient on
+    // the list is now recorded as delivered and nothing failed. A run cut short
+    // by SMTP rate limiting or the 540s ceiling leaves it false, so the next run
+    // — scheduled or manual — picks up the remainder instead of writing the week
+    // off as finished.
+    const complete = failed === 0 && (sent + resumed) === recipients.length;
     if (!onlyEmail) {
         await stateRef.set({
             lastSentWeek: week,
             lastEssayId: essay.id,
             lastSentAt: new Date().toISOString(),
+            complete,
             sent, skipped, failed,
         }, { merge: true });
     }
 
-    console.log(`[WeeklyEssay] sent=${sent} skipped=${skipped} failed=${failed}`);
-    return { week, essay: essay.id, sent, skipped, failed };
+    console.log(`[WeeklyEssay] sent=${sent} skipped=${skipped} failed=${failed} complete=${complete}`);
+    return { week, essay: essay.id, sent, skipped, failed, complete };
 }
 
 /**
