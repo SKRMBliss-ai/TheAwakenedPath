@@ -48,6 +48,7 @@ const EmotionFeelingsCourseView = lazy(() => import('./features/courses/EmotionF
 const Journal = lazy(() => import('./features/journal/components/Journal'));
 const BreathPractice = lazy(() => import('./features/breath/components/BreathPractice').then(m => ({ default: m.BreathPractice })));
 const MasterPranayamApp = lazy(() => import('./components/domain/pranayam/MasterPranayamApp').then(m => ({ default: m.MasterPranayamApp })));
+const DailyPractice = lazy(() => import('./features/practice/DailyPractice'));
 const StatsDashboard = lazy(() => import('./features/stats/StatsDashboard'));
 const SituationalPractices = lazy(() => import('./features/practices/SituationalPractices').then(m => ({ default: m.SituationalPractices })));
 const MusicHub = lazy(() => import('./features/music/MusicHub').then(m => ({ default: m.MusicHub })));
@@ -706,7 +707,9 @@ export default function UntetheredApp() {
   const onNavigate = (id: string, questionId?: string, view?: string) => {
     // If not unlocked, lock everything except home, profile, paywall, music, the learning tabs, journal, situations, and meditation
     // Meditation is FREE for everyone — no paywall.
-    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation'];
+    // daily_practice is free alongside meditation: it is the contemplative half
+    // of the same morning, and the live room reads from it.
+    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'daily_practice'];
     if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -766,7 +769,9 @@ export default function UntetheredApp() {
 
   // Global Access Control — on load, always start at home if the persisted tab is locked
   useEffect(() => {
-    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation'].includes(activeTab)) {
+    // Must list the same free tabs as onNavigate's allowedTabs, or a free user
+    // who left off on one of them is bounced home on every reload.
+    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'daily_practice'].includes(activeTab)) {
       setActiveTab('home');
     }
   }, [isAccessValid, loading]); // intentionally exclude activeTab — only run on auth state change
@@ -1538,6 +1543,7 @@ export default function UntetheredApp() {
           {/* ── Standalone nav items ── */}
           {[
             { id: 'breathe', icon: Wind, label: 'Breathe', locked: false },
+            { id: 'daily_practice', icon: Sun, label: 'Daily Practice', locked: false },
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
             { id: 'situations', icon: Flame, label: 'Practice', locked: !isAccessValid },
             { id: 'music', icon: Headphones, label: 'Sacred Sounds', locked: false },
@@ -1935,6 +1941,17 @@ export default function UntetheredApp() {
                   <MasterPranayamApp
                     onBack={() => setActiveTab('home')}
                     onComplete={() => setActiveTab('home')}
+                  />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {activeTab === 'daily_practice' && currentUser && (
+              <motion.div key="daily-practice-screen" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <DailyPractice
+                    user={currentUser}
+                    onBack={() => setActiveTab('home')}
                   />
                 </Suspense>
               </motion.div>

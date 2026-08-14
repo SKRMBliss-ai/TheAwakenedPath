@@ -9,6 +9,7 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
+const { virtueForDate } = require("./practiceContent");
 
 if (admin.apps.length === 0) {
     admin.initializeApp({
@@ -2233,13 +2234,9 @@ function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
     const videoId = ytId(essay.sourceUrl);
     const thumbUrl = essay.thumb || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
-    // Each essay can name its own guide; otherwise fall back to the hub so the
-    // card is never empty and never links nowhere.
-    const guide = essay.guide || {
-        title: 'The Power of Now: Key Practices for Presence',
-        teaser: 'Simple ways to come back to this moment, today.',
-        url: 'https://www.skrmblissai.in/guides/power-of-now-presence-guide',
-    };
+    // This week's virtue, from the same epoch the app and the live room use, so
+    // the letter names exactly what the room has been sitting with all week.
+    const virtue = virtueForDate();
 
     const story = essay.story
         .map(p => `<p style="font-size:16px;line-height:1.85;color:#2E261C;margin:0 0 22px;font-family:Georgia,serif;">${p}</p>`)
@@ -2298,13 +2295,16 @@ function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
         </div>
       </td></tr>
 
-      <!-- Today's Guide -->
+      <!-- The Daily Practice — sit with us every morning -->
       <tr><td style="padding:0 48px 28px;">
-        <div style="padding:24px;background:rgba(184,151,58,0.04);border:1px solid rgba(184,151,58,0.25);border-radius:12px;">
-          <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 12px;font-weight:700;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">Today's Guide</p>
-          <p style="font-size:20px;font-weight:600;color:#1E1912;margin:0 0 8px;line-height:1.35;font-family:Georgia,serif;">${guide.title}</p>
-          <p style="font-size:15px;line-height:1.7;color:#2E261C;margin:0 0 16px;opacity:0.95;font-family:Georgia,serif;">${guide.teaser}</p>
-          <a href="${click(guide.url)}" style="display:inline-block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8B6A1A;text-decoration:none;font-weight:700;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">Read Today's Guide &rarr;</a>
+        <div style="padding:24px;background:rgba(184,151,58,0.06);border:1px solid rgba(184,151,58,0.35);border-radius:12px;">
+          <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 12px;font-weight:700;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">Sit with us every morning</p>
+          <p style="font-size:20px;font-weight:600;color:#1E1912;margin:0 0 10px;line-height:1.35;font-family:Georgia,serif;">The Daily Practice${virtue.beforeStart ? '' : ` &middot; ${virtue.name}`}</p>
+          <p style="font-size:15px;line-height:1.75;color:#2E261C;margin:0 0 14px;font-family:Georgia,serif;">Every weekday morning at <strong>9:30 AM IST</strong> we sit together in the live room. It opens with the Three Sacred Attitudes spoken aloud &mdash; love, focus, surrender &mdash; and a guide takes everyone through the day's practice.</p>
+          ${virtue.beforeStart
+            ? `<p style="font-size:15px;line-height:1.75;color:#2E261C;margin:0 0 16px;font-family:Georgia,serif;">Alongside it runs a nine-week cycle through the virtues, one week each, with a prayer for every day and small places to carry it &mdash; at the kettle, in a queue, in the middle of a difficult conversation.</p>`
+            : `<p style="font-size:15px;line-height:1.75;color:#2E261C;margin:0 0 16px;font-family:Georgia,serif;">This week we are sitting with <strong>${virtue.name}</strong> &mdash; ${virtue.desc}. It is week ${virtue.week} of ${virtue.totalWeeks}, with a prayer for each day and small places to carry it: at the kettle, in a queue, in the middle of a difficult conversation.</p>`}
+          <a href="${click('https://www.skrmblissai.in/mindgym')}" style="display:inline-block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8B6A1A;text-decoration:none;font-weight:700;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">Open Today's Practice &rarr;</a>
         </div>
       </td></tr>
 
