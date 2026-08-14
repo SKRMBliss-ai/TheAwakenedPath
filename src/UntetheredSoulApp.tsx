@@ -47,6 +47,7 @@ const WisdomUntetheredCourse = lazy(() => import('./features/courses/WisdomUntet
 const EmotionFeelingsCourseView = lazy(() => import('./features/courses/EmotionFeelingsCourseView').then(m => ({ default: m.EmotionFeelingsCourseView })));
 const Journal = lazy(() => import('./features/journal/components/Journal'));
 const BreathPractice = lazy(() => import('./features/breath/components/BreathPractice').then(m => ({ default: m.BreathPractice })));
+const MasterPranayamApp = lazy(() => import('./components/domain/pranayam/MasterPranayamApp').then(m => ({ default: m.MasterPranayamApp })));
 const StatsDashboard = lazy(() => import('./features/stats/StatsDashboard'));
 const SituationalPractices = lazy(() => import('./features/practices/SituationalPractices').then(m => ({ default: m.SituationalPractices })));
 const MusicHub = lazy(() => import('./features/music/MusicHub').then(m => ({ default: m.MusicHub })));
@@ -705,7 +706,7 @@ export default function UntetheredApp() {
   const onNavigate = (id: string, questionId?: string, view?: string) => {
     // If not unlocked, lock everything except home, profile, paywall, music, the learning tabs, journal, situations, and meditation
     // Meditation is FREE for everyone — no paywall.
-    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation'];
+    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation'];
     if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -1536,6 +1537,7 @@ export default function UntetheredApp() {
 
           {/* ── Standalone nav items ── */}
           {[
+            { id: 'breathe', icon: Wind, label: 'Breathe', locked: false },
             { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
             { id: 'situations', icon: Flame, label: 'Practice', locked: !isAccessValid },
             { id: 'music', icon: Headphones, label: 'Sacred Sounds', locked: false },
@@ -1924,6 +1926,17 @@ export default function UntetheredApp() {
                     setActiveTab('home');
                   }}
                 />
+              </motion.div>
+            )}
+
+            {activeTab === 'breathe' && (
+              <motion.div key="breathe-screen" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <MasterPranayamApp
+                    onBack={() => setActiveTab('home')}
+                    onComplete={() => setActiveTab('home')}
+                  />
+                </Suspense>
               </motion.div>
             )}
 
