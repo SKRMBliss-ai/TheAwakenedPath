@@ -69,17 +69,21 @@ export default function SoulfulHome() {
   const CLAY    = palette.BROWN;
 
   // ── Audience toggle ──────────────────────────────────────────────────────
-  const [audience, setAudience] = useState<'you' | 'brands'>(() => {
+  const [audience, setAudience] = useState<'you' | 'brands' | 'products'>(() => {
     if (typeof window === 'undefined') return 'you';
-    return new URLSearchParams(window.location.search).get('for') === 'brands' ? 'brands' : 'you';
+    const param = new URLSearchParams(window.location.search).get('for');
+    if (param === 'brands') return 'brands';
+    if (param === 'products') return 'products';
+    return 'you';
   });
 
-  const chooseAudience = (next: 'you' | 'brands') => {
+  const chooseAudience = (next: 'you' | 'brands' | 'products') => {
     setAudience(next);
-    track(next === 'brands' ? 'HOME_TAB_BRANDS' : 'HOME_TAB_YOU');
+    track(next === 'brands' ? 'HOME_TAB_BRANDS' : next === 'products' ? 'HOME_TAB_PRODUCTS' : 'HOME_TAB_YOU');
     try {
       const url = new URL(window.location.href);
       if (next === 'brands') url.searchParams.set('for', 'brands');
+      else if (next === 'products') url.searchParams.set('for', 'products');
       else url.searchParams.delete('for');
       window.history.replaceState({}, '', url);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -231,6 +235,7 @@ export default function SoulfulHome() {
           {([
             { key: 'you' as const, label: 'For me', sub: 'Wellbeing app & courses', icon: 'M4 20C4 11 11 4 20 4c0 9-7 16-16 16Z|M9 15c2-3 5-5 8-6' },
             { key: 'brands' as const, label: 'For my business', sub: 'Websites, apps & content', icon: 'M4 7h16v12H4z|M9 7V5h6v2|M4 12h16' },
+            { key: 'products' as const, label: 'Our Products', sub: 'Studio apps you can use today', icon: 'M5 8h14M5 14h14M8 3v18M16 3v18M3 8h18v8H3z' },
           ]).map((t) => {
             const on = audience === t.key;
             return (
@@ -662,6 +667,93 @@ export default function SoulfulHome() {
           </div>
         </section>
       </>)}
+
+      {/* ════════════════════════════════════════════════════════════════════
+          OUR PRODUCTS — apps built by Soulful Intelligence Studios
+         ════════════════════════════════════════════════════════════════════ */}
+      {audience === 'products' && (
+        <main style={{ position: 'relative', zIndex: 2 }}>
+          <section style={{ padding: '64px 24px 80px', textAlign: 'center' }}>
+            <div style={{ maxWidth: 1060, margin: '0 auto' }}>
+              <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44' }}>
+                STUDIO PRODUCTS
+              </span>
+              <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 4vw, 46px)', fontWeight: 400, margin: '10px 0 24px', color: INK }}>
+                Apps you can use today
+              </h2>
+              <p style={{ fontSize: 14.5, color: INK2, maxWidth: 580, margin: '0 auto 48px', lineHeight: 1.7, fontFamily: SANS }}>
+                From habit tracking to piano lessons — these are real products we built. Try them.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+                {[
+                  {
+                    emoji: '🎹',
+                    title: 'Dyno\'s Song Adventure',
+                    desc: 'Teach your child their first piano song — guided parent walkthrough plus a five-level game.',
+                    href: 'https://simplypiano.web.app',
+                    tag: 'Music Education'
+                  },
+                  {
+                    emoji: '✅',
+                    title: 'Bliss Habit Tracker',
+                    desc: 'Build habits that stick with daily tracking, streaks, and meaningful progress visualization.',
+                    href: 'https://habitquest-2026.web.app',
+                    tag: 'Productivity'
+                  },
+                  {
+                    emoji: '📚',
+                    title: 'Exam Buddy',
+                    desc: 'CBSE Grade 10 study companion with AI-powered explanations and practice tests.',
+                    href: 'https://cbse-x-prep-buddy.web.app',
+                    tag: 'Learning'
+                  },
+                ].map((app, idx) => (
+                  <motion.a
+                    key={app.title}
+                    href={app.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: idx * 0.1 }}
+                    whileHover={{ y: -8 }}
+                    style={{
+                      display: 'flex', flexDirection: 'column',
+                      background: isDark
+                        ? 'linear-gradient(145deg, rgba(38,30,22,0.85) 0%, rgba(24,18,14,0.9) 100%)'
+                        : 'linear-gradient(145deg, rgba(255,252,247,0.95) 0%, rgba(248,242,233,0.9) 100%)',
+                      border: `1.5px solid ${isDark ? 'rgba(196,145,58,0.25)' : 'rgba(196,181,160,0.5)'}`,
+                      borderRadius: 24,
+                      padding: '32px 24px',
+                      backdropFilter: 'blur(16px)',
+                      boxShadow: '0 8px 28px rgba(0,0,0,0.04)',
+                      transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                    }}
+                  >
+                    <span style={{ fontSize: 48, lineHeight: 1, marginBottom: 16 }}>{app.emoji}</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: isDark ? '#FFDF9E' : '#7A5F44', marginBottom: 10 }}>
+                      {app.tag}
+                    </span>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 10px', color: INK, fontFamily: SANS }}>
+                      {app.title}
+                    </h3>
+                    <p style={{ fontSize: 13.5, color: INK2, margin: 0, lineHeight: 1.6, fontFamily: SANS, flex: 1 }}>
+                      {app.desc}
+                    </p>
+                    <span style={{ marginTop: 16, fontSize: 14, fontWeight: 700, color: isDark ? '#C4913A' : '#7A5F44', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      Open app →
+                    </span>
+                  </motion.a>
+                ))}
+              </div>
+            </div>
+          </section>
+        </main>
+      )}
 
       {/* ── Footer & social fab (shared) ─────────────────────────────────── */}
       <div style={{ position: 'relative', zIndex: 2 }}>
