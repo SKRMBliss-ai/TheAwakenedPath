@@ -12,6 +12,7 @@ import { Chap1Question6 } from './wisdom-untethered/Chap1Question6';
 import { Chap1Question7 } from './wisdom-untethered/Chap1Question7';
 import { Chap1Question8 } from './wisdom-untethered/Chap1Question8';
 import { Chap1Question9 } from './wisdom-untethered/Chap1Question9';
+import { Chap2QuestionComingSoon } from './wisdom-untethered/Chap2QuestionComingSoon';
 import { useCourseTracking, type QuestionProgress } from '../../hooks/useCourseTracking';
 import { useAuth } from '../auth/AuthContext';
 import { ScrollNavigator } from '../../components/ui/ScrollNavigator';
@@ -33,9 +34,20 @@ const CHAPTERS: Chapter[] = [
     subtitle: "Chapter 1",
     explanation: "Chapter 1 of Wisdom Untethered explores one of the most fundamental insights in Singer's teachings: you are not your mind. The mind has a lower layer that reacts automatically based on past experiences, and a higher layer that can consciously redirect itself toward steadier ground. Singer teaches that you don't need to fight negative thoughts — you can use the mind as a tool, through affirmations and deliberate redirection, to lift yourself out of spiraling patterns. At the deepest level, the practice is even simpler: learn to relax in the face of whatever the mind is doing. When you stop feeding the reaction, the negativity gradually loses its grip. Freedom isn't about fixing the mind. It's about stopping the habit of letting it run your life.",
     videoId: "_tyTb6hpGW8"
+  },
+  {
+    id: 2,
+    title: "Chapter 2", // TODO: replace with the real chapter title/theme
+    subtitle: "Chapter 2",
+    explanation: "",
+    videoId: "gnLIANapzis"
   }
 ];
 
+// Chapter 2 questions use a 'ch2q' prefix (ch2q1..ch2q9) so they never collide
+// with Chapter 1's existing 'question1'..'question9' keys — those are already
+// used as Firestore progress-tracking keys and for weekly-assignment/deep-link
+// logic, so they can't be renamed without breaking existing user data.
 const QUESTION_VIDEOS: Record<string, string | null> = {
   'question1': '3oAQijy87rs',
   'question2': 'rlRi9eCyZuU',
@@ -46,12 +58,24 @@ const QUESTION_VIDEOS: Record<string, string | null> = {
   'question7': null,
   'question8': null,
   'question9': null,
+  // Chapter 2 — note: q1 and q3 were both given as gnLIANapzis, kept as sent.
+  'ch2q1': 'gnLIANapzis',
+  'ch2q2': 'PG0W-vYUHso',
+  'ch2q3': 'gnLIANapzis',
+  'ch2q4': 'aDRouft4_fU',
+  'ch2q5': null,
+  'ch2q6': '0hDMPdxsww0',
+  'ch2q7': 'bjRjUajueds',
+  'ch2q8': null,
+  'ch2q9': null,
 };
 
 const QUESTION_MUSICAL_VIDEOS: Record<string, string | null> = {
   'question2': '-yxvAQs5Dgk',
   'question3': 'i8opqcWy71A',
   'question5': 'MHNUWxjfVXo', // Musical Teaching for Q5
+  'ch2q1': 'mtET-Pk-Ei4', // meditation
+  'ch2q3': 'cmQkr2R_7_Q', // song
 };
 
 interface CourseProps {
@@ -157,7 +181,7 @@ function VideoPlayerView({ videoId }: { videoId: string | null }) {
 }
 
 
-const QUESTION_LABELS: Record<string, string> = {
+const CHAPTER1_QUESTION_LABELS: Record<string, string> = {
   question1: 'Q1 · Why the mind runs',
   question2: 'Q2 · Handling doubt & fear',
   question3: 'Q3 · Personal to impersonal',
@@ -169,6 +193,24 @@ const QUESTION_LABELS: Record<string, string> = {
   question9: 'Q9 · The middle way',
 };
 
+// TODO: swap in real per-question titles once Chapter 2's written content arrives.
+const CHAPTER2_QUESTION_LABELS: Record<string, string> = {
+  ch2q1: 'Q1',
+  ch2q2: 'Q2',
+  ch2q3: 'Q3',
+  ch2q4: 'Q4',
+  ch2q5: 'Q5',
+  ch2q6: 'Q6',
+  ch2q7: 'Q7',
+  ch2q8: 'Q8',
+  ch2q9: 'Q9',
+};
+
+const QUESTION_LABELS: Record<string, string> = {
+  ...CHAPTER1_QUESTION_LABELS,
+  ...CHAPTER2_QUESTION_LABELS,
+};
+
 export function WisdomUntetheredCourse({
   activeQuestionId,
   viewMode,
@@ -178,9 +220,12 @@ export function WisdomUntetheredCourse({
   onReturn: _onReturn,
   onNavigateToQuestion,
 }: CourseProps) {
-  const activeChapter = useMemo(() => CHAPTERS[0], []);
+  const isChapter2 = activeQuestionId.startsWith('ch2q');
+  const activeChapter = useMemo(() => (isChapter2 ? CHAPTERS[1] : CHAPTERS[0]), [isChapter2]);
   const [showQPicker, setShowQPicker] = useState(false);
-  const qNum = parseInt(activeQuestionId.replace('question', ''), 10);
+  const qNum = isChapter2
+    ? parseInt(activeQuestionId.slice('ch2q'.length), 10)
+    : parseInt(activeQuestionId.replace('question', ''), 10);
   const { user: currentUser } = useAuth();
   const { progress = {}, updateProgress } = useCourseTracking(currentUser?.uid);
 
@@ -231,7 +276,7 @@ export function WisdomUntetheredCourse({
         {/* Chapter + Question label — mobile only (desktop shows it in sidebar) */}
         <div className="flex sm:hidden items-center gap-2 flex-shrink-0">
           <div className="flex flex-col leading-tight">
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] opacity-70">Ch 1 · The Mind</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] opacity-70">Ch {activeChapter.id} · {activeChapter.title}</span>
             <button
               onClick={() => setShowQPicker(v => !v)}
               className="flex items-center gap-1.5 text-[13px] font-bold text-[var(--accent-primary)] hover:opacity-80 transition-opacity"
@@ -243,7 +288,7 @@ export function WisdomUntetheredCourse({
           {/* Question picker dropdown */}
           {showQPicker && (
             <div className="absolute top-14 left-2 z-50 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-2xl shadow-2xl p-2 min-w-[200px]">
-              {Object.entries(QUESTION_LABELS).map(([id, label]) => (
+              {Object.entries(isChapter2 ? CHAPTER2_QUESTION_LABELS : CHAPTER1_QUESTION_LABELS).map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => { onNavigateToQuestion?.(id); setShowQPicker(false); }}
@@ -335,6 +380,7 @@ export function WisdomUntetheredCourse({
               {activeQuestionId === 'question7' && <Chap1Question7 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question8' && <Chap1Question8 onOpenJournal={onOpenJournal} />}
               {activeQuestionId === 'question9' && <Chap1Question9 onOpenJournal={onOpenJournal} />}
+              {isChapter2 && <Chap2QuestionComingSoon question={qNum} onOpenJournal={onOpenJournal} />}
             </motion.div>
           )}
 

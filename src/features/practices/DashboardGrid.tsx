@@ -8,7 +8,8 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { PRACTICE_LIBRARY } from './practiceLibrary';
 import { useDailyPractice } from './useDailyPractice';
-import { QUESTION_META } from './TodayPath';
+import { QUESTION_META } from './questionMeta';
+import { TodayRitualCard } from '../practice-path/TodayRitualCard';
 import type { WeeklyAssignment } from '../../hooks/useWeeklyAssignment';
 import type { CourseProgress } from '../../hooks/useCourseTracking';
 import { SACRED_TRACKS } from '../music/musicData';
@@ -738,6 +739,12 @@ export function DashboardGrid({
 
   return (
     <>
+      {/* ── The daily ritual, in brief ───────────────────────────────────────
+          Summary only — the full sequence lives on Practice → Today. */}
+      <div className="mb-4 sm:mb-6">
+        <TodayRitualCard userId={userId} onOpen={() => onNavigate('today')} />
+      </div>
+
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-0.5 mb-3 sm:mb-5">
         <AnimatePresence mode="wait">

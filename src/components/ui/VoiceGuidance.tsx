@@ -5,7 +5,7 @@ import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../features/auth/AuthContext';
 
-import { QUESTION_META } from '../../features/practices/TodayPath';
+import { QUESTION_META } from '../../features/practices/questionMeta';
 
 const getPricing = (timezone: string) => {
   if (timezone === 'Asia/Calcutta' || timezone === 'Asia/Kolkata') {

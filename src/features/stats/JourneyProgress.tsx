@@ -64,7 +64,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// SnapshotRow removed — "Today's Practice" is owned by Dashboard's TodayPath widget
+// SnapshotRow removed — "Today's Practice" is owned by the Practice → Today ritual
 
 // Course progress card
 function CourseCard({
