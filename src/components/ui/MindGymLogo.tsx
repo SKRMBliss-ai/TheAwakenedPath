@@ -19,6 +19,9 @@ interface MindGymLogoProps {
    *  changes this component's outer width — unlike an inline sibling, which
    *  widens the row and can be pushed under whatever sits to the right of it. */
   badge?: React.ReactNode;
+  /** Replaces the drawn LogoMark entirely (e.g. the Soulful Intelligence
+   *  photo mark) while keeping the same icon box, wordmark and click target. */
+  icon?: React.ReactNode;
 }
 
 export function MindGymLogo({
@@ -28,6 +31,7 @@ export function MindGymLogo({
   className,
   onClick,
   badge,
+  icon,
 }: MindGymLogoProps) {
   const iconSizes = { sm: 28, md: 36, lg: 52 };
   const iconPx = iconSizes[size];
@@ -43,7 +47,7 @@ export function MindGymLogo({
       {/* ── Icon Mark ── */}
       {(variant === 'full' || variant === 'icon') && (
         <div className="relative flex-shrink-0" style={{ width: iconPx, height: iconPx }}>
-          <LogoMark size={iconPx} animated={animated} />
+          {icon ?? <LogoMark size={iconPx} animated={animated} />}
           {badge && (
             <div
               className="absolute rounded-full overflow-hidden pointer-events-auto"

@@ -16,6 +16,7 @@ import { useGenerativeAudio } from './features/audio/useGenerativeAudio';
 import { ThemeToggle, useTheme } from './theme/ThemeSystem';
 import { collection, query, orderBy, limit, onSnapshot, getDocs, doc } from 'firebase/firestore';
 import { MindGymLogo } from './components/ui/MindGymLogo';
+import SILogoMark from './components/ui/SILogoMark';
 import { useAchievements } from './features/achievements/useAchievements';
 import { MusicMiniPlayer } from './components/ui/MusicMiniPlayer';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
@@ -1401,6 +1402,10 @@ export default function UntetheredApp() {
               setShowLeaveMindGymModal(true);
             }}
             className="group min-w-0"
+            // The drawn sacred-geometry mark is replaced with the real
+            // Soulful Intelligence photo mark, since the icon's own click now
+            // leads there — the icon should look like where it's going.
+            icon={<SILogoMark size={28} />}
           />
           {/* Mobile close button */}
           <button
