@@ -68,8 +68,17 @@ export function PracticesTab() {
       });
       setMsg("Added — it's this week's practice ✓");
       setTimeout(() => setMsg(''), 3000);
-    } catch {
-      setMsg('Could not save. Only the week owner can set this week’s practice.');
+    } catch (err) {
+      // The one bare `catch` used to swallow the real error entirely, so a
+      // permission-denied write and, say, a network failure looked identical
+      // — impossible to tell apart from a screenshot of the toast alone.
+      console.error('[PracticesTab] addPractice failed:', err);
+      const code = (err as { code?: string })?.code;
+      setMsg(
+        code === 'permission-denied'
+          ? "Could not save — this account isn't set up to add the week's practice yet."
+          : 'Could not save. Please try again in a moment.'
+      );
     } finally {
       setSaving(false);
     }

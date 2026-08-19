@@ -17,7 +17,11 @@
   pointer-events: none;
 }
 
-.left { left: 0 }
+/* left sits 34px in, not flush at 0 — the floating sidebar collapse/expand
+   tab (UntetheredSoulApp.tsx) also anchors to the viewport's left edge at
+   this breakpoint, and at 0 it sat on top of the rail's spine and top dot,
+   which read as the rail's border having gone missing. */
+.left { left: 34px }
 .right { right: 0 }
 
 /* A hairline spine, so the rail reads as structure rather than floating dots. */
@@ -91,26 +95,55 @@
 .node:hover .dot { transform: scale(1.5) }
 .node:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: -4px; border-radius: 8px }
 
-/* Label slides out on hover — and on focus, so it is reachable by keyboard. */
+/* Card slides out on hover — and on focus, so it is reachable by keyboard.
+   Wraps (unlike the old single-line pill) so it can hold the definition and
+   the how-to-practise line, not just the name. */
 .label {
   position: absolute;
   top: 50%;
-  white-space: nowrap;
+  width: 220px;
+  white-space: normal;
+  text-align: left;
   font-size: 11.5px;
+  line-height: 1.5;
   color: var(--text-primary);
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 999px;
-  padding: 5px 11px;
+  border-radius: 14px;
+  padding: 10px 13px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
   opacity: 0;
   pointer-events: none;
   transition: opacity .2s, transform .2s;
-  z-index: 2;
+  z-index: 30;
 }
 .left .label { left: 52px; transform: translateY(-50%) translateX(-6px) }
 .right .label { right: 52px; transform: translateY(-50%) translateX(6px) }
 .node:hover .label,
 .node:focus-visible .label { opacity: 1; transform: translateY(-50%) translateX(0) }
+
+.labelName {
+  display: block;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .02em;
+  margin-bottom: 4px;
+  color: var(--virtue-accent);
+}
+.right .labelName { color: var(--text-secondary) }
+
+.labelDesc {
+  display: block;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.labelHow {
+  display: block;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.labelHow b { color: var(--text-secondary); font-style: normal }
 
 @media (min-width: 1180px) {
   .rail { display: flex }

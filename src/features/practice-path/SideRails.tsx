@@ -29,6 +29,7 @@ export function SideRails({ virtueProgress, onOpenVirtue, onOpenSixfold }: SideR
         {VIRTUES.map((v) => {
           const days = virtueProgress[v.key] ?? 0;
           const isNow = v.key === activeVirtue.key;
+          const idea = v.ideas[0];
           return (
             <button
               key={v.key}
@@ -37,7 +38,15 @@ export function SideRails({ virtueProgress, onOpenVirtue, onOpenSixfold }: SideR
               aria-label={`${v.name}${isNow ? ' — this week' : ''}${days >= 7 ? ' — embedded' : ''}`}
             >
               <span className={styles.dot} />
-              <span className={styles.label}>{v.name}{days >= 7 ? ' ✓' : ''}</span>
+              <span className={styles.label}>
+                <span className={styles.labelName}>{v.name}{days >= 7 ? ' ✓' : ''}</span>
+                <span className={styles.labelDesc}>{v.desc}</span>
+                {idea && (
+                  <span className={styles.labelHow}>
+                    {idea.icon} <b>{idea.place}:</b> {idea.how}
+                  </span>
+                )}
+              </span>
             </button>
           );
         })}
@@ -55,7 +64,10 @@ export function SideRails({ virtueProgress, onOpenVirtue, onOpenSixfold }: SideR
               aria-label={`${s.name}${isNow ? ' — in focus this week' : ''}`}
             >
               <span className={styles.dot} />
-              <span className={styles.label}>{s.glyph} {s.name}</span>
+              <span className={styles.label}>
+                <span className={styles.labelName}>{s.glyph} {s.name}</span>
+                <span className={styles.labelDesc}>{s.essence}</span>
+              </span>
             </button>
           );
         })}
