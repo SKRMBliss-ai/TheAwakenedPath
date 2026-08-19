@@ -3220,8 +3220,8 @@ exports.blastUpdateEmail = onCall({
         if (!recipientEmail) continue;
         if (userData.unsubscribed === true) continue;
         if (userData.notificationsEnabled === false) continue;
-        if (['skrmblissai@gmail.com', 'shrutikhungar@gmail.com', 'simkatyal1@gmail.com',
-             'smriti.duggal@gmail.com', 'rashmi.purbey@gmail.com'].includes(recipientEmail.toLowerCase())) continue;
+        if (['shrutikhungar@gmail.com',
+             'simkatyal1@gmail.com'].includes(recipientEmail.toLowerCase())) continue;
 
         // Use Firestore doc ID as userId so unsubscribe handler can find the right document
         const userId = userDoc.id;

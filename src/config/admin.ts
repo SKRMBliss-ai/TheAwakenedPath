@@ -29,6 +29,17 @@ export const isUnlockedUser = (email: string | null | undefined) => {
     return UNLOCKED_EMAILS.includes(email.toLowerCase());
 };
 
+// Engagement Report is restricted further than general unlocked/admin access —
+// rashmi.purbey@gmail.com should not see it even though she's an unlocked user.
+export const ENGAGEMENT_REPORT_EMAILS = UNLOCKED_EMAILS.filter(
+    (e) => e !== 'rashmi.purbey@gmail.com'
+);
+
+export const canViewEngagementReport = (email: string | null | undefined) => {
+    if (!email) return false;
+    return ENGAGEMENT_REPORT_EMAILS.includes(email.toLowerCase());
+};
+
 export const IGNORED_EMAILS = [
     'simkatyal1@gmail.com',
     'smriti.duggal@gmail.com',
