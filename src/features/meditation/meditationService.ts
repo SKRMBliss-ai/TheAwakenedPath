@@ -158,6 +158,47 @@ export function getSessionSchedule(userEmail?: string): {
   };
 }
 
+/**
+ * The next `count` sessions, for the community calendar.
+ *
+ * Derives every entry from getSessionSchedule() rather than re-deriving the
+ * 9:30-IST/weekday rule, so the calendar can never drift out of step with the
+ * room itself — change the schedule in one place and both follow.
+ *
+ * Times are returned as Dates; render them in the viewer's own locale. The
+ * subscriber list spans Europe, Australia and the Americas, so showing IST
+ * would be wrong for most of the people reading it.
+ */
+export function getUpcomingSessions(count = 10, userEmail?: string): {
+  sessionId: string; startTime: Date; endTime: Date; isNext: boolean;
+}[] {
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+  const isWeekendIST = (ms: number) => {
+    const d = new Date(ms + IST_OFFSET_MS).getUTCDay();
+    return d === 0 || d === 6;
+  };
+
+  const first = getSessionSchedule(userEmail);
+  const out: { sessionId: string; startTime: Date; endTime: Date; isNext: boolean }[] = [];
+  const durationMs = first.endTime.getTime() - first.startTime.getTime();
+
+  let cursorMs = first.startTime.getTime();
+  for (let i = 0; out.length < count && i < count * 4; i++) {
+    if (!isWeekendIST(cursorMs)) {
+      const s = new Date(cursorMs);
+      out.push({
+        sessionId: `${s.getUTCFullYear()}-${pad(s.getUTCMonth() + 1)}-${pad(s.getUTCDate())}-${pad(s.getUTCHours())}-${pad(s.getUTCMinutes())}`,
+        startTime: s,
+        endTime: new Date(cursorMs + durationMs),
+        isNext: out.length === 0,
+      });
+    }
+    cursorMs += DAY_MS;
+  }
+  return out;
+}
+
 export const meditationService = {
 
   async joinSession(_sessionId: string, uid: string, displayName: string, avatarUrl: string): Promise<void> {

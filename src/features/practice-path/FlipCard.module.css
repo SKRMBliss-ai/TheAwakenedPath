@@ -1,0 +1,68 @@
+/* Progressive-disclosure flip card.
+   The front defines the height so the back can be absolutely positioned
+   without the card collapsing or content spilling below it. */
+
+.wrap {
+  perspective: 1600px;
+}
+
+.flipper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform .42s cubic-bezier(.4, .16, .2, 1);
+  transform-style: preserve-3d;
+}
+
+.flipped {
+  transform: rotateY(180deg);
+}
+
+.face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--border-subtle);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow .25s, transform .25s, border-color .25s;
+}
+
+.front {
+  position: relative;
+  height: 100%;
+  min-height: 360px;
+}
+
+.back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+
+/* Hover lift only where hover is real — never hide anything behind it. */
+@media (hover: hover) and (pointer: fine) {
+  .wrap:hover .front {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .28);
+    transform: translateY(-3px);
+  }
+}
+
+/* The back scrolls internally rather than growing the card. */
+.backScroll {
+  flex: 1;
+  overflow-y: auto;
+  margin: -2px -4px 0;
+  padding: 0 4px;
+}
+.backScroll::-webkit-scrollbar { width: 4px; }
+.backScroll::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flipper { transition: none; }
+  .wrap:hover .front { transform: none; }
+}

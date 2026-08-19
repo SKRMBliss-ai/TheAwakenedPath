@@ -1,0 +1,121 @@
+/* Two fixed rails flanking the content — the two frameworks, as architecture.
+   Desktop only: below ~1180px there simply isn't room beside the content, and
+   the inline Sixfold strip already covers the same ground there. */
+
+.rail {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 74px;
+  z-index: 20;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 26px 0;
+  pointer-events: none;
+}
+
+.left { left: 0 }
+.right { right: 0 }
+
+/* A hairline spine, so the rail reads as structure rather than floating dots. */
+.rail::before {
+  content: "";
+  position: absolute;
+  top: 8%;
+  bottom: 8%;
+  width: 1px;
+}
+.left::before {
+  right: 20px;
+  background: linear-gradient(transparent, var(--virtue-accent-line) 14%, var(--virtue-accent-line) 86%, transparent);
+}
+.right::before {
+  left: 20px;
+  background: linear-gradient(transparent, var(--border-subtle) 14%, var(--border-subtle) 86%, transparent);
+}
+
+.cap {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  font-size: 9px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+}
+.left .cap { transform: translateX(-50%) rotate(180deg) }
+.right .cap { transform: translateX(-50%) }
+
+.node {
+  pointer-events: auto;
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 9px 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  color: inherit;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border-default);
+  transition: transform .22s cubic-bezier(.3, 1.2, .4, 1), background .22s, box-shadow .22s;
+}
+
+.left .done .dot { background: var(--virtue-accent-line) }
+.right .done .dot { background: var(--border-default) }
+
+.left .now .dot {
+  background: var(--virtue-accent);
+  transform: scale(1.65);
+  box-shadow: 0 0 0 5px var(--virtue-accent-soft), 0 0 18px var(--virtue-accent-line);
+}
+.right .now .dot {
+  background: var(--text-secondary);
+  transform: scale(1.65);
+  box-shadow: 0 0 0 5px var(--bg-surface), 0 0 18px var(--border-default);
+}
+
+.node:hover .dot { transform: scale(1.5) }
+.node:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: -4px; border-radius: 8px }
+
+/* Label slides out on hover — and on focus, so it is reachable by keyboard. */
+.label {
+  position: absolute;
+  top: 50%;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  padding: 5px 11px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+  z-index: 2;
+}
+.left .label { left: 52px; transform: translateY(-50%) translateX(-6px) }
+.right .label { right: 52px; transform: translateY(-50%) translateX(6px) }
+.node:hover .label,
+.node:focus-visible .label { opacity: 1; transform: translateY(-50%) translateX(0) }
+
+@media (min-width: 1180px) {
+  .rail { display: flex }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot, .label { transition: none }
+}

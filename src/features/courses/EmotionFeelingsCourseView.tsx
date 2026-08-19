@@ -70,7 +70,7 @@ interface Lesson {
 
 // Curriculum copy mirrors the sales page outline so the promise and the product
 // read as the same seven stages. `videoId` present = live; null = coming soon.
-const LESSONS: Lesson[] = [
+export const LESSONS: Lesson[] = [
   {
     id: 'guide-intro',
     badge: 'Guide',

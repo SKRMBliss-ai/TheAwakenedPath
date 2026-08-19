@@ -67,6 +67,32 @@ html, body {
   --accent-secondary-muted:  rgba(140,123,138, 0.10);
   --accent-secondary-border: rgba(140,123,138, 0.25);
 
+  /* ─── PRACTICE PATH · semantic accents ──────────────────────────────────
+     Three roles only, all inside Mind Gym's warm plum/brown family so the
+     practice screens read as the same product as the rest of the app:
+       --practice-accent  the active/primary thing being done this week
+       --virtue-accent    the quality being cultivated (secondary, reflective)
+       --done-accent      completed / embedded
+     The Sixfold Path deliberately gets NO colour of its own — it is the
+     supporting frame, and a fourth accent would make it compete with the two
+     pillars it is meant to hold.
+     These are the DARK values, matching this block's convention; the light
+     values live in the html:not(.dark) block below. */
+  --practice-accent:      #C9A87C;
+  --practice-accent-soft: rgba(201, 168, 124, 0.12);
+  --practice-accent-line: rgba(201, 168, 124, 0.42);
+  --virtue-accent:        #B9A5B7;
+  --virtue-accent-soft:   rgba(185, 165, 183, 0.12);
+  --virtue-accent-line:   rgba(185, 165, 183, 0.42);
+  --done-accent:          #8FB9A3;
+  --done-accent-soft:     rgba(143, 185, 163, 0.14);
+  --done-accent-line:     rgba(143, 185, 163, 0.45);
+  /* Solid-fill accent for buttons. Separate from --accent-primary because the
+     light plum measures only 3.95:1 against white text — below the 4.5:1
+     minimum — so filled controls use the deeper tone (6.17:1). */
+  --accent-solid:         #B9A5B7;
+  --on-accent:            #1a1410;
+
   /* Borders */
   --border-default: rgba(255, 255, 255, 0.35);
   --border-subtle:  rgba(255, 255, 255, 0.15);
@@ -1015,4 +1041,21 @@ select:focus-visible {
   .si-testimonial-card   { transition: none !important; }
   .si-feature-card .si-card-img,
   .si-video-card .si-thumb-img { transition: none !important; }
+}
+
+/* ─── PRACTICE PATH · light-mode accents ──────────────────────────────────
+   The dark values are lightened for a near-black ground and drop to roughly
+   2:1 on cream, so light mode uses the deeper end of the same hues. */
+html:not(.dark) {
+  --practice-accent:      #7A5F44;
+  --practice-accent-soft: rgba(122, 95, 68, 0.10);
+  --practice-accent-line: rgba(122, 95, 68, 0.38);
+  --virtue-accent:        #695E68;
+  --virtue-accent-soft:   rgba(105, 94, 104, 0.10);
+  --virtue-accent-line:   rgba(105, 94, 104, 0.38);
+  --done-accent:          #4F7A63;
+  --done-accent-soft:     rgba(79, 122, 99, 0.12);
+  --done-accent-line:     rgba(79, 122, 99, 0.40);
+  --accent-solid:         #695E68;
+  --on-accent:            #FFFFFF;
 }

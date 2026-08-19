@@ -19,7 +19,7 @@ import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
 import { AchievementsProvider } from './features/achievements/useAchievements'
-import { Component, type ReactNode } from 'react'
+import { Component, type ReactNode, lazy, Suspense } from 'react'
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import { db } from './firebase'
 
@@ -203,7 +203,23 @@ if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute &&
 
 const root = createRoot(document.getElementById('root')!);
 
-if (isHomeRoute) {
+
+// DEV-ONLY visual harness for the practice-path components. The real screens
+// sit behind auth; this renders them against sample data so layout can be
+// checked without signing in. import.meta.env.DEV is false in any production
+// build, so this branch and its import are tree-shaken away entirely.
+const isPracticePreviewRoute = import.meta.env.DEV
+  && typeof window !== 'undefined'
+  && window.location.pathname.replace(/\/+$/, '').toLowerCase() === '/__practice-preview';
+
+if (isPracticePreviewRoute) {
+  const PracticePathPreview = lazy(() => import('./features/practice-path/__preview'));
+  root.render(
+    <Suspense fallback={<div style={{ padding: 40, color: '#888' }}>Loading preview…</div>}>
+      <PracticePathPreview />
+    </Suspense>,
+  );
+} else if (isHomeRoute) {
   root.render(
     <ErrorBoundary featureName="SoulfulHome">
       <SoulfulHome />

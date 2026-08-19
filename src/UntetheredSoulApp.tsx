@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy } from 'lucide-react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
 import { usePageSeo } from './lib/seo';
 import { MeditationHomeCard } from './features/meditation/MeditationHomeCard';
 import { db } from './firebase';
@@ -21,7 +21,8 @@ import { MusicMiniPlayer } from './components/ui/MusicMiniPlayer';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { AchievementsDrawer } from './features/achievements/AchievementsDrawer';
 import { TokenToast } from './components/ui/TokenToast';
-import { isAdminEmail, isUnlockedUser, shouldBlockAnalytics } from './config/admin';
+import { isAdminEmail, shouldBlockAnalytics, canViewEngagementReport } from './config/admin';
+import { usePresenceHeartbeat, usePresentMembers } from './features/community/usePresence';
 import { useCourseTracking } from './hooks/useCourseTracking';
 import { useWeeklyAssignment } from './hooks/useWeeklyAssignment';
 import { InfoTooltip } from './components/ui/InfoTooltip';
@@ -53,6 +54,13 @@ const SituationalPractices = lazy(() => import('./features/practices/Situational
 const MusicHub = lazy(() => import('./features/music/MusicHub').then(m => ({ default: m.MusicHub })));
 const VideosHub = lazy(() => import('./features/videos/VideosHub').then(m => ({ default: m.VideosHub })));
 const EngagementReport = lazy(() => import('./features/admin/EngagementReport'));
+const MembersView = lazy(() => import('./features/community/MembersView').then(m => ({ default: m.MembersView })));
+const CalendarView = lazy(() => import('./features/community/CalendarView').then(m => ({ default: m.CalendarView })));
+const PracticePathView = lazy(() => import('./features/practice-path/PracticePathView').then(m => ({ default: m.PracticePathView })));
+const VirtuesView = lazy(() => import('./features/practice-path/VirtuesView').then(m => ({ default: m.VirtuesView })));
+const CircleView = lazy(() => import('./features/practice-path/CircleView').then(m => ({ default: m.CircleView })));
+const PracticesTab = lazy(() => import('./features/practice-path/PracticesTab').then(m => ({ default: m.PracticesTab })));
+const YearPanel = lazy(() => import('./features/practice-path/YearPanel').then(m => ({ default: m.YearPanel })));
 
 // Lightweight centered fallback shown while a feature chunk loads.
 const TabFallback = () => (
@@ -684,7 +692,10 @@ export default function UntetheredApp() {
     const timeout = setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
       const practiceParam = params.get('practice');
-      const validQuestions = ['question1', 'question2', 'question3', 'question4', 'question5', 'question6', 'question7', 'question8', 'question9'];
+      const validQuestions = [
+        'question1', 'question2', 'question3', 'question4', 'question5', 'question6', 'question7', 'question8', 'question9',
+        'ch2q1', 'ch2q2', 'ch2q3', 'ch2q4', 'ch2q5', 'ch2q6', 'ch2q7', 'ch2q8', 'ch2q9',
+      ];
       
       if (practiceParam && validQuestions.includes(practiceParam)) {
         if (!isAccessValid && currentUser) {
@@ -704,9 +715,17 @@ export default function UntetheredApp() {
   }, [loading, isAccessValid, currentUser]);
 
   const onNavigate = (id: string, questionId?: string, view?: string) => {
+    // Engagement Report renders as a full-screen overlay controlled by its own
+    // isReportOpen flag, separate from activeTab. Without this, clicking any
+    // other left-menu item changed activeTab underneath but left the overlay
+    // (and its "hidden" main content) on screen until Return was clicked.
+    setIsReportOpen(false);
+
     // If not unlocked, lock everything except home, profile, paywall, music, the learning tabs, journal, situations, and meditation
     // Meditation is FREE for everyone — no paywall.
-    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation'];
+    // Community (members/calendar) is free for everyone, like meditation — a
+    // paywall in front of "who else is here" would defeat the point of it.
+    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'virtues', 'circle', 'practices'];
     if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -749,8 +768,28 @@ export default function UntetheredApp() {
     localStorage.setItem('mind-gym-active-course', activeCourseId || '');
   }, [activeCourseId]);
   const [expandedChapter1, setExpandedChapter1] = useState(true);
-  // Learn group is collapsed by default; opens automatically if a course is active.
-  const [learnOpen, setLearnOpen] = useState(() => ['intelligence', 'wisdom_untethered'].includes(activeTab));
+  const [expandedChapter2, setExpandedChapter2] = useState(false);
+  // ── Community presence ──
+  // Heartbeat while the app is open; the roster drives the Members badge so the
+  // sidebar itself shows the community is alive without opening anything.
+  usePresenceHeartbeat(
+    currentUser?.uid,
+    currentUser?.displayName ?? profile?.displayName ?? null,
+    currentUser?.photoURL ?? profile?.photoURL ?? null,
+    activeTab,
+  );
+  const { members: presentMembers } = usePresentMembers(currentUser?.uid);
+  const onlineCount = presentMembers.length;
+
+  // ── Sidebar groups: Practice · School · Community ──
+  // Each opens automatically when one of its own tabs is already active, so a
+  // deep link or a restored session never lands the user in a collapsed group.
+  const [practiceOpen, setPracticeOpen] = useState(
+    () => ['today', 'virtues', 'practices', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab));
+  const [learnOpen, setLearnOpen] = useState(
+    () => ['intelligence', 'wisdom_untethered', 'emotion-course', 'videos'].includes(activeTab));
+  const [communityOpen, setCommunityOpen] = useState(
+    () => ['meditation', 'members', 'calendar', 'circle'].includes(activeTab));
 
   const timeOfDayGradient = useMemo(() => {
     const hour = new Date().getHours();
@@ -766,7 +805,7 @@ export default function UntetheredApp() {
 
   // Global Access Control — on load, always start at home if the persisted tab is locked
   useEffect(() => {
-    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation'].includes(activeTab)) {
+    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'virtues', 'circle', 'practices'].includes(activeTab)) {
       setActiveTab('home');
     }
   }, [isAccessValid, loading]); // intentionally exclude activeTab — only run on auth state change
@@ -1388,25 +1427,110 @@ export default function UntetheredApp() {
             );
           })()}
 
-          {/* ── Courses group ── */}
+          {/* ── Practice group — the daily, self-directed side of Mind Gym ── */}
+          <div className="pt-1 pb-0.5">
+            <button
+              onClick={() => setPracticeOpen(o => !o)}
+              className="w-full flex items-center gap-3 px-4 py-[0.5vh] mb-0"
+            >
+              <Flame
+                size={14}
+                strokeWidth={1.5}
+                className={cn(
+                  "transition-colors flex-shrink-0",
+                  ['today', 'virtues', 'practices', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab)
+                    ? "text-[var(--accent-primary)]"
+                    : "text-[var(--text-muted)]"
+                )}
+              />
+              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] flex-1 text-left">
+                Practice
+              </span>
+              <ChevronRight
+                size={13}
+                className="text-[var(--text-muted)] transition-transform duration-300 flex-shrink-0"
+                style={{ transform: practiceOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
+              />
+            </button>
+
+            {practiceOpen && (
+              <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
+                {[
+                  { id: 'today', icon: Sun, label: 'Today', locked: false },
+                  { id: 'virtues', icon: Sparkles, label: 'Virtues', locked: false },
+                  { id: 'practices', icon: Flame, label: 'Practices', locked: false },
+                  { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
+                  { id: 'situations', icon: Flame, label: 'Practice Room', locked: !isAccessValid },
+                  { id: 'breathe', icon: Wind, label: 'Breathe', locked: false },
+                  { id: 'music', icon: Headphones, label: 'Sacred Sounds', locked: false },
+                ].map(item => {
+                  const isActive = activeTab === item.id;
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => onNavigate(item.id)}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all duration-300 group relative text-left",
+                        isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/40"
+                      )}
+                    >
+                      {isActive && (
+                        <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-[var(--accent-primary)]" />
+                      )}
+                      <Icon
+                        size={14}
+                        strokeWidth={isActive ? 2.5 : 1.5}
+                        className={cn("flex-shrink-0", isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")}
+                      />
+                      <span className={cn(
+                        "text-[12px] tracking-[0.12em] font-sans transition-colors flex-1 whitespace-nowrap",
+                        isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
+                      )}>
+                        {item.label}
+                      </span>
+                      {item.locked && <Lock size={9} className="text-[var(--text-muted)] opacity-50 flex-shrink-0" />}
+                      {isActive && <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)] flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+
+                {/* Habit Tracker lives on its own site, so it stays an external link */}
+                <a
+                  href="https://www.skrmblissai.in/habitquest2026"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all hover:bg-[var(--bg-surface)]/40 text-teal-400 hover:text-teal-300 group"
+                >
+                  <CheckSquare size={14} className="flex-shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="text-[12px] tracking-[0.12em] font-sans font-medium flex-1 text-left whitespace-nowrap">
+                    Habit Tracker
+                  </span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-teal-400 flex-shrink-0">New</span>
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* ── School group — guided courses and teaching ── */}
           <div className="pt-1 pb-0.5">
             {/* Group label — tap to expand / collapse */}
             <button
               onClick={() => setLearnOpen(o => !o)}
               className="w-full flex items-center gap-3 px-4 py-[0.5vh] mb-0"
             >
-              <BookOpen
+              <GraduationCap
                 size={14}
                 strokeWidth={1.5}
                 className={cn(
                   "transition-colors flex-shrink-0",
-                  ['intelligence', 'wisdom_untethered', 'emotion-course'].includes(activeTab)
+                  ['intelligence', 'wisdom_untethered', 'emotion-course', 'videos'].includes(activeTab)
                     ? "text-[var(--accent-primary)]"
                     : "text-[var(--text-muted)]"
                 )}
               />
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] flex-1 text-left">
-                Courses
+                School
               </span>
               <ChevronRight
                 size={13}
@@ -1422,6 +1546,7 @@ export default function UntetheredApp() {
                 { id: 'intelligence', label: 'The Power of Now', locked: !isAccessValid, badge: 'Free' as const },
                 { id: 'wisdom_untethered', label: 'Wisdom Untethered', locked: false, badge: 'Free' as const },
                 { id: 'emotion-course', label: 'Feelings & Emotions', locked: false, badge: 'Paid' as const },
+                { id: 'videos', label: 'Videos', locked: false, badge: undefined },
               ].map(sub => {
                 const isActive = activeTab === sub.id;
                 return (
@@ -1526,6 +1651,72 @@ export default function UntetheredApp() {
                             </motion.div>
                           )}
                         </AnimatePresence>
+
+                        {/* Chapter 2 toggle */}
+                        <button
+                          onClick={() => setExpandedChapter2(!expandedChapter2)}
+                          className="w-full flex items-center justify-between px-2 py-[0.8vh] rounded-lg group mt-1"
+                        >
+                          <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
+                            Chapter 2
+                          </span>
+                          <span
+                            className="text-[var(--accent-primary)] transition-transform duration-300 text-[9px]"
+                            style={{ transform: expandedChapter2 ? 'rotate(90deg)' : 'rotate(0deg)', display: 'inline-block' }}
+                          >
+                            ▶
+                          </span>
+                        </button>
+
+                        {/* Chapter 2 questions list */}
+                        <AnimatePresence>
+                          {expandedChapter2 && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.25 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="grid grid-cols-4 gap-2 px-1 py-2">
+                                {[
+                                  { num: 1, label: 'Question 1', id: 'ch2q1', locked: false },
+                                  { num: 2, label: 'Question 2', id: 'ch2q2', locked: !isAccessValid },
+                                  { num: 3, label: 'Question 3', id: 'ch2q3', locked: !isAccessValid },
+                                  { num: 4, label: 'Question 4', id: 'ch2q4', locked: !isAccessValid },
+                                  { num: 5, label: 'Question 5', id: 'ch2q5', locked: !isAccessValid },
+                                  { num: 6, label: 'Question 6', id: 'ch2q6', locked: !isAccessValid },
+                                  { num: 7, label: 'Question 7', id: 'ch2q7', locked: !isAccessValid },
+                                  { num: 8, label: 'Question 8', id: 'ch2q8', locked: !isAccessValid },
+                                  { num: 9, label: 'Question 9', id: 'ch2q9', locked: !isAccessValid },
+                                ].map(q => {
+                                  const isQActive = activeQuestionId === q.id;
+                                  return (
+                                    <button
+                                      key={q.id}
+                                      disabled={q.locked}
+                                      onClick={() => {
+                                        setActiveQuestionId(q.id);
+                                        setViewMode('explanation');
+                                        if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                                      }}
+                                      className={cn(
+                                        "aspect-square flex items-center justify-center rounded-xl text-[11px] font-bold transition-all duration-300",
+                                        isQActive
+                                          ? "bg-[var(--accent-primary)] text-white shadow-[0_0_15px_var(--accent-primary-dim)]"
+                                          : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]/30",
+                                        q.locked && "opacity-30 cursor-not-allowed"
+                                      )}
+                                      title={q.label}
+                                    >
+                                      {q.num}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     )}
                   </div>
@@ -1535,13 +1726,105 @@ export default function UntetheredApp() {
             )}
           </div>
 
-          {/* ── Standalone nav items ── */}
+          {/* ── Community group — the shared, live side ── */}
+          <div className="pt-1 pb-0.5">
+            <button
+              onClick={() => setCommunityOpen(o => !o)}
+              className="w-full flex items-center gap-3 px-4 py-[0.5vh] mb-0"
+            >
+              <Users
+                size={14}
+                strokeWidth={1.5}
+                className={cn(
+                  "transition-colors flex-shrink-0",
+                  ['meditation', 'members', 'calendar', 'circle'].includes(activeTab)
+                    ? "text-[var(--accent-primary)]"
+                    : "text-[var(--text-muted)]"
+                )}
+              />
+              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] flex-1 text-left">
+                Community
+              </span>
+              <ChevronRight
+                size={13}
+                className="text-[var(--text-muted)] transition-transform duration-300 flex-shrink-0"
+                style={{ transform: communityOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
+              />
+            </button>
+
+            {communityOpen && (
+              <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
+                {/* Live session first — it is the reason to come back at a set time */}
+                <button
+                  onClick={() => { onNavigate('meditation'); setIsSidebarOpen(false); }}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all group relative text-left",
+                    activeTab === 'meditation' ? "bg-amber-500/15" : "hover:bg-[var(--bg-surface)]/40"
+                  )}
+                >
+                  {activeTab === 'meditation' && (
+                    <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-amber-400" />
+                  )}
+                  <Wind size={14} className={cn("flex-shrink-0 transition-transform group-hover:scale-110", activeTab === 'meditation' ? 'text-amber-400' : 'text-[var(--text-muted)]')} />
+                  <span className={cn(
+                    "text-[12px] tracking-[0.12em] font-sans flex-1 whitespace-nowrap",
+                    activeTab === 'meditation' ? "text-amber-400 font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
+                  )}>
+                    Wellness Session
+                  </span>
+                  {activeTab !== 'meditation' && (
+                    <span className="relative flex h-2 w-2 flex-shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
+                    </span>
+                  )}
+                </button>
+
+                {[
+                  { id: 'circle', icon: Sparkles, label: 'The Circle' },
+                  { id: 'members', icon: Users, label: 'Members' },
+                  { id: 'calendar', icon: CalendarDays, label: 'Calendar' },
+                ].map(item => {
+                  const isActive = activeTab === item.id;
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => onNavigate(item.id)}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all duration-300 group relative text-left",
+                        isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/40"
+                      )}
+                    >
+                      {isActive && (
+                        <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-[var(--accent-primary)]" />
+                      )}
+                      <Icon
+                        size={14}
+                        strokeWidth={isActive ? 2.5 : 1.5}
+                        className={cn("flex-shrink-0", isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")}
+                      />
+                      <span className={cn(
+                        "text-[12px] tracking-[0.12em] font-sans transition-colors flex-1 whitespace-nowrap",
+                        isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
+                      )}>
+                        {item.label}
+                      </span>
+                      {item.id === 'members' && onlineCount > 0 && (
+                        <span className="text-[9px] font-bold text-emerald-400 tabular-nums flex-shrink-0">
+                          {onlineCount}
+                        </span>
+                      )}
+                      {isActive && <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)] flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── Progress — shared across Practice and School, so it sits on its own ── */}
           {[
-            { id: 'breathe', icon: Wind, label: 'Breathe', locked: false },
-            { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
-            { id: 'situations', icon: Flame, label: 'Practice', locked: !isAccessValid },
-            { id: 'music', icon: Headphones, label: 'Sacred Sounds', locked: false },
-            { id: 'videos', icon: Youtube, label: 'Videos', locked: false },
             { id: 'stats', icon: BarChart2, label: 'Progress', locked: !isAccessValid },
           ].map(item => {
             const isActive = activeTab === item.id;
@@ -1576,51 +1859,13 @@ export default function UntetheredApp() {
               </button>
             );
           })}
-          {/* ── Daily Meditation Room ── */}
-          <button
-            onClick={() => { onNavigate('meditation'); setIsSidebarOpen(false); }}
-            className={cn(
-              "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all group mt-2",
-              activeTab === 'meditation'
-                ? "bg-amber-500/20 text-amber-400 border border-amber-400/30"
-                : "hover:bg-[var(--bg-surface)] text-[var(--text-secondary)]"
-            )}
-          >
-            <Wind size={16} className={cn("flex-shrink-0 transition-transform group-hover:scale-110", activeTab==='meditation'?'text-amber-400':'')} />
-            <span className="text-[12px] font-sans tracking-[0.1em] font-medium">Wellness Session</span>
-            {activeTab !== 'meditation' && (
-              <span className="ml-auto relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
-              </span>
-            )}
-          </button>
-
-          {/* ── Insights & Studio (New Section) ── */}
+          {/* ── Insights & Studio ── */}
           <div className="mt-8 pt-4 border-t border-[var(--border-subtle)]/40 space-y-2">
             <div className="flex items-center gap-3 px-4 py-1">
               <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)] opacity-60">
                 Insights & Studio
               </span>
             </div>
-            
-            <a
-              href="https://www.skrmblissai.in/habitquest2026"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all hover:bg-[var(--bg-surface)] text-teal-400 hover:text-teal-300 group"
-              style={{ filter: 'drop-shadow(0 0 6px rgba(45,212,191,0.4))' }}
-            >
-              <CheckSquare size={16} className="group-hover:scale-110 transition-transform flex-shrink-0" style={{ filter: 'drop-shadow(0 0 5px rgba(45,212,191,0.9))' }} />
-              <span className="text-[12px] font-sans tracking-[0.1em] font-medium">Habit Tracker</span>
-              <span className="ml-auto flex items-center gap-1">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-400" />
-                </span>
-                <span className="text-[8px] font-black uppercase tracking-widest text-teal-400">New</span>
-              </span>
-            </a>
 
             <a
               href="https://www.youtube.com/@SoulfulIntelligenceStudio"
@@ -1632,7 +1877,7 @@ export default function UntetheredApp() {
               <span className="text-[12px] font-sans tracking-[0.1em] font-medium">Soulful Studio</span>
             </a>
 
-            {isUnlockedUser(currentUser?.email ?? profile?.email) && (
+            {canViewEngagementReport(currentUser?.email ?? profile?.email) && (
               <button
                 onClick={() => {
                   setIsReportOpen(true);
@@ -2077,6 +2322,71 @@ export default function UntetheredApp() {
               </motion.div>
             )}
 
+            {/* ── PRACTICE · TODAY (the daily ritual) ── */}
+            {activeTab === 'today' && (
+              <motion.div key="today" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <PracticePathView
+                    onOpenVirtues={() => onNavigate('virtues')}
+                    onOpenPractices={() => onNavigate('practices')}
+                    onOpenSixfold={() => onNavigate('virtues')}
+                    onOpenJournal={() => onNavigate('chapters')}
+                    weeklyQuestionId={weeklyAssignment?.questionId}
+                    weeklyLabel={weeklyAssignment?.weekLabel}
+                    onOpenQuestion={(qid) => onNavigate('wisdom_untethered', qid, 'explanation')}
+                  />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* ── PRACTICE · PRACTICE LIBRARY ── */}
+            {activeTab === 'practices' && (
+              <motion.div key="practices" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <PracticesTab />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* ── PRACTICE · VIRTUES ── */}
+            {activeTab === 'virtues' && (
+              <motion.div key="virtues" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <VirtuesView />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* ── COMMUNITY · THE CIRCLE ── */}
+            {activeTab === 'circle' && (
+              <motion.div key="circle" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <CircleView />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* ── COMMUNITY · MEMBERS ── */}
+            {activeTab === 'members' && (
+              <motion.div key="members" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <MembersView />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* ── COMMUNITY · CALENDAR ── */}
+            {activeTab === 'calendar' && (
+              <motion.div key="calendar" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <CalendarView
+                    userEmail={currentUser?.email ?? undefined}
+                    onEnterSession={() => onNavigate('meditation')}
+                  />
+                </Suspense>
+              </motion.div>
+            )}
+
             {/* ── DAILY MEDITATION ROOM ── */}
             {activeTab === 'meditation' && currentUser && (
               <motion.div key="meditation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
@@ -2135,10 +2445,13 @@ export default function UntetheredApp() {
             {activeTab === 'stats' && (
               <motion.div key="stats" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }}>
                 <Suspense fallback={<TabFallback />}>
-                  <StatsDashboard
-                    onNavigate={onNavigate}
-                    accountCreatedAt={currentUser?.metadata?.creationTime ?? null}
-                  />
+                  <div className="space-y-6">
+                    <YearPanel />
+                    <StatsDashboard
+                      onNavigate={onNavigate}
+                      accountCreatedAt={currentUser?.metadata?.creationTime ?? null}
+                    />
+                  </div>
                 </Suspense>
               </motion.div>
             )}

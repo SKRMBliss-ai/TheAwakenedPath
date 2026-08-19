@@ -1,0 +1,166 @@
+/* Quiet Mode — the app steps back so only the sit remains. */
+
+.quiet {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(900px 700px at 50% 44%, #1b2245, #0c0f20 72%);
+  animation: fadeIn .8s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+.inner { text-align: center; padding: 24px; max-width: 440px; }
+
+.practiceName {
+  font-size: 10.5px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .42);
+  margin-bottom: 34px;
+}
+
+.ringWrap { position: relative; width: 246px; height: 246px; margin: 0 auto; }
+.ring { width: 246px; height: 246px; }
+
+/* The breath: ~10s, 4 in / 6 out — slower than resting rate, because the
+   point is to draw the breath down rather than match where it already is. */
+.breath {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 132px; height: 132px;
+  margin: -66px 0 0 -66px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--practice-accent-soft), var(--virtue-accent-soft) 62%, transparent 72%);
+  animation: breathe 10s cubic-bezier(.45, 0, .55, 1) infinite;
+}
+
+@keyframes breathe {
+  0%   { transform: scale(.7);   opacity: .34 }
+  40%  { transform: scale(1.16); opacity: .72 }
+  100% { transform: scale(.7);   opacity: .34 }
+}
+
+.time {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: Georgia, serif;
+  font-size: 40px; font-weight: 300;
+  color: #ecebf4;
+  letter-spacing: .03em;
+  font-variant-numeric: tabular-nums;
+  opacity: .62;
+}
+
+.word {
+  margin-top: 34px;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 16px;
+  color: rgba(236, 235, 244, .72);
+  line-height: 1.7;
+  min-height: 56px;
+  opacity: 0;
+  transition: opacity 1.6s ease;
+}
+.wordShow { opacity: 1; }
+
+.exit {
+  margin-top: 26px;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, .45);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 9px 20px;
+  cursor: pointer;
+  transition: color .25s, border-color .25s, opacity .5s;
+  opacity: .5;
+}
+.exit:hover { color: #ecebf4; opacity: 1; }
+
+/* ── rails ── */
+.rail {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 22px;
+  padding: 40px 0;
+  pointer-events: none;
+}
+.railLeft { left: 34px; align-items: flex-start; }
+.railRight { right: 34px; align-items: flex-end; text-align: right; }
+
+.railCap {
+  position: absolute; top: 8px;
+  font-size: 8.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .35);
+}
+.railLeft .railCap { left: 4px }
+.railRight .railCap { right: 4px }
+
+.railItem {
+  display: flex; align-items: center; gap: 11px;
+  opacity: .30;
+  transition: opacity 1.2s ease;
+}
+.railRight .railItem { flex-direction: row-reverse; }
+
+.railDot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, .4);
+  transition: background .8s, box-shadow .8s, transform .8s;
+}
+
+.railName {
+  font-size: 12px;
+  color: rgba(236, 235, 244, .6);
+  line-height: 1.35;
+}
+
+.lit { opacity: 1; }
+.lit .railDot {
+  transform: scale(1.9);
+  background: var(--practice-accent);
+  box-shadow: 0 0 14px var(--practice-accent-line), 0 0 0 4px var(--practice-accent-soft);
+}
+.lit .railName { color: #ecebf4; }
+.railRight .lit .railDot {
+  background: var(--done-accent);
+  box-shadow: 0 0 14px var(--done-accent-line), 0 0 0 4px var(--done-accent-soft);
+}
+
+/* On a narrow screen the rails would crowd the ring — stack them instead. */
+@media (max-width: 900px) {
+  .rail {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: auto;
+    justify-content: center;
+    gap: 8px 16px;
+    padding: 0;
+  }
+  .railCap { position: static; display: block; width: 100%; text-align: center; margin-bottom: 2px; }
+  .railLeft { margin-bottom: 20px }
+  .railRight { margin-top: 22px }
+  .railRight .railItem { flex-direction: row; }
+  .quiet { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breath { animation: none; transform: scale(.95); opacity: .5 }
+  .quiet { animation: none }
+  .railItem, .railDot, .word { transition: none }
+}
