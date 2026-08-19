@@ -32,11 +32,11 @@ import { usePersistedState } from './hooks/usePersistedState';
 import { useRazorpay } from './hooks/useRazorpay';
 import { PhonePromptModal } from './components/domain/PhonePromptModal';
 import SacredWelcomeModal from './components/ui/SacredWelcomeModal';
+import { LeaveMindGymModal } from './components/ui/LeaveMindGymModal';
 import { PresenceBreath } from './components/ui/PresenceBreath';
 import { FirstRunWelcome } from './components/ui/FirstRunWelcome';
 import { DashboardGrid } from './features/practices/DashboardGrid';
 import PriceSlider from './components/ui/PriceSlider';
-import SILogoMark from './components/ui/SILogoMark';
 
 // ─── Lazy-loaded feature tabs ───────────────────────────────────────────────
 // None of these are needed for the first paint of the home screen, so they are
@@ -607,6 +607,7 @@ export default function UntetheredApp() {
   const [showReward, setShowReward] = useState<Reward | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showLeaveMindGymModal, setShowLeaveMindGymModal] = useState(false);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1024 : true);
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
   const [achievementsOpen, setAchievementsOpen] = useState(false);
@@ -1340,6 +1341,29 @@ export default function UntetheredApp() {
         </motion.button>
       )}
 
+      {/* Floating sidebar collapse button — the mirror of the expand tab
+          above, on the sidebar's outer edge rather than crammed into the
+          logo row (where it used to sit directly against the wordmark). */}
+      {!isSidebarCollapsed && (
+        <motion.button
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 20 }}
+          onClick={() => setIsSidebarCollapsed(true)}
+          aria-label="Collapse sidebar"
+          className="hidden lg:flex fixed left-[280px] top-1/2 -translate-y-1/2 z-[75] w-8 h-14 items-center justify-center rounded-r-2xl transition-all hover:w-10 group"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1.5px solid var(--border-default)',
+            borderLeft: 'none',
+            boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
+          }}
+          title="Collapse sidebar"
+        >
+          <ChevronLeft size={16} style={{ color: 'var(--text-muted)' }} className="group-hover:scale-110 transition-transform" />
+        </motion.button>
+      )}
+
       <aside className={cn(
         "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70]",
         "border-r border-[var(--border-default)]",
@@ -1364,35 +1388,20 @@ export default function UntetheredApp() {
 
         {/* ── Logo ── */}
         <div className="flex items-center justify-between px-3 py-[1.5vh] flex-shrink-0 w-full">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <MindGymLogo
-              variant="full"
-              size="sm"
-              animated={true}
-              onClick={() => setActiveTab('home')}
-              className="group flex-shrink-0"
-            />
-            {/* Soulful Intelligence mark — paired with the Mind Gym wordmark in
-                the one permanent, uncrowded brand spot, rather than competing
-                for space with the Return button in the top header. */}
-            <a
-              href="https://www.skrmblissai.in"
-              className="w-7 h-7 rounded-full p-0.5 border border-[#C4913A]/60 dark:border-[#FFDF9E]/70 bg-gradient-to-br from-[#C4913A]/20 via-[#4A3260]/15 to-transparent shadow-[0_0_10px_rgba(196,145,58,0.3)] hover:shadow-[0_0_16px_rgba(196,145,58,0.55)] hover:border-[#FFDF9E] hover:scale-105 transition-all flex items-center justify-center overflow-hidden flex-shrink-0"
-              title="Soulful Intelligence Studio — Visit www.skrmblissai.in"
-              aria-label="Visit Soulful Intelligence Studio website at www.skrmblissai.in"
-            >
-              <SILogoMark size={24} />
-            </a>
-          </div>
-          {/* Desktop collapse button — sits at absolute far right */}
-          <button
-            onClick={() => setIsSidebarCollapsed(true)}
-            className="hidden lg:flex w-7 h-7 rounded-xl items-center justify-center transition-all hover:bg-[var(--bg-base)] flex-shrink-0 ml-2 group"
-            title="Collapse sidebar"
-            aria-label="Collapse sidebar"
-          >
-            <ChevronLeft size={14} style={{ color: 'var(--text-muted)' }} className="group-hover:scale-110 transition-transform" />
-          </button>
+          <MindGymLogo
+            variant="full"
+            size="sm"
+            animated={true}
+            onClick={() => {
+              // The logo now leaves the app entirely (Soulful Intelligence's
+              // own homepage) rather than navigating internally — "Dashboard"
+              // in the nav list right below handles the internal case. Since
+              // leaving is a one-way trip out of the SPA, warn first via the
+              // styled modal rather than surprising someone expecting "home".
+              setShowLeaveMindGymModal(true);
+            }}
+            className="group min-w-0"
+          />
           {/* Mobile close button */}
           <button
             onClick={() => setIsSidebarOpen(false)}
@@ -2151,6 +2160,12 @@ export default function UntetheredApp() {
             }}
             planName={welcomeModal.plan}
             userEmail={currentUser?.email}
+          />
+
+          <LeaveMindGymModal
+            isOpen={showLeaveMindGymModal}
+            onCancel={() => setShowLeaveMindGymModal(false)}
+            onConfirm={() => { window.location.href = 'https://www.skrmblissai.in'; }}
           />
 
           {/* First-run orientation — shows once for new users */}

@@ -14,6 +14,11 @@ interface MindGymLogoProps {
   animated?: boolean;
   className?: string;
   onClick?: () => void;
+  /** Small mark rendered as a corner badge on the icon (e.g. a sister-brand
+   *  link). Positioned relative to the icon's own known box, so it never
+   *  changes this component's outer width — unlike an inline sibling, which
+   *  widens the row and can be pushed under whatever sits to the right of it. */
+  badge?: React.ReactNode;
 }
 
 export function MindGymLogo({
@@ -22,9 +27,12 @@ export function MindGymLogo({
   animated = true,
   className,
   onClick,
+  badge,
 }: MindGymLogoProps) {
   const iconSizes = { sm: 28, md: 36, lg: 52 };
   const iconPx = iconSizes[size];
+  const badgeSizes = { sm: 16, md: 18, lg: 22 };
+  const badgePx = badgeSizes[size];
 
   return (
     <div
@@ -34,7 +42,25 @@ export function MindGymLogo({
     >
       {/* ── Icon Mark ── */}
       {(variant === 'full' || variant === 'icon') && (
-        <LogoMark size={iconPx} animated={animated} />
+        <div className="relative flex-shrink-0" style={{ width: iconPx, height: iconPx }}>
+          <LogoMark size={iconPx} animated={animated} />
+          {badge && (
+            <div
+              className="absolute rounded-full overflow-hidden pointer-events-auto"
+              style={{
+                width: badgePx,
+                height: badgePx,
+                right: -badgePx * 0.28,
+                bottom: -badgePx * 0.28,
+              }}
+              // Badge is its own click target (e.g. a link) — stop the click
+              // reaching the icon's onClick (internal nav) underneath it.
+              onClick={(e) => e.stopPropagation()}
+            >
+              {badge}
+            </div>
+          )}
+        </div>
       )}
 
       {/* ── Wordmark ── */}
