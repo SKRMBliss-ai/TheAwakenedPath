@@ -1364,13 +1364,26 @@ export default function UntetheredApp() {
 
         {/* ── Logo ── */}
         <div className="flex items-center justify-between px-3 py-[1.5vh] flex-shrink-0 w-full">
-          <MindGymLogo
-            variant="full"
-            size="sm"
-            animated={true}
-            onClick={() => setActiveTab('home')}
-            className="group"
-          />
+          <div className="flex items-center gap-2.5 min-w-0">
+            <MindGymLogo
+              variant="full"
+              size="sm"
+              animated={true}
+              onClick={() => setActiveTab('home')}
+              className="group flex-shrink-0"
+            />
+            {/* Soulful Intelligence mark — paired with the Mind Gym wordmark in
+                the one permanent, uncrowded brand spot, rather than competing
+                for space with the Return button in the top header. */}
+            <a
+              href="https://www.skrmblissai.in"
+              className="w-7 h-7 rounded-full p-0.5 border border-[#C4913A]/60 dark:border-[#FFDF9E]/70 bg-gradient-to-br from-[#C4913A]/20 via-[#4A3260]/15 to-transparent shadow-[0_0_10px_rgba(196,145,58,0.3)] hover:shadow-[0_0_16px_rgba(196,145,58,0.55)] hover:border-[#FFDF9E] hover:scale-105 transition-all flex items-center justify-center overflow-hidden flex-shrink-0"
+              title="Soulful Intelligence Studio — Visit www.skrmblissai.in"
+              aria-label="Visit Soulful Intelligence Studio website at www.skrmblissai.in"
+            >
+              <SILogoMark size={24} />
+            </a>
+          </div>
           {/* Desktop collapse button — sits at absolute far right */}
           <button
             onClick={() => setIsSidebarCollapsed(true)}
@@ -2071,18 +2084,6 @@ export default function UntetheredApp() {
               </button>
             )}
             
-            {/* Soulful Intelligence mark — takes user directly to www.skrmblissai.in */}
-            <a
-                href="https://www.skrmblissai.in"
-                className="flex items-center gap-2.5 text-current transition-all group flex-shrink-0"
-                title="Soulful Intelligence Studio — Visit www.skrmblissai.in"
-                aria-label="Visit Soulful Intelligence Studio website at www.skrmblissai.in"
-            >
-                <div className="w-12 h-12 sm:w-[50px] sm:h-[50px] rounded-full p-0.5 border-2 border-[#C4913A]/70 dark:border-[#FFDF9E]/80 bg-gradient-to-br from-[#C4913A]/20 via-[#4A3260]/15 to-transparent shadow-[0_0_16px_rgba(196,145,58,0.35)] group-hover:shadow-[0_0_24px_rgba(196,145,58,0.65)] group-hover:border-[#FFDF9E] group-hover:scale-105 transition-all flex items-center justify-center overflow-hidden">
-                    <SILogoMark size={44} />
-                </div>
-            </a>
-
             {/* Internal Return to Dashboard Button */}
             {activeTab !== 'home' && (
               <motion.button
