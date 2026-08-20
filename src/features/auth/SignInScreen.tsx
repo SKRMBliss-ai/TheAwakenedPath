@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './AuthContext';
 import { ArrowRight, Eye, EyeOff, LayoutGrid, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTheme } from '../../theme/ThemeSystem';
-import appLogo from '../../assets/logo.webp';
+import { SI_LOGO_SRC } from '../../components/ui/SILogoMark';
 
 export const SignInScreen = () => {
     const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } = useAuth();
@@ -97,8 +97,14 @@ export const SignInScreen = () => {
                 transition={{ duration: 0.8 }}
                 className="relative z-10 flex flex-col items-center mb-10"
             >
-                <div className="w-20 h-20 mb-4 rounded-2xl p-1 bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] shadow-xl flex items-center justify-center">
-                    <img src={appLogo} alt="Logo" className="w-full h-full object-contain rounded-xl bg-black/20" />
+                {/* The SI mark carries its own gold ring, so it's shown round and
+                    unframed — the previous gradient-filled square fought it. */}
+                <div className="w-20 h-20 mb-4 rounded-full shadow-xl flex items-center justify-center overflow-hidden">
+                    <img
+                        src={SI_LOGO_SRC}
+                        alt="Soulful Intelligence Studio"
+                        className="w-full h-full object-contain rounded-full"
+                    />
                 </div>
                 <h1
                     className="text-2xl font-serif font-bold tracking-[0.15em] uppercase text-center"
