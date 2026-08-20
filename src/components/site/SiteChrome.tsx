@@ -217,7 +217,12 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
           .si-nav-row { gap: 12px; }
         }
         @media (max-width: 640px) {
-          .si-nav-row .si-nav { display: none; }
+          /* Needs !important — each link also carries an inline
+             display:'inline-flex' (for icon/text alignment on desktop),
+             and inline styles beat a plain class rule regardless of
+             media query, so without this the links stayed visible and
+             overlapped the wordmark instead of collapsing to the burger. */
+          .si-nav-row .si-nav { display: none !important; }
           .si-burger { display: inline-flex !important; }
         }
       `}</style>
