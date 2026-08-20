@@ -783,7 +783,7 @@ export default function UntetheredApp() {
   const { members: presentMembers } = usePresentMembers(currentUser?.uid);
   const onlineCount = presentMembers.length;
 
-  // ── Sidebar groups: Practice · School · Community ──
+  // ── Sidebar groups: Practice · Courses · Community ──
   // Each opens automatically when one of its own tabs is already active, so a
   // deep link or a restored session never lands the user in a collapsed group.
   const [practiceOpen, setPracticeOpen] = useState(
@@ -1539,7 +1539,7 @@ export default function UntetheredApp() {
             )}
           </div>
 
-          {/* ── School group — guided courses and teaching ── */}
+          {/* ── Courses group — guided courses and teaching ── */}
           <div className="pt-1 pb-0.5">
             {/* Group label — tap to expand / collapse */}
             <button
@@ -1557,7 +1557,7 @@ export default function UntetheredApp() {
                 )}
               />
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] flex-1 text-left">
-                School
+                Courses
               </span>
               <ChevronRight
                 size={13}
@@ -1850,7 +1850,7 @@ export default function UntetheredApp() {
             )}
           </div>
 
-          {/* ── Progress — shared across Practice and School, so it sits on its own ── */}
+          {/* ── Progress — shared across Practice and Courses, so it sits on its own ── */}
           {[
             { id: 'stats', icon: BarChart2, label: 'Progress', locked: !isAccessValid },
           ].map(item => {
