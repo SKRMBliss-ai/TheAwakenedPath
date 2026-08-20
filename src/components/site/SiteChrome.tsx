@@ -216,8 +216,15 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
           .si-hide-sm { display: none !important; }
           .si-nav-row { gap: 12px; }
         }
-        @media (max-width: 640px) {
-          /* Needs !important — each link also carries an inline
+        @media (max-width: 900px) {
+          /* 640px was too low a threshold: a page like the course sales page
+             passes 7 nav links (none marked secondary), which don't fit next
+             to the logo even at iPad Air width (820px) — they wrapped onto
+             the wordmark exactly like the phone-width bug this block was
+             originally written to fix. 900px covers phones AND tablets in
+             portrait, so the full link row only ever renders where it
+             actually has room.
+             Needs !important — each link also carries an inline
              display:'inline-flex' (for icon/text alignment on desktop),
              and inline styles beat a plain class rule regardless of
              media query, so without this the links stayed visible and
