@@ -359,7 +359,7 @@ export function SiteFooter({ palette }: { palette: Palette }) {
           </div>
         </div>
 
-        <div style={{
+        <div className="si-foot-legal" style={{
           marginTop: 40, paddingTop: 20, borderTop: `1px solid ${palette.BORDER}`,
           display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between',
           fontSize: 12, color: palette.INK2,
@@ -371,17 +371,31 @@ export function SiteFooter({ palette }: { palette: Palette }) {
 
       <style>{`
         .si-foot-link:hover { color: ${palette.PURPLE_STRONG} !important; }
-        @media (max-width: 640px) {
-          .si-foot-pad { padding: 32px 20px 20px !important; }
-          .si-foot-top { gap: 24px !important; }
-          .si-foot-desc { margin-bottom: 12px !important; }
+        /* iPad fell through to the original flex-wrap layout (the 2-column
+           grid only kicked in below 640px), so each link column had no
+           partner beside it and stretched to the leftover width next to the
+           brand block — one narrow column, three names tall. Grid this
+           range too so tablet gets the same 2-up columns as phone. */
+        @media (max-width: 1024px) {
           .si-foot-cols {
             display: grid !important;
             grid-template-columns: 1fr 1fr;
-            gap: 20px 16px;
+            gap: 28px 24px;
             width: 100%;
           }
-          .si-foot-heading { margin-bottom: 8px !important; }
+          .si-foot-top { gap: 32px !important; }
+        }
+        @media (max-width: 640px) {
+          .si-foot-pad { padding: 28px 20px 16px !important; }
+          .si-foot-top { gap: 20px !important; }
+          .si-foot-desc { margin-bottom: 10px !important; font-size: 12.5px !important; }
+          .si-foot-cols { gap: 18px 14px; }
+          .si-foot-heading { margin-bottom: 6px !important; }
+          /* Tightened to the WCAG 2.2 §2.5.8 floor (24px) instead of the
+             32px used elsewhere — still compliant, just less generous, so
+             five stacked links per column don't eat the whole screen. */
+          .si-foot-link { min-height: 24px !important; padding: 3px 0 !important; font-size: 13px !important; }
+          .si-foot-legal { margin-top: 20px !important; padding-top: 14px !important; }
         }
       `}</style>
     </footer>
