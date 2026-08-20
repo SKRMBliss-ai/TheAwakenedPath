@@ -56,10 +56,16 @@ export default defineConfig({
         skipWaiting: true,
         // Serve the app shell for ALL in-app navigations (/, /aboutmindgym,
         // /knowyouremotionalhealth, …) so the service worker doesn't error on
-        // sub-routes. Exclude the Cloud-Function API rewrites and /twinsouls
-        // (its own app — must reach the network, not the Mind Gym shell).
+        // sub-routes. Exclude the Cloud-Function API rewrites, /twinsouls
+        // (its own app — must reach the network, not the Mind Gym shell), and
+        // /.well-known (domain-verification files like Apple Pay's — a browser
+        // that already has the service worker installed and navigates there
+        // directly must get the real file, not the app shell; this doesn't
+        // affect Apple's own verification, which fetches server-side with no
+        // service worker involved, but a stale/misleading 404 during manual
+        // testing isn't worth leaving in).
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//, /^\/twinsouls/, /^\/habitquest2026/],
+        navigateFallbackDenylist: [/^\/api\//, /^\/twinsouls/, /^\/habitquest2026/, /^\/\.well-known\//],
       },
       manifest: {
         name: 'Mind Gym',
