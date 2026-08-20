@@ -154,9 +154,9 @@ export default function BodyMapShowcase({ isDark }: { isDark: boolean }) {
       </div>
 
       <div
+        className="si-bodymap-grid"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 340px) minmax(0, 1fr)',
           gap: 'clamp(24px, 5vw, 64px)',
           alignItems: 'center',
           maxWidth: 900,

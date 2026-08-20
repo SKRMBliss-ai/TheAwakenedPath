@@ -990,6 +990,72 @@ body.dark-mode .mouse-glow {
   }
 }
 
+/* Body-map showcase: fixed 340px/1fr columns, both with a 0 minimum, so on a
+   narrow screen the text column never got a real width to wrap against —
+   text collapsed to one word per line while the diagram sat in the leftover
+   space. Stacks below tablet width instead of squeezing sideways. */
+.si-bodymap-grid {
+  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+}
+@media (max-width: 760px) {
+  .si-bodymap-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Honest-facts stat cards: two-up and tighter on phone instead of one huge
+   card per row. */
+@media (max-width: 560px) {
+  .si-stat-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .si-stat-card {
+    padding: 16px 10px !important;
+  }
+  .si-stat-value {
+    font-size: 22px !important;
+  }
+}
+
+/* Every section on the Feelings & Emotions course page uses a generous
+   clamp() vertical padding (64–96px minimum, up to 160px) meant for desktop
+   breathing room. The clamp floor doesn't relax further on narrow screens,
+   so eleven stacked sections each keep 128–320px of vertical padding alone
+   on phone, which is most of why the page felt like an unusually long
+   scroll. Longhand + !important because the inline clamp() padding shorthand
+   already sets padding-top/bottom directly — only an !important longhand can
+   override that, a shorthand override would not win. Horizontal padding is
+   untouched: clamp(24px, 6vw, 96px) already relaxes to near 24px on phone. */
+@media (max-width: 640px) {
+  section.si-reveal {
+    padding-top: 44px !important;
+    padding-bottom: 44px !important;
+  }
+  .si-section-head {
+    margin-bottom: 32px !important;
+  }
+  .si-faq-list {
+    gap: 10px !important;
+  }
+  .si-faq-q {
+    padding: 15px 18px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* Floating "Preview / Watch Course Intro" hero badge duplicates the primary
+   "Watch the Course Intro" button already in the hero text column. On
+   mobile the text column runs full-width/height, so this fixed
+   bottom:32/right:32 offset landed on top of the "Read the overview" link
+   below it — hidden here rather than repositioned, since the CTA already
+   covers the same action. */
+@media (max-width: 860px) {
+  .si-hero-preview-badge {
+    display: none !important;
+  }
+}
+
 /* ── Dark mode overrides ─────────────────────────────────────────────────── */
 .dark .si-geo-img {
   --si-geo-opacity: 0.045;

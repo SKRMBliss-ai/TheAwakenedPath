@@ -276,13 +276,13 @@ export function SiteFooter({ palette }: { palette: Palette }) {
       borderTop: `1px solid ${palette.BORDER}`,
       color: palette.INK2, fontFamily: SANS,
     }}>
-      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '52px 20px 28px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 40, justifyContent: 'space-between' }}>
-          <div style={{ maxWidth: 300, minWidth: 240 }}>
+      <div className="si-foot-pad" style={{ maxWidth: 1120, margin: '0 auto', padding: '52px 20px 28px' }}>
+        <div className="si-foot-top" style={{ display: 'flex', flexWrap: 'wrap', gap: 40, justifyContent: 'space-between' }}>
+          <div className="si-foot-brand" style={{ maxWidth: 300, minWidth: 240 }}>
             <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', marginBottom: 14 }}>
               <SiteLogo palette={palette} size={44} />
             </a>
-            <p style={{ fontSize: 13.5, lineHeight: 1.7, margin: '0 0 16px', color: palette.INK2 }}>
+            <p className="si-foot-desc" style={{ fontSize: 13.5, lineHeight: 1.7, margin: '0 0 16px', color: palette.INK2 }}>
               A studio for a quieter mind and braver ideas — practices, a course,
               free tools, and digital work made with care.
             </p>
@@ -306,44 +306,50 @@ export function SiteFooter({ palette }: { palette: Palette }) {
             </div>
           </div>
 
-          {FOOTER_COLS.map((col) => (
-            <div key={col.title} style={{ minWidth: 150 }}>
-              <h3 style={{
-                fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase',
-                color: palette.BROWN, margin: '0 0 14px',
-              }}>
-                {col.title}
-              </h3>
-              {/* gap is tight because each link now carries its own vertical
-                  padding to reach the 32px tap target — without this the column
-                  rhythm would jump from 28px to 42px. */}
-              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 }}>
-                {col.items.map((it) => (
-                  <li key={it.label}>
-                    <a
-                      className="si-foot-link"
-                      href={it.href}
-                      {...(it.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                      style={{
-                        color: palette.INK2,
-                        textDecoration: 'none',
-                        fontSize: 13.5,
-                        // WCAG 2.2 §2.5.8 Target Size (Minimum). These rendered
-                        // ~18px tall. Padding is vertical-only so the column
-                        // stays flush-left; widths were already over 24px.
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        minHeight: 32,
-                        padding: '6px 0',
-                      }}
-                    >
-                      {it.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Grid on mobile (two link columns side by side, tight rhythm)
+              instead of each column stacking full-width — that's what made
+              the mobile footer scroll on for so long. Desktop keeps the
+              original flex-wrap layout untouched. */}
+          <div className="si-foot-cols">
+            {FOOTER_COLS.map((col) => (
+              <div key={col.title} style={{ minWidth: 150 }}>
+                <h3 className="si-foot-heading" style={{
+                  fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase',
+                  color: palette.BROWN, margin: '0 0 14px',
+                }}>
+                  {col.title}
+                </h3>
+                {/* gap is tight because each link now carries its own vertical
+                    padding to reach the 32px tap target — without this the column
+                    rhythm would jump from 28px to 42px. */}
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 }}>
+                  {col.items.map((it) => (
+                    <li key={it.label}>
+                      <a
+                        className="si-foot-link"
+                        href={it.href}
+                        {...(it.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                        style={{
+                          color: palette.INK2,
+                          textDecoration: 'none',
+                          fontSize: 13.5,
+                          // WCAG 2.2 §2.5.8 Target Size (Minimum). These rendered
+                          // ~18px tall. Padding is vertical-only so the column
+                          // stays flush-left; widths were already over 24px.
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          minHeight: 32,
+                          padding: '6px 0',
+                        }}
+                      >
+                        {it.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div style={{
@@ -356,7 +362,21 @@ export function SiteFooter({ palette }: { palette: Palette }) {
         </div>
       </div>
 
-      <style>{`.si-foot-link:hover { color: ${palette.PURPLE_STRONG} !important; }`}</style>
+      <style>{`
+        .si-foot-link:hover { color: ${palette.PURPLE_STRONG} !important; }
+        @media (max-width: 640px) {
+          .si-foot-pad { padding: 32px 20px 20px !important; }
+          .si-foot-top { gap: 24px !important; }
+          .si-foot-desc { margin-bottom: 12px !important; }
+          .si-foot-cols {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 16px;
+            width: 100%;
+          }
+          .si-foot-heading { margin-bottom: 8px !important; }
+        }
+      `}</style>
     </footer>
   );
 }

@@ -933,8 +933,15 @@ export default function EmotionFeelingsCourse() {
           </div>
         </div>
 
-        {/* Floating Watch Intro Badge */}
+        {/* Floating Watch Intro Badge — duplicates the "Watch the Course
+            Intro" button already in the text column (same onClick). Fine on
+            desktop where it floats clear in the empty right side of the
+            hero; on mobile the text column runs the full width and height,
+            so this fixed bottom/right offset landed directly on top of the
+            "Read the overview" link. Hidden below 860px rather than
+            repositioned, since the primary CTA already covers the action. */}
         <button
+          className="si-hero-preview-badge"
           onClick={() => {
             setActiveVideoUrl('https://www.youtube.com/embed/nbyToUpT1_8?autoplay=1&rel=0');
             setShowVideoModal(true);
@@ -1222,7 +1229,7 @@ export default function EmotionFeelingsCourse() {
           zIndex: 2,
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: 52 }}>
+        <div className="si-section-head" style={{ textAlign: 'center', marginBottom: 52 }}>
           <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 14 }}>
             Recognize Yourself
           </p>
@@ -1494,7 +1501,7 @@ export default function EmotionFeelingsCourse() {
         }}
       >
         {/* Centered Header */}
-        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+        <div className="si-section-head" style={{ textAlign: 'center', marginBottom: 56 }}>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(32px, 4.2vw, 54px)', fontWeight: 400, color: ink, margin: '0 0 12px' }}>
             The 7-step journey from reacting to freedom
           </h2>
@@ -1617,6 +1624,7 @@ export default function EmotionFeelingsCourse() {
               <div
                 style={{
                   flex: 1,
+                  minWidth: 260,
                   minHeight: 280,
                   borderRadius: 24,
                   background: ch.bgGradient,
@@ -1650,7 +1658,7 @@ export default function EmotionFeelingsCourse() {
 
             // Text Content Component
             const TextBlock = (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <p style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 8 }}>
                   {ch.badgeKicker}
                 </p>
@@ -1999,8 +2007,13 @@ export default function EmotionFeelingsCourse() {
           </p>
         </div>
 
-        {/* Honest facts about the course — every figure here is true. */}
+        {/* Honest facts about the course — every figure here is true.
+            auto-fit with a 180px floor meant a single column on phone width
+            (375 < 2×180), so four tall cards stacked into a long scroll.
+            si-stat-grid forces two-up on mobile, with smaller padding/type
+            to match — desktop keeps the original auto-fit behavior. */}
         <div
+          className="si-stat-grid"
           style={{
             maxWidth: 900,
             margin: '0 auto',
@@ -2017,6 +2030,7 @@ export default function EmotionFeelingsCourse() {
           ].map((s, i) => (
             <div
               key={i}
+              className="si-stat-card"
               style={{
                 background: isDark ? 'rgba(74,50,96,0.18)' : 'rgba(74,50,96,0.06)',
                 border: '1px solid rgba(74,50,96,0.25)',
@@ -2025,7 +2039,7 @@ export default function EmotionFeelingsCourse() {
                 textAlign: 'center',
               }}
             >
-              <p style={{ fontFamily: SERIF, fontSize: 'clamp(26px,3vw,34px)', fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 6px' }}>
+              <p className="si-stat-value" style={{ fontFamily: SERIF, fontSize: 'clamp(26px,3vw,34px)', fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260', margin: '0 0 6px' }}>
                 {s.value}
               </p>
               <p style={{ fontFamily: SANS, fontSize: 11.5, fontWeight: 700, color: inkSub, margin: 0 }}>
@@ -2346,7 +2360,7 @@ export default function EmotionFeelingsCourse() {
           zIndex: 2,
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: 52 }}>
+        <div className="si-faq-head si-section-head" style={{ textAlign: 'center', marginBottom: 52 }}>
           <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 14 }}>
             Questions & Answers
           </p>
@@ -2355,7 +2369,7 @@ export default function EmotionFeelingsCourse() {
           </h2>
         </div>
 
-        <div style={{ maxWidth: 760, margin: '0 auto', display: 'grid', gap: 14 }}>
+        <div className="si-faq-list" style={{ maxWidth: 760, margin: '0 auto', display: 'grid', gap: 14 }}>
           {FAQS.map((faq, idx) => {
             const isOpen = openFaq === idx;
             return (
@@ -2370,6 +2384,7 @@ export default function EmotionFeelingsCourse() {
                 }}
               >
                 <button
+                  className="si-faq-q"
                   onClick={() => setOpenFaq(isOpen ? null : idx)}
                   style={{
                     width: '100%',
@@ -2377,6 +2392,7 @@ export default function EmotionFeelingsCourse() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    gap: 12,
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
@@ -2387,7 +2403,11 @@ export default function EmotionFeelingsCourse() {
                     fontWeight: 700,
                   }}
                 >
-                  {faq.q}
+                  {/* flex:1 + minWidth:0 so the question wraps within its own
+                      share of the row instead of running under the chevron
+                      — without this, a two-line question's second line could
+                      land right behind the (flexShrink:0) icon. */}
+                  <span style={{ flex: 1, minWidth: 0 }}>{faq.q}</span>
                   <ChevronDown
                     size={18}
                     style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease', flexShrink: 0 }}
