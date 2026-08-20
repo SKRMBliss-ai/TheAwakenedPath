@@ -1783,11 +1783,11 @@ export default function EmotionFeelingsCourse() {
         }}
       >
         <div
+          className="si-split-grid"
           style={{
             maxWidth: 980,
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: '1fr 1.3fr',
             gap: 'clamp(32px, 5vw, 64px)',
             alignItems: 'center',
           }}
@@ -2053,11 +2053,11 @@ export default function EmotionFeelingsCourse() {
       >
         <div
           id="pricing"
+          className="si-pricing-grid"
           style={{
             maxWidth: 1100,
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: '1fr 1.2fr 1fr',
             gap: 20,
             alignItems: 'stretch',
           }}

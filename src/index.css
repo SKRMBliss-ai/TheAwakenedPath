@@ -963,6 +963,33 @@ body.dark-mode .mouse-glow {
   opacity: 0.6;
 }
 
+/* ── Pricing grid (Feelings & Emotions course page) ──────────────────────────
+   Was a fixed 3-column inline style with no breakpoint at all, so tablet and
+   phone widths squeezed "What's included" / the price card / "Our Promise"
+   into slivers side by side instead of stacking. Collapses to one column
+   below 1024px (iPad portrait and under), two above that only on the way
+   down from desktop so the price card never drops below a readable width. */
+.si-pricing-grid {
+  grid-template-columns: 1fr 1.2fr 1fr;
+}
+@media (max-width: 1024px) {
+  .si-pricing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Same issue, same fix, for the image+copy split further up the same page:
+   a fixed 1fr/1.3fr two-column grid with no breakpoint, squeezing the photo
+   and text into narrow slivers on tablet and phone. */
+.si-split-grid {
+  grid-template-columns: 1fr 1.3fr;
+}
+@media (max-width: 860px) {
+  .si-split-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Dark mode overrides ─────────────────────────────────────────────────── */
 .dark .si-geo-img {
   --si-geo-opacity: 0.045;
