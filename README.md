@@ -4,7 +4,7 @@ A sacred, structured digital journey to inner freedom, based exclusively on the 
 
 
 ## Project Mission
-The Mind Gym app is designed to guide users from a state of conceptual thinking into the seat of the **Witness Consciousness**. Unlike traditional devotional or concentration-based meditations, this path focuses specifically on:
+The Mind Gym is designed to guide users from a state of conceptual thinking into the seat of the **Witness Consciousness**. Unlike traditional devotional or concentration-based meditations, this path focuses specifically on:
 - **Witnessing the Voice:** Mastering the ability to observe the mind objectively.
 - **Staying Behind the Noise:** Resting in the seat of the self as thoughts and emotions arise.
 - **The Seat of the Witness:** Realizing that you are the one who hears the thoughts, not the thoughts themselves.
