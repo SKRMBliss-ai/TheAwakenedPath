@@ -52,6 +52,25 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
     }
   }, []);
 
+  // Someone arriving straight from a guest course purchase needs a REAL
+  // account, so send them to the sign-in screen rather than this one.
+  //
+  // Why: the prominent path here is beginAnonymousPath(), which creates an
+  // ANONYMOUS Firebase user — its token carries no email claim at all, and
+  // linkGuestPurchases resolves entitlements from auth.token.email. A buyer
+  // taking the default "no password needed" route would sign in happily and
+  // still find the course locked, which is the exact failure this flow is
+  // meant to prevent.
+  //
+  // Deliberately NOT linking purchases on the typed entryEmail instead: that
+  // string is unverified user input, so trusting it would let anyone claim
+  // someone else's paid course just by typing their address.
+  useEffect(() => {
+    let pending = '';
+    try { pending = localStorage.getItem('pendingCourseClaimEmail') || ''; } catch { /* private mode */ }
+    if (pending) onShowSignIn?.();
+  }, []);
+
   const handleEmailChange = (v: string) => {
     setEmail(v);
     setError('');

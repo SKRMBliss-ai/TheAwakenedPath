@@ -298,6 +298,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               try { sessionStorage.setItem('__guest_link_done', currentUser.uid); } catch (_) {}
               import('firebase/functions')
                 .then(({ httpsCallable }) => httpsCallable(functions, 'linkGuestPurchases')())
+                // The claim hint has done its job once linking runs — drop it so
+                // the sign-in banner doesn't keep pointing at an old purchase.
+                .then(() => { try { localStorage.removeItem('pendingCourseClaimEmail'); } catch { /* private mode */ } })
                 .catch(() => { /* nothing to link, or offline */ });
             }
 

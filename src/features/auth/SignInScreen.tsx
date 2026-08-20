@@ -9,7 +9,16 @@ export const SignInScreen = () => {
     const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } = useAuth();
     const { theme, mode } = useTheme();
     const [isLogin, setIsLogin] = useState(true);
-    const [email, setEmail] = useState('');
+
+    // Set by the course sales page after a GUEST purchase. That purchase lives
+    // server-side under guestPurchases/{email} and only merges into an account
+    // when someone signs in with the SAME address, so show it here and prefill
+    // the field — otherwise a buyer with two Google accounts signs in with the
+    // wrong one, sees no course, and files a support ticket.
+    const [claimEmail] = useState<string>(() => {
+        try { return localStorage.getItem('pendingCourseClaimEmail') || ''; } catch { return ''; }
+    });
+    const [email, setEmail] = useState(claimEmail);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -125,6 +134,24 @@ export const SignInScreen = () => {
                         <h2 className="text-xl font-serif font-light mb-8 text-center" style={{ color: theme.textPrimary }}>
                             Enter Presence
                         </h2>
+
+                        {claimEmail && (
+                            <div
+                                className="w-full mb-6 p-3.5 rounded-xl border text-center"
+                                style={{
+                                    background: 'rgba(196,145,58,0.10)',
+                                    borderColor: 'rgba(196,145,58,0.35)',
+                                }}
+                            >
+                                <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1.5" style={{ color: theme.textMuted }}>
+                                    Your course is waiting
+                                </p>
+                                <p className="text-[12.5px] leading-relaxed" style={{ color: theme.textSecondary }}>
+                                    Sign in with <strong style={{ color: theme.textPrimary, wordBreak: 'break-all' }}>{claimEmail}</strong> to
+                                    unlock Understanding Feelings &amp; Emotions.
+                                </p>
+                            </div>
+                        )}
 
                         {/* Error Message */}
                         <AnimatePresence>

@@ -552,6 +552,12 @@ export default function EmotionFeelingsCourse() {
   const [guestName, setGuestName] = useState('');
   const [checkoutErr, setCheckoutErr] = useState('');
 
+  /** Set once payment is captured. `email` is the address the purchase was
+   *  keyed to — the buyer MUST sign in with it for the course to unlock, so
+   *  it's shown prominently rather than buried. `wasSignedIn` skips that
+   *  instruction entirely, since the grant already landed on their account. */
+  const [purchaseSuccess, setPurchaseSuccess] = useState<{ email: string; wasSignedIn: boolean } | null>(null);
+
   // 60-Second Teaser State
   const [teaserVideo, setTeaserVideo] = useState<{ id: string; title: string; episodeNum: number; startTime?: number } | null>(null);
   const [teaserTimer, setTeaserTimer] = useState<number>(60);
@@ -702,11 +708,13 @@ export default function EmotionFeelingsCourse() {
       return;
     }
     setCheckoutErr('');
-    const userId = getAuth().currentUser?.uid || 'guest_pending';
+    const signedInUid = getAuth().currentUser?.uid;
+    const userId = signedInUid || 'guest_pending';
+    const paidEmail = guestEmail.trim();
 
     checkOut(
       userId,
-      guestEmail.trim(),
+      paidEmail,
       guestName.trim(),
       'emotion_feelings_course',
       // Charge in the same currency the slider quoted. Hardcoding INR here billed
@@ -715,13 +723,25 @@ export default function EmotionFeelingsCourse() {
       activePricingConfig.currency,
       () => {
         setShowCheckoutModal(false);
-        alert('🎉 Payment successful! You now have lifetime access to Understanding Feelings & Emotions.');
-        trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ${activePricingConfig.symbol}${customAmount}`, guestEmail);
+        // A guest purchase is stored server-side under guestPurchases/{email}
+        // and only merges into an account when someone signs in with that SAME
+        // address (onUserCreated / linkGuestPurchases). Leave that hint where
+        // the Mind Gym sign-in screen can surface it — localStorage rather than
+        // a query param, so the address never travels in a URL.
+        if (!signedInUid && paidEmail) {
+          try { localStorage.setItem('pendingCourseClaimEmail', paidEmail.toLowerCase()); } catch { /* private mode */ }
+        }
+        setPurchaseSuccess({ email: paidEmail, wasSignedIn: Boolean(signedInUid) });
+        trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ${activePricingConfig.symbol}${customAmount}`, paidEmail);
       },
       guestPhone.trim(),
       customAmount
     );
   };
+
+  /** Hand off to the app. Full page load, not a router push — Mind Gym is a
+   *  separate entry point and needs a fresh auth/entitlement bootstrap. */
+  const goToMindGym = () => { window.location.href = '/mindgym'; };
 
   return (
     <div
@@ -2709,6 +2729,114 @@ export default function EmotionFeelingsCourse() {
 
       {/* 2. Checkout Modal */}
       <AnimatePresence>
+        {purchaseSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 120,
+              background: 'rgba(0,0,0,0.78)',
+              backdropFilter: 'blur(12px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 24,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 16 }}
+              animate={{ scale: 1, y: 0 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="purchase-success-title"
+              style={{
+                width: '100%',
+                maxWidth: 480,
+                background: isDark ? '#1A1222' : '#F9F5EF',
+                border: `1px solid ${borderC}`,
+                borderRadius: 28,
+                padding: 36,
+                boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%', margin: '0 auto 18px',
+                background: 'rgba(74,50,96,0.12)', border: '1px solid rgba(196,145,58,0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 26,
+              }}>
+                ✨
+              </div>
+
+              <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', margin: '0 0 10px' }}>
+                Payment received
+              </p>
+              <h3 id="purchase-success-title" style={{ fontFamily: SERIF, fontSize: 27, fontWeight: 400, color: ink, margin: '0 0 12px', lineHeight: 1.25 }}>
+                Your course is ready.
+              </h3>
+
+              {purchaseSuccess.wasSignedIn ? (
+                <p style={{ fontFamily: SANS, fontSize: 14, lineHeight: 1.65, color: inkSub, margin: '0 0 24px' }}>
+                  Understanding Feelings &amp; Emotions is unlocked on your account.
+                  Open Mind Gym to begin Episode 1.
+                </p>
+              ) : (
+                <>
+                  <p style={{ fontFamily: SANS, fontSize: 14, lineHeight: 1.65, color: inkSub, margin: '0 0 14px' }}>
+                    You have lifetime access to Understanding Feelings &amp; Emotions.
+                    To open it, sign in to Mind Gym with this email:
+                  </p>
+                  <div style={{
+                    fontFamily: SANS, fontSize: 14.5, fontWeight: 700, color: ink,
+                    background: 'rgba(196,145,58,0.10)', border: '1px solid rgba(196,145,58,0.3)',
+                    borderRadius: 12, padding: '11px 14px', margin: '0 0 14px',
+                    wordBreak: 'break-all',
+                  }}>
+                    {purchaseSuccess.email}
+                  </div>
+                  <p style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: inkSub, margin: '0 0 24px' }}>
+                    Your course is tied to this address — signing in with a different
+                    one won&rsquo;t show it. New here? Creating the account unlocks it automatically.
+                  </p>
+                </>
+              )}
+
+              <button
+                onClick={goToMindGym}
+                style={{
+                  width: '100%',
+                  padding: '15px 28px',
+                  borderRadius: 999,
+                  cursor: 'pointer',
+                  background: '#4A3260',
+                  color: '#fff',
+                  border: 'none',
+                  fontFamily: SANS,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  boxShadow: '0 8px 30px rgba(74,50,96,0.3)',
+                }}
+              >
+                Open Mind Gym →
+              </button>
+
+              <button
+                onClick={() => setPurchaseSuccess(null)}
+                style={{
+                  marginTop: 12, background: 'none', border: 'none', cursor: 'pointer',
+                  fontFamily: SANS, fontSize: 12.5, color: inkSub, padding: 8,
+                }}
+              >
+                Stay on this page
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+
         {showCheckoutModal && (
           <motion.div
             initial={{ opacity: 0 }}
