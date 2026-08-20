@@ -490,6 +490,15 @@ const ALL_ACCESS_REGION_CURRENCY: Record<string, { currency: string; symbol: str
   AED: { currency: 'AED', symbol: 'AED ', min: 35, suggested: 149, max: 350, strike: 440 },
 };
 
+// Country (locale region subtag) → charge currency. Mirrors REGION_TO_CURRENCY in
+// EmotionFeelingsCourseView.tsx and the backend's COURSE_PRICES_BY_CURRENCY.
+// Anything unlisted bills in USD, which the backend also falls back to.
+const REGION_TO_CURRENCY: Record<string, string> = {
+  IN: 'INR', GB: 'GBP', CA: 'CAD', AU: 'AUD', AE: 'AED', SG: 'SGD',
+  DE: 'EUR', FR: 'EUR', ES: 'EUR', IT: 'EUR', NL: 'EUR', IE: 'EUR',
+  PT: 'EUR', AT: 'EUR', BE: 'EUR', FI: 'EUR', GR: 'EUR',
+};
+
 function getRegionPricing(isAllAccess = false) {
   const dict = isAllAccess ? ALL_ACCESS_REGION_CURRENCY : REGION_CURRENCY;
   try {
@@ -498,8 +507,11 @@ function getRegionPricing(isAllAccess = false) {
       if (tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta') return dict.INR;
       const langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
       for (const l of langs) {
+        // The region subtag is a country code ('US', 'GB'); these tables are keyed
+        // by currency ('USD', 'GBP'), so the two need translating between them.
         const r = (l || '').split('-').pop()?.toUpperCase();
-        if (r && dict[r]) return dict[r];
+        const cur = r ? REGION_TO_CURRENCY[r] : undefined;
+        if (cur && dict[cur]) return dict[cur];
       }
     }
   } catch (_) {}
@@ -697,11 +709,14 @@ export default function EmotionFeelingsCourse() {
       guestEmail.trim(),
       guestName.trim(),
       'emotion_feelings_course',
-      'INR',
+      // Charge in the same currency the slider quoted. Hardcoding INR here billed
+      // every overseas buyer in rupees — the amount got clamped to the ₹99 floor
+      // and Razorpay's risk engine declined foreign cards on the currency mismatch.
+      activePricingConfig.currency,
       () => {
         setShowCheckoutModal(false);
         alert('🎉 Payment successful! You now have lifetime access to Understanding Feelings & Emotions.');
-        trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ₹${customAmount}`, guestEmail);
+        trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ${activePricingConfig.symbol}${customAmount}`, guestEmail);
       },
       guestPhone.trim(),
       customAmount
