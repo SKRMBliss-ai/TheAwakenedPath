@@ -65,10 +65,15 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
   // Deliberately NOT linking purchases on the typed entryEmail instead: that
   // string is unverified user input, so trusting it would let anyone claim
   // someone else's paid course just by typing their address.
+  // ?claim=1 carries the same intent across devices: the localStorage hint only
+  // exists on the machine the purchase was made on, but the confirmation email
+  // is very often opened on a phone. The flag holds no personal data — the
+  // address itself stays out of the URL.
   useEffect(() => {
     let pending = '';
     try { pending = localStorage.getItem('pendingCourseClaimEmail') || ''; } catch { /* private mode */ }
-    if (pending) onShowSignIn?.();
+    const fromEmailLink = new URLSearchParams(window.location.search).get('claim') === '1';
+    if (pending || fromEmailLink) onShowSignIn?.();
   }, []);
 
   const handleEmailChange = (v: string) => {

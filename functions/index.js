@@ -1762,7 +1762,11 @@ async function sendWelcomeEmail(toEmail, planName) {
  */
 async function sendGuestAccessEmail(toEmail) {
     const transporter = getTransporter();
-    const signupUrl = 'https://www.skrmblissai.in/mindgym';
+    // ?claim=1 makes Mind Gym open the real sign-in screen (Google /
+    // email+password) instead of its default quick-entry screen, which creates
+    // an anonymous account that cannot carry a purchase. Needed because this
+    // email is usually opened on a different device from the one used to buy.
+    const signupUrl = 'https://www.skrmblissai.in/mindgym?claim=1';
     await transporter.sendMail({
         from: '"Mind Gym" <connect@skrmblissai.in>',
         to: toEmail,
@@ -1776,10 +1780,22 @@ async function sendGuestAccessEmail(toEmail) {
             <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Mind Gym &middot; Payment Confirmed</p>
             <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:300;font-style:italic;color:#1C1814;margin:0 0 8px;line-height:1.3;">Thank you — you're in.</h1>
             <div style="width:40px;height:1px;background:#B8973A;margin:16px auto 24px;"></div>
-            <p style="font-family:Georgia,serif;font-size:16px;color:#3A342C;line-height:1.6;margin:0 0 8px;">Your Emotion &amp; Feelings Course purchase is confirmed.</p>
-            <p style="font-family:Georgia,serif;font-size:16px;color:#3A342C;line-height:1.6;margin:0 0 28px;"><strong>One step to unlock it:</strong> create your free account using <strong>this exact email address</strong> (${toEmail}) and the course will appear automatically.</p>
-            <a href="${signupUrl}" style="display:inline-block;padding:14px 34px;background:#1C1814;color:#E6C57D;text-decoration:none;font-family:Georgia,serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Create My Account</a>
-            <p style="font-family:Georgia,serif;font-size:12px;color:#8A8272;line-height:1.6;margin:28px 0 0;">The introduction is available immediately, and a new episode unlocks each week. Questions? Just reply to this email or WhatsApp us at +91 82175 81238.</p>
+            <p style="font-family:Georgia,serif;font-size:16px;color:#3A342C;line-height:1.6;margin:0 0 24px;">Your Understanding Feelings &amp; Emotions purchase is confirmed. Here is how to open it:</p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="text-align:left;margin:0 0 28px;">
+              <tr><td style="padding:0 0 14px;">
+                <p style="font-family:Georgia,serif;font-size:15px;color:#3A342C;line-height:1.6;margin:0;"><strong style="color:#B8973A;">1.</strong>&nbsp; Tap the button below to open Mind Gym.</p>
+              </td></tr>
+              <tr><td style="padding:0 0 14px;">
+                <p style="font-family:Georgia,serif;font-size:15px;color:#3A342C;line-height:1.6;margin:0;"><strong style="color:#B8973A;">2.</strong>&nbsp; Sign in with <strong>${toEmail}</strong> — either &ldquo;Continue with Google&rdquo; (if that is a Google address) or by setting a password. Your course is tied to this address, so signing in with a different one will not show it.</p>
+              </td></tr>
+              <tr><td>
+                <p style="font-family:Georgia,serif;font-size:15px;color:#3A342C;line-height:1.6;margin:0;"><strong style="color:#B8973A;">3.</strong>&nbsp; The course unlocks automatically — open <strong>Courses</strong> and begin Episode 1.</p>
+              </td></tr>
+            </table>
+
+            <a href="${signupUrl}" style="display:inline-block;padding:14px 34px;background:#1C1814;color:#E6C57D;text-decoration:none;font-family:Georgia,serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Open Mind Gym</a>
+            <p style="font-family:Georgia,serif;font-size:12px;color:#8A8272;line-height:1.6;margin:28px 0 0;">The introduction is available immediately, and a new episode unlocks each week. If the course does not appear, reply to this email and we will put it right — or WhatsApp us at +91 82175 81238.</p>
           </td></tr>
         </table>
       </td></tr>
