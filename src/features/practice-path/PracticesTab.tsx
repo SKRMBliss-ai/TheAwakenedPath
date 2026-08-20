@@ -59,8 +59,8 @@ export function PracticesTab() {
         source: form.source,
         tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
         ownWords: form.ownWords,
-        alignVirtue: form.alignVirtue || undefined,
-        alignSixfold: form.alignSixfold || undefined,
+        ...(form.alignVirtue && { alignVirtue: form.alignVirtue }),
+        ...(form.alignSixfold && { alignSixfold: form.alignSixfold }),
       });
       setForm({
         title: '', core: '', purpose: '', instructions: '', dailyLife: '',
