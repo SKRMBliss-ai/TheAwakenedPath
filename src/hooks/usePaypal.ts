@@ -43,6 +43,14 @@ function fetchPaypalConfig(): Promise<{ clientId?: string } | null> {
     return configPromise;
 }
 
+let lastToastMs = 0;
+function showDeduplicatedToast(msg: string, type: 'error' | 'success' = 'error') {
+    const now = Date.now();
+    if (now - lastToastMs < 2500) return;
+    lastToastMs = now;
+    showToast(msg, { type });
+}
+
 export const usePaypal = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     // null = not checked yet, false = backend unavailable (functions not
@@ -68,12 +76,6 @@ export const usePaypal = () => {
         amount?: number
     ) => {
         try {
-            // PayPal being unconfigured/undeployed is NOT a user-facing error:
-            // it means this payment method simply isn't offered right now. Mark
-            // it unavailable so the caller hides the button, and return quietly.
-            // Toasting here fired a red "Could not start PayPal checkout" on
-            // every keystroke of the email field, on top of a form the buyer was
-            // still filling in.
             const config = await fetchPaypalConfig();
             const clientId = config?.clientId;
             if (!clientId) {
@@ -114,15 +116,12 @@ export const usePaypal = () => {
                                 const text = await res.text().catch(() => '');
                                 if (text) errMessage = text;
                             }
-                            showToast(errMessage, { type: 'error' });
+                            showDeduplicatedToast(errMessage, 'error');
                             throw new Error(errMessage);
                         }
                         const order = await res.json();
                         return order.id;
                     } catch (err) {
-                        // onError only fires for a rejection AFTER createOrder resolves
-                        // with a valid order id — a throw in here just stalls the
-                        // button silently otherwise, so reset here too.
                         setIsProcessing(false);
                         throw err;
                     }
@@ -135,15 +134,15 @@ export const usePaypal = () => {
                             body: JSON.stringify({ orderID: data.orderID }),
                         });
                         if (!verifyRes.ok) {
-                            showToast('Payment verification failed. Please try again or contact support.', { type: 'error' });
+                            showDeduplicatedToast('Payment verification failed. Please try again or contact support.', 'error');
                             return;
                         }
                         const verification = await verifyRes.json();
                         if (verification.success) {
-                            showToast('Payment confirmed — unlocking your access.', { type: 'success' });
+                            showDeduplicatedToast('Payment confirmed — unlocking your access.', 'success');
                             onSuccess();
                         } else {
-                            showToast('Payment verification failed. Please contact support.', { type: 'error' });
+                            showDeduplicatedToast('Payment verification failed. Please contact support.', 'error');
                         }
                     } finally {
                         setIsProcessing(false);
@@ -154,7 +153,7 @@ export const usePaypal = () => {
                 },
                 onError: (err: unknown) => {
                     console.error('PayPal Error:', err);
-                    showToast('PayPal could not complete payment. Please use "Pay by Card" below.', { type: 'error' });
+                    showDeduplicatedToast('PayPal is temporarily unavailable for this merchant. Please use "Pay by Card" below.', 'error');
                     setIsProcessing(false);
                 },
             }).render(`#${containerId}`);
