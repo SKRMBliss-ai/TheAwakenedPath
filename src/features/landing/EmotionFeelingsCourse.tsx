@@ -19,6 +19,7 @@ import SacredGeometry from './components/SacredGeometry';
 import CursorGlow from './components/CursorGlow';
 import HeroMark from '../../components/site/HeroMark';
 import BodyMapShowcase from './components/BodyMapShowcase';
+import { PaypalDivider, TrustStrip, TrustBadges, ConsentCheckboxes, WhatsIncluded, OrderPromise } from '../../components/checkout';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Emotion & Feelings Course Page — /feelingsandemotioncourse
@@ -546,62 +547,8 @@ function RazorpaySubmit({ isProcessing }: { isProcessing: boolean }) {
   );
 }
 
-function PaypalDivider() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0' }}>
-      <div style={{ flex: 1, height: 1, background: 'rgba(128,128,128,0.25)' }} />
-      <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', color: 'rgba(128,128,128,0.8)', textTransform: 'uppercase' }}>or</span>
-      <div style={{ flex: 1, height: 1, background: 'rgba(128,128,128,0.25)' }} />
-    </div>
-  );
-}
 
-// Trust badges shown at the bottom of the checkout — card network logos +
-// PCI DSS / encryption / refund copy, matching the standard set by Temu,
-// Stripe, and other high-conversion checkouts.
-function TrustBadges() {
-  const badgeRadius = 4;
-  const badgeBorder = '1px solid rgba(128,128,128,0.22)';
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, marginTop: 6 }}>
-      {/* Card network logos */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {/* Visa */}
-        <svg width="40" height="26" viewBox="0 0 40 26" style={{ borderRadius: badgeRadius, border: badgeBorder }} aria-label="Visa">
-          <rect width="40" height="26" rx="4" fill="#1A1F71" />
-          <text x="20" y="18" textAnchor="middle" fill="white" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="bold" fontStyle="italic">VISA</text>
-        </svg>
-        {/* Mastercard */}
-        <svg width="40" height="26" viewBox="0 0 40 26" style={{ borderRadius: badgeRadius, border: badgeBorder }} aria-label="Mastercard">
-          <rect width="40" height="26" rx="4" fill="#252525" />
-          <circle cx="16" cy="13" r="7" fill="#EB001B" />
-          <circle cx="24" cy="13" r="7" fill="#F79E1B" />
-          <path d="M20 7.3a7 7 0 0 1 0 11.4A7 7 0 0 1 20 7.3z" fill="#FF5F00" />
-        </svg>
-        {/* Amex */}
-        <svg width="40" height="26" viewBox="0 0 40 26" style={{ borderRadius: badgeRadius, border: badgeBorder }} aria-label="American Express">
-          <rect width="40" height="26" rx="4" fill="#007BC1" />
-          <text x="20" y="17" textAnchor="middle" fill="white" fontFamily="Arial,sans-serif" fontSize="9" fontWeight="bold" letterSpacing="0.5">AMEX</text>
-        </svg>
-        {/* Google Pay */}
-        <svg width="50" height="26" viewBox="0 0 50 26" style={{ borderRadius: badgeRadius, border: badgeBorder, background: '#fff' }} aria-label="Google Pay">
-          <text x="25" y="17" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="10" fontWeight="600">
-            <tspan fill="#4285F4">G</tspan><tspan fill="#34A853">o</tspan><tspan fill="#FBBC05">o</tspan><tspan fill="#EA4335">g</tspan><tspan fill="#4285F4">le </tspan><tspan fill="#5F6368">Pay</tspan>
-          </text>
-        </svg>
-        {/* Apple Pay */}
-        <svg width="50" height="26" viewBox="0 0 50 26" style={{ borderRadius: badgeRadius, border: badgeBorder }} aria-label="Apple Pay">
-          <rect width="50" height="26" rx="4" fill="#000" />
-          <text x="25" y="17" textAnchor="middle" fill="white" fontFamily="-apple-system,Arial,sans-serif" fontSize="11" fontWeight="500"> Pay</text>
-        </svg>
-      </div>
-      {/* PCI DSS + encryption trust copy */}
-      <p style={{ fontFamily: SANS, fontSize: 10, color: 'rgba(128,128,128,0.75)', textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
-        🔒 PCI DSS Compliant · 256-bit Encrypted · 14-Day Money-Back Guarantee
-      </p>
-    </div>
-  );
-}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
@@ -636,6 +583,8 @@ export default function EmotionFeelingsCourse() {
   const [customAmount, setCustomAmount] = useState<number>(coursePricingConfig.suggested);
   const [guestName, setGuestName] = useState('');
   const [checkoutErr, setCheckoutErr] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(true);
+  const [agreeMarketing, setAgreeMarketing] = useState(true);
 
   /** Set once payment is captured. `email` is the address the purchase was
    *  keyed to — the buyer MUST sign in with it for the course to unlock, so
@@ -821,6 +770,10 @@ export default function EmotionFeelingsCourse() {
       setCheckoutErr('Please enter your name.');
       return;
     }
+    if (!agreeTerms) {
+      setCheckoutErr('Please agree to the Terms of Service and Privacy Policy.');
+      return;
+    }
     setCheckoutErr('');
     const signedInUid = getAuth().currentUser?.uid;
     const userId = signedInUid || 'guest_pending';
@@ -863,7 +816,8 @@ export default function EmotionFeelingsCourse() {
   const isPaypalFormReady =
     guestName.trim().length > 0 &&
     guestEmail.includes('@') &&
-    guestEmail.split('@')[1]?.includes('.');
+    guestEmail.split('@')[1]?.includes('.') &&
+    agreeTerms;
 
   useEffect(() => {
     if (!showCheckoutModal) return;
@@ -3088,45 +3042,11 @@ export default function EmotionFeelingsCourse() {
                 Join the Course
               </h3>
               <p style={{ fontFamily: SANS, fontSize: 13, color: inkSub, margin: '0 0 14px' }}>
-                Instant lifetime access to all 7 modules & future updates.
+                Lifetime access to all current &amp; upcoming episode drops.
               </p>
 
               {/* ── Trust strip ───────────────────────────────────────────── */}
-              <div style={{
-                display: 'flex', flexDirection: 'column', gap: 8,
-                background: isDark ? 'rgba(196,145,58,0.07)' : 'rgba(74,50,96,0.05)',
-                border: `1px solid ${isDark ? 'rgba(196,145,58,0.18)' : 'rgba(74,50,96,0.12)'}`,
-                borderRadius: 14, padding: '12px 16px', marginBottom: 20,
-              }}>
-                {/* Star rating row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ display: 'flex', gap: 2 }}>
-                    {[1,2,3,4,5].map((s) => (
-                      <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F79E1B" aria-hidden="true">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                    ))}
-                  </div>
-                  <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 700, color: ink }}>4.9</span>
-                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub }}>· 200+ students enrolled</span>
-                </div>
-                {/* Mini testimonial */}
-                <p style={{ fontFamily: SANS, fontSize: 12, color: inkSub, margin: 0, lineHeight: 1.55, fontStyle: 'italic' }}>
-                  "This course genuinely shifted something in me. The way Sim explains emotions is unlike anything I've read before."
-                  <span style={{ display: 'block', marginTop: 4, fontStyle: 'normal', fontWeight: 600, color: ink, fontSize: 11 }}>— Priya R., Mumbai</span>
-                </p>
-                {/* Guarantee pills */}
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {['✅ 14-Day Money-Back', '⚡ Instant Access', '🔒 Secure Checkout'].map((tag) => (
-                    <span key={tag} style={{
-                      fontFamily: SANS, fontSize: 10.5, fontWeight: 600,
-                      padding: '3px 9px', borderRadius: 999,
-                      background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                      color: ink,
-                    }}>{tag}</span>
-                  ))}
-                </div>
-              </div>
+              <TrustStrip isDark={isDark} ink={ink} inkSub={inkSub} />
 
               <form onSubmit={handleStartCheckout} style={{ display: 'grid', gap: 14 }}>
                 <div>
@@ -3153,9 +3073,9 @@ export default function EmotionFeelingsCourse() {
                   />
                 </div>
 
-                <div>
+                 <div>
                   <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
-                    Email Address
+                    Email Address <span style={{ textTransform: 'none', fontWeight: 400, opacity: 0.85 }}>(Your account will be created here)</span>
                   </label>
                   <input
                     type="email"
@@ -3179,7 +3099,7 @@ export default function EmotionFeelingsCourse() {
 
                 <div>
                   <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
-                    Phone Number (Optional)
+                    WhatsApp / Phone Number <span style={{ textTransform: 'none', fontWeight: 400, opacity: 0.85 }}>(For support &amp; updates)</span>
                   </label>
                   <input
                     type="tel"
@@ -3199,6 +3119,16 @@ export default function EmotionFeelingsCourse() {
                     }}
                   />
                 </div>
+
+                <ConsentCheckboxes
+                  agreeTerms={agreeTerms}
+                  setAgreeTerms={setAgreeTerms}
+                  agreeMarketing={agreeMarketing}
+                  setAgreeMarketing={setAgreeMarketing}
+                  isDark={isDark}
+                  ink={ink}
+                  inkSub={inkSub}
+                />
 
                 {checkoutErr && (
                   <p style={{ fontFamily: SANS, fontSize: 12, color: '#E53935', margin: 0 }}>
@@ -3225,6 +3155,8 @@ export default function EmotionFeelingsCourse() {
                     dark={isDark}
                   />
                 </div>
+
+                <WhatsIncluded isDark={isDark} ink={ink} inkSub={inkSub} />
 
                 <div style={{ marginTop: 10, padding: '14px 16px', borderRadius: 14, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
@@ -3292,7 +3224,9 @@ export default function EmotionFeelingsCourse() {
                   </>
                 )}
 
-                <TrustBadges />
+                <OrderPromise brandName="Mind Gym" isDark={isDark} ink={ink} inkSub={inkSub} />
+
+                <TrustBadges isDark={isDark} />
               </form>
             </motion.div>
           </motion.div>
