@@ -19,6 +19,7 @@ import SacredGeometry from './components/SacredGeometry';
 import CursorGlow from './components/CursorGlow';
 import HeroMark from '../../components/site/HeroMark';
 import BodyMapShowcase from './components/BodyMapShowcase';
+import CheckoutPage from './components/CheckoutPage';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Emotion & Feelings Course Page — /feelingsandemotioncourse
@@ -519,43 +520,6 @@ function getRegionPricing(isAllAccess = false) {
   return dict.USD;
 }
 
-// Card checkout submit button (Razorpay). Pulled out of the JSX below because
-// it now needs to render on either side of the PayPal buttons depending on
-// currency, rather than being the sole checkout action.
-function RazorpaySubmit({ isProcessing }: { isProcessing: boolean }) {
-  return (
-    <button
-      type="submit"
-      disabled={isProcessing}
-      style={{
-        padding: '14px',
-        borderRadius: 999,
-        cursor: 'pointer',
-        background: '#4A3260',
-        color: '#fff',
-        border: 'none',
-        fontFamily: SANS,
-        fontSize: 14,
-        fontWeight: 800,
-        marginTop: 8,
-        width: '100%',
-      }}
-    >
-      {isProcessing ? 'Processing...' : 'Pay by Card →'}
-    </button>
-  );
-}
-
-function PaypalDivider() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0' }}>
-      <div style={{ flex: 1, height: 1, background: 'rgba(128,128,128,0.25)' }} />
-      <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', color: 'rgba(128,128,128,0.8)', textTransform: 'uppercase' }}>or</span>
-      <div style={{ flex: 1, height: 1, background: 'rgba(128,128,128,0.25)' }} />
-    </div>
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -580,12 +544,47 @@ export default function EmotionFeelingsCourse() {
   const [reflectionResponse, setReflectionResponse] = useState<string | null>(null);
   const [showVideoModal, setShowVideoModal] = useState<boolean>(false);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string>('');
-  const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
+  // Checkout lives at its own URL rather than in a modal: the buyer keeps a
+  // working back button, a reload doesn't dump them back on the sales page,
+  // and on mobile the form gets the whole screen instead of a dialog stacked
+  // over a scrolling page behind it.
+  const [showCheckout, setShowCheckout] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.location.pathname.replace(/\/+$/, '').toLowerCase().endsWith('/checkout')
+  );
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const openCheckout = () => {
+    if (typeof window !== 'undefined' && !showCheckout) {
+      window.history.pushState({ checkout: true }, '', '/feelingsandemotioncourse/checkout');
+      window.scrollTo(0, 0);
+    }
+    setShowCheckout(true);
+  };
+
+  /** Leaves via history so the browser's own Back and this button land in the
+   *  same place; only rewrites the URL directly when checkout was entered by
+   *  deep link and there is no course page to go back to. */
+  const closeCheckout = () => {
+    if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().includes('/checkout')) {
+      if (window.history.state?.checkout) window.history.back();
+      else window.history.replaceState({}, '', '/feelingsandemotioncourse');
+    }
+    setShowCheckout(false);
+  };
+
+  // Back/forward must move between the sales page and checkout, not out of the
+  // site entirely — the URL changes without a navigation, so nothing else syncs
+  // this state to it.
+  useEffect(() => {
+    const onPop = () => {
+      setShowCheckout(window.location.pathname.replace(/\/+$/, '').toLowerCase().endsWith('/checkout'));
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   // Guest checkout state
   const [guestEmail, setGuestEmail] = useState('');
-  const [guestPhone, setGuestPhone] = useState('');
   const [customAmount, setCustomAmount] = useState<number>(coursePricingConfig.suggested);
   const [guestName, setGuestName] = useState('');
   const [checkoutErr, setCheckoutErr] = useState('');
@@ -789,7 +788,7 @@ export default function EmotionFeelingsCourse() {
       // and Razorpay's risk engine declined foreign cards on the currency mismatch.
       activePricingConfig.currency,
       () => {
-        setShowCheckoutModal(false);
+        closeCheckout();
         // A guest purchase is stored server-side under guestPurchases/{email}
         // and only merges into an account when someone signs in with that SAME
         // address (onUserCreated / linkGuestPurchases). Leave that hint where
@@ -801,7 +800,7 @@ export default function EmotionFeelingsCourse() {
         setPurchaseSuccess({ email: paidEmail, wasSignedIn: Boolean(signedInUid) });
         trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ${activePricingConfig.symbol}${customAmount}`, paidEmail);
       },
-      guestPhone.trim(),
+      '',
       customAmount
     );
   };
@@ -812,7 +811,7 @@ export default function EmotionFeelingsCourse() {
   // the form — PayPal has no separate "submit" step to validate them first the
   // way the Razorpay form's onSubmit does.
   useEffect(() => {
-    if (!showCheckoutModal) return;
+    if (!showCheckout) return;
     if (!guestName.trim() || !guestEmail.includes('@')) return;
     const signedInUid = getAuth().currentUser?.uid;
     const userId = signedInUid || 'guest_pending';
@@ -829,24 +828,46 @@ export default function EmotionFeelingsCourse() {
         'emotion_feelings_course',
         activePricingConfig.currency,
         () => {
-          setShowCheckoutModal(false);
+          closeCheckout();
           if (!signedInUid && paidEmail) {
             try { localStorage.setItem('pendingCourseClaimEmail', paidEmail.toLowerCase()); } catch { /* private mode */ }
           }
           setPurchaseSuccess({ email: paidEmail, wasSignedIn: Boolean(signedInUid) });
           trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ${activePricingConfig.symbol}${customAmount}`, paidEmail);
         },
-        guestPhone.trim(),
+        '',
         customAmount
       );
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCheckoutModal, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
+  }, [showCheckout, guestName, guestEmail, customAmount, activePricingConfig.currency]);
 
   /** Hand off to the app. Full page load, not a router push — Mind Gym is a
    *  separate entry point and needs a fresh auth/entitlement bootstrap. */
   const goToMindGym = () => { window.location.href = '/mindgym'; };
+
+  if (showCheckout && !purchaseSuccess) {
+    return (
+      <CheckoutPage
+        isDark={isDark}
+        selectedPlan={selectedPlan}
+        pricing={activePricingConfig}
+        guestName={guestName}
+        onGuestName={setGuestName}
+        guestEmail={guestEmail}
+        onGuestEmail={setGuestEmail}
+        amount={customAmount}
+        onAmount={setCustomAmount}
+        error={checkoutErr}
+        onSubmit={handleStartCheckout}
+        isProcessing={isProcessing}
+        showPaypal={isPaypalAvailable !== false && Boolean(guestName.trim()) && guestEmail.includes('@')}
+        isPaypalProcessing={isPaypalProcessing}
+        onClose={closeCheckout}
+      />
+    );
+  }
 
   return (
     <div
@@ -880,7 +901,7 @@ export default function EmotionFeelingsCourse() {
           cta={{
             label: 'Join the Course',
             href: '#pricing',
-            onClick: () => setShowCheckoutModal(true),
+            onClick: () => openCheckout(),
           }}
         />
       </div>
@@ -2364,7 +2385,7 @@ export default function EmotionFeelingsCourse() {
             </div>
 
             <button
-              onClick={() => setShowCheckoutModal(true)}
+              onClick={() => openCheckout()}
               className="si-btn-breathe"
               style={{
                 width: '100%',
@@ -2613,7 +2634,7 @@ export default function EmotionFeelingsCourse() {
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <button
-            onClick={() => setShowCheckoutModal(true)}
+            onClick={() => openCheckout()}
             className="si-btn-breathe"
             style={{
               padding: '16px 40px',
@@ -2942,201 +2963,6 @@ export default function EmotionFeelingsCourse() {
           </motion.div>
         )}
 
-        {showCheckoutModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 100,
-              background: 'rgba(0,0,0,0.75)',
-              backdropFilter: 'blur(12px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 24,
-            }}
-            onClick={() => setShowCheckoutModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 16 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 16 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: '100%',
-                maxWidth: 480,
-                background: isDark ? '#1A1222' : '#F9F5EF',
-                border: `1px solid ${borderC}`,
-                borderRadius: 28,
-                padding: 36,
-                boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
-                position: 'relative',
-              }}
-            >
-              <button
-                onClick={() => setShowCheckoutModal(false)}
-                style={{
-                  position: 'absolute',
-                  top: 20,
-                  right: 20,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: inkSub,
-                }}
-              >
-                <X size={20} />
-              </button>
-
-              <h3 style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 400, color: ink, margin: '0 0 6px' }}>
-                Join the Course
-              </h3>
-              <p style={{ fontFamily: SANS, fontSize: 13, color: inkSub, margin: '0 0 24px' }}>
-                Instant lifetime access to all 7 modules & future updates.
-              </p>
-
-              <form onSubmit={handleStartCheckout} style={{ display: 'grid', gap: 14 }}>
-                <div>
-                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Your name"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: 12,
-                      border: `1px solid ${borderC}`,
-                      background: 'transparent',
-                      color: ink,
-                      fontFamily: SANS,
-                      fontSize: 14,
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="you@example.com"
-                    value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: 12,
-                      border: `1px solid ${borderC}`,
-                      background: 'transparent',
-                      color: ink,
-                      fontFamily: SANS,
-                      fontSize: 14,
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
-                    Phone Number (Optional)
-                  </label>
-                  <input
-                    type="tel"
-                    placeholder="+91 98765 43210"
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: 12,
-                      border: `1px solid ${borderC}`,
-                      background: 'transparent',
-                      color: ink,
-                      fontFamily: SANS,
-                      fontSize: 14,
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
-                {checkoutErr && (
-                  <p style={{ fontFamily: SANS, fontSize: 12, color: '#E53935', margin: 0 }}>
-                    {checkoutErr}
-                  </p>
-                )}
-
-                <div style={{ marginTop: 8, marginBottom: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <label style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub }}>
-                      Select Contribution (Pay What You Feel)
-                    </label>
-                    <span style={{ fontSize: 10, fontWeight: 800, color: isDark ? '#C4913A' : '#8B6A1A', textTransform: 'uppercase', background: isDark ? 'rgba(196,145,58,0.15)' : 'rgba(74,50,96,0.08)', padding: '2px 8px', borderRadius: 999 }}>
-                      {selectedPlan === 'course' ? 'Course Only' : 'Whole App + Course 🔥'}
-                    </span>
-                  </div>
-                  <PriceSlider
-                    currency={activePricingConfig.currency}
-                    min={activePricingConfig.min}
-                    suggested={activePricingConfig.suggested}
-                    max={activePricingConfig.max}
-                    value={customAmount}
-                    onChange={(val) => setCustomAmount(val)}
-                    dark={isDark}
-                  />
-                </div>
-
-                <div style={{ marginTop: 10, padding: '14px 16px', borderRadius: 14, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>Total Amount</span>
-                    <span style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub }}>{selectedPlan === 'course' ? 'Feelings & Emotions Course' : 'Whole App All-Access Pass'}</span>
-                  </div>
-                  <span style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260' }}>
-                    {activePricingConfig.symbol}{customAmount.toLocaleString()}
-                  </span>
-                </div>
-
-                {/* Card checkout (Razorpay) and PayPal/Apple Pay are both offered —
-                    deliberately, not gated behind a region guess. A wrong region
-                    detection previously left overseas buyers stuck on a form
-                    quoting the wrong currency with no alternative; whichever
-                    button the buyer actually reaches now still works. */}
-                {isPaypalAvailable === false ? (
-                  // PayPal backend unreachable (functions not deployed, or no
-                  // client id configured). Show card checkout on its own rather
-                  // than an empty slot and a divider leading nowhere.
-                  <RazorpaySubmit isProcessing={isProcessing} />
-                ) : activePricingConfig.currency === 'INR' ? (
-                  <>
-                    <RazorpaySubmit isProcessing={isProcessing} />
-                    <PaypalDivider />
-                    <div id="paypal-button-container" style={{ minHeight: isPaypalProcessing ? 45 : undefined }} />
-                  </>
-                ) : (
-                  <>
-                    <div id="paypal-button-container" style={{ minHeight: isPaypalProcessing ? 45 : undefined }} />
-                    <PaypalDivider />
-                    <RazorpaySubmit isProcessing={isProcessing} />
-                  </>
-                )}
-
-                <p style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub, textAlign: 'center', margin: 0 }}>
-                  🔒 256-Bit Encrypted · 14-Day Money-Back Guarantee
-                </p>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
       </AnimatePresence>
 
       {/* Sticky bottom CTA — the header's "Join the Course" button is hidden
@@ -3144,7 +2970,7 @@ export default function EmotionFeelingsCourse() {
           left mobile scrollers with no always-visible way to start checkout.
           Hidden while the checkout modal or success screen already covers the
           page, so it never sits under (or duplicates) those. */}
-      {!showCheckoutModal && !purchaseSuccess && (
+      {!showCheckout && !purchaseSuccess && (
         <div
           style={{
             position: 'fixed',
@@ -3162,7 +2988,7 @@ export default function EmotionFeelingsCourse() {
           }}
         >
           <button
-            onClick={() => setShowCheckoutModal(true)}
+            onClick={() => openCheckout()}
             style={{
               display: 'block',
               width: '100%',

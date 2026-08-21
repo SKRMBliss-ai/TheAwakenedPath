@@ -47,6 +47,7 @@ export default function SocialFab({ raised = false, onTrack }: Props) {
 
   return (
     <div
+      className="si-floating-dock"
       style={{
         position: 'fixed',
         right: isMobile ? 16 : 24,

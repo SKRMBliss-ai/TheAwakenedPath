@@ -1152,3 +1152,9 @@ html:not(.dark) {
   --accent-solid:         #695E68;
   --on-accent:            #FFFFFF;
 }
+
+/* Checkout is a payment page, not a browsing surface: the site-wide floating
+   docks sit over the pay button on small screens and pull attention off the
+   only action that matters here. CheckoutPage toggles this class while it is
+   mounted. */
+body.si-checkout-open .si-floating-dock { display: none !important; }
