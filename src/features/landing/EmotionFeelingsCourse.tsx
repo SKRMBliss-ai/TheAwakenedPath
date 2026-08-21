@@ -596,6 +596,34 @@ export default function EmotionFeelingsCourse() {
    *  instruction entirely, since the grant already landed on their account. */
   const [purchaseSuccess, setPurchaseSuccess] = useState<{ email: string; wasSignedIn: boolean } | null>(null);
 
+  /** How far the bottom of the LAYOUT viewport sits below the bottom of the
+   *  VISUAL viewport, in px.
+   *
+   *  iOS Safari positions `position: fixed` against the layout viewport, which
+   *  extends behind the browser's bottom toolbar. That toolbar is hidden while
+   *  you scroll down but slides back the instant you scroll up — so a bar
+   *  pinned to `bottom: 0` slips behind it and reads as "the button
+   *  disappeared when I scrolled up", which is exactly what it did. Offsetting
+   *  by this value keeps the bar against the visible edge in both scroll
+   *  directions, and also lifts it clear of the on-screen keyboard. */
+  const [viewportInset, setViewportInset] = useState(0);
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!vv) return;
+    const sync = () => {
+      // Round down: a fractional inset leaves a hairline of page showing under
+      // the bar as Safari animates its toolbar.
+      setViewportInset(Math.max(0, Math.floor(window.innerHeight - vv.height - vv.offsetTop)));
+    };
+    sync();
+    vv.addEventListener('resize', sync);
+    vv.addEventListener('scroll', sync);
+    return () => {
+      vv.removeEventListener('resize', sync);
+      vv.removeEventListener('scroll', sync);
+    };
+  }, []);
+
   // 60-Second Teaser State
   const [teaserVideo, setTeaserVideo] = useState<{ id: string; title: string; episodeNum: number; startTime?: number } | null>(null);
   const [teaserTimer, setTeaserTimer] = useState<number>(60);
@@ -623,7 +651,7 @@ export default function EmotionFeelingsCourse() {
   }, [teaserVideo]);
 
   const { checkOut, isProcessing } = useRazorpay();
-  const { renderCheckout: renderPaypalCheckout, isProcessing: isPaypalProcessing } = usePaypal();
+  const { renderCheckout: renderPaypalCheckout, isProcessing: isPaypalProcessing, isAvailable: isPaypalAvailable } = usePaypal();
 
   // Master SEO + AEO + GEO Schema setup
   usePageSeo({
@@ -790,23 +818,29 @@ export default function EmotionFeelingsCourse() {
     const userId = signedInUid || 'guest_pending';
     const paidEmail = guestEmail.trim();
 
-    renderPaypalCheckout(
-      'paypal-button-container',
-      userId,
-      paidEmail,
-      'emotion_feelings_course',
-      activePricingConfig.currency,
-      () => {
-        setShowCheckoutModal(false);
-        if (!signedInUid && paidEmail) {
-          try { localStorage.setItem('pendingCourseClaimEmail', paidEmail.toLowerCase()); } catch { /* private mode */ }
-        }
-        setPurchaseSuccess({ email: paidEmail, wasSignedIn: Boolean(signedInUid) });
-        trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ${activePricingConfig.symbol}${customAmount}`, paidEmail);
-      },
-      guestPhone.trim(),
-      customAmount
-    );
+    // Debounced: these deps include the text inputs, so re-rendering the
+    // buttons synchronously meant one full create/render cycle per keystroke
+    // while the buyer was still typing their email.
+    const timer = setTimeout(() => {
+      renderPaypalCheckout(
+        'paypal-button-container',
+        userId,
+        paidEmail,
+        'emotion_feelings_course',
+        activePricingConfig.currency,
+        () => {
+          setShowCheckoutModal(false);
+          if (!signedInUid && paidEmail) {
+            try { localStorage.setItem('pendingCourseClaimEmail', paidEmail.toLowerCase()); } catch { /* private mode */ }
+          }
+          setPurchaseSuccess({ email: paidEmail, wasSignedIn: Boolean(signedInUid) });
+          trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ${activePricingConfig.symbol}${customAmount}`, paidEmail);
+        },
+        guestPhone.trim(),
+        customAmount
+      );
+    }, 500);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showCheckoutModal, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
 
@@ -3077,7 +3111,12 @@ export default function EmotionFeelingsCourse() {
                     detection previously left overseas buyers stuck on a form
                     quoting the wrong currency with no alternative; whichever
                     button the buyer actually reaches now still works. */}
-                {activePricingConfig.currency === 'INR' ? (
+                {isPaypalAvailable === false ? (
+                  // PayPal backend unreachable (functions not deployed, or no
+                  // client id configured). Show card checkout on its own rather
+                  // than an empty slot and a divider leading nowhere.
+                  <RazorpaySubmit isProcessing={isProcessing} />
+                ) : activePricingConfig.currency === 'INR' ? (
                   <>
                     <RazorpaySubmit isProcessing={isProcessing} />
                     <PaypalDivider />
@@ -3111,7 +3150,9 @@ export default function EmotionFeelingsCourse() {
             position: 'fixed',
             left: 0,
             right: 0,
-            bottom: 0,
+            // Not `0`: see viewportInset — on iOS Safari `bottom: 0` puts this
+            // behind the browser's bottom toolbar whenever it is showing.
+            bottom: viewportInset,
             zIndex: 90,
             background: isDark ? 'rgba(13,10,18,0.92)' : 'rgba(249,245,239,0.92)',
             backdropFilter: 'blur(10px)',

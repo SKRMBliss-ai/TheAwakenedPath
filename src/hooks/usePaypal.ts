@@ -30,8 +30,25 @@ function loadPaypalSdk(clientId: string, currency: string): Promise<void> {
     return sdkLoad;
 }
 
+// Cached across mounts: whether the PayPal backend answered at all. Without
+// this, every keystroke that re-runs renderCheckout re-fetches the same failing
+// endpoint.
+let configPromise: Promise<{ clientId?: string } | null> | null = null;
+
+function fetchPaypalConfig(): Promise<{ clientId?: string } | null> {
+    if (configPromise) return configPromise;
+    configPromise = fetch('/api/paypal-config')
+        .then((res) => (res.ok ? res.json() : null))
+        .catch(() => null);
+    return configPromise;
+}
+
 export const usePaypal = () => {
     const [isProcessing, setIsProcessing] = useState(false);
+    // null = not checked yet, false = backend unavailable (functions not
+    // deployed, or PAYPAL_CLIENT_ID unset). The caller hides the PayPal UI on
+    // false so buyers see only working options rather than a dead button.
+    const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
 
     /**
      * Renders PayPal's Buttons (which include Apple Pay on supporting
@@ -51,10 +68,19 @@ export const usePaypal = () => {
         amount?: number
     ) => {
         try {
-            const configRes = await fetch('/api/paypal-config');
-            if (!configRes.ok) throw new Error('Failed to load PayPal config');
-            const { clientId } = await configRes.json();
-            if (!clientId) throw new Error('PayPal is not configured');
+            // PayPal being unconfigured/undeployed is NOT a user-facing error:
+            // it means this payment method simply isn't offered right now. Mark
+            // it unavailable so the caller hides the button, and return quietly.
+            // Toasting here fired a red "Could not start PayPal checkout" on
+            // every keystroke of the email field, on top of a form the buyer was
+            // still filling in.
+            const config = await fetchPaypalConfig();
+            const clientId = config?.clientId;
+            if (!clientId) {
+                setIsAvailable(false);
+                return;
+            }
+            setIsAvailable(true);
 
             await loadPaypalSdk(clientId, currency);
 
@@ -118,11 +144,15 @@ export const usePaypal = () => {
                 },
             }).render(`#${containerId}`);
         } catch (error) {
+            // Reached only once PayPal IS configured — i.e. the SDK failed to
+            // load or Buttons failed to render. Hide the dead button rather than
+            // leaving one that cannot be clicked to completion; the buyer still
+            // has the card option in the same form.
             console.error('PayPal Error:', error);
-            showToast('Could not start PayPal checkout. Please try again.', { type: 'error' });
+            setIsAvailable(false);
             setIsProcessing(false);
         }
     };
 
-    return { renderCheckout, isProcessing };
+    return { renderCheckout, isProcessing, isAvailable };
 };
