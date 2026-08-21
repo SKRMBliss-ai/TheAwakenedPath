@@ -4,6 +4,7 @@ import { showToast } from '../lib/toast';
 declare global {
     interface Window {
         paypal: any;
+        google: any;
     }
 }
 
@@ -21,13 +22,29 @@ function loadPaypalSdk(clientId: string, currency: string): Promise<void> {
         // second <script> tag to override the first.
         document.querySelectorAll('script[data-paypal-sdk]').forEach((el) => el.remove());
         const script = document.createElement('script');
-        script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&components=buttons,applepay&intent=capture`;
+        // googlepay component added so PayPal can power the Google Pay button
+        script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&components=buttons,applepay,googlepay&intent=capture`;
         script.dataset.paypalSdk = 'true';
         script.onload = () => resolve();
         script.onerror = () => reject(new Error('Failed to load PayPal SDK'));
         document.head.appendChild(script);
     });
     return sdkLoad;
+}
+
+// Load the Google Pay JS library (only once)
+let googlePayLoad: Promise<void> | null = null;
+function loadGooglePaySdk(): Promise<void> {
+    if (googlePayLoad) return googlePayLoad;
+    googlePayLoad = new Promise((resolve, reject) => {
+        if (window.google?.payments?.api) { resolve(); return; }
+        const script = document.createElement('script');
+        script.src = 'https://pay.google.com/gp/p/js/pay.js';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load Google Pay SDK'));
+        document.head.appendChild(script);
+    });
+    return googlePayLoad;
 }
 
 // Cached across mounts: whether the PayPal backend answered at all. Without
@@ -57,6 +74,7 @@ export const usePaypal = () => {
     // deployed, or PAYPAL_CLIENT_ID unset). The caller hides the PayPal UI on
     // false so buyers see only working options rather than a dead button.
     const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+    const [isGooglePayAvailable, setIsGooglePayAvailable] = useState(false);
 
     /**
      * Renders PayPal's Buttons (which include Apple Pay on supporting
@@ -168,5 +186,173 @@ export const usePaypal = () => {
         }
     };
 
-    return { renderCheckout, isProcessing, isAvailable };
+    /**
+     * Renders a Google Pay button (powered by PayPal's Google Pay component)
+     * into `containerId`. Only shows the button if the device/browser supports
+     * Google Pay and the user has a payment method saved.
+     *
+     * Flow: loadSDKs → googlepay.config() → isReadyToPay → createButton
+     *       → onClick: createOrder → loadPaymentData → confirmOrder → verify
+     */
+    const renderGooglePay = async (
+        containerId: string,
+        userId: string,
+        userEmail: string,
+        courseId: string,
+        currency: string,
+        onSuccess: () => void,
+        userPhone?: string,
+        amount?: number
+    ) => {
+        try {
+            const config = await fetchPaypalConfig();
+            const clientId = config?.clientId;
+            if (!clientId) return;
+
+            // Load both SDKs in parallel
+            await Promise.all([
+                loadPaypalSdk(clientId, currency),
+                loadGooglePaySdk(),
+            ]);
+
+            // PayPal's Google Pay component may not be available in all regions
+            if (!window.paypal?.Googlepay) {
+                console.info('PayPal Googlepay component not available');
+                return;
+            }
+
+            const googlepay = window.paypal.Googlepay();
+
+            // Get PayPal's Google Pay merchant configuration
+            const gpConfig = await googlepay.config();
+
+            // Determine environment from client id prefix
+            const environment = clientId.startsWith('AZ') ? 'PRODUCTION' : 'TEST';
+
+            // orderId captured between createOrder and confirmOrder callbacks
+            let pendingOrderId: string | null = null;
+
+            const onPaymentAuthorized = async (paymentData: any) => {
+                try {
+                    setIsProcessing(true);
+                    if (!pendingOrderId) throw new Error('No pending order');
+
+                    const result = await googlepay.confirmOrder({
+                        orderId: pendingOrderId,
+                        paymentMethodData: paymentData.paymentMethodData,
+                    });
+
+                    if (result?.status !== 'APPROVED') {
+                        showDeduplicatedToast('Google Pay payment could not be approved. Please try another method.', 'error');
+                        setIsProcessing(false);
+                        return { transactionState: 'ERROR' as const };
+                    }
+
+                    // Verify on backend
+                    const verifyRes = await fetch('/api/paypal-verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderID: pendingOrderId }),
+                    });
+                    const verification = await verifyRes.json();
+                    if (verification.success) {
+                        showDeduplicatedToast('Payment confirmed — unlocking your access.', 'success');
+                        onSuccess();
+                        setIsProcessing(false);
+                        return { transactionState: 'SUCCESS' as const };
+                    } else {
+                        showDeduplicatedToast('Payment verification failed. Please contact support.', 'error');
+                        setIsProcessing(false);
+                        return { transactionState: 'ERROR' as const };
+                    }
+                } catch (err) {
+                    console.error('Google Pay confirm error:', err);
+                    setIsProcessing(false);
+                    return { transactionState: 'ERROR' as const };
+                }
+            };
+
+            const paymentsClient = new window.google.payments.api.PaymentsClient({
+                environment,
+                paymentDataCallbacks: { onPaymentAuthorized },
+            });
+
+            // Check if this browser/device can use Google Pay with an existing method
+            const { result: isReady } = await paymentsClient.isReadyToPay({
+                apiVersion: 2,
+                apiVersionMinor: 0,
+                allowedPaymentMethods: gpConfig.allowedPaymentMethods,
+                existingPaymentMethodRequired: true,
+            });
+
+            if (!isReady) {
+                // Device doesn't support Google Pay or user has no saved cards
+                setIsGooglePayAvailable(false);
+                return;
+            }
+
+            setIsGooglePayAvailable(true);
+
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+
+            const button = paymentsClient.createButton({
+                onClick: async () => {
+                    try {
+                        setIsProcessing(true);
+                        // Create a PayPal order first — same endpoint as the regular flow
+                        const res = await fetch('/api/paypal-order', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                courseId, userId, currency,
+                                guestEmail: userEmail || '', guestPhone: userPhone || '',
+                                ...(amount != null ? { amount } : {}),
+                            }),
+                        });
+                        if (!res.ok) {
+                            showDeduplicatedToast('Could not start Google Pay. Please try another method.', 'error');
+                            setIsProcessing(false);
+                            return;
+                        }
+                        const order = await res.json();
+                        pendingOrderId = order.id;
+
+                        // Present Google Pay sheet
+                        await paymentsClient.loadPaymentData({
+                            apiVersion: 2,
+                            apiVersionMinor: 0,
+                            allowedPaymentMethods: gpConfig.allowedPaymentMethods,
+                            transactionInfo: {
+                                totalPriceStatus: 'FINAL',
+                                totalPrice: String(amount ?? 2),
+                                currencyCode: currency,
+                                countryCode: 'US',
+                            },
+                            merchantInfo: gpConfig.merchantInfo,
+                            callbackIntents: ['PAYMENT_AUTHORIZATION'],
+                        });
+                    } catch (err: any) {
+                        // statusCode 'CANCELED' means user dismissed — not an error
+                        if (err?.statusCode !== 'CANCELED') {
+                            console.error('Google Pay error:', err);
+                            showDeduplicatedToast('Google Pay could not complete. Please try another method.', 'error');
+                        }
+                        setIsProcessing(false);
+                    }
+                },
+                buttonColor: 'black',
+                buttonType: 'pay',
+                buttonSizeMode: 'fill',
+            });
+
+            container.appendChild(button);
+        } catch (err) {
+            console.error('Google Pay setup error:', err);
+            setIsGooglePayAvailable(false);
+        }
+    };
+
+    return { renderCheckout, renderGooglePay, isProcessing, isAvailable, isGooglePayAvailable };
 };
