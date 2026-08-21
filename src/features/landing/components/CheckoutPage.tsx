@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { ArrowLeft, Check, Lock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, Check, ChevronDown, Lock } from 'lucide-react';
 import PriceSlider from '../../../components/ui/PriceSlider';
 import { TrustStrip, TrustBadges, ConsentCheckboxes } from '../../../components/checkout';
 
@@ -62,6 +62,14 @@ const INCLUDED = {
   ],
 };
 
+const COMMITMENTS = [
+  { icon: '🌿', title: 'Instant access to inner practices', body: 'Stream released episodes, somatic releases and guided reflections the moment you join.' },
+  { icon: '✨', title: 'Somatic emotional regulation', body: 'Guided by Sim Katyal, move beyond overthinking into bodily presence and nervous-system ease.' },
+  { icon: '🕊️', title: 'Dedicated guidance & space', body: 'Structured practices, daily reflection tools and ongoing support for your inner growth.' },
+  { icon: '⏳', title: 'Self-paced lifetime learning', body: 'Practice at your own rhythm — unlimited access to every current and upcoming episode.' },
+  { icon: '🛡️', title: '14-day money-back guarantee', body: "Doesn't resonate within 14 days? Full refund, no questions asked." },
+];
+
 /**
  * Dedicated checkout page (not a modal). Payment lives on its own URL so the
  * buyer keeps a back button, a shareable/refreshable state and — on mobile —
@@ -80,12 +88,25 @@ export default function CheckoutPage({
     return () => document.body.classList.remove('si-checkout-open');
   }, []);
 
+  // Collapsed by default — five paragraphs of "why trust us" copy ahead of a
+  // form the buyer came to fill in was pure friction. It's here for whoever
+  // wants it, not forced on everyone.
+  const [commitmentOpen, setCommitmentOpen] = useState(false);
+
   const ink = isDark ? '#EDE9E3' : '#2A2118';
   const inkSub = isDark ? 'rgba(237,233,227,0.6)' : '#6B5744';
   const pageBg = isDark ? '#0D0A12' : '#FBF8F3';
-  const cardBg = isDark ? 'rgba(255,255,255,0.04)' : '#FFFFFF';
-  const borderC = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(196,181,160,0.45)';
+  const cardBg = isDark ? 'rgba(255,255,255,0.035)' : '#FFFFFF';
+  const borderC = isDark ? 'rgba(255,255,255,0.09)' : 'rgba(196,181,160,0.4)';
   const accent = isDark ? GOLD : PLUM;
+  const cardShadow = isDark ? '0 12px 32px rgba(0,0,0,0.28)' : '0 12px 32px rgba(74,50,96,0.06)';
+
+  const card: React.CSSProperties = {
+    background: cardBg,
+    border: `1px solid ${borderC}`,
+    borderRadius: 18,
+    boxShadow: cardShadow,
+  };
 
   const field: React.CSSProperties = {
     width: '100%',
@@ -97,6 +118,7 @@ export default function CheckoutPage({
     fontFamily: SANS,
     fontSize: 15, // <16px triggers an iOS Safari zoom-on-focus; 15 is the floor that doesn't
     outline: 'none',
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
   };
   const label: React.CSSProperties = {
     display: 'block', fontFamily: SANS, fontSize: 10.5, fontWeight: 700,
@@ -109,12 +131,14 @@ export default function CheckoutPage({
     <button
       type="submit"
       disabled={isProcessing}
+      className="co-pay-btn"
       style={{
         width: '100%', padding: '15px', borderRadius: 999,
         cursor: isProcessing ? 'wait' : 'pointer',
         background: PLUM, color: '#fff', border: 'none',
         fontFamily: SANS, fontSize: 14.5, fontWeight: 800,
         opacity: isProcessing ? 0.7 : 1,
+        boxShadow: '0 8px 20px rgba(74,50,96,0.28)',
       }}
     >
       {isProcessing ? 'Processing…' : `Pay ${pricing.symbol}${amount.toLocaleString()} by Card`}
@@ -135,10 +159,21 @@ export default function CheckoutPage({
 
   return (
     <div style={{ minHeight: '100vh', background: pageBg, color: ink }}>
+      {/* Focus rings on inline-styled inputs need real CSS (pseudo-classes
+          can't be inline); scoped by class so it only touches this page. */}
+      <style>{`
+        .co-field:focus { border-color: ${accent} !important; box-shadow: 0 0 0 3px ${isDark ? 'rgba(196,145,58,0.18)' : 'rgba(74,50,96,0.12)'}; }
+        .co-pay-btn:not(:disabled):hover { filter: brightness(1.08); }
+        .co-commitment-toggle:hover { opacity: 0.75; }
+        @media (min-width: 861px) {
+          .co-aside { position: sticky; top: 84px; }
+        }
+      `}</style>
+
       <header
         style={{
           display: 'flex', alignItems: 'center', gap: 12,
-          padding: '16px 20px', borderBottom: `1px solid ${borderC}`,
+          padding: '14px 20px', borderBottom: `1px solid ${borderC}`,
           position: 'sticky', top: 0, zIndex: 10,
           background: pageBg,
         }}
@@ -160,27 +195,27 @@ export default function CheckoutPage({
 
       <main
         style={{
-          maxWidth: 960, margin: '0 auto', padding: '28px 20px 56px',
-          display: 'grid', gap: 24,
+          maxWidth: 960, margin: '0 auto', padding: '24px 20px 56px',
+          display: 'grid', gap: 20,
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           alignItems: 'start',
         }}
       >
         {/* Payment column */}
-        <section style={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 20, padding: 24 }}>
-          <h1 style={{ fontFamily: SERIF, fontSize: 30, fontWeight: 400, margin: '0 0 4px' }}>Complete your enrolment</h1>
-          <p style={{ fontFamily: SANS, fontSize: 13, color: inkSub, margin: '0 0 16px' }}>
+        <section style={{ ...card, padding: 22 }}>
+          <h1 style={{ fontFamily: SERIF, fontSize: 27, fontWeight: 400, margin: '0 0 4px' }}>Complete your enrolment</h1>
+          <p style={{ fontFamily: SANS, fontSize: 12.5, color: inkSub, margin: '0 0 14px' }}>
             Takes under a minute. Access opens the moment payment clears.
           </p>
 
           <TrustStrip isDark={isDark} ink={ink} inkSub={inkSub} />
 
-          <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14 }}>
+          <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
             <div>
               <label style={label} htmlFor="co-name">Full name</label>
               <input
                 id="co-name" type="text" required autoComplete="name" placeholder="Your name"
-                value={guestName} onChange={(e) => onGuestName(e.target.value)} style={field}
+                value={guestName} onChange={(e) => onGuestName(e.target.value)} style={field} className="co-field"
               />
             </div>
 
@@ -188,7 +223,7 @@ export default function CheckoutPage({
               <label style={label} htmlFor="co-email">Email address</label>
               <input
                 id="co-email" type="email" required autoComplete="email" placeholder="you@example.com"
-                value={guestEmail} onChange={(e) => onGuestEmail(e.target.value)} style={field}
+                value={guestEmail} onChange={(e) => onGuestEmail(e.target.value)} style={field} className="co-field"
               />
               <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: '6px 0 0' }}>
                 Sign in with this email to unlock the course.
@@ -199,7 +234,7 @@ export default function CheckoutPage({
               <label style={label} htmlFor="co-phone">WhatsApp / Phone <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 500 }}>(for support &amp; updates)</span></label>
               <input
                 id="co-phone" type="tel" autoComplete="tel" placeholder="+1 (555) 000-0000"
-                value={guestPhone} onChange={(e) => onGuestPhone(e.target.value)} style={field}
+                value={guestPhone} onChange={(e) => onGuestPhone(e.target.value)} style={field} className="co-field"
               />
             </div>
 
@@ -229,12 +264,12 @@ export default function CheckoutPage({
             <div
               style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '14px 16px', borderRadius: 14,
+                padding: '13px 16px', borderRadius: 14,
                 background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(74,50,96,0.05)',
               }}
             >
               <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700 }}>Total</span>
-              <span style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 500, color: accent }}>
+              <span style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 500, color: accent }}>
                 {pricing.symbol}{amount.toLocaleString()}
               </span>
             </div>
@@ -259,18 +294,19 @@ export default function CheckoutPage({
           </form>
         </section>
 
-        {/* Right Column: Founder Welcome & Commitment Section (Balanced with Left Column) */}
-        <aside style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Order Summary Box */}
-          <div style={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 20, padding: 24 }}>
+        {/* Right Column: order summary, founder note, and (collapsed by
+            default) the fuller commitment copy — kept off-screen unless the
+            buyer actually wants to read it. */}
+        <aside className="co-aside" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ ...card, padding: 22 }}>
             <p style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: accent, margin: '0 0 6px' }}>
               Your order summary
             </p>
-            <h2 style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 400, margin: '0 0 16px' }}>{planName}</h2>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
+            <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 400, margin: '0 0 14px' }}>{planName}</h2>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 9 }}>
               {INCLUDED[selectedPlan].map((item) => (
-                <li key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontFamily: SANS, fontSize: 13.5, color: inkSub }}>
-                  <Check size={16} style={{ color: '#22863a', flexShrink: 0, marginTop: 2 }} />
+                <li key={item} style={{ display: 'flex', gap: 9, alignItems: 'flex-start', fontFamily: SANS, fontSize: 13, color: inkSub }}>
+                  <Check size={15} style={{ color: '#22863a', flexShrink: 0, marginTop: 2 }} />
                   <span>{item}</span>
                 </li>
               ))}
@@ -280,24 +316,21 @@ export default function CheckoutPage({
           {/* Founder Welcome Card with transparent Namaste.webp */}
           <div
             style={{
-              background: cardBg,
-              border: `1px solid ${borderC}`,
-              borderRadius: 20,
-              padding: 24,
+              ...card,
+              padding: 20,
               textAlign: 'center',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.2)' : '0 10px 30px rgba(74,50,96,0.04)',
             }}
           >
             <img
               src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FNamaste.webp?alt=media"
               alt="Sim Katyal & Shruti Khungar"
               style={{
-                maxHeight: 200,
+                maxHeight: 160,
                 width: 'auto',
-                marginBottom: 16,
+                marginBottom: 14,
                 objectFit: 'contain',
                 display: 'block',
                 filter: isDark ? 'drop-shadow(0 8px 20px rgba(0,0,0,0.4))' : 'drop-shadow(0 8px 20px rgba(74,50,96,0.12))',
@@ -306,113 +339,68 @@ export default function CheckoutPage({
                 (e.target as HTMLImageElement).src = '/Namaste.webp';
               }}
             />
-            <p style={{ fontFamily: SERIF, fontSize: 16, color: ink, fontStyle: 'italic', lineHeight: 1.6, margin: '0 0 10px' }}>
+            <p style={{ fontFamily: SERIF, fontSize: 15, color: ink, fontStyle: 'italic', lineHeight: 1.55, margin: '0 0 8px' }}>
               &ldquo;With deep presence and gratitude, we welcome you. Thank you for walking this path with us toward emotional freedom, quiet clarity, and returning home to your true self.&rdquo;
             </p>
-            <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: accent, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 700, color: accent, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
               — Sim Katyal &amp; Shruti Khungar
             </span>
-            <span style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub, display: 'block', marginTop: 2 }}>
+            <span style={{ fontFamily: SANS, fontSize: 10, color: inkSub, display: 'block', marginTop: 2 }}>
               Founders of Soulful Intelligence Studio &amp; Mind Gym
             </span>
           </div>
 
-          {/* Our Commitment to Your Journey Section */}
-          <div
-            style={{
-              background: cardBg,
-              border: `1px solid ${borderC}`,
-              borderRadius: 20,
-              padding: 24,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-            }}
-          >
-            <div style={{ borderBottom: `1px solid ${borderC}`, paddingBottom: 12 }}>
-              <h3 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, margin: 0, color: ink }}>
-                Our Commitment to Your Journey
-              </h3>
-              <p style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, margin: '4px 0 0' }}>
-                Everything you need for lasting emotional freedom and daily practice.
-              </p>
-            </div>
+          {/* Our Commitment — collapsed by default so the sidebar doesn't
+              dump five paragraphs on someone who's here to pay, not read. */}
+          <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
+            <button
+              type="button"
+              className="co-commitment-toggle"
+              onClick={() => setCommitmentOpen((o) => !o)}
+              aria-expanded={commitmentOpen}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 10, padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer',
+                textAlign: 'left', color: ink,
+              }}
+            >
+              <span>
+                <span style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 500, display: 'block' }}>
+                  Our commitment to your journey
+                </span>
+                <span style={{ fontFamily: SANS, fontSize: 11, color: inkSub, display: 'block', marginTop: 2 }}>
+                  {commitmentOpen ? 'What to expect, in full' : 'Tap to read what to expect'}
+                </span>
+              </span>
+              <ChevronDown
+                size={18}
+                style={{ color: inkSub, flexShrink: 0, transition: 'transform 0.2s ease', transform: commitmentOpen ? 'rotate(180deg)' : 'none' }}
+              />
+            </button>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
-                  🌿
-                </div>
-                <div>
-                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
-                    Instant Access to Inner Practices
-                  </span>
-                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
-                    Begin your journey immediately — stream released episodes, somatic releases, and guided reflections the moment you join.
-                  </span>
-                </div>
+            {commitmentOpen && (
+              <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 14, borderTop: `1px solid ${borderC}` }}>
+                <div style={{ height: 2 }} />
+                {COMMITMENTS.map((c) => (
+                  <div key={c.title} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
+                      {c.icon}
+                    </div>
+                    <div>
+                      <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
+                        {c.title}
+                      </span>
+                      <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
+                        {c.body}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
-                  ✨
-                </div>
-                <div>
-                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
-                    Somatic Emotional Regulation
-                  </span>
-                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
-                    Guided by Sim Katyal, move beyond mental overthinking into bodily presence, emotional freedom, and nervous system ease.
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
-                  🕊️
-                </div>
-                <div>
-                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
-                    Dedicated Guidance &amp; Space
-                  </span>
-                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
-                    Gain access to structured practices, daily reflection tools, and guidance designed to support your ongoing inner growth.
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
-                  ⏳
-                </div>
-                <div>
-                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
-                    Self-Paced Lifetime Learning
-                  </span>
-                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
-                    Practice at your own rhythm. Enjoy unlimited lifetime access to all current modules and every upcoming episode release.
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
-                  🛡️
-                </div>
-                <div>
-                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
-                    14-Day Money-Back Guarantee
-                  </span>
-                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
-                    Experience the course with complete peace of mind. If this journey doesn&apos;t resonate within 14 days, receive a full refund — no questions asked.
-                  </span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </aside>
       </main>
     </div>
   );
 }
-
