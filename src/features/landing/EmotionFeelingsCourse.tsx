@@ -2381,8 +2381,8 @@ export default function EmotionFeelingsCourse() {
                   <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: selectedPlan === 'course' ? '#FFDF9E' : 'rgba(255,255,255,0.7)' }}>
                     Course Only
                   </div>
-                  <div style={{ fontSize: 10.5, color: 'rgba(237,233,227,0.6)', marginTop: 2 }}>
-                    Suggested {coursePricingConfig.symbol}{coursePricingConfig.suggested.toLocaleString()}
+                  <div style={{ fontSize: 10, color: 'rgba(237,233,227,0.5)', marginTop: 2, fontWeight: 600 }}>
+                    One-time · Lifetime
                   </div>
                 </button>
 
@@ -2411,8 +2411,8 @@ export default function EmotionFeelingsCourse() {
                   <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: selectedPlan === 'allAccess' ? '#FFDF9E' : 'rgba(255,255,255,0.7)' }}>
                     App + Course
                   </div>
-                  <div style={{ fontSize: 10.5, color: 'rgba(237,233,227,0.6)', marginTop: 2 }}>
-                    Suggested {allAccessPricingConfig.symbol}{allAccessPricingConfig.suggested.toLocaleString()}
+                  <div style={{ fontSize: 10, color: 'rgba(237,233,227,0.5)', marginTop: 2, fontWeight: 600 }}>
+                    All courses · Live updates
                   </div>
                 </button>
               </div>
@@ -2426,18 +2426,21 @@ export default function EmotionFeelingsCourse() {
                       type="button"
                       onClick={() => setAppSubPeriod(period)}
                       style={{
-                        flex: 1, padding: '7px 0', borderRadius: 9, border: 'none', cursor: 'pointer',
-                        fontFamily: SANS, fontSize: 11.5, fontWeight: 700,
+                        flex: 1, padding: '8px 0', borderRadius: 9, border: 'none', cursor: 'pointer',
+                        fontFamily: SANS,
                         background: appSubPeriod === period ? 'rgba(196,145,58,0.35)' : 'transparent',
                         color: appSubPeriod === period ? '#FFDF9E' : 'rgba(255,255,255,0.55)',
                         transition: 'all 0.2s ease',
-                        position: 'relative',
                       }}
                     >
-                      {period === 'monthly' ? 'Monthly' : 'Yearly'}
-                      {period === 'yearly' && (
-                        <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, background: '#C4913A', color: '#1E1426', padding: '1px 5px', borderRadius: 99 }}>SAVE 33%</span>
-                      )}
+                      <div style={{ fontSize: 11.5, fontWeight: 700 }}>
+                        {period === 'monthly' ? 'Monthly' : (
+                          <span>Yearly <span style={{ fontSize: 9, fontWeight: 900, background: '#C4913A', color: '#1E1426', padding: '1px 5px', borderRadius: 99, marginLeft: 3 }}>SAVE 33%</span></span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 9.5, opacity: 0.65, marginTop: 2 }}>
+                        {period === 'monthly' ? 'Try it, cancel anytime' : isINR ? '≈ ₹22/day' : '≈ $0.27/day'}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -2468,8 +2471,8 @@ export default function EmotionFeelingsCourse() {
                 {selectedPlan === 'allAccess'
                   ? appSubPeriod === 'yearly'
                     ? `${symbol}${appYearlyMonthly}/month · billed annually · cancel anytime`
-                    : 'Billed monthly · cancel anytime'
-                  : 'Pay-What-You-Feel Support Available'
+                    : `Billed monthly · full app access · cancel anytime`
+                  : 'One-time payment · yours forever · no recurring fees'
                 }
               </p>
 
@@ -2499,13 +2502,14 @@ export default function EmotionFeelingsCourse() {
                   'Body-map & emotion practice library in Mind Gym app with unlimited music & meditations',
                   'Watch on any device, forever'
                 ] : [
-                  '✨ EVERY course — Power of Now, Wisdom Untethered, Feelings & Emotions',
-                  '🧠 Full MindGym App (Journal, Breathwork, Audio, Meditations & Practices)',
-                  '🏆 Personal Growth Analytics & Daily Tracker',
-                  '⚡ Every new course we release, free — for life'
+                  '✨ Access every course while you subscribe — this one & all future releases',
+                  '🧠 Full MindGym App — journal, breathwork, audio meditations & somatic practices',
+                  '🏆 Personal growth analytics, streak tracking & daily check-ins',
+                  '⚡ New content added every month — you always get it first',
+                  '🛡️ Cancel anytime — no lock-in, no questions asked'
                 ]).map((checkItem) => (
-                  <div key={checkItem} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5, color: selectedPlan === 'allAccess' && checkItem.startsWith('✨') ? '#FFDF9E' : 'rgba(237,233,227,0.85)' }}>
-                    <Check size={14} color="#C4913A" />
+                  <div key={checkItem} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5, color: selectedPlan === 'allAccess' && checkItem.startsWith('✨') ? '#FFDF9E' : 'rgba(237,233,227,0.85)' }}>
+                    <Check size={14} color="#C4913A" style={{ flexShrink: 0, marginTop: 2 }} />
                     <span>{checkItem}</span>
                   </div>
                 ))}
@@ -2528,7 +2532,12 @@ export default function EmotionFeelingsCourse() {
                 fontWeight: 800,
               }}
             >
-              Join the Course
+              {selectedPlan === 'course'
+                ? 'Join the Course'
+                : appSubPeriod === 'yearly'
+                  ? 'Start My Yearly Practice'
+                  : 'Try the App — Cancel Anytime'
+              }
             </button>
           </div>
 

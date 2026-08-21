@@ -95,7 +95,7 @@ export default function CheckoutPage({
   // Same reasoning as the commitment accordion: PCI/privacy copy is
   // reassurance for whoever wants it, not something to force past on the
   // way to the pay button.
-  const [trustOpen, setTrustOpen] = useState(false);
+  const [trustOpen, setTrustOpen] = useState(true);
 
   const ink = isDark ? '#EDE9E3' : '#2A2118';
   const inkSub = isDark ? 'rgba(237,233,227,0.6)' : '#6B5744';
@@ -353,7 +353,10 @@ export default function CheckoutPage({
               256-bit encrypted · 14-day money-back guarantee
             </p>
 
-            <div>
+            <div style={{
+              border: `1px solid ${borderC}`, borderRadius: 12,
+              overflow: 'hidden',
+            }}>
               <button
                 type="button"
                 className="co-commitment-toggle"
@@ -361,17 +364,25 @@ export default function CheckoutPage({
                 aria-expanded={trustOpen}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  gap: 10, padding: '10px 2px', background: 'none', border: 'none', cursor: 'pointer',
-                  fontFamily: SANS, fontSize: 12, fontWeight: 700, color: inkSub,
+                  gap: 10, padding: '11px 14px', background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                  border: 'none', cursor: 'pointer',
+                  fontFamily: SANS, fontSize: 11.5, fontWeight: 700, color: ink,
                 }}
               >
-                Payment &amp; privacy details
+                <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <ShieldCheck size={14} style={{ color: accent }} />
+                  Payment &amp; privacy details
+                </span>
                 <ChevronDown
-                  size={16}
-                  style={{ flexShrink: 0, transition: 'transform 0.2s ease', transform: trustOpen ? 'rotate(180deg)' : 'none' }}
+                  size={15}
+                  style={{ flexShrink: 0, transition: 'transform 0.2s ease', transform: trustOpen ? 'rotate(180deg)' : 'none', color: inkSub }}
                 />
               </button>
-              {trustOpen && <TrustBadges isDark={isDark} />}
+              {trustOpen && (
+                <div style={{ padding: '0 14px 14px' }}>
+                  <TrustBadges isDark={isDark} />
+                </div>
+              )}
             </div>
           </form>
         </section>
