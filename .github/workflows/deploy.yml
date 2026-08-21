@@ -33,3 +33,18 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AWAKENED_PATH_2026 }}
           projectId: awakened-path-2026
           channelId: live
+
+      # The action above deploys hosting ONLY, so changes to functions/index.js
+      # (Razorpay order creation and payment verification among them) never
+      # shipped from CI and had to be pushed by hand. This deploys them too.
+      # Written to a file rather than passed inline because the firebase CLI
+      # reads credentials via GOOGLE_APPLICATION_CREDENTIALS, which takes a path.
+      - name: Deploy Cloud Functions
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AWAKENED_PATH_2026 }}
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx --yes firebase-tools@latest deploy --only functions \
+            --project awakened-path-2026 --non-interactive --force
+          rm -f "$RUNNER_TEMP/sa.json"
