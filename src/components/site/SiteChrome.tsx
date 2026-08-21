@@ -114,7 +114,13 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
         maxWidth: 1120, margin: '0 auto', padding: '12px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
       }}>
-        <a href="/" onClick={onLogoClick} style={{ display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none', minWidth: 0 }}>
+        {/* flexShrink: 0 — this is a sibling of the nav row in a space-between
+            flex parent. With the old minWidth: 0 (no flexShrink override) the
+            row's shrink math could collapse the logo's width toward 0 before
+            the nav row's own 900px breakpoint kicked in, which visually
+            slid the nav links left on top of the "Soulful Intelligence"
+            wordmark instead of the two staying side by side. */}
+        <a href="/" onClick={onLogoClick} style={{ display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none', flexShrink: 0 }}>
           <SiteLogo palette={palette} size={64} />
         </a>
 

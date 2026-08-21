@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { usePageSeo } from '../../lib/seo';
+import { useSiteTheme } from '../../lib/siteTheme';
+import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Standalone policy pages — Privacy, Terms, Refund — rendered at /policies
@@ -59,14 +61,20 @@ export default function Policies() {
         }
     }, []);
 
+    const { palette, toggle: toggleTheme } = useSiteTheme();
+    const bg = palette.isDark ? '#0D0A12' : CREAM;
+
     return (
-        <div className="min-h-screen w-full antialiased" style={{ fontFamily: "'Outfit', system-ui, -apple-system, sans-serif", background: CREAM }}>
-            <header className={`px-6 py-4 flex items-center justify-between border-b ${TAN_BORDER}`} style={{ background: 'rgba(245,240,228,0.9)' }}>
-                <span className="text-sm font-semibold tracking-wide" style={{ color: INK }}>Mind Gym</span>
-                <a href="/feelingsandemotioncourse" className="text-sm font-bold uppercase tracking-wide hover:opacity-70 transition-opacity" style={{ color: TEAL }}>
-                    ← Back to course
-                </a>
-            </header>
+        <div className="min-h-screen w-full antialiased" style={{ fontFamily: "'Outfit', system-ui, -apple-system, sans-serif", background: bg, color: palette.INK }}>
+            <SiteHeader
+                palette={palette}
+                onToggleTheme={toggleTheme}
+                links={[
+                    { label: 'Home', href: '/' },
+                    { label: 'Course', href: '/feelingsandemotioncourse' },
+                ]}
+                cta={{ label: 'Back to course', href: '/feelingsandemotioncourse' }}
+            />
 
             <main className="max-w-2xl mx-auto px-6 py-12">
                 <p className="text-[11px] uppercase tracking-[0.22em] font-bold mb-2" style={{ color: GOLD_TEXT }}>
@@ -163,6 +171,8 @@ export default function Policies() {
                     Mind Gym · skrmblissai.in · {CONTACT_EMAIL}
                 </p>
             </main>
+
+            <SiteFooter palette={palette} />
         </div>
     );
 }
