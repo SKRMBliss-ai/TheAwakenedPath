@@ -19,7 +19,7 @@ import SacredGeometry from './components/SacredGeometry';
 import CursorGlow from './components/CursorGlow';
 import HeroMark from '../../components/site/HeroMark';
 import BodyMapShowcase from './components/BodyMapShowcase';
-import { PaypalDivider, TrustStrip, TrustBadges, ConsentCheckboxes, WhatsIncluded, OrderPromise } from '../../components/checkout';
+import CheckoutPage from './components/CheckoutPage';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Emotion & Feelings Course Page — /feelingsandemotioncourse
@@ -458,7 +458,7 @@ const FAQS = [
   },
   {
     q: 'What if I fall behind or need more time?',
-    a: 'You receive lifetime access to all 7 modules, future updates, and guided workbooks. You can complete it in 7 weeks or revisit it over months at your own speed.',
+    a: 'You receive lifetime access to all 7 episodes, future updates, and guided workbooks. You can complete it in 7 weeks or revisit it over months at your own speed.',
   },
   {
     q: 'Is there a money-back guarantee?',
@@ -520,35 +520,6 @@ function getRegionPricing(isAllAccess = false) {
   return dict.USD;
 }
 
-// Card checkout submit button (Razorpay). Pulled out of the JSX below because
-// it now needs to render on either side of the PayPal buttons depending on
-// currency, rather than being the sole checkout action.
-function RazorpaySubmit({ isProcessing }: { isProcessing: boolean }) {
-  return (
-    <button
-      type="submit"
-      disabled={isProcessing}
-      style={{
-        padding: '14px',
-        borderRadius: 999,
-        cursor: 'pointer',
-        background: '#4A3260',
-        color: '#fff',
-        border: 'none',
-        fontFamily: SANS,
-        fontSize: 14,
-        fontWeight: 800,
-        marginTop: 8,
-        width: '100%',
-      }}
-    >
-      {isProcessing ? 'Processing...' : 'Pay by Card →'}
-    </button>
-  );
-}
-
-
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
@@ -557,7 +528,15 @@ export default function EmotionFeelingsCourse() {
   const { palette, toggle: toggleTheme } = useSiteTheme();
   const isDark = palette.isDark;
 
-  const [selectedPlan, setSelectedPlan] = useState<'course' | 'allAccess'>('course');
+  // When deep-linking to /checkout with ?plan=allAccess, load that plan
+  const getPlanFromUrl = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('plan') === 'allAccess' ? 'allAccess' : 'course';
+    }
+    return 'course';
+  };
+  const [selectedPlan, setSelectedPlan] = useState<'course' | 'allAccess'>(getPlanFromUrl);
   const coursePricingConfig = getRegionPricing(false);
   const allAccessPricingConfig = getRegionPricing(true);
   const activePricingConfig = selectedPlan === 'course' ? coursePricingConfig : allAccessPricingConfig;
@@ -574,8 +553,44 @@ export default function EmotionFeelingsCourse() {
   const [reflectionResponse, setReflectionResponse] = useState<string | null>(null);
   const [showVideoModal, setShowVideoModal] = useState<boolean>(false);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string>('');
-  const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
+  // Checkout lives at its own URL rather than in a modal: the buyer keeps a
+  // working back button, a reload doesn't dump them back on the sales page,
+  // and on mobile the form gets the whole screen instead of a dialog stacked
+  // over a scrolling page behind it.
+  const [showCheckout, setShowCheckout] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.location.pathname.replace(/\/+$/, '').toLowerCase().endsWith('/checkout')
+  );
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const openCheckout = () => {
+    if (typeof window !== 'undefined' && !showCheckout) {
+      window.history.pushState({ checkout: true }, '', '/feelingsandemotioncourse/checkout');
+      window.scrollTo(0, 0);
+    }
+    setShowCheckout(true);
+  };
+
+  /** Leaves via history so the browser's own Back and this button land in the
+   *  same place; only rewrites the URL directly when checkout was entered by
+   *  deep link and there is no course page to go back to. */
+  const closeCheckout = () => {
+    if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().includes('/checkout')) {
+      if (window.history.state?.checkout) window.history.back();
+      else window.history.replaceState({}, '', '/feelingsandemotioncourse');
+    }
+    setShowCheckout(false);
+  };
+
+  // Back/forward must move between the sales page and checkout, not out of the
+  // site entirely — the URL changes without a navigation, so nothing else syncs
+  // this state to it.
+  useEffect(() => {
+    const onPop = () => {
+      setShowCheckout(window.location.pathname.replace(/\/+$/, '').toLowerCase().endsWith('/checkout'));
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   // Guest checkout state
   const [guestEmail, setGuestEmail] = useState('');
@@ -647,7 +662,7 @@ export default function EmotionFeelingsCourse() {
   }, [teaserVideo]);
 
   const { checkOut, isProcessing } = useRazorpay();
-  const { renderCheckout: renderPaypalCheckout, renderGooglePay, isProcessing: isPaypalProcessing, isAvailable: isPaypalAvailable, isGooglePayAvailable } = usePaypal();
+  const { renderCheckout: renderPaypalCheckout, renderGooglePay, isProcessing: isPaypalProcessing, isAvailable: isPaypalAvailable } = usePaypal();
 
   // Master SEO + AEO + GEO Schema setup
   usePageSeo({
@@ -789,7 +804,7 @@ export default function EmotionFeelingsCourse() {
       // and Razorpay's risk engine declined foreign cards on the currency mismatch.
       activePricingConfig.currency,
       () => {
-        setShowCheckoutModal(false);
+        closeCheckout();
         // A guest purchase is stored server-side under guestPurchases/{email}
         // and only merges into an account when someone signs in with that SAME
         // address (onUserCreated / linkGuestPurchases). Leave that hint where
@@ -820,15 +835,12 @@ export default function EmotionFeelingsCourse() {
     agreeTerms;
 
   useEffect(() => {
-    if (!showCheckoutModal) return;
+    if (!showCheckout) return;
     if (!isPaypalFormReady) return;
     const signedInUid = getAuth().currentUser?.uid;
     const userId = signedInUid || 'guest_pending';
     const paidEmail = guestEmail.trim();
 
-    // Debounced: these deps include the text inputs, so re-rendering the
-    // buttons synchronously meant one full create/render cycle per keystroke
-    // while the buyer was still typing their email.
     const timer = setTimeout(() => {
       renderPaypalCheckout(
         'paypal-button-container',
@@ -837,7 +849,7 @@ export default function EmotionFeelingsCourse() {
         'emotion_feelings_course',
         activePricingConfig.currency,
         () => {
-          setShowCheckoutModal(false);
+          closeCheckout();
           if (!signedInUid && paidEmail) {
             try { localStorage.setItem('pendingCourseClaimEmail', paidEmail.toLowerCase()); } catch { /* private mode */ }
           }
@@ -850,13 +862,13 @@ export default function EmotionFeelingsCourse() {
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCheckoutModal, isPaypalFormReady, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
+  }, [showCheckout, isPaypalFormReady, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
 
   // Google Pay — re-render alongside PayPal whenever the form inputs change.
   // Uses the same isPaypalFormReady gate so the button only appears after a
   // valid name + full email, and shares the same 500ms debounce pattern.
   useEffect(() => {
-    if (!showCheckoutModal) return;
+    if (!showCheckout) return;
     if (!isPaypalFormReady) return;
     const signedInUid = getAuth().currentUser?.uid;
     const userId = signedInUid || 'guest_pending';
@@ -869,7 +881,7 @@ export default function EmotionFeelingsCourse() {
         'emotion_feelings_course',
         activePricingConfig.currency,
         () => {
-          setShowCheckoutModal(false);
+          closeCheckout();
           if (!signedInUid && paidEmail) {
             try { localStorage.setItem('pendingCourseClaimEmail', paidEmail.toLowerCase()); } catch { /* private mode */ }
           }
@@ -882,11 +894,35 @@ export default function EmotionFeelingsCourse() {
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCheckoutModal, isPaypalFormReady, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
+  }, [showCheckout, isPaypalFormReady, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
 
   /** Hand off to the app. Full page load, not a router push — Mind Gym is a
    *  separate entry point and needs a fresh auth/entitlement bootstrap. */
   const goToMindGym = () => { window.location.href = '/mindgym'; };
+
+  if (showCheckout && !purchaseSuccess) {
+    return (
+      <CheckoutPage
+        isDark={isDark}
+        selectedPlan={selectedPlan}
+        pricing={activePricingConfig}
+        guestName={guestName}
+        onGuestName={setGuestName}
+        guestEmail={guestEmail}
+        onGuestEmail={setGuestEmail}
+        guestPhone={guestPhone}
+        onGuestPhone={setGuestPhone}
+        amount={customAmount}
+        onAmount={setCustomAmount}
+        error={checkoutErr}
+        onSubmit={handleStartCheckout}
+        isProcessing={isProcessing}
+        showPaypal={isPaypalAvailable !== false && Boolean(guestName.trim()) && guestEmail.includes('@')}
+        isPaypalProcessing={isPaypalProcessing}
+        onClose={closeCheckout}
+      />
+    );
+  }
 
   return (
     <div
@@ -920,7 +956,7 @@ export default function EmotionFeelingsCourse() {
           cta={{
             label: 'Join the Course',
             href: '#pricing',
-            onClick: () => setShowCheckoutModal(true),
+            onClick: () => openCheckout(),
           }}
         />
       </div>
@@ -2260,7 +2296,7 @@ export default function EmotionFeelingsCourse() {
 
               <div style={{ display: 'grid', gap: 16 }}>
                 {[
-                  { title: '7 in-depth modules', sub: 'Follow the complete transformation journey' },
+                  { title: '7 in-depth episodes', sub: 'Follow the complete transformation journey' },
                   { title: '20+ video lessons', sub: 'Clear, practical and easy to apply' },
                   { title: 'Guided practices & meditations', sub: 'Tools to shift your inner world' },
                   { title: 'Workbooks & journals', sub: 'For deep reflection and clarity' },
@@ -2385,15 +2421,15 @@ export default function EmotionFeelingsCourse() {
 
               <div style={{ display: 'grid', gap: 10, textAlign: 'left', marginBottom: 28 }}>
                 {(selectedPlan === 'course' ? [
-                  '18 Video Masterclasses & Worksheets',
+                  'Video Masterclasses & Worksheets',
                   'Lifetime Course Access & All Future Updates',
                   'Works on all mobile & desktop devices',
                   '100% 14-Day Money-Back Guarantee'
                 ] : [
-                  '✨ EVERYTHING in Feelings & Emotions Course',
-                  '🧠 Full MindGym App Access (Journal, Breathwork & Audio)',
+                  '✨ EVERY course — Power of Now, Wisdom Untethered, Feelings & Emotions',
+                  '🧠 Full MindGym App (Journal, Breathwork, Audio, Meditations & Practices)',
                   '🏆 Personal Growth Analytics & Daily Tracker',
-                  '⚡ Lifetime Access to All Future App Courses & Updates'
+                  '⚡ Every new course we release, free — for life'
                 ]).map((checkItem) => (
                   <div key={checkItem} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5, color: selectedPlan === 'allAccess' && checkItem.startsWith('✨') ? '#FFDF9E' : 'rgba(237,233,227,0.85)' }}>
                     <Check size={14} color="#C4913A" />
@@ -2404,7 +2440,7 @@ export default function EmotionFeelingsCourse() {
             </div>
 
             <button
-              onClick={() => setShowCheckoutModal(true)}
+              onClick={() => openCheckout()}
               className="si-btn-breathe"
               style={{
                 width: '100%',
@@ -2653,7 +2689,7 @@ export default function EmotionFeelingsCourse() {
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <button
-            onClick={() => setShowCheckoutModal(true)}
+            onClick={() => openCheckout()}
             className="si-btn-breathe"
             style={{
               padding: '16px 40px',
@@ -2982,254 +3018,30 @@ export default function EmotionFeelingsCourse() {
           </motion.div>
         )}
 
-        {showCheckoutModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 100,
-              background: 'rgba(0,0,0,0.75)',
-              backdropFilter: 'blur(12px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 24,
-            }}
-            onClick={() => setShowCheckoutModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 16 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 16 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: '100%',
-                maxWidth: 480,
-                background: isDark ? '#1A1222' : '#F9F5EF',
-                border: `1px solid ${borderC}`,
-                borderRadius: 28,
-                padding: 36,
-                boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
-                position: 'relative',
-                // Scrollable so trust badges + Google/Apple Pay buttons are
-                // always reachable even on short mobile screens.
-                overflowY: 'auto',
-                maxHeight: '92dvh',
-                // Thin custom scrollbar (Webkit + Firefox)
-                scrollbarWidth: 'thin' as const,
-                scrollbarColor: 'rgba(196,145,58,0.4) transparent',
-              } as React.CSSProperties}
-            >
-              <button
-                onClick={() => setShowCheckoutModal(false)}
-                style={{
-                  position: 'absolute',
-                  top: 20,
-                  right: 20,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: inkSub,
-                }}
-              >
-                <X size={20} />
-              </button>
-
-              <h3 style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 400, color: ink, margin: '0 0 6px' }}>
-                Join the Course
-              </h3>
-              <p style={{ fontFamily: SANS, fontSize: 13, color: inkSub, margin: '0 0 14px' }}>
-                Lifetime access to all current &amp; upcoming episode drops.
-              </p>
-
-              {/* ── Trust strip ───────────────────────────────────────────── */}
-              <TrustStrip isDark={isDark} ink={ink} inkSub={inkSub} />
-
-              <form onSubmit={handleStartCheckout} style={{ display: 'grid', gap: 14 }}>
-                <div>
-                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Your name"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: 12,
-                      border: `1px solid ${borderC}`,
-                      background: 'transparent',
-                      color: ink,
-                      fontFamily: SANS,
-                      fontSize: 14,
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
-                 <div>
-                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
-                    Email Address <span style={{ textTransform: 'none', fontWeight: 400, opacity: 0.85 }}>(Your account will be created here)</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="you@example.com"
-                    value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: 12,
-                      border: `1px solid ${borderC}`,
-                      background: 'transparent',
-                      color: ink,
-                      fontFamily: SANS,
-                      fontSize: 14,
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub, marginBottom: 6 }}>
-                    WhatsApp / Phone Number <span style={{ textTransform: 'none', fontWeight: 400, opacity: 0.85 }}>(For support &amp; updates)</span>
-                  </label>
-                  <input
-                    type="tel"
-                    placeholder="+1 (555) 000-0000"
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: 12,
-                      border: `1px solid ${borderC}`,
-                      background: 'transparent',
-                      color: ink,
-                      fontFamily: SANS,
-                      fontSize: 14,
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
-                <ConsentCheckboxes
-                  agreeTerms={agreeTerms}
-                  setAgreeTerms={setAgreeTerms}
-                  agreeMarketing={agreeMarketing}
-                  setAgreeMarketing={setAgreeMarketing}
-                  isDark={isDark}
-                  ink={ink}
-                  inkSub={inkSub}
-                />
-
-                {checkoutErr && (
-                  <p style={{ fontFamily: SANS, fontSize: 12, color: '#E53935', margin: 0 }}>
-                    {checkoutErr}
-                  </p>
-                )}
-
-                <div style={{ marginTop: 8, marginBottom: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <label style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: inkSub }}>
-                      Select Contribution (Pay What You Feel)
-                    </label>
-                    <span style={{ fontSize: 10, fontWeight: 800, color: isDark ? '#C4913A' : '#8B6A1A', textTransform: 'uppercase', background: isDark ? 'rgba(196,145,58,0.15)' : 'rgba(74,50,96,0.08)', padding: '2px 8px', borderRadius: 999 }}>
-                      {selectedPlan === 'course' ? 'Course Only' : 'Whole App + Course 🔥'}
-                    </span>
-                  </div>
-                  <PriceSlider
-                    currency={activePricingConfig.currency}
-                    min={activePricingConfig.min}
-                    suggested={activePricingConfig.suggested}
-                    max={activePricingConfig.max}
-                    value={customAmount}
-                    onChange={(val) => setCustomAmount(val)}
-                    dark={isDark}
-                  />
-                </div>
-
-                <WhatsIncluded isDark={isDark} ink={ink} inkSub={inkSub} />
-
-                <div style={{ marginTop: 10, padding: '14px 16px', borderRadius: 14, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>Total Amount</span>
-                    <span style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub }}>{selectedPlan === 'course' ? 'Feelings & Emotions Course' : 'Whole App All-Access Pass'}</span>
-                  </div>
-                  <span style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 500, color: isDark ? '#C4913A' : '#4A3260' }}>
-                    {activePricingConfig.symbol}{customAmount.toLocaleString()}
-                  </span>
-                </div>
-
-                {/* Card checkout (Razorpay) and PayPal/Apple Pay are both offered —
-                    deliberately, not gated behind a region guess. A wrong region
-                    detection previously left overseas buyers stuck on a form
-                    quoting the wrong currency with no alternative; whichever
-                    button the buyer actually reaches now still works.
-
-                    IMPORTANT: The card button MUST always remain visible. PayPal
-                    buttons are toggled via CSS visibility (not conditional mounting)
-                    so the card button never disappears while the buyer is typing
-                    their email. The container is also capped at 55 px tall on
-                    mobile to prevent the PayPal SDK from expanding to half-screen. */}
-                {isPaypalAvailable === false ? (
-                  // PayPal backend unreachable (functions not deployed, or no
-                  // client id configured). Show card checkout on its own rather
-                  // than an empty slot and a divider leading nowhere.
-                  <RazorpaySubmit isProcessing={isProcessing} />
-                ) : activePricingConfig.currency === 'INR' ? (
-                  <>
-                    <RazorpaySubmit isProcessing={isProcessing} />
-                    <div style={{ visibility: isPaypalFormReady ? 'visible' : 'hidden', maxHeight: isPaypalFormReady ? undefined : 0, overflow: 'hidden' }}>
-                      <PaypalDivider />
-                      <div
-                        id="paypal-button-container"
-                        style={{
-                          minHeight: isPaypalProcessing ? 45 : undefined,
-                          maxHeight: 55,
-                          overflow: 'hidden',
-                        }}
-                      />
-                      {/* Google Pay — only shown when device supports it */}
-                      {isGooglePayAvailable && (
-                        <div id="googlepay-button-container" style={{ marginTop: 6, maxHeight: 55, overflow: 'hidden' }} />
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div style={{ visibility: isPaypalFormReady ? 'visible' : 'hidden', maxHeight: isPaypalFormReady ? undefined : 0, overflow: 'hidden' }}>
-                      <div
-                        id="paypal-button-container"
-                        style={{
-                          minHeight: isPaypalProcessing ? 45 : undefined,
-                          maxHeight: 55,
-                          overflow: 'hidden',
-                        }}
-                      />
-                      {/* Google Pay — only shown when device supports it */}
-                      {isGooglePayAvailable && (
-                        <div id="googlepay-button-container" style={{ marginTop: 6, maxHeight: 55, overflow: 'hidden' }} />
-                      )}
-                      <PaypalDivider />
-                    </div>
-                    <RazorpaySubmit isProcessing={isProcessing} />
-                  </>
-                )}
-
-                <OrderPromise brandName="Mind Gym" isDark={isDark} ink={ink} inkSub={inkSub} />
-
-                <TrustBadges isDark={isDark} />
-              </form>
-            </motion.div>
-          </motion.div>
+        {showCheckout && (
+          <CheckoutPage
+            isDark={isDark}
+            selectedPlan={selectedPlan}
+            pricing={activePricingConfig}
+            guestName={guestName}
+            onGuestName={setGuestName}
+            guestEmail={guestEmail}
+            onGuestEmail={setGuestEmail}
+            guestPhone={guestPhone}
+            onGuestPhone={setGuestPhone}
+            amount={customAmount}
+            onAmount={setCustomAmount}
+            error={checkoutErr}
+            onSubmit={handleStartCheckout}
+            isProcessing={isProcessing}
+            showPaypal={isPaypalAvailable !== false}
+            isPaypalProcessing={isPaypalProcessing}
+            onClose={closeCheckout}
+            agreeTerms={agreeTerms}
+            onAgreeTerms={setAgreeTerms}
+            agreeMarketing={agreeMarketing}
+            onAgreeMarketing={setAgreeMarketing}
+          />
         )}
       </AnimatePresence>
 
@@ -3238,7 +3050,7 @@ export default function EmotionFeelingsCourse() {
           left mobile scrollers with no always-visible way to start checkout.
           Hidden while the checkout modal or success screen already covers the
           page, so it never sits under (or duplicates) those. */}
-      {!showCheckoutModal && !purchaseSuccess && (
+      {!showCheckout && !purchaseSuccess && (
         <div
           style={{
             position: 'fixed',
@@ -3256,7 +3068,7 @@ export default function EmotionFeelingsCourse() {
           }}
         >
           <button
-            onClick={() => setShowCheckoutModal(true)}
+            onClick={() => openCheckout()}
             style={{
               display: 'block',
               width: '100%',

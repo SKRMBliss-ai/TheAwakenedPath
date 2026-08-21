@@ -136,7 +136,10 @@ const isEmotionalHealthRoute = (() => {
 const isFeelingsCourseRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  return p === '/feelingsandemotioncourse' || p === '/feelingsandemotioncourse/index.html';
+  // /checkout is the course page's own dedicated payment step, rendered by the
+  // same component — it must resolve here rather than falling through to 404.
+  return p === '/feelingsandemotioncourse' || p === '/feelingsandemotioncourse/index.html'
+    || p === '/feelingsandemotioncourse/checkout';
 })();
 
 const isPoliciesRoute = (() => {
