@@ -45,9 +45,13 @@ interface Props {
 
 const INCLUDED = {
   course: [
-    '7 in-depth episodes — instant lifetime access',
-    'Every future episode added, free',
-    'Body-map & emotion practice library',
+    '7 in-depth episodes — lifetime access',
+    '3 episodes available now — Episodes 4, 5, 6 & 7 unlock weekly after enrollment',
+    'Ebooks & PDF reference course materials',
+    'Free guided meditations to practice what is taught',
+    'Personal WhatsApp support available',
+    'Access to Inner Circle community support',
+    'Body-map & emotion practice library in Mind Gym app with unlimited music & meditations',
     'Watch on any device, forever',
   ],
   allAccess: [
