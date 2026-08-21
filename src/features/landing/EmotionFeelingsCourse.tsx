@@ -3099,6 +3099,49 @@ export default function EmotionFeelingsCourse() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Sticky bottom CTA — the header's "Join the Course" button is hidden
+          below 900px (si-hide-sm, folded into the burger menu instead), which
+          left mobile scrollers with no always-visible way to start checkout.
+          Hidden while the checkout modal or success screen already covers the
+          page, so it never sits under (or duplicates) those. */}
+      {!showCheckoutModal && !purchaseSuccess && (
+        <div
+          style={{
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 90,
+            background: isDark ? 'rgba(13,10,18,0.92)' : 'rgba(249,245,239,0.92)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            borderTop: `1px solid ${borderC}`,
+            padding: '12px 20px calc(12px + env(safe-area-inset-bottom, 0px))',
+          }}
+        >
+          <button
+            onClick={() => setShowCheckoutModal(true)}
+            style={{
+              display: 'block',
+              width: '100%',
+              maxWidth: 480,
+              margin: '0 auto',
+              padding: '14px',
+              borderRadius: 999,
+              cursor: 'pointer',
+              background: '#4A3260',
+              color: '#fff',
+              border: 'none',
+              fontFamily: SANS,
+              fontSize: 14,
+              fontWeight: 800,
+            }}
+          >
+            Join the Course
+          </button>
+        </div>
+      )}
     </div>
   );
 }
