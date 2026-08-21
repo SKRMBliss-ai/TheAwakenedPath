@@ -101,7 +101,22 @@ export const usePaypal = () => {
                                 ...(amount != null ? { amount } : {}),
                             }),
                         });
-                        if (!res.ok) throw new Error(await res.text() || 'Failed to create order');
+                        if (!res.ok) {
+                            let errMessage = 'Failed to create order';
+                            try {
+                                const errJson = await res.json();
+                                if (errJson.error === 'PAYEE_ACCOUNT_RESTRICTED') {
+                                    errMessage = 'PayPal is temporarily unavailable for this merchant. Please use "Pay by Card" below.';
+                                } else if (errJson.message) {
+                                    errMessage = errJson.message;
+                                }
+                            } catch (_) {
+                                const text = await res.text().catch(() => '');
+                                if (text) errMessage = text;
+                            }
+                            showToast(errMessage, { type: 'error' });
+                            throw new Error(errMessage);
+                        }
                         const order = await res.json();
                         return order.id;
                     } catch (err) {
@@ -139,7 +154,7 @@ export const usePaypal = () => {
                 },
                 onError: (err: unknown) => {
                     console.error('PayPal Error:', err);
-                    showToast('Payment could not be completed. Please try again.', { type: 'error' });
+                    showToast('PayPal could not complete payment. Please use "Pay by Card" below.', { type: 'error' });
                     setIsProcessing(false);
                 },
             }).render(`#${containerId}`);

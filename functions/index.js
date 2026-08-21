@@ -1144,8 +1144,15 @@ exports.createPaypalOrder = onRequest({ secrets: [paypalClientId, paypalSecret],
         });
 
         if (!resp.ok) {
-            console.error("PayPal Order Error:", await resp.text());
-            return res.status(500).send("Failed to create payment order");
+            const errText = await resp.text();
+            console.error("PayPal Order Error:", errText);
+            let parsed = {};
+            try { parsed = JSON.parse(errText); } catch (_) {}
+            const isRestricted = parsed.details?.some(d => d.issue === 'PAYEE_ACCOUNT_RESTRICTED');
+            return res.status(400).json({
+                error: isRestricted ? "PAYEE_ACCOUNT_RESTRICTED" : "PAYPAL_ORDER_FAILED",
+                message: isRestricted ? "Merchant PayPal account is restricted. Please use Pay by Card." : "Failed to create payment order"
+            });
         }
 
         const order = await resp.json();
@@ -1154,7 +1161,7 @@ exports.createPaypalOrder = onRequest({ secrets: [paypalClientId, paypalSecret],
         res.json({ id: order.id, client_id: paypalClientId.value() });
     } catch (error) {
         console.error("PayPal Order Error:", error);
-        res.status(500).send("Failed to create payment order");
+        res.status(500).json({ error: "PAYPAL_SERVER_ERROR", message: "Failed to create payment order" });
     }
 });
 
