@@ -277,7 +277,7 @@ export default function CheckoutPage({
             </ul>
           </div>
 
-          {/* Founder Welcome Card with Namaste.webp */}
+          {/* Founder Welcome Card with transparent Namaste.webp */}
           <div
             style={{
               background: cardBg,
@@ -291,31 +291,21 @@ export default function CheckoutPage({
               boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.2)' : '0 10px 30px rgba(74,50,96,0.04)',
             }}
           >
-            <div
+            <img
+              src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FNamaste.webp?alt=media"
+              alt="Sim Katyal & Shruti Khungar"
               style={{
-                position: 'relative',
+                maxHeight: 200,
+                width: 'auto',
                 marginBottom: 16,
-                padding: 4,
-                borderRadius: 16,
-                background: isDark ? 'rgba(196,145,58,0.12)' : 'rgba(74,50,96,0.06)',
-                border: `1px solid ${isDark ? 'rgba(196,145,58,0.25)' : 'rgba(74,50,96,0.15)'}`,
+                objectFit: 'contain',
+                display: 'block',
+                filter: isDark ? 'drop-shadow(0 8px 20px rgba(0,0,0,0.4))' : 'drop-shadow(0 8px 20px rgba(74,50,96,0.12))',
               }}
-            >
-              <img
-                src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FNamaste.webp?alt=media"
-                alt="Sim Katyal & Shruti Khungar"
-                style={{
-                  maxHeight: 190,
-                  width: 'auto',
-                  borderRadius: 12,
-                  objectFit: 'contain',
-                  display: 'block',
-                }}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/Namaste.webp';
-                }}
-              />
-            </div>
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/Namaste.webp';
+              }}
+            />
             <p style={{ fontFamily: SERIF, fontSize: 16, color: ink, fontStyle: 'italic', lineHeight: 1.6, margin: '0 0 10px' }}>
               &ldquo;With deep presence and gratitude, we welcome you. Thank you for walking this path with us toward emotional freedom, quiet clarity, and returning home to your true self.&rdquo;
             </p>
