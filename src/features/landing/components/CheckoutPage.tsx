@@ -332,28 +332,10 @@ export default function CheckoutPage({
           </form>
         </section>
 
-        {/* Right Column: order summary, founder note, and (collapsed by
-            default) the fuller commitment copy — kept off-screen unless the
-            buyer actually wants to read it. */}
+        {/* Right Column: Founder Welcome at top, followed by order summary and commitment */}
         <aside className="co-aside" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ ...card, padding: 22 }}>
-            <p style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: accent, margin: '0 0 6px' }}>
-              Your order summary
-            </p>
-            <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 400, margin: '0 0 14px' }}>{planName}</h2>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 9 }}>
-              {INCLUDED[selectedPlan].map((item) => (
-                <li key={item} style={{ display: 'flex', gap: 9, alignItems: 'flex-start', fontFamily: SANS, fontSize: 13, color: inkSub }}>
-                  <Check size={15} style={{ color: '#22863a', flexShrink: 0, marginTop: 2 }} />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {/* Founder Welcome Card with transparent Namaste.webp — sized up
-              and set on a soft radial backdrop so it reads as a portrait,
-              not a small logo-sized cutout floating on white. */}
+              and set on a soft radial backdrop so it reads as a portrait */}
           <div
             style={{
               ...card,
@@ -401,6 +383,22 @@ export default function CheckoutPage({
             <span style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub, display: 'block', marginTop: 3, position: 'relative' }}>
               Founders of Soulful Intelligence Studio &amp; Mind Gym
             </span>
+          </div>
+
+          {/* Your Order Summary Box */}
+          <div style={{ ...card, padding: 22 }}>
+            <p style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: accent, margin: '0 0 6px' }}>
+              Your order summary
+            </p>
+            <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 400, margin: '0 0 14px' }}>{planName}</h2>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 9 }}>
+              {INCLUDED[selectedPlan].map((item) => (
+                <li key={item} style={{ display: 'flex', gap: 9, alignItems: 'flex-start', fontFamily: SANS, fontSize: 13, color: inkSub }}>
+                  <Check size={15} style={{ color: '#22863a', flexShrink: 0, marginTop: 2 }} />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Our Commitment — collapsed by default so the sidebar doesn't
