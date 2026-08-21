@@ -593,6 +593,7 @@ export default function EmotionFeelingsCourse() {
 
   // Guest checkout state
   const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
   const [customAmount, setCustomAmount] = useState<number>(coursePricingConfig.suggested);
   const [guestName, setGuestName] = useState('');
   const [checkoutErr, setCheckoutErr] = useState('');
@@ -808,7 +809,7 @@ export default function EmotionFeelingsCourse() {
         setPurchaseSuccess({ email: paidEmail, wasSignedIn: Boolean(signedInUid) });
         trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ${activePricingConfig.symbol}${customAmount}`, paidEmail);
       },
-      '',
+      guestPhone.trim(),
       customAmount
     );
   };
@@ -843,13 +844,13 @@ export default function EmotionFeelingsCourse() {
           setPurchaseSuccess({ email: paidEmail, wasSignedIn: Boolean(signedInUid) });
           trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ${activePricingConfig.symbol}${customAmount}`, paidEmail);
         },
-        '',
+        guestPhone.trim(),
         customAmount
       );
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCheckout, guestName, guestEmail, customAmount, activePricingConfig.currency]);
+  }, [showCheckout, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
 
   /** Hand off to the app. Full page load, not a router push — Mind Gym is a
    *  separate entry point and needs a fresh auth/entitlement bootstrap. */
@@ -865,6 +866,8 @@ export default function EmotionFeelingsCourse() {
         onGuestName={setGuestName}
         guestEmail={guestEmail}
         onGuestEmail={setGuestEmail}
+        guestPhone={guestPhone}
+        onGuestPhone={setGuestPhone}
         amount={customAmount}
         onAmount={setCustomAmount}
         error={checkoutErr}

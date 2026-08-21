@@ -371,6 +371,17 @@ export function SiteFooter({ palette }: { palette: Palette }) {
 
       <style>{`
         .si-foot-link:hover { color: ${palette.PURPLE_STRONG} !important; }
+        /* Desktop had NO rule here at all, so this stayed a plain block and
+           the three link groups stacked one under another in the flex row's
+           right slot — a single column fifteen links tall beside an empty
+           middle. They are columns; lay them out as columns. */
+        .si-foot-cols {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(150px, 1fr));
+          gap: 32px;
+          flex: 1;
+          max-width: 660px;
+        }
         /* iPad fell through to the original flex-wrap layout (the 2-column
            grid only kicked in below 640px), so each link column had no
            partner beside it and stretched to the leftover width next to the

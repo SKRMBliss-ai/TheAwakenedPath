@@ -23,6 +23,8 @@ interface Props {
   onGuestName: (v: string) => void;
   guestEmail: string;
   onGuestEmail: (v: string) => void;
+  guestPhone: string;
+  onGuestPhone: (v: string) => void;
   amount: number;
   onAmount: (v: number) => void;
   error: string;
@@ -58,7 +60,7 @@ const INCLUDED = {
  */
 export default function CheckoutPage({
   isDark, selectedPlan, pricing,
-  guestName, onGuestName, guestEmail, onGuestEmail,
+  guestName, onGuestName, guestEmail, onGuestEmail, guestPhone, onGuestPhone,
   amount, onAmount, error, onSubmit,
   isProcessing, showPaypal, isPaypalProcessing, onClose,
 }: Props) {
@@ -178,6 +180,14 @@ export default function CheckoutPage({
               <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: '6px 0 0' }}>
                 Sign in with this email to unlock the course.
               </p>
+            </div>
+
+            <div>
+              <label style={label} htmlFor="co-phone">Phone <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 500 }}>(optional)</span></label>
+              <input
+                id="co-phone" type="tel" autoComplete="tel" placeholder="+91 98765 43210"
+                value={guestPhone} onChange={(e) => onGuestPhone(e.target.value)} style={field}
+              />
             </div>
 
             <div>
