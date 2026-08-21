@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ArrowLeft, Check, Lock, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Check, Lock } from 'lucide-react';
 import PriceSlider from '../../../components/ui/PriceSlider';
 import { TrustStrip, TrustBadges, ConsentCheckboxes } from '../../../components/checkout';
 
@@ -255,38 +255,170 @@ export default function CheckoutPage({
           </form>
         </section>
 
-        {/* Summary column */}
-        <aside style={{ display: 'grid', gap: 16 }}>
+        {/* Right Column: Founder Welcome & Commitment Section (Balanced with Left Column) */}
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Order Summary Box */}
           <div style={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 20, padding: 24 }}>
             <p style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: accent, margin: '0 0 6px' }}>
-              Your order
+              Your order summary
             </p>
-            <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 400, margin: '0 0 16px' }}>{planName}</h2>
+            <h2 style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 400, margin: '0 0 16px' }}>{planName}</h2>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
               {INCLUDED[selectedPlan].map((item) => (
                 <li key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontFamily: SANS, fontSize: 13.5, color: inkSub }}>
-                  <Check size={15} style={{ color: accent, flexShrink: 0, marginTop: 2 }} />
+                  <Check size={16} style={{ color: '#22863a', flexShrink: 0, marginTop: 2 }} />
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
           </div>
 
+          {/* Founder Welcome Card with Namaste.webp */}
           <div
             style={{
-              border: `1px solid ${borderC}`, borderLeft: `3px solid ${accent}`,
-              borderRadius: 16, padding: '16px 18px', background: cardBg,
+              background: cardBg,
+              border: `1px solid ${borderC}`,
+              borderRadius: 20,
+              padding: 24,
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.2)' : '0 10px 30px rgba(74,50,96,0.04)',
             }}
           >
-            <p style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: SANS, fontSize: 12, fontWeight: 800, margin: '0 0 6px' }}>
-              <ShieldCheck size={15} style={{ color: accent }} /> Pay once. Keep it for life.
+            <div
+              style={{
+                position: 'relative',
+                marginBottom: 16,
+                padding: 4,
+                borderRadius: 16,
+                background: isDark ? 'rgba(196,145,58,0.12)' : 'rgba(74,50,96,0.06)',
+                border: `1px solid ${isDark ? 'rgba(196,145,58,0.25)' : 'rgba(74,50,96,0.15)'}`,
+              }}
+            >
+              <img
+                src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FNamaste.webp?alt=media"
+                alt="Sim Katyal & Shruti Khungar"
+                style={{
+                  maxHeight: 190,
+                  width: 'auto',
+                  borderRadius: 12,
+                  objectFit: 'contain',
+                  display: 'block',
+                }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/Namaste.webp';
+                }}
+              />
+            </div>
+            <p style={{ fontFamily: SERIF, fontSize: 16, color: ink, fontStyle: 'italic', lineHeight: 1.6, margin: '0 0 10px' }}>
+              &ldquo;With deep presence and gratitude, we welcome you. Thank you for walking this path with us toward emotional freedom, quiet clarity, and returning home to your true self.&rdquo;
             </p>
-            <p style={{ fontFamily: SANS, fontSize: 12.5, color: inkSub, margin: 0, lineHeight: 1.6 }}>
-              No subscription, no upsells. If it isn't for you, write in within 14 days for a full refund.
-            </p>
+            <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: accent, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              — Sim Katyal &amp; Shruti Khungar
+            </span>
+            <span style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub, display: 'block', marginTop: 2 }}>
+              Founders of Soulful Intelligence Studio &amp; Mind Gym
+            </span>
+          </div>
+
+          {/* Our Commitment to Your Journey Section */}
+          <div
+            style={{
+              background: cardBg,
+              border: `1px solid ${borderC}`,
+              borderRadius: 20,
+              padding: 24,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+            }}
+          >
+            <div style={{ borderBottom: `1px solid ${borderC}`, paddingBottom: 12 }}>
+              <h3 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, margin: 0, color: ink }}>
+                Our Commitment to Your Journey
+              </h3>
+              <p style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, margin: '4px 0 0' }}>
+                Everything you need for lasting emotional freedom and daily practice.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
+                  🌿
+                </div>
+                <div>
+                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
+                    Instant Access to Inner Practices
+                  </span>
+                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
+                    Begin your journey immediately — stream released episodes, somatic releases, and guided reflections the moment you join.
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
+                  ✨
+                </div>
+                <div>
+                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
+                    Somatic Emotional Regulation
+                  </span>
+                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
+                    Guided by Sim Katyal, move beyond mental overthinking into bodily presence, emotional freedom, and nervous system ease.
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
+                  🕊️
+                </div>
+                <div>
+                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
+                    Dedicated Guidance &amp; Space
+                  </span>
+                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
+                    Gain access to structured practices, daily reflection tools, and guidance designed to support your ongoing inner growth.
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
+                  ⏳
+                </div>
+                <div>
+                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
+                    Self-Paced Lifetime Learning
+                  </span>
+                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
+                    Practice at your own rhythm. Enjoy unlimited lifetime access to all current modules and every upcoming episode release.
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ padding: '6px 8px', borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.06)', fontSize: 14 }}>
+                  🛡️
+                </div>
+                <div>
+                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, display: 'block' }}>
+                    14-Day Money-Back Guarantee
+                  </span>
+                  <span style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, lineHeight: 1.5, display: 'block', marginTop: 2 }}>
+                    Experience the course with complete peace of mind. If this journey doesn&apos;t resonate within 14 days, receive a full refund — no questions asked.
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </aside>
       </main>
     </div>
   );
 }
+
