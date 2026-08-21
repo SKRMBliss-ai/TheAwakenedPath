@@ -807,13 +807,20 @@ export default function EmotionFeelingsCourse() {
   };
 
   // Re-render the PayPal Buttons whenever the checkout inputs they close over
-  // change, so a stale amount/email/currency never gets submitted. Guarded on
-  // name+email so the buttons only appear once the buyer has actually filled
-  // the form — PayPal has no separate "submit" step to validate them first the
-  // way the Razorpay form's onSubmit does.
+  // change, so a stale amount/email/currency never gets submitted. We always
+  // render the container (keeping the card button visible at all times) and use
+  // CSS visibility to hide/show it — this avoids the jarring swap where the
+  // card button disappears the moment the buyer types a valid email character.
+  //
+  // A complete email requires both '@' and a '.' after the '@' — e.g. "a@b.c".
+  const isPaypalFormReady =
+    guestName.trim().length > 0 &&
+    guestEmail.includes('@') &&
+    guestEmail.split('@')[1]?.includes('.');
+
   useEffect(() => {
     if (!showCheckoutModal) return;
-    if (!guestName.trim() || !guestEmail.includes('@')) return;
+    if (!isPaypalFormReady) return;
     const signedInUid = getAuth().currentUser?.uid;
     const userId = signedInUid || 'guest_pending';
     const paidEmail = guestEmail.trim();
@@ -842,7 +849,7 @@ export default function EmotionFeelingsCourse() {
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCheckoutModal, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
+  }, [showCheckoutModal, isPaypalFormReady, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
 
   /** Hand off to the app. Full page load, not a router push — Mind Gym is a
    *  separate entry point and needs a fresh auth/entitlement bootstrap. */
@@ -3053,7 +3060,7 @@ export default function EmotionFeelingsCourse() {
                   </label>
                   <input
                     type="tel"
-                    placeholder="+91 98765 43210"
+                    placeholder="+1 (555) 000-0000"
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
                     style={{
@@ -3110,7 +3117,13 @@ export default function EmotionFeelingsCourse() {
                     deliberately, not gated behind a region guess. A wrong region
                     detection previously left overseas buyers stuck on a form
                     quoting the wrong currency with no alternative; whichever
-                    button the buyer actually reaches now still works. */}
+                    button the buyer actually reaches now still works.
+
+                    IMPORTANT: The card button MUST always remain visible. PayPal
+                    buttons are toggled via CSS visibility (not conditional mounting)
+                    so the card button never disappears while the buyer is typing
+                    their email. The container is also capped at 55 px tall on
+                    mobile to prevent the PayPal SDK from expanding to half-screen. */}
                 {isPaypalAvailable === false ? (
                   // PayPal backend unreachable (functions not deployed, or no
                   // client id configured). Show card checkout on its own rather
@@ -3119,13 +3132,31 @@ export default function EmotionFeelingsCourse() {
                 ) : activePricingConfig.currency === 'INR' ? (
                   <>
                     <RazorpaySubmit isProcessing={isProcessing} />
-                    <PaypalDivider />
-                    <div id="paypal-button-container" style={{ minHeight: isPaypalProcessing ? 45 : undefined }} />
+                    <div style={{ visibility: isPaypalFormReady ? 'visible' : 'hidden', maxHeight: isPaypalFormReady ? undefined : 0, overflow: 'hidden' }}>
+                      <PaypalDivider />
+                      <div
+                        id="paypal-button-container"
+                        style={{
+                          minHeight: isPaypalProcessing ? 45 : undefined,
+                          maxHeight: 55,
+                          overflow: 'hidden',
+                        }}
+                      />
+                    </div>
                   </>
                 ) : (
                   <>
-                    <div id="paypal-button-container" style={{ minHeight: isPaypalProcessing ? 45 : undefined }} />
-                    <PaypalDivider />
+                    <div style={{ visibility: isPaypalFormReady ? 'visible' : 'hidden', maxHeight: isPaypalFormReady ? undefined : 0, overflow: 'hidden' }}>
+                      <div
+                        id="paypal-button-container"
+                        style={{
+                          minHeight: isPaypalProcessing ? 45 : undefined,
+                          maxHeight: 55,
+                          overflow: 'hidden',
+                        }}
+                      />
+                      <PaypalDivider />
+                    </div>
                     <RazorpaySubmit isProcessing={isProcessing} />
                   </>
                 )}
