@@ -36,12 +36,20 @@ interface Props {
   onClose: () => void;
 }
 
-const INCLUDED = [
-  'All 7 modules — instant lifetime access',
-  'Every future episode added, free',
-  'Body-map & emotion practice library',
-  'Watch on any device, forever',
-];
+const INCLUDED = {
+  course: [
+    '7 in-depth episodes — instant lifetime access',
+    'Every future episode added, free',
+    'Body-map & emotion practice library',
+    'Watch on any device, forever',
+  ],
+  allAccess: [
+    'Every course: Power of Now, Wisdom Untethered, Feelings & Emotions & more',
+    'Journal, Breathwork, Audio, Meditations & Practices',
+    'Personal Growth Analytics & Daily Tracker',
+    'Every new course we release — lifetime free',
+  ],
+};
 
 /**
  * Dedicated checkout page (not a modal). Payment lives on its own URL so the
@@ -224,7 +232,7 @@ export default function CheckoutPage({
             </p>
             <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 400, margin: '0 0 16px' }}>{planName}</h2>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
-              {INCLUDED.map((item) => (
+              {INCLUDED[selectedPlan].map((item) => (
                 <li key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontFamily: SANS, fontSize: 13.5, color: inkSub }}>
                   <Check size={15} style={{ color: accent, flexShrink: 0, marginTop: 2 }} />
                   <span>{item}</span>

@@ -458,7 +458,7 @@ const FAQS = [
   },
   {
     q: 'What if I fall behind or need more time?',
-    a: 'You receive lifetime access to all 7 modules, future updates, and guided workbooks. You can complete it in 7 weeks or revisit it over months at your own speed.',
+    a: 'You receive lifetime access to all 7 episodes, future updates, and guided workbooks. You can complete it in 7 weeks or revisit it over months at your own speed.',
   },
   {
     q: 'Is there a money-back guarantee?',
@@ -527,7 +527,15 @@ export default function EmotionFeelingsCourse() {
   const { palette, toggle: toggleTheme } = useSiteTheme();
   const isDark = palette.isDark;
 
-  const [selectedPlan, setSelectedPlan] = useState<'course' | 'allAccess'>('course');
+  // When deep-linking to /checkout with ?plan=allAccess, load that plan
+  const getPlanFromUrl = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('plan') === 'allAccess' ? 'allAccess' : 'course';
+    }
+    return 'course';
+  };
+  const [selectedPlan, setSelectedPlan] = useState<'course' | 'allAccess'>(getPlanFromUrl);
   const coursePricingConfig = getRegionPricing(false);
   const allAccessPricingConfig = getRegionPricing(true);
   const activePricingConfig = selectedPlan === 'course' ? coursePricingConfig : allAccessPricingConfig;
@@ -2241,7 +2249,7 @@ export default function EmotionFeelingsCourse() {
 
               <div style={{ display: 'grid', gap: 16 }}>
                 {[
-                  { title: '7 in-depth modules', sub: 'Follow the complete transformation journey' },
+                  { title: '7 in-depth episodes', sub: 'Follow the complete transformation journey' },
                   { title: '20+ video lessons', sub: 'Clear, practical and easy to apply' },
                   { title: 'Guided practices & meditations', sub: 'Tools to shift your inner world' },
                   { title: 'Workbooks & journals', sub: 'For deep reflection and clarity' },
@@ -2366,15 +2374,15 @@ export default function EmotionFeelingsCourse() {
 
               <div style={{ display: 'grid', gap: 10, textAlign: 'left', marginBottom: 28 }}>
                 {(selectedPlan === 'course' ? [
-                  '18 Video Masterclasses & Worksheets',
+                  'Video Masterclasses & Worksheets',
                   'Lifetime Course Access & All Future Updates',
                   'Works on all mobile & desktop devices',
                   '100% 14-Day Money-Back Guarantee'
                 ] : [
-                  '✨ EVERYTHING in Feelings & Emotions Course',
-                  '🧠 Full MindGym App Access (Journal, Breathwork & Audio)',
+                  '✨ EVERY course — Power of Now, Wisdom Untethered, Feelings & Emotions',
+                  '🧠 Full MindGym App (Journal, Breathwork, Audio, Meditations & Practices)',
                   '🏆 Personal Growth Analytics & Daily Tracker',
-                  '⚡ Lifetime Access to All Future App Courses & Updates'
+                  '⚡ Every new course we release, free — for life'
                 ]).map((checkItem) => (
                   <div key={checkItem} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12.5, color: selectedPlan === 'allAccess' && checkItem.startsWith('✨') ? '#FFDF9E' : 'rgba(237,233,227,0.85)' }}>
                     <Check size={14} color="#C4913A" />
