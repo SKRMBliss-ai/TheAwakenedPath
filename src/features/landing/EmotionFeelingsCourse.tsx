@@ -537,9 +537,17 @@ export default function EmotionFeelingsCourse() {
     return 'course';
   };
   const [selectedPlan, setSelectedPlan] = useState<'course' | 'allAccess'>(getPlanFromUrl);
+  const [appSubPeriod, setAppSubPeriod] = useState<'monthly' | 'yearly'>('yearly');
   const coursePricingConfig = getRegionPricing(false);
   const allAccessPricingConfig = getRegionPricing(true);
   const activePricingConfig = selectedPlan === 'course' ? coursePricingConfig : allAccessPricingConfig;
+
+  // Subscription pricing for App + Course
+  const isINR = activePricingConfig.currency === 'INR';
+  const appMonthlyPrice = isINR ? 999 : 14;
+  const appYearlyPrice = isINR ? 7999 : 99;
+  const appYearlyMonthly = isINR ? 667 : 8;
+  const symbol = activePricingConfig.symbol;
 
   const ink     = isDark ? '#EDE9E3' : '#2A2118';
   const inkSub  = isDark ? 'rgba(237,233,227,0.6)' : '#6B5744';
@@ -2277,7 +2285,7 @@ export default function EmotionFeelingsCourse() {
             alignItems: 'stretch',
           }}
         >
-          {/* Left Column: What's included */}
+          {/* Left Column: Episode Journey Map */}
           <div
             style={{
               background: cardBg,
@@ -2286,36 +2294,51 @@ export default function EmotionFeelingsCourse() {
               padding: 32,
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'space-between',
             }}
           >
-            <div>
-              <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400, color: ink, margin: '0 0 20px' }}>
-                What's included
-              </h3>
+            <h3 style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 400, color: ink, margin: '0 0 6px' }}>
+              Your 7-Episode Journey
+            </h3>
+            <p style={{ fontFamily: SANS, fontSize: 12, color: inkSub, margin: '0 0 22px' }}>
+              Each episode builds on the last — a complete inner transformation arc.
+            </p>
 
-              <div style={{ display: 'grid', gap: 16 }}>
-                {[
-                  { title: '7 in-depth episodes', sub: 'Follow the complete transformation journey' },
-                  { title: '20+ video lessons', sub: 'Clear, practical and easy to apply' },
-                  { title: 'Guided practices & meditations', sub: 'Tools to shift your inner world' },
-                  { title: 'Workbooks & journals', sub: 'For deep reflection and clarity' },
-                  { title: 'Lifetime access', sub: 'Learn at your own pace, anytime' },
-                  { title: 'Private community', sub: 'Connect, share and grow together' },
-                  { title: 'Regular updates', sub: 'New content, meditations and practices' },
-                ].map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(196,145,58,0.15)', color: isDark ? '#C4913A' : '#8B6A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2, flexShrink: 0 }}>
-                      <Check size={12} strokeWidth={3} />
-                    </div>
-                    <div>
-                      <p style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, margin: 0 }}>{item.title}</p>
-                      <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: 0 }}>{item.sub}</p>
-                    </div>
+            <div style={{ display: 'grid', gap: 14 }}>
+              {[
+                { ep: 'Ep 1', title: 'What Are Feelings & Emotions?', sub: 'Understand the difference and why it matters', available: true },
+                { ep: 'Ep 2', title: 'The Art of Witnessing', sub: 'Step back from the emotional storm', available: true },
+                { ep: 'Ep 3', title: 'The Body Knows First', sub: 'Reading somatic signals before the mind does', available: true },
+                { ep: 'Ep 4', title: 'Emotional Regulation', sub: 'Practical tools for nervous system ease', available: false },
+                { ep: 'Ep 5', title: 'Healing Old Patterns', sub: 'Working with stored emotional memory', available: false },
+                { ep: 'Ep 6', title: 'Relationships & Emotion', sub: 'Navigating connection with presence', available: false },
+                { ep: 'Ep 7', title: 'Living in Emotional Freedom', sub: 'Integration & your ongoing practice', available: false },
+              ].map((ep, idx) => (
+                <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{
+                    minWidth: 38, height: 38, borderRadius: 10,
+                    background: ep.available ? 'rgba(196,145,58,0.18)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
+                    border: ep.available ? '1px solid rgba(196,145,58,0.4)' : `1px solid ${borderC}`,
+                    color: ep.available ? (isDark ? '#C4913A' : '#8B6A1A') : inkSub,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: SANS, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.04em',
+                    flexShrink: 0,
+                  }}>
+                    {ep.ep}
                   </div>
-                ))}
-              </div>
+                  <div style={{ paddingTop: 2 }}>
+                    <p style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 700, color: ep.available ? ink : inkSub, margin: 0 }}>
+                      {ep.title}
+                      {ep.available && <span style={{ marginLeft: 6, fontSize: 9.5, fontWeight: 800, background: 'rgba(196,145,58,0.2)', color: isDark ? '#C4913A' : '#8B6A1A', padding: '1px 6px', borderRadius: 99 }}>LIVE</span>}
+                    </p>
+                    <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: 0 }}>{ep.sub}</p>
+                  </div>
+                </div>
+              ))}
             </div>
+
+            <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: '20px 0 0', paddingTop: 16, borderTop: `1px solid ${borderC}` }}>
+              Episodes 4–7 unlock every week after you enrol.
+            </p>
           </div>
 
           {/* Center Column: Dark Purple Pricing Card */}
@@ -2394,37 +2417,87 @@ export default function EmotionFeelingsCourse() {
                 </button>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10, marginBottom: 6 }}>
-                <span style={{ fontFamily: SERIF, fontSize: 44, fontWeight: 500, color: '#EDE9E3' }}>
-                  {activePricingConfig.symbol}{customAmount.toLocaleString()}
-                </span>
-                <span style={{ fontFamily: SANS, fontSize: 15, textDecoration: 'line-through', opacity: 0.45 }}>
-                  {activePricingConfig.symbol}{activePricingConfig.strike.toLocaleString()}
-                </span>
+              {/* Subscription period toggle — only for App + Course */}
+              {selectedPlan === 'allAccess' && (
+                <div style={{ display: 'flex', gap: 6, padding: '4px', background: 'rgba(255,255,255,0.07)', borderRadius: 12, marginBottom: 18, border: '1px solid rgba(255,255,255,0.1)' }}>
+                  {(['monthly', 'yearly'] as const).map((period) => (
+                    <button
+                      key={period}
+                      type="button"
+                      onClick={() => setAppSubPeriod(period)}
+                      style={{
+                        flex: 1, padding: '7px 0', borderRadius: 9, border: 'none', cursor: 'pointer',
+                        fontFamily: SANS, fontSize: 11.5, fontWeight: 700,
+                        background: appSubPeriod === period ? 'rgba(196,145,58,0.35)' : 'transparent',
+                        color: appSubPeriod === period ? '#FFDF9E' : 'rgba(255,255,255,0.55)',
+                        transition: 'all 0.2s ease',
+                        position: 'relative',
+                      }}
+                    >
+                      {period === 'monthly' ? 'Monthly' : 'Yearly'}
+                      {period === 'yearly' && (
+                        <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 900, background: '#C4913A', color: '#1E1426', padding: '1px 5px', borderRadius: 99 }}>SAVE 33%</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10, marginBottom: 4 }}>
+                {selectedPlan === 'allAccess' ? (
+                  <>
+                    <span style={{ fontFamily: SERIF, fontSize: 44, fontWeight: 500, color: '#EDE9E3' }}>
+                      {symbol}{(appSubPeriod === 'monthly' ? appMonthlyPrice : appYearlyPrice).toLocaleString()}
+                    </span>
+                    <span style={{ fontFamily: SANS, fontSize: 15, textDecoration: 'line-through', opacity: 0.45 }}>
+                      {symbol}{(appSubPeriod === 'monthly' ? (isINR ? 1499 : 20) : (isINR ? 11988 : 168)).toLocaleString()}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontFamily: SERIF, fontSize: 44, fontWeight: 500, color: '#EDE9E3' }}>
+                      {activePricingConfig.symbol}{customAmount.toLocaleString()}
+                    </span>
+                    <span style={{ fontFamily: SANS, fontSize: 15, textDecoration: 'line-through', opacity: 0.45 }}>
+                      {activePricingConfig.symbol}{activePricingConfig.strike.toLocaleString()}
+                    </span>
+                  </>
+                )}
               </div>
               <p style={{ fontFamily: SANS, fontSize: 11, color: 'rgba(237,233,227,0.6)', margin: '0 0 20px' }}>
-                Pay-What-You-Feel Support Available
+                {selectedPlan === 'allAccess'
+                  ? appSubPeriod === 'yearly'
+                    ? `${symbol}${appYearlyMonthly}/month · billed annually · cancel anytime`
+                    : 'Billed monthly · cancel anytime'
+                  : 'Pay-What-You-Feel Support Available'
+                }
               </p>
 
-              {/* Price Slider */}
-              <div style={{ marginBottom: 24, textAlign: 'left' }}>
-                <PriceSlider
-                  currency={activePricingConfig.currency}
-                  min={activePricingConfig.min}
-                  suggested={activePricingConfig.suggested}
-                  max={activePricingConfig.max}
-                  value={customAmount}
-                  onChange={(val) => setCustomAmount(val)}
-                  dark={true}
-                />
-              </div>
+              {/* Price Slider — course only */}
+              {selectedPlan === 'course' && (
+                <div style={{ marginBottom: 24, textAlign: 'left' }}>
+                  <PriceSlider
+                    currency={activePricingConfig.currency}
+                    min={activePricingConfig.min}
+                    suggested={activePricingConfig.suggested}
+                    max={activePricingConfig.max}
+                    value={customAmount}
+                    onChange={(val) => setCustomAmount(val)}
+                    dark={true}
+                  />
+                </div>
+              )}
 
               <div style={{ display: 'grid', gap: 10, textAlign: 'left', marginBottom: 28 }}>
                 {(selectedPlan === 'course' ? [
-                  'Video Masterclasses & Worksheets',
-                  'Lifetime Course Access & All Future Updates',
-                  'Works on all mobile & desktop devices',
-                  '100% 14-Day Money-Back Guarantee'
+                  '7 in-depth episodes — lifetime access',
+                  '3 episodes available now — Episodes 4, 5, 6 & 7 unlock weekly after enrollment',
+                  'Ebooks & PDF reference course materials',
+                  'Free guided meditations to practice what is taught',
+                  'Personal WhatsApp support available',
+                  'Access to Inner Circle community support',
+                  'Body-map & emotion practice library in Mind Gym app with unlimited music & meditations',
+                  'Watch on any device, forever'
                 ] : [
                   '✨ EVERY course — Power of Now, Wisdom Untethered, Feelings & Emotions',
                   '🧠 Full MindGym App (Journal, Breathwork, Audio, Meditations & Practices)',

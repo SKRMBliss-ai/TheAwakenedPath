@@ -223,26 +223,32 @@ export default function CheckoutPage({
           <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
             <div>
               <label style={label} htmlFor="co-name">Full name</label>
-              <div style={fieldWrap}>
+              <div style={{ ...fieldWrap, position: 'relative' }}>
                 <User size={16} style={fieldIcon} />
                 <input
                   id="co-name" type="text" required autoComplete="name" placeholder="Your name"
-                  value={guestName} onChange={(e) => onGuestName(e.target.value)} style={field} className="co-field"
+                  value={guestName} onChange={(e) => onGuestName(e.target.value)} style={{ ...field, paddingRight: guestName.trim().length >= 2 ? 34 : 12 }} className="co-field"
                 />
+                {guestName.trim().length >= 2 && (
+                  <Check size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#22863a' }} />
+                )}
               </div>
             </div>
 
             <div>
               <label style={label} htmlFor="co-email">Email address</label>
-              <div style={fieldWrap}>
+              <div style={{ ...fieldWrap, position: 'relative' }}>
                 <Mail size={16} style={fieldIcon} />
                 <input
                   id="co-email" type="email" required autoComplete="email" placeholder="you@example.com"
-                  value={guestEmail} onChange={(e) => onGuestEmail(e.target.value)} style={field} className="co-field"
+                  value={guestEmail} onChange={(e) => onGuestEmail(e.target.value)} style={{ ...field, paddingRight: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail) ? 34 : 12 }} className="co-field"
                 />
+                {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail) && (
+                  <Check size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#22863a' }} />
+                )}
               </div>
-              <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: '6px 0 0' }}>
-                Sign in with this email to unlock the course.
+              <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Lock size={11} style={{ color: accent }} /> Access link &amp; receipt will be sent here instantly after payment.
               </p>
             </div>
 
@@ -278,6 +284,44 @@ export default function CheckoutPage({
                 onChange={onAmount}
                 dark={isDark}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => onAmount(pricing.min)}
+                  style={{
+                    padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, fontFamily: SANS,
+                    border: `1px solid ${amount === pricing.min ? accent : borderC}`,
+                    background: amount === pricing.min ? (isDark ? 'rgba(196,145,58,0.2)' : 'rgba(74,50,96,0.1)') : 'transparent',
+                    color: amount === pricing.min ? accent : inkSub, cursor: 'pointer'
+                  }}
+                >
+                  Min {pricing.symbol}{pricing.min}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onAmount(pricing.suggested)}
+                  style={{
+                    padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, fontFamily: SANS,
+                    border: `1px solid ${amount === pricing.suggested ? accent : borderC}`,
+                    background: amount === pricing.suggested ? (isDark ? 'rgba(196,145,58,0.2)' : 'rgba(74,50,96,0.1)') : 'transparent',
+                    color: amount === pricing.suggested ? accent : inkSub, cursor: 'pointer'
+                  }}
+                >
+                  Recommended {pricing.symbol}{pricing.suggested}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onAmount(pricing.max)}
+                  style={{
+                    padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, fontFamily: SANS,
+                    border: `1px solid ${amount === pricing.max ? accent : borderC}`,
+                    background: amount === pricing.max ? (isDark ? 'rgba(196,145,58,0.2)' : 'rgba(74,50,96,0.1)') : 'transparent',
+                    color: amount === pricing.max ? accent : inkSub, cursor: 'pointer'
+                  }}
+                >
+                  Supporter {pricing.symbol}{pricing.max}
+                </button>
+              </div>
             </div>
 
             <div
@@ -399,6 +443,16 @@ export default function CheckoutPage({
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Authentic Student Quote Callout */}
+          <div style={{ ...card, padding: '14px 18px', borderLeft: `3px solid ${accent}`, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(74,50,96,0.03)' }}>
+            <p style={{ fontFamily: SERIF, fontSize: 14.5, fontStyle: 'italic', color: ink, margin: '0 0 4px', lineHeight: 1.5 }}>
+              &ldquo;Watching Episode 1 felt like someone finally explained how my mind and emotional body actually work.&rdquo;
+            </p>
+            <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 700, color: inkSub }}>
+              — Early Course Participant
+            </span>
           </div>
 
           {/* Our Commitment — collapsed by default so the sidebar doesn't
