@@ -670,7 +670,13 @@ export default function EmotionFeelingsCourse() {
   }, [teaserVideo]);
 
   const { checkOut, isProcessing } = useRazorpay();
-  const { renderCheckout: renderPaypalCheckout, renderGooglePay, isProcessing: isPaypalProcessing, isAvailable: isPaypalAvailable } = usePaypal();
+  const { renderCheckout: renderPaypalCheckout, renderGooglePay, renderSubscription, isProcessing: isPaypalProcessing, isAvailable: isPaypalAvailable } = usePaypal();
+
+  // PayPal Billing Plan IDs for App + Course subscriptions
+  const PAYPAL_SUB_PLAN_IDS = {
+    monthly: 'P-2A957478F30403037NKEJTPY',
+    yearly: 'P-77D88672U7996500RNKEJT4Q',
+  } as const;
 
   // Master SEO + AEO + GEO Schema setup
   usePageSeo({
@@ -844,6 +850,7 @@ export default function EmotionFeelingsCourse() {
 
   useEffect(() => {
     if (!showCheckout) return;
+    if (selectedPlan !== 'course') return; // subscription plan uses its own effect below
     if (!isPaypalFormReady) return;
     const signedInUid = getAuth().currentUser?.uid;
     const userId = signedInUid || 'guest_pending';
@@ -870,7 +877,35 @@ export default function EmotionFeelingsCourse() {
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCheckout, isPaypalFormReady, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
+  }, [showCheckout, selectedPlan, isPaypalFormReady, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
+
+  // PayPal Subscription button — renders when App + Course plan is selected
+  useEffect(() => {
+    if (!showCheckout) return;
+    if (selectedPlan !== 'allAccess') return;
+    if (!isPaypalFormReady) return;
+
+    const planId = PAYPAL_SUB_PLAN_IDS[appSubPeriod];
+    const paidEmail = guestEmail.trim();
+    const signedInUid = getAuth().currentUser?.uid;
+
+    const timer = setTimeout(() => {
+      renderSubscription(
+        'paypal-button-container',
+        planId,
+        (subscriptionId) => {
+          closeCheckout();
+          if (!signedInUid && paidEmail) {
+            try { localStorage.setItem('pendingCourseClaimEmail', paidEmail.toLowerCase()); } catch { /* private mode */ }
+          }
+          setPurchaseSuccess({ email: paidEmail, wasSignedIn: Boolean(signedInUid) });
+          trackActivity('APP_SUBSCRIBED_SUCCESS', `Plan: ${appSubPeriod}, SubID: ${subscriptionId}`, paidEmail);
+        }
+      );
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCheckout, selectedPlan, appSubPeriod, isPaypalFormReady, guestEmail, guestName]);
 
   // Google Pay — re-render alongside PayPal whenever the form inputs change.
   // Uses the same isPaypalFormReady gate so the button only appears after a

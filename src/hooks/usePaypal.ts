@@ -32,6 +32,26 @@ function loadPaypalSdk(clientId: string, currency: string): Promise<void> {
     return sdkLoad;
 }
 
+// Separate SDK loader for subscriptions — must use vault=true&intent=subscription.
+// Cannot share with the one-time payment SDK because intent is baked into the URL.
+let subSdkLoad: Promise<void> | null = null;
+let subLoadedClientId: string | null = null;
+
+function loadPaypalSubscriptionSdk(clientId: string): Promise<void> {
+    if (subSdkLoad && subLoadedClientId === clientId) return subSdkLoad;
+    subLoadedClientId = clientId;
+    subSdkLoad = new Promise((resolve, reject) => {
+        document.querySelectorAll('script[data-paypal-sub-sdk]').forEach((el) => el.remove());
+        const script = document.createElement('script');
+        script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&vault=true&intent=subscription&components=buttons`;
+        script.dataset.paypalSubSdk = 'true';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load PayPal Subscription SDK'));
+        document.head.appendChild(script);
+    });
+    return subSdkLoad;
+}
+
 // Load the Google Pay JS library (only once)
 let googlePayLoad: Promise<void> | null = null;
 function loadGooglePaySdk(): Promise<void> {
@@ -354,5 +374,80 @@ export const usePaypal = () => {
         }
     };
 
-    return { renderCheckout, renderGooglePay, isProcessing, isAvailable, isGooglePayAvailable };
+    /**
+     * Renders a PayPal Subscribe button into `containerId`.
+     * Uses the vault+subscription SDK (different from the one-time payment SDK).
+     * planId: the PayPal Billing Plan ID (P-xxx) for monthly or yearly.
+     */
+    const renderSubscription = async (
+        containerId: string,
+        planId: string,
+        onSuccess: (subscriptionId: string) => void
+    ) => {
+        try {
+            const config = await fetchPaypalConfig();
+            const clientId = config?.clientId;
+            if (!clientId) {
+                setIsAvailable(false);
+                return;
+            }
+            setIsAvailable(true);
+
+            // Must remove the one-time SDK before loading the subscription SDK
+            // because PayPal's SDK validates intent on init.
+            document.querySelectorAll('script[data-paypal-sdk]').forEach((el) => el.remove());
+            sdkLoad = null; // reset cache so it reloads fresh when switching back
+
+            await loadPaypalSubscriptionSdk(clientId);
+
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+
+            window.paypal.Buttons({
+                style: {
+                    shape: 'rect',
+                    color: 'gold',
+                    layout: 'vertical',
+                    label: 'subscribe',
+                },
+                createSubscription: (_data: unknown, actions: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                    return actions.subscription.create({ plan_id: planId });
+                },
+                onApprove: async (data: { subscriptionID: string }) => {
+                    try {
+                        setIsProcessing(true);
+                        // Notify our backend to record the subscription
+                        const res = await fetch('/api/paypal-subscription-verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ subscriptionID: data.subscriptionID, planId }),
+                        });
+                        if (res.ok) {
+                            showDeduplicatedToast('Subscription confirmed — welcome to Mind Gym!', 'success');
+                        }
+                        onSuccess(data.subscriptionID);
+                    } catch (err) {
+                        console.error('Subscription verify error:', err);
+                        // Even if backend verify fails, PayPal confirmed it — record optimistically
+                        onSuccess(data.subscriptionID);
+                    } finally {
+                        setIsProcessing(false);
+                    }
+                },
+                onCancel: () => { setIsProcessing(false); },
+                onError: (err: unknown) => {
+                    console.error('PayPal Subscription Error:', err);
+                    showDeduplicatedToast('PayPal subscription unavailable. Please try again.', 'error');
+                    setIsProcessing(false);
+                },
+            }).render(`#${containerId}`);
+        } catch (error) {
+            console.error('PayPal Subscription setup error:', error);
+            setIsAvailable(false);
+            setIsProcessing(false);
+        }
+    };
+
+    return { renderCheckout, renderGooglePay, renderSubscription, isProcessing, isAvailable, isGooglePayAvailable };
 };
