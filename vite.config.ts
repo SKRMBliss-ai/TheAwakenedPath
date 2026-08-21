@@ -54,18 +54,64 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        // Serve the app shell for ALL in-app navigations (/, /aboutmindgym,
-        // /knowyouremotionalhealth, …) so the service worker doesn't error on
-        // sub-routes. Exclude the Cloud-Function API rewrites, /twinsouls
-        // (its own app — must reach the network, not the Mind Gym shell), and
-        // /.well-known (domain-verification files like Apple Pay's — a browser
-        // that already has the service worker installed and navigates there
-        // directly must get the real file, not the app shell; this doesn't
-        // affect Apple's own verification, which fetches server-side with no
-        // service worker involved, but a stale/misleading 404 during manual
-        // testing isn't worth leaving in).
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//, /^\/twinsouls/, /^\/habitquest2026/, /^\/\.well-known\//],
+        // Navigations are NETWORK-FIRST, not cache-first. This is a correctness
+        // requirement, not a performance tweak.
+        //
+        // This used to be `navigateFallback: '/index.html'`, which registers a
+        // NavigationRoute bound to the PRECACHED shell — i.e. cache-first. Every
+        // navigation by a returning visitor was answered entirely from the
+        // service worker's precache: the old index.html, referencing the old
+        // content-hashed JS chunks, also from precache. The network was never
+        // consulted. A new service worker would install in the background and
+        // (via skipWaiting/clientsClaim) take control, but the page already
+        // rendered was the old bundle, and nothing reloaded it — `registerType:
+        // 'autoUpdate'` only auto-reloads when the app imports
+        // `virtual:pwa-register`, which it does not; the generated registerSW.js
+        // is a bare navigator.serviceWorker.register() with no update handling.
+        //
+        // So a shipped fix stayed invisible to anyone who had visited before,
+        // indefinitely, until they happened to hard-reload. That is how a buyer
+        // who had already been to the sales page went through checkout on the
+        // pre-fix bundle hours after the currency fix was live, and was charged
+        // in INR on an overseas card again, while a first-time visitor (no
+        // service worker installed, so the navigation hit the network) got the
+        // fixed bundle and paid successfully.
+        //
+        // NetworkFirst inverts that: the shell — a few KB — is fetched fresh
+        // whenever the network answers within the timeout, so a returning
+        // visitor runs current code on their FIRST navigation, with no reload
+        // and no risk of a forced refresh mid-checkout. The content-hashed
+        // assets it references are immutable and stay precache-first, so this
+        // costs one small conditional request, not a cold load. precacheFallback
+        // serves the precached shell when the network is slow or absent, which
+        // keeps offline and sub-route navigation working exactly as before.
+        //
+        // The urlPattern carries what navigateFallbackDenylist used to: /api
+        // (Cloud-Function rewrites), /twinsouls and /habitquest2026 (separate
+        // apps on this host — they must reach the network, not the Mind Gym
+        // shell), and /.well-known (domain-verification files such as Apple
+        // Pay's, which must be the real file rather than the app shell). Those
+        // paths match no route at all and go straight to the network.
+        // vite-plugin-pwa defaults navigateFallback to 'index.html' when the key
+        // is absent, which re-registers the cache-first NavigationRoute ahead of
+        // the route below (and without the denylist). Set it explicitly to
+        // undefined so no such route is generated and navigations reach the
+        // NetworkFirst handler.
+        navigateFallback: undefined,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request, url }: { request: Request; url: URL }) =>
+              request.mode === 'navigate' &&
+              !/^\/(?:api\/|twinsouls|habitquest2026|\.well-known\/)/.test(url.pathname),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'app-shell',
+              networkTimeoutSeconds: 4,
+              precacheFallback: { fallbackURL: '/index.html' },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
       manifest: {
         name: 'Mind Gym',
