@@ -139,6 +139,27 @@
         }
       },
       {
+        "source": "/api/paypal-config",
+        "function": {
+          "functionId": "getPaypalConfig",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/paypal-order",
+        "function": {
+          "functionId": "createPaypalOrder",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/paypal-verify",
+        "function": {
+          "functionId": "verifyPaypalPayment",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/unsubscribe",
         "function": {
           "functionId": "unsubscribe",

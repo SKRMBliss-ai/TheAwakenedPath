@@ -47,6 +47,12 @@ const emailPass = defineSecret("EMAIL_PASS");
 const youtubeApiKey = defineSecret("YOUTUBE_API_KEY");
 // Razorpay webhook signing secret — was hard-coded as "YOUR_WEBHOOK_SECRET" before, breaking all webhook signature checks
 const razorpayWebhookSecret = defineSecret("RAZORPAY_WEBHOOK_SECRET");
+// PayPal. The client ID is public by nature (it ships in the SDK script URL on
+// every PayPal-enabled site) but is kept in Secret Manager alongside the secret
+// so neither needs baking into the frontend bundle at build time — same pattern
+// as RAZORPAY_KEY_ID.
+const paypalClientId = defineSecret("PAYPAL_CLIENT_ID");
+const paypalSecret = defineSecret("PAYPAL_SECRET");
 
 // Lead-finder secrets — Google Custom Search (Reddit uses public JSON, no key needed)
 const googleSearchKey = defineSecret("GOOGLE_SEARCH_API_KEY");
@@ -833,6 +839,124 @@ exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySe
     }
 });
 
+
+// ─── Shared entitlement grant ──────────────────────────────────────────────
+// Everything that must happen once money has actually been taken: unlock the
+// product, email the buyer, and record the transaction. Extracted from
+// verifyRazorpayPayment unchanged so PayPal grants access by exactly the same
+// path — a second copy of this logic would be a second place for entitlements
+// to drift or be forgotten.
+//
+// The caller is responsible for PROVING the payment first (Razorpay: HMAC
+// signature + order fetch; PayPal: capture returning COMPLETED). This function
+// trusts what it is given and grants, so never call it on unverified input.
+//
+// `paymentId` is the provider's payment identifier and doubles as the
+// transactions/ document id, which makes a repeated call idempotent for the
+// transaction record: a duplicate webhook or a double-clicked capture
+// overwrites the same doc rather than adding another. The entitlement writes
+// are arrayUnion/merge, so they are naturally idempotent too — except a
+// membership extension, which stacks by design; callers must not invoke this
+// twice for one membership payment.
+async function grantPurchase({
+    userId, courseId, grantType = 'course', membershipDays = null,
+    guestEmail = '', guestPhone = '',
+    provider, orderId, paymentId, amount, currency,
+}) {
+    let userEmail = null;
+    const isGuest = userId === 'guest_pending' || userId.startsWith('guest_');
+
+    if (isGuest) {
+        userEmail = String(guestEmail || '').toLowerCase().trim();
+        const phone = String(guestPhone || '').trim();
+
+        if (userEmail) {
+            const guestRef = db.collection("guestPurchases").doc(userEmail);
+            if (grantType === 'membership' && membershipDays) {
+                const guestSnap = await guestRef.get();
+                const newUntilMs = extendMembershipUntilMs(guestSnap.exists ? guestSnap.data().membershipUntil : null, membershipDays);
+                await guestRef.set({
+                    email: userEmail,
+                    phone,
+                    membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } else {
+                const updateData = {
+                    email: userEmail,
+                    phone,
+                    purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                };
+                if (isSoundscapeTrack(courseId)) {
+                    updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
+                }
+                await guestRef.set(updateData, { merge: true });
+            }
+        }
+    } else {
+        const userRef = db.collection("users").doc(userId);
+
+        // Fetch user to get email for welcome notification (and current
+        // membershipUntil, when extending).
+        const userDoc = await userRef.get();
+        userEmail = userDoc.exists ? userDoc.data().email : null;
+
+        if (grantType === 'membership' && membershipDays) {
+            const newUntilMs = extendMembershipUntilMs(userDoc.exists ? userDoc.data().membershipUntil : null, membershipDays);
+            await userRef.set({
+                membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        } else {
+            const updateData = {
+                purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            };
+            // If it's a soundscape track, also add to ownedTracks
+            if (isSoundscapeTrack(courseId)) {
+                updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
+            }
+            await userRef.set(updateData, { merge: true });
+        }
+    }
+
+    // Send the right email: guests must be told to sign up with THIS email
+    // to unlock; existing users get the standard welcome.
+    if (userEmail) {
+        try {
+            if (isGuest) {
+                await sendGuestAccessEmail(userEmail);
+            } else {
+                const planName = grantType === 'membership'
+                    ? (membershipDays && membershipDays >= 300 ? 'Mind Gym Membership (Yearly)' : 'Mind Gym Membership (Monthly)')
+                    : (courseId === 'all_access' ? 'Premium (Lifetime)' : courseId);
+                await sendWelcomeEmail(userEmail, planName);
+            }
+        } catch (emailErr) {
+            console.error("Failed to send access email:", emailErr);
+        }
+    }
+
+    // Log the transaction (Atomic/Secure) — record the actual paid amount &
+    // currency taken from the provider, not the USD price map.
+    await db.collection("transactions").doc(paymentId).set({
+        userId,
+        courseId,
+        provider,
+        // Kept under the original Razorpay field names so existing reads and
+        // dashboards keep working; PayPal fills the same two slots.
+        razorpayOrderId: orderId,
+        razorpayPaymentId: paymentId,
+        amount,
+        currency,
+        status: "SUCCESS",
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return { userEmail, isGuest };
+}
+
 /**
  * Verifies Razorpay Payment Signature and grants access
  */
@@ -875,13 +999,15 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
             return res.status(400).send("Order data mismatch. Discrepancy detected.");
         }
 
-        // 3. Grant Access in Firestore — 'membership' extends membershipUntil
-        //    (Mind Gym premium, any PWYW amount); 'course' unlocks permanently
-        //    via purchasedCourses (unchanged, fixed-price and PWYW course alike).
-        let userEmail = null;
+        // 3. Resolve who/what was bought, then hand off to the shared grant
+        //    path — 'membership' extends membershipUntil (Mind Gym premium, any
+        //    PWYW amount); 'course' unlocks permanently via purchasedCourses.
         const grantType = rzpOrder.notes.grantType === 'membership' ? 'membership' : 'course';
         const membershipDays = parseInt(rzpOrder.notes.membershipDays || '0', 10) || null;
         const isGuest = userId === 'guest_pending' || userId.startsWith('guest_');
+
+        let guestEmail = '';
+        let guestPhone = '';
         if (isGuest) {
             const rzpPayment = await razorpay.payments.fetch(razorpay_payment_id);
             // Prefer the email WE captured on our page (order notes) — reliable even
@@ -890,95 +1016,205 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
             // (lowercase) so it matches the email at signup for account-linking.
             const notesEmail = String(rzpOrder.notes.guestEmail || '').toLowerCase().trim();
             const rzpEmail = String(rzpPayment.email || '').toLowerCase().trim();
-            userEmail = notesEmail || (rzpEmail !== 'void@razorpay.com' ? rzpEmail : '');
-            const guestPhone = String(rzpOrder.notes.guestPhone || rzpPayment.contact || '').trim();
-
-            if (userEmail) {
-                const guestRef = db.collection("guestPurchases").doc(userEmail);
-                if (grantType === 'membership' && membershipDays) {
-                    const guestSnap = await guestRef.get();
-                    const newUntilMs = extendMembershipUntilMs(guestSnap.exists ? guestSnap.data().membershipUntil : null, membershipDays);
-                    await guestRef.set({
-                        email: userEmail,
-                        phone: guestPhone,
-                        membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
-                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
-                } else {
-                    const updateData = {
-                        email: userEmail,
-                        phone: guestPhone,
-                        purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
-                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                    };
-                    if (isSoundscapeTrack(courseId)) {
-                        updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
-                    }
-                    await guestRef.set(updateData, { merge: true });
-                }
-            }
-        } else {
-            const userRef = db.collection("users").doc(userId);
-
-            // Fetch user to get email for welcome notification (and current
-            // membershipUntil, when extending).
-            const userDoc = await userRef.get();
-            userEmail = userDoc.exists ? userDoc.data().email : null;
-
-            if (grantType === 'membership' && membershipDays) {
-                const newUntilMs = extendMembershipUntilMs(userDoc.exists ? userDoc.data().membershipUntil : null, membershipDays);
-                await userRef.set({
-                    membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-            } else {
-                const updateData = {
-                    purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                };
-                // If it's a soundscape track, also add to ownedTracks
-                if (isSoundscapeTrack(courseId)) {
-                    updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
-                }
-                await userRef.set(updateData, { merge: true });
-            }
+            guestEmail = notesEmail || (rzpEmail !== 'void@razorpay.com' ? rzpEmail : '');
+            guestPhone = String(rzpOrder.notes.guestPhone || rzpPayment.contact || '').trim();
         }
 
-        // Send the right email: guests must be told to sign up with THIS email
-        // to unlock; existing users get the standard welcome.
-        if (userEmail) {
-            try {
-                if (isGuest) {
-                    await sendGuestAccessEmail(userEmail);
-                } else {
-                    const planName = grantType === 'membership'
-                        ? (membershipDays && membershipDays >= 300 ? 'Mind Gym Membership (Yearly)' : 'Mind Gym Membership (Monthly)')
-                        : (courseId === 'all_access' ? 'Premium (Lifetime)' : courseId);
-                    await sendWelcomeEmail(userEmail, planName);
-                }
-            } catch (emailErr) {
-                console.error("Failed to send access email:", emailErr);
-            }
-        }
-
-        // 4. Log the transaction (Atomic/Secure) — record the actual paid amount &
-        //    currency from the Razorpay order, not the USD price map (was wrong for INR).
-        const paidCurrency = rzpOrder.currency || (rzpOrder.notes && rzpOrder.notes.currency) || 'USD';
-        const paidAmountMajor = typeof rzpOrder.amount === 'number' ? rzpOrder.amount / 100 : null;
-        await db.collection("transactions").doc(razorpay_payment_id).set({
+        await grantPurchase({
             userId,
             courseId,
-            razorpayOrderId: razorpay_order_id,
-            razorpayPaymentId: razorpay_payment_id,
-            amount: paidAmountMajor,
-            currency: paidCurrency,
-            status: "SUCCESS",
-            timestamp: admin.firestore.FieldValue.serverTimestamp()
+            grantType,
+            membershipDays,
+            guestEmail,
+            guestPhone,
+            provider: 'razorpay',
+            orderId: razorpay_order_id,
+            paymentId: razorpay_payment_id,
+            amount: typeof rzpOrder.amount === 'number' ? rzpOrder.amount / 100 : null,
+            currency: rzpOrder.currency || (rzpOrder.notes && rzpOrder.notes.currency) || 'USD',
         });
 
         res.json({ success: true, message: "Access granted" });
     } catch (error) {
         console.error("Verification Error:", error);
+        res.status(500).send("Verification failed");
+    }
+});
+
+// ─── PayPal ─────────────────────────────────────────────────────────────
+// Live by default (matches the Razorpay integration, which has no sandbox
+// switch either); set PAYPAL_ENV=sandbox in the function's env to test.
+const PAYPAL_API_BASE = process.env.PAYPAL_ENV === 'sandbox'
+    ? 'https://api-m.sandbox.paypal.com'
+    : 'https://api-m.paypal.com';
+
+async function paypalAccessToken() {
+    const auth = Buffer.from(`${paypalClientId.value()}:${paypalSecret.value()}`).toString('base64');
+    const resp = await fetch(`${PAYPAL_API_BASE}/v1/oauth2/token`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'grant_type=client_credentials',
+    });
+    if (!resp.ok) {
+        throw new Error(`PayPal auth failed: ${resp.status} ${await resp.text()}`);
+    }
+    const json = await resp.json();
+    return json.access_token;
+}
+
+/**
+ * Returns the public PayPal client id so the frontend can load the SDK
+ * script before an order exists (the script tag needs a client-id up front;
+ * createPaypalOrder's response is too late for that). Not a secret — this
+ * value ships in the SDK's own script URL on every PayPal-enabled page.
+ */
+exports.getPaypalConfig = onRequest({ secrets: [paypalClientId], cors: true }, async (req, res) => {
+    res.json({ clientId: paypalClientId.value() });
+});
+
+/**
+ * Creates a PayPal Order. Mirrors createRazorpayOrder: same PWYW/fixed-price
+ * resolution, same request shape, so the frontend can treat both providers
+ * identically up to which SDK it hands the order id to.
+ */
+exports.createPaypalOrder = onRequest({ secrets: [paypalClientId, paypalSecret], cors: true }, async (req, res) => {
+    const { courseId, userId, currency = "USD", guestEmail, guestPhone, amount: clientAmount } = req.body;
+
+    const pwyw = resolvePwywAmount(courseId, currency, clientAmount);
+    let chargeCurrency, amount, grantType = "course", membershipDays = null;
+    if (pwyw) {
+        chargeCurrency = pwyw.currency;
+        amount = pwyw.amount;
+        grantType = pwyw.grantType;
+        membershipDays = pwyw.days;
+    } else {
+        const resolved = resolveCoursePrice(courseId, currency);
+        chargeCurrency = resolved.currency;
+        amount = resolved.amount;
+    }
+
+    if (amount == null) {
+        return res.status(400).send("Invalid or missing courseId");
+    }
+
+    // PayPal doesn't settle INR at all (no domestic PayPal payouts in India
+    // since mid-2021) — fall back to USD rather than let order creation fail.
+    if (chargeCurrency === "INR") {
+        chargeCurrency = "USD";
+        amount = pwyw ? resolvePwywAmount(courseId, "USD", clientAmount).amount
+                      : resolveCoursePrice(courseId, "USD").amount;
+    }
+
+    try {
+        const accessToken = await paypalAccessToken();
+        const resp = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                intent: 'CAPTURE',
+                purchase_units: [{
+                    // PayPal's own reference; not used to look the order back up —
+                    // that happens via the order id in the capture response, same
+                    // as Razorpay's razorpay_order_id round-trip.
+                    reference_id: `r_${courseId.substring(0, 20)}_${Date.now()}`,
+                    description: `Unlock ${courseId}`,
+                    amount: {
+                        currency_code: chargeCurrency,
+                        value: amount.toFixed(2),
+                    },
+                    // PayPal has no free-form notes field like Razorpay's; custom_id
+                    // is the closest equivalent and is capped at 127 characters, so
+                    // pack only what capture needs to re-derive the grant — not the
+                    // guest contact details, which travel via guestPurchases lookup
+                    // keyed on the SAME email once verifyPaypalPayment runs.
+                    custom_id: JSON.stringify({
+                        courseId, userId: userId || 'anonymous', grantType,
+                        membershipDays: membershipDays || null,
+                        guestEmail: String(guestEmail || '').toLowerCase().trim(),
+                        guestPhone: String(guestPhone || '').trim(),
+                    }),
+                }],
+            }),
+        });
+
+        if (!resp.ok) {
+            console.error("PayPal Order Error:", await resp.text());
+            return res.status(500).send("Failed to create payment order");
+        }
+
+        const order = await resp.json();
+        // client_id is safe to return — it's the public half of the credential
+        // pair and ships in the PayPal SDK script URL on every page load anyway.
+        res.json({ id: order.id, client_id: paypalClientId.value() });
+    } catch (error) {
+        console.error("PayPal Order Error:", error);
+        res.status(500).send("Failed to create payment order");
+    }
+});
+
+/**
+ * Captures a PayPal Order and grants access. The capture call itself is the
+ * proof of payment — PayPal only returns COMPLETED for money that has actually
+ * moved, so there's no separate signature check the way Razorpay needs one
+ * (that HMAC exists because Razorpay's handler fires client-side and could be
+ * spoofed; PayPal's capture is a server-to-server call we make ourselves).
+ */
+exports.verifyPaypalPayment = onRequest({ secrets: [paypalClientId, paypalSecret, emailUser, emailPass], cors: true }, async (req, res) => {
+    const { orderID } = req.body;
+    if (!orderID) {
+        return res.status(400).send("Missing orderID");
+    }
+
+    try {
+        const accessToken = await paypalAccessToken();
+        const resp = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders/${orderID}/capture`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const capture = await resp.json();
+        if (!resp.ok || capture.status !== 'COMPLETED') {
+            console.error("PayPal Capture Error:", capture);
+            return res.status(400).json({ success: false, message: "Payment not completed" });
+        }
+
+        const unit = capture.purchase_units && capture.purchase_units[0];
+        const capturedPayment = unit?.payments?.captures?.[0];
+        if (!capturedPayment) {
+            return res.status(400).json({ success: false, message: "Malformed capture response" });
+        }
+
+        // custom_id round-trips on the capture itself, not on purchase_units
+        // directly — PayPal echoes it back at that nesting.
+        let meta = {};
+        try { meta = JSON.parse(capturedPayment.custom_id || '{}'); } catch { meta = {}; }
+
+        await grantPurchase({
+            userId: meta.userId || 'guest_pending',
+            courseId: meta.courseId,
+            grantType: meta.grantType || 'course',
+            membershipDays: meta.membershipDays || null,
+            guestEmail: meta.guestEmail || '',
+            guestPhone: meta.guestPhone || '',
+            provider: 'paypal',
+            orderId: orderID,
+            paymentId: capturedPayment.id,
+            amount: parseFloat(capturedPayment.amount?.value),
+            currency: capturedPayment.amount?.currency_code || 'USD',
+        });
+
+        res.json({ success: true, message: "Access granted" });
+    } catch (error) {
+        console.error("PayPal Verification Error:", error);
         res.status(500).send("Verification failed");
     }
 });

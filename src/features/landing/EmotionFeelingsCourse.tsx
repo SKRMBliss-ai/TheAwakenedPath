@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getAuth } from 'firebase/auth';
 import { useRazorpay } from '../../hooks/useRazorpay';
+import { usePaypal } from '../../hooks/usePaypal';
 import { usePageSeo } from '../../lib/seo';
 import PriceSlider from '../../components/ui/PriceSlider';
 import { useSiteTheme } from '../../lib/siteTheme';
@@ -518,6 +519,43 @@ function getRegionPricing(isAllAccess = false) {
   return dict.USD;
 }
 
+// Card checkout submit button (Razorpay). Pulled out of the JSX below because
+// it now needs to render on either side of the PayPal buttons depending on
+// currency, rather than being the sole checkout action.
+function RazorpaySubmit({ isProcessing }: { isProcessing: boolean }) {
+  return (
+    <button
+      type="submit"
+      disabled={isProcessing}
+      style={{
+        padding: '14px',
+        borderRadius: 999,
+        cursor: 'pointer',
+        background: '#4A3260',
+        color: '#fff',
+        border: 'none',
+        fontFamily: SANS,
+        fontSize: 14,
+        fontWeight: 800,
+        marginTop: 8,
+        width: '100%',
+      }}
+    >
+      {isProcessing ? 'Processing...' : 'Pay by Card →'}
+    </button>
+  );
+}
+
+function PaypalDivider() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0' }}>
+      <div style={{ flex: 1, height: 1, background: 'rgba(128,128,128,0.25)' }} />
+      <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', color: 'rgba(128,128,128,0.8)', textTransform: 'uppercase' }}>or</span>
+      <div style={{ flex: 1, height: 1, background: 'rgba(128,128,128,0.25)' }} />
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -585,6 +623,7 @@ export default function EmotionFeelingsCourse() {
   }, [teaserVideo]);
 
   const { checkOut, isProcessing } = useRazorpay();
+  const { renderCheckout: renderPaypalCheckout, isProcessing: isPaypalProcessing } = usePaypal();
 
   // Master SEO + AEO + GEO Schema setup
   usePageSeo({
@@ -738,6 +777,38 @@ export default function EmotionFeelingsCourse() {
       customAmount
     );
   };
+
+  // Re-render the PayPal Buttons whenever the checkout inputs they close over
+  // change, so a stale amount/email/currency never gets submitted. Guarded on
+  // name+email so the buttons only appear once the buyer has actually filled
+  // the form — PayPal has no separate "submit" step to validate them first the
+  // way the Razorpay form's onSubmit does.
+  useEffect(() => {
+    if (!showCheckoutModal) return;
+    if (!guestName.trim() || !guestEmail.includes('@')) return;
+    const signedInUid = getAuth().currentUser?.uid;
+    const userId = signedInUid || 'guest_pending';
+    const paidEmail = guestEmail.trim();
+
+    renderPaypalCheckout(
+      'paypal-button-container',
+      userId,
+      paidEmail,
+      'emotion_feelings_course',
+      activePricingConfig.currency,
+      () => {
+        setShowCheckoutModal(false);
+        if (!signedInUid && paidEmail) {
+          try { localStorage.setItem('pendingCourseClaimEmail', paidEmail.toLowerCase()); } catch { /* private mode */ }
+        }
+        setPurchaseSuccess({ email: paidEmail, wasSignedIn: Boolean(signedInUid) });
+        trackActivity('COURSE_PURCHASED_SUCCESS', `Amount: ${activePricingConfig.symbol}${customAmount}`, paidEmail);
+      },
+      guestPhone.trim(),
+      customAmount
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCheckoutModal, guestName, guestEmail, guestPhone, customAmount, activePricingConfig.currency]);
 
   /** Hand off to the app. Full page load, not a router push — Mind Gym is a
    *  separate entry point and needs a fresh auth/entitlement bootstrap. */
@@ -3001,24 +3072,24 @@ export default function EmotionFeelingsCourse() {
                   </span>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isProcessing}
-                  style={{
-                    padding: '14px',
-                    borderRadius: 999,
-                    cursor: 'pointer',
-                    background: '#4A3260',
-                    color: '#fff',
-                    border: 'none',
-                    fontFamily: SANS,
-                    fontSize: 14,
-                    fontWeight: 800,
-                    marginTop: 8,
-                  }}
-                >
-                  {isProcessing ? 'Processing...' : 'Proceed to Secure Checkout →'}
-                </button>
+                {/* Card checkout (Razorpay) and PayPal/Apple Pay are both offered —
+                    deliberately, not gated behind a region guess. A wrong region
+                    detection previously left overseas buyers stuck on a form
+                    quoting the wrong currency with no alternative; whichever
+                    button the buyer actually reaches now still works. */}
+                {activePricingConfig.currency === 'INR' ? (
+                  <>
+                    <RazorpaySubmit isProcessing={isProcessing} />
+                    <PaypalDivider />
+                    <div id="paypal-button-container" style={{ minHeight: isPaypalProcessing ? 45 : undefined }} />
+                  </>
+                ) : (
+                  <>
+                    <div id="paypal-button-container" style={{ minHeight: isPaypalProcessing ? 45 : undefined }} />
+                    <PaypalDivider />
+                    <RazorpaySubmit isProcessing={isProcessing} />
+                  </>
+                )}
 
                 <p style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub, textAlign: 'center', margin: 0 }}>
                   🔒 256-Bit Encrypted · 14-Day Money-Back Guarantee
