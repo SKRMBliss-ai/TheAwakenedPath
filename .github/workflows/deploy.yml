@@ -34,11 +34,21 @@ jobs:
           projectId: awakened-path-2026
           channelId: live
 
-      # The action above deploys hosting ONLY, so changes to functions/index.js
-      # (Razorpay order creation and payment verification among them) never
-      # shipped from CI and had to be pushed by hand. This deploys them too.
-      # Written to a file rather than passed inline because the firebase CLI
-      # reads credentials via GOOGLE_APPLICATION_CREDENTIALS, which takes a path.
+      # `npm ci` above installs the FRONTEND's dependencies only. functions/ is a
+      # separate npm package with its own lockfile, and the firebase CLI loads
+      # functions/index.js in-process to discover which functions to deploy — so
+      # without functions/node_modules it fails on the require() of
+      # firebase-functions ("Couldn't find firebase-functions package in your
+      # source code"), before deploying anything.
+      - name: Install Cloud Functions dependencies
+        run: npm ci --prefix functions
+
+      # The hosting action above deploys hosting ONLY, so changes to
+      # functions/index.js (Razorpay order creation and payment verification
+      # among them) never shipped from CI and had to be pushed by hand. This
+      # deploys them too. The service account JSON is written to a file rather
+      # than passed inline because the firebase CLI reads credentials via
+      # GOOGLE_APPLICATION_CREDENTIALS, which takes a path.
       - name: Deploy Cloud Functions
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AWAKENED_PATH_2026 }}
