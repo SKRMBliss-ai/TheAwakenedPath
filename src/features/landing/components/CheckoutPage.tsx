@@ -523,6 +523,43 @@ export default function CheckoutPage({
             </span>
           </div>
 
+          {/* More from Soulful Intelligence — Power of Now & Wisdom
+              Untethered are free inside Mind Gym, not separate purchases,
+              so they link into the app rather than another checkout. */}
+          <div style={{ ...card, padding: 20 }}>
+            <p style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: accent, margin: '0 0 12px' }}>
+              More from Soulful Intelligence
+            </p>
+            <div style={{ display: 'grid', gap: 8 }}>
+              {[
+                { label: 'Feelings & Emotions Course', sub: 'You’re enrolling in this now', href: '/feelingsandemotioncourse', current: true },
+                { label: 'The Power of Now', sub: 'Free inside Mind Gym', href: '/mindgym' },
+                { label: 'Wisdom Untethered', sub: 'Free inside Mind Gym', href: '/mindgym' },
+              ].map((course) => (
+                <a
+                  key={course.label}
+                  href={course.href}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                    padding: '11px 14px', borderRadius: 12, textDecoration: 'none',
+                    background: course.current ? (isDark ? 'rgba(196,145,58,0.10)' : 'rgba(74,50,96,0.06)') : 'transparent',
+                    border: `1px solid ${course.current ? 'transparent' : borderC}`,
+                  }}
+                >
+                  <span>
+                    <span style={{ display: 'block', fontFamily: SANS, fontSize: 12.5, fontWeight: 700, color: ink }}>
+                      {course.label}
+                    </span>
+                    <span style={{ display: 'block', fontFamily: SANS, fontSize: 10.5, color: inkSub, marginTop: 1 }}>
+                      {course.sub}
+                    </span>
+                  </span>
+                  {!course.current && <span style={{ color: accent, fontSize: 14, flexShrink: 0 }}>→</span>}
+                </a>
+              ))}
+            </div>
+          </div>
+
         </aside>
       </main>
     </div>
