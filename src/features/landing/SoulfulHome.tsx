@@ -59,6 +59,12 @@ const SERVICES = [
   { icon: 'M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3Z', title: '…& everything else', body: 'If a startup needs it, we probably build it. Just ask.' },
 ];
 
+const AUDIENCE_TABS = [
+  { key: 'you' as const,      label: 'For me',          sub: 'Wellbeing & courses', icon: 'M4 20C4 11 11 4 20 4c0 9-7 16-16 16Z|M9 15c2-3 5-5 8-6' },
+  { key: 'brands' as const,   label: 'For my business', sub: 'Websites & apps',      icon: 'M4 7h16v12H4z|M9 7V5h6v2|M4 12h16' },
+  { key: 'products' as const, label: 'Our Products',    sub: 'Apps you can use',     icon: 'M5 8h14M5 14h14M8 3v18M16 3v18M3 8h18v8H3z' },
+];
+
 export default function SoulfulHome() {
   const { palette, toggle: toggleTheme } = useSiteTheme();
   const isDark = palette.isDark;
@@ -212,10 +218,14 @@ export default function SoulfulHome() {
         />
       </div>
 
-      {/* ── Audience toggle — fixed bottom tab bar ── */}
+      {/* ── Audience toggle — fixed bottom bar. Edge-to-edge tab bar on
+          mobile (the native-app convention); a floating rounded "dock" on
+          desktop (>=860px, via .si-audience-bar) since a full-bleed bar
+          stretched across 1440px+ just looks like three empty lanes. ─── */}
       <nav
         role="tablist"
         aria-label="Choose what you're here for"
+        className="si-audience-bar"
         style={{
           position: 'fixed',
           bottom: 0,
@@ -224,7 +234,9 @@ export default function SoulfulHome() {
           zIndex: 50,
           display: 'flex',
           alignItems: 'stretch',
+          gap: 2,
           height: 68,
+          padding: '0 0 env(safe-area-inset-bottom, 0px)',
           background: isDark
             ? 'rgba(13,10,18,0.88)'
             : 'rgba(252,249,245,0.92)',
@@ -234,11 +246,7 @@ export default function SoulfulHome() {
           boxShadow: '0 -4px 24px rgba(0,0,0,0.10)',
         }}
       >
-        {([
-          { key: 'you' as const,      label: 'For me',          sub: 'Wellbeing & courses', icon: 'M4 20C4 11 11 4 20 4c0 9-7 16-16 16Z|M9 15c2-3 5-5 8-6' },
-          { key: 'brands' as const,   label: 'For my business', sub: 'Websites & apps',      icon: 'M4 7h16v12H4z|M9 7V5h6v2|M4 12h16' },
-          { key: 'products' as const, label: 'Our Products',    sub: 'Apps you can use',     icon: 'M5 8h14M5 14h14M8 3v18M16 3v18M3 8h18v8H3z' },
-        ]).map((t) => {
+        {AUDIENCE_TABS.map((t) => {
           const on = audience === t.key;
           return (
             <button
@@ -249,14 +257,13 @@ export default function SoulfulHome() {
               style={{
                 flex: 1,
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 4,
+                gap: 9,
                 border: 'none',
                 background: 'transparent',
                 cursor: 'pointer',
-                padding: '0 8px 8px',
+                padding: '10px 8px',
                 position: 'relative',
                 fontFamily: SANS,
                 transition: 'opacity 0.2s',
@@ -265,27 +272,62 @@ export default function SoulfulHome() {
                   : (isDark ? 'rgba(237,233,227,0.42)' : 'rgba(42,33,24,0.38)'),
               }}
             >
-              {/* Gold active indicator line at top */}
+              {/* Active pill — a fill behind the tab, not just a hairline,
+                  so the selected state reads at a glance instead of needing
+                  the thin top indicator to carry all of it. */}
+              <span
+                className="si-audience-pill"
+                style={{
+                  position: 'absolute', inset: '6px 4px',
+                  borderRadius: 14,
+                  background: on ? (isDark ? 'rgba(196,145,58,0.14)' : 'rgba(74,50,96,0.08)') : 'transparent',
+                  transition: 'background 0.25s',
+                }}
+              />
               <span style={{
-                position: 'absolute',
-                top: 0,
-                left: '20%',
-                right: '20%',
-                height: 2.5,
-                borderRadius: '0 0 3px 3px',
+                position: 'absolute', top: 0, left: '30%', right: '30%',
+                height: 2.5, borderRadius: '0 0 3px 3px',
                 background: on ? '#C4913A' : 'transparent',
                 transition: 'background 0.25s',
               }} />
-              <span style={{ opacity: on ? 1 : 0.6, transition: 'opacity 0.2s' }}>
-                <Ico d={t.icon} size={20} />
+              <span style={{ position: 'relative', opacity: on ? 1 : 0.6, transition: 'opacity 0.2s', flexShrink: 0 }}>
+                <Ico d={t.icon} size={19} />
               </span>
-              <span style={{ fontSize: 11, fontWeight: on ? 700 : 500, letterSpacing: '0.01em', lineHeight: 1.2 }}>
-                {t.label}
+              <span className="si-audience-label" style={{ position: 'relative', textAlign: 'left', lineHeight: 1.15 }}>
+                <span style={{ display: 'block', fontSize: 12.5, fontWeight: on ? 800 : 600, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
+                  {t.label}
+                </span>
+                <span className="si-audience-sub" style={{ display: 'none', fontSize: 10, fontWeight: 600, opacity: 0.65, marginTop: 1, whiteSpace: 'nowrap' }}>
+                  {t.sub}
+                </span>
               </span>
             </button>
           );
         })}
       </nav>
+
+      <style>{`
+        @media (min-width: 860px) {
+          .si-audience-bar {
+            left: 50% !important; right: auto !important;
+            transform: translateX(-50%);
+            bottom: 20px !important;
+            width: auto !important;
+            min-width: 500px;
+            max-width: 680px;
+            height: 60px !important;
+            border-radius: 999px !important;
+            border-top: none !important;
+            border: 1px solid ${isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)'};
+            padding: 5px !important;
+            gap: 4px !important;
+            box-shadow: 0 16px 40px -12px rgba(0,0,0,0.28) !important;
+          }
+          .si-audience-bar button { border-radius: 999px; padding: 0 20px !important; }
+          .si-audience-pill { border-radius: 999px !important; }
+          .si-audience-sub { display: block !important; }
+        }
+      `}</style>
 
 
       {/* ════════════════════════════════════════════════════════════════════
