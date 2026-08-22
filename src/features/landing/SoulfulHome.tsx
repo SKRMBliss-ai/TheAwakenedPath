@@ -65,7 +65,6 @@ export default function SoulfulHome() {
   const INK    = palette.INK;
   const INK2   = palette.INK2;
   const CARD   = palette.CARD;
-  const SAGE_DK = palette.PURPLE_STRONG;
   const CLAY    = palette.BROWN;
 
   // ── Audience toggle ──────────────────────────────────────────────────────
@@ -179,6 +178,7 @@ export default function SoulfulHome() {
       minHeight: '100vh',
       overflowX: 'hidden',
       position: 'relative',
+      paddingLeft: 148,  // offset for fixed left sidebar; removed on mobile via CSS
     }}>
       {/* ── Sacred geometry — fixed behind the entire page ─────────────────── */}
       <SacredGeometry isDark={isDark} />
@@ -212,86 +212,132 @@ export default function SoulfulHome() {
         />
       </div>
 
-      {/* ── Audience toggle — fixed left sidebar (desktop) / bottom bar (mobile) ── */}
+      {/* ── Audience toggle — full-height binder-tab sidebar (desktop) / bottom bar (mobile) ── */}
       <style>{`
         .si-audience-rail {
           position: fixed;
-          top: 50%;
-          left: 16px;
-          transform: translateY(-50%);
+          left: 0;
+          top: 0;
+          height: 100vh;
           z-index: 40;
           display: flex;
-          justify-content: center;
+          flex-direction: column;
+          pointer-events: none;
         }
         .si-audience-tablist {
-          display: inline-flex;
+          display: flex;
           flex-direction: column;
-          gap: 4px;
-          padding: 6px;
-          border-radius: 20px;
+          height: 100%;
+          gap: 2px;
+          padding: 2px 0;
+          background: none !important;
+          border: none !important;
+          box-shadow: none !important;
+          backdrop-filter: none !important;
         }
         .si-audience-btn {
-          width: 100%;
-          justify-content: flex-start !important;
+          flex: 1;
+          pointer-events: all;
+          display: flex !important;
+          flex-direction: column;
+          align-items: flex-start !important;
+          justify-content: center !important;
+          padding: 0 14px 0 12px !important;
+          border-radius: 0 14px 14px 0 !important;
+          border: none !important;
+          border-left: 3px solid transparent;
+          min-width: 120px;
+          max-width: 120px;
+          width: 120px;
+          transition: all 0.28s cubic-bezier(.4,0,.2,1);
+          white-space: nowrap;
+          cursor: pointer;
+        }
+        .si-audience-btn[aria-selected="true"] {
+          min-width: 140px;
+          max-width: 140px;
+          width: 140px;
+          border-left: 3px solid #C4913A !important;
+        }
+        .si-audience-btn .si-audience-icon {
+          margin-bottom: 6px;
+          opacity: 0.6;
+          transition: opacity 0.2s;
+        }
+        .si-audience-btn[aria-selected="true"] .si-audience-icon {
+          opacity: 1;
         }
         @media (max-width: 767px) {
           .si-audience-rail {
+            height: auto;
             top: auto;
+            bottom: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            transform: none;
-            padding: 0;
-            background: none;
+            flex-direction: row;
           }
           .si-audience-tablist {
-            flex-direction: row;
+            flex-direction: row !important;
+            height: auto !important;
             width: 100%;
-            border-radius: 0;
-            padding: 6px 8px;
-            padding-bottom: env(safe-area-inset-bottom, 6px);
+            padding: 0 !important;
+            gap: 0 !important;
           }
           .si-audience-btn {
-            flex: 1;
+            flex: 1 !important;
+            flex-direction: row !important;
+            min-width: unset !important;
+            max-width: unset !important;
+            width: auto !important;
+            border-radius: 0 !important;
+            border-left: none !important;
+            border-top: 3px solid transparent !important;
             justify-content: center !important;
-            padding: 8px 6px !important;
+            align-items: center !important;
+            padding: 10px 4px env(safe-area-inset-bottom, 10px) !important;
+            gap: 6px;
           }
-          .si-audience-btn .si-audience-sub {
-            display: none;
+          .si-audience-btn[aria-selected="true"] {
+            border-top: 3px solid #C4913A !important;
+            border-left: none !important;
           }
+          .si-audience-btn .si-audience-icon {
+            margin-bottom: 0;
+          }
+          .si-audience-sub { display: none !important; }
+          /* remove the body offset on mobile — sidebar becomes a bottom bar */
+          .si-page-root { padding-left: 0 !important; }
         }
         @media (min-width: 768px) and (max-width: 1100px) {
-          .si-audience-rail {
-            left: 8px;
+          .si-audience-btn {
+            min-width: 100px;
+            max-width: 100px;
+            width: 100px;
           }
-          .si-audience-btn .si-audience-sub {
-            display: none;
+          .si-audience-btn[aria-selected="true"] {
+            min-width: 118px;
+            max-width: 118px;
+            width: 118px;
           }
+          .si-audience-sub { display: none !important; }
+          .si-page-root { padding-left: 102px !important; }
         }
       `}</style>
-      <div
-        className="si-audience-rail"
-        style={{
-          background: 'none',
-        }}
-      >
+      <div className="si-audience-rail">
         <div
           role="tablist"
           aria-label="Choose what you're here for"
           className="si-audience-tablist"
-          style={{
-            background: isDark ? 'rgba(30,22,40,0.88)' : 'rgba(255,255,255,0.88)',
-            border: `1px solid ${palette.BORDER}`,
-            boxShadow: '0 10px 32px -14px rgba(0,0,0,0.35)',
-            backdropFilter: 'blur(14px)',
-          }}
         >
           {([
             { key: 'you' as const, label: 'For me', sub: 'Wellbeing app & courses', icon: 'M4 20C4 11 11 4 20 4c0 9-7 16-16 16Z|M9 15c2-3 5-5 8-6' },
             { key: 'brands' as const, label: 'For my business', sub: 'Websites, apps & content', icon: 'M4 7h16v12H4z|M9 7V5h6v2|M4 12h16' },
             { key: 'products' as const, label: 'Our Products', sub: 'Studio apps you can use today', icon: 'M5 8h14M5 14h14M8 3v18M16 3v18M3 8h18v8H3z' },
-          ]).map((t) => {
+          ]).map((t, i) => {
             const on = audience === t.key;
+            const bgActive = isDark ? 'rgba(30,22,40,0.95)' : 'rgba(255,255,255,0.97)';
+            const bgIdle = isDark ? 'rgba(20,15,28,0.75)' : 'rgba(245,240,234,0.82)';
+            const borderColors = ['#7C6D9A', '#9A8A6D', '#6D9A8A'];
             return (
               <button
                 key={t.key}
@@ -300,20 +346,20 @@ export default function SoulfulHome() {
                 onClick={() => chooseAudience(t.key)}
                 className="si-audience-btn"
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 9, lineHeight: 1.1,
-                  padding: '8px 14px', borderRadius: 13, cursor: 'pointer',
-                  border: '1px solid transparent',
-                  background: on ? SAGE_DK : 'transparent',
-                  color: on ? (isDark ? '#15120F' : '#fff') : INK,
-                  transition: 'background .25s, color .25s',
+                  background: on ? bgActive : bgIdle,
+                  color: on ? (isDark ? '#EDE9E3' : '#2A2118') : (isDark ? 'rgba(237,233,227,0.55)' : 'rgba(42,33,24,0.55)'),
                   fontFamily: SANS,
-                  whiteSpace: 'nowrap',
+                  boxShadow: on
+                    ? '4px 0 18px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(196,145,58,0.18)'
+                    : '2px 0 8px rgba(0,0,0,0.1)',
+                  backdropFilter: 'blur(14px)',
+                  borderLeft: on ? '3px solid #C4913A' : `3px solid ${borderColors[i]}44`,
                 }}
               >
-                <span style={{ flexShrink: 0, opacity: on ? 1 : 0.6 }}><Ico d={t.icon} size={17} /></span>
+                <span className="si-audience-icon"><Ico d={t.icon} size={18} /></span>
                 <span style={{ textAlign: 'left' }}>
-                  <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800 }}>{t.label}</span>
-                  <span className="si-audience-sub" style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: '0.02em', opacity: on ? 0.85 : 0.6 }}>{t.sub}</span>
+                  <span style={{ display: 'block', fontSize: 13, fontWeight: 800 }}>{t.label}</span>
+                  <span className="si-audience-sub" style={{ display: 'block', fontSize: 9.5, fontWeight: 600, letterSpacing: '0.03em', marginTop: 3, opacity: on ? 0.75 : 0.5 }}>{t.sub}</span>
                 </span>
               </button>
             );
