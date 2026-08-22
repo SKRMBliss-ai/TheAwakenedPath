@@ -178,7 +178,7 @@ export default function SoulfulHome() {
       minHeight: '100vh',
       overflowX: 'hidden',
       position: 'relative',
-      paddingLeft: 148,  // offset for fixed left sidebar; removed on mobile via CSS
+      paddingBottom: 72,  // space for fixed bottom tab bar
     }}>
       {/* ── Sacred geometry — fixed behind the entire page ─────────────────── */}
       <SacredGeometry isDark={isDark} />
@@ -212,160 +212,81 @@ export default function SoulfulHome() {
         />
       </div>
 
-      {/* ── Audience toggle — full-height binder-tab sidebar (desktop) / bottom bar (mobile) ── */}
-      <style>{`
-        .si-audience-rail {
-          position: fixed;
-          left: 0;
-          top: 0;
-          height: 100vh;
-          z-index: 40;
-          display: flex;
-          flex-direction: column;
-          pointer-events: none;
-        }
-        .si-audience-tablist {
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-          gap: 2px;
-          padding: 2px 0;
-          background: none !important;
-          border: none !important;
-          box-shadow: none !important;
-          backdrop-filter: none !important;
-        }
-        .si-audience-btn {
-          flex: 1;
-          pointer-events: all;
-          display: flex !important;
-          flex-direction: column;
-          align-items: flex-start !important;
-          justify-content: center !important;
-          padding: 0 14px 0 12px !important;
-          border-radius: 0 14px 14px 0 !important;
-          border: none !important;
-          border-left: 3px solid transparent;
-          min-width: 120px;
-          max-width: 120px;
-          width: 120px;
-          transition: all 0.28s cubic-bezier(.4,0,.2,1);
-          white-space: nowrap;
-          cursor: pointer;
-        }
-        .si-audience-btn[aria-selected="true"] {
-          min-width: 140px;
-          max-width: 140px;
-          width: 140px;
-          border-left: 3px solid #C4913A !important;
-        }
-        .si-audience-btn .si-audience-icon {
-          margin-bottom: 6px;
-          opacity: 0.6;
-          transition: opacity 0.2s;
-        }
-        .si-audience-btn[aria-selected="true"] .si-audience-icon {
-          opacity: 1;
-        }
-        @media (max-width: 767px) {
-          .si-audience-rail {
-            height: auto;
-            top: auto;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            flex-direction: row;
-          }
-          .si-audience-tablist {
-            flex-direction: row !important;
-            height: auto !important;
-            width: 100%;
-            padding: 0 !important;
-            gap: 0 !important;
-          }
-          .si-audience-btn {
-            flex: 1 !important;
-            flex-direction: row !important;
-            min-width: unset !important;
-            max-width: unset !important;
-            width: auto !important;
-            border-radius: 0 !important;
-            border-left: none !important;
-            border-top: 3px solid transparent !important;
-            justify-content: center !important;
-            align-items: center !important;
-            padding: 10px 4px env(safe-area-inset-bottom, 10px) !important;
-            gap: 6px;
-          }
-          .si-audience-btn[aria-selected="true"] {
-            border-top: 3px solid #C4913A !important;
-            border-left: none !important;
-          }
-          .si-audience-btn .si-audience-icon {
-            margin-bottom: 0;
-          }
-          .si-audience-sub { display: none !important; }
-          /* remove the body offset on mobile — sidebar becomes a bottom bar */
-          .si-page-root { padding-left: 0 !important; }
-        }
-        @media (min-width: 768px) and (max-width: 1100px) {
-          .si-audience-btn {
-            min-width: 100px;
-            max-width: 100px;
-            width: 100px;
-          }
-          .si-audience-btn[aria-selected="true"] {
-            min-width: 118px;
-            max-width: 118px;
-            width: 118px;
-          }
-          .si-audience-sub { display: none !important; }
-          .si-page-root { padding-left: 102px !important; }
-        }
-      `}</style>
-      <div className="si-audience-rail">
-        <div
-          role="tablist"
-          aria-label="Choose what you're here for"
-          className="si-audience-tablist"
-        >
-          {([
-            { key: 'you' as const, label: 'For me', sub: 'Wellbeing app & courses', icon: 'M4 20C4 11 11 4 20 4c0 9-7 16-16 16Z|M9 15c2-3 5-5 8-6' },
-            { key: 'brands' as const, label: 'For my business', sub: 'Websites, apps & content', icon: 'M4 7h16v12H4z|M9 7V5h6v2|M4 12h16' },
-            { key: 'products' as const, label: 'Our Products', sub: 'Studio apps you can use today', icon: 'M5 8h14M5 14h14M8 3v18M16 3v18M3 8h18v8H3z' },
-          ]).map((t, i) => {
-            const on = audience === t.key;
-            const bgActive = isDark ? 'rgba(30,22,40,0.95)' : 'rgba(255,255,255,0.97)';
-            const bgIdle = isDark ? 'rgba(20,15,28,0.75)' : 'rgba(245,240,234,0.82)';
-            const borderColors = ['#7C6D9A', '#9A8A6D', '#6D9A8A'];
-            return (
-              <button
-                key={t.key}
-                role="tab"
-                aria-selected={on}
-                onClick={() => chooseAudience(t.key)}
-                className="si-audience-btn"
-                style={{
-                  background: on ? bgActive : bgIdle,
-                  color: on ? (isDark ? '#EDE9E3' : '#2A2118') : (isDark ? 'rgba(237,233,227,0.55)' : 'rgba(42,33,24,0.55)'),
-                  fontFamily: SANS,
-                  boxShadow: on
-                    ? '4px 0 18px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(196,145,58,0.18)'
-                    : '2px 0 8px rgba(0,0,0,0.1)',
-                  backdropFilter: 'blur(14px)',
-                  borderLeft: on ? '3px solid #C4913A' : `3px solid ${borderColors[i]}44`,
-                }}
-              >
-                <span className="si-audience-icon"><Ico d={t.icon} size={18} /></span>
-                <span style={{ textAlign: 'left' }}>
-                  <span style={{ display: 'block', fontSize: 13, fontWeight: 800 }}>{t.label}</span>
-                  <span className="si-audience-sub" style={{ display: 'block', fontSize: 9.5, fontWeight: 600, letterSpacing: '0.03em', marginTop: 3, opacity: on ? 0.75 : 0.5 }}>{t.sub}</span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* ── Audience toggle — fixed bottom tab bar ── */}
+      <nav
+        role="tablist"
+        aria-label="Choose what you're here for"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'stretch',
+          height: 68,
+          background: isDark
+            ? 'rgba(13,10,18,0.88)'
+            : 'rgba(252,249,245,0.92)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'}`,
+          boxShadow: '0 -4px 24px rgba(0,0,0,0.10)',
+        }}
+      >
+        {([
+          { key: 'you' as const,      label: 'For me',          sub: 'Wellbeing & courses', icon: 'M4 20C4 11 11 4 20 4c0 9-7 16-16 16Z|M9 15c2-3 5-5 8-6' },
+          { key: 'brands' as const,   label: 'For my business', sub: 'Websites & apps',      icon: 'M4 7h16v12H4z|M9 7V5h6v2|M4 12h16' },
+          { key: 'products' as const, label: 'Our Products',    sub: 'Apps you can use',     icon: 'M5 8h14M5 14h14M8 3v18M16 3v18M3 8h18v8H3z' },
+        ]).map((t) => {
+          const on = audience === t.key;
+          return (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={on}
+              onClick={() => chooseAudience(t.key)}
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 4,
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                padding: '0 8px 8px',
+                position: 'relative',
+                fontFamily: SANS,
+                transition: 'opacity 0.2s',
+                color: on
+                  ? (isDark ? '#EDE9E3' : '#2A2118')
+                  : (isDark ? 'rgba(237,233,227,0.42)' : 'rgba(42,33,24,0.38)'),
+              }}
+            >
+              {/* Gold active indicator line at top */}
+              <span style={{
+                position: 'absolute',
+                top: 0,
+                left: '20%',
+                right: '20%',
+                height: 2.5,
+                borderRadius: '0 0 3px 3px',
+                background: on ? '#C4913A' : 'transparent',
+                transition: 'background 0.25s',
+              }} />
+              <span style={{ opacity: on ? 1 : 0.6, transition: 'opacity 0.2s' }}>
+                <Ico d={t.icon} size={20} />
+              </span>
+              <span style={{ fontSize: 11, fontWeight: on ? 700 : 500, letterSpacing: '0.01em', lineHeight: 1.2 }}>
+                {t.label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
 
       {/* ════════════════════════════════════════════════════════════════════
           FOR YOU — the immersive wellbeing world
