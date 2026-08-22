@@ -212,24 +212,78 @@ export default function SoulfulHome() {
         />
       </div>
 
-      {/* ── Audience toggle — slim, elevated segmented control ─────────────── */}
-      <div style={{
-        position: 'sticky', top: 60, zIndex: 40,
-        display: 'flex', justifyContent: 'center',
-        padding: '10px 24px 8px',
-        background: isDark
-          ? `linear-gradient(rgba(13,10,18,0.95) 74%, transparent)`
-          : `linear-gradient(rgba(249,245,239,0.95) 74%, transparent)`,
-      }}>
+      {/* ── Audience toggle — fixed left sidebar (desktop) / bottom bar (mobile) ── */}
+      <style>{`
+        .si-audience-rail {
+          position: fixed;
+          top: 50%;
+          left: 16px;
+          transform: translateY(-50%);
+          z-index: 40;
+          display: flex;
+          justify-content: center;
+        }
+        .si-audience-tablist {
+          display: inline-flex;
+          flex-direction: column;
+          gap: 4px;
+          padding: 6px;
+          border-radius: 20px;
+        }
+        .si-audience-btn {
+          width: 100%;
+          justify-content: flex-start !important;
+        }
+        @media (max-width: 767px) {
+          .si-audience-rail {
+            top: auto;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transform: none;
+            padding: 0;
+            background: none;
+          }
+          .si-audience-tablist {
+            flex-direction: row;
+            width: 100%;
+            border-radius: 0;
+            padding: 6px 8px;
+            padding-bottom: env(safe-area-inset-bottom, 6px);
+          }
+          .si-audience-btn {
+            flex: 1;
+            justify-content: center !important;
+            padding: 8px 6px !important;
+          }
+          .si-audience-btn .si-audience-sub {
+            display: none;
+          }
+        }
+        @media (min-width: 768px) and (max-width: 1100px) {
+          .si-audience-rail {
+            left: 8px;
+          }
+          .si-audience-btn .si-audience-sub {
+            display: none;
+          }
+        }
+      `}</style>
+      <div
+        className="si-audience-rail"
+        style={{
+          background: 'none',
+        }}
+      >
         <div
           role="tablist"
           aria-label="Choose what you're here for"
+          className="si-audience-tablist"
           style={{
-            display: 'inline-flex', gap: 4, padding: 5, borderRadius: 16,
-            background: isDark ? 'rgba(30,22,40,0.85)' : 'rgba(255,255,255,0.85)',
+            background: isDark ? 'rgba(30,22,40,0.88)' : 'rgba(255,255,255,0.88)',
             border: `1px solid ${palette.BORDER}`,
-            boxShadow: '0 10px 32px -14px rgba(0,0,0,0.3)',
-            backdropFilter: 'blur(12px)',
+            boxShadow: '0 10px 32px -14px rgba(0,0,0,0.35)',
+            backdropFilter: 'blur(14px)',
           }}
         >
           {([
@@ -244,20 +298,22 @@ export default function SoulfulHome() {
                 role="tab"
                 aria-selected={on}
                 onClick={() => chooseAudience(t.key)}
+                className="si-audience-btn"
                 style={{
                   display: 'flex', alignItems: 'center', gap: 9, lineHeight: 1.1,
-                  padding: '7px 15px', borderRadius: 12, cursor: 'pointer',
+                  padding: '8px 14px', borderRadius: 13, cursor: 'pointer',
                   border: '1px solid transparent',
                   background: on ? SAGE_DK : 'transparent',
                   color: on ? (isDark ? '#15120F' : '#fff') : INK,
                   transition: 'background .25s, color .25s',
                   fontFamily: SANS,
+                  whiteSpace: 'nowrap',
                 }}
               >
                 <span style={{ flexShrink: 0, opacity: on ? 1 : 0.6 }}><Ico d={t.icon} size={17} /></span>
                 <span style={{ textAlign: 'left' }}>
                   <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800 }}>{t.label}</span>
-                  <span style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: '0.02em', opacity: on ? 0.85 : 0.6 }}>{t.sub}</span>
+                  <span className="si-audience-sub" style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: '0.02em', opacity: on ? 0.85 : 0.6 }}>{t.sub}</span>
                 </span>
               </button>
             );
