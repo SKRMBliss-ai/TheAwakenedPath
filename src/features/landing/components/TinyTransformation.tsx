@@ -12,7 +12,7 @@ const SANS  = "'Outfit', system-ui, sans-serif";
 function StormCloud({ size = 56 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 80 80" fill="none" aria-hidden="true">
-      <circle cx="40" cy="40" r="38" fill="rgba(180,160,200,0.12)" />
+      <circle cx="40" cy="40" r="38" fill="rgba(180,160,200,0.25)" />
       {/* Cloud body */}
       <path d="M20 48 C18 48 14 45 14 40 C14 35 18 31 23 31 C24 27 28 24 34 24 C38 24 42 26 44 30 C46 28 50 27 54 29 C58 31 60 36 58 41 C60 43 62 46 60 49 C58 52 54 52 52 52 L26 52 C22 52 20 50 20 48 Z" fill="rgba(160,140,190,0.5)" />
       {/* Rain drops */}
@@ -27,7 +27,7 @@ function StormCloud({ size = 56 }: { size?: number }) {
 function SunRise({ size = 56 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 80 80" fill="none" aria-hidden="true">
-      <circle cx="40" cy="40" r="38" fill="rgba(220,180,100,0.12)" />
+      <circle cx="40" cy="40" r="38" fill="rgba(220,180,100,0.25)" />
       {/* Sun circle */}
       <circle cx="40" cy="46" r="14" fill="rgba(220,170,60,0.7)" />
       {/* Rays */}
@@ -44,7 +44,7 @@ function SunRise({ size = 56 }: { size?: number }) {
 function MindGymLogo({ size = 44 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 60 60" fill="none" aria-hidden="true">
-      <circle cx="30" cy="30" r="28" fill="rgba(74,50,96,0.12)" stroke="rgba(74,50,96,0.25)" strokeWidth="1.5" />
+      <circle cx="30" cy="30" r="28" fill="rgba(74,50,96,0.25)" stroke="rgba(74,50,96,0.4)" strokeWidth="1.5" />
       {/* Brain-like curves */}
       <path d="M20 30 C20 22 26 17 30 17 C34 17 38 20 38 24 C42 22 46 26 44 30 C46 34 42 38 38 36 C38 40 34 43 30 43 C26 43 22 40 22 36 C18 38 16 34 18 30 Z"
         fill="rgba(74,50,96,0.2)" stroke="rgba(74,50,96,0.5)" strokeWidth="1.5" />
@@ -55,7 +55,7 @@ function MindGymLogo({ size = 44 }: { size?: number }) {
 
 // Dotted path connecting the steps
 function DottedPath({ isDark }: { isDark: boolean }) {
-  const color = isDark ? 'rgba(237,233,227,0.25)' : 'rgba(60,40,20,0.2)';
+  const color = isDark ? 'rgba(237,233,227,0.5)' : 'rgba(60,40,20,0.45)';
   return (
     <svg width="100%" height="32" viewBox="0 0 300 32" preserveAspectRatio="none" aria-hidden="true">
       <path d="M 10 16 Q 150 4 290 16" stroke={color} strokeWidth="1.5" fill="none" strokeDasharray="4 6" strokeLinecap="round" />

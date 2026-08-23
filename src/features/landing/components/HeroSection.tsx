@@ -28,12 +28,6 @@ const FOUNDERS = [
   { key: 'sim', name: 'Sim Katyal', photo: '/marketing/sim-facing.webp', avatar: '/marketing/sim.webp' },
 ] as const;
 
-const TRUST = [
-  { icon: '⊙', label: '2 Min Setup' },
-  { icon: '○', label: 'No Commitment' },
-  { icon: '◇', label: 'Cancel Anytime' },
-];
-
 interface Props {
   palette: Palette;
   onStartPractice: () => void;
@@ -94,10 +88,10 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
         @media (min-width: 1024px) and (max-width: 1439px) {
           /* Narrower band: shrink them and bleed further out, or they close in
              on the headline instead of framing it. */
-          .si-hero-founder { --si-bleed: -170px; }
+          .si-hero-founder { --si-bleed: 0px; }
           .si-hero-founder img { height: clamp(420px, 66vh, 580px) !important; }
         }
-        .si-hero-founder { --si-bleed: -110px; }
+        .si-hero-founder { --si-bleed: 40px; }
         .si-hero-founder:first-of-type { left: var(--si-bleed) !important; }
         .si-hero-founder:last-of-type { right: var(--si-bleed) !important; }
         /* Below 1024px the full-height figures give way to this instead —
@@ -141,10 +135,8 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
           style={{
             position: 'absolute',
             top: 0,
-            // Bled off the side edge: a figure standing fully inside the frame
-            // reads as a cut-out placed on the page, one running off it reads
-            // as the page being built around them.
-            [i === 0 ? 'left' : 'right']: -40,
+            // Move inwards away from the edges
+            [i === 0 ? 'left' : 'right']: 'clamp(10px, 5vw, 60px)',
             zIndex: 1,
             pointerEvents: 'none',
             display: 'flex',
@@ -376,88 +368,11 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
             </span>
           </div>
 
-          {/* Trust signals */}
-          <div
-            data-hero-item
-            style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}
-          >
-            {TRUST.map((t) => (
-              <span
-                key={t.label}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontFamily: SANS,
-                  fontSize: 11.5,
-                  color: inkSoft,
-                  fontWeight: 700,
-                }}
-              >
-                <span style={{ fontSize: 13, opacity: 0.7 }}>{t.icon}</span>
-                {t.label}
-              </span>
-            ))}
-          </div>
+
         </div>
       </div>
 
-      {/* ── 5. Watch Intro Floating Badge (Bottom Right) ── */}
-      <a
-        href="https://www.youtube.com/watch?v=0LoCdi1YLe0"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          position: 'absolute',
-          bottom: 32,
-          right: 32,
-          zIndex: 3,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          background: isDark ? 'rgba(20,16,24,0.85)' : 'rgba(249,245,239,0.92)',
-          backdropFilter: 'blur(16px)',
-          border: `1px solid ${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(60,40,20,0.15)'}`,
-          borderRadius: 999,
-          padding: '10px 20px 10px 14px',
-          textDecoration: 'none',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.2)',
-          transition: 'transform 0.3s ease',
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
-        aria-label="Watch 1 minute intro on YouTube"
-      >
-        <span
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: '50%',
-            background: '#FF0000',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <span
-            style={{
-              borderLeft: '11px solid #fff',
-              borderTop: '7px solid transparent',
-              borderBottom: '7px solid transparent',
-              marginLeft: 3,
-            }}
-          />
-        </span>
-        <span style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: isDark ? 'rgba(237,233,227,0.55)' : 'rgba(60,40,20,0.55)' }}>
-            Watch
-          </span>
-          <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: isDark ? '#EDE9E3' : '#2A2118' }}>
-            1 min intro
-          </span>
-        </span>
-      </a>
+
     </section>
   );
 }

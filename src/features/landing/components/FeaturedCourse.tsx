@@ -8,8 +8,7 @@ import type { Palette } from '../../../lib/siteTheme';
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, sans-serif";
 
-const COURSE_IMG =
-  'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2Fsite%2Fcourse-banner.webp?alt=media';
+const COURSE_IMG = 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FSmriti.png?alt=media';
 
 const FEATURES = [
   '7 Modules',

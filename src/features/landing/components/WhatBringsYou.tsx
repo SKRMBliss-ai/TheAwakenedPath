@@ -168,9 +168,9 @@ export default function WhatBringsYou({ palette }: { palette: Palette }) {
       {/* Chip grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: 16,
-        maxWidth: 1000,
+        maxWidth: 960,
         margin: '0 auto 48px',
       }}>
         {CHIPS.map((chip, i) => {
