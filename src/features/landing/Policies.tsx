@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
+import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { ShieldCheck, Lock, FileText, ArrowLeft, Mail, MessageSquare } from 'lucide-react';
 
 const CONTACT_EMAIL = 'connect@skrmblissai.in';
@@ -40,6 +41,7 @@ export default function Policies() {
 
   return (
     <div className="min-h-screen w-full antialiased" style={{ fontFamily: SANS, background: pageBg, color: ink }}>
+      <SiteBackdrop />
       <SiteHeader
         palette={palette}
         onToggleTheme={toggleTheme}

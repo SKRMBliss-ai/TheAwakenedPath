@@ -1,6 +1,7 @@
 import { BookOpen, ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
+import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { GLOSSARY_REGISTRY, ARTICLES_REGISTRY, type GlossaryTerm } from './data/contentEngineData';
 
@@ -56,6 +57,7 @@ export default function ProgrammaticGlossaryView({ termSlug }: Props) {
 
   return (
     <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>
+      <SiteBackdrop />
       <SiteHeader
         palette={palette}
         onToggleTheme={toggleTheme}

@@ -1,6 +1,7 @@
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
+import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { ARTICLES_REGISTRY } from './data/contentEngineData';
 
@@ -44,6 +45,7 @@ export default function ContentHub() {
 
   return (
     <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>
+      <SiteBackdrop />
       <SiteHeader
         palette={palette}
         onToggleTheme={toggleTheme}

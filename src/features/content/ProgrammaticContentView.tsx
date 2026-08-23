@@ -5,6 +5,7 @@ import { db } from '../../firebase';
 import { auth } from '../../firebase';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
+import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { ARTICLES_REGISTRY, type ContentArticle } from './data/contentEngineData';
 import { BLOCK_ANALYTICS_EMAILS, IGNORED_EMAILS } from '../../config/admin';
@@ -105,6 +106,7 @@ export default function ProgrammaticContentView({ slug }: Props) {
 
   return (
     <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>
+      <SiteBackdrop />
       <SiteHeader
         palette={palette}
         onToggleTheme={toggleTheme}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sparkles, Play, ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
+import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { VIDEO_REGISTRY, type VideoResource } from './data/contentEngineData';
 
@@ -77,6 +78,7 @@ export default function ProgrammaticVideoView({ videoId }: Props) {
 
   return (
     <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>
+      <SiteBackdrop />
       <SiteHeader
         palette={palette}
         onToggleTheme={toggleTheme}

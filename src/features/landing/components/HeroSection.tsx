@@ -17,10 +17,15 @@ import HeroMark from '../../../components/site/HeroMark';
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, sans-serif";
 
-/** Transparent-background portraits (Marketting/1.png, 2.png -> webp). */
+/**
+ * Two sets of the same pair. The hero uses the frame where they face each
+ * other (Marketting/shsm.png, split into two): placed left and right they
+ * look inward across the headline, framing it instead of staring past it.
+ * The small avatars use the front-on portraits, which read better at 34px.
+ */
 const FOUNDERS = [
-  { key: 'shruti', name: 'Shruti Khungar', photo: '/marketing/shruti.webp' },
-  { key: 'sim', name: 'Sim Katyal', photo: '/marketing/sim.webp' },
+  { key: 'shruti', name: 'Shruti Khungar', photo: '/marketing/shruti-facing.webp', avatar: '/marketing/shruti.webp' },
+  { key: 'sim', name: 'Sim Katyal', photo: '/marketing/sim-facing.webp', avatar: '/marketing/sim.webp' },
 ] as const;
 
 const TRUST = [
@@ -89,10 +94,10 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
         @media (min-width: 1024px) and (max-width: 1439px) {
           /* Narrower band: shrink them and bleed further out, or they close in
              on the headline instead of framing it. */
-          .si-hero-founder { --si-bleed: -110px; }
-          .si-hero-founder img { height: clamp(300px, 44vh, 430px) !important; }
+          .si-hero-founder { --si-bleed: -170px; }
+          .si-hero-founder img { height: clamp(420px, 66vh, 580px) !important; }
         }
-        .si-hero-founder { --si-bleed: -40px; }
+        .si-hero-founder { --si-bleed: -110px; }
         .si-hero-founder:first-of-type { left: var(--si-bleed) !important; }
         .si-hero-founder:last-of-type { right: var(--si-bleed) !important; }
       `}</style>
@@ -110,8 +115,7 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
 
       {/* ── 2. The founders, flanking the promise ──
           Anchored to the bottom edge and bled off it so they read as part of
-          the page rather than two cut-outs pasted on it. Each sits behind a
-          soft radial glow for the same reason. Decorative: the names are
+          the page rather than two cut-outs pasted on it. Decorative: the names are
           spelled out in the attribution line below the CTAs, so leaving these
           unlabelled avoids a screen reader hearing them twice. */}
       {FOUNDERS.map((f, i) => (
@@ -132,20 +136,6 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
             alignItems: 'flex-end',
           }}
         >
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '18%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 420,
-              height: 420,
-              borderRadius: '50%',
-              background: isDark
-                ? 'radial-gradient(circle, rgba(196,145,58,0.20) 0%, rgba(196,145,58,0) 68%)'
-                : 'radial-gradient(circle, rgba(74,50,96,0.13) 0%, rgba(74,50,96,0) 68%)',
-            }}
-          />
           <img
             src={f.photo}
             alt=""
@@ -153,18 +143,17 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
             decoding="async"
             style={{
               position: 'relative',
-              height: 'clamp(400px, 62vh, 640px)',
+              // Tall enough to reach up alongside the headline — sized short,
+              // they left a band of dead space above their heads.
+              height: 'clamp(520px, 84vh, 860px)',
               width: 'auto',
               display: 'block',
               objectFit: 'contain',
               objectPosition: 'bottom',
               // Fades each figure into the ground instead of cutting off at a
               // hard edge where the section ends.
-              WebkitMaskImage: 'linear-gradient(to bottom, black 72%, transparent 99%)',
-              maskImage: 'linear-gradient(to bottom, black 72%, transparent 99%)',
-              filter: isDark
-                ? 'drop-shadow(0 18px 44px rgba(0,0,0,0.5))'
-                : 'drop-shadow(0 18px 44px rgba(74,50,96,0.18))',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 74%, transparent 99%)',
+              maskImage: 'linear-gradient(to bottom, black 74%, transparent 99%)',
             }}
           />
         </div>
@@ -336,7 +325,7 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
               {FOUNDERS.map((f, i) => (
                 <img
                   key={f.key}
-                  src={f.photo}
+                  src={f.avatar}
                   alt={f.name}
                   style={{
                     width: 34, height: 34, borderRadius: '50%',

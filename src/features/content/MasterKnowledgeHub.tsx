@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Sparkles, Compass, ArrowRight, Play, Search } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
+import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { ARTICLES_REGISTRY, GLOSSARY_REGISTRY, VIDEO_REGISTRY, TOPIC_HUBS } from './data/contentEngineData';
 
@@ -48,6 +49,7 @@ export default function MasterKnowledgeHub() {
 
   return (
     <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>
+      <SiteBackdrop />
       <SiteHeader
         palette={palette}
         onToggleTheme={toggleTheme}

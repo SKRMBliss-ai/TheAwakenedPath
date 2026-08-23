@@ -1,6 +1,7 @@
 import { ShieldCheck, Lock, LogIn } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
+import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { useAuth } from '../auth/AuthContext';
 import { isAdminEmail } from '../../config/admin';
@@ -37,6 +38,7 @@ export default function EditorialIntelligenceView() {
   if (!isAuthorized) {
     return (
       <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>
+        <SiteBackdrop />
         <SiteHeader palette={palette} onToggleTheme={toggleTheme} links={[{ label: 'Home', href: '/' }]} />
         <main style={{ maxWidth: 560, margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
           <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(196,145,58,0.15)', border: '1.5px solid #C4913A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
