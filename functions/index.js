@@ -486,6 +486,14 @@ function httpsGetJsonWithHeaders(url, headers) {
  *
  * Keys must match the stream keys in YouTubeSection.tsx.
  */
+// Bumped whenever the video-selection LOGIC changes (not just the data shape)
+// — e.g. widening the scan window or adding playlist backfill. The shape
+// guard below only checks that fields exist, so a cache written by an older,
+// narrower version of this function would otherwise keep being served as
+// "current shape" for up to CACHE_TTL_MS after a logic change ships, even
+// though it was built by code that could legitimately drop a whole stream.
+const SELECTION_LOGIC_VERSION = 2;
+
 const STREAM_PLAYLISTS = {
     // "Daily meditation by Sim".
     meditation: 'PLQpr02ubPdHI',
@@ -559,7 +567,8 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
     // otherwise a schema change silently serves the old shape for a full TTL.
     const cacheHasCurrentShape = !!(cached && Array.isArray(cached.videos)
         && cached.videos.length && 'durationSec' in cached.videos[0]
-        && 'stream' in cached.videos[0]);
+        && 'stream' in cached.videos[0]
+        && cached.selectionLogicVersion === SELECTION_LOGIC_VERSION);
     if (cached && Array.isArray(cached.videos) && cached.videos.length
         && cacheAge < CACHE_TTL_MS && cacheHasCurrentShape) {
         res.set('Cache-Control', 'public, max-age=1800');
@@ -696,7 +705,7 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
             .slice(0, 40);
         if (!videos.length) throw new Error('No eligible videos after filtering');
 
-        await cacheRef.set({ videos, fetchedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        await cacheRef.set({ videos, selectionLogicVersion: SELECTION_LOGIC_VERSION, fetchedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
 
         res.set('Cache-Control', 'public, max-age=1800');
         return res.json({ videos: videos.slice(0, max), cached: false });

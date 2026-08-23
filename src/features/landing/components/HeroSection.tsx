@@ -100,6 +100,14 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
         .si-hero-founder { --si-bleed: -110px; }
         .si-hero-founder:first-of-type { left: var(--si-bleed) !important; }
         .si-hero-founder:last-of-type { right: var(--si-bleed) !important; }
+        /* Below 1024px the full-height figures give way to this instead —
+           same facing-inward pair shot, small and above the headline, so the
+           founders are still visibly present rather than reduced to a pure
+           text credit line. */
+        .si-hero-mobile-photo { display: none; }
+        @media (max-width: 1023px) {
+          .si-hero-mobile-photo { display: block; }
+        }
       `}</style>
       {/* ── 1. Warm atmospheric ground ── */}
       <div
@@ -198,6 +206,22 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
             textAlign: 'center',
           }}
         >
+          {/* Mobile-only founders photo — see .si-hero-mobile-photo above. */}
+          <img
+            data-hero-item
+            src="/marketing/twins-facing.webp"
+            alt="Shruti Khungar and Sim Katyal, facing each other"
+            className="si-hero-mobile-photo"
+            style={{
+              width: '100%',
+              maxWidth: 380,
+              height: 'auto',
+              margin: '0 auto 28px',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 78%, transparent 99%)',
+              maskImage: 'linear-gradient(to bottom, black 78%, transparent 99%)',
+            }}
+          />
+
           {/* Eyebrow */}
           <p
             data-hero-item
