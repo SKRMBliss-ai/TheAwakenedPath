@@ -1,9 +1,12 @@
 /**
  * HeroSection.tsx
- * Full-bleed editorial hero:
- * - Image spans end-to-end across the entire screen
- * - Scrim overlay enables flawless readability of text on the left
- * - Left: serif headline + sub + CTAs + trust signals + HeroMark
+ * Founder-led editorial hero:
+ * - The two founders flank the composition, bleeding off the bottom edge.
+ *   A stock meditation photo said nothing about who is behind this; the
+ *   people who built it, shown at full height, are the authority signal.
+ * - Centre: eyebrow + serif headline + sub + CTAs + attribution + trust row
+ * - Below 1024px there is no room for two full figures, so they give way to
+ *   an overlapping-avatar credit line that carries the same signal compactly.
  * - Bottom right: Watch 1 min intro floating badge
  */
 import { useEffect, useRef } from 'react';
@@ -14,8 +17,11 @@ import HeroMark from '../../../components/site/HeroMark';
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, sans-serif";
 
-const HERO_IMG =
-  'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2Fatmosphere-calm-desk.webp.webp?alt=media';
+/** Transparent-background portraits (Marketting/1.png, 2.png -> webp). */
+const FOUNDERS = [
+  { key: 'shruti', name: 'Shruti Khungar', photo: '/marketing/shruti.webp' },
+  { key: 'sim', name: 'Sim Katyal', photo: '/marketing/sim.webp' },
+] as const;
 
 const TRUST = [
   { icon: '⊙', label: '2 Min Setup' },
@@ -72,36 +78,97 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
         alignItems: 'center',
       }}
     >
-      {/* ── 1. End-to-End Full-Width Background Image ── */}
-      <img
-        src={HERO_IMG}
-        alt="A person in peaceful meditation, bathed in warm morning light"
-        fetchPriority="high"
-        decoding="async"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          objectPosition: 'center',
-          opacity: 0.85,
-          display: 'block',
-        }}
-      />
-
-      {/* ── 2. Gradient Scrim Overlay for Readability ── */}
+      <style>{`
+        /* The figures are sized off viewport height, so on a short-but-wide
+           window they stay clear of the copy; it is narrow windows that run
+           them into it. Below 1024px they go entirely and the avatar credit
+           line carries the founders instead. */
+        @media (max-width: 1023px) {
+          .si-hero-founder { display: none !important; }
+        }
+        @media (min-width: 1024px) and (max-width: 1439px) {
+          /* Narrower band: shrink them and bleed further out, or they close in
+             on the headline instead of framing it. */
+          .si-hero-founder { --si-bleed: -110px; }
+          .si-hero-founder img { height: clamp(300px, 44vh, 430px) !important; }
+        }
+        .si-hero-founder { --si-bleed: -40px; }
+        .si-hero-founder:first-of-type { left: var(--si-bleed) !important; }
+        .si-hero-founder:last-of-type { right: var(--si-bleed) !important; }
+      `}</style>
+      {/* ── 1. Warm atmospheric ground ── */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
           inset: 0,
           background: isDark
-            ? 'linear-gradient(90deg, #0D0A12 0%, rgba(13,10,18,0.96) 38%, rgba(13,10,18,0.65) 58%, rgba(13,10,18,0.1) 82%, transparent 100%)'
-            : 'linear-gradient(90deg, #F9F5EF 0%, rgba(249,245,239,0.96) 38%, rgba(249,245,239,0.65) 58%, rgba(249,245,239,0.1) 82%, transparent 100%)',
-          pointerEvents: 'none',
+            ? 'radial-gradient(120% 90% at 50% 0%, rgba(74,50,96,0.35) 0%, rgba(13,10,18,0) 60%), #0D0A12'
+            : 'radial-gradient(120% 90% at 50% 0%, rgba(196,145,58,0.14) 0%, rgba(249,245,239,0) 58%), #F9F5EF',
         }}
       />
+
+      {/* ── 2. The founders, flanking the promise ──
+          Anchored to the bottom edge and bled off it so they read as part of
+          the page rather than two cut-outs pasted on it. Each sits behind a
+          soft radial glow for the same reason. Decorative: the names are
+          spelled out in the attribution line below the CTAs, so leaving these
+          unlabelled avoids a screen reader hearing them twice. */}
+      {FOUNDERS.map((f, i) => (
+        <div
+          key={f.key}
+          aria-hidden="true"
+          className="si-hero-founder"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            // Bled off the side edge: a figure standing fully inside the frame
+            // reads as a cut-out placed on the page, one running off it reads
+            // as the page being built around them.
+            [i === 0 ? 'left' : 'right']: -40,
+            zIndex: 1,
+            pointerEvents: 'none',
+            display: 'flex',
+            alignItems: 'flex-end',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '18%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 420,
+              height: 420,
+              borderRadius: '50%',
+              background: isDark
+                ? 'radial-gradient(circle, rgba(196,145,58,0.20) 0%, rgba(196,145,58,0) 68%)'
+                : 'radial-gradient(circle, rgba(74,50,96,0.13) 0%, rgba(74,50,96,0) 68%)',
+            }}
+          />
+          <img
+            src={f.photo}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+            style={{
+              position: 'relative',
+              height: 'clamp(400px, 62vh, 640px)',
+              width: 'auto',
+              display: 'block',
+              objectFit: 'contain',
+              objectPosition: 'bottom',
+              // Fades each figure into the ground instead of cutting off at a
+              // hard edge where the section ends.
+              WebkitMaskImage: 'linear-gradient(to bottom, black 72%, transparent 99%)',
+              maskImage: 'linear-gradient(to bottom, black 72%, transparent 99%)',
+              filter: isDark
+                ? 'drop-shadow(0 18px 44px rgba(0,0,0,0.5))'
+                : 'drop-shadow(0 18px 44px rgba(74,50,96,0.18))',
+            }}
+          />
+        </div>
+      ))}
 
       {/* ── 3. Background HeroMark Graphic Watermark ── */}
       <div
@@ -109,7 +176,7 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
         style={{
           position: 'absolute',
           top: '50%',
-          left: '20%',
+          left: '50%',
           transform: 'translate(-50%, -50%)',
           zIndex: 1,
           opacity: isDark ? 0.35 : 0.22,
@@ -132,10 +199,14 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
       >
         <div
           ref={containerRef}
+          className="si-hero-copy"
           style={{
-            maxWidth: 510,
+            maxWidth: 560,
+            margin: '0 auto',
             display: 'flex',
             flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
           }}
         >
           {/* Eyebrow */}
@@ -180,7 +251,7 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
               fontStyle: 'italic',
               lineHeight: 1.12,
               color: isDark ? 'rgba(237,233,227,0.85)' : '#6B5744',
-              margin: '0 0 28px',
+              margin: '0 0 26px',
               letterSpacing: '-0.01em',
             }}
           >
@@ -195,8 +266,8 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
               fontSize: 15.5,
               lineHeight: 1.65,
               color: inkSoft,
-              margin: '0 0 36px',
-              maxWidth: 440,
+              margin: '0 0 32px',
+              maxWidth: 460,
             }}
           >
             Mind Gym is your daily space for emotional clarity,
@@ -204,7 +275,7 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
           </p>
 
           {/* CTAs */}
-          <div data-hero-item style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 36 }}>
+          <div data-hero-item style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 26 }}>
             <button
               onClick={onStartPractice}
               className="si-btn-breathe"
@@ -251,10 +322,43 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
             </button>
           </div>
 
+          {/* Founder attribution — the authority claim, stated in words next to
+              their faces. Doubles as the mobile fallback: below 1024px the two
+              full-height portraits are hidden and these avatars carry it. */}
+          <div
+            data-hero-item
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: 10, marginBottom: 26,
+            }}
+          >
+            <span style={{ display: 'flex' }}>
+              {FOUNDERS.map((f, i) => (
+                <img
+                  key={f.key}
+                  src={f.photo}
+                  alt={f.name}
+                  style={{
+                    width: 34, height: 34, borderRadius: '50%',
+                    objectFit: 'cover', objectPosition: '50% 12%',
+                    background: isDark ? '#241B2E' : '#EFE7DA',
+                    border: `2px solid ${isDark ? '#0D0A12' : '#F9F5EF'}`,
+                    marginLeft: i === 0 ? 0 : -12,
+                  }}
+                />
+              ))}
+            </span>
+            <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 700, color: inkSoft, textAlign: 'left', lineHeight: 1.35 }}>
+              Founded by twin sisters
+              <br />
+              <span style={{ color: ink }}>Shruti Khungar &amp; Sim Katyal</span>
+            </span>
+          </div>
+
           {/* Trust signals */}
           <div
             data-hero-item
-            style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}
+            style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}
           >
             {TRUST.map((t) => (
               <span
