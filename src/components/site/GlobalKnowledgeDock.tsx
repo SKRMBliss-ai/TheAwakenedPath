@@ -50,9 +50,10 @@ export default function GlobalKnowledgeDock() {
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Open Knowledge Dock & Search (Ctrl+K)"
-        className="si-floating-dock group fixed bottom-[80px] lg:bottom-6 left-4 lg:left-[296px] z-[90] flex items-center gap-0 p-3 hover:gap-2.5 hover:px-4 rounded-full text-[#FFDF9E] border border-[#FFDF9E]/30 shadow-[0_8px_24px_rgba(0,0,0,0.35)] cursor-pointer font-sans text-xs font-bold backdrop-blur-xl transition-all duration-300 hover:scale-105"
+        className="si-floating-dock si-fab-pulse group fixed bottom-[80px] lg:bottom-6 left-4 lg:left-[296px] z-[90] flex items-center gap-0 p-3 hover:gap-2.5 hover:px-4 rounded-full text-[#FFDF9E] shadow-[0_8px_24px_rgba(0,0,0,0.35)] cursor-pointer font-sans text-xs font-bold backdrop-blur-xl transition-all duration-300 hover:scale-105"
         style={{
           background: 'linear-gradient(135deg, #3A234E 0%, #1E122A 100%)',
+          border: '1.5px solid #4A3260',
         }}
         title="Knowledge Hub & Search (⌘K)"
       >

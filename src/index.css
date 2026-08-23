@@ -1158,3 +1158,19 @@ html:not(.dark) {
    only action that matters here. CheckoutPage toggles this class while it is
    mounted. */
 body.si-checkout-open .si-floating-dock { display: none !important; }
+
+/* Floating dock (compass FAB) — purple pulse, matching its own border color
+   so it reads as "this is alive" from across the page without a hover. */
+@keyframes si-fab-pulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 0 0 rgba(74,50,96,0.55); }
+  50%      { box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 0 7px rgba(74,50,96,0); }
+}
+.si-fab-pulse {
+  animation: si-fab-pulse 2.6s ease-in-out infinite;
+}
+.si-fab-pulse:hover {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .si-fab-pulse { animation: none; }
+}

@@ -47,12 +47,11 @@ const FOUNDERS: Founder[] = [
     discipline: ['Product Builder', 'Systems & Automation', 'App & Web Engineering', 'Creative Production'],
     proof: [
       { label: '20+ years', detail: 'Enterprise product engineering & design' },
-      { label: 'Walmart', detail: 'Global technology strategy' },
-      { label: 'Deloitte', detail: 'Enterprise architecture for Fortune 100 clients' },
-      { label: 'Infosys', detail: 'Large-scale digital transformation' },
+      { label: 'Fortune 500', detail: 'Global technology strategy & enterprise architecture' },
+      { label: 'Fortune 100', detail: 'Digital transformation for enterprise clients' },
     ],
     story: [
-      'Twenty years inside enterprise software — architecture at Deloitte, global technology strategy at Walmart, digital transformation at Infosys. The kind of work measured in systems, migrations and scale.',
+      'Twenty years inside enterprise software at Fortune 500 companies — architecture, global technology strategy, digital transformation. The kind of work measured in systems, migrations and scale.',
       'She now spends it on something much smaller and far more personal: an app that helps one person understand themselves. Same engineering discipline, pointed somewhere that matters more.',
     ],
     pull: 'If a practice can’t survive contact with a real, distracted, busy life, it isn’t finished.',
@@ -141,6 +140,20 @@ export default function AboutUs() {
         .au-coin-shell:focus-visible { outline: 2px solid ${accent}; outline-offset: 6px; border-radius: 50%; }
         .au-cta { transition: filter .2s, transform .2s; }
         .au-cta:hover { filter: brightness(1.07); transform: translateY(-1px); }
+        /* Same purple as the coin's active border, pulsing outward — draws
+           the eye to "go deeper" without needing a hover first. */
+        @keyframes au-world-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 ${PLUM}66; }
+          50%      { box-shadow: 0 0 0 6px ${PLUM}00; }
+        }
+        .au-world-link {
+          border: 1.5px solid ${PLUM} !important;
+          animation: au-world-pulse 2.6s ease-in-out infinite;
+        }
+        .au-world-link:hover { filter: brightness(1.1); animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) {
+          .au-world-link { animation: none; }
+        }
         /* Founder rows alternate sides on desktop; on narrow screens they all
            stack portrait-first so the reading order never inverts. */
         @media (min-width: 640px) {
@@ -175,14 +188,15 @@ export default function AboutUs() {
         <section style={{ ...shell, paddingTop: 'clamp(48px, 7vw, 84px)', paddingBottom: 'clamp(32px, 5vw, 56px)', textAlign: 'center' }}>
           <p style={eyebrow}>Two sides of the same soul</p>
           <h1 style={{ ...h2, fontSize: 'clamp(36px, 5.6vw, 64px)', maxWidth: 800, margin: '16px auto 0' }}>
-            One of us built the systems.<br />
-            <em style={{ fontStyle: 'italic', color: inkSub }}>The other lived the story.</em>
+            Built by two sisters.
           </h1>
           <p style={{ ...body, fontSize: 16.5, maxWidth: 620, margin: '24px auto 0' }}>
-            Soulful Intelligence Studio is run by twin sisters. Shruti spent twenty years
-            building enterprise software at Walmart, Deloitte and Infosys. Sim spent those
-            same years finding her way through illness, loss and recovery — and out the
-            other side. Mind Gym is what happens when those two things get built together.
+            Soulful Intelligence Studio is run by twin sisters. Both carry decades of
+            meditation practice passed down from their parents — a tradition they inherited
+            long before they built anything with it. What they have built here is that
+            inheritance combined with modern, evidence-based method: understanding feelings,
+            emotions and the body as one system, turned into a daily practice anyone can use
+            to see their own patterns — and change them.
           </p>
 
           <img
@@ -333,7 +347,7 @@ export default function AboutUs() {
                       </div>
                     </button>
 
-                    <span className="au-hint" style={{ fontFamily: SANS, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: inkSub, marginTop: 16, transition: 'color .2s' }}>
+                    <span className="au-hint" style={{ fontFamily: SANS, fontSize: 13, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: inkSub, marginTop: 16, transition: 'color .2s' }}>
                       ⇄ Tap the coin
                     </span>
                   </div>
@@ -370,12 +384,13 @@ export default function AboutUs() {
 
                     <a
                       href={TWINSOULS_URL}
+                      className="au-world-link"
                       style={{
                         marginTop: 26, display: 'inline-flex', alignItems: 'center', gap: 8,
                         padding: '11px 24px', borderRadius: 999,
-                        border: `1px solid ${borderC}`, textDecoration: 'none',
+                        textDecoration: 'none', background: PLUM,
                         fontFamily: SANS, fontSize: 11.5, fontWeight: 800,
-                        letterSpacing: '0.08em', textTransform: 'uppercase', color: ink,
+                        letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff',
                       }}
                     >
                       Enter {f.name}&apos;s world →
@@ -415,23 +430,56 @@ export default function AboutUs() {
         </section>
 
         {/* ── 5. Our promise ─────────────────────────────────────────── */}
-        <section style={{ ...shell, padding: `${sectionPad} clamp(20px, 5vw, 48px)` }}>
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <p style={eyebrow}>Our promise</p>
-            <h2 style={{ ...h2, maxWidth: 600, margin: '14px auto 0' }}>What you can hold us to.</h2>
-          </div>
-          {/* Explicit two-up rather than auto-fit: four cards across a 1060px
-              shell fitted 3 per row and left the fourth stranded alone. */}
-          <div className="au-promise" style={{ display: 'grid', gap: 18 }}>
-            {PROMISE.map((p, i) => (
-              <div key={p.title} style={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 18, padding: 26 }}>
-                <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: accent }}>
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <h3 style={{ fontFamily: SERIF, fontSize: 21, fontWeight: 400, color: ink, margin: '10px 0 8px' }}>{p.title}</h3>
-                <p style={{ ...body, fontSize: 13.5, lineHeight: 1.65 }}>{p.body}</p>
-              </div>
-            ))}
+        <section style={{ position: 'relative', padding: `${sectionPad} 0`, overflow: 'hidden' }}>
+          {/* Dim watermark of the two of them behind the promises themselves —
+              this is the section making the claims, so it is the one place on
+              the page that gets to carry their likeness as a quiet backdrop
+              rather than a subject. Cards keep full-opacity backgrounds on
+              top, so the image only shows through the gaps. */}
+          <img
+            src="/marketing/twins-pair.webp"
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: 'absolute', left: '50%', bottom: 0, transform: 'translateX(-50%)',
+              width: 'min(1100px, 92vw)', height: 'auto',
+              opacity: isDark ? 0.05 : 0.06,
+              pointerEvents: 'none',
+              filter: 'grayscale(1)',
+            }}
+          />
+
+          <div style={{ ...shell, position: 'relative', padding: '0 clamp(20px, 5vw, 48px)' }}>
+            <div style={{ textAlign: 'center', marginBottom: 40 }}>
+              <p style={eyebrow}>Our promise</p>
+              <h2 style={{ ...h2, maxWidth: 600, margin: '14px auto 0' }}>What you can hold us to.</h2>
+            </div>
+            {/* Explicit two-up rather than auto-fit: four cards across a 1060px
+                shell fitted 3 per row and left the fourth stranded alone. */}
+            <div className="au-promise" style={{ display: 'grid', gap: 18 }}>
+              {PROMISE.map((p, i) => (
+                <div key={p.title} style={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 18, padding: 26 }}>
+                  <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: accent }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <h3 style={{ fontFamily: SERIF, fontSize: 21, fontWeight: 400, color: ink, margin: '10px 0 8px' }}>{p.title}</h3>
+                  <p style={{ ...body, fontSize: 13.5, lineHeight: 1.65 }}>{p.body}</p>
+                </div>
+              ))}
+            </div>
+
+            <p style={{
+              fontFamily: SERIF, fontSize: 'clamp(18px, 2.2vw, 24px)', fontStyle: 'italic',
+              color: ink, lineHeight: 1.6, textAlign: 'center', margin: '48px auto 0', maxWidth: 620,
+            }}>
+              &ldquo;Take what you need. Give what you can. Everything here is offered pay-what-you-feel.&rdquo;
+            </p>
+            <p style={{
+              fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
+              color: accent, textAlign: 'center', margin: '14px 0 0',
+            }}>
+              — The Soulful Intelligence Promise
+            </p>
           </div>
         </section>
 
