@@ -491,6 +491,14 @@ const STREAM_PLAYLISTS = {
     meditation: 'PLQpr02ubPdHI',
 };
 
+// Feelings & Emotions episodes have no dedicated playlist yet, so they are
+// pinned by id instead — mirrored from EmotionFeelingsCourse.tsx
+// teaserVideoId. Chronological recency alone can miss these entirely once
+// three episodes' worth of other uploads have gone out since.
+const STREAM_VIDEO_IDS = {
+    feelings: ['fTrY9KMLhAo', 'pES3x5XlJF0', 'nAf0fSs8dto'],
+};
+
 /** Video ids in a playlist, newest-first as YouTube returns them. */
 async function fetchPlaylistVideoIds(youtubeKey, playlistId, headers) {
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${encodeURIComponent(playlistId)}&maxResults=50&key=${encodeURIComponent(youtubeKey)}`;
@@ -529,7 +537,11 @@ async function resolveUploadsPlaylistId(youtubeKey, handle) {
  */
 exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, async (req, res) => {
     const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
-    const max = Math.min(Math.max(parseInt(req.query.max, 10) || 6, 1), 12);
+    // Filling one slot per stream needs enough history that an infrequent
+    // stream (e.g. a course with 3 episodes total) is still in range —
+    // capping at 12 meant streams with no video in the last dozen uploads
+    // across the WHOLE channel silently vanished from the section.
+    const max = Math.min(Math.max(parseInt(req.query.max, 10) || 6, 1), 40);
     const cacheRef = db.collection('cache').doc('latest_youtube_videos');
 
     let cached = null;
@@ -562,10 +574,10 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
         if (!uploads) throw new Error('Could not resolve uploads playlist');
 
         const ua = { 'User-Agent': 'MindGym/1.0' };
-        const listUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${encodeURIComponent(uploads)}&maxResults=20&key=${encodeURIComponent(key)}`;
+        const listUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${encodeURIComponent(uploads)}&maxResults=50&key=${encodeURIComponent(key)}`;
         const listData = await httpsGetJsonWithHeaders(listUrl, ua);
 
-        const candidates = ((listData && listData.items) || []).map((it) => {
+        let candidates = ((listData && listData.items) || []).map((it) => {
             const s = it && it.snippet;
             const vid = s && s.resourceId && s.resourceId.videoId;
             const t = s && s.thumbnails;
@@ -580,9 +592,63 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
 
         if (!candidates.length) throw new Error('No playlist items returned');
 
+        // Chronological upload order can still miss a stream entirely — e.g.
+        // three Feelings & Emotions episodes sitting behind 50+ daily
+        // meditations. Pull each configured playlist's own recent items and
+        // the pinned episode ids in directly, so every stream is guaranteed a
+        // chance to be found regardless of how buried it is in the channel's
+        // overall upload history.
+        const byId = new Map(candidates.map((c) => [c.id, c]));
+
+        async function mergeSnippetsById(ids) {
+            const unknown = ids.filter((id) => !byId.has(id));
+            if (!unknown.length) return;
+            const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${encodeURIComponent(unknown.join(','))}&key=${encodeURIComponent(key)}`;
+            const data = await httpsGetJsonWithHeaders(url, ua);
+            ((data && data.items) || []).forEach((v) => {
+                const s = v.snippet;
+                const t = s && s.thumbnails;
+                byId.set(v.id, {
+                    id: v.id,
+                    title: (s && s.title) || '',
+                    publishedAt: (s && s.publishedAt) || null,
+                    thumb: (t && t.maxres && t.maxres.url) || (t && t.high && t.high.url)
+                        || (t && t.medium && t.medium.url) || (t && t.default && t.default.url) || null,
+                });
+            });
+        }
+
+        await Promise.all([
+            ...Object.entries(STREAM_PLAYLISTS).map(async ([stream, playlistId]) => {
+                try {
+                    const ids = (await fetchPlaylistVideoIds(key, playlistId, ua)).slice(0, 5);
+                    await mergeSnippetsById(ids);
+                } catch (e) {
+                    console.warn(`[getLatestVideos] playlist backfill ${stream} (${playlistId}) failed:`, e.message);
+                }
+            }),
+            ...Object.entries(STREAM_VIDEO_IDS).map(async ([stream, ids]) => {
+                try {
+                    await mergeSnippetsById(ids);
+                } catch (e) {
+                    console.warn(`[getLatestVideos] pinned ids backfill ${stream} failed:`, e.message);
+                }
+            }),
+        ]);
+
+        candidates = [...byId.values()];
+
         // Keep only public, non-live, non-Shorts videos (same rules the daily
         // email uses) so the home strip shows real long-form content.
-        const ids = candidates.map(v => v.id).slice(0, 20);
+        // videos.list caps at 50 ids per call — if there are more candidates
+        // than that, drop from the ORIGINAL chronological scan first, never
+        // from the backfilled ids: those are the ones a stream depends on to
+        // not disappear, so they must never be the ones truncated away.
+        const originalIds = new Set(((listData && listData.items) || [])
+            .map((it) => it && it.snippet && it.snippet.resourceId && it.snippet.resourceId.videoId)
+            .filter(Boolean));
+        const backfilledFirst = [...byId.keys()].sort((a, b) => Number(originalIds.has(a)) - Number(originalIds.has(b)));
+        const ids = backfilledFirst.slice(0, 50);
         const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=status,snippet,contentDetails&id=${encodeURIComponent(ids.join(','))}&key=${encodeURIComponent(key)}`;
         const videosData = await httpsGetJsonWithHeaders(videosUrl, ua);
 
@@ -602,23 +668,32 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
             }
         });
 
-        // Playlist membership -> stream. Each playlist is one extra call behind
-        // the same 6h cache, and a broken or private id is logged and skipped
-        // rather than failing the whole strip: the client still keyword-matches.
+        // Playlist + pinned-id membership -> stream. Fetched once above (in the
+        // backfill) rather than a second time here, and merged the same way: a
+        // broken or private playlist id is logged and skipped, not fatal — the
+        // client still keyword-matches anything left unmapped.
         const streamById = new Map();
-        await Promise.all(Object.entries(STREAM_PLAYLISTS).map(async ([stream, playlistId]) => {
-            try {
-                const playlistIds = await fetchPlaylistVideoIds(key, playlistId, ua);
-                playlistIds.forEach((id) => { if (!streamById.has(id)) streamById.set(id, stream); });
-            } catch (e) {
-                console.warn(`[getLatestVideos] playlist ${stream} (${playlistId}) failed:`, e.message);
-            }
-        }));
+        await Promise.all([
+            ...Object.entries(STREAM_PLAYLISTS).map(async ([stream, playlistId]) => {
+                try {
+                    const playlistIds = await fetchPlaylistVideoIds(key, playlistId, ua);
+                    playlistIds.forEach((id) => { if (!streamById.has(id)) streamById.set(id, stream); });
+                } catch (e) {
+                    console.warn(`[getLatestVideos] playlist ${stream} (${playlistId}) failed:`, e.message);
+                }
+            }),
+            ...Object.entries(STREAM_VIDEO_IDS).map(async ([stream, ids]) => {
+                ids.forEach((id) => { if (!streamById.has(id)) streamById.set(id, stream); });
+            }),
+        ]);
 
         const videos = candidates
             .filter(v => allowed.has(v.id))
             .map(v => ({ ...v, durationSec: durations.get(v.id) || 0, stream: streamById.get(v.id) || null }))
-            .slice(0, 12);
+            // Newest-first: candidates now includes backfilled older videos
+            // that were not in chronological upload order any more.
+            .sort((a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime())
+            .slice(0, 40);
         if (!videos.length) throw new Error('No eligible videos after filtering');
 
         await cacheRef.set({ videos, fetchedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });

@@ -21,6 +21,10 @@ const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, sans-serif";
 
 const YOUTUBE_CHANNEL = 'https://www.youtube.com/@SoulfulIntelligenceStudio';
+// sub_confirmation=1 opens the subscribe dialog pre-armed so the visitor only
+// has to click "Confirm" — used on the Subscribe button specifically, not on
+// plain channel-visit links where that prompt would be unwelcome.
+const YOUTUBE_SUBSCRIBE = 'https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirmation=1';
 
 const FS = (file: string) =>
   `https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2Fsite%2F${encodeURIComponent(file)}?alt=media`;
@@ -256,9 +260,10 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
 
   useEffect(() => {
     let cancelled = false;
-    // Ask for the full cached window, not 5: filling four stream slots needs
-    // enough history that a busy week in one stream cannot starve the others.
-    fetch('/api/latest-videos?max=12')
+    // Ask for the full cached window: filling four stream slots needs enough
+    // history that a busy week in one stream — or an infrequent stream, like a
+    // 3-episode course — cannot starve the others.
+    fetch('/api/latest-videos?max=40')
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((data) => {
         if (cancelled) return;
@@ -326,7 +331,7 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
         </div>
 
         <a
-          href={YOUTUBE_CHANNEL}
+          href={YOUTUBE_SUBSCRIBE}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onTrack?.('HOME_YOUTUBE_SUBSCRIBE')}
