@@ -12,7 +12,6 @@ const SANS  = "'Outfit', system-ui, sans-serif";
 export default function FinalCta({ palette, onCta }: { palette: Palette; onCta?: () => void }) {
   const isDark = palette.isDark;
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
 
   return (
     <section
@@ -86,9 +85,6 @@ export default function FinalCta({ palette, onCta }: { palette: Palette; onCta?:
         >
           Begin Your Journey
         </a>
-        <p style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, margin: 0 }}>
-          No pressure. No commitment. Just for you.
-        </p>
       </div>
 
       {/* Bottom decoration: minimal SVG circle */}
