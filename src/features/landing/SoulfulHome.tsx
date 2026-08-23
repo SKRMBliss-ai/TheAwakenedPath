@@ -410,9 +410,22 @@ export default function SoulfulHome() {
           {/* 10. Pay-what-you-feel philosophy */}
           <section
             className="si-reveal"
-            style={{ padding: 'clamp(56px, 8vw, 80px) clamp(24px, 6vw, 96px)', textAlign: 'center', position: 'relative', zIndex: 2 }}
+            style={{ padding: 'clamp(56px, 8vw, 80px) clamp(24px, 6vw, 96px)', textAlign: 'center', position: 'relative', zIndex: 2, overflow: 'hidden' }}
           >
-            <div style={{ maxWidth: 680, margin: '0 auto' }}>
+            {/* Background image - dimmed */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: 'url("https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FShSm1.png?alt=media")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.15,
+                zIndex: -1,
+                pointerEvents: 'none',
+              }}
+            />
+            <div style={{ maxWidth: 680, margin: '0 auto', position: 'relative' }}>
               <div style={{ marginBottom: 18, color: CLAY, display: 'flex', justifyContent: 'center' }}>
                 <Ico d={'M8 12V6.5a1.5 1.5 0 0 1 3 0V12|M11 12V5.5a1.5 1.5 0 0 1 3 0V12|M14 12V7a1.5 1.5 0 0 1 3 0v7a7 7 0 0 1-7 7 7 7 0 0 1-7-7v-3a1.5 1.5 0 0 1 3 0'} size={36} />
               </div>
