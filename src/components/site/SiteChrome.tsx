@@ -263,7 +263,7 @@ const FOOTER_COLS: { title: string; items: NavLink[] }[] = [
   {
     title: 'Studio',
     items: [
-      { label: 'About us', href: '/twinsouls/' },
+      { label: 'About us', href: '/about-us' },
       { label: 'Digital services', href: '/#services' },
       { label: 'Videos', href: '/#videos' },
       { label: 'YouTube channel', href: YOUTUBE_URL },

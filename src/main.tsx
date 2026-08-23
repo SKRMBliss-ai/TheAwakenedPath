@@ -5,6 +5,7 @@ import AboutJournal from './features/landing/AboutJournal'
 import EmotionalHealthCheck from './features/landing/EmotionalHealthCheck'
 import EmotionFeelingsCourse from './features/landing/EmotionFeelingsCourse'
 import Policies from './features/landing/Policies'
+import AboutUs from './features/landing/AboutUs'
 import SoulfulHome from './features/landing/SoulfulHome'
 import ContentHub from './features/content/ContentHub'
 import ProgrammaticContentView from './features/content/ProgrammaticContentView'
@@ -142,6 +143,12 @@ const isFeelingsCourseRoute = (() => {
     || p === '/feelingsandemotioncourse/checkout';
 })();
 
+const isAboutUsRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/about-us' || p === '/about-us/index.html' || p === '/aboutus';
+})();
+
 const isPoliciesRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
@@ -197,7 +204,7 @@ const isMindGymRoute = (() => {
 })();
 
 // Track /mindgym (main app) visits
-if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute && !isPoliciesRoute && !isHomeRoute && typeof window !== 'undefined') {
+if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute && !isPoliciesRoute && !isAboutUsRoute && !isHomeRoute && typeof window !== 'undefined') {
   const p = window.location.pathname.toLowerCase();
   if (p === '/mindgym' || p === '/mindgym/') {
     trackPageVisit('/mindgym', 'PAGE_VISIT_APP');
@@ -250,6 +257,14 @@ if (isPracticePreviewRoute) {
   root.render(
     <ErrorBoundary featureName="EmotionFeelingsCourse">
       <EmotionFeelingsCourse />
+      <GlobalKnowledgeDock />
+      <SocialFab />
+    </ErrorBoundary>,
+  );
+} else if (isAboutUsRoute) {
+  root.render(
+    <ErrorBoundary featureName="AboutUs">
+      <AboutUs />
       <GlobalKnowledgeDock />
       <SocialFab />
     </ErrorBoundary>,

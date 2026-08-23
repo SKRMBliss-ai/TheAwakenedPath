@@ -202,14 +202,14 @@ export default function SoulfulHome() {
                 { label: 'What we build', href: '#services' },
                 { label: 'How it works', href: '#how', secondary: true },
                 { label: 'For me', href: '?for=you', secondary: true, onClick: () => chooseAudience('you') },
-                { label: 'About Us', href: '/twinsouls/', onClick: () => track('HOME_ABOUT_US') },
+                { label: 'About Us', href: '/about-us', onClick: () => track('HOME_ABOUT_US') },
               ]
             : [
                 { label: 'Mind Gym', href: '#mindgym', onClick: () => chooseAudience('you') },
                 { label: 'Course', href: '/feelingsandemotioncourse', onClick: () => track('HOME_COURSE_CLICK') },
                 { label: 'Free Guides', href: '#tools', secondary: true, onClick: () => chooseAudience('you') },
                 { label: 'Videos', href: '#videos', secondary: true, onClick: () => chooseAudience('you') },
-                { label: 'About Us', href: '/twinsouls/', onClick: () => track('HOME_ABOUT_US') },
+                { label: 'About Us', href: '/about-us', onClick: () => track('HOME_ABOUT_US') },
                 { label: 'Sign In', href: '/mindgym', secondary: true, onClick: () => track('HOME_SIGN_IN') },
               ]}
           cta={audience === 'brands'
