@@ -4,8 +4,9 @@ const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
 /**
- * The two founders, cut out of Marketting/ShSm1.png and keyed to transparent
- * so each can sit on the card's own background rather than a white rectangle.
+ * The two founders. Sourced from the studio's transparent-background portraits
+ * (Marketting/1.png, 2.png) converted to webp — the originals are 2000x2000
+ * PNGs at ~4MB each, which is not something to ship to a checkout page.
  */
 const FOUNDERS = [
   {

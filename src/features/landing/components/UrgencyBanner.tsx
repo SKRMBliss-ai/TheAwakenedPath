@@ -3,10 +3,9 @@ import { useEffect, useState } from 'react';
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
 
-// Cropped from the twins' marketing photo (Firebase Storage: Marketting/ShSm1.png)
-// down to one figure, with the near-white backdrop keyed to transparent — the
-// source frame has a lot of empty white margin around both figures, which reads
-// as a floating rectangle when dropped straight into a solid-color banner.
+// One founder's transparent-background portrait (Marketting/2.png), converted
+// to webp — the original is a 2000x2000 ~4MB PNG. Transparent rather than the
+// white-backdrop frame, which reads as a floating rectangle on a solid banner.
 const PHOTO_URL = '/marketing/sim.webp';
 
 // A single fixed calendar date, not "N days from whenever this page loads" —
@@ -69,7 +68,7 @@ export default function UrgencyBanner({ isDark, onCta }: { isDark: boolean; onCt
         style={{
           position: 'absolute', left: 0, top: 0,
           height: 72, width: 118,
-          objectFit: 'cover', objectPosition: '50% 8%',
+          objectFit: 'cover', objectPosition: '50% 6%',
           pointerEvents: 'none',
           // Fades the cutout's right edge into the banner instead of ending
           // in a hard rectangle — the PNG has no built-in edge falloff.
