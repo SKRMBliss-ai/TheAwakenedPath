@@ -4,3 +4,4 @@ export { TrustBadges, type TrustBadgesProps } from './TrustBadges';
 export { ConsentCheckboxes, type ConsentCheckboxesProps } from './ConsentCheckboxes';
 export { WhatsIncluded, type WhatsIncludedProps } from './WhatsIncluded';
 export { OrderPromise, type OrderPromiseProps } from './OrderPromise';
+export { FoundersFlipCard, type FoundersFlipCardProps } from './FoundersFlipCard';

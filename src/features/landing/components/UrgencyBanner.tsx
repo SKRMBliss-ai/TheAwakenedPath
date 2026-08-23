@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react';
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
 
-// Cropped from the twins' marketing photo (Firebase Storage: Marketting/shsm.png)
-// down to just one figure, with the near-white backdrop keyed to transparent —
-// the source frame has a lot of empty white margin around both figures, which
-// read as a floating rectangle when dropped straight into a solid-color banner.
-const PHOTO_URL = '/marketing/shsm-left.webp';
+// Cropped from the twins' marketing photo (Firebase Storage: Marketting/ShSm1.png)
+// down to one figure, with the near-white backdrop keyed to transparent — the
+// source frame has a lot of empty white margin around both figures, which reads
+// as a floating rectangle when dropped straight into a solid-color banner.
+const PHOTO_URL = '/marketing/sim.webp';
 
 // A single fixed calendar date, not "N days from whenever this page loads" —
 // the latter resets for every visitor on every visit, which is a fake
@@ -68,13 +68,13 @@ export default function UrgencyBanner({ isDark, onCta }: { isDark: boolean; onCt
         className="si-urgency-photo"
         style={{
           position: 'absolute', left: 0, top: 0,
-          height: 72, width: 130,
-          objectFit: 'cover', objectPosition: '55% 22%',
+          height: 72, width: 118,
+          objectFit: 'cover', objectPosition: '50% 8%',
           pointerEvents: 'none',
           // Fades the cutout's right edge into the banner instead of ending
           // in a hard rectangle — the PNG has no built-in edge falloff.
-          WebkitMaskImage: 'linear-gradient(to right, black 55%, transparent 92%)',
-          maskImage: 'linear-gradient(to right, black 55%, transparent 92%)',
+          WebkitMaskImage: 'linear-gradient(to right, black 42%, transparent 88%)',
+          maskImage: 'linear-gradient(to right, black 42%, transparent 88%)',
         }}
       />
 

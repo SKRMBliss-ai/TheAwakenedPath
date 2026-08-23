@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Check, ChevronDown, Lock, Mail, Phone, ShieldCheck, User } from 'lucide-react';
 import PriceSlider from '../../../components/ui/PriceSlider';
-import { TrustStrip, TrustBadges, ConsentCheckboxes } from '../../../components/checkout';
+import { TrustStrip, TrustBadges, ConsentCheckboxes, FoundersFlipCard } from '../../../components/checkout';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
@@ -389,56 +389,17 @@ export default function CheckoutPage({
 
         {/* Right Column: Founder Welcome at top, followed by order summary and commitment */}
         <aside className="co-aside" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Founder Welcome Card with transparent Namaste.webp — sized up
-              and set on a soft radial backdrop so it reads as a portrait */}
-          <div
-            style={{
-              ...card,
-              padding: '28px 22px 24px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              overflow: 'hidden',
-              position: 'relative',
-            }}
-          >
-            <div
-              aria-hidden="true"
-              style={{
-                position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)',
-                width: 320, height: 320, borderRadius: '50%',
-                background: isDark
-                  ? 'radial-gradient(circle, rgba(196,145,58,0.16) 0%, rgba(196,145,58,0) 70%)'
-                  : 'radial-gradient(circle, rgba(74,50,96,0.08) 0%, rgba(74,50,96,0) 70%)',
-              }}
-            />
-            <img
-              src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FNamaste.webp?alt=media"
-              alt="Sim Katyal & Shruti Khungar"
-              style={{
-                maxHeight: 280,
-                width: 'auto',
-                marginBottom: 16,
-                objectFit: 'contain',
-                display: 'block',
-                position: 'relative',
-                filter: isDark ? 'drop-shadow(0 10px 26px rgba(0,0,0,0.45))' : 'drop-shadow(0 10px 26px rgba(74,50,96,0.16))',
-              }}
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/Namaste.webp';
-              }}
-            />
-            <p style={{ fontFamily: SERIF, fontSize: 16.5, color: ink, fontStyle: 'italic', lineHeight: 1.6, margin: '0 0 10px', position: 'relative' }}>
-              &ldquo;With deep presence and gratitude, we welcome you. Thank you for walking this path with us toward emotional freedom, quiet clarity, and returning home to your true self.&rdquo;
-            </p>
-            <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: accent, letterSpacing: '0.05em', textTransform: 'uppercase', position: 'relative' }}>
-              — Sim Katyal &amp; Shruti Khungar
-            </span>
-            <span style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub, display: 'block', marginTop: 3, position: 'relative' }}>
-              Founders of Soulful Intelligence Studio &amp; Mind Gym
-            </span>
-          </div>
+          {/* Founders — a flip card rather than one static group photo: the
+              two of them are the reason a buyer trusts this page, and one
+              tap introduces each by name, role and their own words. */}
+          <FoundersFlipCard
+            isDark={isDark}
+            ink={ink}
+            inkSub={inkSub}
+            cardBg={cardBg}
+            borderC={borderC}
+            accent={accent}
+          />
 
           {/* Your Order Summary Box */}
           <div style={{ ...card, padding: 22 }}>
