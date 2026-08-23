@@ -31,7 +31,7 @@ const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
 const SI_LOGO = SI_LOGO_SRC;
 const WHATSAPP = 'https://wa.me/918217581238?text=' + encodeURIComponent("Hi Soulful Intelligence — I'd like to talk about a project.");
-const YOUTUBE  = 'https://www.youtube.com/@SoulfulIntelligenceStudio';
+const YOUTUBE  = 'https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirmation=1';
 
 const track = (action: string) => {
   try {

@@ -16,7 +16,7 @@ export const SI_LOGO_SRC = '/si-logo-light.webp';
 export const SERIF = "'Cormorant Garamond', Georgia, serif";
 export const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
 
-const YOUTUBE_URL = 'https://www.youtube.com/@SoulfulIntelligenceStudio';
+const YOUTUBE_URL = 'https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirmation=1';
 const TELEGRAM_URL = 'https://t.me/skrmblissai';
 const FACEBOOK_URL = 'https://www.facebook.com/skrmbliss';
 const WHATSAPP_URL = 'https://wa.me/918217581238';

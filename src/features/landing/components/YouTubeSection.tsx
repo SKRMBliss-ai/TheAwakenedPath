@@ -20,7 +20,7 @@ import type { Palette } from '../../../lib/siteTheme';
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, sans-serif";
 
-const YOUTUBE_CHANNEL = 'https://www.youtube.com/@SoulfulIntelligenceStudio';
+const YOUTUBE_CHANNEL = 'https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirmation=1';
 // sub_confirmation=1 opens the subscribe dialog pre-armed so the visitor only
 // has to click "Confirm" — used on the Subscribe button specifically, not on
 // plain channel-visit links where that prompt would be unwelcome.

@@ -12,7 +12,7 @@ import { useState } from 'react';
 const WHATSAPP_NUMBER = '918217581238';
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi! I'd like to know more.")}`;
 const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/JegHhDRjo1q72y0c9M3XYF';
-const YOUTUBE_URL = 'https://www.youtube.com/@SoulfulIntelligenceStudio';
+const YOUTUBE_URL = 'https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirmation=1';
 const FACEBOOK_URL = 'https://www.facebook.com/skrmbliss';
 const TELEGRAM_URL = 'https://t.me/skrmblissai';
 
