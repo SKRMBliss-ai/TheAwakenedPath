@@ -122,10 +122,17 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
       />
 
       {/* ── 2. The founders, flanking the promise ──
-          Anchored to the bottom edge and bled off it so they read as part of
-          the page rather than two cut-outs pasted on it. Decorative: the names are
-          spelled out in the attribution line below the CTAs, so leaving these
-          unlabelled avoids a screen reader hearing them twice. */}
+          Anchored to the TOP edge, just under the header, and bled off the
+          side so they read as part of the page rather than two cut-outs
+          pasted on it. Previously anchored to the section's bottom edge —
+          on a viewport shorter than the section's own min-height (routine on
+          a real laptop, since 90vh plus the header's own real height often
+          exceeds one screen) that left a tall empty gap between the header
+          and the top of their heads, pushing the figures down out of the
+          first screenful entirely. Top-anchoring means the header is the
+          only thing that can ever sit above them. Decorative: the names are
+          spelled out in the attribution line below the CTAs, so leaving
+          these unlabelled avoids a screen reader hearing them twice. */}
       {FOUNDERS.map((f, i) => (
         <div
           key={f.key}
@@ -133,7 +140,7 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
           className="si-hero-founder"
           style={{
             position: 'absolute',
-            bottom: 0,
+            top: 0,
             // Bled off the side edge: a figure standing fully inside the frame
             // reads as a cut-out placed on the page, one running off it reads
             // as the page being built around them.
@@ -141,7 +148,7 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
             zIndex: 1,
             pointerEvents: 'none',
             display: 'flex',
-            alignItems: 'flex-end',
+            alignItems: 'flex-start',
           }}
         >
           <img
@@ -151,15 +158,16 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
             decoding="async"
             style={{
               position: 'relative',
-              // Tall enough to reach up alongside the headline — sized short,
-              // they left a band of dead space above their heads.
-              height: 'clamp(520px, 84vh, 860px)',
+              // Tall enough to reach down alongside the headline without
+              // needing the section itself to grow to fit them.
+              height: 'clamp(480px, 78vh, 780px)',
               width: 'auto',
               display: 'block',
               objectFit: 'contain',
-              objectPosition: 'bottom',
-              // Fades each figure into the ground instead of cutting off at a
-              // hard edge where the section ends.
+              objectPosition: 'top',
+              // Fades each figure out at the bottom instead of cutting off at
+              // a hard edge — the end that now bleeds off is the torso/legs,
+              // not the head, since anchoring flipped to the top.
               WebkitMaskImage: 'linear-gradient(to bottom, black 74%, transparent 99%)',
               maskImage: 'linear-gradient(to bottom, black 74%, transparent 99%)',
             }}
