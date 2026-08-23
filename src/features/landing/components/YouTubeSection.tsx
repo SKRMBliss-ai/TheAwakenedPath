@@ -1,11 +1,17 @@
 /**
  * YouTubeSection.tsx
- * Netflix-style premium YouTube section.
- * - Featured video card (large, 16:7 aspect)
- * - 4-card horizontal carousel
- * - Live /api/latest-videos fetch + curated fallbacks
- * - Duration badges, category tags, publish date
- * - Large Subscribe button
+ * "Latest in every stream" — one card per content stream rather than a single
+ * featured video plus whatever happened to be uploaded next.
+ *
+ * The channel publishes four distinct things: guided meditations, ambient
+ * music, the Feelings & Emotions course, and the Wisdom Untethered course. A
+ * plain "5 most recent" strip buries three of those whenever one stream has a
+ * busy week — the person who came for a meditation sees four music tracks. So
+ * each stream gets its own fixed slot, showing that stream's newest upload.
+ *
+ * Classification happens here rather than server-side because it is a pure
+ * function of the title (plus a known-ids list for the course), so it needs no
+ * deploy to correct and no cache to invalidate when a rule changes.
  */
 import { useEffect, useState } from 'react';
 import type { Palette } from '../../../lib/siteTheme';
@@ -18,55 +24,92 @@ const YOUTUBE_CHANNEL = 'https://www.youtube.com/@SoulfulIntelligenceStudio';
 const FS = (file: string) =>
   `https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2Fsite%2F${encodeURIComponent(file)}?alt=media`;
 
-// Curated fallback videos — guaranteed premium look while API populates
-const FALLBACK_VIDEOS = [
-  {
-    id: 'fallback-1',
-    title: 'The First Inner Rule: How We Learn to Hide What We Feel',
-    thumb: FS('yt-thumb-presence.webp'),
-    category: 'Inner Work',
-    durationSec: 847,
-    publishedAt: '2026-06-15T00:00:00Z',
-  },
-  {
-    id: 'fallback-2',
+type StreamKey = 'meditation' | 'music' | 'feelings' | 'untethered';
+
+interface Stream {
+  key: StreamKey;
+  label: string;
+  blurb: string;
+  accent: string;
+  /** Where to send someone who wants the whole stream, not just the newest. */
+  href: string;
+}
+
+/** Accents are all drawn from the existing brand family, not invented hues. */
+const STREAMS: Stream[] = [
+  { key: 'meditation', label: 'Meditation',        blurb: 'Guided practice',   accent: '#6E7F6A', href: YOUTUBE_CHANNEL },
+  { key: 'music',      label: 'Music',             blurb: 'Sound for stillness', accent: '#C4913A', href: YOUTUBE_CHANNEL },
+  { key: 'feelings',   label: 'Feelings & Emotions', blurb: 'The course',      accent: '#4A3260', href: '/feelingsandemotioncourse' },
+  { key: 'untethered', label: 'Wisdom Untethered', blurb: 'The course',        accent: '#7A5F44', href: '/mindgym' },
+];
+
+/**
+ * Feelings & Emotions episode ids, mirrored from EmotionFeelingsCourse.tsx.
+ * An exact id beats any keyword rule, and these titles ("What Are Feelings and
+ * Emotions?") do not reliably name the series.
+ */
+const FEELINGS_VIDEO_IDS = new Set([
+  'fTrY9KMLhAo', // EP1
+  'pES3x5XlJF0', // EP2
+  'nAf0fSs8dto', // EP3
+]);
+
+const MUSIC_RE = /\b(music|hz|ambient|sitar|flute|drone|raga|instrumental|frequency|tanpura|soundscape|binaural)\b/i;
+const MEDITATION_RE = /\b(meditation|meditate|guided|breathwork|breathing|breath|sleep|relax|body scan|yoga nidra|affirmation|prayer)\b/i;
+const UNTETHERED_RE = /\buntethered\b/i;
+const FEELINGS_RE = /\bfeelings?\s*(&|and)\s*emotions?\b|\bemotions?\s+course\b/i;
+
+/**
+ * Order matters. "528Hz Guided Meditation & Ambient Music" matches both the
+ * music and meditation rules; it is a two-hour ambient track, so music has to
+ * win. Course series are checked first because they are the most specific.
+ */
+function classify(v: Video): StreamKey | null {
+  const t = v.title || '';
+  if (UNTETHERED_RE.test(t)) return 'untethered';
+  if (FEELINGS_VIDEO_IDS.has(v.id) || FEELINGS_RE.test(t)) return 'feelings';
+  if (MUSIC_RE.test(t)) return 'music';
+  if (MEDITATION_RE.test(t)) return 'meditation';
+  return null;
+}
+
+// Curated fallbacks — one per stream, so the section keeps its shape when the
+// API is unreachable instead of collapsing to a single column.
+const FALLBACK_BY_STREAM: Record<StreamKey, Video> = {
+  meditation: {
+    id: 'fallback-meditation',
     title: 'Daily Prayer: When Silence Is the Most Honest Thing You Can Say',
     thumb: FS('yt-thumb-breath.webp'),
-    category: 'Meditation',
     durationSec: 423,
     publishedAt: '2026-06-08T00:00:00Z',
   },
-  {
-    id: 'fallback-3',
-    title: 'Release Stress Instantly: Deep Breathing for Sleep Rest',
-    thumb: FS('yt-thumb-sleep.webp'),
-    category: 'Breathwork',
-    durationSec: 612,
-    publishedAt: '2026-05-22T00:00:00Z',
-  },
-  {
-    id: 'fallback-4',
-    title: 'Let Go to Grow: Understanding the Art of Letting Go',
+  music: {
+    id: 'fallback-music',
+    title: 'Pure Sitar Stillness | Indian Classical Music for Deep Meditation',
     thumb: FS('yt-thumb-nature.webp'),
-    category: 'Mindfulness',
-    durationSec: 1124,
-    publishedAt: '2026-05-10T00:00:00Z',
+    durationSec: 315,
+    publishedAt: '2026-06-02T00:00:00Z',
   },
-  {
-    id: 'fallback-5',
-    title: 'How Your Body Pays the Price of Stress — Somatic Signals You Ignore',
+  feelings: {
+    id: 'fallback-feelings',
+    title: 'The First Inner Rule: How We Learn to Hide What We Feel',
     thumb: FS('yt-thumb-presence.webp'),
-    category: 'Body & Mind',
-    durationSec: 965,
-    publishedAt: '2026-04-28T00:00:00Z',
+    durationSec: 847,
+    publishedAt: '2026-06-15T00:00:00Z',
   },
-];
+  untethered: {
+    id: 'fallback-untethered',
+    title: 'How To Stop Taking Things Personally | Wisdom Untethered',
+    thumb: FS('yt-thumb-sleep.webp'),
+    durationSec: 598,
+    publishedAt: '2026-05-28T00:00:00Z',
+  },
+};
 
 interface Video {
   id: string;
   title: string;
   thumb: string | null;
-  category?: string;
   durationSec?: number;
   publishedAt?: string | null;
 }
@@ -92,11 +135,11 @@ function fmtAgo(iso?: string | null): string | null {
   return y <= 1 ? 'a year ago' : `${y} years ago`;
 }
 
-function PlayCircle({ size = 52, dark = false }: { size?: number; dark?: boolean }) {
+function PlayCircle({ size = 46 }: { size?: number }) {
   return (
-    <div className="si-play-circle" style={{ width: size, height: size, background: dark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.88)' }}>
+    <div className="si-play-circle" style={{ width: size, height: size, background: 'rgba(0,0,0,0.62)' }}>
       <span style={{
-        borderLeft: `${Math.round(size * 0.28)}px solid ${dark ? '#fff' : '#1A1018'}`,
+        borderLeft: `${Math.round(size * 0.28)}px solid #fff`,
         borderTop: `${Math.round(size * 0.18)}px solid transparent`,
         borderBottom: `${Math.round(size * 0.18)}px solid transparent`,
         marginLeft: Math.round(size * 0.08),
@@ -106,151 +149,98 @@ function PlayCircle({ size = 52, dark = false }: { size?: number; dark?: boolean
   );
 }
 
-function FeaturedCard({ video, isDark }: { video: Video; isDark: boolean }) {
+function StreamCard({ stream, video, isNewest, isDark }: {
+  stream: Stream; video: Video; isNewest: boolean; isDark: boolean;
+}) {
+  const ink = isDark ? '#EDE9E3' : '#2A2118';
   const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
+  const cardBg = isDark ? 'rgba(255,255,255,0.04)' : '#FFFFFF';
+  const borderC = isDark ? 'rgba(255,255,255,0.09)' : 'rgba(196,181,160,0.42)';
+  const isFallback = video.id.startsWith('fallback');
 
   return (
-    <a
-      href={video.id.startsWith('fallback') ? YOUTUBE_CHANNEL : `https://www.youtube.com/watch?v=${video.id}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="si-video-card"
-      style={{ display: 'block', borderRadius: 24 }}
-      aria-label={`Watch: ${video.title}`}
-    >
-      {/* Thumbnail */}
-      <div style={{ position: 'relative', aspectRatio: '16/7', overflow: 'hidden', borderRadius: '24px 24px 0 0', background: isDark ? '#1A1018' : '#EDE0CC' }}>
-        {video.thumb && (
-          <img
-            src={video.thumb}
-            alt=""
-            className="si-thumb-img"
-            loading="eager"
-            decoding="async"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
-        )}
-        {/* Scrim */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.7) 100%)' }} />
-        {/* Play */}
-        <div className="si-play-btn"><PlayCircle size={68} dark /></div>
-        {/* Duration */}
-        {video.durationSec && (
-          <span style={{
-            position: 'absolute', right: 14, bottom: 14,
-            padding: '4px 10px', borderRadius: 8,
-            background: 'rgba(0,0,0,0.8)', color: '#fff',
-            fontFamily: SANS, fontSize: 12, fontWeight: 700,
-          }}>
-            {fmtDuration(video.durationSec)}
-          </span>
-        )}
-        {/* Category + title over scrim */}
-        <div style={{ position: 'absolute', left: 22, right: 100, bottom: 20 }}>
-          {video.category && (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {/* Stream heading sits outside the card: the promise of the slot is
+          "this stream, always here", which should read even while loading. */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: stream.accent, flexShrink: 0 }} />
+        <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: ink }}>
+          {stream.label}
+        </span>
+        <span style={{ fontFamily: SANS, fontSize: 10.5, color: inkSub, marginLeft: 'auto' }}>
+          {stream.blurb}
+        </span>
+      </div>
+
+      <a
+        href={isFallback ? YOUTUBE_CHANNEL : `https://www.youtube.com/watch?v=${video.id}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="si-video-card"
+        style={{
+          display: 'flex', flexDirection: 'column', flex: 1,
+          borderRadius: 16, overflow: 'hidden',
+          background: cardBg, border: `1px solid ${borderC}`,
+          borderTop: `3px solid ${stream.accent}`,
+          textDecoration: 'none',
+        }}
+        aria-label={`${stream.label}: watch ${video.title}`}
+      >
+        <div style={{ position: 'relative', aspectRatio: '16/9', background: isDark ? '#1A1018' : '#EDE0CC', overflow: 'hidden' }}>
+          {video.thumb && (
+            <img
+              src={video.thumb}
+              alt=""
+              className="si-thumb-img"
+              loading="lazy"
+              decoding="async"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          )}
+          <div className="si-play-btn"><PlayCircle size={46} /></div>
+
+          {isNewest && (
             <span style={{
-              display: 'inline-block', padding: '4px 10px', borderRadius: 999, marginBottom: 8,
-              background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)',
-              fontFamily: SANS, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.15em',
-              textTransform: 'uppercase', color: 'rgba(255,255,255,0.85)',
+              position: 'absolute', left: 10, top: 10,
+              padding: '4px 10px', borderRadius: 999,
+              background: stream.accent, color: '#fff',
+              fontFamily: SANS, fontSize: 9, fontWeight: 800,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
             }}>
-              {video.category}
+              Newest
             </span>
           )}
+
+          {video.durationSec ? (
+            <span style={{
+              position: 'absolute', right: 8, bottom: 8,
+              padding: '3px 8px', borderRadius: 6,
+              background: 'rgba(0,0,0,0.78)', color: '#fff',
+              fontFamily: SANS, fontSize: 11, fontWeight: 700,
+            }}>
+              {fmtDuration(video.durationSec)}
+            </span>
+          ) : null}
+        </div>
+
+        <div style={{ padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
           <p style={{
-            fontFamily: SERIF, color: '#fff', fontWeight: 600,
-            fontSize: 'clamp(17px, 2.2vw, 26px)', lineHeight: 1.25, margin: 0,
-            textShadow: '0 2px 12px rgba(0,0,0,0.5)',
+            fontFamily: SERIF, fontSize: 17, fontWeight: 500, margin: '0 0 10px', lineHeight: 1.3,
+            color: ink, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
           }}>
             {video.title}
           </p>
+          <span style={{ fontFamily: SANS, fontSize: 11, color: inkSub, fontWeight: 600, marginTop: 'auto' }}>
+            {fmtAgo(video.publishedAt) ?? 'On the channel'}
+          </span>
         </div>
-      </div>
-
-      {/* Card footer */}
-      <div style={{ padding: '16px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: SANS, fontSize: 12, color: inkSub, fontWeight: 600 }}>
-          {fmtAgo(video.publishedAt)}
-        </span>
-        <span style={{
-          fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em',
-          textTransform: 'uppercase', color: isDark ? '#C4913A' : '#4A3260',
-        }}>
-          Newest ↗
-        </span>
-      </div>
-    </a>
-  );
-}
-
-function SmallCard({ video, isDark }: { video: Video; isDark: boolean }) {
-  const ink    = isDark ? '#EDE9E3' : '#2A2118';
-  const inkSub = isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44';
-
-  return (
-    <a
-      href={video.id.startsWith('fallback') ? YOUTUBE_CHANNEL : `https://www.youtube.com/watch?v=${video.id}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="si-video-card"
-      style={{ width: 'clamp(240px, 30vw, 300px)' }}
-      aria-label={`Watch: ${video.title}`}
-    >
-      {/* Thumbnail */}
-      <div style={{ position: 'relative', aspectRatio: '16/9', background: isDark ? '#1A1018' : '#EDE0CC', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
-        {video.thumb && (
-          <img
-            src={video.thumb}
-            alt=""
-            className="si-thumb-img"
-            loading="lazy"
-            decoding="async"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
-        )}
-        <div className="si-play-btn"><PlayCircle size={40} dark /></div>
-        {video.durationSec && (
-          <span style={{
-            position: 'absolute', right: 8, bottom: 8,
-            padding: '3px 8px', borderRadius: 6,
-            background: 'rgba(0,0,0,0.78)', color: '#fff',
-            fontFamily: SANS, fontSize: 11, fontWeight: 700,
-          }}>
-            {fmtDuration(video.durationSec)}
-          </span>
-        )}
-        {video.category && (
-          <span style={{
-            position: 'absolute', left: 8, top: 8,
-            padding: '3px 8px', borderRadius: 999,
-            background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
-            fontFamily: SANS, fontSize: 9, fontWeight: 800, letterSpacing: '0.12em',
-            textTransform: 'uppercase', color: 'rgba(255,255,255,0.85)',
-          }}>
-            {video.category}
-          </span>
-        )}
-      </div>
-      {/* Card footer */}
-      <div style={{ padding: '13px 15px 16px' }}>
-        <p style={{
-          fontFamily: SANS, fontSize: 13, fontWeight: 700, margin: '0 0 6px', lineHeight: 1.35,
-          color: ink, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-        }}>
-          {video.title}
-        </p>
-        {video.publishedAt && (
-          <p style={{ fontFamily: SANS, fontSize: 11, color: inkSub, margin: 0, fontWeight: 600 }}>
-            {fmtAgo(video.publishedAt)}
-          </p>
-        )}
-      </div>
-    </a>
+      </a>
+    </div>
   );
 }
 
 export default function YouTubeSection({ palette, onTrack }: { palette: Palette; onTrack?: (action: string) => void }) {
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [byStream, setByStream] = useState<Partial<Record<StreamKey, Video>>>({});
   const [status, setStatus] = useState<'loading' | 'ready' | 'fallback'>('loading');
   const isDark = palette.isDark;
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
@@ -258,32 +248,45 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/latest-videos?max=5')
+    // Ask for the full cached window, not 5: filling four stream slots needs
+    // enough history that a busy week in one stream cannot starve the others.
+    fetch('/api/latest-videos?max=12')
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((data) => {
         if (cancelled) return;
         const list: Video[] = Array.isArray(data?.videos) ? data.videos : [];
-        if (list.length >= 2) {
-          // Merge categories from fallback if API doesn't provide them
-          const enriched = list.map((v, i) => ({
-            ...v,
-            category: (v as any).category ?? FALLBACK_VIDEOS[i % FALLBACK_VIDEOS.length]?.category,
-          }));
-          setVideos(enriched);
+
+        // The API returns newest-first, so the first match per stream wins.
+        const picked: Partial<Record<StreamKey, Video>> = {};
+        list.forEach((v) => {
+          const k = classify(v);
+          if (k && !picked[k]) picked[k] = v;
+        });
+
+        const filled = Object.keys(picked).length;
+        if (filled >= 2) {
+          setByStream(picked);
           setStatus('ready');
         } else {
-          setVideos(FALLBACK_VIDEOS);
+          setByStream(FALLBACK_BY_STREAM);
           setStatus('fallback');
         }
       })
       .catch(() => {
-        if (!cancelled) { setVideos(FALLBACK_VIDEOS); setStatus('fallback'); }
+        if (!cancelled) { setByStream(FALLBACK_BY_STREAM); setStatus('fallback'); }
       });
     return () => { cancelled = true; };
   }, []);
 
-  const featured = videos[0] ?? null;
-  const supporting = videos.slice(1, 5);
+  // Only render streams that actually have a video, so a stream with nothing
+  // published yet leaves no dead tile behind.
+  const visible = STREAMS
+    .map((s) => ({ stream: s, video: byStream[s.key] }))
+    .filter((x): x is { stream: Stream; video: Video } => Boolean(x.video));
+
+  const newestId = visible
+    .slice()
+    .sort((a, b) => new Date(b.video.publishedAt || 0).getTime() - new Date(a.video.publishedAt || 0).getTime())[0]?.video.id;
 
   return (
     <section
@@ -294,6 +297,12 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
         background: isDark ? 'rgba(12,9,16,0.4)' : 'rgba(240,232,220,0.35)',
       }}
     >
+      <style>{`
+        .si-stream-grid { display: grid; gap: 22px; grid-template-columns: 1fr; }
+        @media (min-width: 640px)  { .si-stream-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1180px) { .si-stream-grid { grid-template-columns: repeat(4, 1fr); } }
+      `}</style>
+
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 36, gap: 20, flexWrap: 'wrap' }}>
         <div>
@@ -301,14 +310,13 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
             From the Studio
           </p>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3vw, 42px)', fontWeight: 400, color: ink, marginBottom: 8, letterSpacing: '-0.01em' }}>
-            Latest from the Studio
+            Latest in every stream
           </h2>
           <p style={{ fontFamily: SANS, fontSize: 13.5, color: inkSub }}>
-            Guided practices, talks and reflections — new videos every week.
+            Meditation, music and both courses — the newest of each, every week.
           </p>
         </div>
 
-        {/* Subscribe button */}
         <a
           href={YOUTUBE_CHANNEL}
           target="_blank"
@@ -335,33 +343,42 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
         </a>
       </div>
 
-      {/* Loading skeleton */}
+      {/* Loading skeleton — same four-slot shape as the real thing, so the
+          layout does not jump once the fetch lands. */}
       {status === 'loading' && (
-        <div style={{ display: 'grid', gap: 20 }}>
-          <div style={{ borderRadius: 24, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(60,40,20,0.06)', aspectRatio: '16/7', animation: 'heartbeat 2s infinite' }} />
-          <div style={{ display: 'flex', gap: 20, overflow: 'hidden' }}>
-            {[1,2,3,4].map(i => (
-              <div key={i} style={{ width: 260, flexShrink: 0, borderRadius: 16, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(60,40,20,0.06)', aspectRatio: '16/9', animation: 'heartbeat 2s infinite' }} />
-            ))}
-          </div>
+        <div className="si-stream-grid">
+          {STREAMS.map((s) => (
+            <div key={s.key}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.accent }} />
+                <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: ink }}>
+                  {s.label}
+                </span>
+              </div>
+              <div style={{
+                borderRadius: 16, aspectRatio: '16/11',
+                background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(60,40,20,0.06)',
+                animation: 'heartbeat 2s infinite',
+              }} />
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Videos */}
-      {status !== 'loading' && featured && (
-        <div style={{ display: 'grid', gap: 24 }}>
-          <FeaturedCard video={featured} isDark={isDark} />
-
-          {/* Horizontal carousel */}
-          {supporting.length > 0 && (
-            <div className="si-carousel" role="list" aria-label="More videos from the studio">
-              {supporting.map((v) => (
-                <div key={v.id} role="listitem">
-                  <SmallCard video={v} isDark={isDark} />
-                </div>
-              ))}
+      {status !== 'loading' && (
+        <div className="si-stream-grid" role="list" aria-label="Latest video in each stream">
+          {visible.map(({ stream, video }) => (
+            <div key={stream.key} role="listitem" style={{ display: 'flex' }}>
+              <div style={{ flex: 1, display: 'flex' }}>
+                <StreamCard
+                  stream={stream}
+                  video={video}
+                  isNewest={video.id === newestId}
+                  isDark={isDark}
+                />
+              </div>
             </div>
-          )}
+          ))}
         </div>
       )}
 
@@ -376,9 +393,6 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
             fontFamily: SANS, fontSize: 13, fontWeight: 700,
             color: isDark ? 'rgba(237,233,227,0.55)' : '#7A5F44',
             textDecoration: 'none', transition: 'color 0.2s ease',
-            // WCAG 2.2 §2.5.8: this rendered ~19px tall. The underline lives on
-            // the inner span so it still hugs the text instead of dropping to
-            // the bottom of the enlarged box.
             display: 'inline-flex', alignItems: 'center',
             minHeight: 32, padding: '6px 4px',
           }}
