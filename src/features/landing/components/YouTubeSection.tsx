@@ -9,9 +9,10 @@
  * busy week — the person who came for a meditation sees four music tracks. So
  * each stream gets its own fixed slot, showing that stream's newest upload.
  *
- * Classification happens here rather than server-side because it is a pure
- * function of the title (plus a known-ids list for the course), so it needs no
- * deploy to correct and no cache to invalidate when a rule changes.
+ * Classification is two-tier. Curated playlists resolve server-side into a
+ * `stream` field and are authoritative — a daily meditation upload need not
+ * say "meditation" in its title. Anything without one falls back to title
+ * keywords here, which needs no deploy to correct and no cache to invalidate.
  */
 import { useEffect, useState } from 'react';
 import type { Palette } from '../../../lib/siteTheme';
@@ -63,8 +64,13 @@ const FEELINGS_RE = /\bfeelings?\s*(&|and)\s*emotions?\b|\bemotions?\s+course\b/
  * Order matters. "528Hz Guided Meditation & Ambient Music" matches both the
  * music and meditation rules; it is a two-hour ambient track, so music has to
  * win. Course series are checked first because they are the most specific.
+ *
+ * A server-side `stream` always wins over all of it: that comes from curated
+ * playlist membership, and a daily meditation need not say "meditation" in its
+ * title to belong in the meditation slot.
  */
 function classify(v: Video): StreamKey | null {
+  if (v.stream && STREAMS.some((s) => s.key === v.stream)) return v.stream;
   const t = v.title || '';
   if (UNTETHERED_RE.test(t)) return 'untethered';
   if (FEELINGS_VIDEO_IDS.has(v.id) || FEELINGS_RE.test(t)) return 'feelings';
@@ -112,6 +118,8 @@ interface Video {
   thumb: string | null;
   durationSec?: number;
   publishedAt?: string | null;
+  /** Set server-side from curated playlist membership; authoritative. */
+  stream?: StreamKey | null;
 }
 
 function fmtDuration(sec?: number): string | null {

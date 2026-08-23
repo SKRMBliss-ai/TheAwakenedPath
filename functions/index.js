@@ -479,6 +479,27 @@ function httpsGetJsonWithHeaders(url, headers) {
 
 // Resolve the studio's YouTube handle to its "uploads" playlist id. Handles
 // the case where forHandle returns nothing by falling back to channel search.
+/**
+ * Playlists that define a stream authoritatively. Membership beats any title
+ * keyword rule the client applies: a daily meditation upload does not have to
+ * have the word "meditation" in its title to belong in the meditation slot.
+ *
+ * Keys must match the stream keys in YouTubeSection.tsx.
+ */
+const STREAM_PLAYLISTS = {
+    // "Daily meditation by Sim".
+    meditation: 'PLQpr02ubPdHI',
+};
+
+/** Video ids in a playlist, newest-first as YouTube returns them. */
+async function fetchPlaylistVideoIds(youtubeKey, playlistId, headers) {
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${encodeURIComponent(playlistId)}&maxResults=50&key=${encodeURIComponent(youtubeKey)}`;
+    const data = await httpsGetJsonWithHeaders(url, headers);
+    return ((data && data.items) || [])
+        .map((it) => it && it.contentDetails && it.contentDetails.videoId)
+        .filter(Boolean);
+}
+
 async function resolveUploadsPlaylistId(youtubeKey, handle) {
     const ua = { 'User-Agent': 'MindGym/1.0' };
     const channelsUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forHandle=${encodeURIComponent(handle)}&key=${encodeURIComponent(youtubeKey)}`;
@@ -525,7 +546,8 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
     // A payload written before a field was added is stale regardless of age —
     // otherwise a schema change silently serves the old shape for a full TTL.
     const cacheHasCurrentShape = !!(cached && Array.isArray(cached.videos)
-        && cached.videos.length && 'durationSec' in cached.videos[0]);
+        && cached.videos.length && 'durationSec' in cached.videos[0]
+        && 'stream' in cached.videos[0]);
     if (cached && Array.isArray(cached.videos) && cached.videos.length
         && cacheAge < CACHE_TTL_MS && cacheHasCurrentShape) {
         res.set('Cache-Control', 'public, max-age=1800');
@@ -580,9 +602,22 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
             }
         });
 
+        // Playlist membership -> stream. Each playlist is one extra call behind
+        // the same 6h cache, and a broken or private id is logged and skipped
+        // rather than failing the whole strip: the client still keyword-matches.
+        const streamById = new Map();
+        await Promise.all(Object.entries(STREAM_PLAYLISTS).map(async ([stream, playlistId]) => {
+            try {
+                const playlistIds = await fetchPlaylistVideoIds(key, playlistId, ua);
+                playlistIds.forEach((id) => { if (!streamById.has(id)) streamById.set(id, stream); });
+            } catch (e) {
+                console.warn(`[getLatestVideos] playlist ${stream} (${playlistId}) failed:`, e.message);
+            }
+        }));
+
         const videos = candidates
             .filter(v => allowed.has(v.id))
-            .map(v => ({ ...v, durationSec: durations.get(v.id) || 0 }))
+            .map(v => ({ ...v, durationSec: durations.get(v.id) || 0, stream: streamById.get(v.id) || null }))
             .slice(0, 12);
         if (!videos.length) throw new Error('No eligible videos after filtering');
 
