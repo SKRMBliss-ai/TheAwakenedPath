@@ -106,11 +106,11 @@ export const KIDS_AGE_OPTIONS = ['3', '4', '5', '6', '7', '8', '9', '10', '11', 
 // Drop the two supplied images in public/marketing/kids/ with these exact
 // filenames and they'll appear on the sales page automatically.
 export const KIDS_CHART_IMG = '/marketing/kids/activity-chart.png';
-export const KIDS_TEACHER_IMG = '/marketing/kids/mother-son.jpg';
+export const KIDS_TEACHER_IMG = 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2Fsite%2FSimKatyalProfile.webp?alt=media';
 /** The branded "Let's Be Our Best Every Day!" poster (mother + son, with the
  *  title, tagline and Emotional Awareness / Positive Choices / Happy Heart
  *  icons baked into the image itself). Used on both cross-sell placements. */
-export const KIDS_POSTER_IMG = '/marketing/kids/poster.jpg';
+export const KIDS_POSTER_IMG = 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fposter.png?alt=media';
 
 export const KIDS_TEACHER_POINTS = [
   { icon: '❤️', title: 'Understand feelings', body: 'Help children notice and name what is happening inside.' },

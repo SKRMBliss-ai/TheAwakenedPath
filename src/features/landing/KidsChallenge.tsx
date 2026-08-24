@@ -8,6 +8,7 @@
  * page (/kidschallenge/register).
  */
 import { useEffect } from 'react';
+import { Heart, Calendar, Clock, MapPin, Sparkles } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
@@ -208,25 +209,20 @@ export default function KidsChallenge() {
             </p>
           </div>
 
-          {/* Notice · Choose · Grow card */}
+          {/* Notice · Choose · Grow poster */}
           <div style={{
-            background: palette.BAND, borderRadius: 28,
-            padding: 'clamp(32px, 4vw, 48px)', textAlign: 'center',
+            borderRadius: 28,
+            overflow: 'hidden',
             border: `1px solid ${palette.BAND_BORDER}`,
+            background: palette.BAND,
+            display: 'flex',
           }}>
-            <div style={{ fontSize: 40, lineHeight: 1, marginBottom: 18 }} aria-hidden="true">♡</div>
-            <p style={{
-              fontFamily: SERIF, fontSize: 'clamp(26px, 3.4vw, 38px)', fontWeight: 400,
-              lineHeight: 1.3, color: palette.ON_BAND, margin: 0,
-            }}>
-              Notice.<br />Choose.<br />Grow.
-            </p>
-            <p style={{
-              fontFamily: SANS, fontSize: 12, fontWeight: 700, letterSpacing: '0.16em',
-              textTransform: 'uppercase', color: palette.ON_BAND_ACCENT, marginTop: 20,
-            }}>
-              Three days · Three questions
-            </p>
+            <img
+              src={KIDS_POSTER_IMG}
+              alt="Notice. Choose. Grow. Three days. Three questions."
+              loading="lazy"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
           </div>
         </div>
       </header>
@@ -436,44 +432,73 @@ export default function KidsChallenge() {
         </div>
       </section>
 
-      {/* ═══ Final CTA ══════════════════════════════════════════════════════ */}
+      {/* ═══ Final CTA (Redesigned with Graphics) ═══════════════════════════ */}
       <section className="si-reveal" style={{
-        position: 'relative', zIndex: 2, textAlign: 'center',
-        padding: 'clamp(64px, 9vw, 110px) clamp(24px, 6vw, 96px)',
-        background: palette.BAND, color: palette.ON_BAND,
+        position: 'relative', zIndex: 2,
+        padding: 'clamp(56px, 8vw, 96px) clamp(24px, 6vw, 96px)',
       }}>
-        <h2 style={{
-          fontFamily: SERIF, fontSize: 'clamp(30px, 4.4vw, 48px)', fontWeight: 400,
-          lineHeight: 1.15, color: palette.ON_BAND, margin: '0 auto 22px', maxWidth: 760,
+        <div style={{
+          maxWidth: 900, margin: '0 auto',
+          background: isDark ? 'linear-gradient(145deg, #4A2860 0%, #2A1E40 100%)' : 'linear-gradient(145deg, #FDF7F3 0%, #F5EDE6 100%)',
+          borderRadius: 32, padding: 'clamp(32px, 5vw, 56px)',
+          border: `1px solid ${border}`, textAlign: 'center',
+          boxShadow: isDark ? '0 30px 80px rgba(0,0,0,0.5)' : '0 24px 60px rgba(60,40,30,0.08)',
         }}>
-          Give your child three little days to discover something powerful.
-        </h2>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 24, color: palette.BROWN }}>
+            <Sparkles size={28} /> <Heart size={28} fill="currentColor" /> <Sparkles size={28} />
+          </div>
 
-        <p style={{
-          fontFamily: SERIF, fontSize: 'clamp(19px, 2.4vw, 26px)', fontStyle: 'italic',
-          lineHeight: 1.6, color: palette.ON_BAND, margin: '0 auto 32px', maxWidth: 560,
-        }}>
-          I can notice what I feel.<br />
-          I can choose what I do.<br />
-          I can grow a little every day.
-        </p>
+          <h2 style={{
+            fontFamily: SERIF, fontSize: 'clamp(32px, 4.4vw, 52px)', fontWeight: 400,
+            lineHeight: 1.15, color: palette.INK, margin: '0 auto 24px', maxWidth: 760,
+          }}>
+            Give your child three little days to discover something powerful.
+          </h2>
 
-        <a
-          href={KIDS_REGISTER_PATH}
-          onClick={() => trackKids('KIDS_FINAL_CTA')}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 9,
-            padding: '16px 34px', borderRadius: 999,
-            background: palette.ON_BAND, color: palette.BAND,
-            textDecoration: 'none', fontFamily: SANS, fontSize: 15.5, fontWeight: 700,
-          }}
-        >
-          Register my child <Arrow />
-        </a>
+          <p style={{
+            fontFamily: SERIF, fontSize: 'clamp(20px, 2.6vw, 28px)', fontStyle: 'italic',
+            lineHeight: 1.6, color: palette.INK2, margin: '0 auto 40px', maxWidth: 560,
+          }}>
+            I can notice what I feel.<br />
+            I can choose what I do.<br />
+            I can grow a little every day.
+          </p>
 
-        <p style={{ fontFamily: SANS, fontSize: 12.5, color: palette.ON_BAND_SOFT, marginTop: 16 }}>
-          {KIDS_FORMAT} · {KIDS_TIME}
-        </p>
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center',
+            background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.6)',
+            padding: '24px 32px', borderRadius: 24, marginBottom: 36,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: palette.INK2 }}>
+              <Calendar size={20} color={palette.PURPLE_STRONG} /> Every Friday–Sunday
+            </div>
+            <div style={{ width: 1, background: border, margin: '0 8px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: palette.INK2 }}>
+              <Clock size={20} color={palette.PURPLE_STRONG} /> 30–40 Minutes
+            </div>
+            <div style={{ width: 1, background: border, margin: '0 8px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: palette.INK2 }}>
+              <MapPin size={20} color={palette.PURPLE_STRONG} /> {KIDS_TIME}
+            </div>
+          </div>
+
+          <a
+            href={KIDS_REGISTER_PATH}
+            onClick={() => trackKids('KIDS_FINAL_CTA')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 9,
+              padding: '18px 40px', borderRadius: 999,
+              background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
+              textDecoration: 'none', fontFamily: SANS, fontSize: 16, fontWeight: 700,
+              boxShadow: '0 8px 24px rgba(74, 40, 96, 0.4)',
+              transition: 'transform 0.2s ease',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <Heart size={20} fill="currentColor" /> Reserve my child&rsquo;s spot
+          </a>
+        </div>
       </section>
 
       <div style={{ position: 'relative', zIndex: 2 }}>
