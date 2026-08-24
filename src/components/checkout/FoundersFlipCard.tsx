@@ -71,7 +71,8 @@ export function FoundersFlipCard({
         }
         .si-flip-inner.is-flipped { transform: rotateY(180deg); }
         .si-flip-back { transform: rotateY(180deg); }
-        .si-flip-btn:hover .si-flip-hint { background: ${accent}; color: ${isDark ? '#15120F' : '#fff'}; }
+        .si-flip-hint { color: ${inkSub}; }
+        .si-flip-btn:hover .si-flip-hint { background: ${accent}; color: ${isDark ? '#15120F' : '#fff'}; border-color: ${accent}; }
         .si-flip-btn:focus-visible { outline: 2px solid ${accent}; outline-offset: 3px; border-radius: 20px; }
         @media (prefers-reduced-motion: reduce) {
           /* A half-second spin is exactly the kind of motion this setting is
@@ -143,8 +144,8 @@ export function FoundersFlipCard({
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '5px 12px', borderRadius: 999,
                   border: `1px solid ${borderC}`,
-                  fontFamily: SANS, fontSize: 10, fontWeight: 700, color: inkSub,
-                  transition: 'background 0.2s, color 0.2s',
+                  fontFamily: SANS, fontSize: 10, fontWeight: 700,
+                  transition: 'background 0.2s, color 0.2s, border-color 0.2s',
                 }}
               >
                 ⇄ Meet {FOUNDERS[i === 0 ? 1 : 0].name.split(' ')[0]}
