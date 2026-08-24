@@ -5,7 +5,8 @@ import AboutJournal from './features/landing/AboutJournal'
 import EmotionalHealthCheck from './features/landing/EmotionalHealthCheck'
 import EmotionFeelingsCourse from './features/landing/EmotionFeelingsCourse'
 import KidsChallenge from './features/landing/KidsChallenge'
-import KidsChallengeRegister from './features/landing/KidsChallengeRegister'
+import KidsChallengeFlyer from './features/landing/KidsChallengeFlyer';
+import KidsChallengeRegister from './features/landing/KidsChallengeRegister';
 import Policies from './features/landing/Policies'
 import AboutUs from './features/landing/AboutUs'
 import SoulfulHome from './features/landing/SoulfulHome'
@@ -151,6 +152,12 @@ const isKidsChallengeRegisterRoute = (() => {
   return p === '/kidschallenge/register' || p === '/kidschallenge/register/index.html';
 })();
 
+const isKidsChallengeFlyerRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/kidschallenge/flyer' || p === '/kidschallenge/flyer/index.html';
+})();
+
 const isKidsChallengeRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
@@ -281,6 +288,12 @@ if (isPracticePreviewRoute) {
       <KidsChallengeRegister />
       <GlobalKnowledgeDock />
       <SocialFab />
+    </ErrorBoundary>,
+  );
+} else if (isKidsChallengeFlyerRoute) {
+  root.render(
+    <ErrorBoundary featureName="KidsChallengeFlyer">
+      <KidsChallengeFlyer />
     </ErrorBoundary>,
   );
 } else if (isKidsChallengeRoute) {

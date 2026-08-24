@@ -404,18 +404,26 @@ export default function SoulfulHome() {
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
-          {/* Testimonials + stats section removed — it was fabricated social
-              proof (invented people and numbers). It goes back only with real,
-              consented testimonials and truthful figures. */}
+          {/* 6. Our Programs Section */}
+          <section className="si-reveal" aria-labelledby="our-programs-heading" style={{ paddingTop: 'clamp(32px, 5vw, 64px)' }}>
+            <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', textAlign: 'center', marginBottom: 'clamp(24px, 4vw, 48px)' }}>
+              <h2 id="our-programs-heading" style={{
+                fontFamily: SERIF,
+                fontSize: 'clamp(36px, 5vw, 56px)',
+                margin: 0,
+                color: palette.INK,
+                lineHeight: 1.1
+              }}>
+                Our Programs
+              </h2>
+            </div>
 
-          {/* 6. Featured Course banner */}
-          <FeaturedCourse palette={palette} />
+            <FeaturedCourse palette={palette} />
 
-          {/* Section divider */}
-          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+            <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
-          {/* 6.5 Kids Challenge cross-sell */}
-          <KidsChallengeCrossSell palette={palette} source="home" />
+            <KidsChallengeCrossSell palette={palette} source="home" />
+          </section>
 
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
