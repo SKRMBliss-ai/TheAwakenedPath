@@ -2961,7 +2961,8 @@ export default function EmotionFeelingsCourse() {
           zIndex: 1,
         }} />
         <div style={{ position: 'relative', zIndex: 2 }}>
-          style={{
+          <h2
+            style={{
             fontFamily: SERIF,
             fontSize: 'clamp(30px, 4.5vw, 62px)',
             fontWeight: 400,
