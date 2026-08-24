@@ -998,8 +998,8 @@ export default function EmotionFeelingsCourse() {
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: `url("data:image/svg+xml,${EMOJI_PATTERN_SVG}")`,
-            backgroundSize: '1200px 1200px',
+            backgroundImage: "url('/marketing/kids_emotion_pattern.png')",
+            backgroundSize: '2000px 2000px',
             backgroundRepeat: 'repeat',
             opacity: isDark ? 0.05 : 0.08,
             mixBlendMode: isDark ? 'lighten' : 'multiply',
