@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Zap, BookOpen } from 'lucide-react';
+import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Zap, BookOpen, LayoutGrid, Users, MousePointerClick, FileText, TrendingUp } from 'lucide-react';
 import { db, functions } from '../../firebase';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -18,6 +18,102 @@ interface ActivityLog {
     platform?: string;
     userAgent?: string;
     timestamp: any;
+    // A handful of older writers (main.tsx's old mindgym tracker, the guide
+    // view's old inline tracker) used {eventType, path} instead of the
+    // {activityType, location} shape logWebActivity writes everywhere else.
+    // Both writers were fixed to the canonical shape, but historical rows
+    // already in Firestore still have the old field names — read as a
+    // fallback so old data isn't just blank in the report.
+    eventType?: string;
+    path?: string;
+}
+
+/** activityType/location with the legacy eventType/path fallback applied. */
+function normalizeLog(log: ActivityLog) {
+    return {
+        action: log.activityType || log.eventType || 'UNKNOWN',
+        page: log.location || log.path || 'Unknown',
+    };
+}
+
+/** True for page-visit-shaped events — every event name in the app follows
+ *  the PAGE_VISIT_* convention (PAGE_VISIT_APP being the one exception,
+ *  hence the OR) except the historical PAGE_VISIT constant itself. */
+function isPageVisit(action: string) {
+    return action === 'PAGE_VISIT' || action.startsWith('PAGE_VISIT_');
+}
+
+interface OverviewStats {
+    totalVisits: number;
+    totalClicks: number;
+    uniqueVisitors: number;
+    topPages: { page: string; count: number }[];
+    topActions: { label: string; count: number }[];
+    dailyTrend: { day: string; count: number }[];
+    windowLabel: string;
+}
+
+/** Aggregates a batch of raw logs into the Overview tab's summary. All client
+ *  side — the volume here (a few thousand rows at most) doesn't justify a
+ *  Cloud Function or a stored rollup, and computing on demand means the
+ *  numbers are never stale between report opens. */
+function computeOverview(logs: ActivityLog[]): OverviewStats {
+    const pageCounts = new Map<string, number>();
+    const actionCounts = new Map<string, number>();
+    const visitors = new Set<string>();
+    const dayCounts = new Map<string, number>();
+    let totalVisits = 0;
+    let totalClicks = 0;
+
+    for (const log of logs) {
+        const { action, page } = normalizeLog(log);
+
+        if (log.userEmail && log.userEmail !== 'anonymous') visitors.add(log.userEmail.toLowerCase());
+
+        if (isPageVisit(action)) {
+            totalVisits++;
+            pageCounts.set(page, (pageCounts.get(page) || 0) + 1);
+        } else {
+            totalClicks++;
+            // NAV_CLICK/FOOTER_CLICK cover every link in the header and footer
+            // under two action names — grouping by action alone would just
+            // show "NAV_CLICK: 340" with no sense of which link. details
+            // carries "label → href" for exactly this reason.
+            const label = (action === 'NAV_CLICK' || action === 'FOOTER_CLICK') && log.details
+                ? `${action}: ${log.details}`
+                : action;
+            actionCounts.set(label, (actionCounts.get(label) || 0) + 1);
+        }
+
+        const d = log.timestamp?.toDate ? log.timestamp.toDate() : (log.timestamp ? new Date(log.timestamp) : null);
+        if (d) {
+            const dayKey = d.toISOString().slice(0, 10);
+            dayCounts.set(dayKey, (dayCounts.get(dayKey) || 0) + 1);
+        }
+    }
+
+    const sortDesc = (m: Map<string, number>) => [...m.entries()].sort((a, b) => b[1] - a[1]);
+
+    const topPages = sortDesc(pageCounts).slice(0, 8).map(([page, count]) => ({ page, count }));
+    const topActions = sortDesc(actionCounts).slice(0, 8).map(([label, count]) => ({ label, count }));
+
+    // Last 7 calendar days, oldest first, zero-filled so a quiet day still
+    // shows a bar rather than vanishing from the trend entirely.
+    const dailyTrend: { day: string; count: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        dailyTrend.push({ day: key, count: dayCounts.get(key) || 0 });
+    }
+
+    const oldestLog = logs[logs.length - 1];
+    const oldestDate = oldestLog?.timestamp?.toDate ? oldestLog.timestamp.toDate() : null;
+    const windowLabel = oldestDate
+        ? `Since ${oldestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · last ${logs.length.toLocaleString()} events`
+        : `Last ${logs.length.toLocaleString()} events`;
+
+    return { totalVisits, totalClicks, uniqueVisitors: visitors.size, topPages, topActions, dailyTrend, windowLabel };
 }
 
 interface EngagementReportProps {
@@ -26,12 +122,13 @@ interface EngagementReportProps {
 }
 
 const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) => {
-    const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'blast' | 'history'>('logs');
+    const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'users' | 'blast' | 'history'>('overview');
     const [logs, setLogs] = useState<ActivityLog[]>([]);
+    const [overview, setOverview] = useState<OverviewStats | null>(null);
     const [users, setUsers] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    
+
     // Blast Form State
     const [blastTitle, setBlastTitle] = useState('');
     const [blastSubtitle, setBlastSubtitle] = useState('');
@@ -123,6 +220,26 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         }
     };
 
+    const fetchOverview = async () => {
+        setIsLoading(true);
+        try {
+            const logsRef = collection(db, 'activity_logs');
+            // Wider window than the raw-log tab's 300: top-N and the 7-day
+            // trend need enough history to not be dominated by whatever
+            // happened in the last hour. 2000 reads is a manual, admin-only
+            // action, not a background job, so the read cost is bounded by
+            // how often someone opens this tab.
+            const q = query(logsRef, orderBy('timestamp', 'desc'), limit(2000));
+            const snapshot = await getDocs(q);
+            const fetchedLogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ActivityLog[];
+            setOverview(computeOverview(fetchedLogs));
+        } catch (error) {
+            console.error("Error fetching overview:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleBlastUpdate = async () => {
         if (!blastTitle || !blastSubtitle) return;
         setIsBlasting(true);
@@ -147,6 +264,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
 
     useEffect(() => {
         if (isOpen) {
+            if (activeTab === 'overview') fetchOverview();
             if (activeTab === 'logs') fetchLogs();
             if (activeTab === 'users') fetchUsers();
             if (activeTab === 'history') fetchHistory();
@@ -204,20 +322,31 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                         <div className="p-8 border-b border-[#2A2A2A] flex justify-between items-start">
                             <div className="flex gap-4">
                                 <div className="p-3 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] shadow-inner">
-                                    {activeTab === 'logs' ? <Mail className="w-6 h-6 text-[var(--accent-primary)]" /> : <Megaphone className="w-6 h-6 text-[var(--accent-primary)]" />}
+                                    {activeTab === 'overview' ? <LayoutGrid className="w-6 h-6 text-[var(--accent-primary)]" />
+                                        : activeTab === 'logs' ? <Mail className="w-6 h-6 text-[var(--accent-primary)]" />
+                                        : <Megaphone className="w-6 h-6 text-[var(--accent-primary)]" />}
                                 </div>
                                 <div>
                                     <h2 className="text-[22px] font-bold text-[var(--accent-primary)] tracking-wider uppercase">
-                                        {activeTab === 'logs' ? 'Engagement Report' : activeTab === 'blast' ? 'Send Course Update' : 'Email History'}
+                                        {activeTab === 'overview' ? 'Engagement Overview' : activeTab === 'logs' ? 'Activity Log' : activeTab === 'blast' ? 'Send Course Update' : activeTab === 'users' ? 'Users' : 'Email History'}
                                     </h2>
                                     <p className="text-[11px] text-[var(--text-muted)] tracking-[0.2em] font-bold uppercase mt-1">
-                                        {activeTab === 'logs' ? 'Tracking User Activity' : activeTab === 'blast' ? 'Send an email update to all registered users' : 'History of all course update emails sent'}
+                                        {activeTab === 'overview' ? 'Visits, clicks & top pages' : activeTab === 'logs' ? 'Tracking User Activity' : activeTab === 'blast' ? 'Send an email update to all registered users' : activeTab === 'users' ? 'Registered accounts' : 'History of all course update emails sent'}
                                     </p>
                                 </div>
                             </div>
                             <div className="flex gap-4">
                                 <div className="flex gap-2 bg-[var(--bg-surface-hover)] p-1 rounded-full border border-[var(--border-subtle)]">
-                                    <button 
+                                    <button
+                                        onClick={() => setActiveTab('overview')}
+                                        className={cn(
+                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
+                                            activeTab === 'overview' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                        )}
+                                    >
+                                        Overview
+                                    </button>
+                                    <button
                                         onClick={() => setActiveTab('logs')}
                                         className={cn(
                                             "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
@@ -264,7 +393,108 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                             </div>
                         </div>
 
-                        {activeTab === 'logs' ? (
+                        {activeTab === 'overview' ? (
+                            <div className="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar">
+                                {!overview && isLoading && (
+                                    <div className="py-20 text-center text-[var(--text-muted)] italic">Loading overview…</div>
+                                )}
+                                {overview && (
+                                    <div className="space-y-10">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-[0.2em]">{overview.windowLabel}</p>
+                                            <button onClick={fetchOverview} disabled={isLoading} className="text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-colors">
+                                                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                                            </button>
+                                        </div>
+
+                                        {/* Stat tiles */}
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {[
+                                                { label: 'Page Visits', value: overview.totalVisits, icon: FileText },
+                                                { label: 'Clicks Tracked', value: overview.totalClicks, icon: MousePointerClick },
+                                                { label: 'Unique Visitors', value: overview.uniqueVisitors, icon: Users },
+                                                { label: 'Pages Seen', value: overview.topPages.length, icon: TrendingUp },
+                                            ].map((stat) => (
+                                                <div key={stat.label} className="p-5 rounded-2xl bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)]">
+                                                    <stat.icon className="w-4 h-4 text-[var(--accent-primary)] mb-3" />
+                                                    <div className="text-[24px] font-bold text-[var(--text-primary)] leading-none">{stat.value.toLocaleString()}</div>
+                                                    <div className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest mt-2">{stat.label}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* 7-day trend */}
+                                        <div>
+                                            <h3 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4">Last 7 Days</h3>
+                                            <div className="flex items-end gap-3 h-28">
+                                                {overview.dailyTrend.map((d) => {
+                                                    const max = Math.max(...overview.dailyTrend.map((x) => x.count), 1);
+                                                    const pct = Math.max((d.count / max) * 100, d.count > 0 ? 6 : 2);
+                                                    return (
+                                                        <div key={d.day} className="flex-1 flex flex-col items-center gap-2">
+                                                            <div className="w-full flex-1 flex items-end">
+                                                                <div
+                                                                    className="w-full rounded-t-lg bg-[var(--accent-primary)] transition-all"
+                                                                    style={{ height: `${pct}%`, opacity: d.count > 0 ? 0.85 : 0.15 }}
+                                                                    title={`${d.count} events`}
+                                                                />
+                                                            </div>
+                                                            <div className="text-[9px] text-[var(--text-muted)] font-bold uppercase">
+                                                                {new Date(d.day).toLocaleDateString('en-US', { weekday: 'short' })}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Top pages / top actions, side by side */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div>
+                                                <h3 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4">Top Pages</h3>
+                                                <div className="space-y-2">
+                                                    {overview.topPages.length === 0 && (
+                                                        <p className="text-[12px] text-[var(--text-muted)] italic">No page visits in this window.</p>
+                                                    )}
+                                                    {overview.topPages.map((p) => {
+                                                        const max = overview.topPages[0]?.count || 1;
+                                                        return (
+                                                            <div key={p.page} className="relative rounded-lg overflow-hidden bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)]">
+                                                                <div className="absolute inset-y-0 left-0 bg-[var(--accent-primary)]/15" style={{ width: `${(p.count / max) * 100}%` }} />
+                                                                <div className="relative flex items-center justify-between px-3 py-2.5">
+                                                                    <span className="text-[12px] text-[var(--text-secondary)] font-mono truncate pr-3" title={p.page}>{p.page}</span>
+                                                                    <span className="text-[12px] font-bold text-[var(--accent-primary)] shrink-0">{p.count}</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4">Top Clicks</h3>
+                                                <div className="space-y-2">
+                                                    {overview.topActions.length === 0 && (
+                                                        <p className="text-[12px] text-[var(--text-muted)] italic">No clicks tracked in this window.</p>
+                                                    )}
+                                                    {overview.topActions.map((a) => {
+                                                        const max = overview.topActions[0]?.count || 1;
+                                                        return (
+                                                            <div key={a.label} className="relative rounded-lg overflow-hidden bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)]">
+                                                                <div className="absolute inset-y-0 left-0 bg-[var(--accent-primary)]/15" style={{ width: `${(a.count / max) * 100}%` }} />
+                                                                <div className="relative flex items-center justify-between px-3 py-2.5">
+                                                                    <span className="text-[12px] text-[var(--text-secondary)] truncate pr-3" title={a.label}>{a.label}</span>
+                                                                    <span className="text-[12px] font-bold text-[var(--accent-primary)] shrink-0">{a.count}</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : activeTab === 'logs' ? (
                             <>
                                 {activeTab === 'logs' && (
                                     <div className="px-10 py-4 bg-[var(--bg-surface-hover)] border-b border-[var(--border-subtle)]/50">

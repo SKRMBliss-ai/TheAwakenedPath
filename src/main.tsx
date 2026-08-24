@@ -23,20 +23,7 @@ import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
 import { AchievementsProvider } from './features/achievements/useAchievements'
 import { Component, type ReactNode, lazy, Suspense } from 'react'
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
-import { db } from './firebase'
-
-function trackPageVisit(path: string, eventType = 'PAGE_VISIT') {
-  try {
-    addDoc(collection(db, 'activity_logs'), {
-      eventType,
-      path,
-      timestamp: serverTimestamp(),
-    });
-  } catch (error) {
-    console.error('[PageVisit] Failed to log activity:', error);
-  }
-}
+import { track } from './lib/analytics'
 
 // Silence non-critical speech synthesis errors in development/unsupported environments
 VoiceService.init();
@@ -223,7 +210,7 @@ const isMindGymRoute = (() => {
 if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute && !isPoliciesRoute && !isAboutUsRoute && !isHomeRoute && typeof window !== 'undefined') {
   const p = window.location.pathname.toLowerCase();
   if (p === '/mindgym' || p === '/mindgym/') {
-    trackPageVisit('/mindgym', 'PAGE_VISIT_APP');
+    track('PAGE_VISIT_APP', '', '/mindgym');
   }
 }
 

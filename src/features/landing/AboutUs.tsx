@@ -3,6 +3,7 @@ import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
+import { usePageView } from '../../lib/analytics';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // About Us — /about-us
@@ -102,6 +103,8 @@ export default function AboutUs() {
       'The twin sisters behind Soulful Intelligence Studio and Mind Gym: twenty years of enterprise product engineering, and a lived journey through illness, loss and emotional recovery.',
     url: 'https://www.skrmblissai.in/about-us',
   });
+
+  usePageView('PAGE_VISIT_ABOUT_US');
 
   const ink = isDark ? '#EDE9E3' : '#2A2118';
   const inkSub = isDark ? 'rgba(237,233,227,0.62)' : '#6B5744';

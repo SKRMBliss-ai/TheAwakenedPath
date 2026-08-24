@@ -4,6 +4,7 @@ import { useSiteTheme } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { ShieldCheck, Lock, FileText, ArrowLeft, Mail, MessageSquare } from 'lucide-react';
+import { usePageView } from '../../lib/analytics';
 
 const CONTACT_EMAIL = 'connect@skrmblissai.in';
 const WHATSAPP_HUMAN = '+91 82175 81238';
@@ -16,6 +17,8 @@ export default function Policies() {
       'Privacy policy, terms of service and refund policy for Soulful Intelligence Studio — Mind Gym, guided courses and digital services.',
     url: 'https://www.skrmblissai.in/policies',
   });
+
+  usePageView('PAGE_VISIT_POLICIES');
 
   useEffect(() => {
     const id = window.location.hash.replace('#', '');
