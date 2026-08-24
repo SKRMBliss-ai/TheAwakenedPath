@@ -14,6 +14,8 @@ import WhatBringsYou from './components/WhatBringsYou';
 import TinyTransformation from './components/TinyTransformation';
 import FeatureGrid from './components/FeatureGrid';
 import FeaturedCourse from './components/FeaturedCourse';
+import KidsChallengeCrossSell from './components/KidsChallengeCrossSell';
+import { KIDS_REGISTER_PATH, trackKids } from './kidsChallengeData';
 import InteractiveReflection from './components/InteractiveReflection';
 import YouTubeSection from './components/YouTubeSection';
 import FreeGuides from './components/FreeGuides';
@@ -191,6 +193,22 @@ export default function SoulfulHome() {
 
       {/* ── Cursor warm glow ─────────────────────────────────────────────── */}
       <CursorGlow />
+
+      {/* ── Kids Challenge announcement strip ────────────────────────────── */}
+      <a
+        href={KIDS_REGISTER_PATH}
+        onClick={() => trackKids('KIDS_ANNOUNCEMENT_BAR', '/')}
+        style={{
+          position: 'relative', zIndex: 51, display: 'flex', alignItems: 'center',
+          justifyContent: 'center', gap: 8, flexWrap: 'wrap',
+          padding: '9px 16px', textAlign: 'center', textDecoration: 'none',
+          background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
+          fontFamily: SANS, fontSize: 12.5, fontWeight: 700,
+        }}
+      >
+        <span>🌈 New for kids — &ldquo;Let&rsquo;s Be Our Best Every Day!&rdquo;, a live 3-day challenge, ages 3–12</span>
+        <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>Reserve a place →</span>
+      </a>
 
       {/* ── Navigation header ────────────────────────────────────────────── */}
       <div style={{ position: 'relative', zIndex: 50 }}>
@@ -375,6 +393,12 @@ export default function SoulfulHome() {
 
           {/* 6. Featured Course banner */}
           <FeaturedCourse palette={palette} />
+
+          {/* Section divider */}
+          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+          {/* 6.5 Kids Challenge cross-sell */}
+          <KidsChallengeCrossSell palette={palette} source="home" />
 
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>

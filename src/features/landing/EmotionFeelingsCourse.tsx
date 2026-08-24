@@ -18,6 +18,7 @@ import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SacredGeometry from './components/SacredGeometry';
 import CursorGlow from './components/CursorGlow';
 import UrgencyBanner from './components/UrgencyBanner';
+import KidsChallengeCrossSell from './components/KidsChallengeCrossSell';
 import HeroMark from '../../components/site/HeroMark';
 import BodyMapShowcase from './components/BodyMapShowcase';
 import CheckoutPage from './components/CheckoutPage';
@@ -2752,6 +2753,13 @@ export default function EmotionFeelingsCourse() {
           })}
         </div>
       </section>
+
+      {/* Section Divider */}
+      <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+      {/* Kids Challenge cross-sell — parents already here for their own
+          emotional-intelligence work are the natural audience for this. */}
+      <KidsChallengeCrossSell palette={palette} source="course" />
 
       {/* Section Divider */}
       <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>

@@ -4,6 +4,8 @@ import UntetheredApp from './UntetheredSoulApp'
 import AboutJournal from './features/landing/AboutJournal'
 import EmotionalHealthCheck from './features/landing/EmotionalHealthCheck'
 import EmotionFeelingsCourse from './features/landing/EmotionFeelingsCourse'
+import KidsChallenge from './features/landing/KidsChallenge'
+import KidsChallengeRegister from './features/landing/KidsChallengeRegister'
 import Policies from './features/landing/Policies'
 import AboutUs from './features/landing/AboutUs'
 import SoulfulHome from './features/landing/SoulfulHome'
@@ -143,6 +145,18 @@ const isFeelingsCourseRoute = (() => {
     || p === '/feelingsandemotioncourse/checkout';
 })();
 
+const isKidsChallengeRegisterRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/kidschallenge/register' || p === '/kidschallenge/register/index.html';
+})();
+
+const isKidsChallengeRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/kidschallenge' || p === '/kidschallenge/index.html';
+})();
+
 const isAboutUsRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
@@ -257,6 +271,22 @@ if (isPracticePreviewRoute) {
   root.render(
     <ErrorBoundary featureName="EmotionFeelingsCourse">
       <EmotionFeelingsCourse />
+      <GlobalKnowledgeDock />
+      <SocialFab />
+    </ErrorBoundary>,
+  );
+} else if (isKidsChallengeRegisterRoute) {
+  root.render(
+    <ErrorBoundary featureName="KidsChallengeRegister">
+      <KidsChallengeRegister />
+      <GlobalKnowledgeDock />
+      <SocialFab />
+    </ErrorBoundary>,
+  );
+} else if (isKidsChallengeRoute) {
+  root.render(
+    <ErrorBoundary featureName="KidsChallenge">
+      <KidsChallenge />
       <GlobalKnowledgeDock />
       <SocialFab />
     </ErrorBoundary>,
