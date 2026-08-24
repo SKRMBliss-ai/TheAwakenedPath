@@ -6,8 +6,8 @@
 // Emotions course page, and the Mind Gym kids section) never drift apart.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const KIDS_PATH = '/kidschallenge';
-export const KIDS_REGISTER_PATH = '/kidschallenge/register';
+export const KIDS_PATH = '/tiny-kids-transformations';
+export const KIDS_REGISTER_PATH = '/tiny-kids-transformations/register';
 
 export const KIDS_TITLE = "Let's Be Our Best Every Day!";
 export const KIDS_TAGLINE = 'Small Choices · Big Growth · Happy Heart';

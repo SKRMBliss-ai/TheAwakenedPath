@@ -86,32 +86,46 @@ export default function KidsChallenge() {
   const isDark = palette.isDark;
 
   usePageSeo({
-    title: "Let's Be Our Best Every Day! — 3-Day Live Kids Challenge (Ages 3–12)",
+    title: "Tiny Kids Transformations — 3-Day Live Challenge (Ages 3–12)",
     description:
       'A playful 3-day live online challenge helping children ages 3–12 notice their feelings, understand their choices and grow a little every day. Friday to Sunday on Zoom, 30–40 minutes a day.',
-    url: 'https://www.skrmblissai.in/kidschallenge',
+    url: 'https://www.skrmblissai.in/tiny-kids-transformations',
     image: 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fposter.png?alt=media',
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'Course',
-      name: KIDS_TITLE,
-      description: KIDS_BLURB,
-      url: 'https://www.skrmblissai.in/kidschallenge',
-      inLanguage: 'en',
-      typicalAgeRange: '3-12',
-      teaches: ['Emotional awareness for children', 'Self-regulation', 'Kindness and thoughtful choices'],
-      provider: {
-        '@type': 'Organization',
-        name: 'Soulful Intelligence Studio',
-        url: 'https://www.skrmblissai.in',
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Course',
+        name: KIDS_TITLE,
+        description: KIDS_BLURB,
+        url: 'https://www.skrmblissai.in/tiny-kids-transformations',
+        inLanguage: 'en',
+        typicalAgeRange: '3-12',
+        teaches: ['Emotional awareness for children', 'Self-regulation', 'Kindness and thoughtful choices'],
+        provider: {
+          '@type': 'Organization',
+          name: 'Soulful Intelligence Studio',
+          url: 'https://www.skrmblissai.in',
+        },
+        hasCourseInstance: {
+          '@type': 'CourseInstance',
+          courseMode: 'online',
+          courseWorkload: 'PT2H',
+          location: { '@type': 'VirtualLocation', url: 'https://www.skrmblissai.in/tiny-kids-transformations' },
+        },
       },
-      hasCourseInstance: {
-        '@type': 'CourseInstance',
-        courseMode: 'online',
-        courseWorkload: 'PT2H',
-        location: { '@type': 'VirtualLocation', url: 'https://www.skrmblissai.in/kidschallenge' },
-      },
-    },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: KIDS_FAQ.map(faq => ({
+          '@type': 'Question',
+          name: faq.q,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.a,
+          }
+        }))
+      }
+    ],
   });
 
   useEffect(() => { trackKids('PAGE_VISIT_KIDS_CHALLENGE'); }, []);

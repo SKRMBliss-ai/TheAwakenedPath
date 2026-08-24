@@ -149,19 +149,19 @@ const isFeelingsCourseRoute = (() => {
 const isKidsChallengeRegisterRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  return p === '/kidschallenge/register' || p === '/kidschallenge/register/index.html';
+  return p === '/tiny-kids-transformations/register' || p === '/tiny-kids-transformations/register/index.html';
 })();
 
 const isKidsChallengeFlyerRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  return p === '/kidschallenge/flyer' || p === '/kidschallenge/flyer/index.html';
+  return p === '/tiny-kids-transformations/flyer' || p === '/tiny-kids-transformations/flyer/index.html';
 })();
 
 const isKidsChallengeRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  return p === '/kidschallenge' || p === '/kidschallenge/index.html';
+  return p === '/tiny-kids-transformations' || p === '/tiny-kids-transformations/index.html';
 })();
 
 const isAboutUsRoute = (() => {

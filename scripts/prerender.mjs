@@ -26,7 +26,9 @@ const ROUTES = [
   // re-renders over whatever was baked in).
   '/mindgym',
   '/feelingsandemotioncourse',
-  '/kidschallenge',
+  '/tiny-kids-transformations',
+  '/tiny-kids-transformations/register',
+  '/tiny-kids-transformations/flyer',
   '/knowyouremotionalhealth',
   '/aboutmindgym',
   '/policies',
