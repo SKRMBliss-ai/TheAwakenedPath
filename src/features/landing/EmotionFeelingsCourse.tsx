@@ -1267,7 +1267,7 @@ export default function EmotionFeelingsCourse() {
       <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
       {/* ════════════════════════════════════════════════════════════════════
-          MARKETING ASSETS (Poster & Diary)
+          OTHER PROGRAMS WE OFFER (Kids Challenge Promo)
          ════════════════════════════════════════════════════════════════════ */}
       <section
         className="si-reveal"
@@ -1276,99 +1276,120 @@ export default function EmotionFeelingsCourse() {
           position: 'relative',
           zIndex: 2,
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 48,
+          justifyContent: 'center',
           background: isDark ? '#14101A' : '#FAF6F0',
         }}
       >
-        <div style={{ maxWidth: 1120, width: '100%', display: 'flex', gap: 'clamp(32px, 5vw, 52px)', flexWrap: 'wrap', justifyContent: 'center' }}>
-          {[
-            {
-              src: 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fposter.png?alt=media',
-              alt: 'Course poster — Feelings & Emotions',
-              tilt: -1.4,
-              pill: 'The course',
-              caption: 'Understand what you feel',
-            },
-            {
-              src: 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fdiary.jpg?alt=media',
-              alt: 'The reflection diary that comes with the course',
-              tilt: 1.4,
-              pill: 'Included',
-              caption: 'Your reflection diary',
-            },
-          ].map((m) => (
-            <div key={m.src} className="si-asset-media" style={{ flex: '1 1 400px', maxWidth: 500, position: 'relative' }}>
-              {/* colour halo */}
-              <div aria-hidden="true" style={{
-                position: 'absolute', inset: '-12% -8%', zIndex: 0, pointerEvents: 'none',
-                background: 'radial-gradient(58% 58% at 50% 46%, rgba(196,145,58,0.55) 0%, transparent 70%)',
-                opacity: isDark ? 0.3 : 0.18, filter: 'blur(48px)',
-              }} />
-
-              {/* offset back card */}
-              <div aria-hidden="true" className="si-asset-back" style={{
-                position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-                transform: `rotate(${m.tilt * -2.4}deg) translate(${m.tilt < 0 ? 14 : -14}px, 14px)`,
-                borderRadius: 30, background: isDark ? 'rgba(38,30,22,0.7)' : 'rgba(255,252,247,0.9)',
-                border: `1px solid ${borderC}`,
-              }} />
-
-              <div className="si-asset-frame" style={{
-                position: 'relative', zIndex: 1,
-                borderRadius: 30, overflow: 'hidden',
-                border: `1px solid ${borderC}`,
-                background: isDark ? '#14101A' : '#FAF6F0',
-                transform: `rotate(${m.tilt}deg)`,
-                boxShadow: isDark
-                  ? '0 34px 80px rgba(0,0,0,0.55), 0 8px 22px rgba(0,0,0,0.35)'
-                  : '0 34px 80px rgba(74,50,96,0.2), 0 8px 22px rgba(74,50,96,0.1)',
-                transition: 'transform 0.55s cubic-bezier(0.2,0.8,0.2,1)',
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'rotate(0deg) scale(1.02)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = `rotate(${m.tilt}deg)`; }}
-              >
-                <img src={m.src} alt={m.alt} loading="lazy" style={{ width: '100%', height: 'auto', display: 'block' }} />
-
-                {/* bottom scrim */}
-                <div aria-hidden="true" style={{
-                  position: 'absolute', inset: 0, pointerEvents: 'none',
-                  background: 'linear-gradient(180deg, rgba(0,0,0,0) 52%, rgba(20,14,10,0.62) 100%)',
-                }} />
-                {/* diagonal sheen */}
-                <div aria-hidden="true" style={{
-                  position: 'absolute', inset: 0, pointerEvents: 'none',
-                  background: 'linear-gradient(118deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 44%)',
-                }} />
-
-                {/* glass caption bar */}
-                <div style={{
-                  position: 'absolute', left: 14, right: 14, bottom: 14, zIndex: 2,
-                  padding: '11px 16px', borderRadius: 18,
-                  background: 'rgba(20,14,10,0.46)',
-                  backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255,255,255,0.24)',
-                  fontFamily: SANS, fontSize: 12.5, fontWeight: 700, color: '#FFFFFF',
-                }}>
-                  {m.caption}
-                </div>
-              </div>
-
-              {/* floating pill */}
-              <div className="si-asset-pill" style={{
-                position: 'absolute', top: -18, left: -18, zIndex: 3,
-                display: 'inline-flex', alignItems: 'center', gap: 7,
-                padding: '10px 17px', borderRadius: 999,
-                background: cardBg, border: `1px solid ${borderC}`,
-                backdropFilter: 'blur(10px)',
-                boxShadow: isDark ? '0 12px 30px rgba(0,0,0,0.5)' : '0 12px 30px rgba(74,50,96,0.16)',
-                fontFamily: SANS, fontSize: 12, fontWeight: 800, color: ink,
+        <div style={{
+          maxWidth: 1040,
+          width: '100%',
+          background: isDark ? '#1C1624' : '#FFFFFF',
+          borderRadius: 32,
+          border: `1px solid ${borderC}`,
+          boxShadow: isDark ? '0 34px 80px rgba(0,0,0,0.55)' : '0 34px 80px rgba(74,50,96,0.1)',
+          display: 'flex',
+          flexDirection: window.innerWidth > 900 ? 'row' : 'column',
+          overflow: 'hidden',
+        }}>
+          {/* LEFT: TEXT */}
+          <div style={{ flex: '1 1 50%', padding: 'clamp(40px, 5vw, 64px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 28 }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', padding: '6px 14px', borderRadius: 999,
+                background: isDark ? 'rgba(255,255,255,0.06)' : '#F3F1ED', border: `1px solid ${borderC}`,
+                fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.12em', color: isDark ? '#CCC' : '#666',
+                textTransform: 'uppercase'
               }}>
-                <Sparkles size={14} color={isDark ? '#FFDF9E' : '#7A5F44'} /> {m.pill}
+                New · For Children
               </div>
             </div>
-          ))}
+
+            <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(32px, 4vw, 44px)', color: ink, margin: '0 0 24px', lineHeight: 1.15 }}>
+              Let's Be Our Best Every Day!
+            </h2>
+
+            <p style={{ fontFamily: SANS, fontSize: 16, color: isDark ? '#AAA' : '#555', lineHeight: 1.6, marginBottom: 32 }}>
+              You are learning to meet your own feelings. This is the same practice, made playful — a 3-day live weekend challenge for your child.
+            </p>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 40 }}>
+              <span className="si-pill" style={{
+                padding: '6px 14px', borderRadius: 999, border: `1px solid ${borderC}`,
+                fontSize: 12, fontWeight: 700, color: ink, background: isDark ? '#261F30' : '#F9F7F4'
+              }}>Ages 3–12</span>
+              <span className="si-pill" style={{
+                padding: '6px 14px', borderRadius: 999, border: `1px solid ${borderC}`,
+                fontSize: 12, fontWeight: 700, color: ink, background: isDark ? '#261F30' : '#F9F7F4'
+              }}>Live on Zoom</span>
+              <span className="si-pill" style={{
+                padding: '6px 14px', borderRadius: 999, border: `1px solid ${borderC}`,
+                fontSize: 12, fontWeight: 700, color: ink, background: isDark ? '#261F30' : '#F9F7F4'
+              }}>Friday–Sunday</span>
+              <span className="si-pill" style={{
+                padding: '6px 14px', borderRadius: 999, border: `1px solid ${borderC}`,
+                fontSize: 12, fontWeight: 700, color: ink, background: isDark ? '#261F30' : '#F9F7F4'
+              }}>30–40 minutes</span>
+            </div>
+
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+              <a href="/tiny-kids-transformations" style={{
+                background: '#5C5466', color: '#FFF', padding: '14px 28px', borderRadius: 999,
+                fontFamily: SANS, fontSize: 14, fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
+                transition: 'transform 0.2s, background 0.2s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.background = '#4A4354'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = '#5C5466'; }}
+              >
+                Reserve my child's place <span>→</span>
+              </a>
+              <a href="/tiny-kids-transformations" style={{
+                background: 'transparent', border: `1px solid ${borderC}`, color: ink, padding: '13px 24px', borderRadius: 999,
+                fontFamily: SANS, fontSize: 14, fontWeight: 700, textDecoration: 'none',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                See the 3 days
+              </a>
+            </div>
+            
+            {/* Keeping placeholder for QR code, can remove if unused */}
+            <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12, opacity: 0 }}>
+               <div style={{ width: 48, height: 48, background: borderC, borderRadius: 8 }}></div>
+               <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: '#666', lineHeight: 1.3 }}>Scan to<br/>register</span>
+            </div>
+          </div>
+
+          {/* RIGHT: MEDIA */}
+          <div style={{ flex: '1 1 50%', background: '#C6BAC5', padding: 'clamp(32px, 4vw, 48px)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+             <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FPosterDairy.png?alt=media" alt="Kids Challenge Poster" style={{ width: '100%', borderRadius: 16, boxShadow: '0 12px 24px rgba(0,0,0,0.15)' }} />
+             
+             {/* Steps */}
+             <div style={{ background: '#EAE5EA', borderRadius: 12, padding: '16px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ background: '#FFF', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: '#5C5466', flexShrink: 0 }}>1</div>
+                <div>
+                   <div style={{ fontSize: 12, fontWeight: 800, color: '#5C5466', letterSpacing: '0.05em' }}>NOTICE</div>
+                   <div style={{ fontFamily: SERIF, fontSize: 16, fontStyle: 'italic', color: '#333' }}>"What am I feeling right now?"</div>
+                </div>
+             </div>
+             <div style={{ background: '#EAE5EA', borderRadius: 12, padding: '16px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ background: '#FFF', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: '#5C5466', flexShrink: 0 }}>2</div>
+                <div>
+                   <div style={{ fontSize: 12, fontWeight: 800, color: '#5C5466', letterSpacing: '0.05em' }}>UNDERSTAND</div>
+                   <div style={{ fontFamily: SERIF, fontSize: 16, fontStyle: 'italic', color: '#333' }}>"What happened inside me?"</div>
+                </div>
+             </div>
+             <div style={{ background: '#EAE5EA', borderRadius: 12, padding: '16px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ background: '#FFF', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: '#5C5466', flexShrink: 0 }}>3</div>
+                <div>
+                   <div style={{ fontSize: 12, fontWeight: 800, color: '#5C5466', letterSpacing: '0.05em' }}>CHOOSE</div>
+                   <div style={{ fontFamily: SERIF, fontSize: 16, fontStyle: 'italic', color: '#333' }}>"What could I do next?"</div>
+                </div>
+             </div>
+
+             <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#666', marginTop: 8 }}>One small, conscious choice at a time — not perfection.</div>
+          </div>
         </div>
       </section>
 

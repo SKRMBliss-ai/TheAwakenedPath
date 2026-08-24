@@ -228,10 +228,20 @@ export default function SoulfulHome() {
                   label: 'Courses',
                   subItems: [
                     {
-                      label: 'For All',
-                      sub: 'Feelings & Emotions · Power of Now · Wisdom Untethered',
+                      label: 'Feelings & Emotions',
+                      sub: '7-Episode Guided Course',
                       href: '/feelingsandemotioncourse',
-                      onClick: () => track('HOME_COURSE_ALL_CLICK'),
+                      onClick: () => track('HOME_COURSE_FEELINGS_CLICK'),
+                    },
+                    {
+                      label: 'Power of Now',
+                      sub: 'Coming Soon',
+                      href: '#',
+                    },
+                    {
+                      label: 'Wisdom Untethered',
+                      sub: 'Coming Soon',
+                      href: '#',
                     },
                     {
                       label: 'For Kids',

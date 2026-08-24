@@ -89,47 +89,68 @@ function SessionScheduleBadge({ palette, isDark }: { palette: Palette, isDark: b
     <div style={{
       background: cardBg,
       border: `1px solid ${border}`,
-      borderRadius: 16,
-      padding: '20px 24px',
+      borderRadius: 24,
+      padding: '32px 32px 24px',
       fontFamily: SANS,
       color: palette.INK,
-      boxShadow: isDark ? '0 12px 24px rgba(0,0,0,0.2)' : '0 12px 24px rgba(60,40,30,0.05)',
+      boxShadow: isDark ? '0 12px 30px rgba(0,0,0,0.3)' : '0 12px 30px rgba(60,40,30,0.08)',
       width: '100%',
-      maxWidth: 380,
+      maxWidth: 420,
       margin: '0 auto',
       position: 'relative',
       zIndex: 10,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-        <Calendar size={32} color="#FF4B72" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FF4B72" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
         <div>
-          <h4 style={{ margin: 0, fontSize: 18, color: palette.PURPLE_STRONG, fontWeight: 700 }}>Session Schedule</h4>
-          <p style={{ margin: 0, fontSize: 13, color: palette.PURPLE_STRONG, fontWeight: 600 }}>Every Friday · Saturday · Sunday</p>
+          <h4 style={{ margin: '0 0 4px', fontSize: 22, fontFamily: SERIF, color: palette.INK, fontWeight: 500, letterSpacing: '0.02em' }}>Session Schedule</h4>
+          <p style={{ margin: 0, fontSize: 13, color: palette.INK2, fontWeight: 700 }}>Every Friday · Saturday · Sunday</p>
         </div>
       </div>
       
       <div style={{
-        background: palette.PURPLE_STRONG,
-        color: palette.ON_ACCENT,
+        background: '#5C5466',
+        color: '#FFFFFF',
         borderRadius: 999,
-        padding: '6px 12px',
+        padding: '10px 16px',
         textAlign: 'center',
         fontWeight: 800,
-        fontSize: 16,
-        marginBottom: 16,
+        fontSize: 18,
+        letterSpacing: '0.02em',
+        marginBottom: 24,
       }}>
         4:00 PM UK Time
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13.5, fontWeight: 600, color: palette.PURPLE_STRONG }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>🇮🇳 India (IST)</span><span>8:30 PM</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>🇺🇸 USA – New York (ET)</span><span>11:00 AM</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>🇺🇸 USA – Chicago (CT)</span><span>10:00 AM</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>🇺🇸 USA – Denver (MT)</span><span>9:00 AM</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>🇺🇸 USA – Los Angeles (PT)</span><span>8:00 AM</span></div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 14, fontWeight: 700, color: palette.PURPLE_STRONG }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span><span style={{ fontSize: 10, textTransform: 'uppercase', marginRight: 6, fontWeight: 800, color: palette.INK2 }}>in</span> India (IST)</span>
+          <span>8:30 PM</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span><span style={{ fontSize: 10, textTransform: 'uppercase', marginRight: 6, fontWeight: 800, color: palette.INK2 }}>us</span> USA – New York (ET)</span>
+          <span>11:00 AM</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span><span style={{ fontSize: 10, textTransform: 'uppercase', marginRight: 6, fontWeight: 800, color: palette.INK2 }}>us</span> USA – Chicago (CT)</span>
+          <span>10:00 AM</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span><span style={{ fontSize: 10, textTransform: 'uppercase', marginRight: 6, fontWeight: 800, color: palette.INK2 }}>us</span> USA – Denver (MT)</span>
+          <span>9:00 AM</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span><span style={{ fontSize: 10, textTransform: 'uppercase', marginRight: 6, fontWeight: 800, color: palette.INK2 }}>us</span> USA – Los Angeles (PT)</span>
+          <span>8:00 AM</span>
+        </div>
       </div>
 
-      <p style={{ margin: '16px 0 0', fontSize: 11, textAlign: 'center', color: palette.INK2, opacity: 0.8, lineHeight: 1.4, fontWeight: 500 }}>
+      <p style={{ margin: '24px 0 0', fontSize: 11, textAlign: 'center', color: palette.INK2, opacity: 0.8, lineHeight: 1.5, fontWeight: 500 }}>
         *Time may change with Daylight Saving.<br/>
         Please check your local time at registration.
       </p>
@@ -227,9 +248,19 @@ export default function KidsChallenge() {
             label: 'Courses',
             subItems: [
               {
-                label: 'For All',
-                sub: 'Feelings & Emotions · Power of Now · Wisdom Untethered',
+                label: 'Feelings & Emotions',
+                sub: '7-Episode Guided Course',
                 href: '/feelingsandemotioncourse',
+              },
+              {
+                label: 'Power of Now',
+                sub: 'Coming Soon',
+                href: '#',
+              },
+              {
+                label: 'Wisdom Untethered',
+                sub: 'Coming Soon',
+                href: '#',
               },
               {
                 label: 'For Kids',
@@ -304,6 +335,20 @@ export default function KidsChallenge() {
             <p style={{ fontFamily: SANS, fontSize: 12.5, color: palette.INK2, opacity: 0.7, marginTop: 16 }}>
               Parent or guardian registration required. Sessions run live on Zoom.
             </p>
+
+            {/* Session Schedule Badge placed stylisly within text section */}
+            <div style={{
+              marginTop: 48,
+              transform: 'rotate(-2.5deg)',
+              transformOrigin: 'top left',
+              transition: 'transform 0.4s cubic-bezier(0.2,0.8,0.2,1)',
+              cursor: 'default',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'rotate(0deg) scale(1.02)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'rotate(-2.5deg)'; }}
+            >
+              <SessionScheduleBadge palette={palette} isDark={isDark} />
+            </div>
           </div>
 
           {/* Poster — layered media stack with overlays */}
@@ -404,11 +449,6 @@ export default function KidsChallenge() {
               <Heart size={15} fill="currentColor" /> Live on Zoom
             </div>
           </div>
-        </div>
-        
-        {/* Render the new Session Schedule badge under the hero */}
-        <div style={{ marginTop: 40 }}>
-          <SessionScheduleBadge palette={palette} isDark={isDark} />
         </div>
       </header>
 

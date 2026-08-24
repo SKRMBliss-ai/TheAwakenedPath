@@ -51,9 +51,19 @@ export default function Policies() {
             label: 'Courses',
             subItems: [
               {
-                label: 'For All',
-                sub: 'Feelings & Emotions · Power of Now · Wisdom Untethered',
+                label: 'Feelings & Emotions',
+                sub: '7-Episode Guided Course',
                 href: '/feelingsandemotioncourse',
+              },
+              {
+                label: 'Power of Now',
+                sub: 'Coming Soon',
+                href: '#',
+              },
+              {
+                label: 'Wisdom Untethered',
+                sub: 'Coming Soon',
+                href: '#',
               },
               {
                 label: 'For Kids',
