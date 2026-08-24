@@ -10,13 +10,13 @@ export default function KidsChallengeFlyer() {
   usePageSeo({
     title: 'Printable Flyer | Kids Challenge',
     description: 'Printable flyer for the Kids Challenge',
-    url: 'https://www.skrmblissai.in/kidschallenge/flyer',
+    url: 'https://www.skrmblissai.in/tiny-kids-transformations/flyer',
   });
 
   const qrUrl = 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FKidsDiaryCourseQR.png?alt=media';
 
   useEffect(() => {
-    trackKids('PAGE_VISIT_KIDS_FLYER', '/kidschallenge/flyer');
+    trackKids('PAGE_VISIT_KIDS_FLYER', '/tiny-kids-transformations/flyer');
   }, []);
 
   const handlePrint = () => {
@@ -95,7 +95,7 @@ export default function KidsChallengeFlyer() {
               <img src={qrUrl} alt="Scan to Register" style={{ width: 140, height: 140, objectFit: 'contain' }} />
               <div>
                 <h3 style={{ margin: '0 0 8px', color: '#2A1B38', fontSize: 22 }}>Scan to reserve a place</h3>
-                <p style={{ margin: 0, color: '#4A3260', fontSize: 16 }}>Or visit: <strong>skrmblissai.in/kidschallenge</strong></p>
+                <p style={{ margin: 0, color: '#4A3260', fontSize: 16 }}>Or visit: <strong>skrmblissai.in/tiny-kids-transformations</strong></p>
               </div>
             </div>
           </div>

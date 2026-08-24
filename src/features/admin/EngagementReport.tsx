@@ -38,9 +38,15 @@ function normalizeLog(log: ActivityLog) {
 
 /** True for page-visit-shaped events — every event name in the app follows
  *  the PAGE_VISIT_* convention (PAGE_VISIT_APP being the one exception,
- *  hence the OR) except the historical PAGE_VISIT constant itself. */
-function isPageVisit(action: string) {
-    return action === 'PAGE_VISIT' || action.startsWith('PAGE_VISIT_');
+ *  hence the OR) except the historical PAGE_VISIT constant itself.
+ *
+ *  Accepts undefined deliberately: log.activityType is missing on the
+ *  historical {eventType, path}-shaped rows still sitting in Firestore, and
+ *  action.startsWith() on undefined crashed the whole report (caught by the
+ *  root ErrorBoundary, not this component's own — there wasn't one) the
+ *  first time real data with an old-shape row hit this in production. */
+function isPageVisit(action: string | undefined) {
+    return !!action && (action === 'PAGE_VISIT' || action.startsWith('PAGE_VISIT_'));
 }
 
 interface OverviewStats {
@@ -551,14 +557,16 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                             .filter(log => {
                                                 if (!searchTerm) return true;
                                                 const s = searchTerm.toLowerCase();
+                                                const { action, page } = normalizeLog(log);
                                                 return (
                                                     log.userEmail?.toLowerCase().includes(s) ||
-                                                    log.activityType?.toLowerCase().includes(s) ||
-                                                    log.location?.toLowerCase().includes(s) ||
-                                                    getSourceLabel(log.activityType).toLowerCase().includes(s)
+                                                    action.toLowerCase().includes(s) ||
+                                                    page.toLowerCase().includes(s) ||
+                                                    getSourceLabel(action).toLowerCase().includes(s)
                                                 );
                                             })
                                             .map((log, index) => {
+                                            const { action: logAction, page: logPage } = normalizeLog(log);
                                             const { date, time } = formatTimestamp(log.timestamp);
                                             const userName = log.userEmail ? log.userEmail.split('@')[0] : 'User';
                                             const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
@@ -602,9 +610,9 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
-                                                        {getSourceIcon(log.activityType)}
+                                                        {getSourceIcon(logAction)}
                                                         <div className="flex flex-col min-w-0">
-                                                            <span className="text-[11px] font-bold text-[var(--text-secondary)] tracking-tight">{getSourceLabel(log.activityType)}</span>
+                                                            <span className="text-[11px] font-bold text-[var(--text-secondary)] tracking-tight">{getSourceLabel(logAction)}</span>
                                                             {log.details && (
                                                                 <span className="text-[8px] text-[var(--accent-primary)] font-bold uppercase tracking-widest opacity-80 truncate" title={log.details}>
                                                                     {(() => {
@@ -619,8 +627,8 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                     </div>
 
                                                     <div className="flex flex-col pr-2 min-w-0">
-                                                        <div className="text-[12px] text-[var(--text-muted)] italic truncate" title={log.location || 'Unknown'}>
-                                                            {log.location || 'Unknown'}
+                                                        <div className="text-[12px] text-[var(--text-muted)] italic truncate" title={logPage}>
+                                                            {logPage}
                                                         </div>
                                                         <div className="text-[9px] text-[var(--text-muted)] font-mono opacity-40 uppercase tracking-tighter truncate">
                                                             {log.platform || 'web'} • {log.userAgent?.includes('Mobile') ? 'Mobile' : 'Desktop'}
