@@ -4604,7 +4604,13 @@ exports.linkGuestPurchases = onCall(async (request) => {
 // Notify Admin on Kids Challenge Registration
 exports.notifyAdminOnKidsRegistration = onDocumentCreated({
     document: 'waitlist/{docId}',
-    region: 'us-central1'
+    region: 'us-central1',
+    // Missing on the original — a Gen2 secret param throws when .value() is
+    // called on a function that never declared it, so getTransporter() below
+    // failed on every real invocation. Caught by the try/catch and logged,
+    // never surfaced to the parent submitting the form or to anyone reading
+    // the inbox waiting for it, which is exactly how this stayed unnoticed.
+    secrets: [emailUser, emailPass]
 }, async (event) => {
     const snap = event.data;
     if (!snap) return;
@@ -4612,6 +4618,12 @@ exports.notifyAdminOnKidsRegistration = onDocumentCreated({
     if (data.type !== 'kids_challenge') return;
 
     try {
+        // Second bug, independent of the first: `transporter` was referenced
+        // but never declared anywhere in this function or at module scope —
+        // a plain ReferenceError, also swallowed by the catch below. Every
+        // other sender in this file calls getTransporter() fresh; this one
+        // just never did.
+        const transporter = getTransporter();
         const mailOptions = {
             from: '"SKRM Bliss AI" <skrmblissai@gmail.com>',
             to: ADMIN_EMAILS.join(', '),

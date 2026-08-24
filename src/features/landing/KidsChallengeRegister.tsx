@@ -80,7 +80,7 @@ export default function KidsChallengeRegister() {
         mailingList: optInFuture,
         createdAt: serverTimestamp(),
       });
-      trackKids('KIDS_REGISTRATION_SUBMIT', '/kidschallenge/register', `${childName} · age ${age} · ${goal}`);
+      trackKids('KIDS_REGISTRATION_SUBMIT', '/kidschallenge/register', `${childName} · age ${age} · ${goal}`, email.trim().toLowerCase());
       setStatus('done');
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     } catch (err) {

@@ -152,13 +152,13 @@ export const KIDS_TEACHER_QUOTE =
   "I'm learning, unlearning and growing every day — so I can help more children grow a little better, every day.";
 
 /** Fire-and-forget activity log, matching the other landing pages. */
-export function trackKids(action: string, page = KIDS_PATH, details = '') {
+export function trackKids(action: string, page = KIDS_PATH, details = '', email = 'anonymous') {
   try {
     fetch('https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: 'anonymous',
+        email,
         action,
         page,
         details: details || action,
