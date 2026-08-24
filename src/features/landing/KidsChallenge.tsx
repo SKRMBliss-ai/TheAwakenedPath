@@ -168,54 +168,68 @@ export default function KidsChallenge() {
       </div>
 
       {/* ═══ Hero ═══════════════════════════════════════════════════════════ */}
-      <header style={{ position: 'relative', zIndex: 2, padding: 'clamp(48px, 7vw, 88px) clamp(24px, 6vw, 96px) clamp(32px, 5vw, 56px)' }}>
+      <header style={{ position: 'relative', zIndex: 2, padding: 'clamp(48px, 7vw, 88px) clamp(24px, 6vw, 96px) clamp(32px, 5vw, 56px)', overflow: 'hidden' }}>
         <div className="si-kids-hero" style={{
           maxWidth: 1100, margin: '0 auto',
-          display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 'clamp(28px, 4vw, 56px)', alignItems: 'center',
+          display: 'grid', gridTemplateColumns: '1.3fr 0.7fr', gap: 'clamp(20px, 3vw, 40px)', alignItems: 'center',
+          position: 'relative',
         }}>
-          <div>
+          {/* Decorative orbs */}
+          <div style={{
+            position: 'absolute', top: -40, right: '15%', width: 120, height: 120,
+            background: palette.PURPLE_STRONG, borderRadius: '50%', opacity: isDark ? 0.08 : 0.05, zIndex: 0, pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute', bottom: -60, left: '10%', width: 150, height: 150,
+            background: palette.BROWN, borderRadius: '50%', opacity: isDark ? 0.06 : 0.04, zIndex: 0, pointerEvents: 'none',
+          }} />
+
+          <div style={{ position: 'relative', zIndex: 1 }}>
             <span style={{
-              display: 'inline-block', padding: '6px 14px', borderRadius: 999,
-              background: isDark ? 'rgba(201,174,142,0.14)' : 'rgba(122,95,68,0.10)',
+              display: 'inline-block', padding: '8px 16px', borderRadius: 999,
+              background: isDark ? 'rgba(201,174,142,0.18)' : 'rgba(122,95,68,0.12)',
               border: `1px solid ${border}`,
               fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.2em',
-              textTransform: 'uppercase', color: palette.BROWN, marginBottom: 22,
+              textTransform: 'uppercase', color: palette.BROWN, marginBottom: 24,
             }}>
               3-Day Kids Challenge
             </span>
 
             <h1 style={{
-              fontFamily: SERIF, fontSize: 'clamp(40px, 6vw, 68px)', fontWeight: 400,
-              lineHeight: 1.05, letterSpacing: '-0.015em', color: palette.INK, margin: '0 0 16px',
+              fontFamily: SERIF, fontSize: 'clamp(42px, 6.5vw, 72px)', fontWeight: 400,
+              lineHeight: 1.08, letterSpacing: '-0.02em', color: palette.INK, margin: '0 0 18px',
             }}>
               Let&rsquo;s Be Our <span style={{ color: palette.BROWN }}>Best</span> Every Day!
             </h1>
 
             <p style={{
-              fontFamily: SERIF, fontSize: 'clamp(19px, 2.4vw, 25px)', fontStyle: 'italic',
-              color: palette.INK2, margin: '0 0 20px',
+              fontFamily: SERIF, fontSize: 'clamp(18px, 2.3vw, 24px)', fontStyle: 'italic',
+              color: palette.INK2, margin: '0 0 24px', lineHeight: 1.5,
             }}>
               {KIDS_TAGLINE}
             </p>
 
-            <p style={{ fontFamily: SANS, fontSize: 16.5, lineHeight: 1.7, color: palette.INK2, maxWidth: 560, margin: '0 0 28px' }}>
+            <p style={{ fontFamily: SANS, fontSize: 16.5, lineHeight: 1.75, color: palette.INK2, maxWidth: 580, margin: '0 0 32px' }}>
               {KIDS_BLURB}
             </p>
 
             <Cta palette={palette} label="Reserve my child's place" event="KIDS_HERO_CTA" />
 
-            <p style={{ fontFamily: SANS, fontSize: 12.5, color: palette.INK2, opacity: 0.8, marginTop: 14 }}>
+            <p style={{ fontFamily: SANS, fontSize: 12.5, color: palette.INK2, opacity: 0.7, marginTop: 16 }}>
               Parent or guardian registration required. Sessions run live on Zoom.
             </p>
           </div>
 
-          {/* Notice · Choose · Grow poster */}
+          {/* Notice · Choose · Grow poster — floating with shadow */}
           <div style={{
-            borderRadius: 28,
+            borderRadius: 32,
             overflow: 'hidden',
             border: `1px solid ${palette.BAND_BORDER}`,
             background: palette.BAND,
             display: 'flex',
+            boxShadow: isDark ? '0 16px 48px rgba(0,0,0,0.4)' : '0 16px 48px rgba(60,40,30,0.12)',
+            transform: 'translateX(-16px)',
+            zIndex: 1,
           }}>
             <img
               src={KIDS_POSTER_IMG}
@@ -237,35 +251,63 @@ export default function KidsChallenge() {
           'Three short, interactive sessions built around real-life situations children already recognise — short enough to hold attention, meaningful enough to start a habit.',
         )}
 
-        <div className="si-kids-grid-3" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18 }}>
+        <div className="si-kids-grid-3" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
           {KIDS_DAYS.map((d, i) => (
             <article key={d.day} style={{
-              background: cardBg, border: `1px solid ${border}`, borderRadius: 24,
-              padding: 'clamp(24px, 3vw, 32px)',
-            }}>
+              background: cardBg, border: `1px solid ${border}`, borderRadius: 28,
+              padding: 'clamp(28px, 4vw, 36px)',
+              position: 'relative', overflow: 'hidden',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              cursor: 'default',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-6px)';
+              e.currentTarget.style.boxShadow = isDark ? '0 16px 40px rgba(0,0,0,0.3)' : '0 16px 40px rgba(60,40,30,0.12)';
+              e.currentTarget.style.borderColor = palette.PURPLE_STRONG;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = border;
+            }}
+            >
+              {/* Top accent border on hover */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                background: ['linear-gradient(90deg, ' + palette.PURPLE_STRONG + ', ' + palette.BROWN + ')',
+                           'linear-gradient(90deg, ' + palette.BROWN + ', ' + palette.PURPLE_STRONG + ')',
+                           'linear-gradient(90deg, ' + palette.PURPLE_STRONG + ', ' + palette.BROWN + ')'][i],
+                opacity: 0,
+                transition: 'opacity 0.3s ease',
+              }}
+              onMouseEnter={(e) => { (e.target as HTMLElement).style.opacity = '1'; }}
+              onMouseLeave={(e) => { (e.target as HTMLElement).style.opacity = '0'; }}
+              />
+
               <span style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 34, height: 34, borderRadius: 999, marginBottom: 16,
-                background: isDark ? 'rgba(191,176,189,0.16)' : 'rgba(105,94,104,0.10)',
-                fontFamily: SANS, fontSize: 13, fontWeight: 800, color: palette.PURPLE_STRONG,
+                width: 40, height: 40, borderRadius: 999, marginBottom: 18,
+                background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
+                fontFamily: SANS, fontSize: 14, fontWeight: 800,
+                boxShadow: isDark ? '0 4px 12px rgba(83,74,183,0.2)' : '0 4px 12px rgba(83,74,183,0.15)',
               }}>{i + 1}</span>
 
               <p style={{
-                fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em',
-                textTransform: 'uppercase', color: palette.BROWN, margin: '0 0 8px',
+                fontFamily: SANS, fontSize: 11, fontWeight: 900, letterSpacing: '0.22em',
+                textTransform: 'uppercase', color: palette.BROWN, margin: '0 0 10px',
               }}>{d.day}</p>
 
               <h3 style={{
-                fontFamily: SERIF, fontSize: 26, fontWeight: 400, color: palette.INK, margin: '0 0 12px',
+                fontFamily: SERIF, fontSize: 28, fontWeight: 400, color: palette.INK, margin: '0 0 14px', lineHeight: 1.2,
               }}>{d.title}</h3>
 
-              <p style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65, color: palette.INK2, margin: '0 0 16px' }}>
+              <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: palette.INK2, margin: '0 0 18px' }}>
                 {d.body}
               </p>
 
               <p style={{
-                fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: palette.INK2,
-                opacity: 0.8, margin: 0, paddingTop: 14, borderTop: `1px solid ${border}`,
+                fontFamily: SANS, fontSize: 12.5, lineHeight: 1.65, color: palette.INK2,
+                opacity: 0.75, margin: 0, paddingTop: 16, borderTop: `1px solid ${border}`,
               }}>
                 {d.detail}
               </p>
@@ -290,34 +332,46 @@ export default function KidsChallenge() {
 
       {/* ═══ Who it is for + what families receive ══════════════════════════ */}
       <section id="who" className="si-reveal" style={{ position: 'relative', zIndex: 2, padding: 'clamp(56px, 8vw, 88px) clamp(24px, 6vw, 96px)' }}>
-        <div className="si-kids-grid-2" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 24, padding: 'clamp(28px, 3.5vw, 40px)' }}>
-            <h2 style={{ fontFamily: SERIF, fontSize: 30, fontWeight: 400, color: palette.INK, margin: '0 0 20px' }}>
+        <div className="si-kids-grid-2" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 28, alignItems: 'start' }}>
+          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 28, padding: 'clamp(32px, 4vw, 44px)' }}>
+            <h2 style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 400, color: palette.INK, margin: '0 0 24px' }}>
               Who is it for?
             </h2>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 16 }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 20 }}>
               {KIDS_AGE_BANDS.map((a) => (
-                <li key={a.band}>
-                  <p style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 800, color: palette.BROWN, margin: '0 0 3px' }}>{a.band}</p>
-                  <p style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.6, color: palette.INK2, margin: 0 }}>{a.detail}</p>
+                <li key={a.band} style={{ paddingBottom: 16, borderBottom: `1px solid ${border}`, opacity: 0.9 }}>
+                  <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 900, color: palette.BROWN, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{a.band}</p>
+                  <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: palette.INK2, margin: 0 }}>{a.detail}</p>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 24, padding: 'clamp(28px, 3.5vw, 40px)' }}>
-            <h2 style={{ fontFamily: SERIF, fontSize: 30, fontWeight: 400, color: palette.INK, margin: '0 0 20px' }}>
+          <div style={{
+            background: isDark ? 'linear-gradient(135deg, rgba(83,74,183,0.12) 0%, rgba(201,174,142,0.08) 100%)' : 'linear-gradient(135deg, rgba(83,74,183,0.08) 0%, rgba(201,174,142,0.05) 100%)',
+            border: `1.5px solid ${palette.PURPLE_STRONG}`, borderRadius: 28, padding: 'clamp(32px, 4vw, 44px)',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <span style={{
+              position: 'absolute', top: 16, right: 16,
+              background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
+              padding: '6px 14px', borderRadius: 999,
+              fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+            }}>✓ Included</span>
+
+            <h2 style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 400, color: palette.INK, margin: '0 0 24px', paddingTop: 12 }}>
               What families receive
             </h2>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 14 }}>
               {KIDS_INCLUDES.map((f) => (
-                <li key={f} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontFamily: SANS, fontSize: 14.5, lineHeight: 1.6, color: palette.INK2 }}>
-                  <span style={{ flexShrink: 0, marginTop: 3 }}><Check color={palette.BROWN} /></span>
+                <li key={f} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: palette.INK2 }}>
+                  <span style={{ flexShrink: 0, marginTop: 2, color: palette.PURPLE_STRONG }}><Check color={palette.PURPLE_STRONG} /></span>
                   {f}
                 </li>
               ))}
             </ul>
-            <div style={{ marginTop: 22, borderRadius: 16, overflow: 'hidden', border: `1px solid ${border}` }}>
+            <div style={{ marginTop: 28, borderRadius: 20, overflow: 'hidden', border: `1px solid ${palette.PURPLE_STRONG}`, boxShadow: isDark ? '0 8px 24px rgba(0,0,0,0.2)' : '0 8px 24px rgba(83,74,183,0.08)' }}>
               <img
                 src={KIDS_CHART_IMG}
                 alt="The Let's Be Our Best Every Day! activity chart"
@@ -336,8 +390,12 @@ export default function KidsChallenge() {
       <section className="si-reveal" style={{ position: 'relative', zIndex: 2, padding: 'clamp(56px, 8vw, 88px) clamp(24px, 6vw, 96px)' }}>
         {sectionTitle('A mother’s journey · A global mission', 'Know Your Teacher', 'Because this journey began with one mother wanting to help her own child.')}
 
-        <div className="si-kids-grid-2" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '0.85fr 1.15fr', gap: 24, alignItems: 'stretch' }}>
-          <div style={{ borderRadius: 24, overflow: 'hidden', border: `1px solid ${border}`, minHeight: 320 }}>
+        <div className="si-kids-grid-2" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '0.95fr 1.05fr', gap: 32, alignItems: 'center', position: 'relative' }}>
+          <div style={{
+            borderRadius: 32, overflow: 'hidden', border: `1px solid ${border}`, minHeight: 360,
+            boxShadow: isDark ? '0 16px 48px rgba(0,0,0,0.3)' : '0 16px 48px rgba(60,40,30,0.12)',
+            position: 'relative', zIndex: 1,
+          }}>
             <img
               src={KIDS_TEACHER_IMG}
               alt="A mother and her young son sharing a learning moment together"
@@ -351,7 +409,7 @@ export default function KidsChallenge() {
             />
           </div>
 
-          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 24, padding: 'clamp(26px, 3.5vw, 38px)' }}>
+          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 28, padding: 'clamp(32px, 4vw, 44px)', position: 'relative', zIndex: 2 }}>
             <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: palette.INK2, margin: '0 0 14px' }}>
               I&rsquo;m a mom on a journey of helping my 5-year-old understand his feelings, make thoughtful choices and grow into a kind, confident and mindful human being.
             </p>
@@ -416,15 +474,25 @@ export default function KidsChallenge() {
       <section id="faq" className="si-reveal" style={{ position: 'relative', zIndex: 2, padding: 'clamp(56px, 8vw, 88px) clamp(24px, 6vw, 96px)' }}>
         {sectionTitle('Before you register', 'Questions parents may have')}
 
-        <div style={{ maxWidth: 800, margin: '0 auto', display: 'grid', gap: 12 }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', display: 'grid', gap: 14 }}>
           {KIDS_FAQ.map((f) => (
             <details key={f.q} style={{
-              background: cardBg, border: `1px solid ${border}`, borderRadius: 16, padding: '18px 22px',
-            }}>
+              background: cardBg, border: `1px solid ${border}`, borderRadius: 20, padding: '20px 24px',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = palette.PURPLE_STRONG;
+              e.currentTarget.style.boxShadow = isDark ? '0 4px 12px rgba(0,0,0,0.1)' : '0 4px 12px rgba(60,40,30,0.06)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = border;
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+            >
               <summary style={{
-                fontFamily: SANS, fontSize: 15, fontWeight: 700, color: palette.INK, cursor: 'pointer',
+                fontFamily: SANS, fontSize: 15.5, fontWeight: 700, color: palette.INK, cursor: 'pointer', userSelect: 'none',
               }}>{f.q}</summary>
-              <p style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.7, color: palette.INK2, margin: '12px 0 0' }}>
+              <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.75, color: palette.INK2, margin: '14px 0 0', opacity: 0.9 }}>
                 {f.a}
               </p>
             </details>
@@ -435,27 +503,36 @@ export default function KidsChallenge() {
       {/* ═══ Final CTA (Redesigned with Poster Graphic) ═════════════════════ */}
       <section className="si-reveal" style={{
         position: 'relative', zIndex: 2,
-        padding: 'clamp(56px, 8vw, 96px) clamp(24px, 6vw, 96px)',
+        padding: 'clamp(64px, 10vw, 104px) clamp(24px, 6vw, 96px)',
       }}>
         <div style={{
-          maxWidth: 1060, margin: '0 auto',
-          background: isDark ? 'linear-gradient(145deg, #4A2860 0%, #2A1E40 100%)' : 'linear-gradient(145deg, #FDF7F3 0%, #F5EDE6 100%)',
-          borderRadius: 32, padding: 'clamp(28px, 4vw, 48px)',
-          border: `1px solid ${border}`,
-          boxShadow: isDark ? '0 30px 80px rgba(0,0,0,0.5)' : '0 24px 60px rgba(60,40,30,0.08)',
+          maxWidth: 1100, margin: '0 auto',
+          background: isDark ? 'linear-gradient(145deg, rgba(74, 40, 96, 0.6) 0%, rgba(42, 30, 64, 0.8) 100%)' : 'linear-gradient(145deg, rgba(253, 247, 243, 0.8) 0%, rgba(245, 237, 230, 0.6) 100%)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: 40, padding: 'clamp(36px, 5vw, 56px)',
+          border: `1px solid ${palette.BAND_BORDER}`,
+          boxShadow: isDark ? '0 32px 96px rgba(0,0,0,0.4)' : '0 32px 96px rgba(60,40,30,0.1)',
+          position: 'relative', overflow: 'hidden',
         }}>
+          {/* Decorative accent */}
+          <div style={{
+            position: 'absolute', top: -60, right: -60, width: 200, height: 200,
+            background: palette.PURPLE_STRONG, borderRadius: '50%', opacity: isDark ? 0.08 : 0.05, zIndex: 0, pointerEvents: 'none',
+          }} />
+
           <div className="si-kids-footer-grid" style={{
             display: 'grid',
-            gridTemplateColumns: '0.85fr 1.15fr',
-            gap: 'clamp(24px, 4vw, 44px)',
+            gridTemplateColumns: '0.95fr 1.05fr',
+            gap: 'clamp(32px, 5vw, 48px)',
             alignItems: 'center',
+            position: 'relative', zIndex: 1,
           }}>
             {/* Poster image column */}
             <div style={{
-              borderRadius: 24,
+              borderRadius: 36,
               overflow: 'hidden',
-              border: `1px solid ${border}`,
-              boxShadow: isDark ? '0 12px 32px rgba(0,0,0,0.4)' : '0 12px 32px rgba(60,40,30,0.1)',
+              border: `1.5px solid ${palette.BAND_BORDER}`,
+              boxShadow: isDark ? '0 16px 48px rgba(0,0,0,0.3)' : '0 16px 48px rgba(60,40,30,0.12)',
             }}>
               <img
                 src={KIDS_POSTER_IMG}
@@ -536,6 +613,12 @@ export default function KidsChallenge() {
       <style>{`
         @media (max-width: 900px) {
           .si-kids-hero, .si-kids-grid-2, .si-kids-grid-3, .si-kids-footer-grid { grid-template-columns: 1fr !important; }
+          .si-kids-hero { gap: clamp(20px, 3vw, 32px) !important; }
+          .si-kids-hero > div:last-child { transform: translateX(0) !important; margin-top: 1rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          article { transition: none !important; }
+          details { transition: none !important; }
         }
       `}</style>
     </div>
