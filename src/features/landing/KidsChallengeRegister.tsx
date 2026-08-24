@@ -13,7 +13,7 @@ import { db } from '../../firebase';
 import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
-import SiteBackdrop from '../../components/site/SiteBackdrop';
+import KidsBackdrop from '../../components/site/KidsBackdrop';
 import {
   KIDS_PATH, KIDS_TITLE, KIDS_FORMAT, KIDS_TIME, KIDS_GOALS, KIDS_AGE_OPTIONS,
   trackKids,
@@ -101,7 +101,7 @@ export default function KidsChallengeRegister() {
 
   return (
     <div className="min-h-screen w-full antialiased" style={{ fontFamily: SANS, background: palette.BG, color: palette.INK }}>
-      <SiteBackdrop />
+      <KidsBackdrop />
       <SiteHeader
         palette={palette}
         onToggleTheme={toggleTheme}

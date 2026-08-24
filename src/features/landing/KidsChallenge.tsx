@@ -12,7 +12,7 @@ import { Heart, Calendar, Clock, MapPin, Sparkles } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
-import SiteBackdrop from '../../components/site/SiteBackdrop';
+import KidsBackdrop from '../../components/site/KidsBackdrop';
 import {
   KIDS_REGISTER_PATH, KIDS_TITLE, KIDS_TAGLINE, KIDS_AGES, KIDS_TIME,
   KIDS_BLURB, KIDS_DAYS, KIDS_AGE_BANDS, KIDS_INCLUDES, KIDS_STEPS, KIDS_FAQ,
@@ -157,7 +157,7 @@ export default function KidsChallenge() {
 
   return (
     <div className="min-h-screen w-full antialiased" style={{ fontFamily: SANS, background: palette.BG, color: palette.INK, overflowX: 'hidden' }}>
-      <SiteBackdrop />
+      <KidsBackdrop />
 
       <SiteHeader
         palette={palette}
