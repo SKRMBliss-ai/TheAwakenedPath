@@ -432,72 +432,100 @@ export default function KidsChallenge() {
         </div>
       </section>
 
-      {/* ═══ Final CTA (Redesigned with Graphics) ═══════════════════════════ */}
+      {/* ═══ Final CTA (Redesigned with Poster Graphic) ═════════════════════ */}
       <section className="si-reveal" style={{
         position: 'relative', zIndex: 2,
         padding: 'clamp(56px, 8vw, 96px) clamp(24px, 6vw, 96px)',
       }}>
         <div style={{
-          maxWidth: 900, margin: '0 auto',
+          maxWidth: 1060, margin: '0 auto',
           background: isDark ? 'linear-gradient(145deg, #4A2860 0%, #2A1E40 100%)' : 'linear-gradient(145deg, #FDF7F3 0%, #F5EDE6 100%)',
-          borderRadius: 32, padding: 'clamp(32px, 5vw, 56px)',
-          border: `1px solid ${border}`, textAlign: 'center',
+          borderRadius: 32, padding: 'clamp(28px, 4vw, 48px)',
+          border: `1px solid ${border}`,
           boxShadow: isDark ? '0 30px 80px rgba(0,0,0,0.5)' : '0 24px 60px rgba(60,40,30,0.08)',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 24, color: palette.BROWN }}>
-            <Sparkles size={28} /> <Heart size={28} fill="currentColor" /> <Sparkles size={28} />
+          <div className="si-kids-footer-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: '0.85fr 1.15fr',
+            gap: 'clamp(24px, 4vw, 44px)',
+            alignItems: 'center',
+          }}>
+            {/* Poster image column */}
+            <div style={{
+              borderRadius: 24,
+              overflow: 'hidden',
+              border: `1px solid ${border}`,
+              boxShadow: isDark ? '0 12px 32px rgba(0,0,0,0.4)' : '0 12px 32px rgba(60,40,30,0.1)',
+            }}>
+              <img
+                src={KIDS_POSTER_IMG}
+                alt="Let's Be Our Best Every Day! Poster"
+                loading="lazy"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+
+            {/* Content column */}
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 16, color: palette.BROWN }}>
+                <Sparkles size={24} /> <Heart size={24} fill="currentColor" /> <Sparkles size={24} />
+              </div>
+
+              <h2 style={{
+                fontFamily: SERIF, fontSize: 'clamp(28px, 3.6vw, 44px)', fontWeight: 400,
+                lineHeight: 1.15, color: palette.INK, margin: '0 0 18px',
+              }}>
+                Give your child three little days to discover something powerful.
+              </h2>
+
+              <p style={{
+                fontFamily: SERIF, fontSize: 'clamp(18px, 2.2vw, 24px)', fontStyle: 'italic',
+                lineHeight: 1.55, color: palette.INK2, margin: '0 0 28px',
+              }}>
+                I can notice what I feel.<br />
+                I can choose what I do.<br />
+                I can grow a little every day.
+              </p>
+
+              <div style={{
+                display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center',
+                background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.65)',
+                padding: '16px 20px', borderRadius: 20, marginBottom: 28,
+                border: `1px solid ${border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: palette.INK2 }}>
+                  <Calendar size={18} color={palette.PURPLE_STRONG} /> Every Friday–Sunday
+                </div>
+                <div style={{ width: 1, height: 16, background: border }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: palette.INK2 }}>
+                  <Clock size={18} color={palette.PURPLE_STRONG} /> 30–40 Mins
+                </div>
+                <div style={{ width: 1, height: 16, background: border }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: palette.INK2 }}>
+                  <MapPin size={18} color={palette.PURPLE_STRONG} /> {KIDS_TIME}
+                </div>
+              </div>
+
+              <div>
+                <a
+                  href={KIDS_REGISTER_PATH}
+                  onClick={() => trackKids('KIDS_FINAL_CTA')}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 9,
+                    padding: '16px 36px', borderRadius: 999,
+                    background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
+                    textDecoration: 'none', fontFamily: SANS, fontSize: 15.5, fontWeight: 700,
+                    boxShadow: '0 8px 24px rgba(74, 40, 96, 0.4)',
+                    transition: 'transform 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <Heart size={18} fill="currentColor" /> Reserve my child&rsquo;s spot
+                </a>
+              </div>
+            </div>
           </div>
-
-          <h2 style={{
-            fontFamily: SERIF, fontSize: 'clamp(32px, 4.4vw, 52px)', fontWeight: 400,
-            lineHeight: 1.15, color: palette.INK, margin: '0 auto 24px', maxWidth: 760,
-          }}>
-            Give your child three little days to discover something powerful.
-          </h2>
-
-          <p style={{
-            fontFamily: SERIF, fontSize: 'clamp(20px, 2.6vw, 28px)', fontStyle: 'italic',
-            lineHeight: 1.6, color: palette.INK2, margin: '0 auto 40px', maxWidth: 560,
-          }}>
-            I can notice what I feel.<br />
-            I can choose what I do.<br />
-            I can grow a little every day.
-          </p>
-
-          <div style={{
-            display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center',
-            background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.6)',
-            padding: '24px 32px', borderRadius: 24, marginBottom: 36,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: palette.INK2 }}>
-              <Calendar size={20} color={palette.PURPLE_STRONG} /> Every Friday–Sunday
-            </div>
-            <div style={{ width: 1, background: border, margin: '0 8px' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: palette.INK2 }}>
-              <Clock size={20} color={palette.PURPLE_STRONG} /> 30–40 Minutes
-            </div>
-            <div style={{ width: 1, background: border, margin: '0 8px' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: palette.INK2 }}>
-              <MapPin size={20} color={palette.PURPLE_STRONG} /> {KIDS_TIME}
-            </div>
-          </div>
-
-          <a
-            href={KIDS_REGISTER_PATH}
-            onClick={() => trackKids('KIDS_FINAL_CTA')}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 9,
-              padding: '18px 40px', borderRadius: 999,
-              background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
-              textDecoration: 'none', fontFamily: SANS, fontSize: 16, fontWeight: 700,
-              boxShadow: '0 8px 24px rgba(74, 40, 96, 0.4)',
-              transition: 'transform 0.2s ease',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            <Heart size={20} fill="currentColor" /> Reserve my child&rsquo;s spot
-          </a>
         </div>
       </section>
 
@@ -507,7 +535,7 @@ export default function KidsChallenge() {
 
       <style>{`
         @media (max-width: 900px) {
-          .si-kids-hero, .si-kids-grid-2, .si-kids-grid-3 { grid-template-columns: 1fr !important; }
+          .si-kids-hero, .si-kids-grid-2, .si-kids-grid-3, .si-kids-footer-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>
