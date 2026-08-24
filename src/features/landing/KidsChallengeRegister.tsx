@@ -129,8 +129,8 @@ export default function KidsChallengeRegister() {
           </div>
           
           <div style={{
-            background: isDark ? 'rgba(155, 110, 204, 0.12)' : 'rgba(120, 60, 180, 0.05)', 
-            border: `1px solid ${isDark ? 'rgba(155, 110, 204, 0.2)' : 'rgba(120, 60, 180, 0.15)'}`, 
+            background: palette.isDark ? 'rgba(155, 110, 204, 0.12)' : 'rgba(120, 60, 180, 0.05)', 
+            border: `1px solid ${palette.isDark ? 'rgba(155, 110, 204, 0.2)' : 'rgba(120, 60, 180, 0.15)'}`, 
             borderRadius: 14,
             padding: '14px 18px', fontFamily: SANS, fontSize: 13.5, lineHeight: 1.6, color: palette.INK2, marginBottom: 26,
           }}>
