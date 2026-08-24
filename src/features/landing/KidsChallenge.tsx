@@ -805,6 +805,111 @@ export default function KidsChallenge() {
         </div>
       </section>
 
+      {/* ═══ Marketing Materials (Poster + Diary) ═════════════════════════════ */}
+      <section
+        className="si-reveal"
+        style={{
+          padding: 'clamp(60px, 8vw, 100px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 48,
+          background: isDark ? '#14101A' : '#FAF6F0',
+        }}
+      >
+        <div style={{ maxWidth: 1120, width: '100%', display: 'flex', gap: 'clamp(32px, 5vw, 52px)', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {[
+            {
+              src: KIDS_POSTER_IMG,
+              alt: 'Let\'s Be Our Best Every Day! program poster',
+              tilt: -1.4,
+              pill: 'The program',
+              caption: 'Emotional awareness + positive choices',
+            },
+            {
+              src: 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fdiary.jpg?alt=media',
+              alt: 'The reflection diary included with the program',
+              tilt: 1.4,
+              pill: 'Included',
+              caption: 'A child\'s reflection diary',
+            },
+          ].map((m) => (
+            <div key={m.src} className="si-asset-media" style={{ flex: '1 1 400px', maxWidth: 500, position: 'relative' }}>
+              {/* colour halo */}
+              <div aria-hidden="true" style={{
+                position: 'absolute', inset: '-12% -8%', zIndex: 0, pointerEvents: 'none',
+                background: 'radial-gradient(58% 58% at 50% 46%, rgba(196,145,58,0.55) 0%, transparent 70%)',
+                opacity: isDark ? 0.3 : 0.18, filter: 'blur(48px)',
+              }} />
+
+              {/* offset back card */}
+              <div aria-hidden="true" className="si-asset-back" style={{
+                position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+                transform: `rotate(${m.tilt * -2.4}deg) translate(${m.tilt < 0 ? 14 : -14}px, 14px)`,
+                borderRadius: 30, background: isDark ? 'rgba(38,30,22,0.7)' : 'rgba(255,252,247,0.9)',
+                border: `1px solid ${palette.BAND_BORDER}`,
+              }} />
+
+              <div className="si-asset-frame" style={{
+                position: 'relative', zIndex: 1,
+                borderRadius: 30, overflow: 'hidden',
+                border: `1px solid ${palette.BAND_BORDER}`,
+                background: isDark ? '#14101A' : '#FAF6F0',
+                transform: `rotate(${m.tilt}deg)`,
+                boxShadow: isDark
+                  ? '0 34px 80px rgba(0,0,0,0.55), 0 8px 22px rgba(0,0,0,0.35)'
+                  : '0 34px 80px rgba(74,50,96,0.2), 0 8px 22px rgba(74,50,96,0.1)',
+                transition: 'transform 0.55s cubic-bezier(0.2,0.8,0.2,1)',
+              }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'rotate(0deg) scale(1.02)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = `rotate(${m.tilt}deg)`; }}
+              >
+                <img src={m.src} alt={m.alt} loading="lazy" style={{ width: '100%', height: 'auto', display: 'block' }} />
+
+                {/* bottom scrim */}
+                <div aria-hidden="true" style={{
+                  position: 'absolute', inset: 0, pointerEvents: 'none',
+                  background: 'linear-gradient(180deg, rgba(0,0,0,0) 52%, rgba(20,14,10,0.62) 100%)',
+                }} />
+                {/* diagonal sheen */}
+                <div aria-hidden="true" style={{
+                  position: 'absolute', inset: 0, pointerEvents: 'none',
+                  background: 'linear-gradient(118deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 44%)',
+                }} />
+
+                {/* glass caption bar */}
+                <div style={{
+                  position: 'absolute', left: 14, right: 14, bottom: 14, zIndex: 2,
+                  padding: '11px 16px', borderRadius: 18,
+                  background: 'rgba(20,14,10,0.46)',
+                  backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255,255,255,0.24)',
+                  fontFamily: '"Outfit", system-ui, -apple-system, sans-serif', fontSize: 12.5, fontWeight: 700, color: '#FFFFFF',
+                }}>
+                  {m.caption}
+                </div>
+              </div>
+
+              {/* floating pill */}
+              <div className="si-asset-pill" style={{
+                position: 'absolute', top: -18, left: -18, zIndex: 3,
+                display: 'inline-flex', alignItems: 'center', gap: 7,
+                padding: '10px 17px', borderRadius: 999,
+                background: isDark ? 'rgba(30,24,18,0.72)' : 'rgba(249,245,239,0.85)',
+                border: `1px solid ${palette.BAND_BORDER}`,
+                backdropFilter: 'blur(10px)',
+                boxShadow: isDark ? '0 12px 30px rgba(0,0,0,0.5)' : '0 12px 30px rgba(74,50,96,0.16)',
+                fontFamily: '"Outfit", system-ui, -apple-system, sans-serif', fontSize: 12, fontWeight: 800, color: isDark ? '#EDE9E3' : '#2A2118',
+              }}>
+                <Sparkles size={14} color={isDark ? '#FFDF9E' : '#7A5F44'} /> {m.pill}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div style={{ position: 'relative', zIndex: 2 }}>
         <SiteFooter palette={palette} />
       </div>
