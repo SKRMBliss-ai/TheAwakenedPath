@@ -34,6 +34,11 @@
         "source": "/simplypiano{,/**}",
         "destination": "https://simplypiano.web.app",
         "type": 302
+      },
+      {
+        "source": "/kidschallenge{,/**}",
+        "destination": "/tiny-kids-transformations",
+        "type": 301
       }
     ],
     "headers": [

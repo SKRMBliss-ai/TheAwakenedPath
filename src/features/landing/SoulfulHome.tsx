@@ -247,7 +247,7 @@ export default function SoulfulHome() {
                       label: 'For Kids',
                       sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
                       badge: 'NEW',
-                      href: '/kidschallenge',
+                      href: '/tiny-kids-transformations',
                       onClick: () => track('HOME_COURSE_KIDS_CLICK'),
                     },
                   ],

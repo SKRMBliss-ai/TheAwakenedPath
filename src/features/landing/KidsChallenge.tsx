@@ -266,7 +266,7 @@ export default function KidsChallenge() {
                 label: 'For Kids',
                 sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
                 badge: 'NEW',
-                href: '/kidschallenge',
+                href: '/tiny-kids-transformations',
               },
             ],
           },
