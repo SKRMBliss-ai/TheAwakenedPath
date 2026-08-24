@@ -423,6 +423,188 @@ export default function KidsChallenge() {
         </div>
       </section>
 
+      {/* ═══ The chart — the thing the weekend is built around ══════════════
+          Placed straight after the three days on purpose: the sessions are
+          what a family attends, but the chart is what they keep, so it earns
+          a full band of its own rather than a thumbnail further down. */}
+      <section
+        id="chart"
+        className="si-reveal si-chart-band"
+        style={{
+          position: 'relative', zIndex: 2,
+          padding: 'clamp(56px, 8vw, 92px) clamp(24px, 6vw, 96px)',
+          background: palette.BAND, color: palette.ON_BAND,
+        }}
+      >
+        <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+          <div className="si-chart-grid" style={{
+            display: 'grid', gridTemplateColumns: '1.15fr 0.85fr',
+            gap: 'clamp(32px, 4.5vw, 60px)', alignItems: 'center',
+          }}>
+            {/* ── The chart itself ── */}
+            <div className="si-chart-media" style={{ position: 'relative' }}>
+              <div aria-hidden="true" className="si-chart-back" style={{
+                position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+                transform: 'rotate(-2.4deg) translate(-12px, 12px)',
+                borderRadius: 26, background: palette.BAND_TILE,
+                border: `1px solid ${palette.BAND_BORDER}`,
+              }} />
+
+              <div className="si-chart-frame" style={{
+                position: 'relative', zIndex: 1,
+                borderRadius: 26, overflow: 'hidden',
+                border: `1px solid ${palette.BAND_BORDER}`,
+                background: '#FFFFFF',
+                transform: 'rotate(0.8deg)',
+                boxShadow: '0 34px 80px rgba(20,14,26,0.34), 0 8px 22px rgba(20,14,26,0.2)',
+                transition: 'transform 0.55s cubic-bezier(0.2,0.8,0.2,1)',
+              }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'rotate(0deg) scale(1.015)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'rotate(0.8deg)'; }}
+              >
+                <img
+                  src={KIDS_CHART_IMG}
+                  alt="The Let's Be Our Best Every Day! chart — seven daily practices tracked across a full month, with a Look Back &amp; Learn reflection panel"
+                  loading="lazy"
+                  style={{ width: '100%', display: 'block' }}
+                  onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }}
+                />
+                <div aria-hidden="true" style={{
+                  position: 'absolute', inset: 0, pointerEvents: 'none',
+                  background: 'linear-gradient(118deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 42%)',
+                }} />
+              </div>
+
+              <div className="si-chart-pill" style={{
+                position: 'absolute', top: -16, left: -16, zIndex: 3,
+                display: 'inline-flex', alignItems: 'center', gap: 7,
+                padding: '10px 17px', borderRadius: 999,
+                background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
+                boxShadow: '0 12px 30px rgba(20,14,26,0.32)',
+                fontFamily: SANS, fontSize: 11.5, fontWeight: 800, letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+              }}>
+                <Sparkles size={14} /> Yours to keep
+              </div>
+            </div>
+
+            {/* ── The pitch ── */}
+            <div>
+              <span style={{
+                display: 'inline-block', padding: '7px 15px', borderRadius: 999,
+                background: palette.BAND_TILE, border: `1px solid ${palette.BAND_BORDER}`,
+                fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.2em',
+                textTransform: 'uppercase', color: palette.ON_BAND_ACCENT, marginBottom: 18,
+              }}>
+                Included with the challenge
+              </span>
+
+              <h2 style={{
+                fontFamily: SERIF, fontSize: 'clamp(30px, 4vw, 50px)', fontWeight: 400,
+                lineHeight: 1.1, letterSpacing: '-0.015em', color: palette.ON_BAND, margin: '0 0 16px',
+              }}>
+                The weekend ends.<br />The chart keeps going.
+              </h2>
+
+              <p style={{
+                fontFamily: SANS, fontSize: 15.5, lineHeight: 1.7,
+                color: palette.ON_BAND_SOFT, margin: '0 0 24px', maxWidth: 460,
+              }}>
+                Three live sessions teach your child the practice. This chart is what
+                carries it into everyday life — a full month of small, tickable choices
+                they fill in themselves, then look back on together at the end.
+              </p>
+
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'grid', gap: 10 }}>
+                {[
+                  { k: '7 daily practices', v: 'Be kind · Tell the truth · Love everyone · Help others · and three more' },
+                  { k: 'Thought, word and action', v: 'Each practice is tracked three ways, so children see the whole picture' },
+                  { k: '31 days on one page', v: 'A month of progress the whole family can see at a glance' },
+                ].map((row) => (
+                  <li key={row.k} style={{
+                    display: 'flex', gap: 12, alignItems: 'flex-start',
+                    padding: '13px 16px', borderRadius: 16,
+                    background: palette.BAND_TILE, border: `1px solid ${palette.BAND_BORDER}`,
+                  }}>
+                    <span style={{
+                      flexShrink: 0, marginTop: 2, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      width: 24, height: 24, borderRadius: '50%', background: palette.PURPLE_STRONG,
+                    }}><Check color={palette.ON_ACCENT} /></span>
+                    <span style={{ fontFamily: SANS, fontSize: 14, lineHeight: 1.55, color: palette.ON_BAND }}>
+                      <strong style={{ fontWeight: 800 }}>{row.k}</strong>
+                      <span style={{ display: 'block', color: palette.ON_BAND_SOFT, fontSize: 13.5, marginTop: 2 }}>
+                        {row.v}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <Cta palette={palette} label="Reserve my child's place" event="KIDS_CHART_CTA" />
+            </div>
+          </div>
+
+          {/* ── Look Back & Learn — the monthly reflection built into the chart ── */}
+          <div style={{
+            marginTop: 'clamp(32px, 4vw, 52px)',
+            padding: 'clamp(24px, 3vw, 34px)',
+            borderRadius: 26,
+            background: palette.BAND_TILE,
+            border: `1px solid ${palette.BAND_BORDER}`,
+          }}>
+            <p style={{
+              fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.2em',
+              textTransform: 'uppercase', color: palette.ON_BAND_ACCENT, margin: '0 0 6px',
+            }}>
+              Look Back &amp; Learn
+            </p>
+            <p style={{
+              fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65,
+              color: palette.ON_BAND_SOFT, margin: '0 0 20px', maxWidth: 620,
+            }}>
+              At the end of each month the chart turns into a conversation. Four questions,
+              answered together:
+            </p>
+
+            <div className="si-chart-qs" style={{
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12,
+            }}>
+              {[
+                'What did I learn about myself this month?',
+                'What made me feel proud?',
+                'What was difficult — and what can I do next time?',
+                'What are my goals for next month?',
+              ].map((q, i) => (
+                <div key={q} style={{
+                  display: 'flex', gap: 11, alignItems: 'flex-start',
+                  padding: '15px 17px', borderRadius: 18,
+                  background: isDark ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.42)',
+                  border: `1px solid ${palette.BAND_BORDER}`,
+                }}>
+                  <span style={{
+                    flexShrink: 0, width: 24, height: 24, borderRadius: 999,
+                    display: 'grid', placeItems: 'center',
+                    background: 'rgba(255,255,255,0.62)',
+                    fontFamily: SANS, fontSize: 12, fontWeight: 800, color: palette.ON_BAND_ACCENT,
+                  }}>{i + 1}</span>
+                  <span style={{
+                    fontFamily: SERIF, fontSize: 16.5, fontStyle: 'italic',
+                    lineHeight: 1.4, color: palette.ON_BAND,
+                  }}>{q}</span>
+                </div>
+              ))}
+            </div>
+
+            <p style={{
+              fontFamily: SERIF, fontSize: 'clamp(17px, 2vw, 21px)', fontStyle: 'italic',
+              textAlign: 'center', color: palette.ON_BAND, margin: '24px 0 0', lineHeight: 1.5,
+            }}>
+              &ldquo;I am the master of my choices. Every day I grow a little better.&rdquo;
+            </p>
+          </div>
+        </div>
+      </section>
+
       <div style={{ padding: '0 24px', position: 'relative', zIndex: 2 }}><div className="si-divider" /></div>
 
       {/* ═══ Who it is for + what families receive ══════════════════════════ */}
@@ -515,20 +697,6 @@ export default function KidsChallenge() {
                 </li>
               ))}
             </ul>
-
-            <div style={{
-              position: 'relative', marginTop: 24, borderRadius: 20, overflow: 'hidden',
-              border: `1px solid ${palette.BAND_BORDER}`,
-              boxShadow: isDark ? '0 14px 36px rgba(0,0,0,0.32)' : '0 14px 36px rgba(83,74,183,0.12)',
-            }}>
-              <img
-                src={KIDS_CHART_IMG}
-                alt="The Let's Be Our Best Every Day! activity chart"
-                loading="lazy"
-                style={{ width: '100%', display: 'block' }}
-                onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }}
-              />
-            </div>
           </div>
         </div>
       </section>
@@ -805,119 +973,20 @@ export default function KidsChallenge() {
         </div>
       </section>
 
-      {/* ═══ Marketing Materials (Poster + Diary) ═════════════════════════════ */}
-      <section
-        className="si-reveal"
-        style={{
-          padding: 'clamp(60px, 8vw, 100px) clamp(24px, 6vw, 96px)',
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 48,
-          background: isDark ? '#14101A' : '#FAF6F0',
-        }}
-      >
-        <div style={{ maxWidth: 1120, width: '100%', display: 'flex', gap: 'clamp(32px, 5vw, 52px)', flexWrap: 'wrap', justifyContent: 'center' }}>
-          {[
-            {
-              src: KIDS_POSTER_IMG,
-              alt: 'Let\'s Be Our Best Every Day! program poster',
-              tilt: -1.4,
-              pill: 'The program',
-              caption: 'Emotional awareness + positive choices',
-            },
-            {
-              src: 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fdiary.jpg?alt=media',
-              alt: 'The reflection diary included with the program',
-              tilt: 1.4,
-              pill: 'Included',
-              caption: 'A child\'s reflection diary',
-            },
-          ].map((m) => (
-            <div key={m.src} className="si-asset-media" style={{ flex: '1 1 400px', maxWidth: 500, position: 'relative' }}>
-              {/* colour halo */}
-              <div aria-hidden="true" style={{
-                position: 'absolute', inset: '-12% -8%', zIndex: 0, pointerEvents: 'none',
-                background: 'radial-gradient(58% 58% at 50% 46%, rgba(196,145,58,0.55) 0%, transparent 70%)',
-                opacity: isDark ? 0.3 : 0.18, filter: 'blur(48px)',
-              }} />
-
-              {/* offset back card */}
-              <div aria-hidden="true" className="si-asset-back" style={{
-                position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-                transform: `rotate(${m.tilt * -2.4}deg) translate(${m.tilt < 0 ? 14 : -14}px, 14px)`,
-                borderRadius: 30, background: isDark ? 'rgba(38,30,22,0.7)' : 'rgba(255,252,247,0.9)',
-                border: `1px solid ${palette.BAND_BORDER}`,
-              }} />
-
-              <div className="si-asset-frame" style={{
-                position: 'relative', zIndex: 1,
-                borderRadius: 30, overflow: 'hidden',
-                border: `1px solid ${palette.BAND_BORDER}`,
-                background: isDark ? '#14101A' : '#FAF6F0',
-                transform: `rotate(${m.tilt}deg)`,
-                boxShadow: isDark
-                  ? '0 34px 80px rgba(0,0,0,0.55), 0 8px 22px rgba(0,0,0,0.35)'
-                  : '0 34px 80px rgba(74,50,96,0.2), 0 8px 22px rgba(74,50,96,0.1)',
-                transition: 'transform 0.55s cubic-bezier(0.2,0.8,0.2,1)',
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'rotate(0deg) scale(1.02)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = `rotate(${m.tilt}deg)`; }}
-              >
-                <img src={m.src} alt={m.alt} loading="lazy" style={{ width: '100%', height: 'auto', display: 'block' }} />
-
-                {/* bottom scrim */}
-                <div aria-hidden="true" style={{
-                  position: 'absolute', inset: 0, pointerEvents: 'none',
-                  background: 'linear-gradient(180deg, rgba(0,0,0,0) 52%, rgba(20,14,10,0.62) 100%)',
-                }} />
-                {/* diagonal sheen */}
-                <div aria-hidden="true" style={{
-                  position: 'absolute', inset: 0, pointerEvents: 'none',
-                  background: 'linear-gradient(118deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 44%)',
-                }} />
-
-                {/* glass caption bar */}
-                <div style={{
-                  position: 'absolute', left: 14, right: 14, bottom: 14, zIndex: 2,
-                  padding: '11px 16px', borderRadius: 18,
-                  background: 'rgba(20,14,10,0.46)',
-                  backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255,255,255,0.24)',
-                  fontFamily: '"Outfit", system-ui, -apple-system, sans-serif', fontSize: 12.5, fontWeight: 700, color: '#FFFFFF',
-                }}>
-                  {m.caption}
-                </div>
-              </div>
-
-              {/* floating pill */}
-              <div className="si-asset-pill" style={{
-                position: 'absolute', top: -18, left: -18, zIndex: 3,
-                display: 'inline-flex', alignItems: 'center', gap: 7,
-                padding: '10px 17px', borderRadius: 999,
-                background: isDark ? 'rgba(30,24,18,0.72)' : 'rgba(249,245,239,0.85)',
-                border: `1px solid ${palette.BAND_BORDER}`,
-                backdropFilter: 'blur(10px)',
-                boxShadow: isDark ? '0 12px 30px rgba(0,0,0,0.5)' : '0 12px 30px rgba(74,50,96,0.16)',
-                fontFamily: '"Outfit", system-ui, -apple-system, sans-serif', fontSize: 12, fontWeight: 800, color: isDark ? '#EDE9E3' : '#2A2118',
-              }}>
-                <Sparkles size={14} color={isDark ? '#FFDF9E' : '#7A5F44'} /> {m.pill}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       <div style={{ position: 'relative', zIndex: 2 }}>
         <SiteFooter palette={palette} />
       </div>
 
       <style>{`
         @media (max-width: 900px) {
-          .si-kids-hero, .si-kids-grid-2, .si-kids-grid-3, .si-kids-footer-grid { grid-template-columns: 1fr !important; }
+          .si-kids-hero, .si-kids-grid-2, .si-kids-grid-3, .si-kids-footer-grid,
+          .si-chart-grid { grid-template-columns: 1fr !important; }
           .si-kids-hero { gap: clamp(32px, 6vw, 48px) !important; }
+          /* The chart is dense and landscape — flatten the tilt so it can use
+             the full column width, and pull the pill back inside the edge. */
+          .si-chart-frame { transform: none !important; border-radius: 22px !important; }
+          .si-chart-back { display: none !important; }
+          .si-chart-pill { top: -12px !important; left: 6px !important; }
           .si-hero-media { margin-top: 8px; }
           .si-hero-frame { transform: none !important; border-radius: 28px !important; }
           .si-hero-back { display: none !important; }
@@ -930,7 +999,7 @@ export default function KidsChallenge() {
           .si-hero-glass { gap: 10px !important; padding: 10px 14px !important; font-size: 11.5px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
-          article, details, .si-hero-frame, .si-cta-photo { transition: none !important; }
+          article, details, .si-hero-frame, .si-cta-photo, .si-chart-frame { transition: none !important; }
         }
       `}</style>
     </div>
