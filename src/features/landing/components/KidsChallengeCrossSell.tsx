@@ -10,7 +10,7 @@
  */
 import type { Palette } from '../../../lib/siteTheme';
 import {
-  KIDS_PATH, KIDS_REGISTER_PATH, KIDS_TITLE, KIDS_AGES, KIDS_FORMAT,
+  KIDS_PATH, KIDS_REGISTER_PATH, KIDS_TITLE,
   KIDS_STEPS, KIDS_POSTER_IMG, trackKids,
 } from '../kidsChallengeData';
 
