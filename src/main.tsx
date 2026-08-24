@@ -16,8 +16,7 @@ import MasterKnowledgeHub from './features/content/MasterKnowledgeHub'
 import ProgrammaticGlossaryView from './features/content/ProgrammaticGlossaryView'
 import ProgrammaticVideoView from './features/content/ProgrammaticVideoView'
 import EditorialIntelligenceView from './features/content/EditorialIntelligenceView'
-import GlobalKnowledgeDock from './components/site/GlobalKnowledgeDock'
-import SocialFab from './components/ui/SocialFab'
+import SiteWidgets from './components/site/SiteWidgets'
 import NotFoundView from './components/site/NotFoundView'
 import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
@@ -250,40 +249,35 @@ if (isPracticePreviewRoute) {
   root.render(
     <ErrorBoundary featureName="SoulfulHome">
       <SoulfulHome />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (isAboutJournalRoute) {
   root.render(
     <ErrorBoundary featureName="AboutJournal">
       <AboutJournal />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (isEmotionalHealthRoute) {
   root.render(
     <ErrorBoundary featureName="EmotionalHealthCheck">
       <EmotionalHealthCheck />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (isFeelingsCourseRoute) {
   root.render(
     <ErrorBoundary featureName="EmotionFeelingsCourse">
       <EmotionFeelingsCourse />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (isKidsChallengeRegisterRoute) {
   root.render(
     <ErrorBoundary featureName="KidsChallengeRegister">
       <KidsChallengeRegister />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 
@@ -291,24 +285,21 @@ if (isPracticePreviewRoute) {
   root.render(
     <ErrorBoundary featureName="KidsChallenge">
       <KidsChallenge />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (isAboutUsRoute) {
   root.render(
     <ErrorBoundary featureName="AboutUs">
       <AboutUs />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (isPoliciesRoute) {
   root.render(
     <ErrorBoundary featureName="Policies">
       <Policies />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'editorial') {
@@ -316,8 +307,7 @@ if (isPracticePreviewRoute) {
     <ErrorBoundary featureName="EditorialIntelligenceView">
       <AuthProvider>
         <EditorialIntelligenceView />
-        <GlobalKnowledgeDock />
-        <SocialFab />
+        <SiteWidgets />
       </AuthProvider>
     </ErrorBoundary>,
   );
@@ -325,40 +315,35 @@ if (isPracticePreviewRoute) {
   root.render(
     <ErrorBoundary featureName="MasterKnowledgeHub">
       <MasterKnowledgeHub />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'contentHub') {
   root.render(
     <ErrorBoundary featureName="ContentHub">
       <ContentHub />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'glossary' && knowledgeInfo.slug) {
   root.render(
     <ErrorBoundary featureName="ProgrammaticGlossaryView">
       <ProgrammaticGlossaryView termSlug={knowledgeInfo.slug} />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'video' && knowledgeInfo.slug) {
   root.render(
     <ErrorBoundary featureName="ProgrammaticVideoView">
       <ProgrammaticVideoView videoId={knowledgeInfo.slug} />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (knowledgeInfo.type === 'guide' && knowledgeInfo.slug) {
   root.render(
     <ErrorBoundary featureName="ProgrammaticContentView">
       <ProgrammaticContentView slug={knowledgeInfo.slug} />
-      <GlobalKnowledgeDock />
-      <SocialFab />
+      <SiteWidgets />
     </ErrorBoundary>,
   );
 } else if (isMindGymRoute) {
@@ -368,8 +353,7 @@ if (isPracticePreviewRoute) {
         <ThemeProvider>
           <AchievementsProvider>
             <UntetheredApp />
-            <GlobalKnowledgeDock />
-            <SocialFab />
+            <SiteWidgets />
           </AchievementsProvider>
         </ThemeProvider>
       </AuthProvider>

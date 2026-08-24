@@ -1833,6 +1833,228 @@ exports.analyzeEmotion = onRequest({ secrets: [geminiKey], cors: true }, async (
     }
 });
 
+/* ===========================================================================
+ * siteChat — the public assistant in the corner of the marketing pages.
+ *
+ * onCall rather than onRequest because it answers questions about the caller's
+ * own purchases: onCall gives a verified request.auth, so the account lookup is
+ * keyed on the token's uid. It deliberately does NOT accept an email or uid
+ * from the client — that would let anyone read another customer's order state
+ * by typing their address into a chat box.
+ *
+ * The system instruction and the product facts live in siteChatKnowledge.js so
+ * they stay server-side; see the header there for why.
+ * =========================================================================== */
+const { SYSTEM_INSTRUCTION, WHATSAPP_URL } = require("./siteChatKnowledge");
+
+// Long enough for context, short enough to bound cost and latency. The client
+// also trims, but the client is not trusted to.
+const CHAT_MAX_TURNS = 12;
+const CHAT_MAX_CHARS = 1500;
+
+/* ── Cost controls ────────────────────────────────────────────────────────────
+ *
+ * The requirement is that this assistant costs nothing to run, so the design
+ * point is: it must be impossible to generate a bill, even under deliberate
+ * abuse. Three layers, weakest to strongest:
+ *
+ *   1. Per-caller burst limit (in memory). Stops one person hammering. Cheap,
+ *      but per instance, so its real ceiling is this number times the instance
+ *      count — which is why layer 2 exists.
+ *   2. maxInstances on the function (see the onCall options). Caps concurrency,
+ *      which both bounds compute and makes layer 1 an actual ceiling rather
+ *      than a suggestion.
+ *   3. A hard global daily cap, counted in Firestore. This is the real
+ *      guarantee: once the day's budget is spent, the handler returns a canned
+ *      reply and NEVER calls Gemini, so spend cannot exceed the cap no matter
+ *      what the traffic looks like.
+ *
+ * The tradeoff of layer 3 is honest and deliberate: a determined script can
+ * still exhaust a day's budget and deny the assistant to real visitors, but it
+ * cannot cost money. Given the brief, that is the right way round. App Check
+ * (see CHAT_ENFORCE_APP_CHECK) closes the denial-of-service gap too.
+ *
+ * Set CHAT_DAILY_GLOBAL_CAP to sit comfortably inside whatever free tier the
+ * Gemini key is on. Verify that limit in the console before raising it.
+ */
+const CHAT_RATE_WINDOW_MS = 60_000;
+const CHAT_RATE_MAX = 12;          // per caller, per minute, per instance
+const CHAT_DAILY_GLOBAL_CAP = 300; // hard ceiling on Gemini calls per day
+const CHAT_MAX_INSTANCES = 2;
+
+/* App Check enforcement.
+ *
+ * MUST stay false until a client carrying App Check tokens is live in
+ * production — flipping it early rejects every real visitor. Sequence:
+ *   1. Register a reCAPTCHA v3 site key in Firebase console → App Check.
+ *   2. Set VITE_APPCHECK_SITE_KEY and deploy the web app.
+ *   3. Watch the App Check metrics until verified requests appear.
+ *   4. Only then set this to true and redeploy functions.
+ * The handler logs whether a token arrived, so step 3 is checkable from logs
+ * without guessing.
+ */
+const CHAT_ENFORCE_APP_CHECK = false;
+
+const chatHits = new Map(); // key -> number[] of request timestamps
+
+/**
+ * Reserve one unit of today's Gemini budget. Returns false when the day is
+ * spent. Transactional so concurrent instances cannot overshoot the cap.
+ *
+ * One read + one write per message. At the cap that is 600 Firestore ops a day
+ * from this path, well inside the free allowance — and bounded by the cap
+ * itself, which is the point.
+ */
+async function reserveChatBudget() {
+    const day = new Date().toISOString().slice(0, 10); // UTC YYYY-MM-DD
+    const ref = db.collection("system").doc("chatBudget");
+    try {
+        return await db.runTransaction(async (tx) => {
+            const snap = await tx.get(ref);
+            const data = snap.exists ? snap.data() : null;
+            const count = data && data.day === day ? (data.count || 0) : 0;
+            if (count >= CHAT_DAILY_GLOBAL_CAP) return false;
+            tx.set(ref, { day, count: count + 1, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+            return true;
+        });
+    } catch (err) {
+        // Fail CLOSED. If the budget cannot be read, spending is unbounded, and
+        // an unavailable assistant is cheaper than an unmetered one.
+        console.error("siteChat: budget check failed, refusing the call", err);
+        return false;
+    }
+}
+
+function chatRateLimited(key) {
+    const now = Date.now();
+    const hits = (chatHits.get(key) || []).filter((t) => now - t < CHAT_RATE_WINDOW_MS);
+    hits.push(now);
+    chatHits.set(key, hits);
+    // Opportunistic sweep so the map cannot grow without bound on a warm instance.
+    if (chatHits.size > 5000) {
+        for (const [k, v] of chatHits) {
+            if (!v.length || now - v[v.length - 1] > CHAT_RATE_WINDOW_MS) chatHits.delete(k);
+        }
+    }
+    return hits.length > CHAT_RATE_MAX;
+}
+
+exports.siteChat = onCall({
+    secrets: [geminiKey],
+    cors: true,
+    // Bounds worst-case compute and turns the in-memory burst limit into a real
+    // ceiling (CHAT_RATE_MAX × CHAT_MAX_INSTANCES) rather than a per-instance
+    // suggestion. Two is plenty for a chat bubble on a marketing site.
+    maxInstances: CHAT_MAX_INSTANCES,
+    enforceAppCheck: CHAT_ENFORCE_APP_CHECK,
+}, async (request) => {
+    const message = String(request.data?.message || "").trim();
+    if (!message) {
+        throw new HttpsError("invalid-argument", "No message provided.");
+    }
+    if (message.length > CHAT_MAX_CHARS) {
+        throw new HttpsError("invalid-argument", "Message too long.");
+    }
+
+    // Signed-in callers are keyed on uid; everyone else on IP.
+    const rateKey = request.auth?.uid || request.rawRequest?.ip || "anon";
+    if (chatRateLimited(rateKey)) {
+        throw new HttpsError("resource-exhausted", "Too many messages just now — please wait a moment.");
+    }
+
+    // Visibility for the App Check rollout: shows whether real traffic is
+    // carrying tokens yet, so enforcement can be switched on from evidence
+    // rather than hope. Remove once CHAT_ENFORCE_APP_CHECK is true.
+    if (!CHAT_ENFORCE_APP_CHECK) {
+        console.log("siteChat: appCheckToken present =", !!request.app);
+    }
+
+    // The hard money guarantee. Checked before the model is constructed, so a
+    // spent budget costs nothing beyond one Firestore transaction.
+    if (!(await reserveChatBudget())) {
+        console.warn("siteChat: daily cap reached, refusing without calling Gemini");
+        return {
+            reply: `I have answered as many questions as I can today. The team is on WhatsApp and always happy to help: ${WHATSAPP_URL}`,
+            exhausted: true,
+        };
+    }
+
+    // ── Account context, derived from the verified token only ──
+    // Signed-out visitors are the common case on the marketing pages; the model
+    // is instructed to ask them to sign in rather than guess at order status.
+    let accountContext = "The visitor is NOT signed in. You have no account information for them.";
+    const uid = request.auth?.uid;
+    if (uid) {
+        try {
+            const snap = await db.collection("users").doc(uid).get();
+            const u = snap.exists ? snap.data() : null;
+            if (u) {
+                const courses = Array.isArray(u.purchasedCourses) ? u.purchasedCourses : [];
+                const membershipUntil = u.membershipUntil?.toDate ? u.membershipUntil.toDate() : null;
+                const membershipLive = !!membershipUntil && membershipUntil.getTime() > Date.now();
+                accountContext = [
+                    `The visitor IS signed in as ${u.email || "(no email on file)"}.`,
+                    `Courses they have access to: ${courses.length ? courses.join(", ") : "none yet"}.`,
+                    `Mind Gym membership: ${membershipLive ? `active until ${membershipUntil.toDateString()}` : "not active"}.`,
+                ].join(" ");
+            } else {
+                accountContext = "The visitor is signed in but has no profile record yet.";
+            }
+        } catch (err) {
+            console.error("siteChat: account lookup failed", err);
+            accountContext = "The visitor is signed in, but their account could not be read just now. Offer WhatsApp for anything account-related.";
+        }
+    }
+
+    // ── History, sanitised. Roles are forced to the two Gemini accepts, and the
+    // turn count is capped here rather than trusting whatever the client sends.
+    const rawHistory = Array.isArray(request.data?.history) ? request.data.history : [];
+    const history = rawHistory
+        .slice(-CHAT_MAX_TURNS)
+        .filter((m) => m && typeof m.text === "string" && m.text.trim())
+        .map((m) => ({
+            role: m.role === "assistant" || m.role === "model" ? "model" : "user",
+            parts: [{ text: String(m.text).slice(0, CHAT_MAX_CHARS) }],
+        }));
+    // Gemini rejects a history that opens on a model turn (e.g. our greeting).
+    while (history.length && history[0].role === "model") history.shift();
+
+    try {
+        const genAI = new GoogleGenerativeAI(geminiKey.value());
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash",
+            systemInstruction: `${SYSTEM_INSTRUCTION}\n\n# ACCOUNT CONTEXT\n${accountContext}`,
+        });
+
+        const chat = model.startChat({
+            history,
+            generationConfig: { temperature: 0.6, maxOutputTokens: 500 },
+        });
+
+        const result = await chat.sendMessage(message);
+        const reply = result.response.text().trim();
+
+        // Fire-and-forget: what people ask is the most useful signal this thing
+        // produces. Never let a logging failure break the reply.
+        db.collection("chat_logs").add({
+            uid: uid || null,
+            page: String(request.data?.page || "").slice(0, 200),
+            message: message.slice(0, CHAT_MAX_CHARS),
+            reply: reply.slice(0, 2000),
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        }).catch((err) => console.error("siteChat: log write failed", err));
+
+        return { reply };
+    } catch (error) {
+        console.error("siteChat: Gemini error", error);
+        // A dead assistant should still route the visitor somewhere useful.
+        return {
+            reply: `I'm having trouble reaching my notes just now. For anything urgent the team answers on WhatsApp: ${WHATSAPP_URL}`,
+            degraded: true,
+        };
+    }
+});
+
 exports.pingDaily = onRequest((req, res) => res.send("Zen Ping Successful"));
 
 exports.testEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, async (req, res) => {

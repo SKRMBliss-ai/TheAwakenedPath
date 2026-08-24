@@ -27,8 +27,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # VITE_ vars are baked into the bundle at build time, so the App Check
+      # site key has to be present HERE — setting it in Firebase or at runtime
+      # does nothing. Until the repository variable exists this is empty, which
+      # is the current behaviour: src/firebase.ts skips App Check entirely.
+      #
+      # A repository *variable*, not a secret: the site key ships inside the
+      # JavaScript bundle by design and is public. The matching secret key is
+      # the private half, and that one lives in the Firebase console.
       - name: Build
         run: npm run build:seo
+        env:
+          VITE_APPCHECK_SITE_KEY: ${{ vars.APPCHECK_SITE_KEY }}
 
       - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
