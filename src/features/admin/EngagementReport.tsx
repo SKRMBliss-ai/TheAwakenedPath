@@ -319,22 +319,19 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-                    {/* Backdrop */}
+                // Full-page panel, not a centered popup: the parent
+                // (UntetheredSoulApp) already hides the rest of the dashboard
+                // and renders this "inline, replacing main content" — it was
+                // only ever LOOKING like a floating dialog because this
+                // component insisted on its own dark backdrop + a width-capped,
+                // vertically-centered card on top of that. Now it just fills
+                // the space the parent already cleared for it.
+                <div className="fixed inset-0 z-[1000] bg-[var(--bg-primary)]">
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                    />
-
-                    {/* Modal Content */}
-                    <motion.div
-                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-3xl max-h-[90vh] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[24px] shadow-[0_32px_128px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 12 }}
+                        className="w-full h-full bg-[var(--bg-surface)] flex flex-col"
                     >
                         {/* Header */}
                         <div className="p-8 border-b border-[#2A2A2A] flex justify-between items-start">
