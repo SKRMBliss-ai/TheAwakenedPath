@@ -119,17 +119,35 @@ service cloud.firestore {
 
     match /waitlist/{entryId} {
       // Anonymous email captures from marketing landing pages (/aboutmindgym,
-      // /feelingsandemotioncourse). Strict shape validation prevents abuse and
-      // unbounded writes. Must match the exact fields the app actually sends —
-      // 'mailingList' and 'type' were added to app code but never allow-listed
-      // here, which silently broke every waitlist signup (permission-denied).
-      allow create: if request.resource.data.keys().hasOnly(['email', 'source', 'userAgent', 'createdAt', 'mailingList', 'type'])
+      // /feelingsandemotioncourse) AND the Kids Challenge registration form
+      // (/kidschallenge/register) share this one collection — the same trigger,
+      // notifyAdminOnKidsRegistration in functions/index.js, fires on
+      // waitlist/{docId} and reads parentName/phone/childName/age/timezone/
+      // country/goal/notes for type:'kids_challenge' entries. Strict shape
+      // validation prevents abuse and unbounded writes, but must match the
+      // exact fields the app actually sends: 'mailingList' and 'type' were
+      // added to app code but never allow-listed here once already, which
+      // silently broke every simple waitlist signup (permission-denied) — the
+      // kids-registration fields below repeated that exact mistake a second
+      // time, since the richer form was built without updating this rule.
+      allow create: if request.resource.data.keys().hasOnly([
+          'email', 'source', 'userAgent', 'createdAt', 'mailingList', 'type',
+          'parentName', 'phone', 'country', 'childName', 'age', 'timezone', 'goal', 'notes'
+        ])
         && request.resource.data.email is string
         && request.resource.data.email.size() > 3
         && request.resource.data.email.size() < 200
         && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
         && request.resource.data.source is string
-        && request.resource.data.source.size() < 60;
+        && request.resource.data.source.size() < 60
+        && (!('parentName' in request.resource.data) || (request.resource.data.parentName is string && request.resource.data.parentName.size() < 120))
+        && (!('phone' in request.resource.data) || (request.resource.data.phone is string && request.resource.data.phone.size() < 40))
+        && (!('country' in request.resource.data) || (request.resource.data.country is string && request.resource.data.country.size() < 60))
+        && (!('childName' in request.resource.data) || (request.resource.data.childName is string && request.resource.data.childName.size() < 120))
+        && (!('age' in request.resource.data) || (request.resource.data.age is string && request.resource.data.age.size() < 10))
+        && (!('timezone' in request.resource.data) || (request.resource.data.timezone is string && request.resource.data.timezone.size() < 60))
+        && (!('goal' in request.resource.data) || (request.resource.data.goal is string && request.resource.data.goal.size() < 120))
+        && (!('notes' in request.resource.data) || (request.resource.data.notes is string && request.resource.data.notes.size() < 2000));
       allow read: if isAdmin();
       allow delete: if isAdmin();
     }

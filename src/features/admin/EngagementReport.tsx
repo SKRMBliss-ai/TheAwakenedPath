@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Zap, BookOpen, LayoutGrid, Users, MousePointerClick, FileText, TrendingUp } from 'lucide-react';
+import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, BookOpen, LayoutGrid, Users, MousePointerClick, FileText, TrendingUp } from 'lucide-react';
 import { db, functions } from '../../firebase';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -281,21 +281,30 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         };
     };
 
+    // These only matched 5 exact event names and fell through to a Mail icon
+    // + "EMAIL" label for everything else — which included every PAGE_VISIT_*
+    // event (there are a dozen of them: PAGE_VISIT_HOME, PAGE_VISIT_KIDS_
+    // CHALLENGE, PAGE_VISIT_ABOUT_US...) and every click event (NAV_CLICK,
+    // FOOTER_CLICK, KIDS_HERO_CTA...). None of those are emails; the report
+    // was mislabelling most of its own rows. isPageVisit is the same
+    // prefix check the Overview tab's aggregation already uses.
     const getSourceIcon = (type: string) => {
         if (type === 'LOGIN' || type === 'SESSION_START') return <Monitor className="w-4 h-4 text-[var(--accent-primary)]" />;
         if (type === 'EMAIL_OPEN') return <Eye className="w-4 h-4 text-[var(--accent-primary)]" />;
-        if (type === 'PAGE_VIEW') return <Zap className="w-4 h-4 text-[var(--accent-primary)]" />;
         if (type === 'COURSE_SELECT') return <BookOpen className="w-4 h-4 text-[var(--accent-primary)]" />;
-        return <Mail className="w-4 h-4 text-[#E67E22]" />;
+        if (isPageVisit(type)) return <FileText className="w-4 h-4 text-[var(--accent-primary)]" />;
+        if (type.includes('EMAIL')) return <Mail className="w-4 h-4 text-[#E67E22]" />;
+        return <MousePointerClick className="w-4 h-4 text-[var(--accent-primary)]" />;
     };
 
     const getSourceLabel = (type: string) => {
         if (type === 'LOGIN') return 'SIGN IN';
         if (type === 'SESSION_START') return 'PRESENCE';
         if (type === 'EMAIL_OPEN') return 'OPENED';
-        if (type === 'PAGE_VIEW') return 'NAVIGATED';
         if (type === 'COURSE_SELECT') return 'CHAPTER';
-        return 'EMAIL';
+        if (isPageVisit(type)) return 'VISIT';
+        if (type.includes('EMAIL')) return 'EMAIL';
+        return 'CLICK';
     };
 
     return (
