@@ -22,28 +22,49 @@ export const KIDS_BLURB =
 export interface KidsDay {
   day: string;
   title: string;
-  detail: string;
-  body: string;
+  bullets: string[];
+  practice: string;
+  theme: 'pink' | 'blue' | 'green';
 }
 
 export const KIDS_DAYS: KidsDay[] = [
   {
-    day: 'Friday',
+    day: 'DAY 1 – FRIDAY',
     title: 'Meet Yourself',
-    detail: 'Feelings · thoughts · choices · the Best Every Day chart',
-    body: 'Explore feelings, thoughts, words and actions — and how our choices connect with what happens inside us.',
+    bullets: [
+      'What are feelings?',
+      'Thoughts, words & actions',
+      'The 7 choices of the chart',
+      'Make one conscious choice',
+    ],
+    practice: 'Make one conscious choice each day.',
+    theme: 'pink',
   },
   {
-    day: 'Saturday',
+    day: 'DAY 2 – SATURDAY',
     title: 'Understand Yourself',
-    detail: 'Emotions · everyday situations · pausing · choosing a response',
-    body: 'Recognise emotions, pause before reacting, and practise kinder, wiser responses to everyday moments.',
+    bullets: [
+      'Recognise different feelings',
+      'What happens inside me?',
+      'How thoughts influence feelings',
+      'Pause before reacting',
+      'Choose a better response',
+    ],
+    practice: 'Notice one feeling, what caused it & what choice you made.',
+    theme: 'blue',
   },
   {
-    day: 'Sunday',
+    day: 'DAY 3 – SUNDAY',
     title: 'Grow Yourself',
-    detail: 'Reflection · learning · gratitude · next-week goal · celebration',
-    body: 'Look back, celebrate effort, learn from the hard moments and choose one small goal for the week ahead.',
+    bullets: [
+      'Look back & learn',
+      'What made me proud?',
+      'What was difficult?',
+      'What can I try next time?',
+      'My goal for the coming week',
+    ],
+    practice: 'One small goal for the week ahead.',
+    theme: 'green',
   },
 ];
 

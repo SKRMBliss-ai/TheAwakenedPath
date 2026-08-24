@@ -81,6 +81,62 @@ function SectionTitle({ palette, kicker, title, sub }: { palette: Palette; kicke
   );
 }
 
+function SessionScheduleBadge({ palette, isDark }: { palette: Palette, isDark: boolean }) {
+  const border = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const cardBg = isDark ? 'rgba(255,255,255,0.03)' : '#FFFDF9';
+
+  return (
+    <div style={{
+      background: cardBg,
+      border: `1px solid ${border}`,
+      borderRadius: 16,
+      padding: '20px 24px',
+      fontFamily: SANS,
+      color: palette.INK,
+      boxShadow: isDark ? '0 12px 24px rgba(0,0,0,0.2)' : '0 12px 24px rgba(60,40,30,0.05)',
+      width: '100%',
+      maxWidth: 380,
+      margin: '0 auto',
+      position: 'relative',
+      zIndex: 10,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <Calendar size={32} color="#FF4B72" />
+        <div>
+          <h4 style={{ margin: 0, fontSize: 18, color: palette.PURPLE_STRONG, fontWeight: 700 }}>Session Schedule</h4>
+          <p style={{ margin: 0, fontSize: 13, color: palette.PURPLE_STRONG, fontWeight: 600 }}>Every Friday · Saturday · Sunday</p>
+        </div>
+      </div>
+      
+      <div style={{
+        background: palette.PURPLE_STRONG,
+        color: palette.ON_ACCENT,
+        borderRadius: 999,
+        padding: '6px 12px',
+        textAlign: 'center',
+        fontWeight: 800,
+        fontSize: 16,
+        marginBottom: 16,
+      }}>
+        4:00 PM UK Time
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13.5, fontWeight: 600, color: palette.PURPLE_STRONG }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>🇮🇳 India (IST)</span><span>8:30 PM</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>🇺🇸 USA – New York (ET)</span><span>11:00 AM</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>🇺🇸 USA – Chicago (CT)</span><span>10:00 AM</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>🇺🇸 USA – Denver (MT)</span><span>9:00 AM</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>🇺🇸 USA – Los Angeles (PT)</span><span>8:00 AM</span></div>
+      </div>
+
+      <p style={{ margin: '16px 0 0', fontSize: 11, textAlign: 'center', color: palette.INK2, opacity: 0.8, lineHeight: 1.4, fontWeight: 500 }}>
+        *Time may change with Daylight Saving.<br/>
+        Please check your local time at registration.
+      </p>
+    </div>
+  );
+}
+
 export default function KidsChallenge() {
   const { palette, toggle: toggleTheme } = useSiteTheme();
   const isDark = palette.isDark;
@@ -349,6 +405,11 @@ export default function KidsChallenge() {
             </div>
           </div>
         </div>
+        
+        {/* Render the new Session Schedule badge under the hero */}
+        <div style={{ marginTop: 40 }}>
+          <SessionScheduleBadge palette={palette} isDark={isDark} />
+        </div>
       </header>
 
       <div style={{ padding: '0 24px', position: 'relative', zIndex: 2 }}><div className="si-divider" /></div>
@@ -361,80 +422,90 @@ export default function KidsChallenge() {
           'Three short, interactive sessions built around real-life situations children already recognise — short enough to hold attention, meaningful enough to start a habit.',
         )}
 
-        <div className="si-kids-grid-3" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
-          {KIDS_DAYS.map((d, i) => (
-            <article key={d.day} style={{
-              background: cardBg, border: `1px solid ${border}`, borderRadius: 28,
-              padding: 'clamp(28px, 4vw, 36px)',
-              position: 'relative', overflow: 'hidden',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              cursor: 'default',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-6px)';
-              e.currentTarget.style.boxShadow = isDark ? '0 16px 40px rgba(0,0,0,0.3)' : '0 16px 40px rgba(60,40,30,0.12)';
-              e.currentTarget.style.borderColor = palette.PURPLE_STRONG;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-              e.currentTarget.style.borderColor = border;
-            }}
-            >
-              {/* Top accent border on hover */}
-              <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                background: ['linear-gradient(90deg, ' + palette.PURPLE_STRONG + ', ' + palette.BROWN + ')',
-                           'linear-gradient(90deg, ' + palette.BROWN + ', ' + palette.PURPLE_STRONG + ')',
-                           'linear-gradient(90deg, ' + palette.PURPLE_STRONG + ', ' + palette.BROWN + ')'][i],
-                opacity: 0,
-                transition: 'opacity 0.3s ease',
-              }}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.opacity = '1'; }}
-              onMouseLeave={(e) => { (e.target as HTMLElement).style.opacity = '0'; }}
-              />
-
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 40, height: 40, borderRadius: 999, marginBottom: 18,
-                background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
-                fontFamily: SANS, fontSize: 14, fontWeight: 800,
-                boxShadow: isDark ? '0 4px 12px rgba(83,74,183,0.2)' : '0 4px 12px rgba(83,74,183,0.15)',
-              }}>{i + 1}</span>
-
-              <p style={{
-                fontFamily: SANS, fontSize: 11, fontWeight: 900, letterSpacing: '0.22em',
-                textTransform: 'uppercase', color: palette.BROWN, margin: '0 0 10px',
-              }}>{d.day}</p>
-
-              <h3 style={{
-                fontFamily: SERIF, fontSize: 28, fontWeight: 400, color: palette.INK, margin: '0 0 14px', lineHeight: 1.2,
-              }}>{d.title}</h3>
-
-              <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: palette.INK2, margin: '0 0 18px' }}>
-                {d.body}
-              </p>
-
-              <p style={{
-                fontFamily: SANS, fontSize: 12.5, lineHeight: 1.65, color: palette.INK2,
-                opacity: 0.75, margin: 0, paddingTop: 16, borderTop: `1px solid ${border}`,
-              }}>
-                {d.detail}
-              </p>
-            </article>
-          ))}
-        </div>
-
-        <div style={{
-          maxWidth: 1100, margin: '24px auto 0',
-          background: cardBg, border: `1px solid ${border}`, borderRadius: 20,
-          padding: '18px 24px', textAlign: 'center',
-          fontFamily: SANS, fontSize: 14, fontWeight: 600, color: palette.INK,
+        <div className="si-kids-grid-4" style={{ 
+          maxWidth: 1240, margin: '0 auto', 
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 
         }}>
-          <strong>{KIDS_TIME}</strong> each day.{' '}
-          <span style={{ color: palette.INK2, fontWeight: 500 }}>
-            Please check your own local time when you register — UK and US daylight saving can shift the conversion.
-          </span>
+          {KIDS_DAYS.map((d) => {
+            const themeColor = d.theme === 'pink' ? '#FF4B72' : d.theme === 'blue' ? '#2563EB' : '#16A34A';
+            return (
+              <article key={d.day} style={{
+                background: cardBg, border: `1px solid ${border}`, borderRadius: 28,
+                padding: '24px 20px',
+                position: 'relative', overflow: 'hidden',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'default',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = isDark ? '0 16px 40px rgba(0,0,0,0.3)' : '0 16px 40px rgba(60,40,30,0.12)';
+                e.currentTarget.style.borderColor = themeColor;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.borderColor = border;
+              }}
+              >
+                <div style={{
+                  background: themeColor, color: '#FFF',
+                  padding: '4px 16px', borderRadius: 999,
+                  fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.05em',
+                  margin: '0 auto 16px', display: 'table',
+                }}>
+                  {d.day}
+                </div>
+                
+                <h3 style={{
+                  fontFamily: SERIF, fontSize: 24, fontWeight: 700, color: palette.PURPLE_STRONG, margin: '0 0 16px', lineHeight: 1.2,
+                  display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center'
+                }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                  {d.title}
+                </h3>
+
+                <ul style={{ paddingLeft: 24, margin: '0 0 20px', fontFamily: SANS, fontSize: 14, color: palette.INK2, lineHeight: 1.6, fontWeight: 500 }}>
+                  {d.bullets.map((b, idx) => <li key={idx} style={{ marginBottom: 6 }}>{b}</li>)}
+                </ul>
+
+                <p style={{
+                  fontFamily: SANS, fontSize: 13, lineHeight: 1.5, color: themeColor,
+                  fontWeight: 600, margin: 0,
+                }}>
+                  Take-home practice:<br/>
+                  {d.practice}
+                </p>
+              </article>
+            );
+          })}
+
+          {/* 4th Card: Every Child Receives */}
+          <article style={{
+            background: isDark ? 'rgba(83,74,183,0.1)' : '#F9F5FF', border: `1px solid ${palette.PURPLE_STRONG}`, borderRadius: 28,
+            padding: '24px 20px',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <h3 style={{
+              fontFamily: SERIF, fontSize: 24, fontWeight: 700, color: palette.PURPLE_STRONG, margin: '0 0 16px', lineHeight: 1.2,
+              display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center'
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={palette.PURPLE_STRONG} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2"/><path d="M12 5v17"/><path d="M19 8A5 5 0 0 0 12 5a5 5 0 0 0-7 3"/></svg>
+              Every Child<br/>Receives
+            </h3>
+
+            <ul style={{ padding: 0, margin: '0 0 16px', listStyle: 'none' }}>
+              {KIDS_INCLUDES.map((item, i) => (
+                <li key={i} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                  fontFamily: SANS, fontSize: 14, color: palette.PURPLE_STRONG, fontWeight: 600, lineHeight: 1.4,
+                  marginBottom: 12
+                }}>
+                  <div style={{ flexShrink: 0, marginTop: 2 }}><Check color="#FF4B72" /></div>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </article>
         </div>
       </section>
 

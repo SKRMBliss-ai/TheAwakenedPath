@@ -5,7 +5,7 @@ import AboutJournal from './features/landing/AboutJournal'
 import EmotionalHealthCheck from './features/landing/EmotionalHealthCheck'
 import EmotionFeelingsCourse from './features/landing/EmotionFeelingsCourse'
 import KidsChallenge from './features/landing/KidsChallenge'
-import KidsChallengeFlyer from './features/landing/KidsChallengeFlyer';
+
 import KidsChallengeRegister from './features/landing/KidsChallengeRegister';
 import Policies from './features/landing/Policies'
 import AboutUs from './features/landing/AboutUs'
@@ -152,11 +152,7 @@ const isKidsChallengeRegisterRoute = (() => {
   return p === '/tiny-kids-transformations/register' || p === '/tiny-kids-transformations/register/index.html';
 })();
 
-const isKidsChallengeFlyerRoute = (() => {
-  if (typeof window === 'undefined') return false;
-  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  return p === '/tiny-kids-transformations/flyer' || p === '/tiny-kids-transformations/flyer/index.html';
-})();
+
 
 const isKidsChallengeRoute = (() => {
   if (typeof window === 'undefined') return false;
@@ -290,12 +286,7 @@ if (isPracticePreviewRoute) {
       <SocialFab />
     </ErrorBoundary>,
   );
-} else if (isKidsChallengeFlyerRoute) {
-  root.render(
-    <ErrorBoundary featureName="KidsChallengeFlyer">
-      <KidsChallengeFlyer />
-    </ErrorBoundary>,
-  );
+
 } else if (isKidsChallengeRoute) {
   root.render(
     <ErrorBoundary featureName="KidsChallenge">

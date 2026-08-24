@@ -28,7 +28,6 @@ const ROUTES = [
   '/feelingsandemotioncourse',
   '/tiny-kids-transformations',
   '/tiny-kids-transformations/register',
-  '/tiny-kids-transformations/flyer',
   '/knowyouremotionalhealth',
   '/aboutmindgym',
   '/policies',
