@@ -12,15 +12,21 @@
  * competing for the same job.
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
+import { X, Send } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../firebase';
 import { useSiteTheme } from '../../lib/siteTheme';
+import { KIDS_TEACHER_IMG } from '../landing/kidsChallengeData';
 
 const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
 
 const WHATSAPP_URL = 'https://wa.me/918217581238';
+/** Sim's face, reused from the kids-challenge data so there is one source for
+ *  the portrait. Named "assistant" rather than "Sim" throughout: it is an
+ *  assistant standing in for her, and implying she is personally typing would
+ *  be a small lie to every visitor. */
 const ASSISTANT_NAME = 'Sim’s Assistant';
+const ASSISTANT_AVATAR = KIDS_TEACHER_IMG;
 
 /** Kept to the last 12 turns — the callable caps this again server-side. */
 const MAX_HISTORY = 12;
@@ -63,9 +69,37 @@ function renderWithLinks(text: string, linkColor: string) {
   });
 }
 
+/**
+ * Where the launcher sits, given that SocialFab owns the same corner.
+ *
+ * SocialFab rests at bottom:24 but lifts to 88 on mobile app routes to clear
+ * Mind Gym's bottom nav. The chat launcher stacks above it either way, so the
+ * two never overlap — mirroring SocialFab's own rule rather than hard-coding a
+ * second one that could drift away from it.
+ */
+function useLauncherBottom() {
+  const compute = () => {
+    if (typeof window === 'undefined') return 92;
+    const isMobile = window.innerWidth < 1024;
+    const p = window.location.pathname;
+    const isAppRoute = p.startsWith('/mindgym') || p === '/app';
+    // SocialFab: 88 raised / 24 resting, 56 tall, plus a 12 gap.
+    return isMobile && isAppRoute ? 156 : 92;
+  };
+
+  const [bottom, setBottom] = useState(compute);
+  useEffect(() => {
+    const onResize = () => setBottom(compute());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return bottom;
+}
+
 export default function SiteChatWidget() {
   const { palette } = useSiteTheme();
   const isDark = palette.isDark;
+  const launcherBottom = useLauncherBottom();
 
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([GREETING]);
@@ -139,20 +173,34 @@ export default function SiteChatWidget() {
           aria-label="Open chat with the studio assistant"
           className="si-chat-fab"
           style={{
-            position: 'fixed', right: 24, bottom: 92, zIndex: 129,
-            display: 'flex', alignItems: 'center', gap: 9,
-            padding: '13px 20px', borderRadius: 999, border: 'none', cursor: 'pointer',
+            position: 'fixed', right: 24, bottom: launcherBottom, zIndex: 129,
+            display: 'flex', alignItems: 'center',
+            padding: 7, borderRadius: 999, border: 'none', cursor: 'pointer',
             background: 'linear-gradient(135deg, #4A3260 0%, #2A1E40 100%)',
             color: '#FFF6E4',
             fontFamily: SANS, fontSize: 13.5, fontWeight: 700,
             boxShadow: '0 12px 34px -8px rgba(42,30,64,0.7)',
-            transition: 'transform .2s ease, box-shadow .2s ease',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
         >
-          <MessageCircle size={19} />
-          <span className="si-chat-fab-label">Ask us anything</span>
+          <span className="si-chat-fab-avatar" style={{ position: 'relative', flexShrink: 0, display: 'flex' }}>
+            <img
+              src={ASSISTANT_AVATAR}
+              alt=""
+              loading="lazy"
+              style={{
+                width: 40, height: 40, borderRadius: '50%', objectFit: 'cover',
+                objectPosition: 'center 20%', display: 'block',
+                border: '2px solid rgba(255,223,158,0.55)',
+              }}
+            />
+            {/* Presence dot, matching the panel header's "online" cue. */}
+            <span aria-hidden="true" style={{
+              position: 'absolute', right: -1, bottom: -1,
+              width: 11, height: 11, borderRadius: '50%',
+              background: '#4ADE80', border: '2px solid #2A1E40',
+            }} />
+          </span>
+          <span className="si-chat-fab-label">Talk to me</span>
         </button>
       )}
 
@@ -181,14 +229,16 @@ export default function SiteChatWidget() {
             background: 'linear-gradient(135deg, #4A3260 0%, #2A1E40 100%)',
             flexShrink: 0,
           }}>
-            <span style={{
-              width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-              display: 'grid', placeItems: 'center',
-              background: 'rgba(255,255,255,0.16)',
-              border: '1px solid rgba(255,255,255,0.28)',
-            }}>
-              <Sparkles size={18} color="#FFDF9E" />
-            </span>
+            <img
+              src={ASSISTANT_AVATAR}
+              alt=""
+              loading="lazy"
+              style={{
+                width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                objectFit: 'cover', objectPosition: 'center 20%', display: 'block',
+                border: '2px solid rgba(255,223,158,0.5)',
+              }}
+            />
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{
                 display: 'block', fontFamily: SANS, fontSize: 14.5, fontWeight: 700, color: '#FFF6E4',
@@ -355,10 +405,41 @@ export default function SiteChatWidget() {
           0%, 60%, 100% { opacity: .3; transform: translateY(0); }
           30%           { opacity: 1;  transform: translateY(-3px); }
         }
+
+        /* The launcher rests as just her face and grows a label on hover —
+           the same behaviour as the knowledge dock on the other corner, so the
+           two floating controls feel like one system. Animating max-width (not
+           width) keeps the label's natural size the target, so the text never
+           needs a hard-coded pixel width. */
+        .si-chat-fab {
+          transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .si-chat-fab:hover,
+        .si-chat-fab:focus-visible {
+          transform: translateY(-2px);
+        }
+        .si-chat-fab-label {
+          max-width: 0;
+          overflow: hidden;
+          white-space: nowrap;
+          opacity: 0;
+          transition: max-width .32s cubic-bezier(0.2,0.8,0.2,1), opacity .22s ease, margin-left .32s cubic-bezier(0.2,0.8,0.2,1);
+        }
+        .si-chat-fab:hover .si-chat-fab-label,
+        .si-chat-fab:focus-visible .si-chat-fab-label {
+          max-width: 160px;
+          opacity: 1;
+          margin-left: 10px;
+          margin-right: 12px;
+        }
         /* Under 520px the launcher label costs more than it earns, and the
            panel should use the full width rather than float in the corner. */
         @media (max-width: 520px) {
-          .si-chat-fab { right: 16px !important; bottom: 84px !important; padding: 14px !important; }
+          /* Only the inset is nudged here. The bottom offset is computed in JS
+             so the Mind Gym nav-bar lift is not clobbered by an !important. */
+          .si-chat-fab { right: 16px !important; }
+          /* No hover on touch, so the label would never appear — and a tap
+             should open the panel, not reveal a word. */
           .si-chat-fab-label { display: none; }
           .si-chat-panel {
             right: 8px !important; left: 8px !important; bottom: 8px !important;
@@ -369,7 +450,7 @@ export default function SiteChatWidget() {
           }
         }
         @media (prefers-reduced-motion: reduce) {
-          .si-chat-fab { transition: none !important; }
+          .si-chat-fab, .si-chat-fab-label { transition: none !important; }
           @keyframes si-chat-dot { 0%, 100% { opacity: .5; transform: none; } }
         }
       `}</style>
