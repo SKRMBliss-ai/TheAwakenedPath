@@ -5,6 +5,7 @@ import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { ARTICLES_REGISTRY, GLOSSARY_REGISTRY, VIDEO_REGISTRY, TOPIC_HUBS } from './data/contentEngineData';
+import { usePageView } from '../../lib/analytics';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
@@ -46,6 +47,8 @@ export default function MasterKnowledgeHub() {
       },
     },
   });
+
+  usePageView('PAGE_VISIT_KNOWLEDGE_HUB');
 
   return (
     <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>

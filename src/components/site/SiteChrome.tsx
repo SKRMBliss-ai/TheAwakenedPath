@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Palette } from '../../lib/siteTheme';
+import { trackNavClick, trackFooterClick } from '../../lib/analytics';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SiteChrome — the one header and footer used by every public surface:
@@ -103,6 +104,7 @@ function NavDropdown({ link, palette }: { link: NavLink; palette: Palette }) {
               key={sub.label}
               href={sub.href}
               onClick={() => {
+                trackNavClick(sub.label, sub.href);
                 sub.onClick?.();
                 setOpen(false);
               }}
@@ -241,7 +243,7 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
               <a
                 key={l.label}
                 href={l.href}
-                onClick={l.onClick}
+                onClick={() => { trackNavClick(l.label, l.href); l.onClick?.(); }}
                 className={`si-nav${l.secondary ? ' si-hide-sm' : ''}`}
                 style={{
                   color: palette.INK2,
@@ -263,7 +265,7 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
           {cta && (
             <a
               href={cta.href}
-              onClick={cta.onClick}
+              onClick={() => { trackNavClick(`CTA: ${cta.label}`, cta.href); cta.onClick?.(); }}
               className="si-hide-sm"
               style={{
                 background: palette.PURPLE_STRONG, color: palette.isDark ? '#15120F' : '#fff',
@@ -307,7 +309,7 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
                   <a
                     key={sub.label}
                     href={sub.href}
-                    onClick={() => { sub.onClick?.(); setOpen(false); }}
+                    onClick={() => { trackNavClick(sub.label, sub.href); sub.onClick?.(); setOpen(false); }}
                     style={{
                       display: 'block', padding: '8px 10px', color: palette.INK, textDecoration: 'none',
                       borderRadius: 8, background: palette.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
@@ -323,7 +325,7 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
               <a
                 key={l.label}
                 href={l.href}
-                onClick={() => { l.onClick?.(); setOpen(false); }}
+                onClick={() => { trackNavClick(l.label, l.href); l.onClick?.(); setOpen(false); }}
                 style={{
                   display: 'block', padding: '11px 2px', color: palette.INK, textDecoration: 'none',
                   fontSize: 15, fontWeight: 600, borderBottom: `1px solid ${palette.BORDER}`,
@@ -336,7 +338,7 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
           {cta && (
             <a
               href={cta.href}
-              onClick={() => { cta.onClick?.(); setOpen(false); }}
+              onClick={() => { trackNavClick(`CTA: ${cta.label}`, cta.href); cta.onClick?.(); setOpen(false); }}
               style={{
                 display: 'block', marginTop: 14, textAlign: 'center', background: palette.PURPLE_STRONG,
                 color: palette.isDark ? '#15120F' : '#fff', padding: '13px 18px', borderRadius: 999,
@@ -440,6 +442,7 @@ export function SiteFooter({ palette }: { palette: Palette }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
+                  onClick={() => trackFooterClick(`Social: ${s.label}`, s.url)}
                   style={{
                     width: 34, height: 34, borderRadius: '50%',
                     border: `1px solid ${palette.BORDER}`, color: palette.INK2,
@@ -475,6 +478,7 @@ export function SiteFooter({ palette }: { palette: Palette }) {
                         className="si-foot-link"
                         href={it.href}
                         {...(it.href?.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                        onClick={() => trackFooterClick(it.label, it.href)}
                         style={{
                           color: palette.INK2,
                           textDecoration: 'none',

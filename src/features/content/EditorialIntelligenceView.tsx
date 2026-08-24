@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { ShieldCheck, Lock, LogIn } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
@@ -7,13 +8,14 @@ import { useAuth } from '../auth/AuthContext';
 import { isAdminEmail } from '../../config/admin';
 import { auditAllContentPages } from './services/contentIntelligenceService';
 import { ENTITY_REGISTRY } from './data/entityRegistry';
+import { track } from '../../lib/analytics';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
 
 export default function EditorialIntelligenceView() {
   const { palette, toggle: toggleTheme } = useSiteTheme();
-  const { user, signInWithGoogle } = useAuth();
+  const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const isDark = palette.isDark;
   const ink = isDark ? '#EDE9E3' : '#2A2118';
   const inkSub = isDark ? 'rgba(237,233,227,0.72)' : '#6B5744';
@@ -34,6 +36,20 @@ export default function EditorialIntelligenceView() {
     description: 'Autonomous Content Intelligence Dashboard monitoring topical authority scores, AI citation readiness, entity registries, and quality audits.',
     url: 'https://www.skrmblissai.in/editorial',
   });
+
+  // Not the shared usePageView: auth resolves asynchronously (useAuth starts
+  // with user === null and loading === true), so isAuthorized is briefly
+  // false on the very first render even for an admin who is about to be let
+  // in. usePageView's mount-once effect would have captured that transient
+  // false and mislabelled every real dashboard visit as denied. Waiting for
+  // authLoading to settle before firing (and firing exactly once after that,
+  // via the ref) avoids it.
+  const trackedRef = useRef(false);
+  useEffect(() => {
+    if (authLoading || trackedRef.current) return;
+    trackedRef.current = true;
+    track(isAuthorized ? 'PAGE_VISIT_EDITORIAL_HUB' : 'PAGE_VISIT_EDITORIAL_HUB_DENIED');
+  }, [authLoading, isAuthorized]);
 
   if (!isAuthorized) {
     return (

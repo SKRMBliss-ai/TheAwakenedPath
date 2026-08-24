@@ -5,6 +5,7 @@ import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { VIDEO_REGISTRY, type VideoResource } from './data/contentEngineData';
+import { usePageView } from '../../lib/analytics';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
@@ -58,6 +59,8 @@ export default function ProgrammaticVideoView({ videoId }: Props) {
       ],
     },
   });
+
+  usePageView('PAGE_VISIT_VIDEO', undefined, video.id);
 
   const [timeLeft, setTimeLeft] = useState<number>(60);
   const [isPreviewEnded, setIsPreviewEnded] = useState<boolean>(false);

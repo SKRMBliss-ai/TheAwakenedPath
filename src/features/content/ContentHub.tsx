@@ -4,6 +4,7 @@ import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { ARTICLES_REGISTRY } from './data/contentEngineData';
+import { usePageView } from '../../lib/analytics';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
@@ -42,6 +43,8 @@ export default function ContentHub() {
       },
     },
   });
+
+  usePageView('PAGE_VISIT_GUIDES_HUB');
 
   return (
     <div style={{ background: bg, color: ink, fontFamily: SANS, minHeight: '100vh', position: 'relative' }}>

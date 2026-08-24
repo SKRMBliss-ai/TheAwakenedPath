@@ -1,14 +1,10 @@
-import { useEffect } from 'react';
 import { Sparkles, Clock, ArrowRight, ChevronRight, HelpCircle, Compass } from 'lucide-react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { auth } from '../../firebase';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { ARTICLES_REGISTRY, type ContentArticle } from './data/contentEngineData';
-import { BLOCK_ANALYTICS_EMAILS, IGNORED_EMAILS } from '../../config/admin';
+import { usePageView } from '../../lib/analytics';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
@@ -33,29 +29,14 @@ export default function ProgrammaticContentView({ slug }: Props) {
 
   const article: ContentArticle | undefined = ARTICLES_REGISTRY[slug] || ARTICLES_REGISTRY['feelings-vs-emotions'];
 
-  useEffect(() => {
-    // Skip tracking for team / admin members so internal visits
-    // don't inflate the Page Visits counter in the Engagement Report.
-    const currentEmail = (auth.currentUser?.email ?? '').toLowerCase();
-    const isTeamVisit =
-      BLOCK_ANALYTICS_EMAILS.includes(currentEmail) ||
-      IGNORED_EMAILS.includes(currentEmail) ||
-      currentEmail.includes('skrm') ||
-      currentEmail.includes('shruti') ||
-      currentEmail.includes('simk');
-    if (isTeamVisit) return;
-
-    try {
-      addDoc(collection(db, 'activity_logs'), {
-        eventType: 'PAGE_VISIT_GUIDE',
-        details: article.slug,
-        path: window.location.pathname,
-        timestamp: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error('[GuideView] Failed to log page visit:', error);
-    }
-  }, [article.slug]);
+  // Was a bespoke addDoc here writing {eventType, path} — a different shape
+  // from every other tracker in the app (which write {activityType, location}
+  // via logWebActivity), so the report couldn't display these visits at all:
+  // it reads log.activityType and log.location, both undefined on these docs.
+  // The team-skip behaviour is preserved — it's now shouldBlockAnalytics
+  // inside track() itself, the same check Clarity already uses, rather than
+  // a local skrm/shruti/simk substring match reimplemented per page.
+  usePageView('PAGE_VISIT_GUIDE', undefined, article.slug);
 
   // SEO & Schema Setup
   usePageSeo({
