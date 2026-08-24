@@ -1659,7 +1659,84 @@ exports.razorpayWebhook = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret
     res.json({ status: "ok" });
 });
 
-exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
+/* ===========================================================================
+ * Shared AI cost controls
+ *
+ * textToSpeech, witnessPresence, getGrounding, getDailyMeditation and
+ * analyzeEmotion below all take free-text input from an unauthenticated
+ * onRequest endpoint and hand it straight to a billed API — five more doors to
+ * the same exposure siteChat had. textToSpeech is the sharpest one: it calls
+ * Cloud Text-to-Speech's Journey/neural voices on top of Gemini, and neural
+ * TTS billing does not have siteChat's forgiving free tier.
+ *
+ * Same fix, generalised: a per-caller in-memory burst limit plus a hard daily
+ * cap per endpoint, counted in Firestore and checked before the billed call is
+ * made. See reserveChatBudget's comment above for why each layer exists and
+ * what the design accepts — everything there applies here unchanged.
+ * =========================================================================== */
+const AI_RATE_WINDOW_MS = 60_000;
+const AI_RATE_MAX = 12;         // per caller, per endpoint, per minute, per instance
+const AI_DAILY_CAPS = {
+    textToSpeech: 150,       // sharpest cost: Gemini script + neural TTS synthesis
+    witnessPresence: 300,
+    getGrounding: 300,
+    getDailyMeditation: 150, // one call can be reused by every visitor that day — see below
+    analyzeEmotion: 500,     // cheapest per call (one word out), used most often
+};
+const aiHits = new Map(); // "endpoint:key" -> number[] of request timestamps
+
+function aiRateLimited(endpoint, key) {
+    const mapKey = `${endpoint}:${key}`;
+    const now = Date.now();
+    const hits = (aiHits.get(mapKey) || []).filter((t) => now - t < AI_RATE_WINDOW_MS);
+    hits.push(now);
+    aiHits.set(mapKey, hits);
+    if (aiHits.size > 5000) {
+        for (const [k, v] of aiHits) {
+            if (!v.length || now - v[v.length - 1] > AI_RATE_WINDOW_MS) aiHits.delete(k);
+        }
+    }
+    return hits.length > AI_RATE_MAX;
+}
+
+/**
+ * Reserve one unit of today's budget for `endpoint`. Returns false once that
+ * endpoint's daily cap is spent. Each endpoint gets its own counter (and its
+ * own Firestore doc) so one noisy caller on analyzeEmotion cannot starve
+ * getDailyMeditation of its separate budget.
+ */
+async function reserveAiBudget(endpoint) {
+    const cap = AI_DAILY_CAPS[endpoint];
+    const day = new Date().toISOString().slice(0, 10); // UTC YYYY-MM-DD
+    const ref = db.collection("system").doc(`aiBudget_${endpoint}`);
+    try {
+        return await db.runTransaction(async (tx) => {
+            const snap = await tx.get(ref);
+            const data = snap.exists ? snap.data() : null;
+            const count = data && data.day === day ? (data.count || 0) : 0;
+            if (count >= cap) return false;
+            tx.set(ref, { day, count: count + 1, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+            return true;
+        });
+    } catch (err) {
+        console.error(`${endpoint}: budget check failed, refusing the call`, err);
+        return false; // fail closed — see reserveChatBudget's comment
+    }
+}
+
+/** IP fallback key for onRequest endpoints, which have no request.auth. */
+function callerKey(req) {
+    return req.ip || req.headers["x-forwarded-for"] || "anon";
+}
+
+exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
+    if (aiRateLimited("textToSpeech", callerKey(req))) {
+        return res.status(429).send("Too many requests — please wait a moment.");
+    }
+    if (!(await reserveAiBudget("textToSpeech"))) {
+        return res.status(503).send("Silence is okay.");
+    }
+
     let { text, promptContext, gender = 'FEMALE', voice = 'Enceladus' } = req.body;
     const apiKey = geminiKey.value();
 
@@ -1724,9 +1801,16 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true }, async (re
     }
 });
 
-exports.witnessPresence = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
+exports.witnessPresence = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
+    if (aiRateLimited("witnessPresence", callerKey(req))) {
+        return res.status(429).send("Too many requests — please wait a moment.");
+    }
+    if (!(await reserveAiBudget("witnessPresence"))) {
+        return res.status(503).send("The Witness is silent.");
+    }
+
     const { thought } = req.body;
-    
+
     if (!thought) {
         console.warn("No thought provided in request.");
         return res.status(400).send("No thought shared.");
@@ -1762,7 +1846,14 @@ exports.witnessPresence = onRequest({ secrets: [geminiKey], cors: true }, async 
     }
 });
 
-exports.getGrounding = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
+exports.getGrounding = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
+    if (aiRateLimited("getGrounding", callerKey(req))) {
+        return res.status(429).send("Too many requests — please wait a moment.");
+    }
+    if (!(await reserveAiBudget("getGrounding"))) {
+        return res.status(503).send("Feel your breath now.");
+    }
+
     const { emotion } = req.body;
 
     try {
@@ -1777,7 +1868,14 @@ exports.getGrounding = onRequest({ secrets: [geminiKey], cors: true }, async (re
         res.status(500).send("Feel your breath now.");
     }
 });
-exports.getDailyMeditation = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
+exports.getDailyMeditation = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
+    if (aiRateLimited("getDailyMeditation", callerKey(req))) {
+        return res.status(429).send("Too many requests — please wait a moment.");
+    }
+    if (!(await reserveAiBudget("getDailyMeditation"))) {
+        return res.status(503).send("Return to silence.");
+    }
+
     const { dayNumber = 1 } = req.body;
 
     try {
@@ -1814,7 +1912,14 @@ exports.getDailyMeditation = onRequest({ secrets: [geminiKey], cors: true }, asy
     }
 });
 
-exports.analyzeEmotion = onRequest({ secrets: [geminiKey], cors: true }, async (req, res) => {
+exports.analyzeEmotion = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
+    if (aiRateLimited("analyzeEmotion", callerKey(req))) {
+        return res.status(429).json({ emotion: "NEUTRAL" });
+    }
+    if (!(await reserveAiBudget("analyzeEmotion"))) {
+        return res.status(503).json({ emotion: "NEUTRAL" });
+    }
+
     const { text } = req.body;
     if (!text) return res.json({ emotion: "NEUTRAL" });
 
@@ -1876,6 +1981,14 @@ const CHAT_MAX_CHARS = 1500;
  *
  * Set CHAT_DAILY_GLOBAL_CAP to sit comfortably inside whatever free tier the
  * Gemini key is on. Verify that limit in the console before raising it.
+ *
+ * The same three layers exist below (search "Shared AI cost controls") for
+ * textToSpeech, witnessPresence, getGrounding, getDailyMeditation and
+ * analyzeEmotion — five more unauthenticated endpoints on the same billed key
+ * that predate siteChat and had no cap at all. That block is deliberately a
+ * separate implementation rather than a shared one: those are onRequest
+ * handlers with no request.auth, siteChat is onCall, and keeping siteChat's
+ * already-verified path untouched was worth the small duplication.
  */
 const CHAT_RATE_WINDOW_MS = 60_000;
 const CHAT_RATE_MAX = 12;          // per caller, per minute, per instance
