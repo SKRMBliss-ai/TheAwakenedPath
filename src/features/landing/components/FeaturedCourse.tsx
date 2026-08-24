@@ -43,36 +43,42 @@ export default function FeaturedCourse({
       className="si-reveal"
       style={{ padding: 'clamp(24px, 4vw, 48px) clamp(24px, 6vw, 96px)', position: 'relative', zIndex: 2 }}
     >
-      <div style={{
-        maxWidth: 1100, margin: '0 auto',
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        borderRadius: 28,
-        overflow: 'hidden',
-        background: '#1E1426',  // deep mauve-purple
-        boxShadow: '0 40px 100px rgba(0,0,0,0.35)',
-        minHeight: 360,
-        position: 'relative',
-      }}>
+      <div
+        className="si-featured-course-grid"
+        style={{
+          maxWidth: 1100, margin: '0 auto',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          borderRadius: 28,
+          overflow: 'hidden',
+          background: '#1E1426',  // deep mauve-purple
+          boxShadow: '0 40px 100px rgba(0,0,0,0.35)',
+          minHeight: 360,
+          position: 'relative',
+        }}
+      >
         {/* Diagonal Corner Badge */}
-        <div style={{
-          position: 'absolute',
-          top: 22,
-          left: -35,
-          transform: 'rotate(-45deg)',
-          background: 'linear-gradient(135deg, #C4913A 0%, #9E7124 100%)',
-          color: '#FFFFFF',
-          fontFamily: SANS,
-          fontSize: 10,
-          fontWeight: 800,
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          padding: '6px 45px',
-          boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
-          zIndex: 10,
-          pointerEvents: 'none',
-          textAlign: 'center',
-        }}>
+        <div
+          className="si-badge-diagonal"
+          style={{
+            position: 'absolute',
+            top: 22,
+            left: -35,
+            transform: 'rotate(-45deg)',
+            background: 'linear-gradient(135deg, #C4913A 0%, #9E7124 100%)',
+            color: '#FFFFFF',
+            fontFamily: SANS,
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            padding: '6px 45px',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
+            zIndex: 10,
+            pointerEvents: 'none',
+            textAlign: 'center',
+          }}
+        >
           For Adults
         </div>
         {/* Left: Course info */}
@@ -149,7 +155,7 @@ export default function FeaturedCourse({
         </div>
 
         {/* Right: Banner image */}
-        <div style={{ position: 'relative', minHeight: 300, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', minHeight: 260, overflow: 'hidden' }}>
           <img
             src={COURSE_IMG}
             alt="Person walking toward a radiant light — representing emotional transformation"
@@ -170,6 +176,22 @@ export default function FeaturedCourse({
           }} />
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 860px) {
+          .si-featured-course-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 580px) {
+          .si-badge-diagonal {
+            font-size: 8.5px !important;
+            padding: 4px 34px !important;
+            top: 16px !important;
+            left: -30px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }

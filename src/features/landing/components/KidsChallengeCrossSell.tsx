@@ -58,24 +58,27 @@ export default function KidsChallengeCrossSell({
         }}
       >
         {/* Diagonal Corner Badge */}
-        <div style={{
-          position: 'absolute',
-          top: 22,
-          left: -35,
-          transform: 'rotate(-45deg)',
-          background: 'linear-gradient(135deg, #783CB4 0%, #4A2860 100%)',
-          color: '#FFFFFF',
-          fontFamily: SANS,
-          fontSize: 10,
-          fontWeight: 800,
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          padding: '6px 45px',
-          boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
-          zIndex: 10,
-          pointerEvents: 'none',
-          textAlign: 'center',
-        }}>
+        <div
+          className="si-badge-diagonal"
+          style={{
+            position: 'absolute',
+            top: 22,
+            left: -35,
+            transform: 'rotate(-45deg)',
+            background: 'linear-gradient(135deg, #783CB4 0%, #4A2860 100%)',
+            color: '#FFFFFF',
+            fontFamily: SANS,
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            padding: '6px 45px',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
+            zIndex: 10,
+            pointerEvents: 'none',
+            textAlign: 'center',
+          }}
+        >
           For Your Kids
         </div>
         {/* ── Left: the pitch ───────────────────────────────────────────── */}
@@ -259,7 +262,15 @@ export default function KidsChallengeCrossSell({
         @media (max-width: 820px) {
           .si-kids-cross { grid-template-columns: 1fr !important; }
           /* Stacked, the panel sits below the pitch, so the seam is horizontal. */
-          .si-kids-cross-panel { border-left: none !important; }
+          .si-kids-cross-panel { border-left: none !important; border-top: 1px solid ${palette.BORDER} !important; }
+        }
+        @media (max-width: 580px) {
+          .si-badge-diagonal {
+            font-size: 8.5px !important;
+            padding: 4px 34px !important;
+            top: 16px !important;
+            left: -30px !important;
+          }
         }
       `}</style>
     </section>

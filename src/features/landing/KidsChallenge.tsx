@@ -1134,6 +1134,7 @@ export default function KidsChallenge() {
         }
         @media (max-width: 520px) {
           .si-hero-glass { gap: 10px !important; padding: 10px 14px !important; font-size: 11.5px !important; }
+          section { padding-left: 16px !important; padding-right: 16px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           article, details, .si-hero-frame, .si-cta-photo, .si-journal-frame { transition: none !important; }
