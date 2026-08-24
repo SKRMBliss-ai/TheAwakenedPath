@@ -7,7 +7,7 @@
  * for exactly these fields in firestore.rules, and the team follows up with
  * Zoom details by email/WhatsApp.
  */
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { usePageSeo } from '../../lib/seo';
@@ -37,6 +37,10 @@ export default function KidsChallengeRegister() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
+  useEffect(() => {
+    trackKids('PAGE_VISIT_KIDS_REGISTER', '/kidschallenge/register');
+  }, []);
+
   const [parentName, setParentName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -63,6 +67,14 @@ export default function KidsChallengeRegister() {
     try {
       await addDoc(collection(db, 'waitlist'), {
         email: email.trim().toLowerCase(),
+        parentName: parentName.trim(),
+        phone: phone.trim(),
+        country: country.trim(),
+        childName: childName.trim(),
+        age: age.trim(),
+        timezone: timezone.trim(),
+        goal: goal,
+        notes: notes.trim(),
         source: 'kids_challenge_registration',
         type: 'kids_challenge',
         mailingList: optInFuture,

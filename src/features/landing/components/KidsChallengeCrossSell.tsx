@@ -132,6 +132,18 @@ export default function KidsChallengeCrossSell({
             >
               See the 3 days
             </a>
+            
+            {/* Kids Challenge QR Code */}
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <img 
+                src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FKidsDiaryCourseQR.png?alt=media" 
+                alt="Scan to Register" 
+                style={{ width: 48, height: 48, borderRadius: 8, border: `1px solid ${palette.BORDER}` }} 
+              />
+              <span style={{ fontSize: 11, color: palette.INK2, fontFamily: SANS, fontWeight: 600, lineHeight: 1.2 }}>
+                Scan to<br/>register
+              </span>
+            </div>
           </div>
         </div>
 

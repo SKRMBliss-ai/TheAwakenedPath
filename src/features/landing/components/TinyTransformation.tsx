@@ -113,6 +113,14 @@ return (
             <MindGymLogo size={48} />
             <p style={{ fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: isDark ? 'rgba(237,233,227,0.5)' : '#7A5F44', margin: 0 }}>5 minutes</p>
             <p style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink, margin: 0 }}>of Mind Gym</p>
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: '#fff', padding: 8, borderRadius: 12 }}>
+              <img 
+                src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FMindGym.png?alt=media" 
+                alt="Mind Gym QR" 
+                style={{ width: 64, height: 64 }} 
+              />
+              <span style={{ fontSize: 10, color: '#1E1426', fontWeight: 600 }}>Scan to start</span>
+            </div>
           </div>
         </div>
 

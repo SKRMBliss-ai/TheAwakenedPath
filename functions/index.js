@@ -1974,6 +1974,30 @@ exports.previewReminderEmail = onRequest({
                         </td>
                     </tr>
 
+                    <!-- Courses & Apps QR Codes -->
+                    <tr>
+                        <td style="padding:48px;background-color:#ffffff;text-align:center;">
+                            <h3 style="font-size:18px;font-weight:300;font-style:italic;color:#1E1912;margin:0 0 24px; letter-spacing: 1px;">Scan & Explore Our Programs</h3>
+                            
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:0 auto; max-width:600px;">
+                                <tr>
+                                    <td align="center" width="33%" style="padding:0 8px; vertical-align:top;">
+                                        <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FKidsDiaryCourseQR.png?alt=media" alt="Kids Challenge QR" width="100" height="100" style="display:block;margin:0 auto 12px;border-radius:12px;border:1px solid rgba(184,151,58,0.2);" />
+                                        <span style="font-size:11px;font-weight:bold;color:#2E261C;text-transform:uppercase;letter-spacing:1px;display:block;">Kids<br/>Challenge</span>
+                                    </td>
+                                    <td align="center" width="33%" style="padding:0 8px; vertical-align:top;">
+                                        <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FMindGym.png?alt=media" alt="Mind Gym QR" width="100" height="100" style="display:block;margin:0 auto 12px;border-radius:12px;border:1px solid rgba(184,151,58,0.2);" />
+                                        <span style="font-size:11px;font-weight:bold;color:#2E261C;text-transform:uppercase;letter-spacing:1px;display:block;">Mind Gym<br/>App</span>
+                                    </td>
+                                    <td align="center" width="33%" style="padding:0 8px; vertical-align:top;">
+                                        <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2Ffeelingsandemotioncourse.png?alt=media" alt="Feelings Course QR" width="100" height="100" style="display:block;margin:0 auto 12px;border-radius:12px;border:1px solid rgba(184,151,58,0.2);" />
+                                        <span style="font-size:11px;font-weight:bold;color:#2E261C;text-transform:uppercase;letter-spacing:1px;display:block;">Feelings<br/>Course</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
                     <!-- Footer -->
                     <tr>
                         <td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
@@ -4240,4 +4264,42 @@ exports.linkGuestPurchases = onCall(async (request) => {
     const email = auth.token.email;
     const linked = await linkGuestPurchasesForUser(auth.uid, email);
     return { linked };
+});
+
+// Notify Admin on Kids Challenge Registration
+exports.notifyAdminOnKidsRegistration = onDocumentCreated({
+    document: 'waitlist/{docId}',
+    region: 'us-central1'
+}, async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const data = snap.data();
+    if (data.type !== 'kids_challenge') return;
+
+    try {
+        const mailOptions = {
+            from: '"SKRM Bliss AI" <skrmblissai@gmail.com>',
+            to: ADMIN_EMAILS.join(', '),
+            subject: `New Kids Challenge Registration: ${data.childName || 'Unknown'}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px;">
+                    <h2 style="color: #4A3260;">New Kids Challenge Registration</h2>
+                    <p><strong>Parent Name:</strong> ${data.parentName || 'N/A'}</p>
+                    <p><strong>Email:</strong> ${data.email || 'N/A'}</p>
+                    <p><strong>Phone:</strong> ${data.phone || 'N/A'}</p>
+                    <p><strong>Child Name:</strong> ${data.childName || 'N/A'}</p>
+                    <p><strong>Age:</strong> ${data.age || 'N/A'}</p>
+                    <p><strong>Timezone:</strong> ${data.timezone || 'N/A'}</p>
+                    <p><strong>Country:</strong> ${data.country || 'N/A'}</p>
+                    <p><strong>Goal:</strong> ${data.goal || 'N/A'}</p>
+                    <p><strong>Notes:</strong> ${data.notes || 'N/A'}</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log('Admin notified of Kids Challenge registration for:', data.email);
+    } catch (error) {
+        console.error('Failed to notify admin of kids registration:', error);
+    }
 });
