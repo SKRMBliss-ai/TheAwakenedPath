@@ -269,7 +269,7 @@ export default function KidsChallenge() {
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'rotate(1.1deg)'; }}
             >
               <img
-                src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FposterDairy.png?alt=media"
+                src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FPosterDairy.png?alt=media"
                 alt="Let's Be Our Best Every Day! — a 3-day live kids challenge for ages 3 to 12, with poster and diary materials"
                 style={{ width: '100%', height: 'auto', objectFit: 'cover', display: 'block' }}
               />
@@ -423,13 +423,13 @@ export default function KidsChallenge() {
         </div>
       </section>
 
-      {/* ═══ The chart — the thing the weekend is built around ══════════════
+      {/* ═══ The daily journal — the thing the weekend is built around ══════
           Placed straight after the three days on purpose: the sessions are
-          what a family attends, but the chart is what they keep, so it earns
-          a full band of its own rather than a thumbnail further down. */}
+          what a family attends, but the journal is what they keep, so it
+          earns a full band of its own rather than a thumbnail further down. */}
       <section
-        id="chart"
-        className="si-reveal si-chart-band"
+        id="journal"
+        className="si-reveal si-journal-band"
         style={{
           position: 'relative', zIndex: 2,
           padding: 'clamp(56px, 8vw, 92px) clamp(24px, 6vw, 96px)',
@@ -437,20 +437,20 @@ export default function KidsChallenge() {
         }}
       >
         <div style={{ maxWidth: 1180, margin: '0 auto' }}>
-          <div className="si-chart-grid" style={{
+          <div className="si-journal-grid" style={{
             display: 'grid', gridTemplateColumns: '1.15fr 0.85fr',
             gap: 'clamp(32px, 4.5vw, 60px)', alignItems: 'center',
           }}>
-            {/* ── The chart itself ── */}
-            <div className="si-chart-media" style={{ position: 'relative' }}>
-              <div aria-hidden="true" className="si-chart-back" style={{
+            {/* ── The journal itself ── */}
+            <div className="si-journal-media" style={{ position: 'relative' }}>
+              <div aria-hidden="true" className="si-journal-back" style={{
                 position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
                 transform: 'rotate(-2.4deg) translate(-12px, 12px)',
                 borderRadius: 26, background: palette.BAND_TILE,
                 border: `1px solid ${palette.BAND_BORDER}`,
               }} />
 
-              <div className="si-chart-frame" style={{
+              <div className="si-journal-frame" style={{
                 position: 'relative', zIndex: 1,
                 borderRadius: 26, overflow: 'hidden',
                 border: `1px solid ${palette.BAND_BORDER}`,
@@ -464,7 +464,7 @@ export default function KidsChallenge() {
               >
                 <img
                   src={KIDS_CHART_IMG}
-                  alt="The Let's Be Our Best Every Day! chart — seven daily practices tracked across a full month, with a Look Back &amp; Learn reflection panel"
+                  alt="The Let's Be Our Best Every Day! daily journal — seven daily practices tracked across a full month, with a Look Back &amp; Learn reflection panel"
                   loading="lazy"
                   style={{ width: '100%', display: 'block' }}
                   onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }}
@@ -475,7 +475,7 @@ export default function KidsChallenge() {
                 }} />
               </div>
 
-              <div className="si-chart-pill" style={{
+              <div className="si-journal-pill" style={{
                 position: 'absolute', top: -16, left: -16, zIndex: 3,
                 display: 'inline-flex', alignItems: 'center', gap: 7,
                 padding: '10px 17px', borderRadius: 999,
@@ -503,16 +503,16 @@ export default function KidsChallenge() {
                 fontFamily: SERIF, fontSize: 'clamp(30px, 4vw, 50px)', fontWeight: 400,
                 lineHeight: 1.1, letterSpacing: '-0.015em', color: palette.ON_BAND, margin: '0 0 16px',
               }}>
-                The weekend ends.<br />The chart keeps going.
+                The weekend ends.<br />The journal keeps going.
               </h2>
 
               <p style={{
                 fontFamily: SANS, fontSize: 15.5, lineHeight: 1.7,
                 color: palette.ON_BAND_SOFT, margin: '0 0 24px', maxWidth: 460,
               }}>
-                Three live sessions teach your child the practice. This chart is what
-                carries it into everyday life — a full month of small, tickable choices
-                they fill in themselves, then look back on together at the end.
+                Three live sessions teach your child the practice. This daily journal is
+                what carries it into everyday life — a full month of small, tickable
+                choices they fill in themselves, then look back on together at the end.
               </p>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'grid', gap: 10 }}>
@@ -540,11 +540,11 @@ export default function KidsChallenge() {
                 ))}
               </ul>
 
-              <Cta palette={palette} label="Reserve my child's place" event="KIDS_CHART_CTA" />
+              <Cta palette={palette} label="Reserve my child's place" event="KIDS_JOURNAL_CTA" />
             </div>
           </div>
 
-          {/* ── Look Back & Learn — the monthly reflection built into the chart ── */}
+          {/* ── Look Back & Learn — the monthly reflection built into the journal ── */}
           <div style={{
             marginTop: 'clamp(32px, 4vw, 52px)',
             padding: 'clamp(24px, 3vw, 34px)',
@@ -562,11 +562,11 @@ export default function KidsChallenge() {
               fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65,
               color: palette.ON_BAND_SOFT, margin: '0 0 20px', maxWidth: 620,
             }}>
-              At the end of each month the chart turns into a conversation. Four questions,
+              At the end of each month the journal turns into a conversation. Four questions,
               answered together:
             </p>
 
-            <div className="si-chart-qs" style={{
+            <div className="si-journal-qs" style={{
               display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12,
             }}>
               {[
@@ -980,13 +980,13 @@ export default function KidsChallenge() {
       <style>{`
         @media (max-width: 900px) {
           .si-kids-hero, .si-kids-grid-2, .si-kids-grid-3, .si-kids-footer-grid,
-          .si-chart-grid { grid-template-columns: 1fr !important; }
+          .si-journal-grid { grid-template-columns: 1fr !important; }
           .si-kids-hero { gap: clamp(32px, 6vw, 48px) !important; }
-          /* The chart is dense and landscape — flatten the tilt so it can use
+          /* The journal is dense and landscape — flatten the tilt so it can use
              the full column width, and pull the pill back inside the edge. */
-          .si-chart-frame { transform: none !important; border-radius: 22px !important; }
-          .si-chart-back { display: none !important; }
-          .si-chart-pill { top: -12px !important; left: 6px !important; }
+          .si-journal-frame { transform: none !important; border-radius: 22px !important; }
+          .si-journal-back { display: none !important; }
+          .si-journal-pill { top: -12px !important; left: 6px !important; }
           .si-hero-media { margin-top: 8px; }
           .si-hero-frame { transform: none !important; border-radius: 28px !important; }
           .si-hero-back { display: none !important; }
@@ -999,7 +999,7 @@ export default function KidsChallenge() {
           .si-hero-glass { gap: 10px !important; padding: 10px 14px !important; font-size: 11.5px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
-          article, details, .si-hero-frame, .si-cta-photo, .si-chart-frame { transition: none !important; }
+          article, details, .si-hero-frame, .si-cta-photo, .si-journal-frame { transition: none !important; }
         }
       `}</style>
     </div>
