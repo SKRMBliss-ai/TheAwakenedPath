@@ -52,7 +52,29 @@ export default function FeaturedCourse({
         background: '#1E1426',  // deep mauve-purple
         boxShadow: '0 40px 100px rgba(0,0,0,0.35)',
         minHeight: 360,
+        position: 'relative',
       }}>
+        {/* Diagonal Corner Badge */}
+        <div style={{
+          position: 'absolute',
+          top: 22,
+          left: -35,
+          transform: 'rotate(-45deg)',
+          background: 'linear-gradient(135deg, #C4913A 0%, #9E7124 100%)',
+          color: '#FFFFFF',
+          fontFamily: SANS,
+          fontSize: 10,
+          fontWeight: 800,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          padding: '6px 45px',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
+          zIndex: 10,
+          pointerEvents: 'none',
+          textAlign: 'center',
+        }}>
+          For Adults
+        </div>
         {/* Left: Course info */}
         <div style={{
           padding: 'clamp(36px, 5vw, 64px)',

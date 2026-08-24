@@ -54,8 +54,30 @@ export default function KidsChallengeCrossSell({
           background: palette.CARD,
           border: `1px solid ${palette.BORDER}`,
           boxShadow: isDark ? '0 30px 80px rgba(0,0,0,0.40)' : '0 24px 60px rgba(42,36,32,0.10)',
+          position: 'relative',
         }}
       >
+        {/* Diagonal Corner Badge */}
+        <div style={{
+          position: 'absolute',
+          top: 22,
+          left: -35,
+          transform: 'rotate(-45deg)',
+          background: 'linear-gradient(135deg, #783CB4 0%, #4A2860 100%)',
+          color: '#FFFFFF',
+          fontFamily: SANS,
+          fontSize: 10,
+          fontWeight: 800,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          padding: '6px 45px',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
+          zIndex: 10,
+          pointerEvents: 'none',
+          textAlign: 'center',
+        }}>
+          For Your Kids
+        </div>
         {/* ── Left: the pitch ───────────────────────────────────────────── */}
         <div style={{ padding: 'clamp(32px, 4.5vw, 52px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div>
