@@ -27,7 +27,17 @@ function Check() {
   );
 }
 
-export default function FeaturedCourse({ palette: _palette }: { palette: Palette }) {
+export default function FeaturedCourse({
+  palette: _palette,
+  kicker = 'Featured Course',
+  description = 'A 7-week guided journey to know, embrace and transform your emotions — from awareness to freedom.',
+  source: _source = 'home',
+}: {
+  palette: Palette;
+  kicker?: string;
+  description?: string;
+  source?: string;
+}) {
   return (
     <section
       className="si-reveal"
@@ -58,7 +68,7 @@ export default function FeaturedCourse({ palette: _palette }: { palette: Palette
               textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)',
               marginBottom: 20,
             }}>
-              Featured Course
+              {kicker}
             </span>
 
             <h2 style={{
@@ -77,10 +87,9 @@ export default function FeaturedCourse({ palette: _palette }: { palette: Palette
               fontFamily: SANS,
               fontSize: 14, lineHeight: 1.6,
               color: 'rgba(237,233,227,0.65)',
-              marginBottom: 28, maxWidth: 340,
+              marginBottom: 28, maxWidth: 360,
             }}>
-              A 7-week guided journey to know, embrace and transform your emotions —
-              from awareness to freedom.
+              {description}
             </p>
 
             {/* Features checklist */}

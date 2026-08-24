@@ -13,6 +13,7 @@ import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import KidsBackdrop from '../../components/site/KidsBackdrop';
+import FeaturedCourse from './components/FeaturedCourse';
 import {
   KIDS_REGISTER_PATH, KIDS_TITLE, KIDS_TAGLINE, KIDS_AGES, KIDS_TIME,
   KIDS_BLURB, KIDS_DAYS, KIDS_AGE_BANDS, KIDS_INCLUDES, KIDS_STEPS, KIDS_FAQ,
@@ -937,6 +938,16 @@ export default function KidsChallenge() {
           ))}
         </div>
       </section>
+
+      <div style={{ padding: '0 24px', position: 'relative', zIndex: 2 }}><div className="si-divider" /></div>
+
+      {/* ═══ Adult Course Cross-Sell ════════════════════════════════════════ */}
+      <FeaturedCourse 
+        palette={palette}
+        kicker="For Parents · Adult Course"
+        description="Looking to deepen your own emotional transformation? Explore our separate 7-episode guided video series for adults to quiet overthinking, release blockages, and live in deep presence."
+        source="kids_page"
+      />
 
       <div style={{ padding: '0 24px', position: 'relative', zIndex: 2 }}><div className="si-divider" /></div>
 
