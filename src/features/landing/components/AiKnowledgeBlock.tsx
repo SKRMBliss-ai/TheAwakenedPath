@@ -160,7 +160,7 @@ export default function AiKnowledgeBlock({ palette }: Props) {
           }}
         >
           <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink }}>
-            Explore Core Authority Pages:
+            Explore Programs &amp; Resources:
           </span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             <a
@@ -180,6 +180,25 @@ export default function AiKnowledgeBlock({ palette }: Props) {
               }}
             >
               <span>Feelings &amp; Emotion Course</span>
+              <ArrowRight size={13} color={gold} />
+            </a>
+            <a
+              href="/tiny-kids-transformations"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 16px',
+                borderRadius: 999,
+                background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(74,50,96,0.08)',
+                color: ink,
+                fontSize: 12.5,
+                fontFamily: SANS,
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              <span>Kids Live Challenge</span>
               <ArrowRight size={13} color={gold} />
             </a>
             <a
