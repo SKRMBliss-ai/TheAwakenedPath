@@ -59,21 +59,32 @@ export default function KidsChallengeCrossSell({
         {/* ── Left: the pitch ───────────────────────────────────────────── */}
         <div style={{ padding: 'clamp(32px, 4.5vw, 52px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div>
+            {source === 'course' && (
+              <div style={{
+                background: isDark ? 'rgba(201,174,142,0.15)' : 'rgba(122,95,68,0.08)',
+                border: `1px solid ${palette.BORDER}`,
+                borderRadius: 12, padding: '10px 14px', marginBottom: 18,
+                fontFamily: SANS, fontSize: 12, color: palette.INK, lineHeight: 1.5,
+              }}>
+                💡 <strong>Note for Parents:</strong> This page is for the adult video course. Below is a <em>separate</em> 3-Day Live Zoom challenge for children.
+              </div>
+            )}
+
             <span style={{
               display: 'inline-block', padding: '5px 12px', borderRadius: 999,
               background: isDark ? 'rgba(201,174,142,0.14)' : 'rgba(122,95,68,0.10)',
               border: `1px solid ${palette.BORDER}`,
               fontFamily: SANS, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.2em',
-              textTransform: 'uppercase', color: palette.BROWN, marginBottom: 18,
+              textTransform: 'uppercase', color: palette.BROWN, marginBottom: 14,
             }}>
-              New · For children
+              Separate Program · For Children (Ages 3–12)
             </span>
 
             <h2
               id="kids-crosssell-heading"
               style={{
                 fontFamily: SERIF, fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 400,
-                lineHeight: 1.14, letterSpacing: '-0.01em', color: palette.INK, margin: '0 0 14px',
+                lineHeight: 1.14, letterSpacing: '-0.01em', color: palette.INK, margin: '0 0 10px',
               }}
             >
               {KIDS_TITLE}
@@ -81,24 +92,26 @@ export default function KidsChallengeCrossSell({
 
             <p style={{
               fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65, color: palette.INK2,
-              margin: '0 0 22px', maxWidth: 420,
+              margin: '0 0 18px', maxWidth: 460,
             }}>
               {source === 'course'
-                ? 'You are learning to meet your own feelings. This is the same practice, made playful — a 3-day live weekend challenge for your child.'
-                : 'A 3-day live weekend challenge that helps children notice what they feel, understand their choices, and grow a little every day.'}
+                ? 'While you complete your adult reflection modules, give your child their own emotional awareness tools! This is a separate, interactive Live Zoom weekend challenge for kids. No upfront payment required.'
+                : 'A separate 3-day live weekend challenge that helps children notice what they feel, understand their choices, and grow a little every day.'}
             </p>
 
-            {/* Format chips — replaces the single dim meta line so the column
-                carries visual weight instead of collapsing into dead space. */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '0 0 26px' }}>
-              {[KIDS_AGES, ...KIDS_FORMAT.split('·').map((p) => p.trim())].filter(Boolean).map((chip) => (
+            {/* Format chips */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '0 0 24px' }}>
+              {['Live on Zoom', 'Friday–Sunday', '30–40 Mins', 'Ages 3–12', 'No Upfront Payment Required'].map((chip) => (
                 <span key={chip} style={{
                   display: 'inline-flex', alignItems: 'center',
                   padding: '7px 13px', borderRadius: 999,
-                  background: isDark ? 'rgba(201,174,142,0.09)' : 'rgba(122,95,68,0.055)',
-                  border: `1px solid ${palette.BORDER}`,
+                  background: chip.includes('No Upfront') 
+                    ? (isDark ? 'rgba(74,40,96,0.35)' : 'rgba(235,225,245,0.9)')
+                    : (isDark ? 'rgba(201,174,142,0.09)' : 'rgba(122,95,68,0.055)'),
+                  border: `1px solid ${chip.includes('No Upfront') ? palette.PURPLE_STRONG : palette.BORDER}`,
                   fontFamily: SANS, fontSize: 11.5, fontWeight: 700,
-                  color: palette.INK2, whiteSpace: 'nowrap',
+                  color: chip.includes('No Upfront') ? (isDark ? '#E8D2FF' : palette.PURPLE_STRONG) : palette.INK2,
+                  whiteSpace: 'nowrap',
                 }}>{chip}</span>
               ))}
             </div>
@@ -118,7 +131,7 @@ export default function KidsChallengeCrossSell({
               onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
             >
-              Reserve my child&rsquo;s place <Arrow />
+              Register Child (No Payment Needed) <Arrow />
             </a>
             <a
               href={KIDS_PATH}
@@ -130,7 +143,7 @@ export default function KidsChallengeCrossSell({
                 fontFamily: SANS, fontSize: 13.5, fontWeight: 700,
               }}
             >
-              See the 3 days
+              See Program Details
             </a>
             
             {/* Kids Challenge QR Code */}
