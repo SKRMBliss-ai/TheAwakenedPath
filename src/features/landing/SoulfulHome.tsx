@@ -736,15 +736,31 @@ export default function SoulfulHome() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  whileHover={{ y: -6, boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.45)' : '0 16px 40px rgba(74,50,96,0.12)' }}
                   style={{
                     background: CARD,
                     border: `1.5px solid ${isDark ? 'rgba(196,145,58,0.25)' : 'rgba(196,181,160,0.4)'}`,
-                    borderRadius: 22,
+                    borderRadius: 24,
                     padding: '28px 24px',
                     textAlign: 'left',
                     boxShadow: '0 8px 24px rgba(0,0,0,0.03)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
                   }}
                 >
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 3,
+                      background: 'linear-gradient(90deg, #C4913A 0%, #4A3260 100%)',
+                      opacity: 0.55,
+                    }}
+                  />
                   <div style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 400, color: isDark ? '#C4913A' : '#8B6A1A', marginBottom: 8 }}>
                     {stepItem.n}
                   </div>

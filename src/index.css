@@ -1044,6 +1044,30 @@ body.dark-mode .mouse-glow {
   }
 }
 
+/* Layered marketing-asset frames (course page poster + diary) carry a tilt,
+   an offset back card and a pill that overhangs the top-left corner. On phone
+   the frames run near full-width, so the tilt clips at the viewport edge and
+   the overhanging pill pushes past it — flatten both and pull the pill inside. */
+@media (max-width: 900px) {
+  .si-asset-frame {
+    transform: none !important;
+    border-radius: 24px !important;
+  }
+  .si-asset-back {
+    display: none !important;
+  }
+  .si-asset-pill {
+    top: -12px !important;
+    left: 8px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .si-asset-frame {
+    transition: none !important;
+  }
+}
+
 /* Floating "Preview / Watch Course Intro" hero badge duplicates the primary
    "Watch the Course Intro" button already in the hero text column. On
    mobile the text column runs full-width/height, so this fixed

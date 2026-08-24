@@ -57,7 +57,7 @@ export default function KidsChallengeCrossSell({
         }}
       >
         {/* ── Left: the pitch ───────────────────────────────────────────── */}
-        <div style={{ padding: 'clamp(32px, 4.5vw, 56px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div style={{ padding: 'clamp(32px, 4.5vw, 52px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div>
             <span style={{
               display: 'inline-block', padding: '5px 12px', borderRadius: 999,
@@ -88,12 +88,20 @@ export default function KidsChallengeCrossSell({
                 : 'A 3-day live weekend challenge that helps children notice what they feel, understand their choices, and grow a little every day.'}
             </p>
 
-            <p style={{
-              fontFamily: SANS, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
-              textTransform: 'uppercase', color: palette.INK2, opacity: 0.85, margin: '0 0 24px',
-            }}>
-              {KIDS_AGES} &nbsp;·&nbsp; {KIDS_FORMAT}
-            </p>
+            {/* Format chips — replaces the single dim meta line so the column
+                carries visual weight instead of collapsing into dead space. */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '0 0 26px' }}>
+              {[KIDS_AGES, ...KIDS_FORMAT.split('·').map((p) => p.trim())].filter(Boolean).map((chip) => (
+                <span key={chip} style={{
+                  display: 'inline-flex', alignItems: 'center',
+                  padding: '7px 13px', borderRadius: 999,
+                  background: isDark ? 'rgba(201,174,142,0.09)' : 'rgba(122,95,68,0.055)',
+                  border: `1px solid ${palette.BORDER}`,
+                  fontFamily: SANS, fontSize: 11.5, fontWeight: 700,
+                  color: palette.INK2, whiteSpace: 'nowrap',
+                }}>{chip}</span>
+              ))}
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
@@ -128,12 +136,20 @@ export default function KidsChallengeCrossSell({
         </div>
 
         {/* ── Right: poster + Notice · Understand · Choose ────────────────── */}
-        <div style={{
+        <div className="si-kids-cross-panel" style={{
           padding: 'clamp(24px, 3.5vw, 36px)',
-          background: palette.BAND,
-          display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14,
+          /* Gradient rather than a flat slab, so the column reads as a panel of
+             the same card instead of a hard vertical seam down the middle. */
+          background: `linear-gradient(165deg, ${palette.BAND} 0%, ${palette.BAND_TILE} 100%)`,
+          borderLeft: `1px solid ${palette.BAND_BORDER}`,
+          display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12,
+          position: 'relative',
         }}>
-          <div style={{ borderRadius: 18, overflow: 'hidden', marginBottom: 4 }}>
+          <div style={{
+            position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 6,
+            border: `1px solid ${palette.BAND_BORDER}`,
+            boxShadow: isDark ? '0 18px 44px rgba(0,0,0,0.4)' : '0 18px 44px rgba(42,36,32,0.16)',
+          }}>
             <img
               src={KIDS_POSTER_IMG}
               alt="Let's Be Our Best Every Day! — a 3-day kids challenge for ages 3-12, helping children build emotional awareness, make positive choices and grow a happy heart"
@@ -141,6 +157,10 @@ export default function KidsChallengeCrossSell({
               style={{ width: '100%', display: 'block' }}
               onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }}
             />
+            <div aria-hidden="true" style={{
+              position: 'absolute', inset: 0, pointerEvents: 'none',
+              background: 'linear-gradient(118deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 46%)',
+            }} />
           </div>
           {KIDS_STEPS.map((s, i) => (
             <div
@@ -148,8 +168,17 @@ export default function KidsChallengeCrossSell({
               style={{
                 background: palette.BAND_TILE,
                 border: `1px solid ${palette.BAND_BORDER}`,
-                borderRadius: 18, padding: '16px 18px',
+                borderRadius: 18, padding: '15px 18px',
                 display: 'flex', alignItems: 'center', gap: 14,
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateX(4px)';
+                e.currentTarget.style.boxShadow = isDark ? '0 8px 22px rgba(0,0,0,0.28)' : '0 8px 22px rgba(42,36,32,0.12)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
               <span style={{
@@ -182,6 +211,8 @@ export default function KidsChallengeCrossSell({
       <style>{`
         @media (max-width: 820px) {
           .si-kids-cross { grid-template-columns: 1fr !important; }
+          /* Stacked, the panel sits below the pitch, so the seam is horizontal. */
+          .si-kids-cross-panel { border-left: none !important; }
         }
       `}</style>
     </section>
