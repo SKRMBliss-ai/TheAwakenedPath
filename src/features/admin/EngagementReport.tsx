@@ -46,7 +46,10 @@ function normalizeLog(log: ActivityLog) {
  *  root ErrorBoundary, not this component's own — there wasn't one) the
  *  first time real data with an old-shape row hit this in production. */
 function isPageVisit(action: string | undefined) {
-    return !!action && (action === 'PAGE_VISIT' || action.startsWith('PAGE_VISIT_'));
+    // PAGE_VIEW (no S, singular) is the OLDER name — still written today by
+    // useActivityTracker for signed-in Mind Gym tab navigation. Missing it
+    // here mislabelled every one of those as a "click" instead of a "visit".
+    return !!action && (action === 'PAGE_VISIT' || action === 'PAGE_VIEW' || action.startsWith('PAGE_VISIT_'));
 }
 
 interface OverviewStats {
