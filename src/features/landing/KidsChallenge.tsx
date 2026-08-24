@@ -446,7 +446,7 @@ export default function KidsChallenge() {
               <div aria-hidden="true" className="si-journal-back" style={{
                 position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
                 transform: 'rotate(-2.4deg) translate(-12px, 12px)',
-                borderRadius: 26, background: palette.BAND_TILE,
+                borderRadius: 26, background: 'rgba(255,255,255,0.5)',
                 border: `1px solid ${palette.BAND_BORDER}`,
               }} />
 
