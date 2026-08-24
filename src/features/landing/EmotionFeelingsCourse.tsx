@@ -45,11 +45,11 @@ const CLOSING_BANNER = FS_ROOT('ClosingBanner.webp');
 
 const EMOJI_PATTERN_SVG = encodeURIComponent(`
   <svg xmlns="http://www.w3.org/2000/svg" width="600" height="600">
-    <text x="80" y="100" font-size="28" style="opacity: 0.8;">😊</text>
-    <text x="400" y="200" font-size="24" style="opacity: 0.8;">😢</text>
-    <text x="200" y="400" font-size="30" style="opacity: 0.8;">😡</text>
-    <text x="500" y="500" font-size="26" style="opacity: 0.8;">🤢</text>
-    <text x="100" y="550" font-size="24" style="opacity: 0.8;">😨</text>
+    <text x="80" y="100" font-size="72" style="opacity: 0.8;">😊</text>
+    <text x="400" y="200" font-size="64" style="opacity: 0.8;">😢</text>
+    <text x="200" y="400" font-size="80" style="opacity: 0.8;">😡</text>
+    <text x="500" y="500" font-size="68" style="opacity: 0.8;">🤢</text>
+    <text x="100" y="550" font-size="64" style="opacity: 0.8;">😨</text>
   </svg>
 `);
 
