@@ -175,7 +175,22 @@ export default function AboutUs() {
           links={[
             { label: 'Home', href: '/' },
             { label: 'Mind Gym', href: '/mindgym' },
-            { label: 'Course', href: '/feelingsandemotioncourse' },
+            {
+              label: 'Courses',
+              subItems: [
+                {
+                  label: 'For All',
+                  sub: 'Feelings & Emotions · Power of Now · Wisdom Untethered',
+                  href: '/feelingsandemotioncourse',
+                },
+                {
+                  label: 'For Kids',
+                  sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
+                  badge: 'NEW',
+                  href: '/kidschallenge',
+                },
+              ],
+            },
             { label: 'Their worlds', href: TWINSOULS_URL, secondary: true },
           ]}
           cta={{ label: 'Enter Mind Gym →', href: '/mindgym' }}

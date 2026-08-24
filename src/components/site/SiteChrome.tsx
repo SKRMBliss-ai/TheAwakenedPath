@@ -21,12 +21,129 @@ const TELEGRAM_URL = 'https://t.me/skrmblissai';
 const FACEBOOK_URL = 'https://www.facebook.com/skrmbliss';
 const WHATSAPP_URL = 'https://wa.me/918217581238';
 
-export interface NavLink {
+export interface NavSubItem {
   label: string;
   href: string;
+  sub?: string;
+  badge?: string;
+  onClick?: () => void;
+}
+
+export interface NavLink {
+  label: string;
+  href?: string;
   /** hidden on narrow screens when true */
   secondary?: boolean;
   onClick?: () => void;
+  subItems?: NavSubItem[];
+}
+
+function NavDropdown({ link, palette }: { link: NavLink; palette: Palette }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className={`si-nav${link.secondary ? ' si-hide-sm' : ''}`}
+      style={{ position: 'relative', display: 'inline-block' }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          color: palette.INK2,
+          fontSize: 13,
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          padding: '6px 10px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          minHeight: 32,
+          cursor: 'pointer',
+          fontFamily: SANS,
+        }}
+      >
+        {link.label}
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            zIndex: 100,
+            minWidth: 280,
+            background: palette.isDark ? '#231D26' : '#FFFFFF',
+            border: `1px solid ${palette.BORDER}`,
+            borderRadius: 16,
+            padding: '8px 6px',
+            boxShadow: palette.isDark ? '0 16px 40px rgba(0,0,0,0.6)' : '0 12px 32px rgba(60,40,30,0.12)',
+          }}
+        >
+          {link.subItems?.map((sub) => (
+            <a
+              key={sub.label}
+              href={sub.href}
+              onClick={() => {
+                sub.onClick?.();
+                setOpen(false);
+              }}
+              style={{
+                display: 'block',
+                padding: '10px 12px',
+                borderRadius: 10,
+                textDecoration: 'none',
+                transition: 'background 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = palette.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(122,95,68,0.06)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 700, color: palette.INK }}>
+                  {sub.label}
+                </span>
+                {sub.badge && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 999,
+                    background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, letterSpacing: '0.05em',
+                  }}>
+                    {sub.badge}
+                  </span>
+                )}
+              </div>
+              {sub.sub && (
+                <div style={{ fontFamily: SANS, fontSize: 11.5, color: palette.INK2, marginTop: 2, lineHeight: 1.3 }}>
+                  {sub.sub}
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** The brand mark. `stacked` shows the wordmark beneath, for footers. */
@@ -97,8 +214,6 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
   links: NavLink[];
   cta?: { label: string; href: string; onClick?: () => void } | null;
   onLogoClick?: () => void;
-  /** Hide on pages that are deliberately single-theme, so the control never
-   *  appears to do nothing. */
   showThemeToggle?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -114,37 +229,35 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
         maxWidth: 1120, margin: '0 auto', padding: '12px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
       }}>
-        {/* flexShrink: 0 — this is a sibling of the nav row in a space-between
-            flex parent. With the old minWidth: 0 (no flexShrink override) the
-            row's shrink math could collapse the logo's width toward 0 before
-            the nav row's own 900px breakpoint kicked in, which visually
-            slid the nav links left on top of the "Soulful Intelligence"
-            wordmark instead of the two staying side by side. */}
         <a href="/" onClick={onLogoClick} style={{ display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none', flexShrink: 0 }}>
           <SiteLogo palette={palette} size={64} />
         </a>
 
         <nav className="si-nav-row" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           {links.map((l) => (
-            <a
-              key={l.label}
-              href={l.href}
-              onClick={l.onClick}
-              className={`si-nav${l.secondary ? ' si-hide-sm' : ''}`}
-              style={{
-                color: palette.INK2,
-                textDecoration: 'none',
-                fontSize: 13,
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-                padding: '6px 10px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                minHeight: 32,
-              }}
-            >
-              {l.label}
-            </a>
+            l.subItems && l.subItems.length > 0 ? (
+              <NavDropdown key={l.label} link={l} palette={palette} />
+            ) : (
+              <a
+                key={l.label}
+                href={l.href}
+                onClick={l.onClick}
+                className={`si-nav${l.secondary ? ' si-hide-sm' : ''}`}
+                style={{
+                  color: palette.INK2,
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  padding: '6px 10px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  minHeight: 32,
+                }}
+              >
+                {l.label}
+              </a>
+            )
           ))}
           {showThemeToggle && <ThemeToggle palette={palette} onToggle={onToggleTheme} />}
           {cta && (
@@ -173,9 +286,6 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
             display: 'none', width: 34, height: 34, borderRadius: 9, cursor: 'pointer',
             background: 'transparent', border: `1px solid ${palette.BORDER}`, color: palette.INK,
             alignItems: 'center', justifyContent: 'center',
-            // Without this the flex row shrinks the button to ~19px wide on a
-            // 375px viewport, putting the primary mobile nav control under the
-            // 24px minimum (WCAG 2.2 §2.5.8). Height was never the problem.
             flexShrink: 0, minWidth: 34,
           }}
         >
@@ -188,17 +298,40 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
       {open && (
         <div style={{ borderTop: `1px solid ${palette.BORDER}`, background: shell, padding: '10px 20px 16px' }}>
           {links.map((l) => (
-            <a
-              key={l.label}
-              href={l.href}
-              onClick={() => { l.onClick?.(); setOpen(false); }}
-              style={{
-                display: 'block', padding: '11px 2px', color: palette.INK, textDecoration: 'none',
-                fontSize: 15, fontWeight: 600, borderBottom: `1px solid ${palette.BORDER}`,
-              }}
-            >
-              {l.label}
-            </a>
+            l.subItems && l.subItems.length > 0 ? (
+              <div key={l.label} style={{ borderBottom: `1px solid ${palette.BORDER}`, padding: '11px 2px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 8 }}>
+                  {l.label}
+                </div>
+                {l.subItems.map((sub) => (
+                  <a
+                    key={sub.label}
+                    href={sub.href}
+                    onClick={() => { sub.onClick?.(); setOpen(false); }}
+                    style={{
+                      display: 'block', padding: '8px 10px', color: palette.INK, textDecoration: 'none',
+                      borderRadius: 8, background: palette.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                      margin: '4px 0',
+                    }}
+                  >
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>{sub.label}</div>
+                    {sub.sub && <div style={{ fontSize: 12, color: palette.INK2, marginTop: 2 }}>{sub.sub}</div>}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <a
+                key={l.label}
+                href={l.href}
+                onClick={() => { l.onClick?.(); setOpen(false); }}
+                style={{
+                  display: 'block', padding: '11px 2px', color: palette.INK, textDecoration: 'none',
+                  fontSize: 15, fontWeight: 600, borderBottom: `1px solid ${palette.BORDER}`,
+                }}
+              >
+                {l.label}
+              </a>
+            )
           ))}
           {cta && (
             <a
@@ -341,7 +474,7 @@ export function SiteFooter({ palette }: { palette: Palette }) {
                       <a
                         className="si-foot-link"
                         href={it.href}
-                        {...(it.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                        {...(it.href?.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                         style={{
                           color: palette.INK2,
                           textDecoration: 'none',

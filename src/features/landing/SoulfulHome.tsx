@@ -224,7 +224,24 @@ export default function SoulfulHome() {
               ]
             : [
                 { label: 'Mind Gym', href: '#mindgym', onClick: () => chooseAudience('you') },
-                { label: 'Course', href: '/feelingsandemotioncourse', onClick: () => track('HOME_COURSE_CLICK') },
+                {
+                  label: 'Courses',
+                  subItems: [
+                    {
+                      label: 'For All',
+                      sub: 'Feelings & Emotions · Power of Now · Wisdom Untethered',
+                      href: '/feelingsandemotioncourse',
+                      onClick: () => track('HOME_COURSE_ALL_CLICK'),
+                    },
+                    {
+                      label: 'For Kids',
+                      sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
+                      badge: 'NEW',
+                      href: '/kidschallenge',
+                      onClick: () => track('HOME_COURSE_KIDS_CLICK'),
+                    },
+                  ],
+                },
                 { label: 'Free Guides', href: '#tools', secondary: true, onClick: () => chooseAudience('you') },
                 { label: 'Videos', href: '#videos', secondary: true, onClick: () => chooseAudience('you') },
                 { label: 'About Us', href: '/about-us', onClick: () => track('HOME_ABOUT_US') },

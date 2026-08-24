@@ -47,7 +47,22 @@ export default function Policies() {
         onToggleTheme={toggleTheme}
         links={[
           { label: 'Home', href: '/' },
-          { label: 'Course', href: '/feelingsandemotioncourse' },
+          {
+            label: 'Courses',
+            subItems: [
+              {
+                label: 'For All',
+                sub: 'Feelings & Emotions · Power of Now · Wisdom Untethered',
+                href: '/feelingsandemotioncourse',
+              },
+              {
+                label: 'For Kids',
+                sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
+                badge: 'NEW',
+                href: '/kidschallenge',
+              },
+            ],
+          },
         ]}
         cta={{ label: 'Back to course', href: '/feelingsandemotioncourse' }}
       />
