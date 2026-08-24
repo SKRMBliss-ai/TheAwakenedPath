@@ -123,9 +123,18 @@ export default function KidsChallengeRegister() {
 
           <div style={{
             background: 'rgba(196,145,58,0.12)', border: `1px solid ${border}`, borderRadius: 14,
-            padding: '14px 18px', fontFamily: SANS, fontSize: 13.5, lineHeight: 1.6, color: palette.INK2, marginBottom: 26,
+            padding: '14px 18px', fontFamily: SANS, fontSize: 13.5, lineHeight: 1.6, color: palette.INK2, marginBottom: 12,
           }}>
             <strong style={{ color: palette.INK }}>Parent/Guardian registration required.</strong> After registration, we send Zoom details and preparation instructions by email/WhatsApp.
+          </div>
+          
+          <div style={{
+            background: isDark ? 'rgba(155, 110, 204, 0.12)' : 'rgba(120, 60, 180, 0.05)', 
+            border: `1px solid ${isDark ? 'rgba(155, 110, 204, 0.2)' : 'rgba(120, 60, 180, 0.15)'}`, 
+            borderRadius: 14,
+            padding: '14px 18px', fontFamily: SANS, fontSize: 13.5, lineHeight: 1.6, color: palette.INK2, marginBottom: 26,
+          }}>
+            <strong style={{ color: palette.INK }}>Donation Based Course.</strong> This course is purely donation-based (you can donate anywhere from $2 to $99). We will send the payment link directly to you over email and WhatsApp after you register.
           </div>
 
           <form onSubmit={handleSubmit}>
