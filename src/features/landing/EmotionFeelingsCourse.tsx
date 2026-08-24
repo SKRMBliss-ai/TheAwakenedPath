@@ -1003,7 +1003,7 @@ export default function EmotionFeelingsCourse() {
             backgroundSize: '1800px 1800px',
             backgroundPosition: `center ${scrollY * -0.35}px`,
             backgroundRepeat: 'repeat',
-            opacity: isDark ? 0.25 : 0.08,
+            opacity: isDark ? 0.08 : 0.045,
             mixBlendMode: isDark ? 'screen' : 'multiply',
             zIndex: 1,
           }}
@@ -2312,7 +2312,11 @@ export default function EmotionFeelingsCourse() {
           padding: 'clamp(64px, 8vw, 96px) clamp(24px, 6vw, 96px)',
           position: 'relative',
           zIndex: 2,
-          background: isDark ? 'rgba(74,50,96,0.12)' : 'rgba(74,50,96,0.03)',
+          background: isDark ? 'rgba(13,10,18,0.85)' : 'rgba(249,245,239,0.88)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderTop: `1px solid ${border}`,
+          borderBottom: `1px solid ${border}`,
         }}
       >
         <div
@@ -2947,7 +2951,16 @@ export default function EmotionFeelingsCourse() {
             pointerEvents: 'none',
           }}
         />
-        <h2
+        {/* Semi-opaque backdrop layer for text contrast */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: isDark ? 'rgba(13,10,18,0.75)' : 'rgba(249,245,239,0.78)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          zIndex: 1,
+        }} />
+        <div style={{ position: 'relative', zIndex: 2 }}>
           style={{
             fontFamily: SERIF,
             fontSize: 'clamp(30px, 4.5vw, 62px)',
@@ -2994,6 +3007,7 @@ export default function EmotionFeelingsCourse() {
           <p style={{ fontFamily: SANS, fontSize: 11.5, color: inkSub, margin: 0, fontWeight: 600 }}>
             Understand. Heal. Transform.
           </p>
+        </div>
         </div>
       </section>
 
