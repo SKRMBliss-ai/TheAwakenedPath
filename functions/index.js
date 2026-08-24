@@ -1852,19 +1852,78 @@ const { SYSTEM_INSTRUCTION, WHATSAPP_URL } = require("./siteChatKnowledge");
 const CHAT_MAX_TURNS = 12;
 const CHAT_MAX_CHARS = 1500;
 
-/* Throttle. This endpoint is callable without signing in — it has to be, since
- * it answers questions for visitors who have not bought anything — and every
- * call spends Gemini quota. Without a limit a single script can run up the bill.
+/* ── Cost controls ────────────────────────────────────────────────────────────
  *
- * The window is per instance and in memory: cheap (no Firestore reads on the
- * hot path) and enough to stop casual hammering, but Cloud Run may hold several
- * instances, so the effective ceiling is this number times the instance count.
- * For a hard guarantee, put App Check in front of the callable — see the note
- * in the chat widget's PR description.
+ * The requirement is that this assistant costs nothing to run, so the design
+ * point is: it must be impossible to generate a bill, even under deliberate
+ * abuse. Three layers, weakest to strongest:
+ *
+ *   1. Per-caller burst limit (in memory). Stops one person hammering. Cheap,
+ *      but per instance, so its real ceiling is this number times the instance
+ *      count — which is why layer 2 exists.
+ *   2. maxInstances on the function (see the onCall options). Caps concurrency,
+ *      which both bounds compute and makes layer 1 an actual ceiling rather
+ *      than a suggestion.
+ *   3. A hard global daily cap, counted in Firestore. This is the real
+ *      guarantee: once the day's budget is spent, the handler returns a canned
+ *      reply and NEVER calls Gemini, so spend cannot exceed the cap no matter
+ *      what the traffic looks like.
+ *
+ * The tradeoff of layer 3 is honest and deliberate: a determined script can
+ * still exhaust a day's budget and deny the assistant to real visitors, but it
+ * cannot cost money. Given the brief, that is the right way round. App Check
+ * (see CHAT_ENFORCE_APP_CHECK) closes the denial-of-service gap too.
+ *
+ * Set CHAT_DAILY_GLOBAL_CAP to sit comfortably inside whatever free tier the
+ * Gemini key is on. Verify that limit in the console before raising it.
  */
 const CHAT_RATE_WINDOW_MS = 60_000;
-const CHAT_RATE_MAX = 12;
+const CHAT_RATE_MAX = 12;          // per caller, per minute, per instance
+const CHAT_DAILY_GLOBAL_CAP = 300; // hard ceiling on Gemini calls per day
+const CHAT_MAX_INSTANCES = 2;
+
+/* App Check enforcement.
+ *
+ * MUST stay false until a client carrying App Check tokens is live in
+ * production — flipping it early rejects every real visitor. Sequence:
+ *   1. Register a reCAPTCHA v3 site key in Firebase console → App Check.
+ *   2. Set VITE_APPCHECK_SITE_KEY and deploy the web app.
+ *   3. Watch the App Check metrics until verified requests appear.
+ *   4. Only then set this to true and redeploy functions.
+ * The handler logs whether a token arrived, so step 3 is checkable from logs
+ * without guessing.
+ */
+const CHAT_ENFORCE_APP_CHECK = false;
+
 const chatHits = new Map(); // key -> number[] of request timestamps
+
+/**
+ * Reserve one unit of today's Gemini budget. Returns false when the day is
+ * spent. Transactional so concurrent instances cannot overshoot the cap.
+ *
+ * One read + one write per message. At the cap that is 600 Firestore ops a day
+ * from this path, well inside the free allowance — and bounded by the cap
+ * itself, which is the point.
+ */
+async function reserveChatBudget() {
+    const day = new Date().toISOString().slice(0, 10); // UTC YYYY-MM-DD
+    const ref = db.collection("system").doc("chatBudget");
+    try {
+        return await db.runTransaction(async (tx) => {
+            const snap = await tx.get(ref);
+            const data = snap.exists ? snap.data() : null;
+            const count = data && data.day === day ? (data.count || 0) : 0;
+            if (count >= CHAT_DAILY_GLOBAL_CAP) return false;
+            tx.set(ref, { day, count: count + 1, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+            return true;
+        });
+    } catch (err) {
+        // Fail CLOSED. If the budget cannot be read, spending is unbounded, and
+        // an unavailable assistant is cheaper than an unmetered one.
+        console.error("siteChat: budget check failed, refusing the call", err);
+        return false;
+    }
+}
 
 function chatRateLimited(key) {
     const now = Date.now();
@@ -1880,7 +1939,15 @@ function chatRateLimited(key) {
     return hits.length > CHAT_RATE_MAX;
 }
 
-exports.siteChat = onCall({ secrets: [geminiKey], cors: true }, async (request) => {
+exports.siteChat = onCall({
+    secrets: [geminiKey],
+    cors: true,
+    // Bounds worst-case compute and turns the in-memory burst limit into a real
+    // ceiling (CHAT_RATE_MAX × CHAT_MAX_INSTANCES) rather than a per-instance
+    // suggestion. Two is plenty for a chat bubble on a marketing site.
+    maxInstances: CHAT_MAX_INSTANCES,
+    enforceAppCheck: CHAT_ENFORCE_APP_CHECK,
+}, async (request) => {
     const message = String(request.data?.message || "").trim();
     if (!message) {
         throw new HttpsError("invalid-argument", "No message provided.");
@@ -1893,6 +1960,23 @@ exports.siteChat = onCall({ secrets: [geminiKey], cors: true }, async (request) 
     const rateKey = request.auth?.uid || request.rawRequest?.ip || "anon";
     if (chatRateLimited(rateKey)) {
         throw new HttpsError("resource-exhausted", "Too many messages just now — please wait a moment.");
+    }
+
+    // Visibility for the App Check rollout: shows whether real traffic is
+    // carrying tokens yet, so enforcement can be switched on from evidence
+    // rather than hope. Remove once CHAT_ENFORCE_APP_CHECK is true.
+    if (!CHAT_ENFORCE_APP_CHECK) {
+        console.log("siteChat: appCheckToken present =", !!request.app);
+    }
+
+    // The hard money guarantee. Checked before the model is constructed, so a
+    // spent budget costs nothing beyond one Firestore transaction.
+    if (!(await reserveChatBudget())) {
+        console.warn("siteChat: daily cap reached, refusing without calling Gemini");
+        return {
+            reply: `I have answered as many questions as I can today. The team is on WhatsApp and always happy to help: ${WHATSAPP_URL}`,
+            exhausted: true,
+        };
     }
 
     // ── Account context, derived from the verified token only ──
