@@ -38,6 +38,7 @@ import { PresenceBreath } from './components/ui/PresenceBreath';
 import { FirstRunWelcome } from './components/ui/FirstRunWelcome';
 import { DashboardGrid } from './features/practices/DashboardGrid';
 import PriceSlider from './components/ui/PriceSlider';
+import { useActivityTracker } from './hooks/useActivityTracker';
 
 // ─── Lazy-loaded feature tabs ───────────────────────────────────────────────
 // None of these are needed for the first paint of the home screen, so they are
@@ -597,6 +598,11 @@ export default function UntetheredApp() {
     currentUser?.metadata?.creationTime ?? null
   );
 
+  const { logEvent } = useActivityTracker(activeTab, {
+    questionId: activeQuestionId,
+    viewMode
+  });
+
   // ── Other app state (non-persisted) ──
   const [activePractice, setActivePractice] = useState<Practice | null>(null);
   const [practiceState, setPracticeState] = useState('active');
@@ -749,6 +755,7 @@ export default function UntetheredApp() {
       }
       if (questionId) setActiveQuestionId(questionId);
       if (view) setViewMode(view as any);
+      logEvent('COURSE_SELECT', { course: 'wisdom_untethered', questionId: questionId || activeQuestionId });
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
       return;
     }
@@ -2470,7 +2477,6 @@ export default function UntetheredApp() {
                     <YearPanel />
                     <StatsDashboard
                       onNavigate={onNavigate}
-                      accountCreatedAt={currentUser?.metadata?.creationTime ?? null}
                     />
                   </div>
                 </Suspense>

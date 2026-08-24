@@ -9,6 +9,7 @@ import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 
 import { db } from '../../firebase';
 import { ErrorBoundary } from '../../components/ui/ErrorBoundary';
+import { getLocalDayString } from '../../lib/utils';
 
 // ── Practice definitions ──────────────────────────────────────────────────────
 
@@ -181,7 +182,7 @@ const WISDOM_PRACTICES = [
 // ── Firestore helpers ─────────────────────────────────────────────────────────
 
 function todayStr() {
-  return new Date().toISOString().split('T')[0];
+  return getLocalDayString();
 }
 
 function usePracticeRecord(userId: string | undefined, questionId: string) {

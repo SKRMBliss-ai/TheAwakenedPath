@@ -94,10 +94,10 @@ function CourseCard({
       <div className="p-5">
         <div className="flex items-start justify-between mb-3">
           <div>
-            <p className="text-[14px] font-serif font-medium text-[var(--text-primary)] leading-tight">
+            <p className="text-[15px] font-sans font-bold text-[var(--text-primary)] leading-tight tracking-tight">
               {title}
             </p>
-            <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{subtitle}</p>
+            <p className="text-[11px] font-sans text-[var(--text-muted)] mt-1">{subtitle}</p>
           </div>
           <button
             onClick={onCta}
@@ -119,7 +119,7 @@ function CourseCard({
               style={{ background: color }}
             />
           </div>
-          <span className="text-[11px] font-bold flex-shrink-0" style={{ color }}>
+          <span className="text-[12px] font-sans font-medium tracking-tight opacity-90 flex-shrink-0" style={{ color }}>
             {progressLabel}
           </span>
         </div>
@@ -270,7 +270,7 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
           <CourseCard
             title="The Power of Now"
             subtitle="Eckhart Tolle · Living Study"
-            progressLabel={`${ponWatched}/${PON_TOTAL}`}
+            progressLabel={`${ponWatched}/${PON_TOTAL} Chapters`}
             progressPct={ponPct}
             color="#6B7CA4"
             ctaLabel="Continue"
@@ -280,8 +280,8 @@ export function JourneyProgress({ onNavigate, accountCreatedAt }: Props) {
           {/* Wisdom Untethered */}
           <CourseCard
             title="Wisdom Untethered"
-            subtitle={`Michael Singer · ${QUESTION_IDS.length} questions available`}
-            progressLabel={`${wuExploredCount}/${QUESTION_IDS.length} explored`}
+            subtitle={`Michael Singer · ${QUESTION_IDS.length} Chapters`}
+            progressLabel={`${wuExploredCount}/${QUESTION_IDS.length} Questions`}
             progressPct={wuPct}
             color={accentColor}
             ctaLabel="This week's Q"

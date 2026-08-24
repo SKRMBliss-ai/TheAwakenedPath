@@ -1,23 +1,22 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Trash2, Search, ExternalLink, Target, Globe, Youtube, Download, PlayCircle, UserX } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, Zap, BookOpen } from 'lucide-react';
 import { db, functions } from '../../firebase';
-import { collection, query, orderBy, limit, getDocs, where, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { WhisperInput, AnchorButton, SacredToast } from '../../components/ui/SacredUI';
+import { isAdminEmail } from '../../config/admin';
 import { cn } from '../../lib/utils';
-import EmotionalHealthStats from './EmotionalHealthStats';
-import { shouldBlockAnalytics } from '../../config/admin';
 
 interface ActivityLog {
     id: string;
     userId: string;
     userEmail: string;
-    entryEmail?: string;
-    isAnonymous?: boolean;
     activityType: string;
     details: string;
     location?: string;
+    platform?: string;
+    userAgent?: string;
     timestamp: any;
 }
 
@@ -27,34 +26,20 @@ interface EngagementReportProps {
 }
 
 const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) => {
-    const [activeTab, setActiveTab] = useState<'activity' | 'logs' | 'users' | 'waitlist' | 'leads' | 'blast' | 'history' | 'errors'>('activity');
-    const [errorLogs, setErrorLogs] = useState<any[]>([]);
-    const [feedFilter, setFeedFilter] = useState<'all' | 'signup' | 'open' | 'visit' | 'interaction' | 'unsub'>('all');
+    const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'blast' | 'history'>('logs');
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [showAnonymous, setShowAnonymous] = useState(false);
     
     // Blast Form State
     const [blastTitle, setBlastTitle] = useState('');
     const [blastSubtitle, setBlastSubtitle] = useState('');
-    const [blastArticleUrl, setBlastArticleUrl] = useState('https://www.skrmblissai.in/guides/how-to-stop-overthinking-at-night');
-    const [blastVideoUrl, setBlastVideoUrl] = useState('https://www.skrmblissai.in/videos/ep1-feelings-and-emotions');
     const [isBlasting, setIsBlasting] = useState(false);
     const [toast, setToast] = useState('');
 
     // Blast History State
     const [blasts, setBlasts] = useState<any[]>([]);
-
-    // Leads State
-    const [leads, setLeads] = useState<any[]>([]);
-    const [leadKeywords, setLeadKeywords] = useState('spiritual awakening, untethered soul, presence meditation, anxiety meditation help');
-    const [isScanning, setIsScanning] = useState(false);
-    const [lastScan, setLastScan] = useState<any>(null);
-    
-    // Waitlist State
-    const [waitlist, setWaitlist] = useState<any[]>([]);
 
     const fetchHistory = async () => {
         setIsLoading(true);
@@ -68,68 +53,22 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                 ...doc.data()
             }));
 
-            // For each blast, get open, click, and unsubscribe counts
+            // For each blast, get open counts and who opened
             const enrichedBlasts = await Promise.all(fetchedBlasts.map(async (blast) => {
-                try {
-                    const [opensSnap, clicksSnap, unsubscribesSnap] = await Promise.all([
-                        getDocs(query(collection(db, 'email_opens'), where('blastId', '==', blast.id))),
-                        getDocs(query(collection(db, 'email_clicks'), where('blastId', '==', blast.id))),
-                        getDocs(query(collection(db, 'email_unsubscribes'), where('blastId', '==', blast.id)))
-                    ]);
-
-                    const opens = opensSnap.docs.map(d => d.data());
-                    const clicks = clicksSnap.docs.map(d => d.data());
-
-                    // Calculate average "dwell" time (Open to Click)
-                    let totalDwell = 0;
-                    let dwellCount = 0;
-
-                    const openTimes = new Map(opens.map(o => [o.userEmail, o.timestamp?.toMillis()]));
-                    clicks.forEach(c => {
-                        const email = c.userEmail;
-                        const clickTime = c.timestamp?.toMillis();
-                        const openTime = openTimes.get(email);
-                        if (openTime && clickTime && clickTime > openTime) {
-                            totalDwell += (clickTime - openTime);
-                            dwellCount++;
-                        }
-                    });
-
-                    const avgDwell = dwellCount > 0 ? totalDwell / dwellCount : 0;
-
-                    const openedBy = opens.map(o => o.userEmail).filter(Boolean);
-                    const clickedBy = clicks.map(c => c.userEmail).filter(Boolean);
-                    const unsubscribedBy = unsubscribesSnap.docs.map(d => d.data().userEmail).filter(Boolean);
-
-                    return { 
-                        ...blast, 
-                        opens: opensSnap.size,
-                        openedBy: Array.from(new Set(openedBy)),
-                        clicks: clicksSnap.size,
-                        clickedBy: Array.from(new Set(clickedBy)),
-                        unsubscribes: unsubscribesSnap.size,
-                        unsubscribedBy: Array.from(new Set(unsubscribedBy)),
-                        avgDwell: avgDwell // in ms
-                    };
-                } catch (e) {
-                    console.error(`Error enriching blast ${blast.id}:`, e);
-                    return { 
-                        ...blast, 
-                        opens: 0, 
-                        openedBy: [], 
-                        clicks: 0, 
-                        clickedBy: [], 
-                        unsubscribes: 0, 
-                        unsubscribedBy: [], 
-                        avgDwell: 0 
-                    };
-                }
+                const opensRef = collection(db, 'email_opens');
+                const opensQuery = query(opensRef, where('blastId', '==', blast.id));
+                const opensSnap = await getDocs(opensQuery);
+                const openedBy = opensSnap.docs.map(d => d.data().userEmail).filter(Boolean);
+                return { 
+                    ...blast, 
+                    opens: opensSnap.size,
+                    openedBy: Array.from(new Set(openedBy)) // Unique emails
+                };
             }));
 
             setBlasts(enrichedBlasts);
         } catch (error) {
             console.error("Error fetching blast history:", error);
-            setToast("⚠️ Failed to load history. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -140,7 +79,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         try {
             const usersRef = collection(db, 'users');
             // Remove orderBy to ensure all users show up even if lastLogin is missing
-            const q = query(usersRef, limit(100));
+            const q = query(usersRef, limit(300));
             const snapshot = await getDocs(q);
             
             const fetchedUsers = snapshot.docs.map(doc => ({
@@ -163,204 +102,24 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         }
     };
 
-    const fetchErrors = async () => {
-        setIsLoading(true);
-        try {
-            const q = query(collection(db, 'error_logs'), orderBy('timestamp', 'desc'), limit(200));
-            const snapshot = await getDocs(q);
-            setErrorLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        } catch (error) {
-            console.error("Error fetching error logs:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const fetchLogs = async () => {
         setIsLoading(true);
         try {
             const logsRef = collection(db, 'activity_logs');
-            const q = query(logsRef, orderBy('timestamp', 'desc'), limit(500));
+            const q = query(logsRef, orderBy('timestamp', 'desc'), limit(300));
             const snapshot = await getDocs(q);
-
+            
             const fetchedLogs = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             })) as ActivityLog[];
 
-            // Exclude internal team / admin logins so feed reflects real visitor traffic
-            const realUserLogs = fetchedLogs.filter(log => 
-                !shouldBlockAnalytics(log.userEmail) && 
-                !shouldBlockAnalytics(log.entryEmail)
-            );
-
-            setLogs(realUserLogs.slice(0, 500));
+            // We show all logs but keep a slightly higher limit in the UI
+            setLogs(fetchedLogs);
         } catch (error) {
             console.error("Error fetching admin logs:", error);
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    const handleDeleteLog = async (logId: string) => {
-        try {
-            await deleteDoc(doc(db, 'activity_logs', logId));
-            setLogs(prev => prev.filter(l => l.id !== logId));
-            setToast('Activity entry deleted.');
-            setTimeout(() => setToast(''), 4000);
-        } catch (error) {
-            console.error("Failed to delete log:", error);
-            setToast('Failed to delete log.');
-            setTimeout(() => setToast(''), 4000);
-        }
-    };
-
-    const handleDeleteUser = async (userId: string) => {
-        try {
-            await deleteDoc(doc(db, 'users', userId));
-            setUsers(prev => prev.filter(u => u.id !== userId));
-            setToast('User deleted.');
-            setTimeout(() => setToast(''), 4000);
-        } catch (error) {
-            console.error("Failed to delete user:", error);
-            setToast('Failed to delete user. Check permissions.');
-            setTimeout(() => setToast(''), 4000);
-        }
-    };
-
-    const fetchLeads = async () => {
-        setIsLoading(true);
-        try {
-            const leadsRef = collection(db, 'leads');
-            const q = query(leadsRef, orderBy('foundAt', 'desc'), limit(200));
-            const snap = await getDocs(q);
-            setLeads(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-            const scansRef = collection(db, 'lead_scans');
-            const sq = query(scansRef, orderBy('startedAt', 'desc'), limit(1));
-            const sSnap = await getDocs(sq);
-            setLastScan(sSnap.docs[0] ? { id: sSnap.docs[0].id, ...sSnap.docs[0].data() } : null);
-        } catch (e) {
-            console.error('Error fetching leads:', e);
-            setToast('Failed to load leads.');
-            setTimeout(() => setToast(''), 4000);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const fetchWaitlist = async () => {
-        setIsLoading(true);
-        try {
-            const waitlistRef = collection(db, 'waitlist');
-            const q = query(waitlistRef, orderBy('createdAt', 'desc'), limit(200));
-            const snap = await getDocs(q);
-            const entries = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
-
-            // Cross-reference opt-outs (who we DON'T email) and opens (who's
-            // engaged), keyed by email, so the one table shows the full picture.
-            const unsubSet = new Set<string>();
-            const openedSet = new Set<string>();
-            try {
-                const [unsubSnap, opensSnap] = await Promise.all([
-                    getDocs(query(collection(db, 'email_unsubscribes'), limit(2000))),
-                    getDocs(query(collection(db, 'email_opens'), limit(5000))),
-                ]);
-                unsubSnap.docs.forEach(d => {
-                    const em = String(d.data().userEmail || '').toLowerCase().trim();
-                    if (em && em !== 'unknown') unsubSet.add(em);
-                });
-                opensSnap.docs.forEach(d => {
-                    const em = String(d.data().userEmail || '').toLowerCase().trim();
-                    if (em && em !== 'unknown') openedSet.add(em);
-                });
-            } catch (_) { /* collections may be empty / rules; degrade gracefully */ }
-
-            setWaitlist(entries.map(e => {
-                const em = String(e.email || '').toLowerCase().trim();
-                return { ...e, unsubscribed: unsubSet.has(em), opened: openedSet.has(em) };
-            }));
-        } catch (e) {
-            console.error('Error fetching waitlist:', e);
-            setToast('Failed to load waitlist.');
-            setTimeout(() => setToast(''), 4000);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Friendly label for the capture source (which page/CTA the email came from).
-    const sourceLabel = (s?: string) => {
-        switch (s) {
-            case 'app_signup': return 'App Signup';
-            case 'journal_download_gate': return 'Journal Gate';
-            case 'journal_download_clicked': return '⬇ Downloaded';
-            case 'feelings_emotion_course': return 'Course · Notify';
-            case 'feelings_emotion_course_buy_intent': return 'Course · Reserve $4.99';
-            case 'lead_magnet_free_guide': return 'Free Guide';
-            case 'emotional_health_quiz': return 'Emotional Health Quiz';
-            default: return s || 'Journal Gate';
-        }
-    };
-
-    const handleDeleteWaitlist = async (id: string) => {
-        try {
-            await deleteDoc(doc(db, 'waitlist', id));
-            setWaitlist(prev => prev.filter(w => w.id !== id));
-            setToast('Waitlist entry removed.');
-            setTimeout(() => setToast(''), 4000);
-        } catch (error) {
-            setToast('Failed to delete entry.');
-            setTimeout(() => setToast(''), 4000);
-        }
-    };
-
-    const handleRunScan = async () => {
-        setIsScanning(true);
-        try {
-            const keywords = leadKeywords.split(',').map(k => k.trim()).filter(Boolean);
-            const scanFn = httpsCallable(functions, 'scanLeads');
-            const res: any = await scanFn({ keywords, sources: ['google', 'reddit'] });
-            const data = res?.data || {};
-            let msg: string;
-            if (data.googleConfigured === false) {
-                msg = `Found ${data.newLeadsCount} new leads from Reddit (Google API key not configured)`;
-            } else if (data.budgetCapped) {
-                msg = `Found ${data.newLeadsCount} new leads. Daily Google quota near limit — only ${data.googleCallsThisRun}/${data.keywordsScanned} keywords used Google. ${data.googleRemainingToday} queries left today.`;
-            } else {
-                msg = `Found ${data.newLeadsCount} new leads. Google quota: ${data.googleUsedToday}/${data.googleDailyCap} used today.`;
-            }
-            setToast(msg);
-            setTimeout(() => setToast(''), 6500);
-            await fetchLeads();
-        } catch (e: any) {
-            console.error('Lead scan failed:', e);
-            setToast(`Scan failed: ${e?.message || 'unknown error'}`);
-            setTimeout(() => setToast(''), 5000);
-        } finally {
-            setIsScanning(false);
-        }
-    };
-
-    const handleUpdateLeadStatus = async (leadId: string, status: string) => {
-        try {
-            await updateDoc(doc(db, 'leads', leadId), { status });
-            setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l));
-        } catch (e) {
-            console.error('Failed to update lead status:', e);
-            setToast('Failed to update lead.');
-            setTimeout(() => setToast(''), 4000);
-        }
-    };
-
-    const handleDeleteLead = async (leadId: string) => {
-        try {
-            await deleteDoc(doc(db, 'leads', leadId));
-            setLeads(prev => prev.filter(l => l.id !== leadId));
-        } catch (e) {
-            console.error('Failed to delete lead:', e);
-            setToast('Failed to delete lead.');
-            setTimeout(() => setToast(''), 4000);
         }
     };
 
@@ -371,11 +130,9 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             const blastFn = httpsCallable(functions, 'blastUpdateEmail');
             await blastFn({
                 chapterTitle: blastTitle,
-                chapterSubtitle: blastSubtitle,
-                articleUrl: blastArticleUrl,
-                videoUrl: blastVideoUrl
+                chapterSubtitle: blastSubtitle
             });
-            setToast('Daily article update email sent successfully.');
+            setToast('Course update email sent successfully.');
             setBlastTitle('');
             setBlastSubtitle('');
             setTimeout(() => setToast(''), 4000);
@@ -390,12 +147,9 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
 
     useEffect(() => {
         if (isOpen) {
-            if (activeTab === 'logs' || activeTab === 'activity') fetchLogs();
+            if (activeTab === 'logs') fetchLogs();
             if (activeTab === 'users') fetchUsers();
             if (activeTab === 'history') fetchHistory();
-            if (activeTab === 'leads') fetchLeads();
-            if (activeTab === 'waitlist') fetchWaitlist();
-            if (activeTab === 'errors') fetchErrors();
         }
     }, [isOpen, activeTab]);
 
@@ -412,15 +166,8 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
     const getSourceIcon = (type: string) => {
         if (type === 'LOGIN' || type === 'SESSION_START') return <Monitor className="w-4 h-4 text-[var(--accent-primary)]" />;
         if (type === 'EMAIL_OPEN') return <Eye className="w-4 h-4 text-[var(--accent-primary)]" />;
-        if (type === 'EMAIL_UNSUBSCRIBED') return <Mail className="w-4 h-4 text-[#FF4B4B]" />;
-        if (type === 'EMAIL_YOUTUBE_CLICK') return <Youtube className="w-4 h-4 text-red-500" />;
-        if (type === 'EMAIL_CTA_CLICK') return <ExternalLink className="w-4 h-4 text-amber-400" />;
-        if (type === 'PAGE_VISIT_ABOUT') return <Globe className="w-4 h-4 text-teal-400" />;
-        if (type === 'PAGE_VISIT_APP') return <Monitor className="w-4 h-4 text-teal-400" />;
-        if (type === 'VIDEO_PLAY') return <PlayCircle className="w-4 h-4 text-purple-400" />;
-        if (type === 'YOUTUBE_BADGE_CLICK') return <Youtube className="w-4 h-4 text-red-400" />;
-        if (type === 'JOURNAL_DOWNLOAD') return <Download className="w-4 h-4 text-green-400" />;
-        if (type === 'EMAIL_FORM_SUBMIT') return <Mail className="w-4 h-4 text-teal-400" />;
+        if (type === 'PAGE_VIEW') return <Zap className="w-4 h-4 text-[var(--accent-primary)]" />;
+        if (type === 'COURSE_SELECT') return <BookOpen className="w-4 h-4 text-[var(--accent-primary)]" />;
         return <Mail className="w-4 h-4 text-[#E67E22]" />;
     };
 
@@ -428,271 +175,70 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         if (type === 'LOGIN') return 'SIGN IN';
         if (type === 'SESSION_START') return 'PRESENCE';
         if (type === 'EMAIL_OPEN') return 'OPENED';
-        if (type === 'EMAIL_UNSUBSCRIBED') return 'UNSUBSCRIBED';
-        if (type === 'EMAIL_YOUTUBE_CLICK') return 'YOUTUBE CLICK';
-        if (type === 'EMAIL_CTA_CLICK') return 'CTA CLICK';
-        if (type === 'PAGE_VISIT_ABOUT') return 'VISITED PAGE';
-        if (type === 'PAGE_VISIT_APP') return 'ENTERED APP';
-        if (type === 'VIDEO_PLAY') return 'VIDEO PLAY';
-        if (type === 'YOUTUBE_BADGE_CLICK') return 'YOUTUBE ↗';
-        if (type === 'JOURNAL_DOWNLOAD') return 'DOWNLOADED';
-        if (type === 'EMAIL_FORM_SUBMIT') return 'EMAIL SUBMIT';
+        if (type === 'PAGE_VIEW') return 'NAVIGATED';
+        if (type === 'COURSE_SELECT') return 'CHAPTER';
         return 'EMAIL';
     };
 
-    // Turn an activity log into a plain-English sentence for the Live feed.
-    const humanizeLog = (l: ActivityLog): string => {
-        const t = l.activityType;
-        const map: Record<string, string> = {
-            EMAIL_FORM_SUBMIT: 'submitted their email',
-            BUY_INTENT_FORM_SUBMIT: 'reserved the course ($4.99)',
-            LEAD_MAGNET_SUBMIT: 'requested the free guide',
-            LEAD_MAGNET_DOWNLOAD: 'downloaded the free guide',
-            EMOTIONAL_HEALTH_START: 'started the emotional-health quiz',
-            EMOTIONAL_HEALTH_COMPLETE: 'completed the emotional-health quiz',
-            EMOTIONAL_HEALTH_SHARE: 'shared their result card',
-            EMOTIONAL_HEALTH_CTA: 'tapped the app CTA',
-            PAGE_VISIT_FEELINGS_COURSE: 'visited the Feelings & Emotions course',
-            PAGE_VISIT_EMOTIONAL_HEALTH: 'visited the emotional-health quiz',
-            PAGE_VISIT_ABOUT: 'visited the landing page',
-            PAGE_VISIT_APP: 'entered the app',
-            INTRO_VIDEO_PLAY: 'played the intro video',
-            VIDEO_PLAY: 'played a video',
-            WHATSAPP_CLICK: 'messaged us on WhatsApp',
-            WHATSAPP_GROUP_CLICK: 'opened the WhatsApp group',
-            YOUTUBE_CLICK: 'opened YouTube',
-            FACEBOOK_CLICK: 'opened Facebook',
-            CONTACT_WHATSAPP_CLICK: 'tapped WhatsApp',
-            CONTACT_EMAIL_CLICK: 'tapped the email link',
-            TEACHER_STORY_CLICK: "opened the teacher's story",
-            EMAIL_OPEN: 'opened an email',
-            EMAIL_ARTICLE_CLICK: 'clicked the article guide link in email 📖',
-            EMAIL_CTA_CLICK: 'clicked a link in an email',
-            EMAIL_YOUTUBE_CLICK: 'clicked YouTube in an email 🍿',
-            EMAIL_UNSUBSCRIBED: 'unsubscribed',
-            LOGIN: 'signed in',
-            SESSION_START: 'is present in the app',
-        };
-        return map[t] || t.replace(/_/g, ' ').toLowerCase();
-    };
-
-    const relativeTime = (ts: any): string => {
-        if (!ts) return '';
-        const d = ts.toDate ? ts.toDate() : new Date(ts);
-        const diff = Date.now() - d.getTime();
-        const m = Math.floor(diff / 60000);
-        if (m < 1) return 'just now';
-        if (m < 60) return `${m}m ago`;
-        const h = Math.floor(m / 60);
-        if (h < 24) return `${h}h ago`;
-        const days = Math.floor(h / 24);
-        return days < 7 ? `${days}d ago` : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    };
-
-    // Build the Live feed: email OPENS are noisy (many people, same blast), so
-    // club them into ONE row per blast ("N people opened your email update").
-    // Everything else stays as an individual event, all sorted newest-first.
-    const tsMs = (ts: any) => { if (!ts) return 0; const d = ts?.toDate ? ts.toDate() : new Date(ts); return d.getTime(); };
-    const activityFeed = useMemo(() => {
-        const out: any[] = [];
-        const groups = new Map<string, any>();
-        for (const l of logs) {
-            const isAnon = (l as any).isAnonymous || !l.userEmail || l.userEmail === 'anonymous';
-            if (isAnon && !showAnonymous) continue;
-            if (l.activityType === 'EMAIL_OPEN') {
-                const m = (l.details || '').match(/\(([^)]+)\)/);
-                const key = (l as any).blastId || (m ? m[1] : 'email');
-                let g = groups.get(key);
-                if (!g) { g = { kind: 'group', id: 'grp_' + key, latestTs: l.timestamp, openers: [] as string[] }; groups.set(key, g); out.push(g); }
-                const em = l.userEmail && l.userEmail !== 'anonymous' ? l.userEmail : null;
-                if (em && !g.openers.includes(em)) g.openers.push(em);
-                if (tsMs(l.timestamp) > tsMs(g.latestTs)) g.latestTs = l.timestamp;
-            } else {
-                out.push({ kind: 'single', id: l.id, log: l, latestTs: l.timestamp });
-            }
-        }
-        return out.sort((a, b) => tsMs(b.latestTs) - tsMs(a.latestTs));
-    }, [logs, showAnonymous]);
-
-    // Categorise a feed item for the summary tiles + filter chips.
-    const feedCategory = (item: any): 'signup' | 'open' | 'visit' | 'unsub' | 'interaction' => {
-        if (item.kind === 'group') return 'open';
-        const t = item.log.activityType as string;
-        if (['EMAIL_FORM_SUBMIT', 'BUY_INTENT_FORM_SUBMIT', 'LEAD_MAGNET_SUBMIT'].includes(t)) return 'signup';
-        if (t === 'EMAIL_UNSUBSCRIBED') return 'unsub';
-        if (t.startsWith('PAGE_VISIT')) return 'visit';
-        return 'interaction';
-    };
-
-    // At-a-glance counts for the Live overview (recent activity window).
-    const feedStats = useMemo(() => {
-        const s = { signup: 0, opens: 0, visit: 0, interaction: 0, unsub: 0 };
-        for (const item of activityFeed) {
-            const c = feedCategory(item);
-            if (c === 'open') s.opens += item.openers.length;         // unique openers
-            else s[c] += 1;
-        }
-        return s;
-    }, [activityFeed]);
-
-    const filteredFeed = useMemo(() => {
-        if (feedFilter === 'all') return activityFeed;
-        return activityFeed.filter(item => feedCategory(item) === feedFilter);
-    }, [activityFeed, feedFilter]);
-
-    // Helper: is this CTA click a journal download link?
-    const isJournalCta = (l: ActivityLog) =>
-        l.activityType === 'EMAIL_CTA_CLICK' &&
-        (l.details?.toLowerCase().includes('aboutmindgym') || (l as any).destination?.includes('aboutmindgym'));
-
-    // Derived stats from logs
-    const logStats = useMemo(() => {
-        const ytClicks    = logs.filter(l => l.activityType === 'EMAIL_YOUTUBE_CLICK').length;
-        const appCtaClicks     = logs.filter(l => l.activityType === 'EMAIL_CTA_CLICK' && !isJournalCta(l)).length;
-        const journalCtaClicks = logs.filter(l => isJournalCta(l)).length;
-        const videoPlays  = logs.filter(l => l.activityType === 'VIDEO_PLAY' || l.activityType === 'YOUTUBE_BADGE_CLICK').length;
-        const downloads   = logs.filter(l => l.activityType === 'JOURNAL_DOWNLOAD').length;
-        const emailSubmits = logs.filter(l => l.activityType === 'EMAIL_FORM_SUBMIT').length;
-        const pageVisits  = logs.filter(l => l.activityType === 'PAGE_VISIT_ABOUT' || l.activityType === 'PAGE_VISIT_APP').length;
-        const anonymousCount = logs.filter(l => !l.userEmail || l.userEmail === 'anonymous').length;
-        // Unique openers (all-time)
-        const uniqueOpeners = new Set(logs.filter(l => l.activityType === 'EMAIL_OPEN' && l.userEmail && l.userEmail !== 'anonymous').map(l => l.userEmail)).size;
-        // Interactions = any click beyond opening (YouTube + either CTA)
-        const interactions = ytClicks + appCtaClicks + journalCtaClicks;
-        return { ytClicks, appCtaClicks, journalCtaClicks, videoPlays, downloads, emailSubmits, pageVisits, anonymousCount, uniqueOpeners, interactions };
-    }, [logs]);
-
-    // Daily breakdown — last 14 days
-    const dailyStats = useMemo(() => {
-        const days: Record<string, {
-            opens: number; uniqueOpeners: Set<string>;
-            ytClicks: number; appCtaClicks: number; journalCtaClicks: number;
-        }> = {};
-        const toKey = (ts: any) => {
-            if (!ts) return null;
-            const d = ts.toDate ? ts.toDate() : new Date(ts);
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        };
-        logs.forEach(l => {
-            const key = toKey(l.timestamp);
-            if (!key) return;
-            if (!days[key]) days[key] = { opens: 0, uniqueOpeners: new Set(), ytClicks: 0, appCtaClicks: 0, journalCtaClicks: 0 };
-            if (l.activityType === 'EMAIL_OPEN') {
-                days[key].opens++;
-                if (l.userEmail && l.userEmail !== 'anonymous') days[key].uniqueOpeners.add(l.userEmail);
-            }
-            if (l.activityType === 'EMAIL_YOUTUBE_CLICK') days[key].ytClicks++;
-            if (l.activityType === 'EMAIL_CTA_CLICK') {
-                if (isJournalCta(l)) days[key].journalCtaClicks++;
-                else days[key].appCtaClicks++;
-            }
-        });
-        return Object.entries(days)
-            .map(([date, d]) => ({
-                date,
-                opens: d.opens,
-                uniqueOpeners: d.uniqueOpeners.size,
-                ytClicks: d.ytClicks,
-                appCtaClicks: d.appCtaClicks,
-                journalCtaClicks: d.journalCtaClicks,
-                interactions: d.ytClicks + d.appCtaClicks + d.journalCtaClicks,
-            }))
-            .sort((a, b) => new Date(b.date + ' 2026').getTime() - new Date(a.date + ' 2026').getTime())
-            .slice(0, 14);
-    }, [logs]);
-
-    if (!isOpen) return null;
-
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: 0.25 }}
-            className="w-full min-h-screen flex flex-col bg-[var(--bg-base)]"
-        >
-                    {/* Inline Page Content */}
-                    <div
-                        className="w-full flex flex-col"
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                    />
+
+                    {/* Modal Content */}
+                    <motion.div
+                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                        className="relative w-full max-w-3xl max-h-[90vh] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[24px] shadow-[0_32px_128px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
                     >
                         {/* Header */}
-                        <div className="p-4 sm:p-8 border-b border-[#2A2A2A] flex flex-col sm:flex-row justify-between items-start gap-6">
+                        <div className="p-8 border-b border-[#2A2A2A] flex justify-between items-start">
                             <div className="flex gap-4">
-                                <div className="p-3 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] shadow-inner flex-shrink-0">
-                                    {activeTab === 'logs' || activeTab === 'activity' ? <Mail className="w-6 h-6 text-[var(--accent-primary)]" /> : <Megaphone className="w-6 h-6 text-[var(--accent-primary)]" />}
+                                <div className="p-3 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] shadow-inner">
+                                    {activeTab === 'logs' ? <Mail className="w-6 h-6 text-[var(--accent-primary)]" /> : <Megaphone className="w-6 h-6 text-[var(--accent-primary)]" />}
                                 </div>
                                 <div>
-                                    <h2 className="text-[18px] sm:text-[22px] font-bold text-[var(--accent-primary)] tracking-wider uppercase">
-                                        {activeTab === 'activity' ? 'Live Activity'
-                                            : activeTab === 'logs' ? 'Engagement Report'
-                                            : activeTab === 'users' ? 'Users'
-                                            : activeTab === 'waitlist' ? 'Subscribers'
-                                            : activeTab === 'leads' ? 'Lead Finder'
-                                            : activeTab === 'blast' ? 'Send Course Update'
-                                            : 'Email History'}
+                                    <h2 className="text-[22px] font-bold text-[var(--accent-primary)] tracking-wider uppercase">
+                                        {activeTab === 'logs' ? 'Engagement Report' : activeTab === 'blast' ? 'Send Course Update' : 'Email History'}
                                     </h2>
-                                    <p className="text-[9px] sm:text-[11px] text-[var(--text-muted)] tracking-[0.2em] font-bold uppercase mt-1">
-                                        {activeTab === 'activity' ? 'Who interacted · newest first'
-                                            : activeTab === 'logs' ? 'Tracking User Activity'
-                                            : activeTab === 'users' ? 'All registered users'
-                                            : activeTab === 'waitlist' ? 'App signups · Journal gate · Downloads'
-                                            : activeTab === 'leads' ? 'Daily prospect scan from Google + Reddit'
-                                            : activeTab === 'blast' ? 'Send an email update to all users'
-                                            : 'History of all emails sent'}
+                                    <p className="text-[11px] text-[var(--text-muted)] tracking-[0.2em] font-bold uppercase mt-1">
+                                        {activeTab === 'logs' ? 'Tracking User Activity' : activeTab === 'blast' ? 'Send an email update to all registered users' : 'History of all course update emails sent'}
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex flex-row sm:flex-row gap-4 w-full sm:w-auto items-center">
-                                <div className="flex gap-1 sm:gap-2 bg-[var(--bg-surface-hover)] p-1 rounded-full border border-[var(--border-subtle)] flex-1 sm:flex-none overflow-x-auto custom-scrollbar no-scrollbar">
-                                    <button
-                                        onClick={() => setActiveTab('activity')}
-                                        className={cn(
-                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
-                                            activeTab === 'activity' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                                        )}
-                                    >
-                                        Live
-                                    </button>
-                                    <button
+                            <div className="flex gap-4">
+                                <div className="flex gap-2 bg-[var(--bg-surface-hover)] p-1 rounded-full border border-[var(--border-subtle)]">
+                                    <button 
                                         onClick={() => setActiveTab('logs')}
                                         className={cn(
-                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
+                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
                                             activeTab === 'logs' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
-                                        Report
+                                        Activity
                                     </button>
                                     <button 
                                         onClick={() => setActiveTab('users')}
                                         className={cn(
-                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
+                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
                                             activeTab === 'users' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
                                         Users
                                     </button>
-                                    <button 
-                                        onClick={() => setActiveTab('waitlist')}
-                                        className={cn(
-                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
-                                            activeTab === 'waitlist' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                                        )}
-                                    >
-                                        Subscribers
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('leads')}
-                                        className={cn(
-                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
-                                            activeTab === 'leads' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                                        )}
-                                    >
-                                        Leads
-                                    </button>
                                     <button
                                         onClick={() => setActiveTab('blast')}
                                         className={cn(
-                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
+                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
                                             activeTab === 'blast' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
@@ -701,143 +247,25 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <button
                                         onClick={() => setActiveTab('history')}
                                         className={cn(
-                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
+                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
                                             activeTab === 'history' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
                                         History
                                     </button>
-                                    <button
-                                        onClick={() => setActiveTab('errors')}
-                                        className={cn(
-                                            "px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap",
-                                            activeTab === 'errors' ? "bg-red-500 text-white" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                                        )}
-                                    >
-                                        Errors
-                                    </button>
-                                    <a
-                                        href="/editorial"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="px-3 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all whitespace-nowrap bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-black border border-[var(--accent-primary)]/40 flex items-center gap-1.5"
-                                    >
-                                        <span>Editorial 🧠</span>
-                                        <ExternalLink className="w-3 h-3" />
-                                    </a>
                                 </div>
 
                                 <button
                                     onClick={onClose}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all text-[13px] font-medium border border-[var(--border-subtle)]"
+                                    className="p-3 rounded-full hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all border border-transparent hover:border-[var(--border-subtle)]"
                                 >
-                                    <X className="w-4 h-4" /> Close
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
 
-                        {activeTab === 'activity' ? (
-                            <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 custom-scrollbar">
-                                <div className="flex items-center justify-between mb-5 px-2">
-                                    <div>
-                                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">Live Activity</h3>
-                                        <p className="text-[11px] text-[var(--text-muted)]">Who interacted with your pages, app &amp; emails — newest first</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => setShowAnonymous(v => !v)}
-                                            className={`flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full border transition-all ${showAnonymous ? 'border-amber-400/50 text-amber-400 bg-amber-400/10' : 'border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-                                        >
-                                            {showAnonymous ? 'Hide' : 'Show'} anonymous
-                                        </button>
-                                        <button onClick={fetchLogs} disabled={isLoading} className="inline-flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-full border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors">
-                                            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* At-a-glance overview — click a tile to filter the timeline below */}
-                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-3 px-2">
-                                    {[
-                                        { key: 'signup', label: 'New signups', value: feedStats.signup, color: 'var(--accent-primary)' },
-                                        { key: 'open', label: 'Email opens', value: feedStats.opens, color: '#38bdf8' },
-                                        { key: 'visit', label: 'Page visits', value: feedStats.visit, color: '#2dd4bf' },
-                                        { key: 'interaction', label: 'Interactions', value: feedStats.interaction, color: '#a78bfa' },
-                                        { key: 'unsub', label: 'Unsubscribed', value: feedStats.unsub, color: '#FF4B4B' },
-                                    ].map((m) => (
-                                        <button key={m.key} onClick={() => setFeedFilter(feedFilter === m.key ? 'all' : (m.key as any))}
-                                            className={cn("rounded-xl p-3 text-center border transition-all", feedFilter === m.key ? "border-[var(--accent-primary)] bg-[var(--bg-surface)]" : "border-[var(--border-subtle)] hover:border-[var(--border-default)]")}>
-                                            <div className="text-[19px] font-bold leading-none mb-1" style={{ color: m.color }}>{m.value}</div>
-                                            <div className="text-[9px] sm:text-[10px]" style={{ color: 'var(--text-muted)' }}>{m.label}</div>
-                                        </button>
-                                    ))}
-                                </div>
-                                {feedFilter !== 'all' && (
-                                    <div className="px-2 mb-3">
-                                        <button onClick={() => setFeedFilter('all')} className="text-[11px] font-semibold text-[var(--accent-primary)] hover:underline">
-                                            Showing {feedFilter} only · Show everything
-                                        </button>
-                                    </div>
-                                )}
-
-                                <div className="space-y-1.5">
-                                    {filteredFeed.map((item) => {
-                                        if (item.kind === 'group') {
-                                            const n = item.openers.length;
-                                            return (
-                                                <motion.div key={item.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                                                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors">
-                                                    <div className="w-9 h-9 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center shrink-0 mt-0.5">
-                                                        <Eye className="w-4 h-4 text-[var(--accent-primary)]" />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-[13px] leading-snug" style={{ color: 'var(--text-primary)' }}>
-                                                            <span className="font-semibold">{n} {n === 1 ? 'person' : 'people'}</span>{' '}
-                                                            <span style={{ color: 'var(--text-secondary)' }}>opened your email update</span>
-                                                        </p>
-                                                        {n > 0 && <p className="text-[11px] leading-snug mt-0.5" style={{ color: 'var(--text-muted)' }}>{item.openers.join(', ')}</p>}
-                                                    </div>
-                                                    <span className="text-[11px] whitespace-nowrap shrink-0 mt-1" style={{ color: 'var(--text-muted)' }}>{relativeTime(item.latestTs)}</span>
-                                                </motion.div>
-                                            );
-                                        }
-                                        const l = item.log;
-                                        const em = l.userEmail && l.userEmail !== 'anonymous' ? l.userEmail : 'Someone';
-                                        const isNegative = l.activityType === 'EMAIL_UNSUBSCRIBED';
-                                        return (
-                                            <motion.div key={item.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                                                className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors group">
-                                                <div className="w-9 h-9 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center shrink-0 mt-0.5">
-                                                    {getSourceIcon(l.activityType)}
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-[13px] leading-snug" style={{ color: 'var(--text-primary)' }}>
-                                                        <span className="font-semibold">{em}</span>{' '}
-                                                        <span style={{ color: isNegative ? '#FF4B4B' : 'var(--text-secondary)' }}>{humanizeLog(l)}</span>
-                                                        {l.location && l.location !== 'web' && (
-                                                            <span style={{ color: 'var(--text-muted)' }}> · {l.location}</span>
-                                                        )}
-                                                    </p>
-                                                    {l.details && <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{l.details}</p>}
-                                                </div>
-                                                <span className="text-[11px] whitespace-nowrap shrink-0 mt-1" style={{ color: 'var(--text-muted)' }}>{relativeTime(l.timestamp)}</span>
-                                                <button onClick={() => handleDeleteLog(l.id)} title="Delete"
-                                                    className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 shrink-0">
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </button>
-                                            </motion.div>
-                                        );
-                                    })}
-                                    {filteredFeed.length === 0 && !isLoading && (
-                                        <div className="py-20 text-center"><p className="text-[var(--text-muted)] italic">No activity in this filter.</p></div>
-                                    )}
-                                </div>
-                            </div>
-                        ) : activeTab === 'logs' ? (
+                        {activeTab === 'logs' ? (
                             <>
-                                <div className="px-4 sm:px-10 pt-5">
-                                    <EmotionalHealthStats />
-                                </div>
                                 {activeTab === 'logs' && (
                                     <div className="px-10 py-4 bg-[var(--bg-surface-hover)] border-b border-[var(--border-subtle)]/50">
                                         <div className="relative">
@@ -863,80 +291,13 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     </div>
                                 )}
 
-                                {/* ── Daily Breakdown Table ── */}
-                                {dailyStats.length > 0 && (
-                                    <div className="px-4 sm:px-10 py-4 border-b border-[var(--border-subtle)]/50">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--text-muted)] mb-3">Daily Email Engagement</p>
-                                        <div className="overflow-x-auto rounded-xl border border-[var(--border-subtle)]/60">
-                                            <table className="w-full text-[11px] border-collapse">
-                                                <thead>
-                                                    <tr className="bg-[var(--bg-surface-hover)] border-b border-[var(--border-subtle)]/50">
-                                                        <th className="px-3 py-2 text-left font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">Date</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-[var(--accent-primary)] uppercase tracking-wider whitespace-nowrap" title="Total email open events">Opens</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-[var(--accent-primary)] uppercase tracking-wider whitespace-nowrap" title="Distinct people who opened (no duplicates)">Unique</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-red-400 uppercase tracking-wider whitespace-nowrap" title="Clicked YouTube link in email">▶ YT</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-amber-400 uppercase tracking-wider whitespace-nowrap" title="Clicked 'Open Today's Practice' → app">📱 App</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-green-400 uppercase tracking-wider whitespace-nowrap" title="Clicked 'Get Free Journal' → /aboutmindgym">📓 Journal</th>
-                                                        <th className="px-3 py-2 text-center font-bold text-purple-400 uppercase tracking-wider whitespace-nowrap" title="Total clicks (YouTube + App + Journal) — people who did more than just open">Interactions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-[var(--border-subtle)]/30">
-                                                    {dailyStats.map((d, i) => (
-                                                        <tr key={d.date} className={i % 2 === 0 ? 'bg-[var(--bg-base)]' : 'bg-[var(--bg-surface)]/40'}>
-                                                            <td className="px-3 py-2 font-bold text-[var(--text-primary)] whitespace-nowrap">{d.date}</td>
-                                                            <td className="px-3 py-2 text-center font-bold text-[var(--accent-primary)]">{d.opens}</td>
-                                                            <td className="px-3 py-2 text-center text-[var(--text-secondary)]" title="Distinct people (no duplicates)">{d.uniqueOpeners}</td>
-                                                            <td className="px-3 py-2 text-center font-bold text-red-400">{d.ytClicks || <span className="text-[var(--text-muted)]">—</span>}</td>
-                                                            <td className="px-3 py-2 text-center font-bold text-amber-400">{d.appCtaClicks || <span className="text-[var(--text-muted)]">—</span>}</td>
-                                                            <td className="px-3 py-2 text-center font-bold text-green-400">{d.journalCtaClicks || <span className="text-[var(--text-muted)]">—</span>}</td>
-                                                            <td className="px-3 py-2 text-center">
-                                                                {d.interactions > 0
-                                                                    ? <span className="px-2 py-0.5 rounded-full bg-purple-400/15 text-purple-400 font-black">{d.interactions}</span>
-                                                                    : <span className="text-[var(--text-muted)]">—</span>
-                                                                }
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* ── Stats Bar ── */}
-                                <div className="px-4 sm:px-10 py-3 border-b border-[var(--border-subtle)]/50 flex flex-wrap items-center gap-3">
-                                    {[
-                                        { icon: <Youtube className="w-3 h-3 text-red-500" />, label: 'YouTube (from email)', value: logStats.ytClicks, color: 'text-red-400', title: 'Clicked the YouTube video link in the email' },
-                                        { icon: <Monitor className="w-3 h-3 text-amber-400" />, label: 'App clicks', value: logStats.appCtaClicks, color: 'text-amber-400', title: 'Clicked "Open Today\'s Practice" button → /mindgym' },
-                                        { icon: <Download className="w-3 h-3 text-green-400" />, label: 'Journal CTA', value: logStats.journalCtaClicks, color: 'text-green-400', title: 'Clicked "Get Free Journal" button → /aboutmindgym' },
-                                        { icon: <Eye className="w-3 h-3 text-[var(--accent-primary)]" />, label: 'Unique openers', value: logStats.uniqueOpeners, color: 'text-[var(--accent-primary)]', title: 'Distinct people who opened (regardless of how many times)' },
-                                        { icon: <Target className="w-3 h-3 text-purple-400" />, label: 'Total interactions', value: logStats.interactions, color: 'text-purple-400', title: 'Any click (YouTube + App CTA + Journal CTA) — people who did more than just open' },
-                                        { icon: <PlayCircle className="w-3 h-3 text-purple-300" />, label: 'Video plays (site)', value: logStats.videoPlays, color: 'text-purple-300', title: 'Played the walkthrough video on /aboutmindgym' },
-                                        { icon: <Globe className="w-3 h-3 text-teal-300" />, label: 'Page visits', value: logStats.pageVisits, color: 'text-teal-300', title: 'Visited /mindgym or /aboutmindgym' },
-                                    ].map(s => (
-                                        <div key={s.label} title={s.title} className="flex items-center gap-1.5 bg-[var(--bg-surface)] rounded-lg px-2.5 py-1.5 border border-[var(--border-subtle)]/60 cursor-help">
-                                            {s.icon}
-                                            <span className={`text-[11px] font-black ${s.color}`}>{s.value}</span>
-                                            <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider">{s.label}</span>
-                                        </div>
-                                    ))}
-                                    {/* Anonymous toggle */}
-                                    <button
-                                        onClick={() => setShowAnonymous(v => !v)}
-                                        className={`ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-wider transition-all ${showAnonymous ? 'border-amber-400/50 text-amber-400 bg-amber-400/10' : 'border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-                                    >
-                                        <UserX className="w-3 h-3" />
-                                        {showAnonymous ? 'Hide' : 'Show'} anonymous ({logStats.anonymousCount})
-                                    </button>
-                                </div>
-
                                 {/* Table Header */}
-                                <div className="px-4 sm:px-10 py-6 grid grid-cols-[1.5fr_1fr_0.1fr] md:grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                <div className="px-10 py-6 grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
                                     <div>User</div>
                                     <div>Action</div>
-                                    <div className="hidden md:block">Location</div>
-                                    <div className="hidden md:block">Date</div>
-                                    <div className="hidden md:block">Time</div>
+                                    <div>Location</div>
+                                    <div>Date</div>
+                                    <div>Time</div>
                                     <div className="text-right">
                                         <button onClick={fetchLogs} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
                                             <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
@@ -949,68 +310,94 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     <div className="space-y-1">
                                         {logs
                                             .filter(log => {
-                                                // Filter anonymous unless toggle is on
-                                                const isAnon = !log.userEmail || log.userEmail === 'anonymous';
-                                                if (isAnon && !showAnonymous) return false;
                                                 if (!searchTerm) return true;
                                                 const s = searchTerm.toLowerCase();
                                                 return (
                                                     log.userEmail?.toLowerCase().includes(s) ||
-                                                    log.entryEmail?.toLowerCase().includes(s) ||
                                                     log.activityType?.toLowerCase().includes(s) ||
                                                     log.location?.toLowerCase().includes(s) ||
                                                     getSourceLabel(log.activityType).toLowerCase().includes(s)
                                                 );
                                             })
-                                            .map((log) => {
+                                            .map((log, index) => {
                                             const { date, time } = formatTimestamp(log.timestamp);
-                                            // Prefer real email; fall back to entryEmail for anonymous users
-                                            const resolvedEmail = log.userEmail || log.entryEmail || null;
-                                            const userName = resolvedEmail ? resolvedEmail.split('@')[0] : 'User';
+                                            const userName = log.userEmail ? log.userEmail.split('@')[0] : 'User';
                                             const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
+                                            const isAdmin = isAdminEmail(log.userEmail);
+
+                                            // Calculate duration since this event until the next event for the same user
+                                            let duration = '';
+                                            const nextEventSameUser = index > 0 ? [...logs.slice(0, index)].reverse().find(l => l.userEmail === log.userEmail) : null;
+                                            
+                                            if (nextEventSameUser) {
+                                                const currentMs = log.timestamp?.toDate ? log.timestamp.toDate().getTime() : new Date(log.timestamp).getTime();
+                                                const nextMs = nextEventSameUser.timestamp?.toDate ? nextEventSameUser.timestamp.toDate().getTime() : new Date(nextEventSameUser.timestamp).getTime();
+                                                const diff = Math.floor((nextMs - currentMs) / 60000); // minutes
+                                                if (diff > 0 && diff < 120) duration = `${diff}m`;
+                                                else if (diff >= 120) duration = '2h+';
+                                            }
 
                                             return (
                                                 <motion.div
                                                     key={log.id}
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
-                                                    className="grid grid-cols-[1.5fr_1fr_0.1fr] md:grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                    className="grid grid-cols-[1.5fr_1fr_1.5fr_0.8fr_0.8fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
                                                 >
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-primary)] border border-[var(--border-default)] flex items-center justify-center overflow-hidden shrink-0">
-                                                            <span className="text-[12px] font-bold text-[var(--text-muted)]">{displayName.charAt(0)}</span>
+                                                        <div className={cn(
+                                                            "w-8 h-8 rounded-full border flex items-center justify-center overflow-hidden shrink-0",
+                                                            isAdmin ? "bg-[var(--accent-primary)]/20 border-[var(--accent-primary)]/40" : "bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-primary)] border-[var(--border-default)]"
+                                                        )}>
+                                                            <span className={cn("text-[12px] font-bold", isAdmin ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")}>
+                                                                {displayName.charAt(0)}
+                                                            </span>
                                                         </div>
                                                         <div className="flex flex-col min-w-0">
-                                                            <span className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors truncate">{displayName}</span>
                                                             <div className="flex items-center gap-1.5">
-                                                                <span className="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-widest truncate">{resolvedEmail}</span>
-                                                                {log.isAnonymous && (
-                                                                    <span className="text-[8px] font-black tracking-widest text-amber-400/70 uppercase shrink-0">Anon ✦</span>
-                                                                )}
+                                                                <span className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors truncate">{displayName}</span>
+                                                                {isAdmin && <span className="text-[8px] px-1 rounded-sm bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] font-black uppercase tracking-tighter">Admin</span>}
                                                             </div>
+                                                            <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest truncate">{log.userEmail}</span>
                                                         </div>
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
                                                         {getSourceIcon(log.activityType)}
-                                                        <span className="text-[11px] font-bold text-[var(--text-secondary)] tracking-tight">{getSourceLabel(log.activityType)}</span>
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className="text-[11px] font-bold text-[var(--text-secondary)] tracking-tight">{getSourceLabel(log.activityType)}</span>
+                                                            {log.details && (
+                                                                <span className="text-[8px] text-[var(--accent-primary)] font-bold uppercase tracking-widest opacity-80 truncate" title={log.details}>
+                                                                    {(() => {
+                                                                        try {
+                                                                            const d = JSON.parse(log.details);
+                                                                            return d.title || d.path || d.page || log.details;
+                                                                        } catch(e) { return log.details; }
+                                                                    })()}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
 
-                                                    <div className="hidden md:block text-[12px] text-[var(--text-muted)] italic pr-2 truncate" title={log.location || 'Unknown'}>
-                                                        {log.location || 'Unknown'}
+                                                    <div className="flex flex-col pr-2 min-w-0">
+                                                        <div className="text-[12px] text-[var(--text-muted)] italic truncate" title={log.location || 'Unknown'}>
+                                                            {log.location || 'Unknown'}
+                                                        </div>
+                                                        <div className="text-[9px] text-[var(--text-muted)] font-mono opacity-40 uppercase tracking-tighter truncate">
+                                                            {log.platform || 'web'} • {log.userAgent?.includes('Mobile') ? 'Mobile' : 'Desktop'}
+                                                        </div>
                                                     </div>
 
-                                                    <div className="hidden md:block text-[12px] text-[var(--text-secondary)]">{date}</div>
+                                                    <div className="text-[12px] text-[var(--text-secondary)]">{date}</div>
 
-                                                    <div className="hidden md:block text-[12px] font-bold text-[var(--accent-primary)]">{time}</div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[12px] font-bold text-[var(--accent-primary)]">{time}</span>
+                                                        {duration && <span className="text-[9px] text-[var(--text-muted)] font-bold uppercase">Stay: {duration}</span>}
+                                                    </div>
 
-                                                    <div className="flex justify-end gap-2">
-                                                        <button 
-                                                            onClick={() => handleDeleteLog(log.id)}
-                                                            className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400"
-                                                            title="Delete Log"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
+                                                    <div className="flex justify-end">
+                                                        <button className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-[var(--accent-primary)]">
+                                                            <Eye className="w-4 h-4" />
                                                         </button>
                                                     </div>
                                                 </motion.div>
@@ -1042,11 +429,11 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     </div>
                                 </div>
 
-                                <div className="px-4 sm:px-10 py-6 grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[1.5fr_1.5fr_1fr_1fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                <div className="px-10 py-6 grid grid-cols-[1.5fr_1.5fr_1fr_1fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
                                     <div>User</div>
-                                    <div className="hidden md:block">Email</div>
-                                    <div className="hidden md:block">Joined</div>
-                                    <div className="hidden md:block">Last Presence / Login</div>
+                                    <div>Email</div>
+                                    <div>Joined</div>
+                                    <div>Last Presence / Login</div>
                                     <div className="text-right">
                                         <button onClick={fetchUsers} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
                                             <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
@@ -1075,7 +462,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         key={u.id}
                                                         initial={{ opacity: 0, x: -10 }}
                                                         animate={{ opacity: 1, x: 0 }}
-                                                        className="grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[1.5fr_1.5fr_1fr_1fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                        className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
                                                     >
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-primary)] border border-[var(--border-default)] flex items-center justify-center overflow-hidden shrink-0">
@@ -1084,9 +471,9 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                             <span className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors truncate">{displayName}</span>
                                                         </div>
 
-                                                        <div className="hidden md:block text-[12px] text-[var(--text-secondary)] truncate">{u.email}</div>
-                                                        <div className="hidden md:block text-[12px] text-[var(--text-muted)]">{joinedDate}</div>
-                                                        <div className="hidden md:block flex flex-col">
+                                                        <div className="text-[12px] text-[var(--text-secondary)] truncate">{u.email}</div>
+                                                        <div className="text-[12px] text-[var(--text-muted)]">{joinedDate}</div>
+                                                        <div className="flex flex-col">
                                                             <span className="text-[12px] text-[var(--text-secondary)]">{loginDate || 'Never'}</span>
                                                             <span className="text-[10px] font-bold text-[var(--accent-primary)]">{loginTime}</span>
                                                         </div>
@@ -1099,279 +486,10 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                                 "w-2 h-2 rounded-full",
                                                                 u.lastLogin ? "bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" : "bg-neutral-800"
                                                             )} />
-                                                            <button 
-                                                                onClick={() => handleDeleteUser(u.id)}
-                                                                className="ml-2 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400"
-                                                                title="Delete User"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
                                                         </div>
                                                     </motion.div>
                                                 );
                                             })}
-                                    </div>
-                                </div>
-                            </>
-                        ) : activeTab === 'waitlist' ? (
-                            <>
-                                {/* Summary — total / who we email / who opened / who opted out */}
-                                <div className="px-4 sm:px-10 pt-5 flex flex-wrap items-center gap-x-6 gap-y-1 text-[12px] font-bold">
-                                    <span className="text-[var(--text-secondary)]">{waitlist.length} subscribers</span>
-                                    <span className="text-emerald-400">{waitlist.filter((w: any) => !w.unsubscribed).length} active · we email these</span>
-                                    <span className="text-sky-400">{waitlist.filter((w: any) => w.opened).length} opened an email</span>
-                                    <span className="text-[#FF4B4B]">{waitlist.filter((w: any) => w.unsubscribed).length} unsubscribed</span>
-                                </div>
-                                <div className="px-4 sm:px-10 py-5 grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[1.8fr_1fr_0.9fr_0.7fr_1fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
-                                    <div>Email</div>
-                                    <div className="hidden md:block">Source / Page</div>
-                                    <div className="hidden md:block">Status</div>
-                                    <div className="hidden md:block">Opened</div>
-                                    <div className="hidden md:block">Joined</div>
-                                    <div className="text-right">
-                                        <button onClick={fetchWaitlist} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
-                                            <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar">
-                                    <div className="space-y-1">
-                                        {waitlist.map((w) => {
-                                            const { date, time } = formatTimestamp(w.createdAt);
-                                            return (
-                                                <motion.div
-                                                    key={w.id}
-                                                    initial={{ opacity: 0, x: -10 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    className="grid grid-cols-[1.5fr_0.1fr] md:grid-cols-[1.8fr_1fr_0.9fr_0.7fr_1fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
-                                                >
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-primary)] border border-[var(--border-default)] flex items-center justify-center overflow-hidden shrink-0">
-                                                            <Mail className="w-4 h-4 text-[var(--text-muted)]" />
-                                                        </div>
-                                                        <span className={cn("text-[13px] font-medium truncate transition-colors", w.unsubscribed ? "text-[var(--text-muted)] line-through" : "text-[var(--text-primary)] group-hover:text-[var(--accent-primary)]")}>{w.email}</span>
-                                                    </div>
-
-                                                    <div className="hidden md:block text-[11px] font-bold uppercase tracking-tight" style={{
-                                                        color: w.source === 'app_signup' ? 'var(--accent-primary)'
-                                                            : w.source === 'journal_download_clicked' ? '#818cf8'
-                                                            : String(w.source || '').startsWith('feelings_') ? '#d8a53a'
-                                                            : w.source === 'lead_magnet_free_guide' ? '#e0b341'
-                                                            : 'var(--text-secondary)'
-                                                    }}>
-                                                        {sourceLabel(w.source)}
-                                                    </div>
-
-                                                    <div className="hidden md:block">
-                                                        {w.unsubscribed ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-[#FF4B4B]/10 text-[#FF4B4B]">
-                                                                <UserX className="w-3 h-3" /> Unsubscribed
-                                                            </span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">
-                                                                Active
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="hidden md:block">
-                                                        {w.opened ? (
-                                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-400">
-                                                                <Eye className="w-3.5 h-3.5" /> Yes
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-[11px] text-[var(--text-muted)]">—</span>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="hidden md:block flex flex-col">
-                                                        <span className="text-[12px] text-[var(--text-secondary)]">{date}</span>
-                                                        <span className="text-[10px] font-bold text-[var(--accent-primary)]">{time}</span>
-                                                    </div>
-
-                                                    <div className="flex justify-end pr-2">
-                                                        <button 
-                                                            onClick={() => handleDeleteWaitlist(w.id)}
-                                                            className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400"
-                                                            title="Remove Entry"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
-
-                                        {waitlist.length === 0 && !isLoading && (
-                                            <div className="py-20 text-center">
-                                                <p className="text-[var(--text-muted)] italic">Waitlist is currently empty.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </>
-                        ) : activeTab === 'leads' ? (
-                            <>
-                                {/* Scan controls */}
-                                <div className="px-6 sm:px-10 py-5 bg-[var(--bg-surface-hover)] border-b border-[var(--border-subtle)]/50 space-y-4">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">
-                                            Search keywords (comma-separated)
-                                        </label>
-                                        <textarea
-                                            value={leadKeywords}
-                                            onChange={(e) => setLeadKeywords(e.target.value)}
-                                            rows={2}
-                                            className="w-full bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl py-2.5 px-4 text-[12px] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]/50 transition-colors resize-none"
-                                            placeholder="e.g. spiritual awakening, untethered soul, presence meditation"
-                                        />
-                                    </div>
-                                    <div className="flex items-center justify-between gap-4 flex-wrap">
-                                        <div className="flex items-center gap-3 text-[10px] text-[var(--text-muted)] uppercase tracking-[0.18em] font-bold flex-wrap">
-                                            <span className="flex items-center gap-1.5"><Globe className="w-3 h-3" /> Google</span>
-                                            <span className="opacity-40">+</span>
-                                            <span className="flex items-center gap-1.5"><Target className="w-3 h-3" /> Reddit</span>
-                                            {lastScan?.budget && (
-                                                <span
-                                                    className={cn(
-                                                        "px-2 py-0.5 rounded-full border",
-                                                        lastScan.budget.googleRemainingToday <= 10
-                                                            ? "border-red-400/40 text-red-400"
-                                                            : lastScan.budget.googleRemainingToday <= 30
-                                                            ? "border-amber-400/40 text-amber-400"
-                                                            : "border-[var(--accent-primary)]/40 text-[var(--accent-primary)]"
-                                                    )}
-                                                    title="Google Custom Search free-tier daily quota (resets at UTC midnight)"
-                                                >
-                                                    Quota: {lastScan.budget.googleUsedToday}/{lastScan.budget.googleDailyCap}
-                                                </span>
-                                            )}
-                                            {lastScan?.startedAt && (
-                                                <>
-                                                    <span className="opacity-40">·</span>
-                                                    <span>
-                                                        Last scan: {formatTimestamp(lastScan.startedAt).date} {formatTimestamp(lastScan.startedAt).time}
-                                                        {typeof lastScan.newLeadsCount === 'number' && ` · +${lastScan.newLeadsCount} new`}
-                                                    </span>
-                                                </>
-                                            )}
-                                        </div>
-                                        <button
-                                            onClick={handleRunScan}
-                                            disabled={isScanning || !leadKeywords.trim()}
-                                            className={cn(
-                                                "flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] transition-all",
-                                                "bg-[var(--accent-primary)] text-black hover:opacity-90",
-                                                (isScanning || !leadKeywords.trim()) && "opacity-50 cursor-not-allowed"
-                                            )}
-                                        >
-                                            {isScanning ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                                            <span>{isScanning ? 'Scanning…' : 'Run Scan Now'}</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Table header */}
-                                <div className="px-4 sm:px-10 py-5 grid grid-cols-[1.6fr_0.5fr_0.4fr] md:grid-cols-[2fr_0.6fr_0.6fr_0.6fr_0.4fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
-                                    <div>Lead</div>
-                                    <div className="hidden md:block">Source</div>
-                                    <div>Status</div>
-                                    <div className="hidden md:block">Found</div>
-                                    <div className="text-right">
-                                        <button onClick={fetchLeads} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
-                                            <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-8 custom-scrollbar">
-                                    <div className="space-y-1">
-                                        {leads.map((lead) => {
-                                            const { date, time } = formatTimestamp(lead.foundAt);
-                                            const status = lead.status || 'new';
-                                            return (
-                                                <motion.div
-                                                    key={lead.id}
-                                                    initial={{ opacity: 0, x: -10 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    className="grid grid-cols-[1.6fr_0.5fr_0.4fr] md:grid-cols-[2fr_0.6fr_0.6fr_0.6fr_0.4fr] items-center px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
-                                                >
-                                                    <div className="flex flex-col gap-1 min-w-0 pr-3">
-                                                        <a
-                                                            href={lead.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1 flex items-center gap-1.5"
-                                                            title={lead.title}
-                                                        >
-                                                            {lead.title || '(untitled)'}
-                                                            <ExternalLink className="w-3 h-3 opacity-50 shrink-0" />
-                                                        </a>
-                                                        {lead.snippet && (
-                                                            <span className="text-[10px] text-[var(--text-muted)] line-clamp-2 italic">{lead.snippet}</span>
-                                                        )}
-                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest truncate">
-                                                            {lead.displayLink || lead.url}
-                                                            {lead.keyword && <> · matched: <span className="text-[var(--accent-primary)]/70">{lead.keyword}</span></>}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="hidden md:flex items-center gap-2">
-                                                        {lead.source === 'google'
-                                                            ? <Globe className="w-4 h-4 text-[var(--accent-primary)]" />
-                                                            : <Target className="w-4 h-4 text-[#E67E22]" />
-                                                        }
-                                                        <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-tight">{lead.source}</span>
-                                                    </div>
-
-                                                    <div>
-                                                        <select
-                                                            value={status}
-                                                            onChange={(e) => handleUpdateLeadStatus(lead.id, e.target.value)}
-                                                            className={cn(
-                                                                "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border bg-transparent focus:outline-none cursor-pointer",
-                                                                status === 'new' && "border-[var(--accent-primary)]/40 text-[var(--accent-primary)]",
-                                                                status === 'reviewed' && "border-blue-400/40 text-blue-400",
-                                                                status === 'contacted' && "border-purple-400/40 text-purple-400",
-                                                                status === 'converted' && "border-green-400/40 text-green-400",
-                                                                status === 'rejected' && "border-red-400/40 text-red-400"
-                                                            )}
-                                                        >
-                                                            <option value="new">New</option>
-                                                            <option value="reviewed">Reviewed</option>
-                                                            <option value="contacted">Contacted</option>
-                                                            <option value="converted">Converted</option>
-                                                            <option value="rejected">Rejected</option>
-                                                        </select>
-                                                    </div>
-
-                                                    <div className="hidden md:flex flex-col">
-                                                        <span className="text-[12px] text-[var(--text-secondary)]">{date}</span>
-                                                        <span className="text-[10px] font-bold text-[var(--accent-primary)]">{time}</span>
-                                                    </div>
-
-                                                    <div className="flex justify-end gap-2">
-                                                        <button
-                                                            onClick={() => handleDeleteLead(lead.id)}
-                                                            className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400"
-                                                            title="Delete Lead"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
-
-                                        {leads.length === 0 && !isLoading && (
-                                            <div className="py-20 text-center space-y-2">
-                                                <p className="text-[var(--text-muted)] italic">No leads yet.</p>
-                                                <p className="text-[10px] text-[var(--text-muted)]/60 uppercase tracking-[0.2em] font-bold">
-                                                    Click "Run Scan Now" to search Google + Reddit
-                                                </p>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </>
@@ -1397,41 +515,23 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                         </div>
                                     </div>
 
-                                    <div className="space-y-6 py-4">
+                                    <div className="space-y-12 py-4">
                                         <div className="relative p-6 rounded-2xl bg-[var(--bg-surface)]/30 border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 transition-colors">
                                             <WhisperInput 
-                                                label="1. Email Subject / Daily Article Title"
-                                                placeholder="Example: How to Stop Overthinking at Night"
+                                                label="1. Email Subject / Chapter Title"
+                                                placeholder="Example: New Lesson added: The Observer"
                                                 value={blastTitle}
                                                 onChange={setBlastTitle}
                                             />
                                         </div>
                                         <div className="relative p-6 rounded-2xl bg-[var(--bg-surface)]/30 border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 transition-colors">
                                             <WhisperInput 
-                                                label="2. Summary / Key Takeaway"
-                                                placeholder="Example: Discover 4 simple somatic steps to calm your nervous system before sleep..."
+                                                label="2. Description / Details"
+                                                placeholder="Example: We have added a new deep-dive lesson on the Witnessing Presence."
                                                 multiline
                                                 value={blastSubtitle}
                                                 onChange={setBlastSubtitle}
                                             />
-                                        </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="relative p-6 rounded-2xl bg-[var(--bg-surface)]/30 border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 transition-colors">
-                                                <WhisperInput 
-                                                    label="3. Article Post Link (Public, Zero Login)"
-                                                    placeholder="https://www.skrmblissai.in/guides/how-to-stop-overthinking-at-night"
-                                                    value={blastArticleUrl}
-                                                    onChange={setBlastArticleUrl}
-                                                />
-                                            </div>
-                                            <div className="relative p-6 rounded-2xl bg-[var(--bg-surface)]/30 border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 transition-colors">
-                                                <WhisperInput 
-                                                    label="4. 60s Video Teaser Link"
-                                                    placeholder="https://www.skrmblissai.in/videos/ep1-feelings-and-emotions"
-                                                    value={blastVideoUrl}
-                                                    onChange={setBlastVideoUrl}
-                                                />
-                                            </div>
                                         </div>
                                     </div>
 
@@ -1462,60 +562,14 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     </div>
                                 </div>
                             </div>
-                        ) : activeTab === 'errors' ? (
-                            <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 custom-scrollbar">
-                                <div className="flex items-center justify-between mb-5 px-2">
-                                    <div>
-                                        <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">Crash &amp; Error Log</h3>
-                                        <p className="text-[11px] text-[var(--text-muted)]">Runtime errors caught across all users — newest first</p>
-                                    </div>
-                                    <button onClick={fetchErrors} disabled={isLoading} className="inline-flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-full border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors">
-                                        <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
-                                    </button>
-                                </div>
-                                {errorLogs.length === 0 ? (
-                                    <div className="text-center py-16 text-[13px] text-[var(--text-muted)]">
-                                        {isLoading ? 'Loading…' : 'No errors recorded 🎉'}
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {errorLogs.map((e) => {
-                                            const when = e.timestamp?.toDate ? e.timestamp.toDate() : null;
-                                            return (
-                                                <div key={e.id} className="p-4 rounded-2xl border border-red-500/20 bg-red-500/5">
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <p className="text-[13px] font-bold text-[var(--text-primary)] break-words min-w-0 flex-1">{e.message}</p>
-                                                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500/15 text-red-500 flex-shrink-0">{e.kind || 'error'}</span>
-                                                    </div>
-                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-[var(--text-muted)]">
-                                                        {e.feature && <span>📦 {e.feature}</span>}
-                                                        {e.email && <span>👤 {e.email}</span>}
-                                                        {e.url && <span className="truncate max-w-[220px]">🔗 {String(e.url).replace(/^https?:\/\//, '')}</span>}
-                                                        {when && <span>🕐 {when.toLocaleString()}</span>}
-                                                    </div>
-                                                    {e.stack && (
-                                                        <details className="mt-2">
-                                                            <summary className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer hover:text-[var(--text-secondary)]">Stack trace</summary>
-                                                            <pre className="mt-1.5 text-[10px] text-[var(--text-secondary)] whitespace-pre-wrap break-words bg-black/20 rounded-lg p-3 overflow-x-auto max-h-48">{e.stack}</pre>
-                                                        </details>
-                                                    )}
-                                                    {e.userAgent && <p className="mt-1.5 text-[9px] text-[var(--text-muted)] truncate">{e.userAgent}</p>}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
                         ) : (
                             <>
-                                <div className="px-10 py-6 grid grid-cols-[1.8fr_1fr_0.6fr_0.8fr_0.8fr_0.8fr_0.8fr_0.2fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                {/* History View */}
+                                <div className="px-10 py-6 grid grid-cols-[2fr_1fr_0.8fr_0.8fr_0.5fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
                                     <div>Subject / Guidance</div>
                                     <div>Date Sent</div>
-                                    <div className="text-center">Sent</div>
+                                    <div className="text-center">Sent To</div>
                                     <div className="text-center">Opened</div>
-                                    <div className="text-center">Clicked</div>
-                                    <div className="text-center">Engage</div>
-                                    <div className="text-center">Opt-Out</div>
                                     <div className="text-right">
                                         <button onClick={fetchHistory} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
                                             <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
@@ -1524,7 +578,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                 </div>
 
                                 <div className="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar">
-                                    <div className="space-y-1 pt-20">
+                                    <div className="space-y-1">
                                         {blasts.map((blast) => {
                                             const { date, time } = formatTimestamp(blast.sentAt);
                                             const openRate = blast.totalRecipients > 0 ? Math.round((blast.opens / blast.totalRecipients) * 100) : 0;
@@ -1534,10 +588,10 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                     key={blast.id}
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
-                                                    className="grid grid-cols-[1.8fr_1fr_0.6fr_0.8fr_0.8fr_0.8fr_0.8fr_0.2fr] items-center px-4 py-6 rounded-xl hover:bg-[var(--bg-surface)] transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                    className="grid grid-cols-[2fr_1fr_0.8fr_0.8fr_0.5fr] items-center px-4 py-6 rounded-xl hover:bg-[var(--bg-surface)] transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
                                                 >
                                                     <div className="flex flex-col gap-1 pr-4">
-                                                        <span className="text-[14px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1">{blast.chapterTitle}</span>
+                                                        <span className="text-[14px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">{blast.chapterTitle}</span>
                                                         <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest truncate">{blast.subject}</span>
                                                     </div>
 
@@ -1546,78 +600,21 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                                         <span className="text-[10px] text-[var(--text-muted)] font-bold">{time}</span>
                                                     </div>
 
-                                                    <div className="text-center font-mono text-[13px] text-[var(--text-muted)] relative group/details">
+                                                    <div className="text-center font-mono text-[13px] text-[var(--text-muted)]">
                                                         {blast.totalRecipients}
-                                                        
-                                                        {blast.recipientEmails?.length > 0 && (
-                                                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[#1C1814] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover/details:opacity-100 transition-opacity pointer-events-none z-50">
-                                                                <p className="text-[8px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left flex justify-between">Sent To: <span>{blast.totalRecipients}</span></p>
-                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left font-mono">
-                                                                    {blast.recipientEmails.map((email: string) => (
-                                                                        <div key={email} className="text-[9px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
                                                     </div>
 
-                                                    {/* Opened */}
-                                                    <div className="flex flex-col items-center relative group/details">
+                                                    <div className="flex flex-col items-center relative">
                                                         <span className="text-[13px] font-bold text-[var(--accent-primary)]">{blast.opens}</span>
-                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest text-center">{openRate}%</span>
+                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest">{openRate}% rate</span>
                                                         
+                                                        {/* Hover Details for Openers */}
                                                         {blast.openedBy?.length > 0 && (
-                                                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[#1C1814] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover/details:opacity-100 transition-opacity pointer-events-none z-50">
-                                                                <p className="text-[8px] font-bold text-[var(--accent-primary)] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left flex justify-between">Opened By: <span>{blast.opens}</span></p>
-                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left font-mono">
+                                                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                                                <p className="text-[8px] font-bold text-[var(--accent-primary)] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left">Opened By:</p>
+                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left">
                                                                     {blast.openedBy.map((email: string) => (
-                                                                        <div key={email} className="text-[9px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Clicked */}
-                                                    <div className="flex flex-col items-center relative group/details">
-                                                        <span className="text-[13px] font-bold text-[#E67E22]">{blast.clicks || 0}</span>
-                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest text-center">
-                                                            {blast.totalRecipients > 0 ? Math.round(((blast.clicks || 0) / blast.totalRecipients) * 100) : 0}%
-                                                        </span>
-                                                        
-                                                        {blast.clickedBy?.length > 0 && (
-                                                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[#1C1814] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover/details:opacity-100 transition-opacity pointer-events-none z-50">
-                                                                <p className="text-[8px] font-bold text-[#E67E22] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left flex justify-between">Clicked By: <span>{blast.clicks}</span></p>
-                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left font-mono">
-                                                                    {blast.clickedBy.map((email: string) => (
-                                                                        <div key={email} className="text-[9px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Engagement Time */}
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="text-[13px] font-bold text-[#9B59B6]">
-                                                            {blast.avgDwell ? (blast.avgDwell > 60000 ? `${(blast.avgDwell / 60000).toFixed(1)}m` : `${Math.round(blast.avgDwell / 1000)}s`) : '--'}
-                                                        </span>
-                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest text-center">Avg Read</span>
-                                                    </div>
-
-                                                    {/* Unsubscribed */}
-                                                    <div className="flex flex-col items-center relative group/details">
-                                                        <span className="text-[13px] font-bold text-[#FF4B4B]">{blast.unsubscribes || 0}</span>
-                                                        <span className="text-[8px] text-[var(--text-muted)] font-bold uppercase tracking-widest text-center">
-                                                            {blast.totalRecipients > 0 ? ((blast.unsubscribes || 0) / blast.totalRecipients * 100).toFixed(1) : 0}%
-                                                        </span>
-                                                        
-                                                        {blast.unsubscribedBy?.length > 0 && (
-                                                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-3 rounded-xl bg-[#1C1814] border border-[var(--border-subtle)] shadow-2xl opacity-0 group-hover/details:opacity-100 transition-opacity pointer-events-none z-50">
-                                                                <p className="text-[8px] font-bold text-[#FF4B4B] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-1 text-left flex justify-between">Opted Out: <span>{blast.unsubscribes}</span></p>
-                                                                <div className="max-h-32 overflow-y-auto custom-scrollbar text-left font-mono">
-                                                                    {blast.unsubscribedBy.map((email: string) => (
-                                                                        <div key={email} className="text-[9px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
+                                                                        <div key={email} className="text-[10px] text-[var(--text-secondary)] py-0.5 truncate">{email}</div>
                                                                     ))}
                                                                 </div>
                                                             </div>
@@ -1650,8 +647,10 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                             .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 10px; }
                             .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--border-default); }
                         ` }} />
-                    </div>
-        </motion.div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
     );
 };
 

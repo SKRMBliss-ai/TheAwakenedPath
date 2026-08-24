@@ -12,6 +12,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { doc, onSnapshot, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { getLocalDayString } from '../../lib/utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -48,7 +49,7 @@ export interface UseDailyPracticeReturn {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function todayString(): string {
-  return new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
+  return getLocalDayString();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
