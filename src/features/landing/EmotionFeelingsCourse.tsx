@@ -999,7 +999,7 @@ export default function EmotionFeelingsCourse() {
             position: 'absolute',
             inset: 0,
             backgroundImage: `url("data:image/svg+xml,${EMOJI_PATTERN_SVG}")`,
-            backgroundSize: '600px 600px',
+            backgroundSize: '1200px 1200px',
             backgroundRepeat: 'repeat',
             opacity: isDark ? 0.05 : 0.08,
             mixBlendMode: isDark ? 'lighten' : 'multiply',

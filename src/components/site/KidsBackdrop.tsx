@@ -21,7 +21,7 @@ export default function KidsBackdrop() {
           position: 'absolute',
           inset: 0,
           backgroundImage: "url('/marketing/kids_emotion_pattern.png')",
-          backgroundSize: '300px 300px', // Scale the pattern
+          backgroundSize: '900px 900px', // Scale the pattern so characters are bigger and fewer
           backgroundRepeat: 'repeat',
           opacity: palette.isDark ? 0.05 : 0.06, // Keep it very faint like distant polka dots
           mixBlendMode: palette.isDark ? 'lighten' : 'multiply',
