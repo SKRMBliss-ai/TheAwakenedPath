@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme } from '../../lib/siteTheme';
-import { KIDS_TITLE, KIDS_TAGLINE, KIDS_AGES, KIDS_TIME, KIDS_POSTER_IMG } from './kidsChallengeData';
+import { KIDS_TITLE, KIDS_TAGLINE, KIDS_AGES, KIDS_TIME, KIDS_POSTER_IMG, trackKids } from './kidsChallengeData';
 
 export default function KidsChallengeFlyer() {
   const { palette } = useSiteTheme();
