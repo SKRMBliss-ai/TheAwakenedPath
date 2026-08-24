@@ -152,7 +152,22 @@ export default function KidsChallenge() {
           { label: 'The 3 days', href: '#days' },
           { label: 'Who it is for', href: '#who', secondary: true },
           { label: 'Questions', href: '#faq', secondary: true },
-          { label: 'Adult course', href: '/feelingsandemotioncourse', secondary: true },
+          {
+            label: 'Courses',
+            subItems: [
+              {
+                label: 'For All',
+                sub: 'Feelings & Emotions · Power of Now · Wisdom Untethered',
+                href: '/feelingsandemotioncourse',
+              },
+              {
+                label: 'For Kids',
+                sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
+                badge: 'NEW',
+                href: '/kidschallenge',
+              },
+            ],
+          },
         ]}
         cta={{ label: "Reserve my child's place →", href: KIDS_REGISTER_PATH, onClick: () => trackKids('KIDS_HEADER_CTA') }}
       />

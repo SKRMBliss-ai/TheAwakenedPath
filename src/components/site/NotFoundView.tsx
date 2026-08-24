@@ -14,10 +14,26 @@ import { useEffect } from 'react';
 // look identical.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const LINKS: { label: string; href: string }[] = [
+const LINKS: any[] = [
   { label: 'About Mind Gym', href: '/aboutmindgym' },
   { label: 'Articles', href: '/guides' },
-  { label: 'Course', href: '/feelingsandemotioncourse' },
+  {
+    label: 'Courses',
+    href: '',
+    subItems: [
+      {
+        label: 'For All',
+        sub: 'Feelings & Emotions · Power of Now · Wisdom Untethered',
+        href: '/feelingsandemotioncourse',
+      },
+      {
+        label: 'For Kids',
+        sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
+        badge: 'NEW',
+        href: '/kidschallenge',
+      },
+    ],
+  },
   { label: 'Emotional health check', href: '/knowyouremotionalhealth' },
 ];
 
