@@ -31,6 +31,7 @@ export default function KidsChallengeRegister() {
     title: `Register | ${KIDS_TITLE}`,
     description: 'Reserve your child\'s place in the 3-day live kids challenge — Friday to Sunday on Zoom.',
     url: 'https://www.skrmblissai.in/kidschallenge/register',
+    image: 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fposter.png?alt=media',
   });
 
   const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');

@@ -90,6 +90,7 @@ export default function KidsChallenge() {
     description:
       'A playful 3-day live online challenge helping children ages 3–12 notice their feelings, understand their choices and grow a little every day. Friday to Sunday on Zoom, 30–40 minutes a day.',
     url: 'https://www.skrmblissai.in/kidschallenge',
+    image: 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fposter.png?alt=media',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Course',
