@@ -650,6 +650,15 @@ export default function EmotionFeelingsCourse() {
   // 60-Second Teaser State
   const [teaserVideo, setTeaserVideo] = useState<{ id: string; title: string; episodeNum: number; startTime?: number } | null>(null);
   const [teaserTimer, setTeaserTimer] = useState<number>(60);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const startTeaser = (id: string, title: string, episodeNum: number, startTime?: number) => {
     setTeaserVideo({ id, title, episodeNum, startTime });
@@ -991,7 +1000,8 @@ export default function EmotionFeelingsCourse() {
             position: 'absolute',
             inset: 0,
             backgroundImage: "url('/marketing/kids_emotion_pattern.png')",
-            backgroundSize: '2000px 2000px',
+            backgroundSize: '1800px 1800px',
+            backgroundPosition: `center ${scrollY * -0.35}px`,
             backgroundRepeat: 'repeat',
             opacity: isDark ? 0.25 : 0.08,
             mixBlendMode: isDark ? 'screen' : 'multiply',
