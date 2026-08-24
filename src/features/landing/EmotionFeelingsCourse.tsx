@@ -1242,6 +1242,52 @@ export default function EmotionFeelingsCourse() {
       <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
       {/* ════════════════════════════════════════════════════════════════════
+          MARKETING ASSETS (Poster & Diary)
+         ════════════════════════════════════════════════════════════════════ */}
+      <section
+        className="si-reveal"
+        style={{
+          padding: 'clamp(60px, 8vw, 100px) clamp(24px, 6vw, 96px)',
+          position: 'relative',
+          zIndex: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 48,
+          background: isDark ? '#14101A' : '#FAF6F0',
+        }}
+      >
+        <div style={{ maxWidth: 1120, width: '100%', display: 'flex', gap: 32, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {/* Poster */}
+          <div style={{ flex: '1 1 400px', maxWidth: 500 }}>
+            <img
+              src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fposter.png?alt=media"
+              alt="Course Poster"
+              style={{
+                width: '100%',
+                borderRadius: 24,
+                boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.5)' : '0 20px 40px rgba(74,50,96,0.15)',
+                border: `1px solid ${borderC}`
+              }}
+            />
+          </div>
+          {/* Diary */}
+          <div style={{ flex: '1 1 400px', maxWidth: 500 }}>
+            <img
+              src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fdiary.jpg?alt=media"
+              alt="Course Diary Session"
+              style={{
+                width: '100%',
+                borderRadius: 24,
+                boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.5)' : '0 20px 40px rgba(74,50,96,0.15)',
+                border: `1px solid ${borderC}`
+              }}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════════
           MEET YOUR GUIDE — SIM KATYAL
          ════════════════════════════════════════════════════════════════════ */}
       <section

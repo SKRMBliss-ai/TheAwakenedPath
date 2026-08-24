@@ -370,8 +370,8 @@ export function SiteFooter({ palette }: { palette: Palette }) {
           display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between',
           fontSize: 12, color: palette.INK2,
         }}>
-          <span>© {new Date().getFullYear()} Soulful Intelligence Studio</span>
-          <span>Made with care in India</span>
+          <span>&copy; {new Date().getFullYear()} SKRM Bliss AI</span>
+          <span>Terms & Privacy below</span>
         </div>
       </div>
 
