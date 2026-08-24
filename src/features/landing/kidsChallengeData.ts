@@ -106,6 +106,14 @@ export const KIDS_FAQ = [
     a: 'No. This is an educational self-awareness and emotional-learning experience for children. It is not a substitute for professional mental-health care.',
   },
   {
+    q: 'Is this the same as the adult Feelings & Emotions course?',
+    a: 'No. The adult Feelings & Emotions course is a separate, self-paced video series. This 3-Day Kids Challenge is a separate, live interactive weekend Zoom program designed specifically for children (Ages 3–12).',
+  },
+  {
+    q: 'How much does this kids challenge cost? Is upfront payment required?',
+    a: 'Registration is free and requires no upfront payment. The program is purely donation-based (you can donate anywhere from $2 to $99). We will send the donation details directly to you over email and WhatsApp after you register.',
+  },
+  {
     q: 'What do we need to join?',
     a: 'A device with Zoom, a quiet corner, and something to colour with for the activity chart. We send the link and a short preparation note after registration.',
   },
