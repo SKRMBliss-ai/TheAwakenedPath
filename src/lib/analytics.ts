@@ -35,6 +35,13 @@ const LOG_URL = 'https://us-central1-awakened-path-2026.cloudfunctions.net/logWe
  */
 export function track(action: string, details = '', page?: string) {
   try {
+    // import.meta.env.DEV is true under `vite`/`vite dev` and false in a real
+    // `vite build` — every dev server (localhost:5173, 5174, any autoPort
+    // fallback) is DEV regardless of hostname. Without this, testing the app
+    // locally posts real rows into production's activity_logs — which is
+    // exactly what happened testing this feature: a full route sweep for QA
+    // showed up in the live Engagement Report as "Anonymous" traffic.
+    if (import.meta.env.DEV) return;
     if (shouldBlockAnalytics(auth.currentUser?.email)) return;
     const resolvedPage = page || (typeof window !== 'undefined' ? window.location.pathname : '/');
     fetch(LOG_URL, {

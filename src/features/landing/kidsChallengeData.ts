@@ -154,6 +154,7 @@ export const KIDS_TEACHER_QUOTE =
 /** Fire-and-forget activity log, matching the other landing pages. */
 export function trackKids(action: string, page = KIDS_PATH, details = '', email = 'anonymous') {
   try {
+    if (import.meta.env.DEV) return; // never let local testing write into production analytics
     fetch('https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

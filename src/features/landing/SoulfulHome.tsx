@@ -37,6 +37,7 @@ const YOUTUBE  = 'https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirm
 
 const track = (action: string) => {
   try {
+    if (import.meta.env.DEV) return; // never let local testing write into production analytics
     fetch('https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'anonymous', action, page: '/', details: action, source: document.referrer || 'direct' }),

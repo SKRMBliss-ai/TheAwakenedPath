@@ -36,6 +36,7 @@ function getTrackedEmail(): string {
 
 async function trackActivity(action: string, details = '', emailOverride?: string) {
     try {
+        if (import.meta.env.DEV) return; // never let local testing write into production analytics
         const email = emailOverride || getTrackedEmail();
         fetch(LOG_URL, {
             method: 'POST',

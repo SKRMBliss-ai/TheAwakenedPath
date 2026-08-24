@@ -63,6 +63,7 @@ const phoneValid = (v: string) => v.replace(/\D/g, '').length >= 8;
 
 function captureLead(email: string, phone: string, title: string) {
   try {
+    if (import.meta.env.DEV) return; // never let local testing write into production analytics
     fetch(LOG_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, action: 'GUIDE_LEAD', page: '/', details: `guide: ${title} | phone: ${phone}`, source: document.referrer || 'direct' }),
