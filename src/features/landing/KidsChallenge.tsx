@@ -269,8 +269,8 @@ export default function KidsChallenge() {
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'rotate(1.1deg)'; }}
             >
               <img
-                src={KIDS_POSTER_IMG}
-                alt="Let's Be Our Best Every Day! — a 3-day live kids challenge for ages 3 to 12"
+                src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FposterDairy.png?alt=media"
+                alt="Let's Be Our Best Every Day! — a 3-day live kids challenge for ages 3 to 12, with poster and diary materials"
                 style={{ width: '100%', height: 'auto', objectFit: 'cover', display: 'block' }}
               />
 
