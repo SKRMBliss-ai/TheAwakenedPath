@@ -17,7 +17,7 @@ import FeaturedCourse from './components/FeaturedCourse';
 import {
   KIDS_REGISTER_PATH, KIDS_TITLE, KIDS_TAGLINE, KIDS_AGES, KIDS_TIME,
   KIDS_BLURB, KIDS_DAYS, KIDS_AGE_BANDS, KIDS_INCLUDES, KIDS_STEPS, KIDS_FAQ,
-  KIDS_CHART_IMG, KIDS_TEACHER_IMG, KIDS_TEACHER_POINTS, KIDS_TEACHER_QUOTE,
+  KIDS_CHART_IMG, KIDS_ONLY_DIARY_IMG, KIDS_TEACHER_IMG, KIDS_TEACHER_POINTS, KIDS_TEACHER_QUOTE,
   KIDS_POSTER_IMG, trackKids,
 } from './kidsChallengeData';
 
@@ -590,7 +590,7 @@ export default function KidsChallenge() {
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'rotate(0.8deg)'; }}
               >
                 <img
-                  src={KIDS_CHART_IMG}
+                  src={KIDS_ONLY_DIARY_IMG}
                   alt="The Let's Be Our Best Every Day! daily journal — seven daily practices tracked across a full month, with a Look Back &amp; Learn reflection panel"
                   loading="lazy"
                   style={{ width: '100%', display: 'block' }}
@@ -981,25 +981,30 @@ export default function KidsChallenge() {
         </div>
       </section>
 
-      {/* ═══ Final CTA (Redesigned with Poster Graphic) ═════════════════════ */}
+      {/* ═══ Final CTA (Full Bleed End-to-End) ══════════════════════════════ */}
       <section className="si-reveal" style={{
         position: 'relative', zIndex: 2,
-        padding: 'clamp(64px, 10vw, 104px) clamp(24px, 6vw, 96px)',
+        width: '100%',
+        background: isDark
+          ? 'linear-gradient(145deg, rgba(74, 40, 96, 0.85) 0%, rgba(32, 22, 52, 0.95) 100%)'
+          : 'linear-gradient(145deg, rgba(253, 247, 243, 0.95) 0%, rgba(245, 237, 230, 0.90) 100%)',
+        backdropFilter: 'blur(12px)',
+        borderTop: `1px solid ${palette.BAND_BORDER}`,
+        borderBottom: `1px solid ${palette.BAND_BORDER}`,
+        boxShadow: isDark ? '0 32px 96px rgba(0,0,0,0.4)' : '0 32px 96px rgba(60,40,30,0.08)',
+        padding: 'clamp(56px, 8vw, 96px) clamp(24px, 6vw, 96px)',
+        overflow: 'hidden',
       }}>
+        {/* Decorative accent */}
         <div style={{
-          maxWidth: 1100, margin: '0 auto',
-          background: isDark ? 'linear-gradient(145deg, rgba(74, 40, 96, 0.6) 0%, rgba(42, 30, 64, 0.8) 100%)' : 'linear-gradient(145deg, rgba(253, 247, 243, 0.8) 0%, rgba(245, 237, 230, 0.6) 100%)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: 40, padding: 'clamp(36px, 5vw, 56px)',
-          border: `1px solid ${palette.BAND_BORDER}`,
-          boxShadow: isDark ? '0 32px 96px rgba(0,0,0,0.4)' : '0 32px 96px rgba(60,40,30,0.1)',
-          position: 'relative', overflow: 'hidden',
+          position: 'absolute', top: -60, right: -60, width: 300, height: 300,
+          background: palette.PURPLE_STRONG, borderRadius: '50%', opacity: isDark ? 0.12 : 0.06, zIndex: 0, pointerEvents: 'none',
+        }} />
+
+        <div style={{
+          maxWidth: 1200, margin: '0 auto',
+          position: 'relative', zIndex: 1,
         }}>
-          {/* Decorative accent */}
-          <div style={{
-            position: 'absolute', top: -60, right: -60, width: 200, height: 200,
-            background: palette.PURPLE_STRONG, borderRadius: '50%', opacity: isDark ? 0.08 : 0.05, zIndex: 0, pointerEvents: 'none',
-          }} />
 
           <div className="si-kids-footer-grid" style={{
             display: 'grid',
