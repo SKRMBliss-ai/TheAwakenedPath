@@ -43,15 +43,7 @@ const SIM_PROFILE   = FS('SimKatyalProfile.webp');
 const JOURNAL_IMG   = FS('reflection-journal.webp');
 const CLOSING_BANNER = FS_ROOT('ClosingBanner.webp');
 
-const EMOJI_PATTERN_SVG = encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" width="600" height="600">
-    <text x="80" y="100" font-size="72" style="opacity: 0.8;">😊</text>
-    <text x="400" y="200" font-size="64" style="opacity: 0.8;">😢</text>
-    <text x="200" y="400" font-size="80" style="opacity: 0.8;">😡</text>
-    <text x="500" y="500" font-size="68" style="opacity: 0.8;">🤢</text>
-    <text x="100" y="550" font-size="64" style="opacity: 0.8;">😨</text>
-  </svg>
-`);
+
 
 const LOG_URL = 'https://us-central1-awakened-path-2026.cloudfunctions.net/logWebActivity';
 
@@ -1001,8 +993,8 @@ export default function EmotionFeelingsCourse() {
             backgroundImage: "url('/marketing/kids_emotion_pattern.png')",
             backgroundSize: '2000px 2000px',
             backgroundRepeat: 'repeat',
-            opacity: isDark ? 0.05 : 0.08,
-            mixBlendMode: isDark ? 'lighten' : 'multiply',
+            opacity: isDark ? 0.25 : 0.08,
+            mixBlendMode: isDark ? 'screen' : 'multiply',
             zIndex: 1,
           }}
         />

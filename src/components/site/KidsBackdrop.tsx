@@ -23,8 +23,8 @@ export default function KidsBackdrop() {
           backgroundImage: "url('/marketing/kids_emotion_pattern.png')",
           backgroundSize: '2000px 2000px', // Scale the pattern so characters are huge and sparse
           backgroundRepeat: 'repeat',
-          opacity: palette.isDark ? 0.05 : 0.06, // Keep it very faint like distant polka dots
-          mixBlendMode: palette.isDark ? 'lighten' : 'multiply',
+          opacity: palette.isDark ? 0.25 : 0.08, // Clearly visible in dark mode, tasteful in light mode
+          mixBlendMode: palette.isDark ? 'screen' : 'multiply',
           zIndex: 1, 
         }}
       />
