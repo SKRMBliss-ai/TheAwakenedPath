@@ -11,7 +11,7 @@
 import type { Palette } from '../../../lib/siteTheme';
 import {
   KIDS_PATH, KIDS_REGISTER_PATH, KIDS_TITLE,
-  KIDS_STEPS, KIDS_POSTER_IMG, trackKids,
+  KIDS_STEPS, KIDS_CHART_IMG, trackKids,
 } from '../kidsChallengeData';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
@@ -198,7 +198,7 @@ export default function KidsChallengeCrossSell({
             boxShadow: isDark ? '0 18px 44px rgba(0,0,0,0.4)' : '0 18px 44px rgba(42,36,32,0.16)',
           }}>
             <img
-              src={KIDS_POSTER_IMG}
+              src={KIDS_CHART_IMG}
               alt="Let's Be Our Best Every Day! — a 3-day kids challenge for ages 3-12, helping children build emotional awareness, make positive choices and grow a happy heart"
               loading="lazy"
               style={{ width: '100%', display: 'block' }}
