@@ -2315,8 +2315,8 @@ export default function EmotionFeelingsCourse() {
           background: isDark ? 'rgba(13,10,18,0.85)' : 'rgba(249,245,239,0.88)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          borderTop: `1px solid ${border}`,
-          borderBottom: `1px solid ${border}`,
+          borderTop: `1px solid ${borderC}`,
+          borderBottom: `1px solid ${borderC}`,
         }}
       >
         <div
