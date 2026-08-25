@@ -2417,6 +2417,14 @@ const getTransporter = () => {
         auth: {
             user: emailUser.value(),
             pass: emailPass.value(),
+            // Tested: forcing LOGIN here (vs nodemailer's default AUTH PLAIN
+            // negotiation) did NOT fix the 535 rejection either — both were
+            // tried against a freshly-rotated, verified-correct password and
+            // failed identically. Kept as LOGIN anyway since it's the more
+            // widely-compatible mechanism and this rules it out as a cause;
+            // the real block is almost certainly account/provider-side (see
+            // the investigation notes on getTransporter's callers).
+            method: 'LOGIN',
         },
     });
 };
