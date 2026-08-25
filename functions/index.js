@@ -2201,7 +2201,7 @@ exports.testWelcomeEmail = onRequest({ secrets: [emailUser, emailPass], cors: tr
     const { to, plan } = req.query;
     if (!to) return res.status(400).send("Provide 'to' email address. Optional: ?plan=Some+Plan+Name");
     try {
-        await sendWelcomeEmail(to, plan || 'Understanding Feelings & Emotions (test send)');
+        await sendWelcomeEmail(to, plan || 'Mind Gym (test send)');
         res.send(`Welcome email sent to ${to}`);
     } catch (error) {
         console.error("Test Welcome Email Error:", error);
@@ -2603,7 +2603,7 @@ async function sendGuestAccessEmail(toEmail) {
             <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Mind Gym &middot; Payment Confirmed</p>
             <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:300;font-style:italic;color:#1C1814;margin:0 0 8px;line-height:1.3;">Thank you — you're in.</h1>
             <div style="width:40px;height:1px;background:#B8973A;margin:16px auto 24px;"></div>
-            <p style="font-family:Georgia,serif;font-size:16px;color:#3A342C;line-height:1.6;margin:0 0 24px;">Your Understanding Feelings &amp; Emotions purchase is confirmed. Here is how to open it:</p>
+            <p style="font-family:Georgia,serif;font-size:16px;color:#3A342C;line-height:1.6;margin:0 0 24px;">Your Mind Gym access is confirmed. Here is how to open it:</p>
 
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="text-align:left;margin:0 0 28px;">
               <tr><td style="padding:0 0 14px;">
