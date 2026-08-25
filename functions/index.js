@@ -2405,7 +2405,7 @@ const signatureBlock = ({ dark = false } = {}) => {
             <v:fill type="frame" src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FShSm1.png?alt=media" color="${bgColor}" />
             <v:textbox inset="0,0,0,0">
           <![endif]-->
-          <div style="background-color:${overlayColor};padding:24px 16px;border-radius:12px;width:60%;max-width:400px;margin:28px auto;box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+          <div style="background-color:${overlayColor};padding:28px 16px;border-radius:12px;width:94%;max-width:760px;margin:16px auto;box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
             <div style="margin-bottom:12px;font-size:18px;opacity:0.7;">✋</div>
             <p style="margin:0 auto 12px;font-size:15px;font-style:italic;color:${textColor};line-height:1.4;font-family:Georgia,serif;max-width:95%;">
               "Take what you need. Give what you can. Everything here is offered pay-what-you-feel."
