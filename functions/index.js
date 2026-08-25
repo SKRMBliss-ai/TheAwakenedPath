@@ -2526,7 +2526,7 @@ async function sendWelcomeEmail(toEmail, planName) {
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
         <tr>
             <td align="center" style="padding:24px 16px;">
-                <table width="680" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:680px;background:#FDFAF4;border:1px solid #E6C57D;">
+                <table width="800" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:800px;background:#FDFAF4;border:1px solid #E6C57D;">
                     <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
                     <tr>
                         <td style="padding:32px 40px 20px;text-align:center;">
@@ -2580,7 +2580,7 @@ async function sendGuestAccessEmail(toEmail) {
         html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0ece4;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
       <tr><td align="center" style="padding:24px 16px;">
-        <table width="680" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:680px;background:#FDFAF4;border:1px solid #E6C57D;">
+        <table width="800" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:800px;background:#FDFAF4;border:1px solid #E6C57D;">
           <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
           <tr><td style="padding:36px 40px;text-align:center;">
             <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Mind Gym &middot; Payment Confirmed</p>
