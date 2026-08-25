@@ -2394,20 +2394,20 @@ const signatureBlock = ({ dark = false } = {}) => {
     const subTextColor = dark ? 'rgba(253,250,244,0.7)' : 'rgba(30,25,18,0.6)';
     const rule = dark ? 'rgba(253,250,244,0.15)' : 'rgba(184,151,58,0.25)';
     return `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="max-width:680px;margin:0 auto 24px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="max-width:380px;margin:0 auto 24px;">
       <tr>
         <td background="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FShSm1.png?alt=media" 
             bgcolor="${bgColor}" 
             valign="middle" 
             style="background-image:url('https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FShSm1.png?alt=media');background-size:cover;background-position:center 25%;border-radius:12px;border:1px solid ${rule};text-align:center;">
           <!--[if gte mso 9]>
-          <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:680px;height:240px;">
+          <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:380px;height:220px;">
             <v:fill type="frame" src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FShSm1.png?alt=media" color="${bgColor}" />
             <v:textbox inset="0,0,0,0">
           <![endif]-->
-          <div style="background-color:${overlayColor};padding:48px 20px;border-radius:12px;width:85%;max-width:480px;margin:32px auto;">
-            <div style="margin-bottom:16px;font-size:24px;opacity:0.7;">✋</div>
-            <p style="margin:0 auto 16px;font-size:20px;font-style:italic;color:${textColor};line-height:1.5;font-family:Georgia,serif;max-width:85%;">
+          <div style="background-color:${overlayColor};padding:24px 16px;border-radius:12px;width:85%;margin:20px auto;">
+            <div style="margin-bottom:12px;font-size:18px;opacity:0.7;">✋</div>
+            <p style="margin:0 auto 12px;font-size:15px;font-style:italic;color:${textColor};line-height:1.4;font-family:Georgia,serif;max-width:95%;">
               "Take what you need. Give what you can. Everything here is offered pay-what-you-feel."
             </p>
             <p style="margin:0;font-size:11px;font-weight:600;color:${subTextColor};text-transform:uppercase;letter-spacing:1px;font-family:sans-serif;">
