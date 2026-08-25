@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { RefreshCw, ChevronRight } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { usePracticeDay, usePracticeHistory, type PracticeDay } from './usePracticeDay';
 import { todayKey } from './dailyRhythm';
 import {
   teachingForDay, promptForDay, LANDED_OPTIONS, TECHNIQUES, DURATIONS,
 } from './dailyContent';
+import {
+  DIARY_CATEGORIES, categoryLapses, anyLapse, diaryTouched,
+  type DiaryCategory,
+} from './diaryModel';
 
 /**
  * The Daily Practice ribbon — one calm, scrolling ritual that folds the day's
@@ -19,25 +23,6 @@ import {
  * can finish without the keyboard. Progress is FELT (the orb brightens), never
  * counted (no bar, no streak that breaks).
  */
-
-// Each ethical virtue is also a face of the Sixfold Path — the diary is where
-// the path gets tested in the concrete. `sixfold` names the flow it belongs to;
-// `why` is the connection, shown on hover / tap.
-const DIARY_ITEMS: {
-  key: keyof NonNullable<PracticeDay['diary']>;
-  label: string; hint: string; sixfold: string; why: string;
-}[] = [
-  { key: 'nonharm', label: 'Non-harming', hint: 'Ahimsa — in thought, word, deed',
-    sixfold: 'Right Action', why: 'Non-harming is Right Action lived — and Right Intention beneath it, since harm begins as a motive before it becomes a deed.' },
-  { key: 'truthful', label: 'Truthful', hint: 'honesty without a mask',
-    sixfold: 'Right Speech', why: 'Truthfulness is Right Speech in practice — and Right Vision, the clear seeing that truthful words depend on.' },
-  { key: 'restraint', label: 'Restraint', hint: 'energy kept, not leaked',
-    sixfold: 'Right Presence', why: 'Restraint holds energy in the body rather than spending it outward — the ground of Right Presence.' },
-  { key: 'humility', label: 'Humility', hint: 'no pride of knowing, having, ruling',
-    sixfold: 'Right Vision', why: 'Humility is Right Vision turned on yourself — seeing your own behaviour without the distortion of pride.' },
-  { key: 'love', label: 'Love for all', hint: 'no one held in ill will',
-    sixfold: 'Right Intention', why: 'Love for all is Right Intention at its widest — the vow that thoughts, words and actions serve everyone, not just your own.' },
-];
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -63,7 +48,7 @@ export default function DailyRibbon() {
   const touched = {
     teaching: !!d.teachingLanded,
     meditation: !!d.technique || !!d.minutes || !!d.sat,
-    diary: !!d.diary && Object.keys(d.diary).length > 0,
+    diary: diaryTouched(d.diary),
     deeper: !!d.deeperNote,
   };
   const glow = Object.values(touched).filter(Boolean).length / 4;
@@ -78,8 +63,7 @@ export default function DailyRibbon() {
     return set.size;
   }, [history, date, touched.teaching, touched.meditation, touched.diary, touched.deeper]);
 
-  const hasLapse = !!d.diary && DIARY_ITEMS.some((i) => (d.diary?.[i.key] as number) > 0);
-  const prompt = promptForDay(date, { settled: d.settled, hasLapse, shuffle });
+  const prompt = promptForDay(date, { settled: d.settled, hasLapse: anyLapse(d.diary), shuffle });
 
   return (
     <div className="max-w-xl mx-auto px-4 pb-16">
@@ -157,48 +141,44 @@ export default function DailyRibbon() {
           />
         </Band>
 
-        {/* ── 3 · Diary (simple) ── */}
+        {/* ── 3 · Diary (granular, optional) ── */}
         <Band icon="📿" title="A gentle look" done={touched.diary} delay={0.1}>
           <p className="text-[12px] text-[var(--text-muted)] -mt-1 mb-2">
-            Noted without judgment, then let go. Tap only what slipped.
+            Optional. Noted without judgment, then let go — tap a virtue to look closer.
           </p>
           <div className="space-y-1.5">
-            {DIARY_ITEMS.map((item) => {
-              const slipped = (d.diary?.[item.key] as number) > 0;
-              return (
-                <div
-                  key={item.key}
-                  className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2"
-                >
-                  <button
-                    onClick={() => patch({ diary: { ...d.diary, [item.key]: slipped ? 0 : 1 } })}
-                    className="flex items-center gap-3 flex-1 text-left"
-                  >
-                    <span
-                      className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[11px]"
-                      style={{
-                        borderColor: slipped ? 'var(--practice-accent-line)' : 'var(--done-accent-line)',
-                        background: slipped ? 'var(--practice-accent-soft)' : 'var(--done-accent-soft)',
-                        color: slipped ? 'var(--practice-accent)' : 'var(--done-accent)',
-                      }}
-                    >
-                      {slipped ? '·' : '✓'}
-                    </span>
-                    <span className="flex-1">
-                      <span className="block text-[13.5px] text-[var(--text-primary)]">{item.label}</span>
-                      <span className="block text-[11px] text-[var(--text-muted)]">{item.hint}</span>
-                    </span>
-                  </button>
-                  <SixfoldTag name={item.sixfold} why={item.why} />
-                  <button
-                    onClick={() => patch({ diary: { ...d.diary, [item.key]: slipped ? 0 : 1 } })}
-                    className="text-[11px] text-[var(--text-muted)] flex-shrink-0"
-                  >
-                    {slipped ? 'slipped' : 'held'}
-                  </button>
-                </div>
-              );
-            })}
+            {DIARY_CATEGORIES.map((cat) => (
+              <DiaryRow
+                key={cat.key}
+                cat={cat}
+                marks={d.diary?.[cat.key]}
+                onToggleSub={(sub, next) =>
+                  patch({ diary: { ...d.diary, [cat.key]: { ...d.diary?.[cat.key], [sub]: next } } })}
+                onClearCategory={() => patch({ diary: { ...d.diary, [cat.key]: {} } })}
+              />
+            ))}
+          </div>
+
+          {/* Diet + service — single-line observations */}
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Chip
+              active={!!d.diary?.diet}
+              onClick={() => patch({ diary: { ...d.diary, diet: !d.diary?.diet } })}
+            >
+              🍎 Diet slipped
+            </Chip>
+            <Chip
+              active={!!d.diary?.servicePhysical}
+              onClick={() => patch({ diary: { ...d.diary, servicePhysical: !d.diary?.servicePhysical } })}
+            >
+              🤲 Served with my hands
+            </Chip>
+            <Chip
+              active={!!d.diary?.serviceGiving}
+              onClick={() => patch({ diary: { ...d.diary, serviceGiving: !d.diary?.serviceGiving } })}
+            >
+              🎁 Served by giving
+            </Chip>
           </div>
 
           <div className="flex items-center justify-between mt-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2">
@@ -206,22 +186,6 @@ export default function DailyRibbon() {
             <span className="text-[12px] text-[var(--text-muted)]">
               {d.minutes ? `${d.minutes} min · from your sit` : 'add it above'}
             </span>
-          </div>
-
-          <FieldLabel className="mt-3">Selfless service today</FieldLabel>
-          <div className="flex gap-2">
-            <Chip
-              active={!!d.diary?.servicePhysical}
-              onClick={() => patch({ diary: { ...d.diary, servicePhysical: !d.diary?.servicePhysical } })}
-            >
-              🤲 With my hands
-            </Chip>
-            <Chip
-              active={!!d.diary?.serviceGiving}
-              onClick={() => patch({ diary: { ...d.diary, serviceGiving: !d.diary?.serviceGiving } })}
-            >
-              🎁 By giving
-            </Chip>
           </div>
         </Band>
 
@@ -313,6 +277,96 @@ function Band({
       </div>
       {children}
     </motion.section>
+  );
+}
+
+/** One ethical virtue in the diary. Collapsed, it is a single held/slipped line
+ *  carrying its Sixfold link. Tapping it opens the sub-lines (thought / word /
+ *  deed, etc.) for granular recording — depth on demand, never forced. */
+function DiaryRow({
+  cat, marks, onToggleSub, onClearCategory,
+}: {
+  cat: DiaryCategory;
+  marks?: Record<string, boolean>;
+  onToggleSub: (sub: string, next: boolean) => void;
+  onClearCategory: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const lapses = categoryLapses(marks);
+  const slipped = lapses > 0;
+
+  return (
+    <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] overflow-hidden">
+      <div className="flex items-center gap-3 px-3 py-2">
+        <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-3 flex-1 text-left">
+          <ChevronRight
+            size={13}
+            className="flex-shrink-0 text-[var(--text-muted)] transition-transform"
+            style={{ transform: open ? 'rotate(90deg)' : 'none' }}
+          />
+          <span
+            className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[11px]"
+            style={{
+              borderColor: slipped ? 'var(--practice-accent-line)' : 'var(--done-accent-line)',
+              background: slipped ? 'var(--practice-accent-soft)' : 'var(--done-accent-soft)',
+              color: slipped ? 'var(--practice-accent)' : 'var(--done-accent)',
+            }}
+          >
+            {slipped ? lapses : '✓'}
+          </span>
+          <span className="flex-1">
+            <span className="block text-[13.5px] text-[var(--text-primary)]">{cat.label}</span>
+            <span className="block text-[11px] text-[var(--text-muted)]">{cat.tradition}</span>
+          </span>
+        </button>
+        <SixfoldTag name={cat.sixfold} why={cat.why} />
+        <span className="text-[11px] text-[var(--text-muted)] flex-shrink-0 w-12 text-right">
+          {slipped ? `${lapses} noted` : 'held'}
+        </span>
+      </div>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pb-3 pt-1 pl-11">
+              <div className="flex flex-wrap gap-2">
+                {cat.sublines.map(([subKey, subLabel]) => {
+                  const on = !!marks?.[subKey];
+                  return (
+                    <button
+                      key={subKey}
+                      onClick={() => onToggleSub(subKey, !on)}
+                      className="rounded-full px-3 py-1.5 text-[12.5px] border transition-all active:scale-95"
+                      style={{
+                        borderColor: on ? 'var(--practice-accent-line)' : 'var(--border-subtle)',
+                        background: on ? 'var(--practice-accent-soft)' : 'transparent',
+                        color: on ? 'var(--practice-accent)' : 'var(--text-secondary)',
+                        fontWeight: on ? 600 : 400,
+                      }}
+                    >
+                      {subLabel}
+                    </button>
+                  );
+                })}
+              </div>
+              {slipped && (
+                <button
+                  onClick={onClearCategory}
+                  className="mt-2 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                >
+                  clear — held after all
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 

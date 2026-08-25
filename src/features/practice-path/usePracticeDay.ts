@@ -51,17 +51,10 @@ export interface PracticeDay {
   /** The reactive go-deeper prompt shown, and the one-line answer. */
   deeperPrompt?: string;
   deeperNote?: string;
-  /** Simple-mode self-introspection marks. Counts of lapses (0 = held); the
-   *  practice minutes mirror `minutes` so the diary reuses the recorded sit. */
-  diary?: {
-    nonharm?: number;
-    truthful?: number;
-    restraint?: number;
-    humility?: number;
-    love?: number;
-    servicePhysical?: boolean;
-    serviceGiving?: boolean;
-  };
+  /** Granular self-introspection marks (see diaryModel.ts). Each ethical
+   *  category holds its own sub-lines; everything is optional, and the practice
+   *  minutes mirror `minutes` so the diary reuses the recorded sit. */
+  diary?: import('./diaryModel').DiaryDay;
   updatedAt?: number;
 }
 
