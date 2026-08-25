@@ -4,6 +4,7 @@ import { BodyMapSelector } from "./BodyMapSelector";
 import { WitnessAndRelease } from "./WitnessAndRelease";
 import { useJournalVoice } from "../hooks/useJournalVoice";
 import { MoodGrid } from "./MoodGrid";
+import { EmotionMatrixPicker } from "./EmotionMatrixPicker";
 import { FELT_EXPERIENCES } from "../../../data/feltExperiences";
 
 
@@ -479,12 +480,22 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                     />
                                 </motion.div>
 
+                                {/* Optional granularity refiner — two taps (energy · pleasantness)
+                                    narrow 50+ feelings to a precise word. Layers on top of the
+                                    cards above; naming it exactly is itself regulating. */}
+                                <motion.div variants={fadeUp} className="mt-6">
+                                    <EmotionMatrixPicker
+                                        selected={selectedEmotions}
+                                        onChange={setSelectedEmotions}
+                                    />
+                                </motion.div>
+
                                 <motion.div variants={fadeUp} className="mt-8">
-                                    <GentleTextarea 
-                                        label="Or in your own words:" 
-                                        placeholder="What was the thought? What triggered it?" 
-                                        value={customThought} 
-                                        onChange={setCustomThought} 
+                                    <GentleTextarea
+                                        label="Or in your own words:"
+                                        placeholder="What was the thought? What triggered it?"
+                                        value={customThought}
+                                        onChange={setCustomThought}
                                     />
                                 </motion.div>
 
