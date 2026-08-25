@@ -9,10 +9,6 @@
   --color-accent-primary: var(--accent-primary);
   --color-accent-secondary: var(--accent-secondary);
   
-  /* Width of the right-edge tool rail (MindGymDock) on desktop. Content
-     reserves this so the rail never sits on top of anything. */
-  --dock-w: 56px;
-
   --radius-xl: 1.25rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;

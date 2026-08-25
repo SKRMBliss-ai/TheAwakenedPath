@@ -124,9 +124,8 @@ export function MindGymDock({ tools, hidden, active }: MindGymDockProps) {
   const panelOpen = chatOpen || knowledgeOpen;
   const away = hidden || panelOpen;
 
-  // Split so the rail can pin "connect" to the bottom behind a divider, the
-  // way a tool rail separates what you use from what you reach for rarely.
-  const primary = (
+  // Shared by both shells, so the two never drift apart.
+  const entries = (
     <>
       {tools}
       <DockItem label="Ask the studio assistant" onClick={() => { setChatOpen(true); setOpen(false); }}>
@@ -135,11 +134,7 @@ export function MindGymDock({ tools, hidden, active }: MindGymDockProps) {
       <DockItem label="Knowledge Hub" onClick={() => { setKnowledgeOpen(true); setOpen(false); }}>
         <HubIcon />
       </DockItem>
-    </>
-  );
 
-  const connect = (
-    <>
       {/* The five social links stay behind one entry — a rail of ten icons is
           a menu, not a dock. */}
       <AnimatePresence>
@@ -181,21 +176,12 @@ export function MindGymDock({ tools, hidden, active }: MindGymDockProps) {
         {panels}
         <div
           className={cn(
-            'fixed right-0 top-0 bottom-0 w-[var(--dock-w)] z-[140] transition-transform duration-500',
-            'flex flex-col items-center border-l border-[var(--border-subtle)]',
-            'bg-[var(--bg-secondary)]/95 backdrop-blur-2xl',
-            away ? 'translate-x-full' : 'translate-x-0',
+            'fixed right-0 top-1/2 -translate-y-1/2 z-[140] transition-all duration-500',
+            away ? 'opacity-0 pointer-events-none translate-x-14' : 'opacity-100',
           )}
         >
-          {/* The tools sit centred rather than at the top: the rail runs the
-              full height so it reads as chrome, but six icons pinned under the
-              header would leave it looking unfinished. */}
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-center gap-2.5 py-4">
-            {primary}
-          </div>
-          <div className="flex flex-col items-center gap-2.5 pb-5 pt-3 w-full">
-            <span className="w-6 h-px bg-[var(--border-subtle)] mb-1" />
-            {connect}
+          <div className="flex flex-col items-center gap-2.5 py-3.5 px-2 rounded-l-2xl border border-r-0 border-[var(--border-subtle)] bg-[var(--bg-secondary)]/90 backdrop-blur-2xl shadow-2xl">
+            {entries}
           </div>
         </div>
       </>
@@ -231,8 +217,7 @@ export function MindGymDock({ tools, hidden, active }: MindGymDockProps) {
               transition={{ duration: 0.22 }}
               className="flex flex-col items-end gap-3"
             >
-              {primary}
-              {connect}
+              {entries}
             </motion.div>
           )}
         </AnimatePresence>

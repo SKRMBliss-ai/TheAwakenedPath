@@ -1998,10 +1998,7 @@ export default function UntetheredApp() {
         "relative z-10 min-h-screen transition-all duration-500",
         // Mobile: don't shift content when sidebar is open (overlay instead)
         // Desktop: shift content based on collapsed state
-        isSidebarCollapsed ? "lg:pl-0" : "lg:pl-[280px]",
-        // The tool rail is full-height chrome on desktop, so reserve its width
-        // rather than letting it float over the right edge of the content.
-        "lg:pr-[var(--dock-w)]"
+        isSidebarCollapsed ? "lg:pl-0" : "lg:pl-[280px]"
       )}>
         {/* Time of Day Ambient Tint */}
         <div
