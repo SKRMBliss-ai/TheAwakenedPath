@@ -2388,8 +2388,10 @@ exports.previewReminderEmail = onRequest({
  *    (meditation reminders) and some on cream (daily reminder).
  */
 const signatureBlock = ({ dark = false } = {}) => {
-    const name = dark ? '#FDFAF4' : '#1E1912';
-    const role = dark ? 'rgba(253,250,244,0.55)' : 'rgba(30,25,18,0.6)';
+    const bgColor = dark ? '#1E1912' : '#FDFAF4';
+    const overlayColor = dark ? 'rgba(30,25,18,0.85)' : 'rgba(253,250,244,0.88)';
+    const textColor = dark ? '#FDFAF4' : '#1E1912';
+    const subTextColor = dark ? 'rgba(253,250,244,0.7)' : 'rgba(30,25,18,0.6)';
     const rule = dark ? 'rgba(253,250,244,0.15)' : 'rgba(184,151,58,0.25)';
     return `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 14px;">
@@ -2509,7 +2511,7 @@ async function sendWelcomeEmail(toEmail, planName) {
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
         <tr>
             <td align="center" style="padding:24px 16px;">
-                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#FDFAF4;border:1px solid #E6C57D;">
+                <table width="600" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:600px;background:#FDFAF4;border:1px solid #E6C57D;">
                     <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
                     <tr>
                         <td style="padding:32px 40px 20px;text-align:center;">
@@ -2563,7 +2565,7 @@ async function sendGuestAccessEmail(toEmail) {
         html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0ece4;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
       <tr><td align="center" style="padding:24px 16px;">
-        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#FDFAF4;border:1px solid #E6C57D;">
+        <table width="600" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:600px;background:#FDFAF4;border:1px solid #E6C57D;">
           <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
           <tr><td style="padding:36px 40px;text-align:center;">
             <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Mind Gym &middot; Payment Confirmed</p>
