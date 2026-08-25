@@ -45,7 +45,10 @@ export interface PracticeDayContent {
   focus: string;
   invitation: string;
   explore: string;
-  inspiration: string;
+  /** Retained for hand-authored days; the generated engine no longer sets it. */
+  inspiration?: string;
+  /** One question to ponder and journal on, in the week's topic. */
+  journalPrompt: string;
   /** Three contextual entry points; each may hold several alternatives that
    *  "try another way" cycles through without changing the practice itself. */
   ways: { morning: string[]; day: string[]; evening: string[] };
@@ -141,52 +144,68 @@ const ANGLE_FRAMES: Record<AngleKey, {
   focus: (p: Practice) => string;
   invitation: (p: Practice) => string;
   explore: (p: Practice) => string;
+  /** The day's journalling question. Asks about the practice rather than
+   *  restating it, so it gives the writer somewhere to go. */
+  journal: (p: Practice) => string;
 }> = {
   ARRIVE: {
     focus: (p) => `Today you simply arrive at ${p.title}. Let the core instruction settle before anything else: “${p.core}”`,
     invitation: () => `Say the core instruction once, slowly, feeling its meaning rather than reciting it. Then choose one simple way to hold it today.`,
     explore: (p) => p.dailyLife[0] ? `Begin here: ${lower(p.dailyLife[0])}.` : `Carry the instruction into your first ordinary task today.`,
+    journal: (p) => `What does ${p.title} ask of you today — and what part of you already agrees with it?`,
   },
   NOTICE: {
     focus: (p) => `Today you notice. ${p.title} usually becomes visible by its absence — the moment it slips. Watch without judgment.`,
     invitation: (p) => `Notice one moment today where ${p.title} was present, and one where it was not. Meet both with equal kindness.`,
     explore: (p) => p.dailyLife[1] ? `Try noticing as you ${lower(p.dailyLife[1])}.` : `Watch for the gap between what you intend and what you actually do.`,
+    journal: (p) => `Where did ${p.title} slip today? Describe the moment plainly, without defending or blaming yourself.`,
   },
   APPLY: {
     focus: (p) => `Today you apply. ${p.title} moves from observation into deliberate use — one real situation, consciously chosen.`,
     invitation: (p) => `Pick one interaction or decision today and bring ${p.title} to it on purpose.`,
     explore: (p) => p.dailyLife[2] ? `A concrete way in: ${lower(p.dailyLife[2])}.` : `Choose one situation today and apply the practice deliberately.`,
+    journal: (p) => `Write about the one situation you brought ${p.title} to. What was different because you did?`,
   },
   'GO DEEPER': {
     focus: (p) => `Today you go deeper. Why is ${p.title} difficult to hold? Usually something quieter is running underneath, unexamined.`,
     invitation: () => `Look beneath the surface today and ask what is really driving you.`,
     explore: (p) => p.instructions[2] ? `Sit with this: ${lower(p.instructions[2])}.` : `Ask honestly what resists this practice in you.`,
+    journal: (p) => `What runs underneath your resistance to ${p.title}? Name the quieter motive as honestly as you can.`,
   },
   EMBODY: {
     focus: (p) => `Today you embody. ${p.title} that stays in the mind is only half the practice — let it become something someone else can feel.`,
     invitation: (p) => `Take one concrete action today that expresses ${p.title}.`,
     explore: (p) => p.dailyLife[3] ? `For example: ${lower(p.dailyLife[3])}.` : `Do one thing that makes the practice visible in the world.`,
+    journal: (p) => `Who could feel ${p.title} in you today? What reached them that your words alone would not have carried?`,
   },
   RETURN: {
     focus: (p) => `Today you return. By now you will have forgotten ${p.title} at some point. That forgetting is not the problem — returning is the practice.`,
     invitation: () => `Find where you lost alignment this week and begin again, without self-criticism.`,
     explore: (p) => p.dailyLife[4] ? `Practise this: ${lower(p.dailyLife[4])}.` : `Notice where you drifted, and simply come back.`,
+    journal: (p) => `Where did you lose ${p.title} this week, and what brought you back? Write about the returning, not the losing.`,
   },
   REFLECT: {
     focus: (p) => `Today you reflect. The week closes. Look honestly at where ${p.title} became real, and what you want to keep.`,
     invitation: () => `Review the week as a whole and name one thing you want to carry forward.`,
     explore: (p) => p.dailyLife[5] ? `Close with this: ${lower(p.dailyLife[5])}.` : `Read back what you noticed this week and see what changed.`,
+    journal: (p) => `Where did ${p.title} become real this week? Name one thing you want to keep, and one you want to set down.`,
   },
 };
 
 /** A day's content — hand-authored when the practice carries it, generated
  *  from the practice's own material otherwise. */
 export function dayContentFor(practice: Practice, dayNumber: number): PracticeDayContent {
-  const authored = practice.days?.[dayNumber - 1];
-  if (authored) return authored;
-
   const angle = DAY_ANGLES[dayNumber - 1] ?? DAY_ANGLES[0];
   const frame = ANGLE_FRAMES[angle.key];
+
+  // Hand-authored days predate the journal prompt, so fill it from the day's
+  // angle rather than leaving the writer an empty question.
+  const authored = practice.days?.[dayNumber - 1];
+  if (authored) {
+    return authored.journalPrompt
+      ? authored
+      : { ...authored, journalPrompt: frame.journal(practice) };
+  }
 
   // Fall back to the core line if a list is empty, so the engine always has
   // the teacher's words to work from rather than inventing filler.
@@ -201,7 +220,7 @@ export function dayContentFor(practice: Practice, dayNumber: number): PracticeDa
     focus: frame.focus(safe),
     invitation: frame.invitation(safe),
     explore: frame.explore(safe),
-    inspiration: practice.core || '',
+    journalPrompt: frame.journal(safe),
     generated: true,
     ways: {
       morning: [

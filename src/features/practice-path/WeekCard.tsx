@@ -254,9 +254,6 @@ export function WeekCard(p: WeekCardProps) {
           <div className={styles.bLabel}>A way to explore</div>
           <div className={styles.bText}>{content.explore}</div>
 
-          <div className={styles.bLabel}>Inspiration</div>
-          <div className={styles.bQuote}>{content.inspiration}</div>
-
           <div className={styles.bLabel}>Ways to practise</div>
           <div className="space-y-1.5">
             {([['morning', '☀', 'Morning'], ['day', '💬', 'During the day'], ['evening', '🌙', 'Evening']] as const)
@@ -277,6 +274,9 @@ export function WeekCard(p: WeekCardProps) {
           <button className={styles.again} onClick={() => setWayShuffle((s) => s + 1)}>
             <RefreshCw size={10} className="inline mr-1 -mt-0.5" />another way
           </button>
+
+          <div className={styles.bLabel}>Today's journal prompt</div>
+          <div className={styles.bQuote}>{content.journalPrompt}</div>
 
           <div className={styles.bLabel}>What did I notice?</div>
           <textarea
