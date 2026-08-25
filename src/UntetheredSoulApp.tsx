@@ -733,7 +733,8 @@ export default function UntetheredApp() {
     // Meditation is FREE for everyone — no paywall.
     // Community (members/calendar) is free for everyone, like meditation — a
     // paywall in front of "who else is here" would defeat the point of it.
-    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'virtues', 'circle', 'practices'];
+    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'circle', 'practices'];
+    if (currentUser?.email === 'skrmblissai@gmail.com') allowedTabs.push('virtues');
     if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -814,7 +815,7 @@ export default function UntetheredApp() {
 
   // Global Access Control — on load, always start at home if the persisted tab is locked
   useEffect(() => {
-    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'virtues', 'circle', 'practices'].includes(activeTab)) {
+    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'circle', 'practices', ...(currentUser?.email === 'skrmblissai@gmail.com' ? ['virtues'] : [])].includes(activeTab)) {
       setActiveTab('home');
     }
   }, [isAccessValid, loading]); // intentionally exclude activeTab — only run on auth state change
@@ -1491,7 +1492,7 @@ export default function UntetheredApp() {
               <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
                 {[
                   { id: 'today', icon: Sun, label: 'Today', locked: false },
-                  { id: 'virtues', icon: Sparkles, label: 'Virtues', locked: false },
+                  { id: 'virtues', icon: Sparkles, label: 'Virtues', locked: !isAccessValid && currentUser?.email !== 'skrmblissai@gmail.com' },
                   { id: 'practices', icon: Flame, label: 'Practices', locked: false },
                   { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
                   { id: 'situations', icon: Flame, label: 'Practice Room', locked: !isAccessValid },
