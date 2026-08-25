@@ -735,6 +735,10 @@ export function DashboardGrid({
   const confirmIntegrate = () => {
     if (isAccessValid) markIntegrate();
     setShowCommitment(false);
+    // Living it isn't a promise you close a modal on — it's the sit and the
+    // gentle look at the day. Carry the commitment straight into the ribbon,
+    // where meditation and the diary get filled.
+    onNavigate('today');
   };
 
   return (

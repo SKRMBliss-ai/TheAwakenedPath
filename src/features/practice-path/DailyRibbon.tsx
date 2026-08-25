@@ -20,12 +20,23 @@ import {
  * counted (no bar, no streak that breaks).
  */
 
-const DIARY_ITEMS: { key: keyof NonNullable<PracticeDay['diary']>; label: string; hint: string }[] = [
-  { key: 'nonharm', label: 'Non-harming', hint: 'Ahimsa — in thought, word, deed' },
-  { key: 'truthful', label: 'Truthful', hint: 'honesty without a mask' },
-  { key: 'restraint', label: 'Restraint', hint: 'energy kept, not leaked' },
-  { key: 'humility', label: 'Humility', hint: 'no pride of knowing, having, ruling' },
-  { key: 'love', label: 'Love for all', hint: 'no one held in ill will' },
+// Each ethical virtue is also a face of the Sixfold Path — the diary is where
+// the path gets tested in the concrete. `sixfold` names the flow it belongs to;
+// `why` is the connection, shown on hover / tap.
+const DIARY_ITEMS: {
+  key: keyof NonNullable<PracticeDay['diary']>;
+  label: string; hint: string; sixfold: string; why: string;
+}[] = [
+  { key: 'nonharm', label: 'Non-harming', hint: 'Ahimsa — in thought, word, deed',
+    sixfold: 'Right Action', why: 'Non-harming is Right Action lived — and Right Intention beneath it, since harm begins as a motive before it becomes a deed.' },
+  { key: 'truthful', label: 'Truthful', hint: 'honesty without a mask',
+    sixfold: 'Right Speech', why: 'Truthfulness is Right Speech in practice — and Right Vision, the clear seeing that truthful words depend on.' },
+  { key: 'restraint', label: 'Restraint', hint: 'energy kept, not leaked',
+    sixfold: 'Right Presence', why: 'Restraint holds energy in the body rather than spending it outward — the ground of Right Presence.' },
+  { key: 'humility', label: 'Humility', hint: 'no pride of knowing, having, ruling',
+    sixfold: 'Right Vision', why: 'Humility is Right Vision turned on yourself — seeing your own behaviour without the distortion of pride.' },
+  { key: 'love', label: 'Love for all', hint: 'no one held in ill will',
+    sixfold: 'Right Intention', why: 'Love for all is Right Intention at its widest — the vow that thoughts, words and actions serve everyone, not just your own.' },
 ];
 
 function greeting(): string {
@@ -155,27 +166,37 @@ export default function DailyRibbon() {
             {DIARY_ITEMS.map((item) => {
               const slipped = (d.diary?.[item.key] as number) > 0;
               return (
-                <button
+                <div
                   key={item.key}
-                  onClick={() => patch({ diary: { ...d.diary, [item.key]: slipped ? 0 : 1 } })}
-                  className="w-full flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2 text-left transition-colors"
+                  className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2"
                 >
-                  <span
-                    className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[11px]"
-                    style={{
-                      borderColor: slipped ? 'var(--practice-accent-line)' : 'var(--done-accent-line)',
-                      background: slipped ? 'var(--practice-accent-soft)' : 'var(--done-accent-soft)',
-                      color: slipped ? 'var(--practice-accent)' : 'var(--done-accent)',
-                    }}
+                  <button
+                    onClick={() => patch({ diary: { ...d.diary, [item.key]: slipped ? 0 : 1 } })}
+                    className="flex items-center gap-3 flex-1 text-left"
                   >
-                    {slipped ? '·' : '✓'}
-                  </span>
-                  <span className="flex-1">
-                    <span className="block text-[13.5px] text-[var(--text-primary)]">{item.label}</span>
-                    <span className="block text-[11px] text-[var(--text-muted)]">{item.hint}</span>
-                  </span>
-                  <span className="text-[11px] text-[var(--text-muted)]">{slipped ? 'slipped' : 'held'}</span>
-                </button>
+                    <span
+                      className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[11px]"
+                      style={{
+                        borderColor: slipped ? 'var(--practice-accent-line)' : 'var(--done-accent-line)',
+                        background: slipped ? 'var(--practice-accent-soft)' : 'var(--done-accent-soft)',
+                        color: slipped ? 'var(--practice-accent)' : 'var(--done-accent)',
+                      }}
+                    >
+                      {slipped ? '·' : '✓'}
+                    </span>
+                    <span className="flex-1">
+                      <span className="block text-[13.5px] text-[var(--text-primary)]">{item.label}</span>
+                      <span className="block text-[11px] text-[var(--text-muted)]">{item.hint}</span>
+                    </span>
+                  </button>
+                  <SixfoldTag name={item.sixfold} why={item.why} />
+                  <button
+                    onClick={() => patch({ diary: { ...d.diary, [item.key]: slipped ? 0 : 1 } })}
+                    className="text-[11px] text-[var(--text-muted)] flex-shrink-0"
+                  >
+                    {slipped ? 'slipped' : 'held'}
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -292,6 +313,43 @@ function Band({
       </div>
       {children}
     </motion.section>
+  );
+}
+
+/** The Sixfold-Path link on a diary virtue. Shows the flow it belongs to as a
+ *  small compass pill; hover (desktop) or tap (mobile) reveals why they connect.
+ *  So the ethical virtues and the Sixfold Path read as one framework, not two. */
+function SixfoldTag({ name, why }: { name: string; why: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      className="relative flex-shrink-0 group"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+        className="text-[10px] rounded-full px-2 py-1 border transition-colors whitespace-nowrap"
+        style={{
+          borderColor: 'var(--virtue-accent-line)',
+          background: 'var(--virtue-accent-soft)',
+          color: 'var(--virtue-accent)',
+        }}
+      >
+        🧭 {name}
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 bottom-full mb-2 w-56 z-20 rounded-xl border p-3 text-left shadow-xl"
+          style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-secondary, #110e16)' }}
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--virtue-accent)' }}>
+            {name}
+          </p>
+          <p className="text-[12px] leading-relaxed text-[var(--text-secondary)]">{why}</p>
+        </div>
+      )}
+    </div>
   );
 }
 
