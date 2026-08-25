@@ -2410,25 +2410,27 @@ const signatureBlock = ({ dark = false } = {}) => {
  * Helper to get nodemailer transporter
  */
 const getTransporter = () => {
-    // GoDaddy migrated this mailbox's backend to Titan Email at some point
-    // (confirmed directly: the account's webmail login lives at
-    // secureserver.titan.email, not the classic GoDaddy Workspace Email
-    // portal). smtpout.secureserver.net is the LEGACY GoDaddy relay and no
-    // longer has authority over this account — it was accepting connections
-    // and running the AUTH exchange (a real, valid TLS server, correct
-    // ESMTP banner) but rejecting the credentials with 535 because the
-    // account simply isn't there anymore. smtp.titan.email is the correct
-    // server post-migration, verified by hand: raw SMTP against it returns
-    // a different, more specific Postfix error (535 5.7.8, vs GoDaddy's bare
-    // "535 ...authentication rejected"), i.e. a live account being evaluated
-    // by the right backend, not a dead account on the wrong one.
     return nodemailer.createTransport({
-        host: 'smtp.titan.email',
+        host: 'smtpout.secureserver.net',
         port: 465,
         secure: true,
         auth: {
-            user: emailUser.value(),
-            pass: emailPass.value(),
+            // .trim() is load-bearing, not defensive habit. The EMAIL_USER
+            // secret value had a trailing CRLF stored INSIDE it (hex ended
+            // ...2e696e 0d0a — "…skrmblissai.in\r\n"), almost certainly from
+            // being set via `echo ... | secrets:set` at some point, since
+            // echo appends a newline. Every SMTP AUTH therefore sent
+            // base64("connect@skrmblissai.in\r\n") as the username and got a
+            // bare 535 back — indistinguishable from a wrong password, which
+            // is exactly how it was misdiagnosed for a long time (rotating
+            // the password, trying PLAIN vs LOGIN, and swapping servers all
+            // failed identically, because none of them touched the username).
+            // Proven by raw socket: same server, same password, same machine,
+            // trimmed username -> "235 authentication succeeded".
+            // The secret itself is being re-set cleanly, but trimming here
+            // means a stray newline in either secret can never resurrect this.
+            user: emailUser.value().trim(),
+            pass: emailPass.value().trim(),
         },
     });
 };
