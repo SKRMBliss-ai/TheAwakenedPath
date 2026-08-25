@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { arrayRemove, arrayUnion, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useCourseTracking } from '../../hooks/useCourseTracking';
 import { EMOTION_COURSE_ID } from '../courses/EmotionFeelingsCourseView';
+import { CURRICULUM } from './curriculum';
 
 /**
  * The set of completed lesson ids across all three courses.
@@ -19,6 +20,7 @@ import { EMOTION_COURSE_ID } from '../courses/EmotionFeelingsCourseView';
  */
 export function useCurriculumProgress(uid: string | null | undefined): Set<string> {
   const [powerOfNow, setPowerOfNow] = useState<string[]>([]);
+  const [school, setSchool] = useState<string[]>([]);
   const { progress: wisdom = {} } = useCourseTracking(uid);
   const { progress: emotion = {} } = useCourseTracking(uid, EMOTION_COURSE_ID);
 
@@ -31,8 +33,19 @@ export function useCurriculumProgress(uid: string | null | undefined): Set<strin
     );
   }, [uid]);
 
+  // The School lessons live in the Skool classroom, so there is nothing to
+  // observe — this record IS the completion, written by the manual tick.
+  useEffect(() => {
+    if (!uid) { setSchool([]); return; }
+    return onSnapshot(
+      doc(db, 'users', uid, 'progress', 'innerJourney'),
+      (snap) => setSchool(snap.exists() ? (snap.data().watched ?? []) : []),
+      () => setSchool([]),
+    );
+  }, [uid]);
+
   return useMemo(() => {
-    const done = new Set<string>(powerOfNow);
+    const done = new Set<string>([...powerOfNow, ...school]);
 
     // A Wisdom question counts as done once any of its steps is complete —
     // matching how the course itself shows a question as started.
@@ -48,5 +61,41 @@ export function useCurriculumProgress(uid: string | null | undefined): Set<strin
     });
 
     return done;
-  }, [powerOfNow, wisdom, emotion]);
+  }, [powerOfNow, school, wisdom, emotion]);
+}
+
+/**
+ * Mark a curriculum lesson studied, or un-mark it.
+ *
+ * Completion is READ from three different stores, so it has to be WRITTEN
+ * back to whichever store owns the lesson — writing to a fourth "curriculum"
+ * doc would make the tick disagree with the course itself the moment either
+ * one changed.
+ */
+export function useLessonToggle(uid: string | null | undefined) {
+  const { updateProgress: updateWisdom } = useCourseTracking(uid);
+  const { updateProgress: updateEmotion } = useCourseTracking(uid, EMOTION_COURSE_ID);
+
+  return useCallback(async (lessonId: string, done: boolean) => {
+    if (!uid) return;
+    const stage = CURRICULUM.find((s) => s.lessons.some((l) => l.id === lessonId));
+    if (!stage) return;
+
+    if (stage.source === 'powerOfNow' || stage.source === 'innerJourney') {
+      const docId = stage.source === 'powerOfNow' ? 'powerOfNow' : 'innerJourney';
+      await setDoc(
+        doc(db, 'users', uid, 'progress', docId),
+        { watched: done ? arrayUnion(lessonId) : arrayRemove(lessonId) },
+        { merge: true },
+      );
+      return;
+    }
+
+    // A Wisdom question counts as done if ANY step is set, so un-marking has
+    // to clear all three — clearing only `video` would leave it still "done".
+    const update = stage.source === 'emotionCourse' ? updateEmotion : updateWisdom;
+    await update(lessonId, done
+      ? { video: true }
+      : { read: false, practice: false, video: false });
+  }, [uid, updateWisdom, updateEmotion]);
 }

@@ -1,11 +1,15 @@
-import { TwoPillars } from './TwoPillars';
+import { WeekCard } from './WeekCard';
+import { LessonCard } from './LessonCard';
+import { MeditationCard } from './MeditationCard';
+import { invocationOfDay, teachingOfDay } from './dailyRhythm';
 import { CurriculumTrack } from './CurriculumTrack';
 import { WeeklyLetter } from './WeeklyLetter';
 import { YearView } from './YearView';
 import { ReflectionSearch } from './ReflectionSearch';
 import { MorningGlance } from './MorningGlance';
 import { PostSit } from './PostSit';
-import { SideRails } from './SideRails';
+import { SixfoldRail, VirtuesRail } from './SideRails';
+import styles from './Triptych.module.css';
 import type { Practice, PracticeAssignment } from './practiceOfWeek';
 
 /**
@@ -60,12 +64,6 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 export default function PracticePathPreview() {
   return (
     <div className="min-h-screen bg-[var(--bg-base,#0C0910)] text-[var(--text-primary,#FDFAF4)] p-6 sm:p-10">
-      <SideRails
-        virtueProgress={{ sincerity: 7, commitment: 3, patience: 0 }}
-        onOpenVirtue={() => {}}
-        onOpenSixfold={() => {}}
-      />
-
       <div className="max-w-5xl mx-auto space-y-12">
         <header>
           <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)]">Dev preview</p>
@@ -75,23 +73,43 @@ export default function PracticePathPreview() {
           </p>
         </header>
 
-        <Section title="Two pillars + flip cards + Sixfold">
-          <TwoPillars
-            virtueDays={3}
-            virtueDoneToday={false}
-            onToggleVirtue={() => {}}
-            onOpenVirtue={() => {}}
-            practice={samplePractice}
-            practiceWeekStates={['practised', 'practised', 'engaged', 'none', 'none', 'none', 'none']}
-            practiceDoneToday={false}
-            onTogglePractice={() => {}}
-            onOpenPractice={() => {}}
-            practiceReflection=""
-            onSaveReflection={() => {}}
-            carried={{ text: 'Pause before the word, not after it.', week: 1, gap: 1 }}
-            resurfaced={{ gap: 3, lastReflection: 'I noticed the urge to correct people.' }}
-            onOpenSixfold={() => {}}
-          />
+        <Section title="The triptych — rails, week card, lesson card">
+          <div className={styles.triptych}>
+            <SixfoldRail onOpen={() => {}} />
+            <main className={styles.centre}>
+              <WeekCard
+                virtueDays={3}
+                virtueDoneToday={false}
+                onToggleVirtue={() => {}}
+                onOpenVirtue={() => {}}
+                practice={samplePractice}
+                practiceWeekStates={['practised', 'practised', 'engaged', 'none', 'none', 'none', 'none']}
+                practiceDoneToday={false}
+                onTogglePractice={() => {}}
+                onOpenPractice={() => {}}
+                practiceReflection=""
+                onSaveReflection={() => {}}
+                carried={{ text: 'Pause before the word, not after it.', week: 1, gap: 1 }}
+                resurfaced={{ gap: 3, lastReflection: 'I noticed the urge to correct people.' }}
+                onOpenSixfold={() => {}}
+              />
+              <LessonCard completed={new Set(['question1'])} onOpenLesson={() => {}} />
+              <MeditationCard
+                day={{ date: '2026-08-25', breath: true }}
+                patch={() => {}}
+                invocation={invocationOfDay()}
+                teaching={teachingOfDay()}
+                onShuffleInvocation={() => {}}
+                onShuffleTeaching={() => {}}
+                onBeginSit={() => {}}
+                virtueName="Sincerity"
+              />
+            </main>
+            <VirtuesRail
+              virtueProgress={{ sincerity: 7, commitment: 3, patience: 0 }}
+              onOpen={() => {}}
+            />
+          </div>
         </Section>
 
         <Section title="Curriculum track">

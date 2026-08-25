@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy, Users, CalendarDays, GraduationCap, Lightbulb, HelpCircle, Database } from 'lucide-react';
 import { usePageSeo } from './lib/seo';
 import { MeditationHomeCard } from './features/meditation/MeditationHomeCard';
 import { db } from './firebase';
@@ -63,6 +63,7 @@ const VirtuesView = lazy(() => import('./features/practice-path/VirtuesView').th
 const CircleView = lazy(() => import('./features/practice-path/CircleView').then(m => ({ default: m.CircleView })));
 const PracticesTab = lazy(() => import('./features/practice-path/PracticesTab').then(m => ({ default: m.PracticesTab })));
 const YearPanel = lazy(() => import('./features/practice-path/YearPanel').then(m => ({ default: m.YearPanel })));
+const BackupView = lazy(() => import('./features/practice-path/BackupView').then(m => ({ default: m.BackupView })));
 
 // Lightweight centered fallback shown while a feature chunk loads.
 const TabFallback = () => (
@@ -733,7 +734,7 @@ export default function UntetheredApp() {
     // Meditation is FREE for everyone — no paywall.
     // Community (members/calendar) is free for everyone, like meditation — a
     // paywall in front of "who else is here" would defeat the point of it.
-    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'virtues', 'circle', 'practices'];
+    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'virtues', 'circle', 'practices', 'insights', 'questions', 'backup'];
     if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -794,7 +795,7 @@ export default function UntetheredApp() {
   // Each opens automatically when one of its own tabs is already active, so a
   // deep link or a restored session never lands the user in a collapsed group.
   const [practiceOpen, setPracticeOpen] = useState(
-    () => ['today', 'virtues', 'practices', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab));
+    () => ['today', 'insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab));
   const [learnOpen, setLearnOpen] = useState(
     () => ['intelligence', 'wisdom_untethered', 'emotion-course', 'videos'].includes(activeTab));
   const [communityOpen, setCommunityOpen] = useState(
@@ -814,7 +815,7 @@ export default function UntetheredApp() {
 
   // Global Access Control — on load, always start at home if the persisted tab is locked
   useEffect(() => {
-    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'virtues', 'circle', 'practices'].includes(activeTab)) {
+    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'virtues', 'circle', 'practices', 'insights', 'questions', 'backup'].includes(activeTab)) {
       setActiveTab('home');
     }
   }, [isAccessValid, loading]); // intentionally exclude activeTab — only run on auth state change
@@ -1472,7 +1473,7 @@ export default function UntetheredApp() {
                 strokeWidth={1.5}
                 className={cn(
                   "transition-colors flex-shrink-0",
-                  ['today', 'virtues', 'practices', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab)
+                  ['today', 'insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab)
                     ? "text-[var(--accent-primary)]"
                     : "text-[var(--text-muted)]"
                 )}
@@ -1490,9 +1491,16 @@ export default function UntetheredApp() {
             {practiceOpen && (
               <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
                 {[
+                  // Inner Journey's eight, in its order and with its labels.
                   { id: 'today', icon: Sun, label: 'Today', locked: false },
-                  { id: 'virtues', icon: Sparkles, label: 'Virtues', locked: false },
+                  { id: 'insights', icon: Lightbulb, label: 'Insights', locked: false },
+                  { id: 'questions', icon: HelpCircle, label: 'Questions', locked: false },
                   { id: 'practices', icon: Flame, label: 'Practices', locked: false },
+                  { id: 'virtues', icon: Sparkles, label: 'Path', locked: false },
+                  { id: 'stats', icon: BarChart2, label: 'Progress', locked: !isAccessValid },
+                  { id: 'circle', icon: Users, label: 'Everyone', locked: false },
+                  { id: 'backup', icon: Database, label: 'Backup', locked: false },
+                  // Mind Gym's own, which Inner Journey has no equivalent for.
                   { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
                   { id: 'situations', icon: Flame, label: 'Practice Room', locked: !isAccessValid },
                   { id: 'breathe', icon: Wind, label: 'Breathe', locked: false },
@@ -1815,7 +1823,6 @@ export default function UntetheredApp() {
                 </button>
 
                 {[
-                  { id: 'circle', icon: Sparkles, label: 'The Circle' },
                   { id: 'members', icon: Users, label: 'Members' },
                   { id: 'calendar', icon: CalendarDays, label: 'Calendar' },
                 ].map(item => {
@@ -1857,42 +1864,6 @@ export default function UntetheredApp() {
             )}
           </div>
 
-          {/* ── Progress — shared across Practice and Courses, so it sits on its own ── */}
-          {[
-            { id: 'stats', icon: BarChart2, label: 'Progress', locked: !isAccessValid },
-          ].map(item => {
-            const isActive = activeTab === item.id;
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className={cn(
-                  "w-full flex items-center gap-2.5 px-3 py-[min(8px,1vh)] rounded-xl transition-all duration-300 group relative",
-                  isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/50"
-                )}
-              >
-                {isActive && (
-                  <div className="absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full bg-[var(--accent-primary)]" />
-                )}
-                <Icon
-                  size={16}
-                  strokeWidth={isActive ? 2.5 : 1.5}
-                  className={isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"}
-                />
-                <span className={cn(
-                  "text-[12px] uppercase tracking-[0.18em] font-sans transition-colors flex-1 text-left whitespace-nowrap",
-                  isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
-                )}>
-                  {item.label}
-                </span>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {item.locked && <Lock size={10} className="text-[var(--text-muted)] opacity-40" />}
-                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" />}
-                </div>
-              </button>
-            );
-          })}
           {/* ── Insights & Studio ── */}
           <div className="mt-8 pt-4 border-t border-[var(--border-subtle)]/40 space-y-2">
             <div className="flex items-center gap-3 px-4 py-1">
@@ -2359,6 +2330,7 @@ export default function UntetheredApp() {
                     onOpenPractices={() => onNavigate('practices')}
                     onOpenSixfold={() => onNavigate('virtues')}
                     onOpenJournal={() => onNavigate('chapters')}
+                    onOpenTab={(tab, qid) => onNavigate(tab, qid, qid ? 'explanation' : undefined)}
                     weeklyQuestionId={weeklyAssignment?.questionId}
                     weeklyLabel={weeklyAssignment?.weekLabel}
                     onOpenQuestion={(qid) => onNavigate('wisdom_untethered', qid, 'explanation')}
@@ -2385,7 +2357,34 @@ export default function UntetheredApp() {
               </motion.div>
             )}
 
-            {/* ── COMMUNITY · THE CIRCLE ── */}
+            {/* ── PRACTICE · INSIGHTS ── */}
+            {activeTab === 'insights' && (
+              <motion.div key="insights" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <CircleView mode="insight" />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* ── PRACTICE · QUESTIONS ── */}
+            {activeTab === 'questions' && (
+              <motion.div key="questions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <CircleView mode="question" />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* ── PRACTICE · BACKUP ── */}
+            {activeTab === 'backup' && (
+              <motion.div key="backup" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <BackupView />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* ── COMMUNITY · THE CIRCLE (Everyone) ── */}
             {activeTab === 'circle' && (
               <motion.div key="circle" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <Suspense fallback={<TabFallback />}>

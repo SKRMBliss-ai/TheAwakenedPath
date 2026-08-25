@@ -11,7 +11,17 @@ interface CurriculumTrackProps {
 }
 
 /**
- * The persistent curriculum track: three segments, one per course, with a
+ * Seven segments in one row would leave each label a few pixels wide, so the
+ * track is split into its two families — the in-app Mind Gym courses and the
+ * Inner Journey School stages — each keeping its own readable row.
+ */
+const GROUPS = [
+  { name: 'Mind Gym courses', keys: ['presence', 'wisdom', 'emotions'] },
+  { name: 'Inner Journey School', keys: ['ij-s1', 'ij-s2', 'ij-s3', 'ij-l2'] },
+];
+
+/**
+ * The persistent curriculum track: one segment per course or stage, with a
  * lesson drawer beneath.
  *
  * Stage is derived from the completed set every render rather than stored, so
@@ -32,8 +42,13 @@ export function CurriculumTrack({ completed, onToggleLesson, onOpenLesson }: Cur
         </span>
       </div>
 
+      {GROUPS.map((group) => (
+      <div key={group.name} className="mb-1 last:mb-0">
+        <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--text-muted)] opacity-70 px-2.5 mb-1">
+          {group.name}
+        </div>
       <div className="flex items-stretch">
-        {stages.map((s, i) => {
+        {stages.filter((x) => group.keys.includes(x.stage.key)).map((s, i) => {
           const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
           return (
             <button
@@ -73,6 +88,8 @@ export function CurriculumTrack({ completed, onToggleLesson, onOpenLesson }: Cur
           );
         })}
       </div>
+      </div>
+      ))}
 
       {/* Lesson drawer */}
       {openKey && (() => {
@@ -106,12 +123,23 @@ export function CurriculumTrack({ completed, onToggleLesson, onOpenLesson }: Cur
                     >
                       {done && <Check size={10} className="text-[var(--on-accent)]" strokeWidth={3} />}
                     </button>
-                    <button
-                      onClick={() => onOpenLesson?.(l.tab, l.questionId)}
-                      className="text-left flex-1 hover:text-[var(--text-primary)]"
-                    >
-                      {l.title}
-                    </button>
+                    {l.href ? (
+                      <a
+                        href={l.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-left flex-1 hover:text-[var(--text-primary)]"
+                      >
+                        {l.title} ↗
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => onOpenLesson?.(l.tab, l.questionId)}
+                        className="text-left flex-1 hover:text-[var(--text-primary)]"
+                      >
+                        {l.title}
+                      </button>
+                    )}
                   </div>
                 );
               })}

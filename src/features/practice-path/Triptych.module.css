@@ -1,0 +1,568 @@
+/* ============================================================
+   The Today layout, ported placement-for-placement from Inner
+   Journey: three columns — Sixfold rail, centre journey,
+   Virtues rail — with the centre holding exactly three cards
+   in order (this week, today's lesson, today's meditation).
+
+   Only the palette and the type are Awakened Path's: every
+   colour here is a brand token, and every serif is
+   --font-serif (Cormorant Garamond), never Spectral.
+   ============================================================ */
+
+.triptych {
+  display: grid;
+  gap: 20px;
+  margin-top: 22px;
+  grid-template-columns: minmax(150px, 186px) minmax(0, 1fr) minmax(150px, 186px);
+  align-items: start;
+}
+
+/* Below the breakpoint the rails cannot sit beside the content, so the
+   grid collapses and the centre is ordered FIRST — the journey must never
+   be pushed below a framework nobody came here for. */
+@media (max-width: 1080px) {
+  .triptych { grid-template-columns: 1fr; gap: 14px }
+  .centre { order: 1 }
+  .railSix { order: 2 }
+  .railVirtue { order: 3 }
+}
+
+/* ── side rails ───────────────────────────────────────────── */
+.siderail {
+  position: sticky;
+  top: 16px;
+  align-self: start;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+@media (max-width: 1080px) {
+  .siderail { position: static; max-height: none; overflow: visible }
+}
+
+.railFold {
+  border: 1px solid var(--border-subtle);
+  border-radius: 13px;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+.railFold > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background .18s;
+}
+.railFold > summary::-webkit-details-marker { display: none }
+.railFold > summary::after {
+  content: "\203A";
+  color: var(--text-muted);
+  font-size: 16px;
+  transition: transform .25s ease;
+}
+.railFold[open] > summary::after { transform: rotate(90deg) }
+.railFold > summary:hover { background: var(--bg-surface-hover) }
+
+.srCap {
+  font-size: 9.5px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.railSix .srCap { color: var(--practice-accent) }
+.railVirtue .srCap { color: var(--virtue-accent) }
+
+.srItems { padding: 4px 6px 8px }
+.srNote {
+  padding: 2px 14px 12px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  opacity: .7;
+}
+
+/* Stacked rails become a wrapping grid so nine virtues do not turn into
+   nine full-width rows on a tablet. */
+@media (max-width: 1080px) {
+  .srItems {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 4px;
+  }
+}
+
+/* ── rail items — lamps, not progress bars ───────────────── */
+.srItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font: inherit;
+  width: 100%;
+  text-align: left;
+  transition: background .18s;
+}
+.srItem:hover { background: var(--bg-surface-hover) }
+.srItem:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: -2px }
+
+.srLamp {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--border-subtle);
+  transition: background .4s, box-shadow .4s, transform .4s;
+}
+.railSix .srItem:hover .srLamp {
+  background: var(--practice-accent);
+  box-shadow: 0 0 10px var(--practice-accent-line);
+}
+.railVirtue .srItem:hover .srLamp {
+  background: var(--virtue-accent);
+  box-shadow: 0 0 10px var(--virtue-accent-line);
+}
+.lit .srLamp { transform: scale(1.5) }
+.railSix .lit .srLamp {
+  background: var(--practice-accent);
+  box-shadow: 0 0 14px var(--practice-accent-line), 0 0 0 4px var(--practice-accent-soft);
+}
+.railVirtue .lit .srLamp {
+  background: var(--virtue-accent);
+  box-shadow: 0 0 14px var(--virtue-accent-line), 0 0 0 4px var(--virtue-accent-soft);
+}
+.embedded .srLamp { background: var(--done-accent-line) }
+
+.srNum { font-size: 9px; color: var(--text-muted); width: 14px; flex: 0 0 auto }
+.srName { font-size: 12px; color: var(--text-secondary); line-height: 1.3 }
+.lit .srName { color: var(--text-primary) }
+.srNow {
+  display: block;
+  font-size: 8.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.railSix .srNow { color: var(--practice-accent) }
+.railVirtue .srNow { color: var(--virtue-accent) }
+
+/* ── floating tooltip shared by both rails ───────────────── */
+.railtip {
+  position: fixed;
+  z-index: 70;
+  max-width: 270px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-elevated);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.railtip.on { opacity: 1; transform: translateY(0) }
+.rtTitle {
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--virtue-accent);
+  margin-bottom: 7px;
+}
+.railtip.six .rtTitle { color: var(--practice-accent) }
+.rtDef { font-size: 13px; color: var(--text-primary); line-height: 1.55 }
+.rtExtra {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid var(--border-subtle);
+}
+.rtExtra b {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 3px;
+}
+
+/* ── centre column ───────────────────────────────────────── */
+.centre { display: flex; flex-direction: column; gap: 16px; min-width: 0 }
+
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+}
+
+.cap {
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+/* 1 · this week — virtue and practice as ONE card, split by a rule */
+.cardWeek {
+  background: linear-gradient(160deg, var(--virtue-accent-soft), var(--practice-accent-soft) 55%, transparent);
+}
+.cwSplit { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 18px }
+@media (max-width: 640px) {
+  .cwSplit { grid-template-columns: 1fr; gap: 16px }
+  .cwDiv { height: 1px; width: 100% }
+}
+.cwDiv {
+  background: linear-gradient(transparent, var(--border-subtle) 18%, var(--border-subtle) 82%, transparent);
+}
+.cwHalf { min-width: 0 }
+.cwKind {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 7px;
+}
+.capDot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto }
+.vDot { background: var(--virtue-accent) }
+.pDot { background: var(--practice-accent) }
+.cwName {
+  font-family: var(--font-serif);
+  font-size: 23px;
+  font-weight: 500;
+  line-height: 1.15;
+}
+.cwVirtue .cwName { color: var(--virtue-accent) }
+.cwPractice .cwName { color: var(--practice-accent) }
+.cwRole { font-size: 12px; color: var(--text-muted); margin-top: 3px }
+/* alignment tags — kind above name, so the relationship is legible */
+.alignRow { display: flex; gap: 8px; flex-wrap: wrap }
+.alignTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+  transition: border-color .15s;
+}
+.alignTag:hover { border-color: var(--practice-accent-line) }
+.atKind {
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.atName { font-weight: 600 }
+.alignSixfold {
+  border-color: var(--practice-accent-line);
+  background: var(--practice-accent-soft);
+}
+.alignSixfold .atName { color: var(--practice-accent) }
+.alignSixfold .atKind { color: var(--practice-accent) }
+.alignVirtue {
+  border-color: var(--virtue-accent-line);
+  background: var(--virtue-accent-soft);
+}
+.alignVirtue .atName { color: var(--virtue-accent) }
+.alignVirtue .atKind { color: var(--virtue-accent); opacity: .75 }
+
+.cwInvite { margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--border-subtle) }
+.cwAct {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 13px;
+  flex-wrap: wrap;
+}
+.cwMore { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-subtle) }
+
+/* shared small type inside the centre cards */
+.bLabel {
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 13px 0 5px;
+}
+.bText { font-size: 13.5px; color: var(--text-secondary); line-height: 1.65 }
+.bQuote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.7;
+}
+.ftLabel {
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+.ftText { font-size: 14.5px; color: var(--text-primary); line-height: 1.6 }
+
+.again {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  margin-top: 8px;
+}
+.again:hover { color: var(--accent-primary) }
+
+.ghostlink {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.ghostlink:hover { text-decoration: underline }
+
+/* 2 · lesson */
+.clStage {
+  font-size: 10.5px;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--practice-accent);
+  margin-bottom: 6px;
+}
+.clTitle {
+  font-family: var(--font-serif);
+  font-size: 21px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+.clSub { font-size: 12.5px; color: var(--text-muted); margin-top: 5px }
+.clAct { display: flex; align-items: center; gap: 14px; margin-top: 15px; flex-wrap: wrap }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  background: var(--accent-solid);
+  color: var(--on-accent);
+}
+.btn:hover { opacity: .9 }
+.inlineCheck { margin-top: 14px }
+
+/* 3 · meditation — a flip card, overview on the front, the sit on the back */
+.cardMed { perspective: 1400px; overflow: hidden }
+.medInner {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.4, .16, .2, 1);
+}
+.medInner.flipped { transform: rotateY(180deg) }
+.medFace { backface-visibility: hidden; -webkit-backface-visibility: hidden }
+.medFront { position: relative }
+.medBack { position: absolute; inset: 0; transform: rotateY(180deg); overflow-y: auto }
+
+.cmHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.cmHead .cap { margin-bottom: 0 }
+.cmTechLabel {
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--practice-accent);
+  margin-bottom: 5px;
+}
+.cmTechName {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--practice-accent);
+  line-height: 1.15;
+}
+.cmTechWeek { font-size: 12px; color: var(--text-muted); margin-top: 4px }
+.cmRule {
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-subtle), transparent 78%);
+  margin: 18px 0;
+}
+.cmPrepHead,
+.cmLogHead {
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.btnBegin {
+  width: 100%;
+  margin-top: 18px;
+  min-height: 52px;
+  font-size: 15px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  background: var(--accent-solid);
+  color: var(--on-accent);
+}
+.btnBegin:hover { opacity: .9 }
+
+/* ── Love · Focus · Surrender flip card, inside the meditation card ── */
+.attWrap { perspective: 1300px }
+.attFlip {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.4, .16, .2, 1);
+}
+.attFlip.flipped { transform: rotateY(180deg) }
+.attFace {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 1px solid var(--virtue-accent-line);
+  border-radius: 13px;
+  padding: 15px 16px;
+  background: linear-gradient(158deg, var(--virtue-accent-soft), var(--practice-accent-soft) 62%, transparent);
+}
+.attFront { position: relative }
+.attBack {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+}
+.attHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  letter-spacing: .06em;
+  color: var(--virtue-accent);
+  margin-bottom: 10px;
+}
+.attScroll { flex: 1; overflow-y: auto; margin: 0 -4px; padding: 0 4px }
+.attScroll::-webkit-scrollbar { width: 4px }
+.attScroll::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px }
+.attPart { margin-bottom: 13px; padding-left: 12px; border-left: 2px solid }
+.attLove { border-color: var(--practice-accent) }
+.attFocus { border-color: var(--virtue-accent) }
+.attSurrender { border-color: var(--done-accent) }
+.apName {
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.attLove .apName { color: var(--practice-accent) }
+.attFocus .apName { color: var(--virtue-accent) }
+.attSurrender .apName { color: var(--done-accent) }
+.apText {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.65;
+}
+.attClose {
+  font-family: var(--font-serif);
+  font-size: 15.5px;
+  color: var(--text-primary);
+  line-height: 1.65;
+  margin-top: 4px;
+  padding-top: 11px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ── pre-sit checklist ───────────────────────────────────── */
+.presit {
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--bg-input);
+  overflow: hidden;
+}
+.presitItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 11px 13px;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  background: none;
+  font: inherit;
+}
+.presitItem:last-child { border-bottom: none }
+.presitItem:hover { background: var(--bg-surface) }
+.piText { font-size: 14px; line-height: 1.5; color: var(--text-primary) }
+.checked .piText { color: var(--done-accent) }
+.piSub { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.5 }
+
+/* ── recent days fold ────────────────────────────────────── */
+.recentFold {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+.recentFold > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.recentFold > summary::-webkit-details-marker { display: none }
+.recentFold > summary::after {
+  content: "\2304";
+  color: var(--text-muted);
+  transition: transform .25s ease;
+  font-size: 15px;
+}
+.recentFold[open] > summary::after { transform: rotate(180deg) }
+
+@media (prefers-reduced-motion: reduce) {
+  .medInner, .attFlip, .srLamp, .railtip { transition: none }
+}

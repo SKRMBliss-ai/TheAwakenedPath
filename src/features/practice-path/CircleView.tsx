@@ -30,14 +30,40 @@ function timeAgo(ts: unknown): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-export function CircleView() {
+/**
+ * `circle`  — the whole feed, both kinds, with the tab strip (Everyone).
+ * `insight` / `question` — one kind only, as its own sidebar destination,
+ *   matching Inner Journey's separate Insights and Questions views.
+ */
+export type CircleMode = 'circle' | PracticeEntryKind;
+
+const HEADINGS: Record<CircleMode, { eyebrow: string; title: string; sub?: string }> = {
+  circle: {
+    eyebrow: 'Everyone',
+    title: 'What the practice is showing us',
+  },
+  insight: {
+    eyebrow: 'Insights',
+    title: 'Capture an insight',
+    sub: 'A realisation, a shift, something that landed. Dated automatically.',
+  },
+  question: {
+    eyebrow: 'Questions',
+    title: 'Ask a question',
+    sub: 'Something to bring to the circle, or to sit with. Mark it answered when it resolves.',
+  },
+};
+
+export function CircleView({ mode = 'circle' }: { mode?: CircleMode } = {}) {
   const { user } = useAuth();
-  const [tab, setTab] = useState<PracticeEntryKind>('insight');
+  const [tab, setTab] = useState<PracticeEntryKind>(mode === 'circle' ? 'insight' : mode);
   const [text, setText] = useState('');
   const [shared, setShared] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const { entries, loaded } = usePracticeEntries(tab, user?.uid);
+  // In a single-kind view the tab is fixed by the route, not by the strip.
+  const kind: PracticeEntryKind = mode === 'circle' ? tab : mode;
+  const { entries, loaded } = usePracticeEntries(kind, user?.uid);
   const { add, answer, reopen, remove } = usePracticeEntryActions(
     user?.uid,
     user?.displayName ?? null,
@@ -70,7 +96,7 @@ export function CircleView() {
     if (!text.trim() || saving) return;
     setSaving(true);
     try {
-      await add(tab, text, shared);
+      await add(kind, text, shared);
       setText('');
     } finally {
       setSaving(false);
@@ -152,12 +178,16 @@ export function CircleView() {
   return (
     <div className="space-y-6">
       <div>
-        <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)]">The Circle</span>
+        <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)]">
+          {HEADINGS[mode].eyebrow}
+        </span>
         <h1 className="text-2xl sm:text-3xl font-serif font-light text-[var(--text-primary)] mt-1">
-          What the practice is showing us
+          {HEADINGS[mode].title}
         </h1>
         <p className="text-[13px] text-[var(--text-secondary)] mt-2">
-          This week everyone is practising <strong className="text-[var(--text-primary)]">{virtue.name}</strong>.
+          {HEADINGS[mode].sub ?? (
+            <>This week everyone is practising <strong className="text-[var(--text-primary)]">{virtue.name}</strong>.</>
+          )}
         </p>
       </div>
 
@@ -171,7 +201,8 @@ export function CircleView() {
         </div>
       </details>
 
-      {/* Tabs */}
+      {/* Tabs — only when this view holds both kinds. */}
+      {mode === 'circle' && (
       <div className="flex gap-1 border-b border-[var(--border-subtle)]">
         {([['insight', 'Insights'], ['question', 'Questions']] as const).map(([k, label]) => (
           <button
@@ -188,6 +219,7 @@ export function CircleView() {
           </button>
         ))}
       </div>
+      )}
 
       {/* Compose */}
       <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 p-4">
@@ -195,7 +227,7 @@ export function CircleView() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={3}
-          placeholder={tab === 'insight' ? 'Today I saw that…' : 'What happens when…?'}
+          placeholder={kind === 'insight' ? 'Today I saw that…' : 'What happens when…?'}
           className="w-full rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] px-3 py-2.5 text-[14px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] resize-y"
         />
         <div className="flex items-center justify-between gap-3 mt-3 flex-wrap">
@@ -215,7 +247,7 @@ export function CircleView() {
             disabled={!text.trim() || saving}
             className="px-5 py-2 rounded-full text-[13px] font-bold bg-[var(--accent-solid)] text-[var(--on-accent)] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
           >
-            {saving ? 'Saving…' : tab === 'insight' ? 'Share insight' : 'Ask'}
+            {saving ? 'Saving…' : kind === 'insight' ? 'Share insight' : 'Ask'}
           </button>
         </div>
       </div>
@@ -229,10 +261,10 @@ export function CircleView() {
             Nothing here yet.
           </p>
           <p className="text-[13px] text-[var(--text-muted)] mt-2">
-            The first {tab === 'insight' ? 'insight' : 'question'} can be yours.
+            The first {kind === 'insight' ? 'insight' : 'question'} can be yours.
           </p>
         </div>
-      ) : tab === 'question' ? (
+      ) : kind === 'question' ? (
         <div className="space-y-5">
           {open.length > 0 && (
             <div className="space-y-2">
