@@ -319,7 +319,12 @@ function DiaryRow({
             <span className="block text-[11px] text-[var(--text-muted)]">{cat.tradition}</span>
           </span>
         </button>
-        <SixfoldTag name={cat.sixfold} why={cat.why} />
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          <InfoTag glyph="🧭" name={cat.sixfold} why={cat.why} color="var(--virtue-accent)"
+            line="var(--virtue-accent-line)" soft="var(--virtue-accent-soft)" />
+          <InfoTag glyph="✦" name={cat.virtues[0]} label={cat.virtues.join(' · ')} why={cat.virtueWhy}
+            color="var(--practice-accent)" line="var(--practice-accent-line)" soft="var(--practice-accent-soft)" />
+        </div>
         <span className="text-[11px] text-[var(--text-muted)] flex-shrink-0 w-12 text-right">
           {slipped ? `${lapses} noted` : 'held'}
         </span>
@@ -370,35 +375,37 @@ function DiaryRow({
   );
 }
 
-/** The Sixfold-Path link on a diary virtue. Shows the flow it belongs to as a
- *  small compass pill; hover (desktop) or tap (mobile) reveals why they connect.
- *  So the ethical virtues and the Sixfold Path read as one framework, not two. */
-function SixfoldTag({ name, why }: { name: string; why: string }) {
+/** A framework link on a diary virtue — the Sixfold flow (compass) or the Nine
+ *  Virtues (star) it belongs to. Hover (desktop) or tap (mobile) reveals why
+ *  they connect, so the diary, the Sixfold Path and the Nine Virtues read as
+ *  one framework seen from three sides rather than three separate systems. */
+function InfoTag({
+  glyph, name, label, why, color, line, soft,
+}: {
+  glyph: string; name: string; label?: string; why: string;
+  color: string; line: string; soft: string;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <div
-      className="relative flex-shrink-0 group"
+      className="relative"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
         className="text-[10px] rounded-full px-2 py-1 border transition-colors whitespace-nowrap"
-        style={{
-          borderColor: 'var(--virtue-accent-line)',
-          background: 'var(--virtue-accent-soft)',
-          color: 'var(--virtue-accent)',
-        }}
+        style={{ borderColor: line, background: soft, color }}
       >
-        🧭 {name}
+        {glyph} {name}
       </button>
       {open && (
         <div
           className="absolute right-0 bottom-full mb-2 w-56 z-20 rounded-xl border p-3 text-left shadow-xl"
           style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-secondary, #110e16)' }}
         >
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--virtue-accent)' }}>
-            {name}
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color }}>
+            {label ?? name}
           </p>
           <p className="text-[12px] leading-relaxed text-[var(--text-secondary)]">{why}</p>
         </div>

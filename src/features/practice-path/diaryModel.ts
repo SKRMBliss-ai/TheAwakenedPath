@@ -32,6 +32,10 @@ export interface DiaryCategory {
   sixfold: string;
   /** Why the virtue and the flow connect — shown on hover / tap. */
   why: string;
+  /** The Nine-Virtue(s) this ethical observation cultivates. */
+  virtues: string[];
+  /** Why they connect — shown on hover / tap. */
+  virtueWhy: string;
   /** Sub-lines: [storageKey, plain label]. Plain-language first, for reach. */
   sublines: [string, string][];
 }
@@ -40,11 +44,15 @@ export const DIARY_CATEGORIES: DiaryCategory[] = [
   {
     key: 'ahimsa', label: 'Non-harming', tradition: 'Ahimsa', sixfold: 'Right Action',
     why: 'Non-harming is Right Action lived — and Right Intention beneath it, since harm begins as a motive before it becomes a deed.',
+    virtues: ['Gentleness', 'Caring', 'Tolerance'],
+    virtueWhy: 'Watching for harm is how Gentleness, Caring and Tolerance become real rather than merely intended.',
     sublines: [['thought', 'In thought'], ['word', 'In word'], ['deed', 'In deed']],
   },
   {
     key: 'truthfulness', label: 'Truthful', tradition: 'Truthfulness', sixfold: 'Right Speech',
     why: 'Truthfulness is Right Speech in practice — and Right Vision, the clear seeing that truthful words depend on.',
+    virtues: ['Sincerity', 'Commitment'],
+    virtueWhy: 'Truthfulness is Sincerity tested — the gap between what you feel and what you show, closed one honest inch a day.',
     sublines: [
       ['falsehood', 'Falsehood'], ['deceit', 'Deceit'], ['hypocrisy', 'Hypocrisy'],
       ['fraud', 'Fraud'], ['illegalGain', 'Unfair gain'],
@@ -53,11 +61,15 @@ export const DIARY_CATEGORIES: DiaryCategory[] = [
   {
     key: 'chastity', label: 'Restraint', tradition: 'Chastity', sixfold: 'Right Presence',
     why: 'Restraint holds energy in the body rather than spending it outward — the ground of Right Presence.',
+    virtues: ['Detachment', 'Commitment'],
+    virtueWhy: 'Restraint is Detachment in the body — energy kept rather than leaked toward every passing wanting.',
     sublines: [['thought', 'In thought'], ['word', 'In word'], ['deed', 'In deed']],
   },
   {
     key: 'humility', label: 'Humility', tradition: 'Humility', sixfold: 'Right Vision',
     why: 'Humility is Right Vision turned on yourself — seeing your own behaviour without the distortion of pride.',
+    virtues: ['Graciousness', 'Acceptance'],
+    virtueWhy: 'Noticing pride of knowledge, wealth or power is how Graciousness and Acceptance grow in place of it.',
     sublines: [
       ['knowledge', 'Pride of knowledge'], ['wealth', 'Pride of wealth'], ['power', 'Pride of power'],
     ],
@@ -65,6 +77,8 @@ export const DIARY_CATEGORIES: DiaryCategory[] = [
   {
     key: 'love', label: 'Love for all', tradition: 'Love for all, hatred for none', sixfold: 'Right Intention',
     why: 'Love for all is Right Intention at its widest — the vow that thoughts, words and actions serve everyone, not just your own.',
+    virtues: ['Caring', 'Tolerance', 'Gentleness'],
+    virtueWhy: 'Holding no one in ill will is Caring, Tolerance and Gentleness extended past the people who are easy to love.',
     sublines: [['thought', 'In thought'], ['word', 'In word'], ['deed', 'In deed']],
   },
 ];

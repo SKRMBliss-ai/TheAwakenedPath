@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy, Users, CalendarDays, GraduationCap, Lightbulb, HelpCircle, Database } from 'lucide-react';
+import { Flame, Sparkles, Sun, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
 import { usePageSeo } from './lib/seo';
 import { MeditationHomeCard } from './features/meditation/MeditationHomeCard';
 import { db } from './firebase';
@@ -556,11 +556,8 @@ const PREVIEW_EMAIL = 'skrmblissai@gmail.com';
 export default function UntetheredApp() {
   const { user: currentUser, profile, loading, signOut, isAccessValid, isPremiumUser, tokenBalance, activateTrial, deductTokens } = useAuth();
 
-  // The owner previews the locked tabs without a membership. main added this
-  // for `virtues` alone; the suite is seven tabs now, so leaving the other six
-  // locked would only half-solve the thing that bypass exists for.
+  // The owner previews locked tabs without a membership.
   const canPreviewLocked = currentUser?.email === PREVIEW_EMAIL;
-  const paidLocked = !isAccessValid && !canPreviewLocked;
   const { theme } = useTheme();
 
   usePageSeo({
@@ -1522,16 +1519,10 @@ export default function UntetheredApp() {
             {practiceOpen && (
               <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
                 {[
-                  // Inner Journey's eight, in its order and with its labels.
+                  // The Daily Practice ribbon is the one designed-for daily action;
+                  // Insights / Questions / Practices / Path / Progress / Everyone /
+                  // Backup were retired from the rail to keep the path simple.
                   { id: 'today', icon: Sun, label: 'Today', locked: false },
-                  { id: 'insights', icon: Lightbulb, label: 'Insights', locked: paidLocked },
-                  { id: 'questions', icon: HelpCircle, label: 'Questions', locked: paidLocked },
-                  { id: 'practices', icon: Flame, label: 'Practices', locked: paidLocked },
-                  { id: 'virtues', icon: Sparkles, label: 'Path', locked: paidLocked },
-                  { id: 'stats', icon: BarChart2, label: 'Progress', locked: paidLocked },
-                  { id: 'circle', icon: Users, label: 'Everyone', locked: paidLocked },
-                  { id: 'backup', icon: Database, label: 'Backup', locked: paidLocked },
-                  // Mind Gym's own, which Inner Journey has no equivalent for.
                   { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
                   { id: 'situations', icon: Flame, label: 'Practice Room', locked: !isAccessValid },
                   { id: 'breathe', icon: Wind, label: 'Breathe', locked: false },
@@ -2683,12 +2674,12 @@ export default function UntetheredApp() {
         >
           {[
             { id: 'home', icon: Home, label: 'Home' },
-            { id: 'situations', icon: Flame, label: 'Practice' },
+            { id: 'today', icon: Sun, label: 'Today' },
             // Courses is the hub (CoursesHub renders on the 'intelligence' tab),
             // and on a phone the bottom bar is the only nav most people use.
             { id: 'intelligence', icon: GraduationCap, label: 'Courses' },
             { id: 'chapters', icon: BookOpen, label: 'Journal' },
-            { id: 'stats', icon: BarChart2, label: 'Progress' },
+            { id: 'situations', icon: Flame, label: 'Practice' },
             { id: 'profile', icon: User, label: 'You' },
           ].map(({ id, icon: Icon, label }) => {
             const active = activeTab === id;
