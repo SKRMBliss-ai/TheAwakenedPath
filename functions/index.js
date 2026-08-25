@@ -2410,21 +2410,25 @@ const signatureBlock = ({ dark = false } = {}) => {
  * Helper to get nodemailer transporter
  */
 const getTransporter = () => {
+    // GoDaddy migrated this mailbox's backend to Titan Email at some point
+    // (confirmed directly: the account's webmail login lives at
+    // secureserver.titan.email, not the classic GoDaddy Workspace Email
+    // portal). smtpout.secureserver.net is the LEGACY GoDaddy relay and no
+    // longer has authority over this account — it was accepting connections
+    // and running the AUTH exchange (a real, valid TLS server, correct
+    // ESMTP banner) but rejecting the credentials with 535 because the
+    // account simply isn't there anymore. smtp.titan.email is the correct
+    // server post-migration, verified by hand: raw SMTP against it returns
+    // a different, more specific Postfix error (535 5.7.8, vs GoDaddy's bare
+    // "535 ...authentication rejected"), i.e. a live account being evaluated
+    // by the right backend, not a dead account on the wrong one.
     return nodemailer.createTransport({
-        host: 'smtpout.secureserver.net',
+        host: 'smtp.titan.email',
         port: 465,
         secure: true,
         auth: {
             user: emailUser.value(),
             pass: emailPass.value(),
-            // Tested: forcing LOGIN here (vs nodemailer's default AUTH PLAIN
-            // negotiation) did NOT fix the 535 rejection either — both were
-            // tried against a freshly-rotated, verified-correct password and
-            // failed identically. Kept as LOGIN anyway since it's the more
-            // widely-compatible mechanism and this rules it out as a cause;
-            // the real block is almost certainly account/provider-side (see
-            // the investigation notes on getTransporter's callers).
-            method: 'LOGIN',
         },
     });
 };
