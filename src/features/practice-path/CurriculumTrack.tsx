@@ -11,13 +11,10 @@ interface CurriculumTrackProps {
 }
 
 /**
- * Seven segments in one row would leave each label a few pixels wide, so the
- * track is split into its two families — the in-app Mind Gym courses and the
- * Inner Journey School stages — each keeping its own readable row.
+ * The track carries the in-app Mind Gym courses in a single readable row.
  */
 const GROUPS = [
   { name: 'Mind Gym courses', keys: ['presence', 'wisdom', 'emotions'] },
-  { name: 'Inner Journey School', keys: ['ij-s1', 'ij-s2', 'ij-s3', 'ij-l2'] },
 ];
 
 /**

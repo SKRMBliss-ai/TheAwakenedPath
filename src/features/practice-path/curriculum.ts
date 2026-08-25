@@ -1,7 +1,6 @@
 import { QUESTION_META } from '../practices/questionMeta';
 import { CHAPTERS } from '../presence-intelligence/teachingData';
 import { LESSONS as EMOTION_LESSONS } from '../courses/EmotionFeelingsCourseView';
-import { SCHOOL_CURRICULUM } from './schoolCurriculum';
 
 /**
  * The Mind Gym curriculum — three courses, taken in order.
@@ -70,19 +69,6 @@ export const CURRICULUM: CurriculumStage[] = [
     key: 'emotions', label: 'Emotions', title: 'Feelings & Emotions',
     tab: 'emotion-course', lessons: emotionLessons, source: 'emotionCourse',
   },
-  // ── The Inner Journey School, carried in alongside the Mind Gym courses ──
-  // These are external classroom lessons, so they are ticked by hand rather
-  // than observed; see schoolCurriculum.ts.
-  ...SCHOOL_CURRICULUM.map((stage) => ({
-    key: stage.key,
-    label: stage.label,
-    title: stage.title,
-    tab: 'school',
-    lessons: stage.lessons.map((l) => ({
-      id: l.id, title: l.title, tab: 'school', href: l.href,
-    })),
-    source: 'innerJourney' as const,
-  })),
 ];
 
 export interface StageStanding {
