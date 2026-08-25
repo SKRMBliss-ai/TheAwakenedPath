@@ -19,6 +19,7 @@ import { MindGymLogo } from './components/ui/MindGymLogo';
 import SILogoMark from './components/ui/SILogoMark';
 import { useAchievements } from './features/achievements/useAchievements';
 import { MusicMiniPlayer } from './components/ui/MusicMiniPlayer';
+import { MindGymDock } from './components/ui/MindGymDock';
 import { AchievementToast } from './features/achievements/AchievementsPanel';
 import { AchievementsDrawer } from './features/achievements/AchievementsDrawer';
 import { TokenToast } from './components/ui/TokenToast';
@@ -536,7 +537,6 @@ const PremiumPaywall = ({ user, checkOut, isProcessing, onSuccess }: any) => {
 export default function UntetheredApp() {
   const { user: currentUser, profile, loading, signOut, isAccessValid, isPremiumUser, tokenBalance, activateTrial, deductTokens } = useAuth();
   const { theme } = useTheme();
-  const { musicUrl } = useVoiceStatus();
 
   usePageSeo({
     title: 'Mind Gym — Daily Meditation, Breathwork & Witness Journaling | SKRM Bliss AI',
@@ -619,8 +619,6 @@ export default function UntetheredApp() {
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1024 : true);
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
   const [achievementsOpen, setAchievementsOpen] = useState(false);
-  // The floating tools collapse into one button — see the Floating Dock below.
-  const [dockOpen, setDockOpen] = useState(false);
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -2617,86 +2615,45 @@ export default function UntetheredApp() {
         unlocked={unlocked}
         points={points}
       />
-      {/* Floating Dock
-          These three tools — the guide, the Watcher's Pause and the sound
-          toggle — used to sit on screen as three permanent circles. Stacked
-          with the chat launcher and the social FAB that made five floating
-          buttons down the right edge, which read as clutter rather than as
-          tools. They collapse into ONE button now and expand on tap; the
-          dock stays open until it is dismissed, so using two in a row does
-          not mean opening it twice.                                        */}
-      <div className={cn(
-        "fixed right-3 sm:right-6 z-[100] flex flex-col items-center gap-3 sm:gap-4 transition-all duration-500",
-        // Hide these floating actions completely when inside the full-screen Meditation Room
-        (activeTab === 'meditation' && isSidebarCollapsed) ? "opacity-0 pointer-events-none scale-90 translate-x-10" : "opacity-100 scale-100 translate-x-0",
-        // On mobile: bottom-20 so stack clears the sticky 64px nav bar; on desktop keep existing offsets
-        musicUrl
-          ? "bottom-28 sm:bottom-24"
-          : "bottom-20 sm:bottom-12"
-      )}>
-        {/* Voice Guidance Avatar */}
-        {dockOpen && voiceGuidanceEnabled && (
-          <VoiceGuidance
-            preferredVoice={preferredVoice}
-            activeTab={activeTab}
-            isAccessValid={isAccessValid}
-            assignment={weeklyAssignment}
-            bottomOffset={0}
-            isInline
-          />
-        )}
-
-        {/* Presence Hub — hide on mobile to reduce clutter */}
-        {dockOpen && (
-        <div className="hidden sm:flex flex-col gap-3 sm:gap-4">
-          <WatcherPauseButton />
-        </div>
-        )}
-        {dockOpen && (
-        <button
-            onClick={toggleAudio}
-            className={cn(
-              "p-4 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center group overflow-hidden shadow-2xl relative",
-              isAudioEnabled
-                ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/30 text-[var(--accent-primary)] shadow-[0_0_30px_var(--glow-primary)]"
-                : "bg-[var(--bg-surface)] border-[var(--border-default)]/60 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/20 hover:shadow-[0_0_20px_rgba(184,151,58,0.15)]"
-            )}
-            title={isAudioEnabled ? "Voice Guidance Active" : "Enable Voice Guidance"}
-          >
-            {isAudioEnabled ? (
-              <motion.div
-                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.8, 0.5] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute inset-0 bg-[var(--accent-primary)]/20 blur-xl"
+      {/* One dock for every floating tool — see MindGymDock. */}
+      <MindGymDock
+        hidden={activeTab === 'meditation' && isSidebarCollapsed}
+        active={isAudioEnabled}
+        tools={
+          <>
+            {voiceGuidanceEnabled && (
+              <VoiceGuidance
+                preferredVoice={preferredVoice}
+                activeTab={activeTab}
+                isAccessValid={isAccessValid}
+                assignment={weeklyAssignment}
+                bottomOffset={0}
+                isInline
               />
-            ) : (
-              <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             )}
-            <Headphones className={cn("w-5 h-5 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
-          </button>
-        )}
-
-        {/* The one button that is always there. It reports activity while
-            collapsed, so nothing running out of sight goes unnoticed. */}
-        <button
-          onClick={() => setDockOpen((o) => !o)}
-          aria-expanded={dockOpen}
-          aria-label={dockOpen ? 'Hide tools' : 'Show tools'}
-          className={cn(
-            "p-3.5 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center shadow-2xl relative",
-            dockOpen
-              ? "bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-primary)] rotate-90"
-              : "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/30 text-[var(--accent-primary)]"
-          )}
-        >
-          {!dockOpen && isAudioEnabled && (
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--accent-primary)] ring-2 ring-[var(--bg-primary)]" />
-          )}
-          {dockOpen
-            ? <X className="w-5 h-5" />
-            : <Sparkles className="w-5 h-5" />}
-        </button>
-      </div>
+            <WatcherPauseButton />
+            <button
+              onClick={toggleAudio}
+              aria-label={isAudioEnabled ? 'Voice guidance active' : 'Enable voice guidance'}
+              className={cn(
+                "w-10 h-10 rounded-full border flex items-center justify-center overflow-hidden relative transition-transform hover:scale-110 active:scale-95",
+                isAudioEnabled
+                  ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/30 text-[var(--accent-primary)]"
+                  : "bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              )}
+            >
+              {isAudioEnabled && (
+                <motion.div
+                  animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0.8, 0.5] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute inset-0 bg-[var(--accent-primary)]/20 blur-xl"
+                />
+              )}
+              <Headphones className={cn("w-[19px] h-[19px] relative z-10", isAudioEnabled && "animate-pulse")} />
+            </button>
+          </>
+        }
+      />
       <PhonePromptModal />
       <MusicMiniPlayer />
 

@@ -8,7 +8,13 @@ import { isAdminEmail } from '../../config/admin';
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
 
-export default function GlobalKnowledgeDock() {
+interface GlobalKnowledgeDockProps {
+  hideLauncher?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export default function GlobalKnowledgeDock({ hideLauncher, open, onOpenChange }: GlobalKnowledgeDockProps = {}) {
   const { user } = useAuth();
   const { palette } = useSiteTheme();
   const isDark = palette.isDark;
@@ -20,7 +26,12 @@ export default function GlobalKnowledgeDock() {
   // #8B6A1A is the same amber family and reaches 4.6:1 in light mode.
   const gold = isDark ? '#C4913A' : '#8B6A1A';
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isOpen = open ?? uncontrolledOpen;
+  const setIsOpen = (next: boolean) => {
+    if (open === undefined) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResultItem[]>([]);
   const [activeTab, setActiveTab] = useState<'search' | 'journeys' | 'glossary'>('search');
@@ -38,15 +49,18 @@ export default function GlobalKnowledgeDock() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setIsOpen((prev) => !prev);
+        setIsOpen(!isOpen);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+    // Re-bound on isOpen so the shortcut toggles against the current state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   return (
     <>
+      {!hideLauncher && (
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Open Knowledge Dock & Search (Ctrl+K)"
@@ -65,6 +79,7 @@ export default function GlobalKnowledgeDock() {
           ⌘K
         </span>
       </button>
+      )}
 
       {/* Slide-over Knowledge Dock Drawer */}
       {isOpen && (

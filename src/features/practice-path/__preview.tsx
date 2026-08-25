@@ -10,6 +10,7 @@ import { MorningGlance } from './MorningGlance';
 import { PostSit } from './PostSit';
 import { SixfoldRail, VirtuesRail } from './SideRails';
 import styles from './Triptych.module.css';
+import { MindGymDock } from '../../components/ui/MindGymDock';
 import type { Practice, PracticeAssignment } from './practiceOfWeek';
 
 /**
@@ -64,6 +65,8 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 export default function PracticePathPreview() {
   return (
     <div className="min-h-screen bg-[var(--bg-base,#0C0910)] text-[var(--text-primary,#FDFAF4)] p-6 sm:p-10">
+      <MindGymDock />
+
       <div className="max-w-5xl mx-auto space-y-12">
         <header>
           <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)]">Dev preview</p>

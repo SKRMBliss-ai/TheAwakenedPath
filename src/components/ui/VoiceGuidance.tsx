@@ -143,6 +143,18 @@ const getScript = (tab: string, isAccessValid: boolean, assignment: any, timezon
   return "Welcome to your sacred space. I am here to guide your journey to inner freedom. Wherever you are, simply be here now.";
 };
 
+/**
+ * The guide — a per-screen walkthrough, spoken ON REQUEST.
+ *
+ * It used to narrate itself the first time you landed on each tab. Audio that
+ * starts on its own is the one thing a calm app must never do: it talks over
+ * whatever else is playing, it is startling in a shared or quiet room, and it
+ * spends the member's tokens on something they did not ask for. The pulse on
+ * the avatar invites the tap instead.
+ *
+ * Tapping it explains the screen you are on — getScript() returns the
+ * walkthrough for the active tab.
+ */
 export const VoiceGuidance = ({
   preferredVoice = 'en-GB-Chirp3-HD-Despina',
   activeTab = 'home',
@@ -191,57 +203,11 @@ export const VoiceGuidance = ({
     return () => clearTimeout(pulseTimer);
   }, [activeTab, isNewUser]);
 
-  // Preload Voice — delayed 8s after mount so it doesn't compete with initial page render
+  // Navigating away stops whatever the guide was saying. Soundscape music is
+  // unaffected by stop(), so this only silences the narration.
   useEffect(() => {
-    if (!VoiceService.isEnabled) return;
-    const delay = setTimeout(() => {
-      if (!VoiceService.isEnabled) return;
-      const segments = currentScript.split(/\n\n+/).filter(s => s.trim().length > 0);
-      segments.forEach(segment => {
-        VoiceService.preloadText(segment, {
-          voice: preferredVoice,
-          gender: preferredVoice.includes('-D') ? 'MALE' : 'FEMALE'
-        });
-      });
-    }, 8000); // 8s delay — page fully rendered and interactive before any TTS network calls
-    return () => clearTimeout(delay);
-  }, [preferredVoice, currentScript]);
-
-  // Auto-play on first visit to EVERY tab/screen (only if voice enabled & not heard before)
-  useEffect(() => {
-    // Always stop TTS when navigating between screens (soundscape music is unaffected by stop())
     VoiceService.stop();
-
-    if (!VoiceService.isEnabled) return;
-    if (VoiceService.hasHeardScreen(`tab-${activeTab}`)) return;
-
-    // Delay auto-play: 5s on first screen (let app fully settle), 2s on subsequent screens
-    const isFirstScreen = !localStorage.getItem('voice-heard-screens');
-    const timer = setTimeout(async () => {
-      // Re-check inside timer (user may have navigated away)
-      if (!VoiceService.isEnabled) return;
-      if (VoiceService.hasHeardScreen(`tab-${activeTab}`)) return;
-
-      const script = getScript(activeTab, isAccessValid, assignment, timezone);
-      if (!script || script.trim().length < 10) return; // no script for this tab
-
-      try {
-        setIsPreparing(true);
-        VoiceService.markScreenHeard(`tab-${activeTab}`); // mark immediately so re-renders don't re-trigger
-        await VoiceService.speak(script, {
-          gender: preferredVoice.includes('-D') ? 'MALE' : 'FEMALE',
-          voice: preferredVoice,
-          promptContext: `Spiritual guide for the ${activeTab} screen`
-        });
-      } catch { /* silent */ } finally {
-        setIsPreparing(false);
-      }
-    }, isFirstScreen ? 5000 : 2000); // 5s on very first screen, 2s after that
-
-    return () => clearTimeout(timer);
-  // activeTab is the primary trigger; re-read isAccessValid/assignment inside the callback
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, preferredVoice]);
+  }, [activeTab]);
 
   // Sync isPreparing with service status
   useEffect(() => {

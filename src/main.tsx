@@ -363,8 +363,9 @@ if (isPracticePreviewRoute) {
       <AuthProvider>
         <ThemeProvider>
           <AchievementsProvider>
+            {/* No <SiteWidgets /> here — MindGymDock owns the corner inside
+                the app, and mounting both put two launchers in it. */}
             <UntetheredApp />
-            <SiteWidgets />
           </AchievementsProvider>
         </ThemeProvider>
       </AuthProvider>

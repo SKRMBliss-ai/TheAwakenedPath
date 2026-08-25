@@ -96,12 +96,27 @@ function useLauncherBottom() {
   return bottom;
 }
 
-export default function SiteChatWidget() {
+/**
+ * `hideLauncher` + `open`/`onOpenChange` let a parent dock own the button, so
+ * the corner holds one floating control instead of one per widget.
+ */
+interface SiteChatWidgetProps {
+  hideLauncher?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export default function SiteChatWidget({ hideLauncher, open, onOpenChange }: SiteChatWidgetProps = {}) {
   const { palette } = useSiteTheme();
   const isDark = palette.isDark;
   const launcherBottom = useLauncherBottom();
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isOpen = open ?? uncontrolledOpen;
+  const setIsOpen = (next: boolean) => {
+    if (open === undefined) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
   const [messages, setMessages] = useState<Msg[]>([GREETING]);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -167,7 +182,7 @@ export default function SiteChatWidget() {
   return (
     <>
       {/* ── Launcher ─────────────────────────────────────────────────────── */}
-      {!isOpen && (
+      {!isOpen && !hideLauncher && (
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Open chat with the studio assistant"
@@ -229,6 +244,16 @@ export default function SiteChatWidget() {
             background: 'linear-gradient(135deg, #4A3260 0%, #2A1E40 100%)',
             flexShrink: 0,
           }}>
+            <button
+              onClick={() => setIsOpen(false)}
+              aria-label="Close chat"
+              style={{
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                color: 'rgba(255,246,228,0.85)', padding: 4, display: 'flex',
+              }}
+            >
+              <X size={20} />
+            </button>
             <img
               src={ASSISTANT_AVATAR}
               alt=""
@@ -251,16 +276,7 @@ export default function SiteChatWidget() {
                 Usually replies in a moment
               </span>
             </span>
-            <button
-              onClick={() => setIsOpen(false)}
-              aria-label="Close chat"
-              style={{
-                background: 'transparent', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,246,228,0.85)', padding: 4, display: 'flex',
-              }}
-            >
-              <X size={20} />
-            </button>
+
           </div>
 
           {/* Thread */}
