@@ -2666,6 +2666,9 @@ export default function UntetheredApp() {
           {[
             { id: 'home', icon: Home, label: 'Home' },
             { id: 'situations', icon: Flame, label: 'Practice' },
+            // Courses is the hub (CoursesHub renders on the 'intelligence' tab),
+            // and on a phone the bottom bar is the only nav most people use.
+            { id: 'intelligence', icon: GraduationCap, label: 'Courses' },
             { id: 'chapters', icon: BookOpen, label: 'Journal' },
             { id: 'stats', icon: BarChart2, label: 'Progress' },
             { id: 'profile', icon: User, label: 'You' },
@@ -2675,13 +2678,15 @@ export default function UntetheredApp() {
               <button
                 key={id}
                 onClick={() => onNavigate(id)}
-                className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 active:scale-95 transition-transform"
+                className="flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2.5 active:scale-95 transition-transform"
                 style={{ color: active ? 'var(--accent-primary)' : 'var(--text-muted)' }}
                 aria-label={label}
                 aria-current={active ? 'page' : undefined}
               >
                 <Icon size={20} strokeWidth={active ? 2.4 : 1.8} />
-                <span className="text-[9px] font-bold uppercase tracking-wider">{label}</span>
+                {/* Six items on a 375px screen leaves ~62px each, so the
+                    tracking tightens and the label is never allowed to wrap. */}
+                <span className="text-[9px] font-bold uppercase tracking-[0.04em] w-full text-center truncate">{label}</span>
               </button>
             );
           })}
