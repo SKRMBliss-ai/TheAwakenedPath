@@ -619,6 +619,8 @@ export default function UntetheredApp() {
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1024 : true);
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  // The floating tools collapse into one button — see the Floating Dock below.
+  const [dockOpen, setDockOpen] = useState(false);
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -734,7 +736,11 @@ export default function UntetheredApp() {
     // Meditation is FREE for everyone — no paywall.
     // Community (members/calendar) is free for everyone, like meditation — a
     // paywall in front of "who else is here" would defeat the point of it.
-    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'virtues', 'circle', 'practices', 'insights', 'questions', 'backup'];
+    // The practice suite is PAID apart from Today: Insights, Questions,
+    // Practices, Path, Progress, Everyone and Backup all require access.
+    // Today stays open because it is the daily ritual and the reason to
+    // come back — the paywall sits behind it, not in front of it.
+    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today'];
     if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -815,7 +821,7 @@ export default function UntetheredApp() {
 
   // Global Access Control — on load, always start at home if the persisted tab is locked
   useEffect(() => {
-    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today', 'virtues', 'circle', 'practices', 'insights', 'questions', 'backup'].includes(activeTab)) {
+    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today'].includes(activeTab)) {
       setActiveTab('home');
     }
   }, [isAccessValid, loading]); // intentionally exclude activeTab — only run on auth state change
@@ -1493,13 +1499,13 @@ export default function UntetheredApp() {
                 {[
                   // Inner Journey's eight, in its order and with its labels.
                   { id: 'today', icon: Sun, label: 'Today', locked: false },
-                  { id: 'insights', icon: Lightbulb, label: 'Insights', locked: false },
-                  { id: 'questions', icon: HelpCircle, label: 'Questions', locked: false },
-                  { id: 'practices', icon: Flame, label: 'Practices', locked: false },
-                  { id: 'virtues', icon: Sparkles, label: 'Path', locked: false },
+                  { id: 'insights', icon: Lightbulb, label: 'Insights', locked: !isAccessValid },
+                  { id: 'questions', icon: HelpCircle, label: 'Questions', locked: !isAccessValid },
+                  { id: 'practices', icon: Flame, label: 'Practices', locked: !isAccessValid },
+                  { id: 'virtues', icon: Sparkles, label: 'Path', locked: !isAccessValid },
                   { id: 'stats', icon: BarChart2, label: 'Progress', locked: !isAccessValid },
-                  { id: 'circle', icon: Users, label: 'Everyone', locked: false },
-                  { id: 'backup', icon: Database, label: 'Backup', locked: false },
+                  { id: 'circle', icon: Users, label: 'Everyone', locked: !isAccessValid },
+                  { id: 'backup', icon: Database, label: 'Backup', locked: !isAccessValid },
                   // Mind Gym's own, which Inner Journey has no equivalent for.
                   { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
                   { id: 'situations', icon: Flame, label: 'Practice Room', locked: !isAccessValid },
@@ -2611,9 +2617,14 @@ export default function UntetheredApp() {
         unlocked={unlocked}
         points={points}
       />
-      {/* Floating Action Stack
-          On mobile (< sm): pushed higher to avoid the sticky journal Cancel/Next bar.
-          In journal/witness tabs: compact — only voice avatar + headphone shown.       */}
+      {/* Floating Dock
+          These three tools — the guide, the Watcher's Pause and the sound
+          toggle — used to sit on screen as three permanent circles. Stacked
+          with the chat launcher and the social FAB that made five floating
+          buttons down the right edge, which read as clutter rather than as
+          tools. They collapse into ONE button now and expand on tap; the
+          dock stays open until it is dismissed, so using two in a row does
+          not mean opening it twice.                                        */}
       <div className={cn(
         "fixed right-3 sm:right-6 z-[100] flex flex-col items-center gap-3 sm:gap-4 transition-all duration-500",
         // Hide these floating actions completely when inside the full-screen Meditation Room
@@ -2623,8 +2634,8 @@ export default function UntetheredApp() {
           ? "bottom-28 sm:bottom-24"
           : "bottom-20 sm:bottom-12"
       )}>
-        {/* Voice Guidance Avatar — always shown */}
-        {voiceGuidanceEnabled && (
+        {/* Voice Guidance Avatar */}
+        {dockOpen && voiceGuidanceEnabled && (
           <VoiceGuidance
             preferredVoice={preferredVoice}
             activeTab={activeTab}
@@ -2636,9 +2647,12 @@ export default function UntetheredApp() {
         )}
 
         {/* Presence Hub — hide on mobile to reduce clutter */}
+        {dockOpen && (
         <div className="hidden sm:flex flex-col gap-3 sm:gap-4">
           <WatcherPauseButton />
         </div>
+        )}
+        {dockOpen && (
         <button
             onClick={toggleAudio}
             className={cn(
@@ -2660,6 +2674,28 @@ export default function UntetheredApp() {
             )}
             <Headphones className={cn("w-5 h-5 relative z-10 transition-transform", isAudioEnabled ? "animate-pulse" : "group-hover:scale-110")} />
           </button>
+        )}
+
+        {/* The one button that is always there. It reports activity while
+            collapsed, so nothing running out of sight goes unnoticed. */}
+        <button
+          onClick={() => setDockOpen((o) => !o)}
+          aria-expanded={dockOpen}
+          aria-label={dockOpen ? 'Hide tools' : 'Show tools'}
+          className={cn(
+            "p-3.5 rounded-full backdrop-blur-3xl border transition-all flex items-center justify-center shadow-2xl relative",
+            dockOpen
+              ? "bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-primary)] rotate-90"
+              : "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/30 text-[var(--accent-primary)]"
+          )}
+        >
+          {!dockOpen && isAudioEnabled && (
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--accent-primary)] ring-2 ring-[var(--bg-primary)]" />
+          )}
+          {dockOpen
+            ? <X className="w-5 h-5" />
+            : <Sparkles className="w-5 h-5" />}
+        </button>
       </div>
       <PhonePromptModal />
       <MusicMiniPlayer />
