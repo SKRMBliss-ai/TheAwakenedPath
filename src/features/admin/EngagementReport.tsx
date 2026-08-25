@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, BookOpen, LayoutGrid, Users, MousePointerClick, FileText, TrendingUp } from 'lucide-react';
+import { X, RefreshCw, Mail, Monitor, Eye, Megaphone, Send, BookOpen, LayoutGrid, Users, MousePointerClick, FileText, TrendingUp, AlertTriangle } from 'lucide-react';
 import { db, functions } from '../../firebase';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -125,15 +125,27 @@ function computeOverview(logs: ActivityLog[]): OverviewStats {
     return { totalVisits, totalClicks, uniqueVisitors: visitors.size, topPages, topActions, dailyTrend, windowLabel };
 }
 
+interface ErrorLog {
+    id: string;
+    message: string;
+    stack?: string;
+    feature?: string;
+    kind?: string;
+    url?: string;
+    email?: string | null;
+    timestamp: any;
+}
+
 interface EngagementReportProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
 const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'users' | 'blast' | 'history'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'users' | 'blast' | 'history' | 'errors'>('overview');
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [overview, setOverview] = useState<OverviewStats | null>(null);
+    const [errors, setErrors] = useState<ErrorLog[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -249,6 +261,20 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
         }
     };
 
+    const fetchErrors = async () => {
+        setIsLoading(true);
+        try {
+            const ref = collection(db, 'error_logs');
+            const q = query(ref, orderBy('timestamp', 'desc'), limit(150));
+            const snapshot = await getDocs(q);
+            setErrors(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ErrorLog[]);
+        } catch (error) {
+            console.error("Error fetching error_logs:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleBlastUpdate = async () => {
         if (!blastTitle || !blastSubtitle) return;
         setIsBlasting(true);
@@ -277,6 +303,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
             if (activeTab === 'logs') fetchLogs();
             if (activeTab === 'users') fetchUsers();
             if (activeTab === 'history') fetchHistory();
+            if (activeTab === 'errors') fetchErrors();
         }
     }, [isOpen, activeTab]);
 
@@ -339,14 +366,15 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                 <div className="p-3 rounded-xl bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] shadow-inner">
                                     {activeTab === 'overview' ? <LayoutGrid className="w-6 h-6 text-[var(--accent-primary)]" />
                                         : activeTab === 'logs' ? <Mail className="w-6 h-6 text-[var(--accent-primary)]" />
+                                        : activeTab === 'errors' ? <AlertTriangle className="w-6 h-6 text-[var(--accent-primary)]" />
                                         : <Megaphone className="w-6 h-6 text-[var(--accent-primary)]" />}
                                 </div>
                                 <div>
                                     <h2 className="text-[22px] font-bold text-[var(--accent-primary)] tracking-wider uppercase">
-                                        {activeTab === 'overview' ? 'Engagement Overview' : activeTab === 'logs' ? 'Activity Log' : activeTab === 'blast' ? 'Send Course Update' : activeTab === 'users' ? 'Users' : 'Email History'}
+                                        {activeTab === 'overview' ? 'Engagement Overview' : activeTab === 'logs' ? 'Activity Log' : activeTab === 'blast' ? 'Send Course Update' : activeTab === 'users' ? 'Users' : activeTab === 'errors' ? 'Error Log' : 'Email History'}
                                     </h2>
                                     <p className="text-[11px] text-[var(--text-muted)] tracking-[0.2em] font-bold uppercase mt-1">
-                                        {activeTab === 'overview' ? 'Visits, clicks & top pages' : activeTab === 'logs' ? 'Tracking User Activity' : activeTab === 'blast' ? 'Send an email update to all registered users' : activeTab === 'users' ? 'Registered accounts' : 'History of all course update emails sent'}
+                                        {activeTab === 'overview' ? 'Visits, clicks & top pages' : activeTab === 'logs' ? 'Tracking User Activity' : activeTab === 'blast' ? 'Send an email update to all registered users' : activeTab === 'users' ? 'Registered accounts' : activeTab === 'errors' ? 'Runtime crashes reported from real sessions' : 'History of all course update emails sent'}
                                     </p>
                                 </div>
                             </div>
@@ -396,6 +424,15 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                         )}
                                     >
                                         History
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('errors')}
+                                        className={cn(
+                                            "px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all",
+                                            activeTab === 'errors' ? "bg-[var(--accent-primary)] text-black" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                        )}
+                                    >
+                                        Errors
                                     </button>
                                 </div>
 
@@ -809,7 +846,7 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                     </div>
                                 </div>
                             </div>
-                        ) : (
+                        ) : activeTab === 'history' ? (
                             <>
                                 {/* History View */}
                                 <div className="px-10 py-6 grid grid-cols-[2fr_1fr_0.8fr_0.8fr_0.5fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
@@ -878,6 +915,65 @@ const EngagementReport: React.FC<EngagementReportProps> = ({ isOpen, onClose }) 
                                         {blasts.length === 0 && !isLoading && (
                                             <div className="py-20 text-center">
                                                 <p className="text-[var(--text-muted)] italic">No email history found.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                {/* Errors View — error_logs was already being written (ErrorBoundary.tsx
+                                    calls reportError on every crash, rules already allow admin reads) but
+                                    nothing ever displayed it. */}
+                                <div className="px-10 py-6 grid grid-cols-[2fr_1fr_1fr_0.5fr] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] items-center border-b border-[var(--border-subtle)]/50">
+                                    <div>Message</div>
+                                    <div>Feature / Kind</div>
+                                    <div>When</div>
+                                    <div className="text-right">
+                                        <button onClick={fetchErrors} disabled={isLoading} className="hover:text-[var(--accent-primary)] transition-colors">
+                                            <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar">
+                                    <div className="space-y-1">
+                                        {errors.map((err) => {
+                                            const { date, time } = formatTimestamp(err.timestamp);
+                                            return (
+                                                <motion.div
+                                                    key={err.id}
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    className="grid grid-cols-[2fr_1fr_1fr_0.5fr] items-start px-4 py-4 rounded-xl hover:bg-[var(--bg-surface)]/50 transition-colors border-b border-[var(--border-subtle)]/30 last:border-0 group"
+                                                >
+                                                    <div className="flex flex-col gap-1 pr-4 min-w-0">
+                                                        <span className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors" title={err.stack || err.message}>
+                                                            {err.message}
+                                                        </span>
+                                                        {err.url && (
+                                                            <span className="text-[10px] text-[var(--text-muted)] truncate" title={err.url}>{err.url}</span>
+                                                        )}
+                                                        {err.email && (
+                                                            <span className="text-[9px] text-[var(--accent-primary)] font-bold uppercase tracking-widest">{err.email}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="text-[12px] text-[var(--text-secondary)]">{err.feature || '—'}</span>
+                                                        <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase">{err.kind || 'error'}</span>
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[12px] text-[var(--text-secondary)]">{date}</span>
+                                                        <span className="text-[10px] text-[var(--text-muted)] font-bold">{time}</span>
+                                                    </div>
+                                                    <div />
+                                                </motion.div>
+                                            );
+                                        })}
+
+                                        {errors.length === 0 && !isLoading && (
+                                            <div className="py-20 text-center">
+                                                <p className="text-[var(--text-muted)] italic">No errors reported. Good sign.</p>
                                             </div>
                                         )}
                                     </div>

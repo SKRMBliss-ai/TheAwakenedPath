@@ -24,9 +24,18 @@ import { VoiceService } from './services/voiceService'
 import { AchievementsProvider } from './features/achievements/useAchievements'
 import { Component, type ReactNode, lazy, Suspense } from 'react'
 import { track } from './lib/analytics'
+import { installGlobalErrorReporting } from './lib/errorReporter'
 
 // Silence non-critical speech synthesis errors in development/unsupported environments
 VoiceService.init();
+
+// Was defined (with a comment saying crashes "surface in the admin
+// Engagement Report") but never actually called anywhere — window.onerror
+// and unhandledrejection were going uncaught. React ErrorBoundary crashes
+// were still reported (ErrorBoundary.tsx calls reportError directly), but
+// async throws and event-handler errors outside React's render cycle had no
+// path to error_logs at all.
+installGlobalErrorReporting();
 
 // Monitor service worker registration for errors
 if ('serviceWorker' in navigator) {

@@ -4073,7 +4073,15 @@ exports.emailClickTracker = onRequest({ cors: true }, async (req, res) => {
  * Generic web activity tracker — called from frontend pages (AboutJournal, main app)
  * to log page visits, video plays, downloads, and form submissions.
  */
-exports.logWebActivity = onRequest({ cors: true }, async (req, res) => {
+// secrets: [emailUser, emailPass] — same missing-binding bug as
+// notifyAdminOnKidsRegistration below: this function's own lead-notify path
+// (7 events further down: EMAIL_FORM_SUBMIT, JOURNAL_DOWNLOAD, GUIDE_LEAD...)
+// calls getTransporter(), whose emailUser.value()/emailPass.value() throw on
+// a Gen2 function that never declared these secrets. Caught by the inner
+// try/catch and only logged — every lead-notification email this endpoint
+// was meant to send has been failing silently since it was written, on every
+// marketing page's email-capture form site-wide.
+exports.logWebActivity = onRequest({ cors: true, secrets: [emailUser, emailPass] }, async (req, res) => {
     if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
     const body = req.method === 'POST' ? req.body : req.query;
     const { email, action, page, details, source } = body || {};
