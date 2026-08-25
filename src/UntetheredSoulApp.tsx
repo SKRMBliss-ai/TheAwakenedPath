@@ -59,7 +59,7 @@ const VideosHub = lazy(() => import('./features/videos/VideosHub').then(m => ({ 
 const EngagementReport = lazy(() => import('./features/admin/EngagementReport'));
 const MembersView = lazy(() => import('./features/community/MembersView').then(m => ({ default: m.MembersView })));
 const CalendarView = lazy(() => import('./features/community/CalendarView').then(m => ({ default: m.CalendarView })));
-const PracticePathView = lazy(() => import('./features/practice-path/PracticePathView').then(m => ({ default: m.PracticePathView })));
+const DailyRibbon = lazy(() => import('./features/practice-path/DailyRibbon'));
 const VirtuesView = lazy(() => import('./features/practice-path/VirtuesView').then(m => ({ default: m.VirtuesView })));
 const CircleView = lazy(() => import('./features/practice-path/CircleView').then(m => ({ default: m.CircleView })));
 const PracticesTab = lazy(() => import('./features/practice-path/PracticesTab').then(m => ({ default: m.PracticesTab })));
@@ -2356,16 +2356,7 @@ export default function UntetheredApp() {
             {activeTab === 'today' && (
               <motion.div key="today" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <Suspense fallback={<TabFallback />}>
-                  <PracticePathView
-                    onOpenVirtues={() => onNavigate('virtues')}
-                    onOpenPractices={() => onNavigate('practices')}
-                    onOpenSixfold={() => onNavigate('virtues')}
-                    onOpenJournal={() => onNavigate('chapters')}
-                    onOpenTab={(tab, qid) => onNavigate(tab, qid, qid ? 'explanation' : undefined)}
-                    weeklyQuestionId={weeklyAssignment?.questionId}
-                    weeklyLabel={weeklyAssignment?.weekLabel}
-                    onOpenQuestion={(qid) => onNavigate('wisdom_untethered', qid, 'explanation')}
-                  />
+                  <DailyRibbon />
                 </Suspense>
               </motion.div>
             )}

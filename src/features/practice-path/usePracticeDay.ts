@@ -37,6 +37,31 @@ export interface PracticeDay {
   practiceEngaged?: boolean;
   practicePractised?: boolean;
   practiceReflection?: string;
+
+  // ── Daily Practice ribbon ──────────────────────────────────────────────────
+  // The unified daily ritual (teaching · meditation · diary · go-deeper) writes
+  // into this same one-doc-per-day record, so a day still has a single source of
+  // truth. Every field is optional: a blank day is a valid, complete day.
+  /** Meditation technique chosen for today's sit. */
+  technique?: string;
+  /** Which teaching was surfaced, and how it landed. */
+  teachingId?: string;
+  teachingLanded?: 'clarity' | 'comfort' | 'challenge';
+  teachingNote?: string;
+  /** The reactive go-deeper prompt shown, and the one-line answer. */
+  deeperPrompt?: string;
+  deeperNote?: string;
+  /** Simple-mode self-introspection marks. Counts of lapses (0 = held); the
+   *  practice minutes mirror `minutes` so the diary reuses the recorded sit. */
+  diary?: {
+    nonharm?: number;
+    truthful?: number;
+    restraint?: number;
+    humility?: number;
+    love?: number;
+    servicePhysical?: boolean;
+    serviceGiving?: boolean;
+  };
   updatedAt?: number;
 }
 
