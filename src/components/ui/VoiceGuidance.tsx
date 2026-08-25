@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, X, Pause, Square } from 'lucide-react';
+import { Play, X, Pause, Square, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import { cn } from '../../lib/utils';
@@ -505,6 +505,19 @@ export const VoiceGuidance = ({
               {/* Hover overlay for familiar users */}
               {!isPulsating && !isSpeaking && !isPaused && (
                 <div className="absolute inset-0 bg-[var(--accent-primary)]/0 group-hover:bg-[var(--accent-primary)]/10 transition-colors" />
+              )}
+
+              {/* Persistent speaker badge so this reads as "voice" at a glance,
+                  distinct from the chat launcher's green presence dot — both
+                  are circular headshot photos and were otherwise
+                  indistinguishable stacked in the same corner. Hidden while
+                  speaking/paused since that state already covers the whole
+                  circle with its own icon. */}
+              {!isSpeaking && !isPaused && (
+                <span className="absolute bottom-0 right-0 w-6 h-6 rounded-full flex items-center justify-center border-2 border-[var(--bg-surface)] z-20"
+                  style={{ background: 'var(--accent-primary)' }}>
+                  <Volume2 size={12} className="text-[var(--bg-base)]" strokeWidth={2.5} />
+                </span>
               )}
             </motion.button>
           </div>
