@@ -144,51 +144,52 @@ const ANGLE_FRAMES: Record<AngleKey, {
   focus: (p: Practice) => string;
   invitation: (p: Practice) => string;
   explore: (p: Practice) => string;
-  /** The day's journalling question. Asks about the practice rather than
-   *  restating it, so it gives the writer somewhere to go. */
+  /** The day's journalling prompt. Names one small, concrete thing to do and
+   *  one line to write — a whole entry finished in under a minute, so a busy
+   *  day never becomes a reason to skip it. */
   journal: (p: Practice) => string;
 }> = {
   ARRIVE: {
     focus: (p) => `Today you simply arrive at ${p.title}. Let the core instruction settle before anything else: “${p.core}”`,
     invitation: () => `Say the core instruction once, slowly, feeling its meaning rather than reciting it. Then choose one simple way to hold it today.`,
     explore: (p) => p.dailyLife[0] ? `Begin here: ${lower(p.dailyLife[0])}.` : `Carry the instruction into your first ordinary task today.`,
-    journal: (p) => `What does ${p.title} ask of you today — and what part of you already agrees with it?`,
+    journal: (p) => `In one sentence: how will you show ${p.title} today? Write it now, before the day starts.`,
   },
   NOTICE: {
     focus: (p) => `Today you notice. ${p.title} usually becomes visible by its absence — the moment it slips. Watch without judgment.`,
     invitation: (p) => `Notice one moment today where ${p.title} was present, and one where it was not. Meet both with equal kindness.`,
     explore: (p) => p.dailyLife[1] ? `Try noticing as you ${lower(p.dailyLife[1])}.` : `Watch for the gap between what you intend and what you actually do.`,
-    journal: (p) => `Where did ${p.title} slip today? Describe the moment plainly, without defending or blaming yourself.`,
+    journal: (p) => `Name the one moment ${p.title} slipped today. Just the moment, in a line — no explaining.`,
   },
   APPLY: {
     focus: (p) => `Today you apply. ${p.title} moves from observation into deliberate use — one real situation, consciously chosen.`,
     invitation: (p) => `Pick one interaction or decision today and bring ${p.title} to it on purpose.`,
     explore: (p) => p.dailyLife[2] ? `A concrete way in: ${lower(p.dailyLife[2])}.` : `Choose one situation today and apply the practice deliberately.`,
-    journal: (p) => `Write about the one situation you brought ${p.title} to. What was different because you did?`,
+    journal: (p) => `You brought ${p.title} to one situation on purpose. In a sentence: what was different because you did?`,
   },
   'GO DEEPER': {
     focus: (p) => `Today you go deeper. Why is ${p.title} difficult to hold? Usually something quieter is running underneath, unexamined.`,
     invitation: () => `Look beneath the surface today and ask what is really driving you.`,
     explore: (p) => p.instructions[2] ? `Sit with this: ${lower(p.instructions[2])}.` : `Ask honestly what resists this practice in you.`,
-    journal: (p) => `What runs underneath your resistance to ${p.title}? Name the quieter motive as honestly as you can.`,
+    journal: (p) => `One honest line: what made ${p.title} hard to hold today?`,
   },
   EMBODY: {
     focus: (p) => `Today you embody. ${p.title} that stays in the mind is only half the practice — let it become something someone else can feel.`,
     invitation: (p) => `Take one concrete action today that expresses ${p.title}.`,
     explore: (p) => p.dailyLife[3] ? `For example: ${lower(p.dailyLife[3])}.` : `Do one thing that makes the practice visible in the world.`,
-    journal: (p) => `Who could feel ${p.title} in you today? What reached them that your words alone would not have carried?`,
+    journal: (p) => `Name one thing you did that let someone feel ${p.title}. One line — what did you do?`,
   },
   RETURN: {
     focus: (p) => `Today you return. By now you will have forgotten ${p.title} at some point. That forgetting is not the problem — returning is the practice.`,
     invitation: () => `Find where you lost alignment this week and begin again, without self-criticism.`,
     explore: (p) => p.dailyLife[4] ? `Practise this: ${lower(p.dailyLife[4])}.` : `Notice where you drifted, and simply come back.`,
-    journal: (p) => `Where did you lose ${p.title} this week, and what brought you back? Write about the returning, not the losing.`,
+    journal: (p) => `Where did you drift from ${p.title} today, and what one thing brought you back? A line each.`,
   },
   REFLECT: {
     focus: (p) => `Today you reflect. The week closes. Look honestly at where ${p.title} became real, and what you want to keep.`,
     invitation: () => `Review the week as a whole and name one thing you want to carry forward.`,
     explore: (p) => p.dailyLife[5] ? `Close with this: ${lower(p.dailyLife[5])}.` : `Read back what you noticed this week and see what changed.`,
-    journal: (p) => `Where did ${p.title} become real this week? Name one thing you want to keep, and one you want to set down.`,
+    journal: (p) => `${p.title} this week — one line to keep, one line to set down. Then pick the one you carry forward.`,
   },
 };
 
