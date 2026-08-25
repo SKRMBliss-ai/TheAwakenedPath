@@ -2190,6 +2190,38 @@ exports.testEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, a
 });
 
 /**
+ * Manual test send of the real purchase-confirmation emails — the ones an
+ * actual buyer receives from verifyRazorpayPayment/verifyRazorpaySubscription,
+ * never exercised by a dedicated test endpoint before now. Hits the exact
+ * same sendWelcomeEmail/sendGuestAccessEmail helpers real purchases use, so a
+ * successful send here means the real flow works too. Never touches
+ * Firestore or any real order — email only.
+ */
+exports.testWelcomeEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, async (req, res) => {
+    const { to, plan } = req.query;
+    if (!to) return res.status(400).send("Provide 'to' email address. Optional: ?plan=Some+Plan+Name");
+    try {
+        await sendWelcomeEmail(to, plan || 'Understanding Feelings & Emotions (test send)');
+        res.send(`Welcome email sent to ${to}`);
+    } catch (error) {
+        console.error("Test Welcome Email Error:", error);
+        res.status(500).send(`Failed: ${error.message}`);
+    }
+});
+
+exports.testGuestAccessEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, async (req, res) => {
+    const { to } = req.query;
+    if (!to) return res.status(400).send("Provide 'to' email address.");
+    try {
+        await sendGuestAccessEmail(to);
+        res.send(`Guest access email sent to ${to}`);
+    } catch (error) {
+        console.error("Test Guest Access Email Error:", error);
+        res.status(500).send(`Failed: ${error.message}`);
+    }
+});
+
+/**
  * Preview the full daily reminder email — sends to ?to= with today's live content.
  * Use this to QA the email design before the 8 PM scheduled send.
  */
@@ -2309,44 +2341,11 @@ exports.previewReminderEmail = onRequest({
                         </td>
                     </tr>
 
-                    <!-- Courses & Apps QR Codes -->
-                    <tr>
-                        <td style="padding:48px;background-color:#ffffff;text-align:center;">
-                            <h3 style="font-size:18px;font-weight:300;font-style:italic;color:#1E1912;margin:0 0 24px; letter-spacing: 1px;">Scan & Explore Our Programs</h3>
-                            
-                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:0 auto; max-width:600px;">
-                                <tr>
-                                    <td align="center" width="33%" style="padding:0 8px; vertical-align:top;">
-                                        <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FKidsDiaryCourseQR.png?alt=media" alt="Kids Challenge QR" width="100" height="100" style="display:block;margin:0 auto 12px;border-radius:12px;border:1px solid rgba(184,151,58,0.2);" />
-                                        <span style="font-size:11px;font-weight:bold;color:#2E261C;text-transform:uppercase;letter-spacing:1px;display:block;">Kids<br/>Challenge</span>
-                                    </td>
-                                    <td align="center" width="33%" style="padding:0 8px; vertical-align:top;">
-                                        <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FMindGym.png?alt=media" alt="Mind Gym QR" width="100" height="100" style="display:block;margin:0 auto 12px;border-radius:12px;border:1px solid rgba(184,151,58,0.2);" />
-                                        <span style="font-size:11px;font-weight:bold;color:#2E261C;text-transform:uppercase;letter-spacing:1px;display:block;">Mind Gym<br/>App</span>
-                                    </td>
-                                    <td align="center" width="33%" style="padding:0 8px; vertical-align:top;">
-                                        <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2Ffeelingsandemotioncourse.png?alt=media" alt="Feelings Course QR" width="100" height="100" style="display:block;margin:0 auto 12px;border-radius:12px;border:1px solid rgba(184,151,58,0.2);" />
-                                        <span style="font-size:11px;font-weight:bold;color:#2E261C;text-transform:uppercase;letter-spacing:1px;display:block;">Feelings<br/>Course</span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Footer -->
+                    <!-- Shared footer: founders' signature, QR codes, WhatsApp, brand line -->
                     <tr>
                         <td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
                             <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.8);margin:0 0 16px;">Mind Gym · Daily Practice · Preview</p>
-                            <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:0;line-height:1.8;">
-                                <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a>
-                            </p>
-                            <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:8px 0 0;line-height:1.8;">
-                                By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp; 
-                                <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" style="color:#B8973A;text-decoration:none;">
-                                    <img src="https://img.icons8.com/material-rounded/24/B8973A/youtube-play.png" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;" alt="YouTube" />
-                                    Soulful Intelligence Studio
-                                </a>
-                            </p>
+                            ${emailFooter({ dark: false })}
                         </td>
                     </tr>
                 </table>
@@ -2371,11 +2370,13 @@ exports.previewReminderEmail = onRequest({
 });
 
 /**
- * Shared human signature for the footer of every email.
- *
- * Until now every template signed off as the brand only ("Mind Gym", "By Twin
- * Souls"). Newsletters that read as coming from a named person consistently do
- * better, so this puts a face and a name at the end of each one.
+ * Shared human signature — now both founders, side by side in one photo
+ * (Marketting/ShSm1.png: Shruti left, Sim right, wide 16:9-ish composition
+ * with a wide gap between them). Rendered as a short wide strip rather than
+ * cropped into a circle: at circle scale the gap between them would dominate
+ * whichever crop was chosen. object-fit:cover on a short, wide box keeps
+ * the full width — so both faces stay in frame — and only trims a little
+ * head/shoulder room top and bottom, where there's nothing meaningful to lose.
  *
  * Notes for anyone editing this:
  *  - The name is real TEXT, never baked into the image. Most clients block
@@ -2391,20 +2392,68 @@ const signatureBlock = ({ dark = false } = {}) => {
     const role = dark ? 'rgba(253,250,244,0.55)' : 'rgba(30,25,18,0.6)';
     const rule = dark ? 'rgba(253,250,244,0.15)' : 'rgba(184,151,58,0.25)';
     return `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 14px;">
       <tr>
-        <td style="padding-right:16px;vertical-align:middle;">
-          <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FSimWriting.png?alt=media"
-               width="104" height="104" alt="Sim Katyal"
-               style="width:104px;height:104px;border-radius:50%;object-fit:cover;display:block;border:1px solid ${rule};" />
+        <td style="border-radius:12px;overflow:hidden;border:1px solid ${rule};">
+          <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FShSm1.png?alt=media"
+               width="320" height="110" alt="Shruti Khungar and Sim Katyal"
+               style="width:320px;height:110px;object-fit:cover;object-position:center 35%;display:block;" />
         </td>
-        <td style="vertical-align:middle;text-align:left;">
-          <p style="margin:0;font-size:13px;font-weight:600;color:${name};line-height:1.3;">Sim Katyal</p>
-          <p style="margin:2px 0 0;font-size:11px;color:${role};line-height:1.3;">Guide &middot; Mind Gym</p>
+      </tr>
+    </table>
+    <p style="margin:0 0 18px;font-size:13px;font-weight:600;color:${name};line-height:1.3;">Shruti &amp; Sim
+      <span style="display:block;margin-top:2px;font-size:11px;font-weight:400;color:${role};">Founders &middot; Soulful Intelligence Studio</span>
+    </p>`;
+};
+
+/**
+ * The three "scan to explore" QR codes, previously living only inside
+ * previewReminderEmail's template — pulled out so every customer-facing
+ * email can carry the same footer instead of each template growing its own
+ * slightly different version. All three images already exist in Storage;
+ * this doesn't generate anything new.
+ */
+const qrCodesBlock = () => `
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:0 auto 24px;max-width:600px;">
+      <tr>
+        <td align="center" width="33%" style="padding:0 8px;vertical-align:top;">
+          <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FKidsDiaryCourseQR.png?alt=media" alt="Kids Challenge QR" width="90" height="90" style="display:block;margin:0 auto 10px;border-radius:12px;border:1px solid rgba(184,151,58,0.2);" />
+          <span style="font-size:10px;font-weight:bold;color:#2E261C;text-transform:uppercase;letter-spacing:1px;display:block;">Kids<br/>Challenge</span>
+        </td>
+        <td align="center" width="33%" style="padding:0 8px;vertical-align:top;">
+          <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2FMindGym.png?alt=media" alt="Mind Gym QR" width="90" height="90" style="display:block;margin:0 auto 10px;border-radius:12px;border:1px solid rgba(184,151,58,0.2);" />
+          <span style="font-size:10px;font-weight:bold;color:#2E261C;text-transform:uppercase;letter-spacing:1px;display:block;">Mind Gym<br/>App</span>
+        </td>
+        <td align="center" width="33%" style="padding:0 8px;vertical-align:top;">
+          <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2Ffeelingsandemotioncourse.png?alt=media" alt="Feelings Course QR" width="90" height="90" style="display:block;margin:0 auto 10px;border-radius:12px;border:1px solid rgba(184,151,58,0.2);" />
+          <span style="font-size:10px;font-weight:bold;color:#2E261C;text-transform:uppercase;letter-spacing:1px;display:block;">Feelings<br/>Course</span>
         </td>
       </tr>
     </table>`;
-};
+
+/**
+ * The one footer every customer-facing email should share: the founders'
+ * signature, the three QR codes, WhatsApp support, and the brand line.
+ * `dark` matches signatureBlock's — pass the same value used for the rest of
+ * that template. Callers still control their own OUTER <td> background/
+ * border/padding since that varies by template (dark meditation-reminder
+ * card vs. cream daily-reminder card); this only returns the shared inner
+ * content.
+ */
+const emailFooter = ({ dark = false } = {}) => `
+    ${signatureBlock({ dark })}
+    ${qrCodesBlock()}
+    <p style="font-size:10px;color:${dark ? 'rgba(253,250,244,0.55)' : 'rgba(30,25,18,0.6)'};margin:0;line-height:1.8;">
+      <a href="https://www.skrmblissai.in" style="color:#B8973A;text-decoration:none;">www.skrmblissai.in</a> &nbsp;&middot;&nbsp;
+      <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp: +91 82175 81238</a>
+    </p>
+    <p style="font-size:10px;color:${dark ? 'rgba(253,250,244,0.55)' : 'rgba(30,25,18,0.6)'};margin:8px 0 0;line-height:1.8;">
+      By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp;
+      <a href="https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirmation=1" style="color:#B8973A;text-decoration:none;">
+        <img src="https://img.icons8.com/material-rounded/24/B8973A/youtube-play.png" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;" alt="YouTube" />
+        Soulful Intelligence Studio
+      </a>
+    </p>`;
 
 /**
  * Helper to get nodemailer transporter
@@ -2471,8 +2520,13 @@ async function sendWelcomeEmail(toEmail, planName) {
                     </tr>
                     <tr>
                         <td style="padding:0 40px 32px;text-align:center;">
-                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 20px;">Your gateway for <b>\${planName}</b> was successful.</p>
-                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 0;">Step beyond the noise. You now possess full access to the intelligence course, the practice room, and interactive journaling. As a premium member, remember that you also hold the key to <b>2 complimentary personal consultations</b>. Email us whenever you are ready.<br><br>Return to the app to begin.</p>
+                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 20px;">Your gateway for <b>${planName}</b> was successful.</p>
+                            <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 32px;">Step beyond the noise. You now possess full access to the intelligence course, the practice room, and interactive journaling. As a premium member, remember that you also hold the key to <b>2 complimentary personal consultations</b>. Email us whenever you are ready.<br><br>Return to the app to begin.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:rgba(184,151,58,0.03);padding:32px 40px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
+                            ${emailFooter({ dark: false })}
                         </td>
                     </tr>
                 </table>
@@ -2531,6 +2585,9 @@ async function sendGuestAccessEmail(toEmail) {
 
             <a href="${signupUrl}" style="display:inline-block;padding:14px 34px;background:#1C1814;color:#E6C57D;text-decoration:none;font-family:Georgia,serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Open Mind Gym</a>
             <p style="font-family:Georgia,serif;font-size:12px;color:#8A8272;line-height:1.6;margin:28px 0 0;">The introduction is available immediately, and a new episode unlocks each week. If the course does not appear, reply to this email and we will put it right — or WhatsApp us at +91 82175 81238.</p>
+          </td></tr>
+          <tr><td style="background-color:rgba(184,151,58,0.03);padding:32px 40px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
+            ${emailFooter({ dark: false })}
           </td></tr>
         </table>
       </td></tr>
@@ -2631,7 +2688,7 @@ exports.sendMeditationReminders = onSchedule({
         <a href="https://awakened-path-2026.web.app/meditation" style="display:inline-block;padding:14px 32px;background:linear-gradient(to right, #14b8a6, #5eead4);color:#042f2e;text-decoration:none;font-weight:bold;border-radius:24px;text-transform:uppercase;letter-spacing:2px;">
             JOIN MEDITATION &rarr;
         </a>
-        ${signatureBlock({ dark: true })}
+        ${emailFooter({ dark: true })}
         <p style="text-align: center; margin-top: 30px;">
             <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=MEDITATION_REMINDER" style="color: rgba(255, 255, 255, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from reminders</a>
         </p>
@@ -2698,7 +2755,7 @@ exports.testMeditationReminderEmail = onRequest({
         <a href="https://awakened-path-2026.web.app/meditation" style="display:inline-block;padding:14px 32px;background:linear-gradient(to right, #14b8a6, #5eead4);color:#042f2e;text-decoration:none;font-weight:bold;border-radius:24px;text-transform:uppercase;letter-spacing:2px;">
             JOIN MEDITATION &rarr;
         </a>
-        ${signatureBlock({ dark: true })}
+        ${emailFooter({ dark: true })}
         <p style="text-align: center; margin-top: 30px;">
             <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=MEDITATION_REMINDER" style="color: rgba(255, 255, 255, 0.4); text-decoration: none; font-size: 10px;">Unsubscribe from reminders</a>
         </p>
@@ -3076,17 +3133,10 @@ function buildWeeklyEssayHtml(essay, userId, trackEmail, blastId) {
       </td></tr>
 
       <tr><td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
-        ${signatureBlock({ dark: false })}
         <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184,151,58,0.8);margin:0 0 16px;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">Mind Gym</p>
-        <p style="font-size:10px;color:rgba(30,25,18,0.6);margin:0;line-height:1.8;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
-          <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp;
-          <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=${blastId}" style="color:rgba(30,25,18,0.6);text-decoration:none;">Unsubscribe</a>
-        </p>
+        ${emailFooter({ dark: false })}
         <p style="font-size:10px;color:rgba(30,25,18,0.6);margin:8px 0 0;line-height:1.8;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
-          By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp;
-          <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" style="color:#B8973A;text-decoration:none;">
-            <img src="https://img.icons8.com/material-rounded/24/B8973A/youtube-play.png" width="14" height="14" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;" alt="YouTube" />Soulful Intelligence Studio
-          </a>
+          <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId=${userId}&blastId=${blastId}" style="color:rgba(30,25,18,0.6);text-decoration:none;">Unsubscribe</a>
         </p>
       </td></tr>
     </table>
@@ -3627,21 +3677,13 @@ async function runReminderLogic(apiKey, youtubeKey, force = false) {
                         </td>
                     </tr>
 
-                    <!-- Footer -->
+                    <!-- Shared footer: founders' signature, QR codes, WhatsApp, brand line -->
                     <tr>
                         <td style="background-color:rgba(184,151,58,0.03);padding:32px 48px;border-top:1px solid rgba(184,151,58,0.2);text-align:center;">
-                            ${signatureBlock({ dark: false })}
                             <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(184, 151, 58, 0.8);margin:0 0 16px;">Mind Gym</p>
-                            <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:0;line-height:1.8;">
-                                <a href="https://wa.me/918217581238" style="color:#B8973A;text-decoration:none;">WhatsApp Support</a> &nbsp;&middot;&nbsp; 
-                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=DAILY_REMINDER" style="color:rgba(30, 25, 18, 0.6);text-decoration:none;">Unsubscribe from Mind Gym</a>
-                            </p>
+                            ${emailFooter({ dark: false })}
                             <p style="font-size:10px;color:rgba(30, 25, 18, 0.6);margin:8px 0 0;line-height:1.8;">
-                                By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp; 
-                                <a href="https://www.youtube.com/@SoulfulIntelligenceStudio" style="color:#B8973A;text-decoration:none;">
-                                    <img src="https://img.icons8.com/material-rounded/24/B8973A/youtube-play.png" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;" alt="YouTube" />
-                                    Soulful Intelligence Studio
-                                </a>
+                                <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=DAILY_REMINDER" style="color:rgba(30, 25, 18, 0.6);text-decoration:none;">Unsubscribe from Mind Gym</a>
                             </p>
                         </td>
                     </tr>
@@ -3954,8 +3996,8 @@ exports.blastUpdateEmail = onCall({
                 <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/emailClickTracker?blastId=${blastId}&email=${encodeURIComponent(recipientEmail)}&url=${encodeURIComponent(targetVideoUrl)}" style="display: inline-block; padding: 10px 24px; background: transparent; border: 1px solid #E6C57D; color: #E6C57D; text-decoration: none; font-size: 12px; font-weight: bold; border-radius: 999px;">Watch 60s Video Teaser 🍿</a>
             </div>
 
-            ${signatureBlock({ dark: true })}
-            <p style="text-align: center; margin-top: 32px;">
+            ${emailFooter({ dark: true })}
+            <p style="text-align: center; margin-top: 8px;">
                 <a href="https://us-central1-awakened-path-2026.cloudfunctions.net/unsubscribe?userId={{USER_ID}}&blastId=${blastId}" style="color: rgba(253, 250, 244, 0.4); text-decoration: none; font-size: 10.5px;">Unsubscribe from daily wisdom updates</a>
             </p>
             <!-- TRACKING PIXEL -->
