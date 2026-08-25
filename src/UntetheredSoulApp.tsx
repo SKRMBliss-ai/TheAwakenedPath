@@ -534,8 +534,33 @@ const PremiumPaywall = ({ user, checkOut, isProcessing, onSuccess }: any) => {
 
 // --- Main App Component ---
 
+/**
+ * Tabs anyone can reach, signed in or not.
+ *
+ * Everything else in the practice suite sits behind the membership — see
+ * PAID_PRACTICE_TABS. Today is deliberately NOT in that list: it is the daily
+ * ritual and the reason to come back, so the paywall sits behind it.
+ */
+const FREE_TABS = [
+  'home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered',
+  'intelligence', 'learn', 'chapters', 'situations', 'meditation',
+  'members', 'calendar', 'today',
+];
+
+/** The membership tabs, and the one account that may preview them. */
+const PAID_PRACTICE_TABS = [
+  'insights', 'questions', 'practices', 'virtues', 'stats', 'circle', 'backup',
+];
+const PREVIEW_EMAIL = 'skrmblissai@gmail.com';
+
 export default function UntetheredApp() {
   const { user: currentUser, profile, loading, signOut, isAccessValid, isPremiumUser, tokenBalance, activateTrial, deductTokens } = useAuth();
+
+  // The owner previews the locked tabs without a membership. main added this
+  // for `virtues` alone; the suite is seven tabs now, so leaving the other six
+  // locked would only half-solve the thing that bypass exists for.
+  const canPreviewLocked = currentUser?.email === PREVIEW_EMAIL;
+  const paidLocked = !isAccessValid && !canPreviewLocked;
   const { theme } = useTheme();
 
   usePageSeo({
@@ -738,7 +763,8 @@ export default function UntetheredApp() {
     // Practices, Path, Progress, Everyone and Backup all require access.
     // Today stays open because it is the daily ritual and the reason to
     // come back — the paywall sits behind it, not in front of it.
-    const allowedTabs = ['home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today'];
+    const allowedTabs = [...FREE_TABS];
+    if (canPreviewLocked) allowedTabs.push(...PAID_PRACTICE_TABS);
     if (!isAccessValid && !allowedTabs.includes(id)) {
       setActiveTab('paywall');
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
@@ -819,7 +845,8 @@ export default function UntetheredApp() {
 
   // Global Access Control — on load, always start at home if the persisted tab is locked
   useEffect(() => {
-    if (!loading && !isAccessValid && !['home', 'profile', 'paywall', 'music', 'wisdom_untethered', 'intelligence', 'learn', 'chapters', 'situations', 'meditation', 'members', 'calendar', 'today'].includes(activeTab)) {
+    const reachable = canPreviewLocked ? [...FREE_TABS, ...PAID_PRACTICE_TABS] : FREE_TABS;
+    if (!loading && !isAccessValid && !reachable.includes(activeTab)) {
       setActiveTab('home');
     }
   }, [isAccessValid, loading]); // intentionally exclude activeTab — only run on auth state change
@@ -1497,13 +1524,13 @@ export default function UntetheredApp() {
                 {[
                   // Inner Journey's eight, in its order and with its labels.
                   { id: 'today', icon: Sun, label: 'Today', locked: false },
-                  { id: 'insights', icon: Lightbulb, label: 'Insights', locked: !isAccessValid },
-                  { id: 'questions', icon: HelpCircle, label: 'Questions', locked: !isAccessValid },
-                  { id: 'practices', icon: Flame, label: 'Practices', locked: !isAccessValid },
-                  { id: 'virtues', icon: Sparkles, label: 'Path', locked: !isAccessValid },
-                  { id: 'stats', icon: BarChart2, label: 'Progress', locked: !isAccessValid },
-                  { id: 'circle', icon: Users, label: 'Everyone', locked: !isAccessValid },
-                  { id: 'backup', icon: Database, label: 'Backup', locked: !isAccessValid },
+                  { id: 'insights', icon: Lightbulb, label: 'Insights', locked: paidLocked },
+                  { id: 'questions', icon: HelpCircle, label: 'Questions', locked: paidLocked },
+                  { id: 'practices', icon: Flame, label: 'Practices', locked: paidLocked },
+                  { id: 'virtues', icon: Sparkles, label: 'Path', locked: paidLocked },
+                  { id: 'stats', icon: BarChart2, label: 'Progress', locked: paidLocked },
+                  { id: 'circle', icon: Users, label: 'Everyone', locked: paidLocked },
+                  { id: 'backup', icon: Database, label: 'Backup', locked: paidLocked },
                   // Mind Gym's own, which Inner Journey has no equivalent for.
                   { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
                   { id: 'situations', icon: Flame, label: 'Practice Room', locked: !isAccessValid },
