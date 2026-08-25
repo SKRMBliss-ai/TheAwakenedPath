@@ -2394,18 +2394,18 @@ const signatureBlock = ({ dark = false } = {}) => {
     const subTextColor = dark ? 'rgba(253,250,244,0.7)' : 'rgba(30,25,18,0.6)';
     const rule = dark ? 'rgba(253,250,244,0.15)' : 'rgba(184,151,58,0.25)';
     return `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="max-width:600px;margin:0 auto 24px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="max-width:680px;margin:0 auto 24px;">
       <tr>
         <td background="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FShSm1.png?alt=media" 
             bgcolor="${bgColor}" 
             valign="middle" 
             style="background-image:url('https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FShSm1.png?alt=media');background-size:cover;background-position:center 25%;border-radius:12px;border:1px solid ${rule};text-align:center;">
           <!--[if gte mso 9]>
-          <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;height:200px;">
+          <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:680px;height:240px;">
             <v:fill type="frame" src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FShSm1.png?alt=media" color="${bgColor}" />
             <v:textbox inset="0,0,0,0">
           <![endif]-->
-          <div style="background-color:${overlayColor};padding:48px 20px;border-radius:12px;">
+          <div style="background-color:${overlayColor};padding:48px 20px;border-radius:12px;width:85%;max-width:480px;margin:32px auto;">
             <div style="margin-bottom:16px;font-size:24px;opacity:0.7;">✋</div>
             <p style="margin:0 auto 16px;font-size:20px;font-style:italic;color:${textColor};line-height:1.5;font-family:Georgia,serif;max-width:85%;">
               "Take what you need. Give what you can. Everything here is offered pay-what-you-feel."
@@ -2431,7 +2431,7 @@ const signatureBlock = ({ dark = false } = {}) => {
  * this doesn't generate anything new.
  */
 const qrCodesBlock = () => `
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:0 auto 24px;max-width:600px;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:0 auto 24px;max-width:680px;">
       <tr>
         <td align="center" width="33%" style="padding:0 8px;vertical-align:top;">
           <img src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FKidsDiaryCourseQR.png?alt=media" alt="Kids Challenge QR" width="90" height="90" style="display:block;margin:0 auto 10px;border-radius:12px;border:1px solid rgba(184,151,58,0.2);" />
@@ -2526,7 +2526,7 @@ async function sendWelcomeEmail(toEmail, planName) {
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
         <tr>
             <td align="center" style="padding:24px 16px;">
-                <table width="600" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:600px;background:#FDFAF4;border:1px solid #E6C57D;">
+                <table width="680" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:680px;background:#FDFAF4;border:1px solid #E6C57D;">
                     <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
                     <tr>
                         <td style="padding:32px 40px 20px;text-align:center;">
@@ -2580,7 +2580,7 @@ async function sendGuestAccessEmail(toEmail) {
         html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0ece4;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
       <tr><td align="center" style="padding:24px 16px;">
-        <table width="600" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:600px;background:#FDFAF4;border:1px solid #E6C57D;">
+        <table width="680" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:680px;background:#FDFAF4;border:1px solid #E6C57D;">
           <tr><td style="background:#B8973A;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
           <tr><td style="padding:36px 40px;text-align:center;">
             <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#B8973A;margin:0 0 16px;">Mind Gym &middot; Payment Confirmed</p>
