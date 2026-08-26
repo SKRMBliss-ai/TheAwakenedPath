@@ -15,6 +15,7 @@ import {
   gratitudeForDay, dailyPrayerForDay, reflectionForDay,
   type Gratitude, type DailyPrayer,
 } from './dailyWisdom';
+import { MonthMirror } from './MonthMirror';
 
 /**
  * The Daily Practice ribbon — one calm, scrolling ritual that folds the day's
@@ -43,6 +44,7 @@ export default function DailyRibbon() {
   const [shuffle, setShuffle] = useState(0);
   const [gratShuffle, setGratShuffle] = useState(0);
   const [prayerShuffle, setPrayerShuffle] = useState(0);
+  const [showMonth, setShowMonth] = useState(false);
   const teaching = useMemo(() => teachingForDay(date), [date]);
   const gratitude = gratitudeForDay(date, gratShuffle);
   const dailyPrayer = dailyPrayerForDay(date, prayerShuffle);
@@ -181,6 +183,14 @@ export default function DailyRibbon() {
               {d.minutes ? `${d.minutes} min · from your sit` : 'add it above'}
             </span>
           </div>
+
+          <button
+            onClick={() => setShowMonth(true)}
+            className="mt-3 w-full rounded-xl border py-2.5 text-[12.5px] font-semibold transition-colors"
+            style={{ borderColor: 'var(--practice-accent-line)', color: 'var(--practice-accent)', background: 'var(--practice-accent-soft)' }}
+          >
+            🪞 See your Monthly Mirror — where this becomes progress
+          </button>
         </Band>
 
         {/* ── 4 · Go deeper ── */}
@@ -214,6 +224,12 @@ export default function DailyRibbon() {
           </p>
         )}
       </div>
+
+      <AnimatePresence>
+        {showMonth && (
+          <MonthMirror uid={uid} history={history} onClose={() => setShowMonth(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
