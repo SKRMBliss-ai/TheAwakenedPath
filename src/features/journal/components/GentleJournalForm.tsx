@@ -5,6 +5,8 @@ import { WitnessAndRelease } from "./WitnessAndRelease";
 import { useJournalVoice } from "../hooks/useJournalVoice";
 import { MoodGrid } from "./MoodGrid";
 import { EmotionMatrixPicker } from "./EmotionMatrixPicker";
+import { LoveFearChoice } from "./LoveFearChoice";
+import { deriveLoveFear, type Polarity } from "../loveFear";
 import { FELT_EXPERIENCES } from "../../../data/feltExperiences";
 
 
@@ -309,6 +311,7 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
     const [bodySensations, setBodySensations] = useState(initialData?.bodySensations || "");
     const [openReflection, setOpenReflection] = useState(initialData?.reflections || "");
     const [cognitiveDistortion, setCognitiveDistortion] = useState(initialData?.cognitiveDistortion || "");
+    const [polarity, setPolarity] = useState<Polarity | null>((initialData as any)?.polarity ?? null);
 
     const scrollRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -419,6 +422,9 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
             bodySensations,
             cognitiveDistortion,
             reflections: reflection || openReflection,
+            // The love/fear root — the person's own choice, or the derived lean
+            // if they didn't tap. Powers the vibration aura and trend.
+            polarity: polarity ?? deriveLoveFear(selectedEmotions),
         });
         setStep(5);
     };
@@ -487,6 +493,15 @@ export function GentleJournalForm({ onSave, onCancel, initialData }: {
                                     <EmotionMatrixPicker
                                         selected={selectedEmotions}
                                         onChange={setSelectedEmotions}
+                                    />
+                                </motion.div>
+
+                                {/* The love/fear root — the choice at the heart of the practice. */}
+                                <motion.div variants={fadeUp} className="mt-4">
+                                    <LoveFearChoice
+                                        emotions={selectedEmotions}
+                                        value={polarity}
+                                        onChange={setPolarity}
                                     />
                                 </motion.div>
 

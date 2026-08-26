@@ -26,6 +26,8 @@ import { useEmotionSync } from '../../presence-intelligence/hooks/useEmotionSync
 import { useDailyPractice } from '../../practices/useDailyPractice';
 import { GentleJournalForm } from './GentleJournalForm';
 import { PracticeHistory } from './PracticeHistory';
+import { VibrationCard } from './VibrationAura';
+import { vibrationOf } from '../loveFear';
 
 
 
@@ -63,6 +65,8 @@ interface JournalEntry {
     bodyArea: string;
     emotions: string;
     reflections: string;
+    /** Love / fear root of the entry — powers the vibration aura & trend. */
+    polarity?: 'love' | 'fear' | 'neutral';
     guidance: string;
     dayNumber?: number;
     createdAt?: any;
@@ -451,6 +455,9 @@ const Journal: React.FC<JournalProps> = ({ isAccessValid, onUpgrade }) => {
                         </motion.div>
                     ) : !showLogForm ? (
                         <motion.div key="dashboard" variants={pageVariants} initial="hidden" animate="visible" exit="exit">
+                            <div className="max-w-md mx-auto w-full mb-4">
+                                <VibrationCard balance={vibrationOf(entries.map((e) => e.polarity))} />
+                            </div>
                             <JournalDashboard
                                 entries={entries}
                                 isLoadingScript={isLoadingScript}

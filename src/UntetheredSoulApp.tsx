@@ -40,6 +40,8 @@ import { FirstRunWelcome } from './components/ui/FirstRunWelcome';
 import { DashboardGrid } from './features/practices/DashboardGrid';
 import PriceSlider from './components/ui/PriceSlider';
 import { useActivityTracker } from './hooks/useActivityTracker';
+import { useVibration } from './features/journal/hooks/useVibration';
+import { AuraDot } from './features/journal/components/VibrationAura';
 
 // ─── Lazy-loaded feature tabs ───────────────────────────────────────────────
 // None of these are needed for the first paint of the home screen, so they are
@@ -140,6 +142,7 @@ const MobileDashboard = ({ user }: any) => {
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
       : 'Good evening';
+  const vib = useVibration(user?.uid);
 
   return (
     <motion.div
@@ -161,8 +164,9 @@ const MobileDashboard = ({ user }: any) => {
         >
           {greeting},
         </span>
-        <p className="font-serif text-[18px] font-normal mt-0.5 truncate" style={{ color: 'var(--text-primary)' }}>
+        <p className="font-serif text-[18px] font-normal mt-0.5 truncate flex items-center justify-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
           {user.displayName || 'Friend'}
+          {vib.total > 0 && <AuraDot balance={vib.balance} />}
         </p>
       </div>
     </motion.div>
@@ -174,6 +178,7 @@ const BreadthDesktop = ({ user }: any) => {
   const greeting = hour < 12 ? 'Good morning'
     : hour < 17 ? 'Good afternoon'
       : 'Good evening';
+  const vib = useVibration(user?.uid);
 
   return (
     <motion.div
@@ -188,8 +193,9 @@ const BreadthDesktop = ({ user }: any) => {
           <p className="font-sans text-[11px] font-bold tracking-[.28em] uppercase mb-1" style={{ color: 'var(--accent-primary)' }}>
             {greeting},
           </p>
-          <h1 className="font-serif text-3xl lg:text-4xl font-light mb-1" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="font-serif text-3xl lg:text-4xl font-light mb-1 flex items-center justify-center gap-2" style={{ color: 'var(--text-primary)' }}>
             {user.displayName}
+            {vib.total > 0 && <AuraDot balance={vib.balance} size={14} />}
           </h1>
           <PresenceBreath size={220} showCaption={false} />
         </div>
