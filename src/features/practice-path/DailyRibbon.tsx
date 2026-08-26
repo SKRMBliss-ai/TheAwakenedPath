@@ -8,9 +8,10 @@ import {
   teachingForDay, promptForDay, LANDED_OPTIONS, TECHNIQUES, DURATIONS,
 } from './dailyContent';
 import {
-  DIARY_CATEGORIES, categoryLapses, anyLapse, diaryTouched,
+  DIARY_CATEGORIES, categoryCount, anyLapse, diaryTouched,
   type DiaryCategory,
 } from './diaryModel';
+import { prayerForDay, reflectionForDay } from './dailyWisdom';
 
 /**
  * The Daily Practice ribbon — one calm, scrolling ritual that folds the day's
@@ -39,7 +40,10 @@ export default function DailyRibbon() {
   const history = usePracticeHistory(uid, 400);
 
   const [shuffle, setShuffle] = useState(0);
+  const [prayerShuffle, setPrayerShuffle] = useState(0);
   const teaching = useMemo(() => teachingForDay(date), [date]);
+  const prayer = prayerForDay(date, prayerShuffle);
+  const reflection = reflectionForDay(date);
 
   const d = day ?? { date };
   const firstName = (user?.displayName || '').split(' ')[0];
@@ -77,6 +81,31 @@ export default function DailyRibbon() {
           Five quiet minutes. Begin wherever you like — anything you leave is still a whole day.
         </p>
       </div>
+
+      {/* ── Opening prayer — universal, addressed to whatever the person holds sacred ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mb-6 rounded-2xl border p-4 text-center"
+        style={{ borderColor: 'var(--practice-accent-line)', background: 'var(--practice-accent-soft)' }}
+      >
+        <p className="text-[9px] font-bold uppercase tracking-[0.28em] mb-2" style={{ color: 'var(--practice-accent)' }}>
+          A quiet asking
+        </p>
+        <p className="text-[16px] leading-relaxed font-serif italic text-[var(--text-primary)]">
+          “{prayer}”
+        </p>
+        <p className="mt-2 text-[10.5px] text-[var(--text-muted)]">
+          To the universe, your higher self, or simply your own deepest intention.
+        </p>
+        <button
+          onClick={() => setPrayerShuffle((s) => s + 1)}
+          className="mt-2 inline-flex items-center gap-1 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+        >
+          <RefreshCw size={10} /> another
+        </button>
+      </motion.div>
 
       <div className="space-y-4">
         {/* ── 1 · Teaching ── */}
@@ -159,28 +188,6 @@ export default function DailyRibbon() {
             ))}
           </div>
 
-          {/* Diet + service — single-line observations */}
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Chip
-              active={!!d.diary?.diet}
-              onClick={() => patch({ diary: { ...d.diary, diet: !d.diary?.diet } })}
-            >
-              🍎 Diet slipped
-            </Chip>
-            <Chip
-              active={!!d.diary?.servicePhysical}
-              onClick={() => patch({ diary: { ...d.diary, servicePhysical: !d.diary?.servicePhysical } })}
-            >
-              🤲 Served with my hands
-            </Chip>
-            <Chip
-              active={!!d.diary?.serviceGiving}
-              onClick={() => patch({ diary: { ...d.diary, serviceGiving: !d.diary?.serviceGiving } })}
-            >
-              🎁 Served by giving
-            </Chip>
-          </div>
-
           <div className="flex items-center justify-between mt-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2">
             <span className="text-[13px] text-[var(--text-primary)]">Time in practice</span>
             <span className="text-[12px] text-[var(--text-muted)]">
@@ -204,6 +211,9 @@ export default function DailyRibbon() {
             <RefreshCw size={11} /> another prompt
           </button>
         </Band>
+
+        {/* ── A thought to carry — a longer reflection, collapsed by default ── */}
+        <ReflectionCard reflection={reflection} />
       </div>
 
       {/* ── Arrival ── */}
@@ -280,9 +290,10 @@ function Band({
   );
 }
 
-/** One ethical virtue in the diary. Collapsed, it is a single held/slipped line
- *  carrying its Sixfold link. Tapping it opens the sub-lines (thought / word /
- *  deed, etc.) for granular recording — depth on demand, never forced. */
+/** One virtue in the diary. Collapsed, it is a single line carrying its Sixfold
+ *  and Nine-Virtue links. Tapping it opens the everyday prompts — each a concrete
+ *  thing to look for — recorded with one tap. Lapse virtues read gold ("noted"),
+ *  the good virtue reads green ("done"); nothing is required. */
 function DiaryRow({
   cat, marks, onToggleSub, onClearCategory,
 }: {
@@ -292,8 +303,16 @@ function DiaryRow({
   onClearCategory: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const lapses = categoryLapses(marks);
-  const slipped = lapses > 0;
+  const count = categoryCount(marks);
+  const marked = count > 0;
+  const good = cat.polarity === 'good';
+  // Good acts read green; lapses read gold. An untouched lapse is "held" (green
+  // check); an untouched good virtue is a quiet dash, inviting rather than pass/fail.
+  const accent = good
+    ? { color: 'var(--done-accent)', line: 'var(--done-accent-line)', soft: 'var(--done-accent-soft)' }
+    : marked
+      ? { color: 'var(--practice-accent)', line: 'var(--practice-accent-line)', soft: 'var(--practice-accent-soft)' }
+      : { color: 'var(--done-accent)', line: 'var(--done-accent-line)', soft: 'var(--done-accent-soft)' };
 
   return (
     <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] overflow-hidden">
@@ -306,13 +325,9 @@ function DiaryRow({
           />
           <span
             className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[11px]"
-            style={{
-              borderColor: slipped ? 'var(--practice-accent-line)' : 'var(--done-accent-line)',
-              background: slipped ? 'var(--practice-accent-soft)' : 'var(--done-accent-soft)',
-              color: slipped ? 'var(--practice-accent)' : 'var(--done-accent)',
-            }}
+            style={{ borderColor: accent.line, background: accent.soft, color: accent.color }}
           >
-            {slipped ? lapses : '✓'}
+            {marked ? count : good ? '·' : '✓'}
           </span>
           <span className="flex-1">
             <span className="block text-[13.5px] text-[var(--text-primary)]">{cat.label}</span>
@@ -326,7 +341,7 @@ function DiaryRow({
             color="var(--practice-accent)" line="var(--practice-accent-line)" soft="var(--practice-accent-soft)" />
         </div>
         <span className="text-[11px] text-[var(--text-muted)] flex-shrink-0 w-12 text-right">
-          {slipped ? `${lapses} noted` : 'held'}
+          {marked ? `${count} ${good ? 'done' : 'noted'}` : good ? '—' : 'held'}
         </span>
       </div>
 
@@ -338,39 +353,76 @@ function DiaryRow({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="px-3 pb-3 pt-1 pl-11">
-              <div className="flex flex-wrap gap-2">
-                {cat.sublines.map(([subKey, subLabel]) => {
-                  const on = !!marks?.[subKey];
-                  return (
-                    <button
-                      key={subKey}
-                      onClick={() => onToggleSub(subKey, !on)}
-                      className="rounded-full px-3 py-1.5 text-[12.5px] border transition-all active:scale-95"
+            <div className="px-3 pb-3 pt-1 pl-11 space-y-1">
+              {cat.sublines.map(([subKey, subLabel]) => {
+                const on = !!marks?.[subKey];
+                return (
+                  <button
+                    key={subKey}
+                    onClick={() => onToggleSub(subKey, !on)}
+                    className="w-full flex items-start gap-2.5 text-left rounded-lg px-2 py-1.5 transition-colors active:scale-[0.99]"
+                    style={{ background: on ? accent.soft : 'transparent' }}
+                  >
+                    <span
+                      className="flex-shrink-0 mt-0.5 w-4 h-4 rounded-md border flex items-center justify-center text-[10px]"
                       style={{
-                        borderColor: on ? 'var(--practice-accent-line)' : 'var(--border-subtle)',
-                        background: on ? 'var(--practice-accent-soft)' : 'transparent',
-                        color: on ? 'var(--practice-accent)' : 'var(--text-secondary)',
-                        fontWeight: on ? 600 : 400,
+                        borderColor: on ? accent.line : 'var(--border-subtle)',
+                        background: on ? accent.color : 'transparent',
+                        color: on ? '#1a1410' : 'transparent',
                       }}
                     >
+                      ✓
+                    </span>
+                    <span className="text-[12.5px] leading-snug" style={{ color: on ? accent.color : 'var(--text-secondary)' }}>
                       {subLabel}
-                    </button>
-                  );
-                })}
-              </div>
-              {slipped && (
+                    </span>
+                  </button>
+                );
+              })}
+              {marked && (
                 <button
                   onClick={onClearCategory}
-                  className="mt-2 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                  className="mt-1 ml-2 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                 >
-                  clear — held after all
+                  clear this virtue
                 </button>
               )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/** A longer reflection to carry into the day — collapsed to one line, expands on
+ *  "read". Rotates daily; the full passages live in dailyWisdom.ts. */
+function ReflectionCard({ reflection }: { reflection: { lead: string; body: string } }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-[var(--text-muted)] mb-2">
+        ✨ A thought to carry
+      </p>
+      <p className="text-[14.5px] leading-relaxed font-serif text-[var(--text-primary)]">{reflection.lead}</p>
+      <AnimatePresence>
+        {open && (
+          <motion.p
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="text-[13px] leading-relaxed text-[var(--text-secondary)] mt-2 overflow-hidden"
+          >
+            {reflection.body}
+          </motion.p>
+        )}
+      </AnimatePresence>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="mt-2 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+      >
+        {open ? 'less' : 'read'}
+      </button>
     </div>
   );
 }
