@@ -11,7 +11,10 @@ import {
   DIARY_CATEGORIES, categoryCount, anyLapse, diaryTouched,
   type DiaryCategory,
 } from './diaryModel';
-import { prayerForDay, reflectionForDay } from './dailyWisdom';
+import {
+  gratitudeForDay, dailyPrayerForDay, reflectionForDay,
+  type Gratitude, type DailyPrayer,
+} from './dailyWisdom';
 
 /**
  * The Daily Practice ribbon — one calm, scrolling ritual that folds the day's
@@ -26,10 +29,8 @@ import { prayerForDay, reflectionForDay } from './dailyWisdom';
  */
 
 function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+  // Deliberately not "good morning" — mornings are greeted by the gratitude card.
+  return new Date().getHours() < 12 ? 'Begin in gratitude' : 'Welcome back';
 }
 
 export default function DailyRibbon() {
@@ -40,10 +41,13 @@ export default function DailyRibbon() {
   const history = usePracticeHistory(uid, 400);
 
   const [shuffle, setShuffle] = useState(0);
+  const [gratShuffle, setGratShuffle] = useState(0);
   const [prayerShuffle, setPrayerShuffle] = useState(0);
   const teaching = useMemo(() => teachingForDay(date), [date]);
-  const prayer = prayerForDay(date, prayerShuffle);
+  const gratitude = gratitudeForDay(date, gratShuffle);
+  const dailyPrayer = dailyPrayerForDay(date, prayerShuffle);
   const reflection = reflectionForDay(date);
+  const isMorning = new Date().getHours() < 12;
 
   const d = day ?? { date };
   const firstName = (user?.displayName || '').split(' ')[0];
@@ -82,30 +86,13 @@ export default function DailyRibbon() {
         </p>
       </div>
 
-      {/* ── Opening prayer — universal, addressed to whatever the person holds sacred ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mb-6 rounded-2xl border p-4 text-center"
-        style={{ borderColor: 'var(--practice-accent-line)', background: 'var(--practice-accent-soft)' }}
-      >
-        <p className="text-[9px] font-bold uppercase tracking-[0.28em] mb-2" style={{ color: 'var(--practice-accent)' }}>
-          A quiet asking
-        </p>
-        <p className="text-[16px] leading-relaxed font-serif italic text-[var(--text-primary)]">
-          “{prayer}”
-        </p>
-        <p className="mt-2 text-[10.5px] text-[var(--text-muted)]">
-          To the universe, your higher self, or simply your own deepest intention.
-        </p>
-        <button
-          onClick={() => setPrayerShuffle((s) => s + 1)}
-          className="mt-2 inline-flex items-center gap-1 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
-        >
-          <RefreshCw size={10} /> another
-        </button>
-      </motion.div>
+      {/* ── Morning gratitude — greets the first half of the day ── */}
+      {isMorning && (
+        <GratitudeCard gratitude={gratitude} onShuffle={() => setGratShuffle((s) => s + 1)} />
+      )}
+
+      {/* ── Today's prayer — one longer prayer a day, the daily inspiration ── */}
+      <DailyPrayerCard prayer={dailyPrayer} onShuffle={() => setPrayerShuffle((s) => s + 1)} />
 
       <div className="space-y-4">
         {/* ── 1 · Teaching ── */}
@@ -392,6 +379,102 @@ function DiaryRow({
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+/** Morning gratitude — the first-half-of-day greeting. Lead line always shown;
+ *  "open" reveals the fuller prayer. Rotates daily, reshuffle for another. */
+function GratitudeCard({ gratitude, onShuffle }: { gratitude: Gratitude; onShuffle: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="mb-4 rounded-2xl border p-4"
+      style={{ borderColor: 'var(--done-accent-line)', background: 'var(--done-accent-soft)' }}
+    >
+      <p className="text-[9px] font-bold uppercase tracking-[0.28em] mb-2" style={{ color: 'var(--done-accent)' }}>
+        🌅 Morning gratitude
+      </p>
+      <p className="text-[15.5px] leading-relaxed font-serif text-[var(--text-primary)]">{gratitude.lead}</p>
+      <AnimatePresence>
+        {open && (
+          <motion.p
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="text-[13px] leading-relaxed text-[var(--text-secondary)] mt-2 overflow-hidden"
+          >
+            {gratitude.body}
+          </motion.p>
+        )}
+      </AnimatePresence>
+      <div className="mt-2 flex items-center gap-4">
+        <button onClick={() => setOpen((o) => !o)} className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]">
+          {open ? 'less' : 'read'}
+        </button>
+        <button onClick={onShuffle} className="inline-flex items-center gap-1 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]">
+          <RefreshCw size={10} /> another
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+/** Today's prayer — one longer, sectioned prayer a day. Collapsed to a title and
+ *  opening line; "open the prayer" reveals every section. Rotates daily, with a
+ *  reshuffle, so there is always something new to come back for. */
+function DailyPrayerCard({ prayer, onShuffle }: { prayer: DailyPrayer; onShuffle: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.05 }}
+      className="mb-6 rounded-2xl border p-4"
+      style={{ borderColor: 'var(--practice-accent-line)', background: 'var(--practice-accent-soft)' }}
+    >
+      <p className="text-[9px] font-bold uppercase tracking-[0.28em] mb-1" style={{ color: 'var(--practice-accent)' }}>
+        🙏 Today’s prayer
+      </p>
+      <p className="text-[15px] font-serif text-[var(--text-primary)] mb-1.5">{prayer.title}</p>
+      <p className="text-[14px] leading-relaxed font-serif italic text-[var(--text-secondary)]">{prayer.opening}</p>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden mt-3 space-y-3"
+          >
+            {prayer.sections.map((s, i) => (
+              <div key={i}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-0.5" style={{ color: 'var(--practice-accent)' }}>
+                  {i + 1} · {s.heading}
+                </p>
+                <p className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{s.body}</p>
+              </div>
+            ))}
+            <p className="text-[12px] text-[var(--text-muted)] text-center pt-1">— may only Love remain —</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="mt-2.5 flex items-center gap-4">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="text-[11px] font-semibold"
+          style={{ color: 'var(--practice-accent)' }}
+        >
+          {open ? 'close the prayer' : 'open the prayer'}
+        </button>
+        <button onClick={onShuffle} className="inline-flex items-center gap-1 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]">
+          <RefreshCw size={10} /> another
+        </button>
+      </div>
+    </motion.div>
   );
 }
 
