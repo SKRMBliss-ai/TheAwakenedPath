@@ -77,7 +77,7 @@ export default function DailyRibbon() {
   const prompt = promptForDay(date, { settled: d.settled, hasLapse: anyLapse(d.diary), shuffle });
 
   return (
-    <div className="max-w-xl mx-auto px-4 pb-16">
+    <div className="max-w-xl lg:max-w-3xl mx-auto px-4 pb-16">
       {/* ── Header + the day-orb ── */}
       <div className="flex flex-col items-center text-center pt-6 pb-8">
         <DayOrb glow={glow} />
@@ -165,7 +165,7 @@ export default function DailyRibbon() {
           <p className="text-[12px] text-[var(--text-muted)] -mt-1 mb-2">
             Optional. Noted without judgment, then let go — tap a virtue to turn it over.
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
             {DIARY_CATEGORIES.map((cat) => (
               <DiaryFlipCard
                 key={cat.key}

@@ -125,7 +125,7 @@ export function DailyTracker() {
     <div>
       <h2 className="text-[18px] font-extrabold text-[var(--kid-ink)]">Today's good choices 🌈</h2>
       <p className="text-[13px] text-[var(--kid-ink-soft)] mb-3">Tap a card to flip it. {doneCount}/7 done — every day is a new chance!</p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {BEHAVIOURS.map((b) => (
           <FlipBehaviourCard key={b.id} b={b} done={!!today[b.id]} onYes={() => s.toggleBehaviour(b.id)} />
         ))}
@@ -203,7 +203,7 @@ export function MindWorld({ onPlay }: { onPlay: (behaviourId: string) => void })
     <div>
       <h2 className="text-[18px] font-extrabold text-[var(--kid-ink)] mb-1">Your Mind World 🗺️</h2>
       <p className="text-[13px] text-[var(--kid-ink-soft)] mb-4">Tap a world to play a choice — every good choice makes it glow brighter!</p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {BEHAVIOURS.map((b) => {
           const pts = s.pointsByBehaviour[b.id] ?? 0;
           const glow = Math.min(1, pts / 100); // fully lit at 100 pts

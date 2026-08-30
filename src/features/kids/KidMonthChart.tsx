@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { BEHAVIOURS, todayKey } from './data';
@@ -51,6 +51,9 @@ function daysIn(m: string): number {
   return new Date(y, mo, 0).getDate();
 }
 
+const LABEL_W = 128;
+const CELL_W = 26;
+
 export function KidMonthChart() {
   const s = useKidStore();
   const [month, setMonth] = useState(currentMonth());
@@ -58,8 +61,18 @@ export function KidMonthChart() {
   const nDays = daysIn(month);
   const days = Array.from({ length: nDays }, (_, i) => i + 1);
   const review = s.monthReviews[month] ?? {};
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const cellKey = (day: number) => `${month}-${String(day).padStart(2, '0')}`;
+
+  // On open / month change, bring today's column into focus (centered).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (month !== currentMonth()) { el.scrollLeft = 0; return; }
+    const x = LABEL_W + (new Date().getDate() - 1) * CELL_W;
+    el.scrollLeft = Math.max(0, x - el.clientWidth / 2);
+  }, [month]);
 
   return (
     <div className="space-y-4">
@@ -85,9 +98,9 @@ export function KidMonthChart() {
           className="p-1.5 rounded-xl bg-white shadow-sm disabled:opacity-30"><ChevronRight size={16} /></button>
       </div>
 
-      {/* The grid — horizontal scroll for the days */}
-      <div className="rounded-3xl bg-white shadow-sm p-2 overflow-x-auto">
-        <div style={{ minWidth: 80 + nDays * 26 }}>
+      {/* The grid — horizontal scroll for the days; auto-centred on today */}
+      <div ref={scrollRef} className="rounded-3xl bg-white shadow-sm p-2 overflow-x-auto">
+        <div style={{ minWidth: LABEL_W + nDays * CELL_W + 36 }}>
           {/* day header */}
           <div className="flex items-center">
             <div className="w-[128px] flex-shrink-0" />

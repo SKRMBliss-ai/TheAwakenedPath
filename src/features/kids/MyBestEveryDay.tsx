@@ -59,7 +59,7 @@ export default function MyBestEveryDay() {
       {!onboarded ? (
         <Onboarding />
       ) : (
-        <div className="max-w-md mx-auto px-4 pt-4 pb-28">
+        <div className={`mx-auto px-4 pt-4 pb-28 ${tab === 'chart' ? 'max-w-md sm:max-w-2xl lg:max-w-5xl' : 'max-w-md sm:max-w-xl lg:max-w-3xl'}`}>
           {/* header */}
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-[15px] font-extrabold" style={{ color: 'var(--kid-accent)' }}>My Best Every Day</h1>
@@ -100,7 +100,7 @@ export default function MyBestEveryDay() {
 
           {/* bottom nav */}
           {!reflecting && !scenario && (
-            <div className="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto">
+            <div className="fixed bottom-0 left-0 right-0 z-40 max-w-md sm:max-w-xl mx-auto">
               <div className="mx-3 mb-3 rounded-full shadow-lg flex items-center justify-around px-2 py-2" style={{ background: '#fff' }}>
                 {NAV.map((n) => (
                   <button key={n.id} onClick={() => setTab(n.id)}
