@@ -21,15 +21,18 @@ interface KidState {
   completions: Record<string, DayCompletions>;   // dateKey -> {behaviourId: true}
   missionsDone: Record<string, string[]>;         // dateKey -> [mission text]
   reflections: Record<string, Reflection>;
+  monthReviews: Record<string, Record<string, string>>; // "YYYY-MM" -> {q1..q4}
   streak: number;
   badges: string[];
   rewards: string[];
 
   completeOnboarding: (name: string, avatarId: string) => void;
   toggleBehaviour: (behaviourId: string) => void;
+  setBehaviourOn: (dateKey: string, behaviourId: string, done: boolean) => void;
   awardPoints: (points: number, behaviourId?: string) => void;
   completeMission: (text: string, points: number) => void;
   setReflection: (r: Reflection) => void;
+  setMonthReview: (month: string, key: string, value: string) => void;
   reset: () => void;
 }
 
@@ -80,6 +83,7 @@ export const useKidStore = create<KidState>()(
       completions: {},
       missionsDone: {},
       reflections: {},
+      monthReviews: {},
       streak: 0,
       badges: [],
       rewards: [],
@@ -108,6 +112,32 @@ export const useKidStore = create<KidState>()(
           rewards: recomputeRewards(points, s.rewards),
         };
       }),
+
+      setBehaviourOn: (dateKey, behaviourId, done) => set((s) => {
+        const beh = BEHAVIOURS.find((b) => b.id === behaviourId);
+        if (!beh) return s;
+        const day = { ...(s.completions[dateKey] ?? {}) };
+        const wasDone = !!day[behaviourId];
+        if (wasDone === done) return s;
+        if (done) day[behaviourId] = true; else delete day[behaviourId];
+        const delta = done ? beh.points : -beh.points;
+        const completions = { ...s.completions, [dateKey]: day };
+        const points = Math.max(0, s.points + delta);
+        const pointsByBehaviour = {
+          ...s.pointsByBehaviour,
+          [behaviourId]: Math.max(0, (s.pointsByBehaviour[behaviourId] ?? 0) + delta),
+        };
+        const streak = computeStreak(completions);
+        return {
+          completions, points, pointsByBehaviour, streak,
+          badges: recomputeBadges({ completions, streak, badges: s.badges }),
+          rewards: recomputeRewards(points, s.rewards),
+        };
+      }),
+
+      setMonthReview: (month, key, value) => set((s) => ({
+        monthReviews: { ...s.monthReviews, [month]: { ...s.monthReviews[month], [key]: value } },
+      })),
 
       awardPoints: (pts, behaviourId) => set((s) => {
         const points = s.points + pts;

@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useKidStore } from './store';
 import { Onboarding } from './Onboarding';
 import { KidDashboard, DailyTracker, MindWorld, RewardsScreen, Friends, Reflection } from './screens';
+import { KidMonthChart } from './KidMonthChart';
 import { ChoiceScene } from './ChoiceScene';
 import { scenarioForDay, scenariosForBehaviour, type Scenario } from './scenarios';
 import { todayKey } from './data';
@@ -17,11 +18,12 @@ import { isMuted, setMuted } from '../../lib/sfx';
  * theme via CSS vars, independent of the app's dark theme.
  */
 
-type Tab = 'home' | 'today' | 'world' | 'rewards' | 'friends';
+type Tab = 'home' | 'today' | 'chart' | 'world' | 'rewards' | 'friends';
 
 const NAV: { id: Tab; icon: string; label: string }[] = [
   { id: 'home', icon: '🏠', label: 'Home' },
   { id: 'today', icon: '🌈', label: 'Today' },
+  { id: 'chart', icon: '📅', label: 'Chart' },
   { id: 'world', icon: '🗺️', label: 'World' },
   { id: 'rewards', icon: '🎁', label: 'Rewards' },
   { id: 'friends', icon: '🤝', label: 'Friends' },
@@ -84,6 +86,8 @@ export default function MyBestEveryDay() {
                 />
               ) : tab === 'today' ? (
                 <DailyTracker />
+              ) : tab === 'chart' ? (
+                <KidMonthChart />
               ) : tab === 'world' ? (
                 <MindWorld onPlay={playForBehaviour} />
               ) : tab === 'rewards' ? (
@@ -100,10 +104,10 @@ export default function MyBestEveryDay() {
               <div className="mx-3 mb-3 rounded-full shadow-lg flex items-center justify-around px-2 py-2" style={{ background: '#fff' }}>
                 {NAV.map((n) => (
                   <button key={n.id} onClick={() => setTab(n.id)}
-                    className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-2xl transition-all"
+                    className="flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-2xl transition-all"
                     style={{ background: tab === n.id ? 'var(--kid-accent)' + '18' : 'transparent' }}>
-                    <span className="text-[20px]" style={{ filter: tab === n.id ? 'none' : 'grayscale(0.3)' }}>{n.icon}</span>
-                    <span className="text-[9px] font-bold" style={{ color: tab === n.id ? 'var(--kid-accent)' : 'var(--kid-ink-soft)' }}>{n.label}</span>
+                    <span className="text-[18px]" style={{ filter: tab === n.id ? 'none' : 'grayscale(0.3)' }}>{n.icon}</span>
+                    <span className="text-[8px] font-bold" style={{ color: tab === n.id ? 'var(--kid-accent)' : 'var(--kid-ink-soft)' }}>{n.label}</span>
                   </button>
                 ))}
               </div>
