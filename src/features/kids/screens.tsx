@@ -8,7 +8,7 @@ import { CompanionOrb } from './Companion';
 import { useKidStore } from './store';
 
 // ─── Home / Dashboard ─────────────────────────────────────────────────────────
-export function KidDashboard({ onStart, onOpenReflection }: { onStart: () => void; onOpenReflection: () => void }) {
+export function KidDashboard({ onStart, onOpenTracker, onOpenReflection }: { onStart: () => void; onOpenTracker: () => void; onOpenReflection: () => void }) {
   const s = useKidStore();
   const key = todayKey();
   const today = s.completions[key] ?? {};
@@ -92,7 +92,10 @@ export function KidDashboard({ onStart, onOpenReflection }: { onStart: () => voi
         Start Today's Adventure! 🚀
       </motion.button>
 
-      <button onClick={onOpenReflection} className="w-full text-[13px] font-bold text-[var(--kid-ink-soft)] py-2">
+      <button onClick={onOpenTracker} className="w-full text-[13px] font-bold text-[var(--kid-ink-soft)] py-1.5">
+        ✅ Log today's good choices →
+      </button>
+      <button onClick={onOpenReflection} className="w-full text-[13px] font-bold text-[var(--kid-ink-soft)] py-1.5">
         🌙 End-of-day reflection →
       </button>
     </div>
@@ -153,25 +156,25 @@ export function DailyTracker() {
 }
 
 // ─── Mind World ───────────────────────────────────────────────────────────────
-export function MindWorld() {
+export function MindWorld({ onPlay }: { onPlay: (behaviourId: string) => void }) {
   const s = useKidStore();
   return (
     <div>
       <h2 className="text-[18px] font-extrabold text-[var(--kid-ink)] mb-1">Your Mind World 🗺️</h2>
-      <p className="text-[13px] text-[var(--kid-ink-soft)] mb-4">Every good choice makes an area glow brighter!</p>
+      <p className="text-[13px] text-[var(--kid-ink-soft)] mb-4">Tap a world to play a choice — every good choice makes it glow brighter!</p>
       <div className="grid grid-cols-2 gap-3">
         {BEHAVIOURS.map((b) => {
           const pts = s.pointsByBehaviour[b.id] ?? 0;
           const glow = Math.min(1, pts / 100); // fully lit at 100 pts
           return (
-            <div key={b.id} className="rounded-3xl p-4 text-center relative overflow-hidden" style={{ background: `linear-gradient(160deg, ${b.color}${Math.round(20 + glow * 60).toString(16)}, #fff)` }}>
+            <button key={b.id} onClick={() => onPlay(b.id)} className="rounded-3xl p-4 text-center relative overflow-hidden active:scale-95 transition-transform" style={{ background: `linear-gradient(160deg, ${b.color}${Math.round(20 + glow * 60).toString(16)}, #fff)` }}>
               <div className="text-[34px] mb-1" style={{ filter: `saturate(${0.4 + glow})`, opacity: 0.5 + glow * 0.5 }}>{b.icon}</div>
               <p className="text-[12.5px] font-extrabold text-[var(--kid-ink)] leading-tight">{b.area}</p>
               <div className="h-1.5 rounded-full mt-2 overflow-hidden" style={{ background: 'var(--kid-line)' }}>
                 <div className="h-full rounded-full" style={{ width: `${Math.round(glow * 100)}%`, background: b.color }} />
               </div>
               <p className="text-[10px] text-[var(--kid-ink-soft)] mt-1">{pts} points</p>
-            </div>
+            </button>
           );
         })}
       </div>

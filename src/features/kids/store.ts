@@ -27,6 +27,7 @@ interface KidState {
 
   completeOnboarding: (name: string, avatarId: string) => void;
   toggleBehaviour: (behaviourId: string) => void;
+  awardPoints: (points: number, behaviourId?: string) => void;
   completeMission: (text: string, points: number) => void;
   setReflection: (r: Reflection) => void;
   reset: () => void;
@@ -104,6 +105,17 @@ export const useKidStore = create<KidState>()(
         return {
           completions, points, pointsByBehaviour, streak,
           badges: recomputeBadges({ completions, streak, badges: s.badges }),
+          rewards: recomputeRewards(points, s.rewards),
+        };
+      }),
+
+      awardPoints: (pts, behaviourId) => set((s) => {
+        const points = s.points + pts;
+        return {
+          points,
+          pointsByBehaviour: behaviourId
+            ? { ...s.pointsByBehaviour, [behaviourId]: (s.pointsByBehaviour[behaviourId] ?? 0) + pts }
+            : s.pointsByBehaviour,
           rewards: recomputeRewards(points, s.rewards),
         };
       }),

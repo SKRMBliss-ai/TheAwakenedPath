@@ -3,6 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useKidStore } from './store';
 import { Onboarding } from './Onboarding';
 import { KidDashboard, DailyTracker, MindWorld, RewardsScreen, Friends, Reflection } from './screens';
+import { ChoiceScene } from './ChoiceScene';
+import { scenarioForDay, scenariosForBehaviour, type Scenario } from './scenarios';
+import { todayKey } from './data';
 
 /**
  * My Best Every Day — a gentle, gamified daily ethical-behaviour game for kids,
@@ -28,6 +31,12 @@ export default function MyBestEveryDay() {
   const reset = useKidStore((s) => s.reset);
   const [tab, setTab] = useState<Tab>('home');
   const [reflecting, setReflecting] = useState(false);
+  const [scenario, setScenario] = useState<Scenario | null>(null);
+
+  const playForBehaviour = (behaviour: string) => {
+    const list = scenariosForBehaviour(behaviour);
+    setScenario(list[Math.floor(Math.random() * list.length)] ?? scenarioForDay(todayKey()));
+  };
 
   return (
     <div
@@ -55,16 +64,22 @@ export default function MyBestEveryDay() {
           </div>
 
           <AnimatePresence mode="wait">
-            <motion.div key={reflecting ? 'reflect' : tab}
+            <motion.div key={scenario ? 'scene' : reflecting ? 'reflect' : tab}
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-              {reflecting ? (
+              {scenario ? (
+                <ChoiceScene scenario={scenario} onDone={() => setScenario(null)} />
+              ) : reflecting ? (
                 <Reflection onClose={() => setReflecting(false)} />
               ) : tab === 'home' ? (
-                <KidDashboard onStart={() => setTab('today')} onOpenReflection={() => setReflecting(true)} />
+                <KidDashboard
+                  onStart={() => setScenario(scenarioForDay(todayKey()))}
+                  onOpenTracker={() => setTab('today')}
+                  onOpenReflection={() => setReflecting(true)}
+                />
               ) : tab === 'today' ? (
                 <DailyTracker />
               ) : tab === 'world' ? (
-                <MindWorld />
+                <MindWorld onPlay={playForBehaviour} />
               ) : tab === 'rewards' ? (
                 <RewardsScreen />
               ) : (
@@ -74,7 +89,7 @@ export default function MyBestEveryDay() {
           </AnimatePresence>
 
           {/* bottom nav */}
-          {!reflecting && (
+          {!reflecting && !scenario && (
             <div className="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto">
               <div className="mx-3 mb-3 rounded-full shadow-lg flex items-center justify-around px-2 py-2" style={{ background: '#fff' }}>
                 {NAV.map((n) => (
