@@ -62,6 +62,7 @@ const EngagementReport = lazy(() => import('./features/admin/EngagementReport'))
 const MembersView = lazy(() => import('./features/community/MembersView').then(m => ({ default: m.MembersView })));
 const CalendarView = lazy(() => import('./features/community/CalendarView').then(m => ({ default: m.CalendarView })));
 const DailyRibbon = lazy(() => import('./features/practice-path/DailyRibbon'));
+const MyBestEveryDay = lazy(() => import('./features/kids/MyBestEveryDay'));
 const VirtuesView = lazy(() => import('./features/practice-path/VirtuesView').then(m => ({ default: m.VirtuesView })));
 const CircleView = lazy(() => import('./features/practice-path/CircleView').then(m => ({ default: m.CircleView })));
 const PracticesTab = lazy(() => import('./features/practice-path/PracticesTab').then(m => ({ default: m.PracticesTab })));
@@ -550,7 +551,7 @@ const PremiumPaywall = ({ user, checkOut, isProcessing, onSuccess }: any) => {
 const FREE_TABS = [
   'home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered',
   'intelligence', 'learn', 'chapters', 'situations', 'meditation',
-  'members', 'calendar', 'today',
+  'members', 'calendar', 'today', 'mybest',
 ];
 
 /** The membership tabs, and the one account that may preview them. */
@@ -1529,6 +1530,7 @@ export default function UntetheredApp() {
                   // Insights / Questions / Practices / Path / Progress / Everyone /
                   // Backup were retired from the rail to keep the path simple.
                   { id: 'today', icon: Sun, label: 'Today', locked: false },
+                  { id: 'mybest', icon: Trophy, label: 'Kids · My Best', locked: false },
                   { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
                   { id: 'situations', icon: Flame, label: 'Practice Room', locked: !isAccessValid },
                   { id: 'breathe', icon: Wind, label: 'Breathe', locked: false },
@@ -2354,6 +2356,15 @@ export default function UntetheredApp() {
               <motion.div key="today" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <Suspense fallback={<TabFallback />}>
                   <DailyRibbon />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* ── PRACTICE · KIDS — My Best Every Day ── */}
+            {activeTab === 'mybest' && (
+              <motion.div key="mybest" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <MyBestEveryDay />
                 </Suspense>
               </motion.div>
             )}
