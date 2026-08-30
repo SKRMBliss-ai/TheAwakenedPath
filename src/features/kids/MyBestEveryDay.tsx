@@ -6,6 +6,7 @@ import { KidDashboard, DailyTracker, MindWorld, RewardsScreen, Friends, Reflecti
 import { ChoiceScene } from './ChoiceScene';
 import { scenarioForDay, scenariosForBehaviour, type Scenario } from './scenarios';
 import { todayKey } from './data';
+import { isMuted, setMuted } from '../../lib/sfx';
 
 /**
  * My Best Every Day — a gentle, gamified daily ethical-behaviour game for kids,
@@ -32,6 +33,7 @@ export default function MyBestEveryDay() {
   const [tab, setTab] = useState<Tab>('home');
   const [reflecting, setReflecting] = useState(false);
   const [scenario, setScenario] = useState<Scenario | null>(null);
+  const [muted, setMutedState] = useState(isMuted());
 
   const playForBehaviour = (behaviour: string) => {
     const list = scenariosForBehaviour(behaviour);
@@ -59,8 +61,12 @@ export default function MyBestEveryDay() {
           {/* header */}
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-[15px] font-extrabold" style={{ color: 'var(--kid-accent)' }}>My Best Every Day</h1>
-            <button onClick={() => { if (confirm('Start over? This clears your progress on this device.')) reset(); }}
-              className="text-[10px] font-bold text-[var(--kid-ink-soft)]">restart</button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => { const m = !muted; setMuted(m); setMutedState(m); }}
+                className="text-[16px]" aria-label={muted ? 'Unmute' : 'Mute'}>{muted ? '🔇' : '🔊'}</button>
+              <button onClick={() => { if (confirm('Start over? This clears your progress on this device.')) reset(); }}
+                className="text-[10px] font-bold text-[var(--kid-ink-soft)]">restart</button>
+            </div>
           </div>
 
           <AnimatePresence mode="wait">

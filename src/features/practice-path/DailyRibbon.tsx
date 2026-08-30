@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, ChevronRight } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
+import { sfx } from '../../lib/sfx';
 import { useAuth } from '../auth/AuthContext';
 import { usePracticeDay, usePracticeHistory, type PracticeDay } from './usePracticeDay';
 import { todayKey } from './dailyRhythm';
@@ -162,17 +163,16 @@ export default function DailyRibbon() {
         {/* ── 3 · Diary (granular, optional) ── */}
         <Band icon="📿" title="A gentle look" done={touched.diary} delay={0.1}>
           <p className="text-[12px] text-[var(--text-muted)] -mt-1 mb-2">
-            Optional. Noted without judgment, then let go — tap a virtue to look closer.
+            Optional. Noted without judgment, then let go — tap a virtue to turn it over.
           </p>
-          <div className="space-y-1.5">
+          <div className="grid grid-cols-2 gap-2">
             {DIARY_CATEGORIES.map((cat) => (
-              <DiaryRow
+              <DiaryFlipCard
                 key={cat.key}
                 cat={cat}
                 marks={d.diary?.[cat.key]}
                 onToggleSub={(sub, next) =>
                   patch({ diary: { ...d.diary, [cat.key]: { ...d.diary?.[cat.key], [sub]: next } } })}
-                onClearCategory={() => patch({ diary: { ...d.diary, [cat.key]: {} } })}
               />
             ))}
           </div>
@@ -293,107 +293,81 @@ function Band({
   );
 }
 
-/** One virtue in the diary. Collapsed, it is a single line carrying its Sixfold
- *  and Nine-Virtue links. Tapping it opens the everyday prompts — each a concrete
- *  thing to look for — recorded with one tap. Lapse virtues read gold ("noted"),
- *  the good virtue reads green ("done"); nothing is required. */
-function DiaryRow({
-  cat, marks, onToggleSub, onClearCategory,
+/** One virtue as a flip card. The face carries its name, tradition and its
+ *  Sixfold / Nine-Virtue links; a tap turns it over to the everyday prompts,
+ *  recorded with one tap. Lapse virtues read gold ("noted"), the good virtue
+ *  reads green ("done"); nothing is required. */
+function DiaryFlipCard({
+  cat, marks, onToggleSub,
 }: {
   cat: DiaryCategory;
   marks?: Record<string, boolean>;
   onToggleSub: (sub: string, next: boolean) => void;
-  onClearCategory: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [flipped, setFlipped] = useState(false);
   const count = categoryCount(marks);
   const marked = count > 0;
   const good = cat.polarity === 'good';
-  // Good acts read green; lapses read gold. An untouched lapse is "held" (green
-  // check); an untouched good virtue is a quiet dash, inviting rather than pass/fail.
-  const accent = good
+  const accent = good || !marked
     ? { color: 'var(--done-accent)', line: 'var(--done-accent-line)', soft: 'var(--done-accent-soft)' }
-    : marked
-      ? { color: 'var(--practice-accent)', line: 'var(--practice-accent-line)', soft: 'var(--practice-accent-soft)' }
-      : { color: 'var(--done-accent)', line: 'var(--done-accent-line)', soft: 'var(--done-accent-soft)' };
+    : { color: 'var(--practice-accent)', line: 'var(--practice-accent-line)', soft: 'var(--practice-accent-soft)' };
 
   return (
-    <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] overflow-hidden">
-      <div className="flex items-center gap-3 px-3 py-2">
-        <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-3 flex-1 text-left">
-          <ChevronRight
-            size={13}
-            className="flex-shrink-0 text-[var(--text-muted)] transition-transform"
-            style={{ transform: open ? 'rotate(90deg)' : 'none' }}
-          />
-          <span
-            className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[11px]"
-            style={{ borderColor: accent.line, background: accent.soft, color: accent.color }}
-          >
-            {marked ? count : good ? '·' : '✓'}
-          </span>
-          <span className="flex-1">
-            <span className="block text-[13.5px] text-[var(--text-primary)]">{cat.label}</span>
-            <span className="block text-[11px] text-[var(--text-muted)]">{cat.tradition}</span>
-          </span>
+    <div className="relative" style={{ perspective: 900, height: 132 }}>
+      <motion.div
+        className="relative w-full h-full"
+        style={{ transformStyle: 'preserve-3d' }}
+        animate={{ rotateY: flipped ? 180 : 0 }}
+        transition={{ duration: 0.45, ease: 'easeInOut' }}
+      >
+        {/* FRONT */}
+        <button
+          onClick={() => { setFlipped(true); sfx.chime(); }}
+          className="absolute inset-0 rounded-2xl border p-3 flex flex-col text-left"
+          style={{ backfaceVisibility: 'hidden', borderColor: marked ? accent.line : 'var(--border-subtle)', background: marked ? accent.soft : 'var(--bg-surface)' }}
+        >
+          <div className="flex items-start justify-between">
+            <span className="w-6 h-6 rounded-full border flex items-center justify-center text-[12px]"
+              style={{ borderColor: accent.line, background: accent.soft, color: accent.color }}>
+              {marked ? count : good ? '·' : '✓'}
+            </span>
+            <span className="text-[10px] text-[var(--text-muted)]">{marked ? `${count} ${good ? 'done' : 'noted'}` : good ? '—' : 'held'}</span>
+          </div>
+          <span className="block text-[13.5px] font-medium text-[var(--text-primary)] mt-1.5">{cat.label}</span>
+          <span className="block text-[10px] text-[var(--text-muted)]">{cat.tradition}</span>
+          <div className="mt-auto flex flex-wrap gap-1">
+            <InfoTag glyph="🧭" name={cat.sixfold} why={cat.why} color="var(--virtue-accent)"
+              line="var(--virtue-accent-line)" soft="var(--virtue-accent-soft)" />
+            <InfoTag glyph="✦" name={cat.virtues[0]} label={cat.virtues.join(' · ')} why={cat.virtueWhy}
+              color="var(--practice-accent)" line="var(--practice-accent-line)" soft="var(--practice-accent-soft)" />
+          </div>
         </button>
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <InfoTag glyph="🧭" name={cat.sixfold} why={cat.why} color="var(--virtue-accent)"
-            line="var(--virtue-accent-line)" soft="var(--virtue-accent-soft)" />
-          <InfoTag glyph="✦" name={cat.virtues[0]} label={cat.virtues.join(' · ')} why={cat.virtueWhy}
-            color="var(--practice-accent)" line="var(--practice-accent-line)" soft="var(--practice-accent-soft)" />
-        </div>
-        <span className="text-[11px] text-[var(--text-muted)] flex-shrink-0 w-12 text-right">
-          {marked ? `${count} ${good ? 'done' : 'noted'}` : good ? '—' : 'held'}
-        </span>
-      </div>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3 pt-1 pl-11 space-y-1">
-              {cat.sublines.map(([subKey, subLabel]) => {
-                const on = !!marks?.[subKey];
-                return (
-                  <button
-                    key={subKey}
-                    onClick={() => onToggleSub(subKey, !on)}
-                    className="w-full flex items-start gap-2.5 text-left rounded-lg px-2 py-1.5 transition-colors active:scale-[0.99]"
-                    style={{ background: on ? accent.soft : 'transparent' }}
-                  >
-                    <span
-                      className="flex-shrink-0 mt-0.5 w-4 h-4 rounded-md border flex items-center justify-center text-[10px]"
-                      style={{
-                        borderColor: on ? accent.line : 'var(--border-subtle)',
-                        background: on ? accent.color : 'transparent',
-                        color: on ? '#1a1410' : 'transparent',
-                      }}
-                    >
-                      ✓
-                    </span>
-                    <span className="text-[12.5px] leading-snug" style={{ color: on ? accent.color : 'var(--text-secondary)' }}>
-                      {subLabel}
-                    </span>
-                  </button>
-                );
-              })}
-              {marked && (
+        {/* BACK — the sub-line prompts */}
+        <div
+          className="absolute inset-0 rounded-2xl border p-2.5 flex flex-col"
+          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', borderColor: accent.line, background: 'var(--bg-surface)' }}
+        >
+          <div className="flex-1 overflow-y-auto space-y-1 pr-0.5">
+            {cat.sublines.map(([subKey, subLabel]) => {
+              const on = !!marks?.[subKey];
+              return (
                 <button
-                  onClick={onClearCategory}
-                  className="mt-1 ml-2 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                  key={subKey}
+                  onClick={() => { onToggleSub(subKey, !on); sfx.tap(); }}
+                  className="w-full flex items-start gap-1.5 text-left rounded-md px-1 py-1 transition-colors"
+                  style={{ background: on ? accent.soft : 'transparent' }}
                 >
-                  clear this virtue
+                  <span className="flex-shrink-0 mt-0.5 w-3.5 h-3.5 rounded border flex items-center justify-center text-[9px]"
+                    style={{ borderColor: on ? accent.line : 'var(--border-subtle)', background: on ? accent.color : 'transparent', color: on ? '#1a1410' : 'transparent' }}>✓</span>
+                  <span className="text-[11px] leading-snug" style={{ color: on ? accent.color : 'var(--text-secondary)' }}>{subLabel}</span>
                 </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              );
+            })}
+          </div>
+          <button onClick={() => { setFlipped(false); sfx.chime(); }} className="text-[10px] text-[var(--text-muted)] mt-1 flex-shrink-0">↩ flip back</button>
+        </div>
+      </motion.div>
     </div>
   );
 }

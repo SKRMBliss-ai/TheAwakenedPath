@@ -4,6 +4,7 @@ import type { Scenario, Choice } from './scenarios';
 import { EMOTIONS } from './emotions';
 import { CompanionOrb } from './Companion';
 import { useKidStore } from './store';
+import { sfx } from '../../lib/sfx';
 
 /**
  * A Choice Scene — the ethical decision as gameplay. The scenario appears, the
@@ -21,6 +22,9 @@ export function ChoiceScene({ scenario, onDone }: { scenario: Scenario; onDone: 
     if (c.best) {
       awardPoints(c.points, scenario.behaviour);
       setCelebrated(true);
+      sfx.celebrate();
+    } else {
+      sfx.tap();
     }
   };
 

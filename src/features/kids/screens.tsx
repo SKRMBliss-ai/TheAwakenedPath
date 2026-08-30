@@ -5,7 +5,9 @@ import {
   SAMPLE_FRIENDS, PROUD_OPTIONS, FEELING_OPTIONS, todayKey,
 } from './data';
 import { CompanionOrb } from './Companion';
+import { EMOTION_LIST } from './emotions';
 import { useKidStore } from './store';
+import { sfx } from '../../lib/sfx';
 
 // ─── Home / Dashboard ─────────────────────────────────────────────────────────
 export function KidDashboard({ onStart, onOpenTracker, onOpenReflection }: { onStart: () => void; onOpenTracker: () => void; onOpenReflection: () => void }) {
@@ -24,12 +26,22 @@ export function KidDashboard({ onStart, onOpenTracker, onOpenReflection }: { onS
 
   return (
     <div className="space-y-4">
-      {/* Greeting + companion */}
-      <div className="flex items-center gap-3">
-        <CompanionOrb c={companion} size={64} accessory={s.rewards.includes('crown') ? '👑' : s.rewards.includes('hat') ? '🎩' : undefined} />
-        <div className="flex-1">
-          <p className="text-[18px] font-extrabold text-[var(--kid-ink)]">Good {partOfDay}, {s.name}! ☀️</p>
-          <p className="text-[13px] text-[var(--kid-ink-soft)]">Level {level.n} · {level.name}</p>
+      {/* Headquarters hero — the crew floating above the control room */}
+      <div className="rounded-3xl p-4 relative overflow-hidden" style={{ background: 'linear-gradient(160deg,#fff, #F3ECFF)' }}>
+        <div className="flex justify-center gap-1 mb-1">
+          {EMOTION_LIST.slice(0, 6).map((e, i) => (
+            <motion.div key={e.id} animate={{ y: [0, -5, 0] }} transition={{ duration: 2 + i * 0.2, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}>
+              <CompanionOrb c={e} size={34} bounce={false} />
+            </motion.div>
+          ))}
+        </div>
+        <div className="flex items-center gap-3 mt-1">
+          <CompanionOrb c={companion} size={56} accessory={s.rewards.includes('crown') ? '👑' : s.rewards.includes('hat') ? '🎩' : undefined} />
+          <div className="flex-1">
+            <p className="text-[17px] font-extrabold text-[var(--kid-ink)]">Good {partOfDay}, {s.name}! ☀️</p>
+            <p className="text-[12px] text-[var(--kid-ink-soft)]">Level {level.n} · {level.name}</p>
+            <p className="text-[11px] italic mt-0.5" style={{ color: 'var(--kid-accent)' }}>"We've got awesome choices waiting for you!" — Sunny</p>
+          </div>
         </div>
       </div>
 
@@ -60,7 +72,7 @@ export function KidDashboard({ onStart, onOpenTracker, onOpenReflection }: { onS
             return (
               <button
                 key={m.text}
-                onClick={() => !done && s.completeMission(m.text, m.points)}
+                onClick={() => { if (!done) { s.completeMission(m.text, m.points); sfx.success(); } }}
                 className="w-full flex items-center gap-3 rounded-2xl p-3 text-left shadow-sm transition-all"
                 style={{ background: done ? '#E8F8EE' : '#fff', opacity: done ? 0.85 : 1 }}
               >
@@ -102,55 +114,84 @@ export function KidDashboard({ onStart, onOpenTracker, onOpenReflection }: { onS
   );
 }
 
-// ─── Daily tracker ────────────────────────────────────────────────────────────
+// ─── Daily tracker — a grid of flippable cards ────────────────────────────────
 export function DailyTracker() {
   const s = useKidStore();
   const key = todayKey();
   const today = s.completions[key] ?? {};
-  const [burst, setBurst] = useState<{ id: string; pts: number } | null>(null);
+  const doneCount = BEHAVIOURS.filter((b) => today[b.id]).length;
 
   return (
-    <div className="space-y-3">
+    <div>
       <h2 className="text-[18px] font-extrabold text-[var(--kid-ink)]">Today's good choices 🌈</h2>
-      <p className="text-[13px] text-[var(--kid-ink-soft)] -mt-1">Every day is a new chance. Tap what you did!</p>
-      {BEHAVIOURS.map((b) => {
-        const done = !!today[b.id];
-        return (
-          <div key={b.id} className="rounded-3xl p-4 shadow-sm relative overflow-hidden" style={{ background: '#fff', borderLeft: `6px solid ${b.color}` }}>
-            <div className="flex items-start gap-3">
-              <span className="text-[30px]">{b.icon}</span>
-              <div className="flex-1">
-                <p className="text-[15px] font-extrabold text-[var(--kid-ink)]">{b.title}</p>
-                <p className="text-[12.5px] text-[var(--kid-ink-soft)] mt-0.5">{b.prompt}</p>
-                <div className="flex gap-2 mt-2.5">
-                  <button
-                    onClick={() => { if (!done) { setBurst({ id: b.id, pts: b.points }); setTimeout(() => setBurst(null), 900); } s.toggleBehaviour(b.id); }}
-                    className="rounded-full px-4 py-2 text-[13px] font-extrabold transition-all"
-                    style={{ background: done ? b.color : b.color + '22', color: done ? '#fff' : b.color }}
-                  >
-                    {done ? `Yes! +${b.points} ⭐` : `Yes! +${b.points} ⭐`}
-                  </button>
-                  {!done && (
-                    <span className="rounded-full px-4 py-2 text-[12px] font-semibold text-[var(--kid-ink-soft)]" style={{ background: 'var(--kid-line)' }}>
-                      I'm still working on it 💛
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-            <AnimatePresence>
-              {burst?.id === b.id && (
-                <motion.div
-                  initial={{ opacity: 0, y: 0, scale: 0.6 }} animate={{ opacity: 1, y: -30, scale: 1.2 }} exit={{ opacity: 0 }}
-                  className="absolute right-6 top-4 text-[22px] font-extrabold pointer-events-none" style={{ color: b.color }}
-                >
-                  +{burst.pts} ⭐
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        );
-      })}
+      <p className="text-[13px] text-[var(--kid-ink-soft)] mb-3">Tap a card to flip it. {doneCount}/7 done — every day is a new chance!</p>
+      <div className="grid grid-cols-2 gap-3">
+        {BEHAVIOURS.map((b) => (
+          <FlipBehaviourCard key={b.id} b={b} done={!!today[b.id]} onYes={() => s.toggleBehaviour(b.id)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FlipBehaviourCard({ b, done, onYes }: { b: typeof BEHAVIOURS[number]; done: boolean; onYes: () => void }) {
+  const [flipped, setFlipped] = useState(false);
+  const [burst, setBurst] = useState(false);
+
+  const yes = () => {
+    if (!done) { setBurst(true); sfx.success(); setTimeout(() => setBurst(false), 1000); }
+    else sfx.tap();
+    onYes();
+  };
+
+  return (
+    <div className="relative" style={{ perspective: 900, height: 168 }}>
+      <motion.div
+        className="relative w-full h-full"
+        style={{ transformStyle: 'preserve-3d' }}
+        animate={{ rotateY: flipped ? 180 : 0 }}
+        transition={{ duration: 0.5, ease: 'easeInOut' }}
+      >
+        {/* FRONT */}
+        <button
+          onClick={() => { setFlipped(true); sfx.flip(); }}
+          className="absolute inset-0 rounded-3xl p-3 flex flex-col items-center justify-center text-center shadow-md"
+          style={{
+            backfaceVisibility: 'hidden',
+            background: done ? `linear-gradient(160deg, ${b.color}, ${b.color}cc)` : '#fff',
+            border: `3px solid ${b.color}${done ? 'ff' : '33'}`,
+          }}
+        >
+          <motion.div animate={done ? { scale: [1, 1.2, 1] } : {}} className="text-[42px]">{done ? '✅' : b.icon}</motion.div>
+          <p className="text-[13px] font-extrabold mt-1 leading-tight" style={{ color: done ? '#fff' : 'var(--kid-ink)' }}>{b.title}</p>
+          <p className="text-[10px] mt-1" style={{ color: done ? '#fff' : 'var(--kid-ink-soft)' }}>{done ? `+${b.points} earned! ⭐` : 'tap to flip →'}</p>
+        </button>
+
+        {/* BACK */}
+        <div
+          className="absolute inset-0 rounded-3xl p-3 flex flex-col shadow-md"
+          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', background: b.color + '18', border: `3px solid ${b.color}` }}
+        >
+          <p className="text-[11.5px] text-[var(--kid-ink)] leading-snug flex-1">{b.prompt}</p>
+          <button onClick={yes} className="rounded-full py-2 text-[12px] font-extrabold text-white mt-1" style={{ background: b.color }}>
+            {done ? '✓ Done!' : `Yes! +${b.points} ⭐`}
+          </button>
+          <button onClick={() => { setFlipped(false); sfx.tap(); }} className="text-[10px] font-bold mt-1" style={{ color: b.color }}>
+            {done ? 'flip back' : "still working on it 💛"}
+          </button>
+        </div>
+      </motion.div>
+
+      <AnimatePresence>
+        {burst && (
+          <motion.div
+            initial={{ opacity: 0, y: 0, scale: 0.6 }} animate={{ opacity: 1, y: -40, scale: 1.3 }} exit={{ opacity: 0 }}
+            className="absolute left-1/2 -translate-x-1/2 top-4 text-[24px] font-extrabold pointer-events-none z-10" style={{ color: b.color }}
+          >
+            +{b.points} ⭐
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
