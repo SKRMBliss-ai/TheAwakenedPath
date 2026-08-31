@@ -167,14 +167,14 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
               className="overflow-hidden rounded-[16px] text-left shadow-lg"
               style={{ border: '1px solid rgba(255,255,255,0.16)', background: room.palette.scrim }}
             >
-              <div className="flex h-[228px] w-full items-center justify-center">
+              <div className="w-full" style={{ aspectRatio: '205 / 768' }}>
                 <img
                   src={hoveredId === room.id ? roomCard(room.id) : roomFull(room.id)}
                   alt={`${room.name} — ${room.practising}`}
                   loading="lazy"
                   width={205}
                   height={768}
-                  className="block h-full w-auto object-contain"
+                  className="block h-full w-full object-contain"
                   draggable={false}
                 />
               </div>
