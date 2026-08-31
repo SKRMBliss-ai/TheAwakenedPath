@@ -11,6 +11,8 @@ import softWhoosh from '../../../assets/dragon-studio-whoosh-effect-405447.mp3';
 import brightNotify from '../../../assets/universfield-bright-notification-352449.mp3';
 import calmPiano from '../../../assets/alexzavesa-calm-inspiring-piano-logo-short-version-518990.mp3';
 import notify09 from '../../../assets/universfield-new-notification-09-352705.mp3';
+import breatheIn from '../../../assets/kids-pause-breathe-in.mp3';
+import breatheOut from '../../../assets/kids-pause-breathe-out.mp3';
 
 /**
  * The Kids Gym sound design table, as code.
@@ -27,7 +29,7 @@ import notify09 from '../../../assets/universfield-new-notification-09-352705.mp
 
 export type Cue =
   | 'tap' | 'roomCard' | 'enterRoom' | 'exitRoom' | 'discovery' | 'resolve'
-  | 'breathComplete' | 'tapHit';
+  | 'breathComplete' | 'tapHit' | 'breatheIn' | 'breatheOut';
 
 interface CueDef { src: string; volume: number; interruptible?: boolean }
 
@@ -47,6 +49,10 @@ const TABLE: Record<Cue, CueDef> = {
   // Each hit on a tap target: a worry shrinking, a seed going in, fire
   // breathing down.
   tapHit:         { src: bubblePop, volume: 0.30 },
+  // Box breathing in the Pause Room — a spoken/breath cue for each half of
+  // the cycle. Quiet, since it sits under the child's own breathing.
+  breatheIn:      { src: breatheIn,  volume: 0.5 },
+  breatheOut:     { src: breatheOut, volume: 0.5 },
 };
 
 let current: HTMLAudioElement | null = null;

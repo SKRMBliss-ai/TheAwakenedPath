@@ -41,12 +41,22 @@ function Choice({ room, label, onClick }: { room: KidsRoomConfig; label: string;
   );
 }
 
-/* ── Step: breathe ──────────────────────────────────────────────────────── */
+/* ── Step: box breathing ─────────────────────────────────────────────────
+ * Four equal beats — in, hold, out, hold — each traced along one side of a
+ * square, so the shape the child watches literally is the "box" they're
+ * breathing. A breath-in / breath-out cue plays at the start of each of
+ * those two beats. */
 
-const BREATH = [
-  { label: 'Breathe in…', secs: 4, open: 1 },
-  { label: 'Hold', secs: 2, open: 1 },
-  { label: 'Breathe out…', secs: 6, open: 0.35 },
+const BOX_SIDE = 4; // seconds per side — classic 4-4-4-4 box breathing
+
+// Square corners in SVG space, traced clockwise from bottom-left.
+const BOX_CORNERS = { bl: { x: 44, y: 156 }, tl: { x: 44, y: 44 }, tr: { x: 156, y: 44 }, br: { x: 156, y: 156 } };
+
+const BOX_BREATH = [
+  { label: 'Breathe in…', from: BOX_CORNERS.bl, to: BOX_CORNERS.tl, cue: 'breatheIn' as const },
+  { label: 'Hold', from: BOX_CORNERS.tl, to: BOX_CORNERS.tr, cue: null },
+  { label: 'Breathe out…', from: BOX_CORNERS.tr, to: BOX_CORNERS.br, cue: 'breatheOut' as const },
+  { label: 'Hold', from: BOX_CORNERS.br, to: BOX_CORNERS.bl, cue: null },
 ];
 
 function BreathStep({
@@ -54,11 +64,15 @@ function BreathStep({
 }: { room: KidsRoomConfig; step: Extract<Step, { kind: 'breath' }>; onDone: () => void; onTick: (f: number) => void }) {
   const [i, setI] = useState(0);
   const [rounds, setRounds] = useState(0);
-  const phase = BREATH[i];
+  const phase = BOX_BREATH[i];
+
+  useEffect(() => {
+    if (phase.cue) sound.play(phase.cue);
+  }, [i, phase.cue]);
 
   useEffect(() => {
     const t = setTimeout(() => {
-      const next = (i + 1) % BREATH.length;
+      const next = (i + 1) % BOX_BREATH.length;
       if (next === 0) {
         const r = rounds + 1;
         setRounds(r);
@@ -67,33 +81,32 @@ function BreathStep({
         if (r >= step.rounds) { onDone(); return; }
       }
       setI(next);
-    }, phase.secs * 1000);
+    }, BOX_SIDE * 1000);
     return () => clearTimeout(t);
-  }, [i, phase.secs, rounds, step.rounds, onDone, onTick]);
+  }, [i, rounds, step.rounds, onDone, onTick]);
 
   return (
     <div className="flex flex-col items-center">
       <svg viewBox="0 0 200 200" width="212" height="212">
-        <defs>
-          <radialGradient id="petal">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="100%" stopColor={room.palette.accent} />
-          </radialGradient>
-        </defs>
-        <motion.g
-          animate={{ scale: phase.open, rotate: phase.open > 0.8 ? 8 : 0 }}
-          transition={{ duration: phase.secs, ease: 'easeInOut' }}
-          style={{ transformOrigin: '100px 100px' }}
-        >
-          {Array.from({ length: 8 }).map((_, p) => (
-            <ellipse key={p} cx="100" cy="58" rx="17" ry="40" fill="url(#petal)" opacity="0.9" transform={`rotate(${p * 45} 100 100)`} />
-          ))}
-        </motion.g>
-        <circle cx="100" cy="100" r="17" fill="#FFE9A8" />
+        <rect
+          x={BOX_CORNERS.tl.x} y={BOX_CORNERS.tl.y}
+          width={BOX_CORNERS.tr.x - BOX_CORNERS.tl.x} height={BOX_CORNERS.bl.y - BOX_CORNERS.tl.y}
+          rx="14" fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="3"
+        />
+        <motion.circle
+          key={i}
+          r="10"
+          fill={room.palette.accent}
+          stroke="#FFFFFF"
+          strokeWidth="2"
+          initial={{ cx: phase.from.x, cy: phase.from.y }}
+          animate={{ cx: phase.to.x, cy: phase.to.y }}
+          transition={{ duration: BOX_SIDE, ease: 'linear' }}
+        />
       </svg>
       <AnimatePresence mode="wait">
         <motion.p
-          key={phase.label}
+          key={phase.label + i}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           className="mt-3 text-[20px] font-bold"
           style={{ color: room.palette.ink, textShadow: `0 2px 18px ${room.palette.scrim}` }}

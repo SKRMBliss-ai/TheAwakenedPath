@@ -108,7 +108,7 @@ export const KIDS_WORLD: KidsRoomConfig[] = [
     palette: { ink: '#EAFBF3', accent: '#3FB37F', scrim: '#0B2C25' },
     art: 'painted',
     steps: [
-      { kind: 'breath', prompt: 'Breathe with the flower.', rounds: 3 },
+      { kind: 'breath', prompt: 'Breathe the box with me.', rounds: 3 },
     ],
     ending: 'The forest is quiet. So are you.',
   },

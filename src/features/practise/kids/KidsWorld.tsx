@@ -119,7 +119,7 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
         </div>
 
         {/* Room cards — each is a little animated window into its world */}
-        <div className="mt-7 grid grid-cols-2 gap-3.5">
+        <div className="mt-7 grid grid-cols-3 gap-2.5">
           {KIDS_WORLD.map((room, i) => (
             <motion.button
               key={room.id}
@@ -130,23 +130,25 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
               whileTap={{ scale: 0.97 }}
               onClick={() => { sound.play('roomCard'); setActive(room); }}
               aria-label={`${room.name} — ${room.practising}`}
-              className="overflow-hidden rounded-[22px] text-left shadow-lg"
+              className="overflow-hidden rounded-[16px] text-left shadow-lg"
               style={{ border: '1px solid rgba(255,255,255,0.16)', background: room.palette.scrim }}
             >
-              <img
-                src={roomCard(room.id)}
-                alt=""
-                loading="lazy"
-                width={195}
-                height={390}
-                className="block h-auto w-full"
-                draggable={false}
-              />
-              <div className="px-3.5 pb-3.5 pt-3">
-                <div className="text-[14px] font-extrabold leading-tight" style={{ color: room.palette.ink }}>
+              <div className="aspect-square w-full overflow-hidden">
+                <img
+                  src={roomCard(room.id)}
+                  alt=""
+                  loading="lazy"
+                  width={195}
+                  height={195}
+                  className="block h-full w-full object-cover object-top"
+                  draggable={false}
+                />
+              </div>
+              <div className="px-2 pb-2.5 pt-1.5">
+                <div className="text-[11.5px] font-extrabold leading-tight" style={{ color: room.palette.ink }}>
                   {room.name}
                 </div>
-                <div className="mt-0.5 text-[11.5px] leading-snug" style={{ color: room.palette.ink, opacity: 0.68 }}>
+                <div className="mt-0.5 text-[9.5px] leading-snug" style={{ color: room.palette.ink, opacity: 0.68 }}>
                   {room.practising}
                 </div>
               </div>
