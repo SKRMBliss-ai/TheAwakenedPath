@@ -22,6 +22,7 @@ interface KidState {
   missionsDone: Record<string, string[]>;         // dateKey -> [mission text]
   reflections: Record<string, Reflection>;
   monthReviews: Record<string, Record<string, string>>; // "YYYY-MM" -> {q1..q4}
+  scenariosDone: Record<string, string[]>;               // dateKey -> [scenarioId]
   streak: number;
   badges: string[];
   rewards: string[];
@@ -30,6 +31,7 @@ interface KidState {
   toggleBehaviour: (behaviourId: string) => void;
   setBehaviourOn: (dateKey: string, behaviourId: string, done: boolean) => void;
   awardPoints: (points: number, behaviourId?: string) => void;
+  completeScenario: (scenarioId: string) => void;
   completeMission: (text: string, points: number) => void;
   setReflection: (r: Reflection) => void;
   setMonthReview: (month: string, key: string, value: string) => void;
@@ -84,6 +86,7 @@ export const useKidStore = create<KidState>()(
       missionsDone: {},
       reflections: {},
       monthReviews: {},
+      scenariosDone: {},
       streak: 0,
       badges: [],
       rewards: [],
@@ -139,6 +142,13 @@ export const useKidStore = create<KidState>()(
         monthReviews: { ...s.monthReviews, [month]: { ...s.monthReviews[month], [key]: value } },
       })),
 
+      completeScenario: (scenarioId) => set((s) => {
+        const key = todayKey();
+        const done = s.scenariosDone[key] ?? [];
+        if (done.includes(scenarioId)) return s;
+        return { scenariosDone: { ...s.scenariosDone, [key]: [...done, scenarioId] } };
+      }),
+
       awardPoints: (pts, behaviourId) => set((s) => {
         const points = s.points + pts;
         return {
@@ -166,7 +176,8 @@ export const useKidStore = create<KidState>()(
 
       reset: () => set({
         onboarded: false, name: '', avatarId: 'sunny', points: 0, pointsByBehaviour: {},
-        completions: {}, missionsDone: {}, reflections: {}, streak: 0, badges: [], rewards: [],
+        completions: {}, missionsDone: {}, reflections: {}, monthReviews: {}, scenariosDone: {},
+        streak: 0, badges: [], rewards: [],
       }),
     }),
     { name: 'my-best-every-day' },

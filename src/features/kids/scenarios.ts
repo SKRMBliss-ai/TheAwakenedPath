@@ -149,3 +149,25 @@ export function scenarioForDay(dateKey: string): Scenario {
 export function scenariosForBehaviour(behaviour: string): Scenario[] {
   return SCENARIOS.filter((s) => s.behaviour === behaviour);
 }
+
+/**
+ * The smart adventure picker: given the scenarios already completed today, hand
+ * back a fresh one so "Start Today's Adventure" never repeats what's done. The
+ * order is rotated by day so it feels different day to day. When every adventure
+ * is done, returns { scenario: null, remaining: 0 } and the UI celebrates rather
+ * than re-serving — but a child can still replay a favourite on request.
+ */
+export function nextAdventure(doneIds: string[]): { scenario: Scenario | null; remaining: number; total: number } {
+  const total = SCENARIOS.length;
+  // Rotate the order by day so the first adventure isn't always the same.
+  const seed = [...(new Date().toISOString().slice(0, 10))].reduce((a, c) => a + c.charCodeAt(0), 0);
+  const rotated = SCENARIOS.map((_, i) => SCENARIOS[(i + seed) % total]);
+  const undone = rotated.filter((s) => !doneIds.includes(s.id));
+  return { scenario: undone[0] ?? null, remaining: undone.length, total };
+}
+
+/** For replay when all are done — a random one, ideally different from the last. */
+export function replayAdventure(lastId?: string): Scenario {
+  const pool = lastId ? SCENARIOS.filter((s) => s.id !== lastId) : SCENARIOS;
+  return pool[Math.floor(Math.random() * pool.length)] ?? SCENARIOS[0];
+}

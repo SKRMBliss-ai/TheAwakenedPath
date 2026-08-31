@@ -14,6 +14,7 @@ import { sfx } from '../../lib/sfx';
  */
 export function ChoiceScene({ scenario, onDone }: { scenario: Scenario; onDone: () => void }) {
   const awardPoints = useKidStore((s) => s.awardPoints);
+  const completeScenario = useKidStore((s) => s.completeScenario);
   const [picked, setPicked] = useState<Choice | null>(null);
   const [celebrated, setCelebrated] = useState(false);
 
@@ -21,6 +22,7 @@ export function ChoiceScene({ scenario, onDone }: { scenario: Scenario; onDone: 
     setPicked(c);
     if (c.best) {
       awardPoints(c.points, scenario.behaviour);
+      completeScenario(scenario.id);
       setCelebrated(true);
       sfx.celebrate();
     } else {

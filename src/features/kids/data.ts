@@ -26,6 +26,9 @@ export const BEHAVIOURS: Behaviour[] = [
   { id: 'mindheart', icon: '⭐', title: 'Mind & Heart Time',  prompt: 'Did you take quiet time — gratitude, reflection, learning?',points: 10, color: '#00BBF9', area: 'Reflection Observatory' },
 ];
 
+export type Shape = 'star' | 'drop' | 'spark' | 'shield' | 'leaf' | 'bolt' | 'diamond' | 'heart' | 'moon';
+export type Expression = 'joy' | 'sad' | 'angry' | 'worried' | 'calm' | 'shy' | 'bored' | 'curious' | 'picky' | 'sleepy';
+
 export interface Companion {
   id: string;
   name: string;
@@ -33,15 +36,19 @@ export interface Companion {
   emoji: string;
   color: string;
   color2: string;
+  /** Distinct silhouette accent, so each character reads at a glance. */
+  shape?: Shape;
+  /** Drives the animated face — angry brows, worried sweat, sleepy eyes, etc. */
+  expression?: Expression;
 }
 
-/** Original emotion companions — a colour and a feeling, no film characters. */
+/** Original emotion companions — a colour, a shape and a feeling; no film characters. */
 export const COMPANIONS: Companion[] = [
-  { id: 'sunny',  name: 'Sunny',  trait: 'Joyful',  emoji: '😄', color: '#FFD23F', color2: '#FF9F1C' },
-  { id: 'marina', name: 'Marina', trait: 'Calm',    emoji: '😌', color: '#4EA8DE', color2: '#5390D9' },
-  { id: 'blaze',  name: 'Blaze',  trait: 'Brave',   emoji: '😤', color: '#FF6B6B', color2: '#EE4266' },
-  { id: 'nova',   name: 'Nova',   trait: 'Curious', emoji: '🤩', color: '#9B5DE5', color2: '#7B2CBF' },
-  { id: 'fern',   name: 'Fern',   trait: 'Kind',    emoji: '🥰', color: '#43BC5F', color2: '#2A9D8F' },
+  { id: 'sunny',  name: 'Sunny',  trait: 'Joyful',  emoji: '😄', color: '#FFD23F', color2: '#FF9F1C', shape: 'star',    expression: 'joy' },
+  { id: 'marina', name: 'Marina', trait: 'Calm',    emoji: '😌', color: '#4EA8DE', color2: '#5390D9', shape: 'drop',    expression: 'calm' },
+  { id: 'blaze',  name: 'Blaze',  trait: 'Brave',   emoji: '😤', color: '#FF6B6B', color2: '#EE4266', shape: 'spark',   expression: 'angry' },
+  { id: 'nova',   name: 'Nova',   trait: 'Curious', emoji: '🤩', color: '#9B5DE5', color2: '#7B2CBF', shape: 'diamond', expression: 'curious' },
+  { id: 'fern',   name: 'Fern',   trait: 'Kind',    emoji: '🥰', color: '#43BC5F', color2: '#2A9D8F', shape: 'leaf',    expression: 'shy' },
 ];
 
 export interface Level { n: number; name: string; at: number; }

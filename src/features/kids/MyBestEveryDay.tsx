@@ -5,7 +5,7 @@ import { Onboarding } from './Onboarding';
 import { KidDashboard, DailyTracker, MindWorld, RewardsScreen, Friends, Reflection } from './screens';
 import { KidMonthChart } from './KidMonthChart';
 import { ChoiceScene } from './ChoiceScene';
-import { scenarioForDay, scenariosForBehaviour, type Scenario } from './scenarios';
+import { nextAdventure, replayAdventure, scenariosForBehaviour, type Scenario } from './scenarios';
 import { todayKey } from './data';
 import { isMuted, setMuted } from '../../lib/sfx';
 
@@ -36,10 +36,19 @@ export default function MyBestEveryDay() {
   const [reflecting, setReflecting] = useState(false);
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [muted, setMutedState] = useState(isMuted());
+  const scenariosDone = useKidStore((s) => s.scenariosDone);
+
+  const doneToday = scenariosDone[todayKey()] ?? [];
+  const { scenario: nextUndone, remaining, total } = nextAdventure(doneToday);
+
+  // Smart launcher: serve a fresh adventure; when all are done, replay a
+  // different favourite instead of repeating the same one.
+  const startAdventure = () => setScenario(nextUndone ?? replayAdventure(doneToday[doneToday.length - 1]));
 
   const playForBehaviour = (behaviour: string) => {
     const list = scenariosForBehaviour(behaviour);
-    setScenario(list[Math.floor(Math.random() * list.length)] ?? scenarioForDay(todayKey()));
+    const undone = list.find((x) => !doneToday.includes(x.id));
+    setScenario(undone ?? list[0] ?? replayAdventure());
   };
 
   return (
@@ -80,7 +89,9 @@ export default function MyBestEveryDay() {
                 <Reflection onClose={() => setReflecting(false)} />
               ) : tab === 'home' ? (
                 <KidDashboard
-                  onStart={() => setScenario(scenarioForDay(todayKey()))}
+                  onStart={startAdventure}
+                  adventuresDone={total - remaining}
+                  adventuresTotal={total}
                   onOpenTracker={() => setTab('today')}
                   onOpenReflection={() => setReflecting(true)}
                 />

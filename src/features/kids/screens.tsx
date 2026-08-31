@@ -10,7 +10,7 @@ import { useKidStore } from './store';
 import { sfx } from '../../lib/sfx';
 
 // ─── Home / Dashboard ─────────────────────────────────────────────────────────
-export function KidDashboard({ onStart, onOpenTracker, onOpenReflection }: { onStart: () => void; onOpenTracker: () => void; onOpenReflection: () => void }) {
+export function KidDashboard({ onStart, adventuresDone, adventuresTotal, onOpenTracker, onOpenReflection }: { onStart: () => void; adventuresDone: number; adventuresTotal: number; onOpenTracker: () => void; onOpenReflection: () => void }) {
   const s = useKidStore();
   const key = todayKey();
   const today = s.completions[key] ?? {};
@@ -98,11 +98,32 @@ export function KidDashboard({ onStart, onOpenTracker, onOpenReflection }: { onS
         </Card>
       )}
 
-      <motion.button whileTap={{ scale: 0.96 }} onClick={onStart}
-        className="w-full rounded-full py-4 text-[17px] font-extrabold text-white shadow-lg"
-        style={{ background: 'linear-gradient(135deg,var(--kid-accent),var(--kid-accent2))' }}>
-        Start Today's Adventure! 🚀
-      </motion.button>
+      {(() => {
+        const allDone = adventuresDone >= adventuresTotal;
+        return (
+          <div>
+            {/* Adventure progress dots */}
+            <div className="flex items-center justify-center gap-1.5 mb-2">
+              {Array.from({ length: adventuresTotal }).map((_, i) => (
+                <span key={i} className="w-2.5 h-2.5 rounded-full transition-colors"
+                  style={{ background: i < adventuresDone ? 'var(--kid-accent)' : 'var(--kid-line)' }} />
+              ))}
+            </div>
+            <motion.button whileTap={{ scale: 0.96 }} onClick={onStart}
+              className="w-full rounded-full py-4 text-[16px] font-extrabold text-white shadow-lg"
+              style={{ background: allDone ? 'linear-gradient(135deg,#43BC5F,#2A9D8F)' : 'linear-gradient(135deg,var(--kid-accent),var(--kid-accent2))' }}>
+              {adventuresDone === 0 ? "Start Today's Adventure! 🚀"
+                : allDone ? 'All adventures done! 🎉 Replay a favourite'
+                : `Next Adventure → ${adventuresDone}/${adventuresTotal} done ✨`}
+            </motion.button>
+            {allDone && (
+              <p className="text-[12px] text-center mt-1.5" style={{ color: 'var(--kid-accent)' }}>
+                Amazing — you explored every choice today! Come back tomorrow for fresh ones. 🌈
+              </p>
+            )}
+          </div>
+        );
+      })()}
 
       <button onClick={onOpenTracker} className="w-full text-[13px] font-bold text-[var(--kid-ink-soft)] py-1.5">
         ✅ Log today's good choices →
