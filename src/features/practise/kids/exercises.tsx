@@ -41,24 +41,46 @@ function Choice({ room, label, onClick }: { room: KidsRoomConfig; label: string;
   );
 }
 
-/* ── Step: breathe ──────────────────────────────────────────────────────── */
+/* ── Step: box breathing ────────────────────────────────────────────────── */
 
-const BREATH = [
-  { label: 'Breathe in…', secs: 4, open: 1 },
-  { label: 'Hold', secs: 2, open: 1 },
-  { label: 'Breathe out…', secs: 6, open: 0.35 },
+/**
+ * Box breathing — in 4, hold 4, out 4, hold 4 — drawn as a square the child
+ * travels around. Each phase walks one side, so the shape teaches the rhythm
+ * without a word of explanation: the box is the breath.
+ */
+const BOX = 4;               // seconds per side
+const S = 34, E = 166;       // the square's edges within the 200×200 canvas
+
+const SIDES = [
+  { label: 'Breathe in',  cue: 'breatheIn'  as const, from: [S, E], to: [S, S] }, // up the left
+  { label: 'Hold',        cue: null,                  from: [S, S], to: [E, S] }, // across the top
+  { label: 'Breathe out', cue: 'breatheOut' as const, from: [E, S], to: [E, E] }, // down the right
+  { label: 'Hold',        cue: null,                  from: [E, E], to: [S, E] }, // back along the bottom
 ];
 
-function BreathStep({
+function BoxBreathStep({
   room, step, onDone, onTick,
 }: { room: KidsRoomConfig; step: Extract<Step, { kind: 'breath' }>; onDone: () => void; onTick: (f: number) => void }) {
   const [i, setI] = useState(0);
   const [rounds, setRounds] = useState(0);
-  const phase = BREATH[i];
+  const [count, setCount] = useState(BOX);
+  const side = SIDES[i];
+
+  // The breath voice leads each side; the visual follows it.
+  useEffect(() => {
+    if (side.cue) sound.play(side.cue);
+  }, [i, side.cue]);
+
+  // A visible 4 · 3 · 2 · 1 for each side.
+  useEffect(() => {
+    setCount(BOX);
+    const t = setInterval(() => setCount((c) => (c > 1 ? c - 1 : c)), 1000);
+    return () => clearInterval(t);
+  }, [i]);
 
   useEffect(() => {
     const t = setTimeout(() => {
-      const next = (i + 1) % BREATH.length;
+      const next = (i + 1) % SIDES.length;
       if (next === 0) {
         const r = rounds + 1;
         setRounds(r);
@@ -67,42 +89,73 @@ function BreathStep({
         if (r >= step.rounds) { onDone(); return; }
       }
       setI(next);
-    }, phase.secs * 1000);
+    }, BOX * 1000);
     return () => clearTimeout(t);
-  }, [i, phase.secs, rounds, step.rounds, onDone, onTick]);
+  }, [i, rounds, step.rounds, onDone, onTick]);
+
+  const inhaling = i === 0;
+  const exhaling = i === 2;
 
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 200 200" width="212" height="212">
-        <defs>
-          <radialGradient id="petal">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="100%" stopColor={room.palette.accent} />
-          </radialGradient>
-        </defs>
-        <motion.g
-          animate={{ scale: phase.open, rotate: phase.open > 0.8 ? 8 : 0 }}
-          transition={{ duration: phase.secs, ease: 'easeInOut' }}
+      <svg viewBox="0 0 200 200" width="232" height="232">
+        {/* the box */}
+        <rect
+          x={S} y={S} width={E - S} height={E - S} rx="8"
+          fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="4"
+        />
+
+        {/* the side currently being travelled, drawing itself in real time */}
+        <motion.line
+          key={`side-${i}-${rounds}`}
+          x1={side.from[0]} y1={side.from[1]} x2={side.to[0]} y2={side.to[1]}
+          stroke={room.palette.accent} strokeWidth="6" strokeLinecap="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: BOX, ease: 'linear' }}
+        />
+
+        {/* a soft light that swells on the in-breath and settles on the out.
+            Scale, not r — framer-motion drives transforms, not SVG geometry. */}
+        <motion.circle
+          cx="100" cy="100" r="34"
+          fill={room.palette.accent}
           style={{ transformOrigin: '100px 100px' }}
+          animate={{ scale: inhaling ? 1.35 : exhaling ? 0.65 : 1, opacity: inhaling ? 0.30 : 0.18 }}
+          transition={{ duration: BOX, ease: 'easeInOut' }}
+        />
+
+        {/* the traveller — one dot walking the square */}
+        <motion.circle
+          key={`dot-${i}-${rounds}`}
+          cx="0" cy="0" r="9" fill="#FFFFFF"
+          initial={{ x: side.from[0], y: side.from[1] }}
+          animate={{ x: side.to[0], y: side.to[1] }}
+          transition={{ duration: BOX, ease: 'linear' }}
+          style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.9))' }}
+        />
+
+        {/* the count, in the middle of the box */}
+        <text
+          x="100" y="108" textAnchor="middle"
+          style={{ fontFamily: "'Outfit', system-ui, sans-serif", fontSize: 40, fontWeight: 800, fill: '#FFFFFF' }}
         >
-          {Array.from({ length: 8 }).map((_, p) => (
-            <ellipse key={p} cx="100" cy="58" rx="17" ry="40" fill="url(#petal)" opacity="0.9" transform={`rotate(${p * 45} 100 100)`} />
-          ))}
-        </motion.g>
-        <circle cx="100" cy="100" r="17" fill="#FFE9A8" />
+          {count}
+        </text>
       </svg>
+
       <AnimatePresence mode="wait">
         <motion.p
-          key={phase.label}
+          key={`${side.label}-${i}`}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="mt-3 text-[20px] font-bold"
+          className="mt-2 text-[21px] font-bold"
           style={{ color: room.palette.ink, textShadow: `0 2px 18px ${room.palette.scrim}` }}
         >
-          {phase.label}
+          {side.label}
         </motion.p>
       </AnimatePresence>
       <p className="mt-1 text-[13px]" style={{ color: room.palette.ink, opacity: 0.75 }}>
-        {rounds} of {step.rounds} breaths
+        {rounds} of {step.rounds} rounds
       </p>
     </div>
   );
@@ -256,7 +309,7 @@ export function RoomExercise({
         transition={{ duration: 0.4 }}
         className="w-full"
       >
-        {step.kind === 'breath' && <BreathStep room={room} step={step} onDone={advance} onTick={report} />}
+        {step.kind === 'breath' && <BoxBreathStep room={room} step={step} onDone={advance} onTick={report} />}
         {step.kind === 'tap' && <TapStep room={room} step={step} onDone={advance} onTick={report} />}
         {step.kind === 'reframe' && <ReframeStep room={room} step={step} onDone={advance} />}
         {step.kind === 'pick' && (
