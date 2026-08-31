@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Volume2, VolumeX } from 'lucide-react';
 import { isMuted, setMuted } from '../../../lib/sfx';
 import { usePractiseStore } from '../store';
 import type { PracticeRoom, StrengthId } from '../types';
 import { Mascot } from './Mascot';
 import { CinematicRoom } from './CinematicRoom';
-import { KIDS_WORLD, roomCard, type KidsRoomConfig, type RoomId } from './rooms';
+import { KIDS_WORLD, roomCard, roomFull, type KidsRoomConfig, type RoomId } from './rooms';
 import * as sound from './sound';
 
 /**
@@ -49,6 +49,15 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
   const store = usePractiseStore();
   const [active, setActive] = useState<KidsRoomConfig | null>(null);
   const [muted, setMutedState] = useState(isMuted());
+  const [hoveredId, setHoveredId] = useState<RoomId | null>(null);
+
+  // Pip's greeting has done its job after a couple of seconds — shrink it
+  // to a slim strip so the rooms sit higher and there's less to scroll past.
+  const [greetingCollapsed, setGreetingCollapsed] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setGreetingCollapsed(true), 2600);
+    return () => clearTimeout(t);
+  }, []);
 
   const toggleSound = () => {
     const next = !muted;
@@ -102,53 +111,72 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
           </button>
         </div>
 
-        {/* Pip greets the child */}
-        <div className="flex flex-col items-center pt-2 text-center">
-          <Mascot mood="curious" size={120} />
-          <h1 className="mt-3 text-[30px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT }}>
+        {/* Pip greets the child, then steps back to make room for the rooms */}
+        <motion.div
+          layout
+          className="flex flex-col items-center overflow-hidden text-center"
+          animate={{ paddingTop: greetingCollapsed ? 4 : 8, paddingBottom: greetingCollapsed ? 2 : 0 }}
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+        >
+          <motion.div layout="position" animate={{ scale: greetingCollapsed ? 0 : 1, height: greetingCollapsed ? 0 : 'auto' }} transition={{ duration: 0.5, ease: 'easeInOut' }}>
+            <Mascot mood="curious" size={120} />
+          </motion.div>
+          <motion.h1
+            layout="position"
+            animate={{ fontSize: greetingCollapsed ? 17 : 30, marginTop: greetingCollapsed ? 0 : 12 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            className="font-extrabold leading-tight text-white"
+            style={{ fontFamily: FONT }}
+          >
             Kids Gym
-          </h1>
-          <p className="mt-1.5 max-w-xs text-[14px] leading-relaxed text-white/70">
-            A magical place to explore your mind. Pick a room — each one is a different world.
-          </p>
+          </motion.h1>
+          <AnimatePresence>
+            {!greetingCollapsed && (
+              <motion.p
+                initial={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.4 }}
+                className="mt-1.5 max-w-xs overflow-hidden text-[14px] leading-relaxed text-white/70"
+              >
+                A magical place to explore your mind. Pick a room — each one is a different world.
+              </motion.p>
+            )}
+          </AnimatePresence>
           {store.practiceCount > 0 && (
-            <p className="mt-2 text-[12px] font-bold" style={{ color: '#FFD98A' }}>
+            <motion.p layout="position" className="mt-1.5 text-[12px] font-bold" style={{ color: '#FFD98A' }}>
               You’ve visited {store.practiceCount} {store.practiceCount === 1 ? 'room' : 'rooms'} ✨
-            </p>
+            </motion.p>
           )}
-        </div>
+        </motion.div>
 
-        {/* Room cards — each is a little animated window into its world */}
-        <div className="mt-7 grid grid-cols-2 gap-3.5">
+        {/* Room cards — static art at rest; hover brings each world to life */}
+        <div className="mt-4 grid grid-cols-3 gap-2.5">
           {KIDS_WORLD.map((room, i) => (
             <motion.button
               key={room.id}
+              layout
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.4 }}
-              whileHover={{ y: -4 }}
+              whileHover={{ y: -4, scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
+              onHoverStart={() => setHoveredId(room.id)}
+              onHoverEnd={() => setHoveredId(null)}
               onClick={() => { sound.play('roomCard'); setActive(room); }}
               aria-label={`${room.name} — ${room.practising}`}
-              className="overflow-hidden rounded-[22px] text-left shadow-lg"
+              className="overflow-hidden rounded-[16px] text-left shadow-lg"
               style={{ border: '1px solid rgba(255,255,255,0.16)', background: room.palette.scrim }}
             >
-              <img
-                src={roomCard(room.id)}
-                alt=""
-                loading="lazy"
-                width={195}
-                height={390}
-                className="block h-auto w-full"
-                draggable={false}
-              />
-              <div className="px-3.5 pb-3.5 pt-3">
-                <div className="text-[14px] font-extrabold leading-tight" style={{ color: room.palette.ink }}>
-                  {room.name}
-                </div>
-                <div className="mt-0.5 text-[11.5px] leading-snug" style={{ color: room.palette.ink, opacity: 0.68 }}>
-                  {room.practising}
-                </div>
+              <div className="w-full" style={{ aspectRatio: '205 / 768' }}>
+                <img
+                  src={hoveredId === room.id ? roomCard(room.id) : roomFull(room.id)}
+                  alt={`${room.name} — ${room.practising}`}
+                  loading="lazy"
+                  width={205}
+                  height={768}
+                  className="block h-full w-full object-contain"
+                  draggable={false}
+                />
               </div>
             </motion.button>
           ))}

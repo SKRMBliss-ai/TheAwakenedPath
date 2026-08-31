@@ -108,7 +108,7 @@ export const KIDS_WORLD: KidsRoomConfig[] = [
     palette: { ink: '#EAFBF3', accent: '#3FB37F', scrim: '#0B2C25' },
     art: 'painted',
     steps: [
-      { kind: 'breath', prompt: 'Follow the light around the box.', rounds: 3 },
+      { kind: 'breath', prompt: 'Breathe the box with me.', rounds: 3 },
     ],
     ending: 'The forest is quiet. So are you.',
   },
@@ -209,5 +209,7 @@ export function getRoom(id: RoomId): KidsRoomConfig {
 
 /** Full-bleed painted artwork for a room. */
 export const roomArt = (id: RoomId) => `/rooms/${id}.webp`;
-/** Animated room card shown on the hub. */
+/** Animated room card — plays on hover, in the hub grid. */
 export const roomCard = (id: RoomId) => `/rooms/${id}_card.webp`;
+/** Full, uncropped card art (title baked in) — the hub grid's resting state. */
+export const roomFull = (id: RoomId) => `/rooms/full/${id}_full.webp`;
