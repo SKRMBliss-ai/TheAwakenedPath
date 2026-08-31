@@ -30,3 +30,7 @@ functions/jaas-key.pem
 *.pem
 functions/jaas-key.pk
 *.pk
+
+# Regenerable art masters and proof sheets (scripts/prepare-gym-art.mjs).
+# Kept out of public/ so they never enter the PWA precache.
+art-build/

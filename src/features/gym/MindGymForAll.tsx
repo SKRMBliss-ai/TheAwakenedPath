@@ -6,6 +6,24 @@ import { GymMark } from './ui/GymMark';
 import type { GymRoute } from './lib/gymRouter';
 
 /**
+ * The two entry characters, cut from public/assets/landing/GirlAndBoyChar.png
+ * by scripts/prepare-gym-art.mjs.
+ *
+ * `w`/`h` are the trimmed masters' intrinsic dimensions and go on the <img> so
+ * the card reserves the right box before the WebP arrives — no layout shift.
+ *
+ * `sizes` states the width the card genuinely renders at each breakpoint, so a
+ * phone never downloads the desktop file. The art is sized by HEIGHT in CSS,
+ * not width: the two characters have different proportions (one full body, one
+ * waist-up), and matching their heights is what makes them read at the same
+ * scale side by side.
+ */
+const ART = {
+  kids: { slug: 'kids', w: 580, h: 1011, sizes: '(min-width:1024px) 106px, (min-width:768px) 76px, 71px' },
+  adult: { slug: 'adult', w: 723, h: 993, sizes: '(min-width:1024px) 134px, (min-width:768px) 96px, 90px' },
+} as const;
+
+/**
  * /mindgymforall — the entry experience.
  *
  * The one screen whose job is to say what this product IS ("the practice gym
@@ -88,10 +106,10 @@ export default function MindGymForAll({ onEnter }: { onEnter: (route: GymRoute) 
 
         {/* iPad portrait earns a second column here; below that they stack, and
             from lg they stack again inside the narrower right-hand column. */}
-        <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:mt-0 lg:grid-cols-1 lg:gap-5 [@media(max-height:520px)]:mt-5">
+        <div className="mt-9 grid gap-4 md:grid-cols-2 lg:mt-0 lg:grid-cols-1 lg:gap-5 [@media(max-height:520px)]:mt-5">
           <EntryCard
             tone="accent"
-            emoji="🧒"
+            art={ART.kids}
             title="Kids Gym"
             who="For ages 5–10"
             blurb="Play, explore and strengthen your mind."
@@ -100,7 +118,7 @@ export default function MindGymForAll({ onEnter }: { onEnter: (route: GymRoute) 
           />
           <EntryCard
             tone="accent2"
-            emoji="🧘"
+            art={ART.adult}
             title="Adult Gym"
             who="For teens & adults"
             blurb="Build awareness, resilience and conscious choice."
@@ -139,7 +157,7 @@ export default function MindGymForAll({ onEnter }: { onEnter: (route: GymRoute) 
 
 function EntryCard({
   tone,
-  emoji,
+  art,
   title,
   who,
   blurb,
@@ -147,7 +165,7 @@ function EntryCard({
   onClick,
 }: {
   tone: 'accent' | 'accent2';
-  emoji: string;
+  art: (typeof ART)[keyof typeof ART];
   title: string;
   who: string;
   blurb: string;
@@ -155,11 +173,15 @@ function EntryCard({
   onClick: () => void;
 }) {
   const ink = tone === 'accent' ? 'var(--gym-accent)' : 'var(--gym-accent-2)';
+  const file = (w: number) => `/assets/gym/${art.slug}-character@${w}.webp`;
 
   return (
+    // overflow-hidden lets the character bleed into the card's bottom padding
+    // and stand on its edge, the way the mockup frames it, without escaping the
+    // rounded corner.
     <GymCard tone={tone} radius="panel" className="flex flex-col">
-      <div className="flex items-start gap-4">
-        <div className="min-w-0 flex-1">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 sm:gap-4">
+        <div className="min-w-0">
           <h2
             className="font-semibold"
             style={{
@@ -182,46 +204,33 @@ function EntryCard({
           </p>
         </div>
 
-        <ArtSlot emoji={emoji} label={title} />
+        {/* Decorative: the card already names the gym in text, so an alt here
+            would only repeat it to a screen reader. */}
+        <img
+          src={file(160)}
+          srcSet={`${file(160)} 160w, ${file(320)} 320w`}
+          sizes={art.sizes}
+          width={art.w}
+          height={art.h}
+          alt=""
+          loading="eager"
+          decoding="async"
+          className="h-[124px] w-auto self-end md:h-[132px] lg:h-[184px]"
+        />
       </div>
 
-      <GymButton tone={tone} onClick={onClick} className="mt-5" trailing={<ArrowRight size={17} strokeWidth={2.2} />}>
+      {/* Full card width, not sharing a row with the character. In the 2-up
+          tablet layout a card is only ~288px wide, and a button competing with
+          the art for that space wrapped "Enter Adult Gym" onto two lines. */}
+      <GymButton
+        tone={tone}
+        onClick={onClick}
+        className="mt-5"
+        trailing={<ArrowRight size={17} strokeWidth={2.2} />}
+      >
         {cta}
       </GymButton>
     </GymCard>
-  );
-}
-
-/**
- * PLACEHOLDER FOR COMMISSIONED ARTWORK.
- *
- * The mockups show rendered character illustrations here (a boy for the Kids
- * Gym, a woman for the Adult Gym). Those assets do not exist in `public/` and
- * are a content dependency, not an engineering one — so this holds the exact
- * box they will occupy, tinted to the card, rather than substituting generic
- * stock art. Swap the emoji for an <img> and nothing around it moves.
- *
- * Sized in `clamp` so it never crowds the copy on a 320px phone and never looks
- * lost on an iPad.
- */
-function ArtSlot({ emoji, label }: { emoji: string; label: string }) {
-  return (
-    <div
-      data-gym-art-slot={label}
-      aria-hidden
-      className="grid shrink-0 place-items-center"
-      style={{
-        width: 'clamp(64px, 20vw, 104px)',
-        height: 'clamp(64px, 20vw, 104px)',
-        borderRadius: 'var(--gym-radius-card)',
-        background: 'linear-gradient(150deg, rgba(255,255,255,0.9), rgba(255,255,255,0.35))',
-        border: '1px solid var(--gym-line)',
-        fontSize: 'clamp(30px, 9vw, 46px)',
-        lineHeight: 1,
-      }}
-    >
-      <span>{emoji}</span>
-    </div>
   );
 }
 
