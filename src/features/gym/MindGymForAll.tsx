@@ -3,6 +3,7 @@ import { GymScreen } from './ui/GymScreen';
 import { GymCard } from './ui/GymCard';
 import { GymButton } from './ui/GymButton';
 import { GymMark } from './ui/GymMark';
+import { NatureStage } from './ui/NatureStage';
 import type { GymRoute } from './lib/gymRouter';
 
 /**
@@ -106,25 +107,29 @@ export default function MindGymForAll({ onEnter }: { onEnter: (route: GymRoute) 
 
         {/* iPad portrait earns a second column here; below that they stack, and
             from lg they stack again inside the narrower right-hand column. */}
-        <div className="mt-9 grid gap-4 md:grid-cols-2 lg:mt-0 lg:grid-cols-1 lg:gap-5 [@media(max-height:520px)]:mt-5">
-          <EntryCard
-            tone="accent"
-            art={ART.kids}
-            title="Kids Gym"
-            who="For ages 5–10"
-            blurb="Play, explore and strengthen your mind."
-            cta="Enter Kids Gym"
-            onClick={() => onEnter('kids')}
-          />
-          <EntryCard
-            tone="accent2"
-            art={ART.adult}
-            title="Adult Gym"
-            who="For teens & adults"
-            blurb="Build awareness, resilience and conscious choice."
-            cta="Enter Adult Gym"
-            onClick={() => onEnter('adults')}
-          />
+        <div className="mt-9 lg:mt-0 [@media(max-height:520px)]:mt-5">
+          <NatureStage>
+            <div className="grid gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-1">
+              <EntryCard
+                tone="accent"
+                art={ART.kids}
+                title="Kids Gym"
+                who="For ages 5–10"
+                blurb="Play, explore and strengthen your mind."
+                cta="Enter Kids Gym"
+                onClick={() => onEnter('kids')}
+              />
+              <EntryCard
+                tone="accent2"
+                art={ART.adult}
+                title="Adult Gym"
+                who="For teens & adults"
+                blurb="Build awareness, resilience and conscious choice."
+                cta="Enter Adult Gym"
+                onClick={() => onEnter('adults')}
+              />
+            </div>
+          </NatureStage>
         </div>
       </div>
 
