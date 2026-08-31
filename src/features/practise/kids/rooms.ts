@@ -209,5 +209,7 @@ export function getRoom(id: RoomId): KidsRoomConfig {
 
 /** Full-bleed painted artwork for a room. */
 export const roomArt = (id: RoomId) => `/rooms/${id}.webp`;
-/** Animated room card shown on the hub. */
+/** Animated room card — plays on hover, in the hub grid. */
 export const roomCard = (id: RoomId) => `/rooms/${id}_card.webp`;
+/** Full, uncropped card art (title baked in) — the hub grid's resting state. */
+export const roomFull = (id: RoomId) => `/rooms/full/${id}_full.webp`;
