@@ -18,6 +18,7 @@ import ProgrammaticVideoView from './features/content/ProgrammaticVideoView'
 import EditorialIntelligenceView from './features/content/EditorialIntelligenceView'
 import SiteWidgets from './components/site/SiteWidgets'
 import NotFoundView from './components/site/NotFoundView'
+import { matchGymRoute } from './features/gym/lib/gymRouter'
 import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
@@ -224,6 +225,17 @@ const isMindGymRoute = (() => {
   return p === '/mindgym' || p === '/mindgym/index.html';
 })();
 
+// MY BEST EVERY DAY — the Practice Gym. The whole /mindgymfor* family is matched
+// as ONE branch and handed to <GymApp>, which owns which gym is showing and
+// navigates between them client-side. Matching each URL separately here would
+// mean a full page reload on every move between gyms, and three duplicate
+// application shells. Disjoint from isMindGymRoute above, which is an exact
+// match on /mindgym, so the existing app is unaffected.
+const gymRoute = (() => {
+  if (typeof window === 'undefined') return null;
+  return matchGymRoute(window.location.pathname);
+})();
+
 // Track /mindgym (main app) visits
 if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute && !isPoliciesRoute && !isAboutUsRoute && !isHomeRoute && typeof window !== 'undefined') {
   const p = window.location.pathname.toLowerCase();
@@ -369,6 +381,15 @@ if (isPracticePreviewRoute) {
           </AchievementsProvider>
         </ThemeProvider>
       </AuthProvider>
+    </ErrorBoundary>,
+  );
+} else if (gymRoute) {
+  const GymApp = lazy(() => import('./features/gym/GymApp'));
+  root.render(
+    <ErrorBoundary featureName="MindGym-PracticeGym">
+      <Suspense fallback={null}>
+        <GymApp initialRoute={gymRoute} />
+      </Suspense>
     </ErrorBoundary>,
   );
 } else {
