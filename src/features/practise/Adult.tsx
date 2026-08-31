@@ -153,7 +153,10 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
         <AnimatePresence mode="wait">
           <Fade keyId="created">
             <div className="flex flex-col items-center text-center">
-              <div className="grid h-24 w-24 place-items-center rounded-3xl text-5xl" style={{ background: 'var(--p-accent-soft)' }}>
+              <div
+                className="grid h-24 w-24 place-items-center rounded-3xl text-5xl shadow-lg"
+                style={{ background: 'linear-gradient(150deg, #8B7BF0, #4A2E9E)', boxShadow: '0 10px 28px rgba(74,46,158,0.35)' }}
+              >
                 {room.glyph}
               </div>
               <h2 className="mt-5 text-2xl font-bold" style={{ color: 'var(--p-ink)' }}>We’ve created a practice just for you.</h2>
@@ -190,11 +193,18 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
         <AnimatePresence mode="wait">
           <Fade keyId="today">
             <p className="mb-4 text-sm" style={{ color: 'var(--p-muted)' }}>Nothing specific on your mind? Let’s train one thing today.</p>
-            <Card style={{ background: 'var(--p-accent-soft)', border: 'none' }}>
+            <div
+              className="relative overflow-hidden rounded-[28px] p-6"
+              style={{ background: 'linear-gradient(150deg, #8B7BF0, #4A2E9E)', boxShadow: '0 14px 32px rgba(74,46,158,0.3)' }}
+            >
+              <div
+                className="pointer-events-none absolute -right-6 -top-8 h-28 w-28 rounded-full opacity-40"
+                style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.6), transparent 70%)' }}
+              />
               <div className="text-4xl">{todays.glyph}</div>
-              <div className="mt-3 text-xl font-bold" style={{ color: 'var(--p-ink)' }}>{todays.title}</div>
-              <div className="mt-1 text-sm" style={{ color: 'var(--p-muted)' }}>{todays.whatPractising}</div>
-            </Card>
+              <div className="mt-3 text-xl font-bold text-white">{todays.title}</div>
+              <div className="mt-1 text-sm text-white/75">{todays.whatPractising}</div>
+            </div>
             <div className="mt-6 space-y-3">
               <PrimaryButton onClick={() => startSession(todays)}>Begin practice</PrimaryButton>
               <GhostButton onClick={() => { sfx.tap(); startSession(TODAYS_PRACTICES[(TODAYS_PRACTICES.indexOf(todays) + 1) % TODAYS_PRACTICES.length]); }}>
@@ -224,7 +234,10 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
             {store.saved.map((sp) => (
               <Card key={sp.room.id}>
                 <div className="flex items-start gap-3">
-                  <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl text-2xl" style={{ background: 'var(--p-accent-soft)' }}>
+                  <div
+                    className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl text-2xl"
+                    style={{ background: 'linear-gradient(150deg, #8B7BF0, #4A2E9E)' }}
+                  >
                     {sp.room.glyph}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -259,27 +272,30 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
   }
 
   /* ── Home / front door ────────────────────────────────────────────────── */
-  const doors: { icon: typeof Brain; title: string; sub: string; onClick: () => void }[] = [
-    { icon: Brain, title: 'I have something on my mind', sub: 'Something is stuck — bring it in.', onClick: () => { setSituation(''); setView('intake'); } },
-    { icon: Sprout, title: 'I want to grow', sub: 'Give me today’s practice.', onClick: () => setView('today') },
-    { icon: RefreshCw, title: 'Continue my practice', sub: 'Pick up where I left off.', onClick: () => (store.saved[0] ? startSession(store.saved[0].room) : setView('today')) },
-    { icon: Bookmark, title: 'My saved practices', sub: 'Choose from my gym.', onClick: () => setView('saved') },
+  const doors: { icon: typeof Brain; title: string; sub: string; tint: [string, string]; onClick: () => void }[] = [
+    { icon: Brain, title: 'I have something on my mind', sub: 'Something is stuck — bring it in.', tint: ['#8B7BF0', '#4A2E9E'], onClick: () => { setSituation(''); setView('intake'); } },
+    { icon: Sprout, title: 'I want to grow', sub: 'Give me today’s practice.', tint: ['#6FE0C6', '#1FA987'], onClick: () => setView('today') },
+    { icon: RefreshCw, title: 'Continue my practice', sub: 'Pick up where I left off.', tint: ['#5FC2E8', '#2E6FCF'], onClick: () => (store.saved[0] ? startSession(store.saved[0].room) : setView('today')) },
+    { icon: Bookmark, title: 'My saved practices', sub: 'Choose from my gym.', tint: ['#E88FD8', '#9B4FC9'], onClick: () => setView('saved') },
   ];
 
   return (
     <PractiseShell variant="adult">
       <TopBar title="Adult Gym" onBack={onExitGym} />
       <Fade keyId="home">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--p-ink)' }}>{greeting()} 👋</h1>
-        <p className="mt-1 text-sm" style={{ color: 'var(--p-muted)' }}>What would you like to work on today?</p>
+        <p className="text-[13px] font-semibold" style={{ color: 'var(--p-accent)' }}>{greeting()}</p>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--p-ink)' }}>What would you like to work on today?</h1>
 
         <div className="mt-5 space-y-3">
           {doors.map((d) => {
             const Icon = d.icon;
             return (
-              <Card key={d.title} onClick={d.onClick} className="flex items-center gap-4 !p-4">
-                <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-2xl" style={{ background: 'var(--p-accent-soft)' }}>
-                  <Icon size={20} style={{ color: 'var(--p-accent)' }} />
+              <Card key={d.title} onClick={() => { sfx.tap(); d.onClick(); }} className="flex items-center gap-4 !p-4">
+                <div
+                  className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl shadow-sm"
+                  style={{ background: `linear-gradient(150deg, ${d.tint[0]}, ${d.tint[1]})` }}
+                >
+                  <Icon size={20} className="text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold" style={{ color: 'var(--p-ink)' }}>{d.title}</div>

@@ -242,7 +242,7 @@ function StepBody({
       return (
         <div>
           {heading}
-          <BreathOrb onDone={onSpaceDone} />
+          <BreathOrb onDone={onSpaceDone} variant={variant} />
         </div>
       );
 
@@ -318,7 +318,7 @@ function OptionGrid({
   return (
     <div className={variant === 'kids' ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-2.5'}>
       {options.map((o) => (
-        <Chip key={o} label={o} selected={selected.includes(o)} onClick={() => onToggle(o)} big />
+        <Chip key={o} label={o} selected={selected.includes(o)} onClick={() => onToggle(o)} big tone={variant === 'kids' ? 'green' : 'accent'} />
       ))}
     </div>
   );

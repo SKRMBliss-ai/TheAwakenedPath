@@ -1,17 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Play, Pause, RotateCcw, Sparkles } from 'lucide-react';
 import { sfx } from '../../lib/sfx';
 import { usePractiseStore } from './store';
 import type { PracticeRoom } from './types';
-import { BreathOrb } from './BreathOrb';
-import { Card, Fade, PractiseShell, PrimaryButton, TopBar } from './ui';
+import { Card, Fade, GlowOrb, PractiseShell, PrimaryButton, TopBar } from './ui';
 
 /**
- * Meditation Practice Room — the redesigned daily meditation practice (formerly
- * "Today"). A calm, unhurried place for short guided sits, styled after the
- * meditation-player mockups. Completions count toward the on-device practice
- * journey, so daily sitting builds the same visible strength as the gym.
+ * Meditation Practice Room — the redesigned daily meditation practice
+ * (formerly "Today"). Styled after the meditation-player mockups: a light,
+ * card-based home ("Welcome back" + colourful planet thumbnails) that opens
+ * into a deep cosmic, glowing-orb session player. Completions count toward
+ * the on-device practice journey, so daily sitting builds the same visible
+ * strength as the gym.
  */
 
 interface Sit {
@@ -20,6 +21,7 @@ interface Sit {
   sub: string;
   minutes: number;
   glyph: string;
+  tint: [string, string];
   /** Gentle guidance lines, shown one at a time during the sit. */
   script: string[];
 }
@@ -27,6 +29,7 @@ interface Sit {
 const SITS: Sit[] = [
   {
     id: 'arrive', title: 'Arrive & Settle', sub: 'Land in the present moment', minutes: 3, glyph: '🌅',
+    tint: ['#8B7BF0', '#4A2E9E'],
     script: [
       'Let your body settle. Nothing to fix, nowhere to be.',
       'Feel the weight of yourself held by the chair or floor.',
@@ -36,6 +39,7 @@ const SITS: Sit[] = [
   },
   {
     id: 'breath', title: 'Breath Focus', sub: 'Steady the mind with the breath', minutes: 5, glyph: '🌬️',
+    tint: ['#5FC2E8', '#2E6FCF'],
     script: [
       'Bring attention to the breath, wherever you feel it most.',
       'No need to change it — just notice it coming and going.',
@@ -45,6 +49,7 @@ const SITS: Sit[] = [
   },
   {
     id: 'body', title: 'Body Scan', sub: 'Release held tension', minutes: 7, glyph: '🫧',
+    tint: ['#6FE0C6', '#1FA987'],
     script: [
       'Bring awareness to the top of your head, and let it soften.',
       'Move slowly down — face, shoulders, chest — releasing as you go.',
@@ -54,6 +59,7 @@ const SITS: Sit[] = [
   },
   {
     id: 'letgo', title: 'Letting Go', sub: 'Set something down for now', minutes: 4, glyph: '🍃',
+    tint: ['#E88FD8', '#9B4FC9'],
     script: [
       'Notice anything your mind keeps carrying today.',
       'You don’t have to solve it now. Just let it be here.',
@@ -76,6 +82,13 @@ function sitRoom(sit: Sit): PracticeRoom {
   };
 }
 
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export function MeditationPracticeRoom() {
   const { streak, minutes } = usePractiseStore();
   const [active, setActive] = useState<Sit | null>(null);
@@ -87,45 +100,75 @@ export function MeditationPracticeRoom() {
       <Fade keyId="med-home">
         <div className="flex items-center justify-between">
           <div>
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--p-accent)' }}>{greeting()}</p>
             <h1 className="text-2xl font-bold" style={{ color: 'var(--p-ink)' }}>Meditation Practice Room</h1>
-            <p className="mt-1 text-sm" style={{ color: 'var(--p-muted)' }}>A quiet place to sit. Choose a short practice.</p>
           </div>
           <div className="rounded-full px-3 py-1.5 text-[12px] font-bold" style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}>
             🔥 {streak} · {Math.floor(minutes / 60)}h {minutes % 60}m
           </div>
         </div>
 
-        {/* Hero */}
-        <Card className="mt-5 overflow-hidden text-center" style={{ background: 'linear-gradient(160deg, var(--p-accent-soft), var(--p-surface))', border: 'none' }}>
-          <div className="flex flex-col items-center gap-3 py-2">
-            <motion.div
-              animate={{ scale: [1, 1.08, 1] }}
-              transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
-              className="grid h-24 w-24 place-items-center rounded-full text-4xl text-white"
-              style={{ background: 'radial-gradient(circle at 50% 40%, var(--p-accent-soft), var(--p-accent))' }}
-            >
-              🌙
-            </motion.div>
+        {/* Cosmic hero card */}
+        <div
+          className="relative mt-5 overflow-hidden rounded-[32px] px-6 py-7 text-center"
+          style={{
+            background:
+              'radial-gradient(120% 100% at 15% 0%, var(--p-cos-3) 0%, transparent 55%), linear-gradient(160deg, var(--p-cos-1) 0%, var(--p-cos-2) 100%)',
+            boxShadow: '0 16px 40px rgba(58,33,120,0.35)',
+          }}
+        >
+          <div className="flex flex-col items-center gap-3">
+            <GlowOrb size={104} face="sleepy" />
             <div>
-              <div className="text-lg font-bold" style={{ color: 'var(--p-ink)' }}>Take a moment for yourself</div>
-              <div className="text-[13px]" style={{ color: 'var(--p-muted)' }}>Even a few minutes builds the muscle of presence.</div>
+              <div className="text-lg font-bold text-white">Take a moment for yourself</div>
+              <div className="text-[13px] text-white/70">Even a few minutes builds the muscle of presence.</div>
             </div>
             <div className="w-full max-w-xs pt-1">
-              <PrimaryButton onClick={() => { sfx.chime(); setActive(SITS[0]); }}>
+              <PrimaryButton gradient="cta" onClick={() => { sfx.swell(); setActive(SITS[0]); }}>
                 <span className="inline-flex items-center gap-2"><Play size={16} /> Begin today’s sit</span>
               </PrimaryButton>
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* Practice list */}
-        <div className="mt-6 mb-2 text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--p-muted)' }}>
-          Guided practices
+        {/* "Best for you" — colourful planet thumbnails */}
+        <div className="mt-7 mb-3 text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--p-muted)' }}>
+          Best for you
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {SITS.map((s) => (
+            <motion.button
+              key={s.id}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => { sfx.tap(); setActive(s); }}
+              className="relative overflow-hidden rounded-3xl p-4 text-left"
+              style={{ background: `linear-gradient(150deg, ${s.tint[0]}, ${s.tint[1]})`, minHeight: 128 }}
+            >
+              <div
+                className="absolute -right-4 -top-4 h-16 w-16 rounded-full opacity-50"
+                style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.55), transparent 70%)' }}
+              />
+              <span className="text-2xl">{s.glyph}</span>
+              <div className="mt-6 text-sm font-bold text-white">{s.title}</div>
+              <div className="mt-3 flex items-center gap-1.5">
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-white/25 text-white"><Play size={11} /></span>
+                <span className="text-[11px] font-semibold text-white/90">{s.minutes} min</span>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Full list */}
+        <div className="mt-7 mb-2 text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--p-muted)' }}>
+          All guided practices
         </div>
         <div className="space-y-3">
           {SITS.map((s) => (
             <Card key={s.id} onClick={() => { sfx.tap(); setActive(s); }} className="flex items-center gap-4 !p-4">
-              <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl text-2xl" style={{ background: 'var(--p-accent-soft)' }}>
+              <div
+                className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl text-2xl"
+                style={{ background: `linear-gradient(150deg, ${s.tint[0]}, ${s.tint[1]})` }}
+              >
                 {s.glyph}
               </div>
               <div className="min-w-0 flex-1">
@@ -143,7 +186,24 @@ export function MeditationPracticeRoom() {
   );
 }
 
-/** A minimal calm player: breathing orb, rotating guidance, a soft timer. */
+/** A faux audio waveform bar that fills up to the current progress. */
+function Waveform({ progress }: { progress: number }) {
+  const bars = useMemo(() => Array.from({ length: 40 }, (_, i) => 8 + Math.round(Math.abs(Math.sin(i * 0.7)) * 20 + Math.random() * 6)), []);
+  const litCount = Math.round(progress * bars.length);
+  return (
+    <div className="flex h-8 w-full items-center gap-[3px]">
+      {bars.map((h, i) => (
+        <div
+          key={i}
+          className="flex-1 rounded-full transition-colors"
+          style={{ height: h, background: i < litCount ? '#FFFFFF' : 'rgba(255,255,255,0.22)' }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** A minimal cosmic player: glowing orb, rotating guidance, a soft waveform timer. */
 function SitPlayer({ sit, onExit }: { sit: Sit; onExit: () => void }) {
   const store = usePractiseStore();
   const total = sit.minutes * 60;
@@ -152,6 +212,8 @@ function SitPlayer({ sit, onExit }: { sit: Sit; onExit: () => void }) {
   const [line, setLine] = useState(0);
   const [done, setDone] = useState(false);
   const logged = useRef(false);
+
+  useEffect(() => { sfx.swell(); }, []);
 
   useEffect(() => {
     if (!playing || done) return;
@@ -184,25 +246,26 @@ function SitPlayer({ sit, onExit }: { sit: Sit; onExit: () => void }) {
     if (!logged.current) {
       logged.current = true;
       store.completeSession(sitRoom(sit), Math.max(1, Math.round((total - remaining) / 60)));
-      sfx.chime();
+      sfx.bell();
     }
     setDone(true);
   };
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
   const ss = String(remaining % 60).padStart(2, '0');
+  const progress = 1 - remaining / total;
 
   if (done) {
     return (
-      <PractiseShell variant="adult">
+      <PractiseShell variant="adult" mode="cosmic">
         <div className="flex min-h-[70vh] flex-col items-center justify-center gap-5 text-center">
-          <div className="text-6xl">🌿</div>
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--p-ink)' }}>Practice complete.</h2>
-          <p className="max-w-sm text-sm" style={{ color: 'var(--p-muted)' }}>
+          <GlowOrb size={128} face="sleepy" />
+          <h2 className="text-2xl font-bold text-white">Practice complete.</h2>
+          <p className="max-w-sm text-sm text-white/70">
             You gave yourself {sit.minutes} minutes of presence. That’s a rep — it counts.
           </p>
-          <div className="w-full max-w-xs">
-            <PrimaryButton onClick={onExit}>Back to the room</PrimaryButton>
+          <div className="w-full max-w-xs pt-2">
+            <PrimaryButton gradient="cta" onClick={onExit}>Back to the room</PrimaryButton>
           </div>
         </div>
       </PractiseShell>
@@ -210,42 +273,59 @@ function SitPlayer({ sit, onExit }: { sit: Sit; onExit: () => void }) {
   }
 
   return (
-    <PractiseShell variant="adult">
-      <TopBar title={sit.title} onBack={onExit} right={
-        <span className="text-[13px] font-semibold tabular-nums" style={{ color: 'var(--p-accent)' }}>{mm}:{ss}</span>
-      } />
-      <div className="flex flex-col items-center">
-        <BreathOrb />
+    <PractiseShell variant="adult" mode="cosmic">
+      <TopBar
+        title="Meditation time"
+        light
+        onBack={onExit}
+        right={<span className="text-[13px] font-semibold tabular-nums text-white/85">{mm}:{ss}</span>}
+      />
+      <div className="flex flex-col items-center pt-2">
+        <GlowOrb size={200} />
+        <AnimatePresence mode="wait">
+          <motion.div key="title" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-5 text-center">
+            <div className="text-xl font-bold text-white">{sit.title}</div>
+            <div className="text-[13px] text-white/60">{sit.sub}</div>
+          </motion.div>
+        </AnimatePresence>
+
         <AnimatePresence mode="wait">
           <motion.p
             key={line}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="mt-2 max-w-sm text-center text-base font-medium"
-            style={{ color: 'var(--p-ink)' }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="mt-5 min-h-[3.5rem] max-w-sm text-center text-base font-medium text-white/90"
           >
             {sit.script[line]}
           </motion.p>
         </AnimatePresence>
 
-        <div className="mt-8 flex items-center gap-6">
-          <button onClick={() => { setRemaining(total); setPlaying(true); sfx.tap(); }} aria-label="Restart" className="rounded-full p-3 hover:bg-black/5" style={{ color: 'var(--p-muted)' }}>
+        <div className="mt-6 w-full max-w-sm">
+          <Waveform progress={progress} />
+        </div>
+
+        <div className="mt-6 flex items-center gap-6">
+          <button
+            onClick={() => { setRemaining(total); setPlaying(true); sfx.tap(); }}
+            aria-label="Restart"
+            className="rounded-full p-3 text-white/70 transition hover:bg-white/10"
+          >
             <RotateCcw size={20} />
           </button>
           <button
             onClick={() => { setPlaying((p) => !p); sfx.tap(); }}
             className="grid h-16 w-16 place-items-center rounded-full text-white shadow-lg"
-            style={{ background: 'var(--p-accent)' }}
+            style={{ background: 'linear-gradient(135deg, var(--p-cos-3), var(--p-cos-2))', boxShadow: '0 8px 24px rgba(124,63,192,0.55)' }}
             aria-label={playing ? 'Pause' : 'Play'}
           >
             {playing ? <Pause size={26} /> : <Play size={26} />}
           </button>
-          <button onClick={finishEarly} aria-label="Finish" className="rounded-full p-3 hover:bg-black/5" style={{ color: 'var(--p-muted)' }}>
+          <button onClick={finishEarly} aria-label="Finish" className="rounded-full p-3 text-white/70 transition hover:bg-white/10">
             <Sparkles size={20} />
           </button>
         </div>
-        <p className="mt-4 text-[12px]" style={{ color: 'var(--p-muted)' }}>
+        <p className="mt-4 text-[12px] text-white/50">
           {playing ? 'Follow the breath. When the mind wanders, gently return.' : 'Paused — take your time.'}
         </p>
       </div>
