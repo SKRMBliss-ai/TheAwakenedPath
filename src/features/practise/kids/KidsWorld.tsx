@@ -6,24 +6,30 @@ import { usePractiseStore } from '../store';
 import type { PracticeRoom, StrengthId } from '../types';
 import { Mascot } from './Mascot';
 import { CinematicRoom } from './CinematicRoom';
-import { KindnessEnvironment, PauseEnvironment, WorryEnvironment } from './environments';
-import { KindnessExercise, PauseExercise, WorryExercise } from './exercises';
-import { KIDS_WORLD, type KidsRoomConfig, type RoomId } from './rooms';
+import { KIDS_WORLD, roomCard, type KidsRoomConfig, type RoomId } from './rooms';
 import * as sound from './sound';
 
 /**
  * Kids Gym — a world the child enters, not a dashboard they read.
  *
- * The hub is a night sky of portals; each portal opens into its own world
- * through the shared cinematic entrance. Three worlds are fully built
- * (Pause, Worry, Kindness); the rest announce themselves as coming soon
- * rather than pretending to be ready.
+ * The hub is a night sky of room cards; each opens into its painted world
+ * through the shared cinematic entrance. Pip greets the child here and then
+ * steps aside, because every room's artwork has a child of its own inside it.
  */
 
-const STRENGTHS_BY_ROOM: Partial<Record<RoomId, StrengthId[]>> = {
+const FONT = "'Outfit', system-ui, -apple-system, sans-serif";
+
+const STRENGTHS_BY_ROOM: Record<RoomId, StrengthId[]> = {
+  feelings: ['awareness'],
+  thought: ['awareness', 'perspective'],
+  body: ['awareness'],
   pause: ['pausing', 'awareness'],
+  story: ['perspective'],
+  friendship: ['perspective', 'self-compassion'],
+  anger: ['pausing', 'letting-go'],
   worry: ['letting-go', 'awareness'],
   kindness: ['self-compassion', 'perspective'],
+  reflection: ['awareness', 'perspective'],
 };
 
 /** Adapts a world to the shape the practice journey records. */
@@ -33,30 +39,16 @@ function asPracticeRoom(room: KidsRoomConfig): PracticeRoom {
     gym: 'kids',
     title: room.name,
     whatPractising: room.practising,
-    glyph: room.glyph,
+    glyph: '✨',
     steps: [],
-    strengths: STRENGTHS_BY_ROOM[room.id] ?? ['awareness'],
+    strengths: STRENGTHS_BY_ROOM[room.id],
   };
 }
 
 export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
   const store = usePractiseStore();
   const [active, setActive] = useState<KidsRoomConfig | null>(null);
-  const [progress, setProgress] = useState(0);
   const [muted, setMutedState] = useState(isMuted());
-
-  const enter = (room: KidsRoomConfig) => {
-    if (room.status !== 'ready') { sound.play('tap'); return; }
-    sound.play('roomCard');
-    setProgress(0);
-    setActive(room);
-  };
-
-  const leave = (room: KidsRoomConfig, completed: boolean) => {
-    if (completed) store.completeSession(asPracticeRoom(room), 4);
-    setActive(null);
-    setProgress(0);
-  };
 
   const toggleSound = () => {
     const next = !muted;
@@ -65,39 +57,20 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
     if (!next) sound.play('tap');
   };
 
-  /* ── Inside a world ───────────────────────────────────────────────────── */
   if (active) {
-    const env = (p: number) => {
-      if (active.id === 'pause') return <PauseEnvironment palette={active.palette} progress={p} />;
-      if (active.id === 'worry') return <WorryEnvironment palette={active.palette} progress={p} />;
-      return <KindnessEnvironment palette={active.palette} progress={p} />;
-    };
-
     return (
       <CinematicRoom
         room={active}
-        progress={progress}
-        environment={env}
-        onExit={() => leave(active, progress >= 1)}
-      >
-        {({ finish }) => {
-          const props = { room: active, onProgress: setProgress, onFinish: finish };
-          if (active.id === 'pause') return <PauseExercise {...props} />;
-          if (active.id === 'worry') return <WorryExercise {...props} />;
-          return <KindnessExercise {...props} />;
-        }}
-      </CinematicRoom>
+        onExit={() => setActive(null)}
+        onComplete={() => store.completeSession(asPracticeRoom(active), 4)}
+      />
     );
   }
 
-  /* ── The hub ──────────────────────────────────────────────────────────── */
   return (
     <div
       className="relative min-h-[100svh] w-full overflow-hidden"
-      style={{
-        background: 'linear-gradient(180deg, #1A1040 0%, #2E1B62 45%, #4A2A7A 100%)',
-        fontFamily: "'Outfit', system-ui, -apple-system, sans-serif",
-      }}
+      style={{ background: 'linear-gradient(180deg, #1A1040 0%, #2E1B62 45%, #4A2A7A 100%)', fontFamily: FONT }}
     >
       {/* drifting stars */}
       {Array.from({ length: 22 }).map((_, i) => (
@@ -131,11 +104,8 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
 
         {/* Pip greets the child */}
         <div className="flex flex-col items-center pt-2 text-center">
-          <Mascot mood="curious" size={128} />
-          <h1
-            className="mt-3 text-[30px] font-extrabold leading-tight text-white"
-            style={{ fontFamily: "'Outfit', system-ui, -apple-system, sans-serif" }}
-          >
+          <Mascot mood="curious" size={120} />
+          <h1 className="mt-3 text-[30px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT }}>
             Kids Gym
           </h1>
           <p className="mt-1.5 max-w-xs text-[14px] leading-relaxed text-white/70">
@@ -148,50 +118,40 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
           )}
         </div>
 
-        {/* Portals */}
+        {/* Room cards — each is a little animated window into its world */}
         <div className="mt-7 grid grid-cols-2 gap-3.5">
-          {KIDS_WORLD.map((room, i) => {
-            const ready = room.status === 'ready';
-            return (
-              <motion.button
-                key={room.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.4 }}
-                whileHover={ready ? { y: -4 } : undefined}
-                whileTap={ready ? { scale: 0.97 } : undefined}
-                onClick={() => enter(room)}
-                className="relative overflow-hidden rounded-[26px] p-4 text-left"
-                style={{
-                  background: `linear-gradient(160deg, ${room.palette.sky[2]}, ${room.palette.sky[0]})`,
-                  border: '1px solid rgba(255,255,255,0.14)',
-                  minHeight: 152,
-                  opacity: ready ? 1 : 0.55,
-                }}
-              >
-                {/* the room's light, leaking out of the portal */}
-                <div
-                  className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full"
-                  style={{ background: `radial-gradient(circle, ${room.palette.glow}66, transparent 70%)` }}
-                />
-                <span className="text-[26px]">{room.glyph}</span>
-                <div className="mt-5 text-[15px] font-extrabold leading-tight" style={{ color: room.palette.ink }}>
+          {KIDS_WORLD.map((room, i) => (
+            <motion.button
+              key={room.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05, duration: 0.4 }}
+              whileHover={{ y: -4 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => { sound.play('roomCard'); setActive(room); }}
+              aria-label={`${room.name} — ${room.practising}`}
+              className="overflow-hidden rounded-[22px] text-left shadow-lg"
+              style={{ border: '1px solid rgba(255,255,255,0.16)', background: room.palette.scrim }}
+            >
+              <img
+                src={roomCard(room.id)}
+                alt=""
+                loading="lazy"
+                width={195}
+                height={390}
+                className="block h-auto w-full"
+                draggable={false}
+              />
+              <div className="px-3.5 pb-3.5 pt-3">
+                <div className="text-[14px] font-extrabold leading-tight" style={{ color: room.palette.ink }}>
                   {room.name}
                 </div>
-                <div className="mt-1 text-[11.5px] leading-snug" style={{ color: room.palette.ink, opacity: 0.72 }}>
+                <div className="mt-0.5 text-[11.5px] leading-snug" style={{ color: room.palette.ink, opacity: 0.68 }}>
                   {room.practising}
                 </div>
-                {!ready && (
-                  <span
-                    className="absolute right-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-bold"
-                    style={{ background: 'rgba(255,255,255,0.18)', color: room.palette.ink }}
-                  >
-                    Soon
-                  </span>
-                )}
-              </motion.button>
-            );
-          })}
+              </div>
+            </motion.button>
+          ))}
         </div>
       </div>
     </div>

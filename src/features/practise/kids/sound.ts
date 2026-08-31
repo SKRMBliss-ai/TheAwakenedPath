@@ -11,8 +11,6 @@ import softWhoosh from '../../../assets/dragon-studio-whoosh-effect-405447.mp3';
 import brightNotify from '../../../assets/universfield-bright-notification-352449.mp3';
 import calmPiano from '../../../assets/alexzavesa-calm-inspiring-piano-logo-short-version-518990.mp3';
 import notify09 from '../../../assets/universfield-new-notification-09-352705.mp3';
-import notify012 from '../../../assets/universfield-new-notification-012-363675.mp3';
-import notify039 from '../../../assets/universfield-new-notification-039-493472.mp3';
 
 /**
  * The Kids Gym sound design table, as code.
@@ -28,14 +26,8 @@ import notify039 from '../../../assets/universfield-new-notification-039-493472.
  */
 
 export type Cue =
-  // global
   | 'tap' | 'roomCard' | 'enterRoom' | 'exitRoom' | 'discovery' | 'resolve'
-  // pause room
-  | 'breathComplete'
-  // worry room
-  | 'worryNamed' | 'worryShrink'
-  // kindness room
-  | 'plantSeed' | 'bloom';
+  | 'breathComplete' | 'tapHit';
 
 interface CueDef { src: string; volume: number; interruptible?: boolean }
 
@@ -48,16 +40,13 @@ const TABLE: Record<Cue, CueDef> = {
   discovery:  { src: brightNotify,   volume: 0.45 },
   resolve:    { src: calmPiano,      volume: 0.42 },
 
-  // ── Pause Room — the quietest room; nothing here should startle ───────
-  breathComplete: { src: notify09, volume: 0.22 },
-
-  // ── Worry Room — big worry → smaller worry → space → calm ─────────────
-  worryNamed:  { src: notify012,  volume: 0.35 },
-  worryShrink: { src: bubblePop,  volume: 0.30 },
-
-  // ── Kindness Room — the warmest palette ───────────────────────────────
-  plantSeed: { src: sharpPop,  volume: 0.30 },
-  bloom:     { src: notify039, volume: 0.38 },
+  // ── Exercise beats ────────────────────────────────────────────────────
+  // One soft breath marker; the Pause Room is the quietest world, so this
+  // sits well below everything else.
+  breathComplete: { src: notify09,  volume: 0.22 },
+  // Each hit on a tap target: a worry shrinking, a seed going in, fire
+  // breathing down.
+  tapHit:         { src: bubblePop, volume: 0.30 },
 };
 
 let current: HTMLAudioElement | null = null;

@@ -1,42 +1,38 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
-import { Mascot } from './Mascot';
-import type { KidsRoomConfig } from './rooms';
+import { RoomExercise } from './exercises';
+import { roomArt, type KidsRoomConfig } from './rooms';
 import * as sound from './sound';
 
 /**
  * The cinematic room shell. Every world is entered the same way, so the
- * sequence itself becomes a product feature the child learns to expect:
+ * sequence itself becomes something the child learns to expect:
  *
- *   APPROACH   camera pushes forward, the world is blurred and dark
- *   REVEAL     the world settles into focus, Pip walks in
+ *   APPROACH   the camera pushes into the painting, blurred and dark
+ *   REVEAL     the world settles into focus
  *   TITLE      the room names itself, one line of story
  *   READY      a single invitation — the child takes control
  *
- * The exercise then plays inside the same environment, never on a card
- * stacked on top of it. The world stays the interface.
+ * The exercise then plays inside the same painting, never on a card stacked
+ * on top of it. The world stays the interface.
  */
 
 type Phase = 'approach' | 'reveal' | 'title' | 'ready' | 'exercise';
 
+const FONT = "'Outfit', system-ui, -apple-system, sans-serif";
+
 export function CinematicRoom({
   room,
-  environment,
-  children,
   onExit,
-  progress = 0,
+  onComplete,
 }: {
   room: KidsRoomConfig;
-  /** The room's world, given the live exercise progress. */
-  environment: (progress: number) => ReactNode;
-  /** The exercise — rendered once the child accepts the invitation. */
-  children: (api: { finish: () => void }) => ReactNode;
   onExit: () => void;
-  /** 0→1, drives how the world transforms as the child practises. */
-  progress?: number;
+  onComplete: () => void;
 }) {
   const [phase, setPhase] = useState<Phase>('approach');
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     sound.play('enterRoom');
@@ -46,35 +42,59 @@ export function CinematicRoom({
     return () => { [t1, t2, t3].forEach(clearTimeout); sound.stopAll(); };
   }, []);
 
+  const soft = room.art === 'upscaled';
   const cinematic = phase === 'approach';
-  const showMascot = phase !== 'approach';
   const showTitle = phase === 'title' || phase === 'ready';
   const showInvite = phase === 'ready';
   const inExercise = phase === 'exercise';
 
   const leave = () => { sound.play('exitRoom'); onExit(); };
+  const finish = () => { onComplete(); leave(); };
 
   return (
     <div
       className="relative min-h-[100svh] w-full overflow-hidden"
-      style={{ background: room.palette.sky[0], fontFamily: "'Outfit', system-ui, -apple-system, sans-serif" }}
+      style={{ background: room.palette.scrim, fontFamily: FONT }}
     >
-      {/* ── The world ──────────────────────────────────────────────────── */}
+      {/* ── The painted world. The camera pushes in, then it breathes. ──── */}
       <motion.div
         className="absolute inset-0"
-        initial={{ scale: 1.35, filter: 'blur(14px)' }}
-        animate={{ scale: cinematic ? 1.35 : 1, filter: cinematic ? 'blur(14px)' : 'blur(0px)' }}
+        initial={{ scale: 1.3, filter: 'blur(16px)' }}
+        animate={{
+          scale: cinematic ? 1.3 : inExercise ? 1.06 : 1.02,
+          // Rooms whose still was derived from the card art get a touch of
+          // softness at rest, so the upscale reads as depth of field.
+          filter: cinematic ? 'blur(16px)' : inExercise ? 'blur(3px)' : soft ? 'blur(1.2px)' : 'blur(0px)',
+        }}
         transition={{ duration: 1.7, ease: [0.22, 0.9, 0.28, 1] }}
       >
-        {environment(progress)}
+        <img
+          src={roomArt(room.id)}
+          alt=""
+          className="h-full w-full object-cover"
+          draggable={false}
+        />
       </motion.div>
 
-      {/* arrival vignette — deepest during the approach, then lifts */}
+      {/* The world dims a little while the child is working — words first —
+          then brightens back as they get through it. */}
       <motion.div
         className="pointer-events-none absolute inset-0"
-        animate={{ opacity: cinematic ? 0.92 : 0.30 }}
+        animate={{ opacity: (inExercise ? 0.52 : 0.34) - progress * 0.22 }}
+        transition={{ duration: 1.2 }}
+        style={{ background: room.palette.scrim }}
+      />
+
+      {/* arrival vignette, and a scrim so words always sit on something */}
+      <motion.div
+        className="pointer-events-none absolute inset-0"
+        animate={{ opacity: cinematic ? 0.95 : 1 }}
         transition={{ duration: 1.7, ease: 'easeOut' }}
-        style={{ background: `radial-gradient(120% 90% at 50% 55%, transparent 25%, ${room.palette.sky[0]} 100%)` }}
+        style={{
+          background: cinematic
+            ? `radial-gradient(120% 90% at 50% 55%, transparent 20%, ${room.palette.scrim} 100%)`
+            : `linear-gradient(180deg, ${room.palette.scrim}B3 0%, transparent 26%, transparent 42%, ${room.palette.scrim}E6 88%)`,
+        }}
       />
 
       {/* ── Chrome ─────────────────────────────────────────────────────── */}
@@ -83,53 +103,31 @@ export function CinematicRoom({
           onClick={leave}
           aria-label="Leave room"
           className="grid h-10 w-10 place-items-center rounded-full backdrop-blur-sm transition hover:bg-white/10"
-          style={{ background: 'rgba(255,255,255,0.10)', color: room.palette.ink }}
+          style={{ background: 'rgba(0,0,0,0.28)', color: room.palette.ink }}
         >
           <ChevronLeft size={22} />
         </button>
 
-        {/* The intro sits low, like a title card. The exercise centres itself
-            so nothing gets clipped against the bottom of the screen. */}
-        <div className={`flex flex-1 flex-col items-center text-center ${inExercise ? 'justify-center' : 'justify-end pb-4'}`}>
-          {/* Pip arrives in the world */}
-          <AnimatePresence>
-            {showMascot && !inExercise && (
-              <motion.div
-                initial={{ opacity: 0, y: 28, scale: 0.7 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                transition={{ type: 'spring', stiffness: 70, damping: 14 }}
-              >
-                <Mascot
-                  mood={room.mood}
-                  size={132}
-                  accessory={room.id === 'worry' ? 'lantern' : room.id === 'kindness' ? 'seed' : 'none'}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
+        <div className={`flex flex-1 flex-col items-center text-center ${inExercise ? 'justify-center' : 'justify-end pb-6'}`}>
           {/* Title moment */}
           <AnimatePresence>
             {showTitle && !inExercise && (
               <motion.div
-                initial={{ opacity: 0, y: 22 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.7, ease: 'easeOut' }}
-                className="mt-4"
               >
                 <h1
-                  className="text-[28px] font-extrabold tracking-tight"
-                  style={{
-                    color: room.palette.ink,
-                    textShadow: `0 2px 24px ${room.palette.sky[0]}`,
-                    fontFamily: "'Outfit', system-ui, -apple-system, sans-serif",
-                  }}
+                  className="text-[30px] font-extrabold tracking-tight"
+                  style={{ color: room.palette.ink, fontFamily: FONT, textShadow: `0 2px 26px ${room.palette.scrim}, 0 1px 6px ${room.palette.scrim}` }}
                 >
                   {room.name}
                 </h1>
-                <p className="mx-auto mt-2 max-w-[19rem] text-[15px] leading-relaxed" style={{ color: room.palette.ink, opacity: 0.82 }}>
+                <p
+                  className="mx-auto mt-2 max-w-[19rem] text-[15px] leading-relaxed"
+                  style={{ color: room.palette.ink, opacity: 0.88, textShadow: `0 1px 14px ${room.palette.scrim}` }}
+                >
                   {room.tagline}
                 </p>
               </motion.div>
@@ -155,20 +153,9 @@ export function CinematicRoom({
           </AnimatePresence>
 
           {/* The exercise plays inside the world */}
-          <AnimatePresence mode="wait">
-            {inExercise && (
-              <motion.div
-                key="exercise"
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.6 }}
-                className="w-full"
-              >
-                {children({ finish: leave })}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {inExercise && (
+            <RoomExercise room={room} onProgress={setProgress} onFinish={finish} />
+          )}
         </div>
       </div>
     </div>
