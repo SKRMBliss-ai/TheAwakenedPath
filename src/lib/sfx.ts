@@ -1,9 +1,21 @@
 /**
- * A tiny Web-Audio sound engine — pleasant, synthesized tones layered into
- * small chords, sparkles and sweeps. No audio files, so nothing to license
- * and nothing to download. Respects a per-device mute toggle and never
- * throws if audio isn't available (SSR, autoplay policy, etc.).
+ * A small sound engine with two layers:
+ *  1. Synthesized Web-Audio tones (no files, nothing to license) — used for
+ *     the app's original, frequent micro-interactions so their character
+ *     never changes underneath existing features.
+ *  2. A handful of produced audio clips (src/assets) reserved for Practise's
+ *     higher-ceremony moments — entering a meditation, a room opening, a
+ *     session's finishing cheer — where a real recording reads as more
+ *     "stunning" than an oscillator ever will.
+ * Both respect the same per-device mute toggle and never throw if audio
+ * isn't available (SSR, autoplay policy, etc.).
  */
+import popUrl from '../assets/creatorshome-sharp-pop-328170.mp3';
+import bubbleUrl from '../assets/soundreality-bubble-pop-424583.mp3';
+import whooshUrl from '../assets/dragon-studio-whoosh-effect-405447.mp3';
+import pianoSwellUrl from '../assets/alexzavesa-calm-inspiring-piano-logo-short-version-518990.mp3';
+import brightNotifyUrl from '../assets/universfield-bright-notification-352449.mp3';
+import cheerUrl from '../assets/driken5482-applause-cheer-236786.mp3';
 
 let ctx: AudioContext | null = null;
 function ac(): AudioContext | null {
@@ -56,30 +68,18 @@ function warmNote(freq: number, start: number, dur: number, gain = 0.1) {
   note(freq * 0.5, start, dur * 0.9, gain * 0.35, 'triangle', 1200);
 }
 
-/** Short filtered-noise sweep — a soft "whoosh" for screen/scene transitions. */
-function whooshBurst(start: number, dur: number, rising: boolean, gain = 0.09) {
-  const a = ac(); if (!a) return;
-  const t = a.currentTime + start;
-  const len = Math.max(1, Math.floor(a.sampleRate * dur));
-  const buf = a.createBuffer(1, len, a.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
-  const src = a.createBufferSource();
-  src.buffer = buf;
-  const f = a.createBiquadFilter();
-  f.type = 'bandpass';
-  f.Q.value = 0.9;
-  f.frequency.setValueAtTime(rising ? 300 : 2600, t);
-  f.frequency.exponentialRampToValueAtTime(rising ? 2600 : 300, t + dur);
-  const g = a.createGain();
-  g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(gain, t + dur * 0.35);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(f); f.connect(g); g.connect(a.destination);
-  src.start(t); src.stop(t + dur + 0.05);
-}
-
 function play(fn: () => void) { if (!isMuted()) fn(); }
+
+/** Play a produced audio clip. A fresh element per call keeps rapid repeats
+ *  (e.g. quick taps) from cutting each other off. */
+function playFile(url: string, volume = 0.55) {
+  if (isMuted() || typeof window === 'undefined') return;
+  try {
+    const a = new Audio(url);
+    a.volume = volume;
+    void a.play().catch(() => { /* autoplay policy — ignore */ });
+  } catch { /* ignore */ }
+}
 
 // Notes (Hz) — a couple of octaves of a pentatonic-friendly scale.
 const N = {
@@ -108,24 +108,21 @@ export const sfx = {
   }),
   /** A gentle warm chime for the adult side — calm, unobtrusive. */
   chime: () => play(() => { warmNote(N.A4, 0, 0.9, 0.07); warmNote(N.E5, 0.03, 1.1, 0.055); }),
-  /** A slow, spacious swell for entering the cosmic meditation player. */
-  swell: () => play(() => {
-    warmNote(N.C4, 0, 2.4, 0.05);
-    warmNote(N.G4, 0.15, 2.2, 0.045);
-    warmNote(N.E5, 0.35, 1.9, 0.035);
-    whooshBurst(0, 1.6, true, 0.05);
-  }),
+  /** A slow, spacious swell for entering the cosmic meditation player —
+   *  a real calm piano sting, layered over a soft synthesized pad. */
+  swell: () => { play(() => { warmNote(N.C4, 0, 2.4, 0.04); warmNote(N.G4, 0.15, 2.2, 0.035); }); playFile(pianoSwellUrl, 0.5); },
   /** A sparkling high-register twinkle — for stars / cosmic accents, saves. */
   twinkle: () => play(() => {
     [N.C6, N.E6, N.G6, N.D6].forEach((f, i) => note(f + (Math.random() * 6 - 3), i * 0.05 + Math.random() * 0.02, 0.35, 0.045, 'sine', 6000));
   }),
-  /** A bright, harmonic-rich bell — kids' "yes! correct / lovely" moment. */
-  bell: () => play(() => {
-    note(N.G5, 0, 0.7, 0.12, 'triangle');
-    note(N.G5 * 2, 0, 0.5, 0.05, 'sine');
-    note(N.G5 * 3, 0, 0.35, 0.025, 'sine');
-    note(N.C6, 0.1, 0.6, 0.07, 'sine');
-  }),
+  /** A bright notification ding — confirmations (mood picks, finishing early). */
+  bell: () => playFile(brightNotifyUrl, 0.5),
   /** Soft whoosh for moving between screens / steps. */
-  whoosh: () => play(() => whooshBurst(0, 0.5, true, 0.07)),
+  whoosh: () => playFile(whooshUrl, 0.45),
+  /** A crisp produced pop — a more "finished" tap for primary confirmations. */
+  pop: () => playFile(popUrl, 0.5),
+  /** A playful bubble pop — opening a room / card in a bright, kid-facing UI. */
+  bubble: () => playFile(bubbleUrl, 0.55),
+  /** A real cheer + applause — the big "you did it!" flourish. */
+  cheer: () => playFile(cheerUrl, 0.5),
 };

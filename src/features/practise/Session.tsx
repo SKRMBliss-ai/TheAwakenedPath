@@ -65,7 +65,7 @@ export function Session({
     };
     store.completeSession(room, kidly ? 3 : 6);
     store.addReflection(reflection);
-    sfx.celebrate();
+    if (kidly) sfx.cheer(); else sfx.celebrate();
     setDone(true);
     onComplete(reflection);
   };

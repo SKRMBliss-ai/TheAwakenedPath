@@ -140,7 +140,7 @@ export function MeditationPracticeRoom() {
             <motion.button
               key={s.id}
               whileTap={{ scale: 0.97 }}
-              onClick={() => { sfx.tap(); setActive(s); }}
+              onClick={() => { sfx.pop(); setActive(s); }}
               className="relative overflow-hidden rounded-3xl p-4 text-left"
               style={{ background: `linear-gradient(150deg, ${s.tint[0]}, ${s.tint[1]})`, minHeight: 128 }}
             >

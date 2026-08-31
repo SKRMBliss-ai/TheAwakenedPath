@@ -36,7 +36,7 @@ export function KidsGym({ onExitGym }: { onExitGym: () => void }) {
     return <Session room={room} variant="kids" onExit={() => setRoom(null)} onComplete={() => {}} />;
   }
 
-  const open = (r: KidsRoom) => { sfx.flip(); setRoom(r); };
+  const open = (r: KidsRoom) => { sfx.bubble(); setRoom(r); };
   const pickMood = (id: string) => { sfx.bell(); setMood(id); };
 
   return (
