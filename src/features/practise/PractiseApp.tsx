@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { sfx } from '../../lib/sfx';
 import { usePractiseStore } from './store';
 import { AdultGym } from './Adult';
-import { KidsGym } from './Kids';
+import { KidsWorld } from './kids/KidsWorld';
 import { GlowOrb, PractiseShell } from './ui';
 
 /**
@@ -21,7 +21,7 @@ export default function PractiseApp() {
   const exit = () => { sfx.tap(); setLocalGym(null); };
 
   if (gym === 'adult') return <AdultGym onExitGym={exit} />;
-  if (gym === 'kids') return <KidsGym onExitGym={exit} />;
+  if (gym === 'kids') return <KidsWorld onExitGym={exit} />;
 
   return (
     <PractiseShell variant="adult" mode="cosmic">
