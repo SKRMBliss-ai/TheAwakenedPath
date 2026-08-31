@@ -49,7 +49,7 @@ export default function MindGymForAll({ onEnter }: { onEnter: (route: GymRoute) 
       {/* On phone and iPad portrait this is one column: hero, then the two gyms.
           From lg (iPad landscape / desktop) the hero takes the left column and
           the gyms stack down the right, as in the mockup. */}
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14 lg:items-center lg:min-h-[70vh]">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14 lg:items-stretch lg:min-h-[70vh]">
         <section className="pt-6 sm:pt-8 lg:pt-0 [@media(max-height:520px)]:pt-2">
           <h1
             className="font-normal"
@@ -107,7 +107,7 @@ export default function MindGymForAll({ onEnter }: { onEnter: (route: GymRoute) 
 
         {/* iPad portrait earns a second column here; below that they stack, and
             from lg they stack again inside the narrower right-hand column. */}
-        <div className="mt-9 lg:mt-0 [@media(max-height:520px)]:mt-5">
+        <div className="mt-9 lg:mt-0 lg:h-full [@media(max-height:520px)]:mt-5">
           <NatureStage>
             <div className="grid gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-1">
               <EntryCard

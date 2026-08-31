@@ -1,8 +1,13 @@
 import type { ReactNode } from 'react';
 
 /**
- * The nature backdrop behind the Kids/Adult gym cards on /mindgymforall,
- * matching the reference mockup's forest-and-pond scene behind that column.
+ * The nature backdrop behind the Kids/Adult gym cards on /mindgymforall.
+ *
+ * FULL-BLEED, not a framed inset panel — it fills the entire card region
+ * edge to edge, top to bottom (stretched to match the hero text column's
+ * height on desktop via the parent grid's `items-stretch`), the way the
+ * reference image has it: no border, no rounded frame, no boxed shadow
+ * separating it from the page. The two cards float directly on top of it.
  *
  * DRAWN, NOT PHOTOGRAPHED. A commissioned photo/illustration (the same
  * ChatGPT pipeline as the two characters — see scripts/prepare-gym-art.mjs)
@@ -13,28 +18,24 @@ import type { ReactNode } from 'react';
  * trivially recoloured from the same --gym-* tokens as everything else here —
  * a photo would need art-directing to match the palette exactly.
  *
- * DELIBERATELY NOT behind the hero text. .agent/rules/
+ * STILL NOT behind the hero headline/body copy — that stays on the plain
+ * cream ground in the left column. .agent/rules/
  * accessibility-in-dark-glow-environment.md requires text stay readable even
- * against a low-intensity background; a busy scene under body copy risks
- * exactly that, and it's not where the reference puts it either — the
- * headline stays on the plain cream ground, only the card column sits on the
- * scene.
+ * against a low-intensity background, and painting a busy scene directly
+ * under body paragraphs is exactly the risk that rule exists to avoid.
  */
 export function NatureStage({ children }: { children: ReactNode }) {
   return (
     <div
-      className="relative overflow-hidden"
+      className="relative h-full min-h-[420px] overflow-hidden"
       style={{
         borderRadius: 'var(--gym-radius-panel)',
-        // A hairline frame so the scene has an edge on the cream page, same
-        // language as every other panel in the gym.
-        border: '1px solid var(--gym-line)',
-        boxShadow: 'var(--gym-shadow-soft)',
+        background: 'linear-gradient(180deg, #EAF3EC 0%, #DCEEE2 45%, #A9D6C9 100%)',
       }}
     >
       <svg
         className="absolute inset-0 h-full w-full"
-        viewBox="0 0 400 600"
+        viewBox="0 0 400 480"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden
         style={{ display: 'block' }}
@@ -42,7 +43,7 @@ export function NatureStage({ children }: { children: ReactNode }) {
         <defs>
           <linearGradient id="gym-sky" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#EAF3EC" />
-            <stop offset="55%" stopColor="#DCEEE2" />
+            <stop offset="45%" stopColor="#DCEEE2" />
             <stop offset="100%" stopColor="#CFE8DC" />
           </linearGradient>
           <linearGradient id="gym-pond" x1="0" y1="0" x2="0" y2="1">
@@ -55,31 +56,45 @@ export function NatureStage({ children }: { children: ReactNode }) {
           </radialGradient>
         </defs>
 
-        <rect width="400" height="600" fill="url(#gym-sky)" />
-        <circle cx="320" cy="90" r="70" fill="url(#gym-sun)" />
+        <rect width="400" height="480" fill="url(#gym-sky)" />
+
+        {/*
+          Elements are spread across a broad y=40..480 band (not clustered
+          only near the bottom) on purpose. This box gets `slice`-cropped to
+          wildly different aspect ratios — a tall single column on a phone,
+          a wide short strip on desktop where it matches the hero text
+          column's height — and a scene concentrated in one narrow band
+          would vanish entirely under some crops. Spreading hills, trees and
+          a bird across most of the height means every realistic crop still
+          shows a real scene, not empty sky.
+        */}
+        <circle cx="330" cy="70" r="52" fill="url(#gym-sun)" />
 
         {/* far hills */}
-        <path d="M0 260 Q70 210 150 245 T400 235 V420 H0 Z" fill="#B9DCC9" opacity="0.75" />
+        <path d="M0 210 Q70 165 150 195 T400 185 V400 H0 Z" fill="#B9DCC9" opacity="0.75" />
         {/* near hills */}
-        <path d="M0 320 Q90 275 200 305 T400 290 V430 H0 Z" fill="#8FC7AC" opacity="0.85" />
+        <path d="M0 265 Q90 225 200 250 T400 235 V410 H0 Z" fill="#8FC7AC" opacity="0.85" />
 
         {/* pond band, with the near hills reflected as soft horizontal bands */}
-        <rect x="0" y="420" width="400" height="180" fill="url(#gym-pond)" />
+        <rect x="0" y="370" width="400" height="110" fill="url(#gym-pond)" />
         <g opacity="0.35" stroke="#EAF6EF" strokeWidth="3" strokeLinecap="round">
-          <line x1="30" y1="450" x2="110" y2="450" />
-          <line x1="150" y1="470" x2="260" y2="470" />
-          <line x1="60" y1="495" x2="180" y2="495" />
-          <line x1="230" y1="450" x2="330" y2="450" />
-          <line x1="40" y1="530" x2="150" y2="530" />
-          <line x1="220" y1="510" x2="340" y2="510" />
+          <line x1="30" y1="392" x2="110" y2="392" />
+          <line x1="150" y1="408" x2="260" y2="408" />
+          <line x1="60" y1="430" x2="180" y2="430" />
+          <line x1="230" y1="392" x2="330" y2="392" />
+          <line x1="40" y1="452" x2="150" y2="452" />
+          <line x1="220" y1="440" x2="340" y2="440" />
         </g>
 
-        {/* tree clusters — same layered-canopy language as GymMark's logo tree */}
+        {/* tree clusters — same layered-canopy language as GymMark's logo tree —
+            spread from y≈220 through y≈340 so a mid-height crop keeps at
+            least one. */}
         {[
-          { x: 46, y: 400, s: 1.0 },
-          { x: 356, y: 392, s: 1.15 },
-          { x: 20, y: 330, s: 0.6 },
-          { x: 380, y: 320, s: 0.55 },
+          { x: 40, y: 335, s: 1.0 },
+          { x: 362, y: 320, s: 1.1 },
+          { x: 14, y: 255, s: 0.62 },
+          { x: 386, y: 235, s: 0.55 },
+          { x: 200, y: 220, s: 0.5 },
         ].map((t, i) => (
           <g key={i} transform={`translate(${t.x} ${t.y}) scale(${t.s})`} opacity="0.9">
             <path d="M0 46v-22" stroke="#4F7D5F" strokeWidth="4" strokeLinecap="round" />
@@ -89,22 +104,15 @@ export function NatureStage({ children }: { children: ReactNode }) {
           </g>
         ))}
 
-        {/* birds */}
+        {/* birds, one low enough (y=180) to survive a tight desktop crop */}
         <g stroke="#4F7D5F" strokeWidth="2.4" strokeLinecap="round" fill="none" opacity="0.55">
-          <path d="M60 90 q8 -10 16 0 q8 -10 16 0" />
-          <path d="M300 150 q6 -8 12 0 q6 -8 12 0" />
-          <path d="M120 60 q5 -7 10 0 q5 -7 10 0" />
+          <path d="M60 70 q8 -10 16 0 q8 -10 16 0" />
+          <path d="M300 120 q6 -8 12 0 q6 -8 12 0" />
+          <path d="M150 180 q5 -7 10 0 q5 -7 10 0" />
         </g>
       </svg>
 
-      {/* Fade to the page's own cream at the top edge, so the stage reads as
-          rising out of the section rather than a hard-edged photo dropped in. */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-10"
-        style={{ background: 'linear-gradient(180deg, var(--gym-bg) 0%, transparent 100%)' }}
-      />
-
-      <div className="relative p-4 sm:p-5">{children}</div>
+      <div className="relative flex h-full flex-col justify-center p-4 sm:p-5">{children}</div>
     </div>
   );
 }
