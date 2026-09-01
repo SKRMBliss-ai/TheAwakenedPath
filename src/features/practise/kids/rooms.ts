@@ -213,9 +213,46 @@ export function getRoom(id: RoomId): KidsRoomConfig {
   return KIDS_WORLD.find((r) => r.id === id) ?? KIDS_WORLD[0];
 }
 
+/**
+ * Room art now serves from Firebase Storage, not the local /public bundle —
+ * moved on request, to keep this (soon 10-room, ~2-3MB) art set out of the
+ * git repo and the PWA's service-worker precache entirely, at the cost of
+ * a second origin on first paint.
+ *
+ * REQUIRES THE UPLOAD TO HAVE HAPPENED FIRST. This session has no Firebase
+ * credentials — no service account, no `firebase login` — so the upload
+ * has to run from a machine that's authenticated. Until it does, every
+ * image below 404s: do not deploy a build of this code before running it.
+ *
+ *   gsutil -m cp -r public/rooms gs://awakened-path-2026.firebasestorage.app/
+ *
+ * (installs with the Google Cloud SDK; `gcloud auth login` first if that
+ * machine isn't already authenticated. The Firebase Console's Storage tab
+ * — drag-and-drop, preserving the rooms/ and rooms/full/ folder structure
+ * — works the same if gsutil isn't installed.)
+ *
+ * That command uploads the CURRENT public/rooms/ tree verbatim — the three
+ * already-regenerated rooms (feelings, thought, body) at their new
+ * resolution, and the remaining seven at whatever is committed when it's
+ * run. Re-run it (same command, safe to repeat) after every future room
+ * regeneration to keep Storage current; nothing here does that
+ * automatically.
+ *
+ * Storage's rules currently allow public read on every path (storage.
+ * rules' own rule #3, literally commented "DEBUG: Allow public read of
+ * EVERYTHING") — which is what makes the plain `alt=media` URL below work
+ * with no auth token. If that rule is ever tightened to require auth, these
+ * three functions need a token appended or a signed-URL fetch instead.
+ */
+const STORAGE_BUCKET = 'awakened-path-2026.firebasestorage.app';
+
+function storageUrl(path: string): string {
+  return `https://firebasestorage.googleapis.com/v0/b/${STORAGE_BUCKET}/o/${encodeURIComponent(path)}?alt=media`;
+}
+
 /** Full-bleed painted artwork for a room. */
-export const roomArt = (id: RoomId) => `/rooms/${id}.webp`;
+export const roomArt = (id: RoomId) => storageUrl(`rooms/${id}.webp`);
 /** Animated room card — plays on hover, in the hub grid. */
-export const roomCard = (id: RoomId) => `/rooms/${id}_card.webp`;
-/** Full, uncropped card art (title baked in) — the hub grid's resting state. */
-export const roomFull = (id: RoomId) => `/rooms/full/${id}_full.webp`;
+export const roomCard = (id: RoomId) => storageUrl(`rooms/${id}_card.webp`);
+/** Full, uncropped card art (title baked in for pre-'hires' rooms) — the hub grid's resting state. */
+export const roomFull = (id: RoomId) => storageUrl(`rooms/full/${id}_full.webp`);
