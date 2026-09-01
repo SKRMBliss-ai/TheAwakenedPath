@@ -163,25 +163,31 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
               <div className="relative w-full aspect-[1/1.85] sm:aspect-[1/2.1] lg:aspect-[1/2.35] overflow-hidden">
                 <img
                   src={hoveredId === room.id ? roomCard(room.id) : roomFull(room.id)}
-                  alt=""
+                  alt={room.art === 'hires' ? '' : `${room.name} — ${room.practising}`}
                   loading="lazy"
                   className="block h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                   draggable={false}
                 />
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-x-0 bottom-0 p-4 sm:p-5 pt-16 sm:pt-24 transition-opacity duration-300"
-                  style={{
-                    background: `linear-gradient(0deg, ${room.palette.scrim}FD 0%, ${room.palette.scrim}D0 50%, ${room.palette.scrim}00 100%)`,
-                  }}
-                >
-                  <p className="text-[15px] sm:text-[18px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT }}>
-                    {room.name}
-                  </p>
-                  <p className="mt-1 text-[12px] sm:text-[13.5px] font-medium leading-tight text-white/85">
-                    {room.practising}
-                  </p>
-                </div>
+                {/* Only 'hires' rooms need this: their art has no title baked
+                    into the pixels (see rooms.ts's `art` doc comment), unlike
+                    the 'painted'/'upscaled' rooms whose art already carries
+                    the title — overlaying it there would show the name twice. */}
+                {room.art === 'hires' && (
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-x-0 bottom-0 p-4 sm:p-5 pt-16 sm:pt-24 transition-opacity duration-300"
+                    style={{
+                      background: `linear-gradient(0deg, ${room.palette.scrim}FD 0%, ${room.palette.scrim}D0 50%, ${room.palette.scrim}00 100%)`,
+                    }}
+                  >
+                    <p className="text-[15px] sm:text-[18px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT }}>
+                      {room.name}
+                    </p>
+                    <p className="mt-1 text-[12px] sm:text-[13.5px] font-medium leading-tight text-white/85">
+                      {room.practising}
+                    </p>
+                  </div>
+                )}
               </div>
             </motion.button>
           ))}
