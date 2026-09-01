@@ -81,7 +81,7 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
       <SkyBackdrop />
 
-      <div className="relative mx-auto w-full max-w-2xl px-5 pb-10 pt-5 lg:max-w-4xl">
+      <div className="relative mx-auto w-full max-w-2xl sm:max-w-3xl md:max-w-5xl lg:max-w-[1400px] xl:max-w-[1680px] 2xl:max-w-[1780px] px-4 sm:px-6 md:px-10 lg:px-12 pb-16 pt-5">
         <div className="flex items-center justify-between">
           <button
             onClick={onExitGym}
@@ -112,7 +112,7 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
           </motion.div>
           <motion.h1
             layout="position"
-            animate={{ fontSize: greetingCollapsed ? 17 : 30, marginTop: greetingCollapsed ? 0 : 12 }}
+            animate={{ fontSize: greetingCollapsed ? 22 : 36, marginTop: greetingCollapsed ? 0 : 12 }}
             transition={{ duration: 0.5, ease: 'easeInOut' }}
             className="font-extrabold leading-tight text-white"
             style={{ fontFamily: FONT }}
@@ -139,18 +139,7 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
         </motion.div>
 
         {/* Room cards — static art at rest; hover brings each world to life */}
-        {/*
-              Was a flat `grid-cols-3` at every width — no breakpoints at
-              all, confirmed by grep before this change — which is exactly
-              why it read as cramped on both a phone and a wide window: 3
-              narrow columns everywhere, never given more room to work
-              with. Two columns on a phone (wider tiles, a little more
-              scrolling — a real trade-off, not a free win) up to 4 on
-              desktop, paired with the container widening to lg:max-w-4xl
-              above so those extra columns get genuine extra width rather
-              than just subdividing the same 672px.
-            */}
-            <div className="mt-4 grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-7 xl:grid-cols-5 xl:gap-8">
           {KIDS_WORLD.map((room, i) => (
             <motion.button
               key={room.id}
@@ -158,41 +147,41 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.4 }}
-              whileHover={{ y: -4, scale: 1.04 }}
+              whileHover={{ y: -8, scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onHoverStart={() => setHoveredId(room.id)}
               onHoverEnd={() => setHoveredId(null)}
               onClick={() => { sound.play('roomCard'); setActive(room); }}
               aria-label={`${room.name} — ${room.practising}`}
-              className="overflow-hidden rounded-[16px] text-left shadow-lg"
-              style={{ border: '1px solid rgba(255,255,255,0.16)', background: room.palette.scrim }}
+              className="group relative overflow-hidden rounded-[24px] text-left shadow-2xl transition-all duration-300"
+              style={{
+                border: hoveredId === room.id ? '1px solid rgba(255,255,255,0.45)' : '1px solid rgba(255,255,255,0.18)',
+                background: room.palette.scrim,
+                boxShadow: hoveredId === room.id ? `0 16px 36px ${room.palette.scrim}AA` : '0 8px 24px rgba(0,0,0,0.35)',
+              }}
             >
-              <div className="relative w-full" style={{ aspectRatio: '205 / 768' }}>
+              <div className="relative w-full aspect-[1/1.85] sm:aspect-[1/2.1] lg:aspect-[1/2.35] overflow-hidden">
                 <img
                   src={hoveredId === room.id ? roomCard(room.id) : roomFull(room.id)}
-                  alt={room.art === 'hires' ? '' : `${room.name} — ${room.practising}`}
+                  alt=""
                   loading="lazy"
-                  width={205}
-                  height={768}
-                  className="block h-full w-full object-contain"
+                  className="block h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                   draggable={false}
                 />
-                {/* Earlier rooms' art has the title baked into the pixels
-                    (see rooms.ts's `art` doc comment) — a 'hires' room's
-                    doesn't, by design (a fresh generation can't reliably
-                    render legible baked text), so it needs this as real HTML
-                    instead. The button's own aria-label already carries the
-                    same text for every room; this is visual only. */}
-                {room.art === 'hires' && (
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-x-0 bottom-0 px-2.5 pb-2.5 pt-8"
-                    style={{ background: `linear-gradient(0deg, ${room.palette.scrim}F2 15%, ${room.palette.scrim}00 100%)` }}
-                  >
-                    <p className="text-[12.5px] font-extrabold leading-tight text-white">{room.name}</p>
-                    <p className="mt-0.5 text-[10.5px] leading-tight text-white/75">{room.practising}</p>
-                  </div>
-                )}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 bottom-0 p-4 sm:p-5 pt-16 sm:pt-24 transition-opacity duration-300"
+                  style={{
+                    background: `linear-gradient(0deg, ${room.palette.scrim}FD 0%, ${room.palette.scrim}D0 50%, ${room.palette.scrim}00 100%)`,
+                  }}
+                >
+                  <p className="text-[15px] sm:text-[18px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT }}>
+                    {room.name}
+                  </p>
+                  <p className="mt-1 text-[12px] sm:text-[13.5px] font-medium leading-tight text-white/85">
+                    {room.practising}
+                  </p>
+                </div>
               </div>
             </motion.button>
           ))}
