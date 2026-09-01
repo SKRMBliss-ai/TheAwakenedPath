@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Flame, Sparkles, Sun, Moon, Dumbbell, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
+import { Flame, Sparkles, Sun, Moon, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
 import { usePageSeo } from './lib/seo';
 import { MeditationHomeCard } from './features/meditation/MeditationHomeCard';
 import { db } from './firebase';
@@ -62,7 +62,6 @@ const EngagementReport = lazy(() => import('./features/admin/EngagementReport'))
 const MembersView = lazy(() => import('./features/community/MembersView').then(m => ({ default: m.MembersView })));
 const CalendarView = lazy(() => import('./features/community/CalendarView').then(m => ({ default: m.CalendarView })));
 const MyBestEveryDay = lazy(() => import('./features/kids/MyBestEveryDay'));
-const PractiseApp = lazy(() => import('./features/practise/PractiseApp'));
 const MeditationPracticeRoom = lazy(() => import('./features/practise/MeditationPracticeRoom'));
 const VirtuesView = lazy(() => import('./features/practice-path/VirtuesView').then(m => ({ default: m.VirtuesView })));
 const CircleView = lazy(() => import('./features/practice-path/CircleView').then(m => ({ default: m.CircleView })));
@@ -552,7 +551,7 @@ const PremiumPaywall = ({ user, checkOut, isProcessing, onSuccess }: any) => {
 const FREE_TABS = [
   'home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered',
   'intelligence', 'learn', 'chapters', 'situations', 'meditation',
-  'members', 'calendar', 'today', 'mybest', 'practise',
+  'members', 'calendar', 'today', 'mybest',
 ];
 
 /** The membership tabs, and the one account that may preview them. */
@@ -830,7 +829,7 @@ export default function UntetheredApp() {
   // Each opens automatically when one of its own tabs is already active, so a
   // deep link or a restored session never lands the user in a collapsed group.
   const [practiceOpen, setPracticeOpen] = useState(
-    () => ['practise', 'insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab));
+    () => ['insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab));
   const [learnOpen, setLearnOpen] = useState(
     () => ['intelligence', 'wisdom_untethered', 'emotion-course', 'videos'].includes(activeTab));
   const [communityOpen, setCommunityOpen] = useState(
@@ -1509,7 +1508,7 @@ export default function UntetheredApp() {
                 strokeWidth={1.5}
                 className={cn(
                   "transition-colors flex-shrink-0",
-                  ['practise', 'insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab)
+                  ['insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab)
                     ? "text-[var(--accent-primary)]"
                     : "text-[var(--text-muted)]"
                 )}
@@ -1530,7 +1529,6 @@ export default function UntetheredApp() {
                   // The Daily Practice ribbon is the one designed-for daily action;
                   // Insights / Questions / Practices / Path / Progress / Everyone /
                   // Backup were retired from the rail to keep the path simple.
-                  { id: 'practise', icon: Dumbbell, label: 'Mind Gym', locked: false },
                   { id: 'mybest', icon: Trophy, label: 'Kids · My Best', locked: false },
                   { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
                   { id: 'situations', icon: Flame, label: 'Practice Room', locked: !isAccessValid },
@@ -2363,15 +2361,6 @@ export default function UntetheredApp() {
               </motion.div>
             )}
 
-            {/* ── PRACTISE · MIND GYM (Kids + Adult on one shared engine) ── */}
-            {activeTab === 'practise' && (
-              <motion.div key="practise" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <Suspense fallback={<TabFallback />}>
-                  <PractiseApp />
-                </Suspense>
-              </motion.div>
-            )}
-
             {/* ── PRACTICE · KIDS — My Best Every Day ── */}
             {activeTab === 'mybest' && (
               <motion.div key="mybest" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
@@ -2703,7 +2692,6 @@ export default function UntetheredApp() {
         >
           {[
             { id: 'home', icon: Home, label: 'Home' },
-            { id: 'practise', icon: Dumbbell, label: 'Gym' },
             // Courses is the hub (CoursesHub renders on the 'intelligence' tab),
             // and on a phone the bottom bar is the only nav most people use.
             { id: 'intelligence', icon: GraduationCap, label: 'Courses' },
@@ -2722,7 +2710,7 @@ export default function UntetheredApp() {
                 aria-current={active ? 'page' : undefined}
               >
                 <Icon size={20} strokeWidth={active ? 2.4 : 1.8} />
-                {/* Six items on a 375px screen leaves ~62px each, so the
+                {/* Five items on a 375px screen leaves ~70px each, so the
                     tracking tightens and the label is never allowed to wrap. */}
                 <span className="text-[9px] font-bold uppercase tracking-[0.04em] w-full text-center truncate">{label}</span>
               </button>
