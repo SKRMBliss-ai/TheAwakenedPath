@@ -21,11 +21,14 @@ export function Session({
   variant,
   onExit,
   onComplete,
+  theme,
 }: {
   room: PracticeRoom;
   variant: Variant;
   onExit: () => void;
   onComplete: (r: Reflection) => void;
+  /** Passed straight through to PractiseShell — see GYM_ADULT_THEME in ui.tsx. */
+  theme?: Record<string, string>;
 }) {
   const store = usePractiseStore();
   const [idx, setIdx] = useState(0);
@@ -72,7 +75,7 @@ export function Session({
 
   if (done) {
     return (
-      <PractiseShell variant={variant}>
+      <PractiseShell variant={variant} theme={theme}>
         <div className="flex min-h-[70vh] flex-col items-center justify-center gap-5 text-center">
           <motion.div
             initial={{ scale: 0.6, opacity: 0 }}
@@ -99,7 +102,7 @@ export function Session({
   }
 
   return (
-    <PractiseShell variant={variant}>
+    <PractiseShell variant={variant} theme={theme}>
       <TopBar
         title={room.title}
         onBack={idx === 0 ? onExit : () => setIdx((i) => i - 1)}

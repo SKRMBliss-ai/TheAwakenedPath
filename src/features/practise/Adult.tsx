@@ -7,6 +7,7 @@ import { usePractiseStore } from './store';
 import { buildBespokeRoom, draftPattern, STRENGTHS, TODAYS_PRACTICES } from './content';
 import { Session } from './Session';
 import { Card, Fade, GhostButton, PractiseShell, PrimaryButton, TopBar } from './ui';
+import { GYM_ADULT_THEME } from './theme';
 
 type View = 'home' | 'intake' | 'pattern' | 'created' | 'session' | 'today' | 'saved';
 
@@ -45,6 +46,7 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
       <Session
         room={room}
         variant="adult"
+        theme={GYM_ADULT_THEME}
         onExit={() => setView('home')}
         onComplete={() => { /* progress written in-engine; ownership actions live in Saved */ }}
       />
@@ -54,7 +56,7 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
   /* ── Situation intake ─────────────────────────────────────────────────── */
   if (view === 'intake') {
     return (
-      <PractiseShell variant="adult">
+      <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
         <TopBar title="I have something on my mind" onBack={() => setView('home')} step={1} total={3} />
         <AnimatePresence mode="wait">
           <Fade keyId="intake">
@@ -108,7 +110,7 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
       </div>
     );
     return (
-      <PractiseShell variant="adult">
+      <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
         <TopBar title="Understanding your situation" onBack={() => setView('intake')} step={2} total={3} />
         <AnimatePresence mode="wait">
           <Fade keyId="pattern">
@@ -148,7 +150,7 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
   /* ── Room created ─────────────────────────────────────────────────────── */
   if (view === 'created' && room) {
     return (
-      <PractiseShell variant="adult">
+      <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
         <TopBar title="Practice Room Created" onBack={() => setView('pattern')} />
         <AnimatePresence mode="wait">
           <Fade keyId="created">
@@ -188,7 +190,7 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
   /* ── Today's practice ─────────────────────────────────────────────────── */
   if (view === 'today') {
     return (
-      <PractiseShell variant="adult">
+      <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
         <TopBar title="Today’s Practice" onBack={() => setView('home')} />
         <AnimatePresence mode="wait">
           <Fade keyId="today">
@@ -220,7 +222,7 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
   /* ── My practices ─────────────────────────────────────────────────────── */
   if (view === 'saved') {
     return (
-      <PractiseShell variant="adult">
+      <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
         <TopBar title="My Practices" onBack={() => setView('home')} />
         {store.saved.length === 0 ? (
           <div className="mt-16 text-center">
@@ -280,7 +282,7 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
   ];
 
   return (
-    <PractiseShell variant="adult">
+    <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
       <TopBar title="Adult Gym" onBack={onExitGym} />
       <Fade keyId="home">
         <p className="text-[13px] font-semibold" style={{ color: 'var(--p-accent)' }}>{greeting()}</p>

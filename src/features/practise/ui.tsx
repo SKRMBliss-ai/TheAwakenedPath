@@ -50,6 +50,7 @@ const THEME: Record<Variant, Record<string, string>> = {
   },
 };
 
+
 /** Full-bleed themed container for a Practise screen.
  *  mode="light" (default) = clean card-based background, matches the
  *  wireframes' list/home screens.
@@ -62,15 +63,21 @@ export function PractiseShell({
   children,
   className,
   mode = 'light',
+  theme,
 }: {
   variant: Variant;
   children: ReactNode;
   className?: string;
   mode?: 'light' | 'cosmic';
+  /** Overrides THEME[variant]'s values without changing the shared default —
+   *  see GYM_ADULT_THEME below for why this exists rather than editing
+   *  THEME.adult directly. */
+  theme?: Record<string, string>;
 }) {
   const cosmic = mode === 'cosmic' && variant === 'adult';
+  const palette = theme ? { ...THEME[variant], ...theme } : THEME[variant];
   return (
-    <div style={THEME[variant] as React.CSSProperties} className={cn('min-h-full w-full', className)}>
+    <div style={palette as React.CSSProperties} className={cn('min-h-full w-full', className)}>
       <div
         className="relative min-h-full w-full overflow-hidden"
         style={
