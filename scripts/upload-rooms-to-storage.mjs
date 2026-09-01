@@ -23,9 +23,12 @@
  *   (or set GOOGLE_APPLICATION_CREDENTIALS and omit the argument)
  *
  * Uploads every file under public/rooms/ to the SAME relative path under
- * rooms/ in the bucket (public/rooms/feelings.webp -> rooms/feelings.webp,
- * public/rooms/full/feelings_full.webp -> rooms/full/feelings_full.webp) —
- * exactly what rooms.ts's roomArt/roomCard/roomFull expect.
+ * kids-rooms/ in the bucket (public/rooms/feelings.webp ->
+ * kids-rooms/feelings.webp, public/rooms/full/feelings_full.webp ->
+ * kids-rooms/full/feelings_full.webp) — exactly what rooms.ts's
+ * roomArt/roomCard/roomFull expect. (Prefix is kids-rooms/, not rooms/ —
+ * a dedicated namespace for this content, not a separate bucket; see
+ * rooms.ts's doc comment for why.)
  */
 
 // The modular API (firebase-admin/app + firebase-admin/storage), not the
@@ -64,12 +67,12 @@ function* walk(dir) {
 }
 
 const files = [...walk(SRC_DIR)].filter((f) => f.endsWith('.webp'));
-console.log(`uploading ${files.length} files from ${SRC_DIR} to gs://${BUCKET}/rooms/ ...\n`);
+console.log(`uploading ${files.length} files from ${SRC_DIR} to gs://${BUCKET}/kids-rooms/ ...\n`);
 
 let done = 0;
 for (const file of files) {
   const rel = path.relative(SRC_DIR, file).split(path.sep).join('/'); // Windows path -> URL path
-  const dest = `rooms/${rel}`;
+  const dest = `kids-rooms/${rel}`;
   await bucket.upload(file, {
     destination: dest,
     metadata: { contentType: 'image/webp', cacheControl: 'public, max-age=31536000, immutable' },

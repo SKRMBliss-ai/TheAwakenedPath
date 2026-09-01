@@ -245,6 +245,15 @@ export function getRoom(id: RoomId): KidsRoomConfig {
  * EVERYTHING") — which is what makes the plain `alt=media` URL below work
  * with no auth token. If that rule is ever tightened to require auth, these
  * three functions need a token appended or a signed-URL fetch instead.
+ *
+ * Lives under its own `kids-rooms/` prefix (not `rooms/`) — a dedicated
+ * namespace for this content within the one project bucket, chosen over a
+ * literal second GCS bucket since it needs no separate provisioning, no
+ * second storage.rules entry, and no second upload-script target: the
+ * existing public-read rule already covers any path, and the same script
+ * just needed its destination prefix updated (see upload-rooms-to-
+ * storage.mjs). If this content later needs its own quota, billing line, or
+ * access control, that's the point to promote it to a real separate bucket.
  */
 const STORAGE_BUCKET = 'awakened-path-2026.firebasestorage.app';
 
@@ -253,8 +262,8 @@ function storageUrl(path: string): string {
 }
 
 /** Full-bleed painted artwork for a room. */
-export const roomArt = (id: RoomId) => storageUrl(`rooms/${id}.webp`);
+export const roomArt = (id: RoomId) => storageUrl(`kids-rooms/${id}.webp`);
 /** Animated room card — plays on hover, in the hub grid. */
-export const roomCard = (id: RoomId) => storageUrl(`rooms/${id}_card.webp`);
+export const roomCard = (id: RoomId) => storageUrl(`kids-rooms/${id}_card.webp`);
 /** Full, uncropped card art (title baked in for pre-'hires' rooms) — the hub grid's resting state. */
-export const roomFull = (id: RoomId) => storageUrl(`rooms/full/${id}_full.webp`);
+export const roomFull = (id: RoomId) => storageUrl(`kids-rooms/full/${id}_full.webp`);
