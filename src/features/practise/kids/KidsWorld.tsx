@@ -163,10 +163,19 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
               <div className="relative w-full aspect-[1/1.85] sm:aspect-[1/2.1] lg:aspect-[1/2.35] overflow-hidden">
                 <img
                   src={hoveredId === room.id ? roomCard(room.id) : roomFull(room.id)}
-                  alt={room.art === 'hires' ? '' : `${room.name} — ${room.practising}`}
+                  alt=""
                   loading="lazy"
                   className="block h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                   draggable={false}
+                  onError={(e) => {
+                    const img = e.currentTarget;
+                    if (!img.dataset.fallback) {
+                      img.dataset.fallback = 'true';
+                      img.src = hoveredId === room.id
+                        ? `https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/rooms%2F${room.id}_card.webp?alt=media`
+                        : `https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/rooms%2Ffull%2F${room.id}_full.webp?alt=media`;
+                    }
+                  }}
                 />
                 {/* Only 'hires' rooms need this: their art has no title baked
                     into the pixels (see rooms.ts's `art` doc comment), unlike

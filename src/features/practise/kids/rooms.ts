@@ -257,13 +257,14 @@ export function getRoom(id: RoomId): KidsRoomConfig {
  */
 const STORAGE_BUCKET = 'awakened-path-2026.firebasestorage.app';
 
-function storageUrl(path: string): string {
+export function storageUrl(path: string): string {
   return `https://firebasestorage.googleapis.com/v0/b/${STORAGE_BUCKET}/o/${encodeURIComponent(path)}?alt=media`;
 }
 
 /** Full-bleed painted artwork for a room. */
-export const roomArt = (id: RoomId) => storageUrl(`kids-rooms/${id}.webp`);
+/** Full-bleed painted artwork for a room. */
+export const roomArt = (id: RoomId) => `/rooms/${id}.webp`;
 /** Animated room card — plays on hover, in the hub grid. */
-export const roomCard = (id: RoomId) => storageUrl(`kids-rooms/${id}_card.webp`);
-/** Full, uncropped card art (title baked in for pre-'hires' rooms) — the hub grid's resting state. */
-export const roomFull = (id: RoomId) => storageUrl(`kids-rooms/full/${id}_full.webp`);
+export const roomCard = (id: RoomId) => `/rooms/${id}_card.webp`;
+/** Full, uncropped card art — the hub grid's resting state. */
+export const roomFull = (id: RoomId) => `/rooms/full/${id}_full.webp`;
