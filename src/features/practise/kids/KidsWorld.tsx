@@ -5,6 +5,7 @@ import { isMuted, setMuted } from '../../../lib/sfx';
 import { usePractiseStore } from '../store';
 import type { PracticeRoom, StrengthId } from '../types';
 import { Mascot } from './Mascot';
+import { SkyBackdrop } from './SkyBackdrop';
 import { CinematicRoom } from './CinematicRoom';
 import { KIDS_WORLD, roomCard, roomFull, type KidsRoomConfig, type RoomId } from './rooms';
 import * as sound from './sound';
@@ -77,20 +78,8 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
   }
 
   return (
-    <div
-      className="relative min-h-[100svh] w-full overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #1A1040 0%, #2E1B62 45%, #4A2A7A 100%)', fontFamily: FONT }}
-    >
-      {/* drifting stars */}
-      {Array.from({ length: 22 }).map((_, i) => (
-        <motion.span
-          key={i}
-          className="absolute rounded-full bg-white"
-          style={{ left: `${(i * 37) % 96}%`, top: `${(i * 53) % 70}%`, width: i % 4 === 0 ? 3 : 2, height: i % 4 === 0 ? 3 : 2 }}
-          animate={{ opacity: [0.15, 0.85, 0.15] }}
-          transition={{ repeat: Infinity, duration: 3 + (i % 5), delay: i * 0.25 }}
-        />
-      ))}
+    <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
+      <SkyBackdrop />
 
       <div className="relative mx-auto w-full max-w-2xl px-5 pb-10 pt-5">
         <div className="flex items-center justify-between">
