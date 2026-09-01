@@ -539,6 +539,54 @@ export const VIDEO_REGISTRY: Record<string, VideoResource> = {
       'Daily 5-minute practice builds unshakeable peace.'
     ],
     relatedGuideSlugs: ['witness-consciousness-guide', 'stopping-overthinking-naturally']
+  },
+
+  'ep5-part-1-see-your-masks': {
+    id: 'ep5-part-1-see-your-masks',
+    title: 'Episode 5 Part 1: Why We Keep Trying to Prove Ourselves',
+    description: 'The drive to achieve, people-please, and prove ourselves — and the quiet, bottomless ache that success cannot fill.',
+    youtubeId: '0nxN9fQfVKU',
+    duration: '12:00',
+    uploadDate: '2026-09-01',
+    transcriptSummary: 'Sim Katyal explores the underlying drive to achieve, people-please, and maintain masks of validation.',
+    keyTakeaways: [
+      'Ego masks are constructed to protect vulnerable feelings.',
+      'People-pleasing is a somatic strategy to secure safety.',
+      'Awareness dissolves the need to constantly perform.'
+    ],
+    relatedGuideSlugs: ['feelings-vs-emotions', 'witness-consciousness-guide']
+  },
+
+  'ep5-part-2-see-your-masks': {
+    id: 'ep5-part-2-see-your-masks',
+    title: 'Episode 5 Part 2: The Mask of Achievement & Approval',
+    description: 'Understanding why we construct ego masks to seek approval and how to stop performing for validation.',
+    youtubeId: 'SajZXFmmDmQ',
+    duration: '14:00',
+    uploadDate: '2026-09-01',
+    transcriptSummary: 'Deepening into the mechanics of the achievement mask and unmasking the observer.',
+    keyTakeaways: [
+      'Validation seeking reinforces the delusion of inadequacy.',
+      'Sitting with the feeling of unworthiness transforms it.',
+      'Presence needs no proof.'
+    ],
+    relatedGuideSlugs: ['feelings-vs-emotions', 'witness-consciousness-guide']
+  },
+
+  'ep5-part-3-see-your-masks': {
+    id: 'ep5-part-3-see-your-masks',
+    title: 'Episode 5 Part 3: Dissolving the Need to Prove Yourself',
+    description: 'Somatic release of the urge to prove worth, stepping into natural presence and inner completeness.',
+    youtubeId: 'F1Bcb9gmXPo',
+    duration: '15:00',
+    uploadDate: '2026-09-01',
+    transcriptSummary: 'Final integration of Episode 5: letting go of the struggle to prove yourself.',
+    keyTakeaways: [
+      'Complete emotional surrender brings true freedom.',
+      'You are already whole without external proof.',
+      'Somatic release settles the nervous system.'
+    ],
+    relatedGuideSlugs: ['feelings-vs-emotions', 'witness-consciousness-guide']
   }
 };
 

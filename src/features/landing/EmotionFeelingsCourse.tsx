@@ -421,6 +421,7 @@ const CHAPTERS: Chapter[] = [
     keyPractice: 'Mask Dissolution Practice',
     bgGradient: 'linear-gradient(135deg, #352526 0%, #180F10 100%)',
     imgUrl: FS_ROOT('Episode5.webp'),
+    teaserVideoId: '0nxN9fQfVKU',
   },
   {
     num: 6,

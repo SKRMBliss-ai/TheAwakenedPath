@@ -47,6 +47,9 @@ const ROUTES = [
   '/glossary/somatic-tracking',
   '/videos/ep1-feelings-and-emotions',
   '/videos/ep2-art-of-witnessing',
+  '/videos/ep5-part-1-see-your-masks',
+  '/videos/ep5-part-2-see-your-masks',
+  '/videos/ep5-part-3-see-your-masks',
 ];
 
 const MIME = {
