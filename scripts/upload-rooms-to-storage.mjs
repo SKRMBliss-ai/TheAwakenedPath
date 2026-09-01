@@ -28,7 +28,14 @@
  * exactly what rooms.ts's roomArt/roomCard/roomFull expect.
  */
 
-import admin from 'firebase-admin';
+// The modular API (firebase-admin/app + firebase-admin/storage), not the
+// older `import admin from 'firebase-admin'; admin.credential.cert(...)`
+// style — confirmed that one fails under real ESM with a recent
+// firebase-admin version ("Cannot read properties of undefined (reading
+// 'cert')": admin.credential comes back undefined through the default-
+// import interop). The modular named exports don't have that ambiguity.
+import { cert, initializeApp } from 'firebase-admin/app';
+import { getStorage } from 'firebase-admin/storage';
 import { readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
@@ -42,11 +49,11 @@ if (!keyPath) {
   process.exit(1);
 }
 
-admin.initializeApp({
-  credential: admin.credential.cert(keyPath),
+const app = initializeApp({
+  credential: cert(keyPath),
   storageBucket: BUCKET,
 });
-const bucket = admin.storage().bucket();
+const bucket = getStorage(app).bucket();
 
 function* walk(dir) {
   for (const entry of readdirSync(dir)) {
