@@ -224,19 +224,21 @@ export function getRoom(id: RoomId): KidsRoomConfig {
  * has to run from a machine that's authenticated. Until it does, every
  * image below 404s: do not deploy a build of this code before running it.
  *
- *   gsutil -m cp -r public/rooms gs://awakened-path-2026.firebasestorage.app/
+ *   node scripts/upload-rooms-to-storage.mjs <path-to-service-account.json>
  *
- * (installs with the Google Cloud SDK; `gcloud auth login` first if that
- * machine isn't already authenticated. The Firebase Console's Storage tab
- * — drag-and-drop, preserving the rooms/ and rooms/full/ folder structure
- * — works the same if gsutil isn't installed.)
+ * See that script's own header comment for the one-time setup (a temporary
+ * `npm install --no-save firebase-admin`, and downloading a service-account
+ * key from Firebase Console -> Project Settings -> Service Accounts).
+ * Chosen over the `gsutil` CLI, which needs the separate Google Cloud SDK
+ * installed — confirmed missing ("gsutil is not recognized") on the
+ * machine this was actually run from — where Node is already a given for
+ * building this app at all.
  *
- * That command uploads the CURRENT public/rooms/ tree verbatim — the three
+ * That script uploads the CURRENT public/rooms/ tree verbatim — the three
  * already-regenerated rooms (feelings, thought, body) at their new
  * resolution, and the remaining seven at whatever is committed when it's
- * run. Re-run it (same command, safe to repeat) after every future room
- * regeneration to keep Storage current; nothing here does that
- * automatically.
+ * run. Re-run it (safe to repeat) after every future room regeneration to
+ * keep Storage current; nothing here does that automatically.
  *
  * Storage's rules currently allow public read on every path (storage.
  * rules' own rule #3, literally commented "DEBUG: Allow public read of
