@@ -46,8 +46,14 @@ export interface KidsRoomConfig {
   palette: RoomPalette;
   /** 'painted' = a full-resolution still shipped for this room.
    *  'upscaled' = derived from the room card because no still exists yet;
-   *  the shell softens it slightly so it reads as depth of field. */
-  art: 'painted' | 'upscaled';
+   *  the shell softens it slightly so it reads as depth of field.
+   *  'hires' = regenerated at native resolution via scripts/prepare-room-
+   *  art.mjs. Its hub-tile art carries NO baked-in title (earlier rooms'
+   *  art does — see roomFull's doc comment); KidsWorld.tsx renders the
+   *  name/practising line as real HTML for these instead, both because a
+   *  fresh generation can't reliably render legible baked text and because
+   *  real text is sharper, accessible, and never needs regenerating. */
+  art: 'painted' | 'upscaled' | 'hires';
   steps: Step[];
   /** The closing line — a discovery, never a score. */
   ending: string;
@@ -61,7 +67,7 @@ export const KIDS_WORLD: KidsRoomConfig[] = [
     invitation: 'Meet my feelings',
     practising: 'Naming what I feel',
     palette: { ink: '#FBF3FF', accent: '#C77DE0', scrim: '#2B1B4D' },
-    art: 'painted',
+    art: 'hires',
     steps: [
       { kind: 'pick', prompt: 'What are you feeling right now?', options: ['Happy', 'Worried', 'Angry', 'Sad', 'Okay', 'Excited'] },
       { kind: 'pick', prompt: 'Where do you feel it most?', options: ['In my tummy', 'In my chest', 'In my head', 'All over'] },
@@ -76,7 +82,7 @@ export const KIDS_WORLD: KidsRoomConfig[] = [
     invitation: 'Catch a thought',
     practising: 'Noticing thoughts',
     palette: { ink: '#F2F8FF', accent: '#E8A75F', scrim: '#12233A' },
-    art: 'painted',
+    art: 'hires',
     steps: [
       { kind: 'tap', prompt: 'A thought is floating past. Catch it.', glyph: '💭', taps: 3, hint: 'more taps' },
       { kind: 'pick', prompt: 'Which thought showed up?', options: ['“I’m going to mess this up.”', '“They don’t like me.”', '“I can’t do this.”', '“It’s not fair.”'] },

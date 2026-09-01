@@ -156,16 +156,32 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
               className="overflow-hidden rounded-[16px] text-left shadow-lg"
               style={{ border: '1px solid rgba(255,255,255,0.16)', background: room.palette.scrim }}
             >
-              <div className="w-full" style={{ aspectRatio: '205 / 768' }}>
+              <div className="relative w-full" style={{ aspectRatio: '205 / 768' }}>
                 <img
                   src={hoveredId === room.id ? roomCard(room.id) : roomFull(room.id)}
-                  alt={`${room.name} — ${room.practising}`}
+                  alt={room.art === 'hires' ? '' : `${room.name} — ${room.practising}`}
                   loading="lazy"
                   width={205}
                   height={768}
                   className="block h-full w-full object-contain"
                   draggable={false}
                 />
+                {/* Earlier rooms' art has the title baked into the pixels
+                    (see rooms.ts's `art` doc comment) — a 'hires' room's
+                    doesn't, by design (a fresh generation can't reliably
+                    render legible baked text), so it needs this as real HTML
+                    instead. The button's own aria-label already carries the
+                    same text for every room; this is visual only. */}
+                {room.art === 'hires' && (
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-x-0 bottom-0 px-2.5 pb-2.5 pt-8"
+                    style={{ background: `linear-gradient(0deg, ${room.palette.scrim}F2 15%, ${room.palette.scrim}00 100%)` }}
+                  >
+                    <p className="text-[12.5px] font-extrabold leading-tight text-white">{room.name}</p>
+                    <p className="mt-0.5 text-[10.5px] leading-tight text-white/75">{room.practising}</p>
+                  </div>
+                )}
               </div>
             </motion.button>
           ))}
