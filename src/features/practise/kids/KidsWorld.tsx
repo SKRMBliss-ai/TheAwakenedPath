@@ -81,7 +81,7 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
       <SkyBackdrop />
 
-      <div className="relative mx-auto w-full max-w-2xl px-5 pb-10 pt-5">
+      <div className="relative mx-auto w-full max-w-2xl px-5 pb-10 pt-5 lg:max-w-4xl">
         <div className="flex items-center justify-between">
           <button
             onClick={onExitGym}
@@ -139,7 +139,18 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
         </motion.div>
 
         {/* Room cards — static art at rest; hover brings each world to life */}
-        <div className="mt-4 grid grid-cols-3 gap-2.5">
+        {/*
+              Was a flat `grid-cols-3` at every width — no breakpoints at
+              all, confirmed by grep before this change — which is exactly
+              why it read as cramped on both a phone and a wide window: 3
+              narrow columns everywhere, never given more room to work
+              with. Two columns on a phone (wider tiles, a little more
+              scrolling — a real trade-off, not a free win) up to 4 on
+              desktop, paired with the container widening to lg:max-w-4xl
+              above so those extra columns get genuine extra width rather
+              than just subdividing the same 672px.
+            */}
+            <div className="mt-4 grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
           {KIDS_WORLD.map((room, i) => (
             <motion.button
               key={room.id}

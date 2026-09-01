@@ -97,7 +97,7 @@ export const KIDS_WORLD: KidsRoomConfig[] = [
     invitation: 'Start the scan',
     practising: 'Listening to my body',
     palette: { ink: '#EAFDFF', accent: '#3FBCD4', scrim: '#06212B' },
-    art: 'upscaled',
+    art: 'hires',
     steps: [
       { kind: 'tap', prompt: 'Warm up the scanner.', glyph: '🔍', taps: 3, hint: 'more taps' },
       { kind: 'pick', prompt: 'Where does your body feel something?', options: ['My chest', 'My tummy', 'My hands', 'My jaw', 'My breathing'] },
