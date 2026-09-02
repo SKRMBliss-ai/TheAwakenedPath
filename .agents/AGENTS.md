@@ -40,3 +40,19 @@
 - Daily subjects (`DAILY_SUBJECTS`) rotate by **day-of-week**; the featured guide rotates by **day-of-year**. They are deliberately independent.
 - Therefore a subject line must **never name a specific article or guide** — it would systematically not match the guide in the email body.
 - Never invent a guide title in a subject line. Only the 7 slugs in `DAILY_GUIDES` exist.
+
+## 11. Kids Gym Card & Visual Effects Protection
+- **Same-Origin Asset Paths**: `roomArt`, `roomCard`, and `roomFull` in `src/features/practise/kids/rooms.ts` **MUST ALWAYS** resolve to same-origin relative paths (`/rooms/${id}.webp`, `/rooms/${id}_card.webp`, `/rooms/full/${id}_full.webp`). NEVER change `rooms.ts` to unverified external storage buckets (e.g. `kids-rooms/`) that produce 404 broken image placeholders.
+- **Image Fallback Safeguard**: All room card `<img>` tags in `KidsWorld.tsx` **MUST** retain `onError` fallback handling to Firebase Storage to guarantee 100% uptime even if a local file is missing.
+- **Hover Sparkles Overlay (`<CardSparklesOverlay>`)**: The dynamic 4-point golden sparkle star animation overlay in `KidsWorld.tsx` **MUST ALWAYS** remain rendered when a room card is hovered (`hoveredId === room.id`). Any future card component updates must preserve this magical hover experience across all 10 room cards (`feelings`, `thought`, `body`, `pause`, `story`, `friendship`, `anger`, `worry`, `kindness`, `reflection`).
+- **Responsive Geometry**: Maintain wide and long aspect ratio bounds (`aspect-[1/1.85]` mobile, `aspect-[1/2.1]` tablet, `aspect-[1/2.35]` desktop) and grid layout (`xl:grid-cols-5`) so cards feel premium on both web and mobile screens.
+
+## 12. Pre-Deployment Verification Checklist
+Before committing or executing `npx firebase deploy --only hosting`:
+- [ ] **Build Command**: Verified build is run via `npm run build:seo` (NEVER plain `npm run build`).
+- [ ] **Kids Gym Asset Paths**: Verified `rooms.ts` points to valid `/rooms/...` paths and returns HTTP 200.
+- [ ] **Sparkle Animation Check**: Verified `<CardSparklesOverlay>` is present in `KidsWorld.tsx` and fires on card hover.
+- [ ] **Mobile & Desktop Layout**: Verified grid columns and card aspect ratios render cleanly on desktop and mobile.
+- [ ] **Git Staging Hygiene**: Checked `git status` to ensure **ONLY** modified files are staged via `git add <path>`.
+- [ ] **Rebase & Push**: Executed `git pull --rebase origin main` and `git push origin main` cleanly before deploying.
+
