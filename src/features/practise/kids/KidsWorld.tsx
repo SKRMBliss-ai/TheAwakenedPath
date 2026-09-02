@@ -46,6 +46,62 @@ function asPracticeRoom(room: KidsRoomConfig): PracticeRoom {
   };
 }
 
+const SPARKLE_POSITIONS = [
+  { top: '14%', left: '76%', size: 24, delay: 0 },
+  { top: '38%', left: '82%', size: 18, delay: 0.35 },
+  { top: '65%', left: '78%', size: 22, delay: 0.15 },
+  { top: '22%', left: '18%', size: 16, delay: 0.5 },
+  { top: '78%', left: '22%', size: 20, delay: 0.25 },
+];
+
+function CardSparklesOverlay({ active }: { active: boolean }) {
+  if (!active) return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+      {SPARKLE_POSITIONS.map((sp, idx) => (
+        <motion.div
+          key={idx}
+          style={{ position: 'absolute', top: sp.top, left: sp.left }}
+          initial={{ opacity: 0, scale: 0.3, rotate: -10 }}
+          animate={{
+            opacity: [0.2, 1, 0.3],
+            scale: [0.6, 1.25, 0.7],
+            rotate: [0, 25, -15],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            repeatType: 'reverse',
+            ease: 'easeInOut',
+            delay: sp.delay,
+          }}
+        >
+          <div
+            className="relative flex items-center justify-center"
+            style={{ width: sp.size, height: sp.size }}
+          >
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,217,138,0.7) 45%, transparent 75%)',
+                transform: 'scale(2.0)',
+                filter: 'blur(2px)',
+              }}
+            />
+            <svg viewBox="0 0 24 24" className="w-full h-full text-white drop-shadow-[0_0_10px_rgba(255,235,170,0.95)]">
+              <path
+                d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"
+                fill="currentColor"
+              />
+            </svg>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
   const store = usePractiseStore();
   const [active, setActive] = useState<KidsRoomConfig | null>(null);
@@ -177,6 +233,7 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
                     }
                   }}
                 />
+                <CardSparklesOverlay active={hoveredId === room.id} />
                 {/* Only 'hires' rooms need this: their art has no title baked
                     into the pixels (see rooms.ts's `art` doc comment), unlike
                     the 'painted'/'upscaled' rooms whose art already carries
