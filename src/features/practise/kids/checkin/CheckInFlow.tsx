@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, Volume2, VolumeX } from 'lucide-react';
 import { isMuted, setMuted } from '../../../../lib/sfx';
-import { FEELINGS, GOODBITS, SIZES, type BodyZoneId, type IntensityId } from './content';
+import { BODY_ZONE_WORDS, FEELINGS, GOODBITS, SITUATIONS, SIZES, THOUGHTS, type BodyZoneId, type IntensityId } from './content';
 import { FaceIcon } from './FaceIcon';
 import { BodyMap } from './BodyMap';
 import { ChirpyBar } from './ChirpyBar';
@@ -11,16 +11,17 @@ import { say, stopSpeech } from './voice';
 
 /**
  * The check-in spine — ported faithfully from the working prototype
- * (see BUILD_BRIEF.md §1 and §6 "build order"). This is the smallest slice
- * worth putting in front of a real child:
+ * (see BUILD_BRIEF.md §1 and §6 "build order").
  *
- *   feeling → (intensity, only for an unpleasant feeling) → reflection (body)
- *   → a closing line, with "Get a grown-up" reachable from every screen and
- *   the quiet state taking over completely if a feeling is picked "really big".
+ *   feeling → (intensity, only for an unpleasant feeling) → body → thought
+ *   → situation → story (the three assembled into one moment) → a closing
+ *   line — with "Get a grown-up" reachable from every screen and the quiet
+ *   state taking over completely if a feeling is picked "really big".
  *
- * Per the brief: stop here. The rest of the path (thought/situation/story/
- * camera/maybes) and the rooms/games are the next slices, not built yet —
- * see the report back to the founder for what's deliberately missing.
+ * Still not built: the eyes/camera test (P-06), the "other maybes" reframe
+ * (P-07), and the five closing teaching moves (one per feeling) — the story
+ * screen's CTA goes straight to the closing line instead of into those. See
+ * the report back to the founder for what's deliberately missing.
  *
  * Chirpy, the quiet state, and auto-advance are the three non-negotiables
  * (BUILD_BRIEF.md's "do not relitigate" list) and all three are live here.
@@ -29,17 +30,20 @@ import { say, stopSpeech } from './voice';
 const FONT_DISPLAY = "'Baloo 2', 'Outfit', ui-rounded, system-ui, sans-serif";
 const FONT_BODY = "'Outfit', system-ui, -apple-system, sans-serif";
 
-type ScreenId = 'feeling' | 'intensity' | 'body' | 'good' | 'stop' | 'trusted-who' | 'trusted-go' | 'done';
+type ScreenId = 'feeling' | 'intensity' | 'body' | 'thought' | 'situation' | 'story' | 'good' | 'stop' | 'trusted-who' | 'trusted-go' | 'done';
 
 interface Session {
   feeling: string | null;
   size: IntensityId | null;
   body: BodyZoneId | null;
+  /** A THOUGHTS entry, 'none' for "something else", or null before it's picked. */
+  thought: string | null;
+  situation: string | null;
   noticed: string | null;
   quiet: boolean;
 }
 
-const EMPTY_SESSION: Session = { feeling: null, size: null, body: null, noticed: null, quiet: false };
+const EMPTY_SESSION: Session = { feeling: null, size: null, body: null, thought: null, situation: null, noticed: null, quiet: false };
 
 function Pill({ label, emoji, pressed, onClick, big }: { label: string; emoji?: string; pressed?: boolean; onClick: () => void; big?: boolean }) {
   return (
@@ -145,7 +149,21 @@ export function CheckInFlow({ onExit }: { onExit: () => void }) {
 
   const pickBody = (zone: BodyZoneId) => choose(
     () => setSession((s) => ({ ...s, body: zone })),
-    () => go('done'),
+    () => go('thought'),
+  );
+
+  /** Longer pause than other picks — Chirpy has to actually say the thought
+   *  out loud (sayChirpy) before the app moves on, same timing as the
+   *  prototype's pickThought(). */
+  const pickThought = (text: string) => choose(
+    () => setSession((s) => ({ ...s, thought: text })),
+    () => go('situation'),
+    1600,
+  );
+
+  const pickSituation = (id: string) => choose(
+    () => setSession((s) => ({ ...s, situation: id })),
+    () => go('story'),
   );
 
   const pickGood = (text: string) => choose(
@@ -180,7 +198,11 @@ export function CheckInFlow({ onExit }: { onExit: () => void }) {
   };
 
   const feeling = FEELINGS.find((f) => f.id === session.feeling);
-  const scene: SceneId = screen === 'body' ? 'look' : screen === 'trusted-who' || screen === 'trusted-go' || screen === 'stop' ? 'still' : screen === 'good' ? 'dawn' : 'night';
+  const SCENE_BY_SCREEN: Partial<Record<ScreenId, SceneId>> = {
+    body: 'look', situation: 'look', story: 'den', good: 'dawn',
+    'trusted-who': 'still', 'trusted-go': 'still', stop: 'still',
+  };
+  const scene: SceneId = SCENE_BY_SCREEN[screen] ?? 'night';
   const canBack = history.length > 1 && screen !== 'feeling' && screen !== 'trusted-go' && screen !== 'stop';
   const showExit = screen !== 'trusted-who' && screen !== 'trusted-go';
 
@@ -240,6 +262,23 @@ export function CheckInFlow({ onExit }: { onExit: () => void }) {
               {screen === 'body' && (
                 <BodyScreen quiet={session.quiet} selected={session.body} onPick={pickBody} onStop={() => go('stop')} speak={speak} />
               )}
+              {screen === 'thought' && (
+                <ThoughtScreen quiet={session.quiet} chirpyName="Chirpy" selected={session.thought} onPick={pickThought} onStop={() => go('stop')} speak={speak} />
+              )}
+              {screen === 'situation' && (
+                <SituationScreen selected={session.situation} onPick={pickSituation} speak={speak} />
+              )}
+              {screen === 'story' && feeling && (
+                <StoryScreen
+                  quiet={session.quiet}
+                  feeling={feeling}
+                  body={session.body}
+                  thought={session.thought}
+                  situation={session.situation}
+                  chirpyName="Chirpy"
+                  speak={speak}
+                />
+              )}
               {screen === 'good' && (
                 <GoodScreen onPick={pickGood} speak={speak} />
               )}
@@ -267,6 +306,13 @@ export function CheckInFlow({ onExit }: { onExit: () => void }) {
               <Cta label="Just close it" onClick={goAgain} ghost />
             </>
           )}
+          {screen === 'story' && session.quiet && (
+            <>
+              <Cta label="Next" onClick={() => go('done')} />
+              <Cta label="Stop here for now" onClick={() => go('stop')} ghost />
+            </>
+          )}
+          {screen === 'story' && !session.quiet && <Cta label="Okay" onClick={() => go('done')} />}
           {screen === 'trusted-go' && <Cta label="Okay" onClick={goAgain} />}
           {screen === 'done' && <Cta label="Go again" onClick={goAgain} ghost />}
           {showExit && screen !== 'stop' && (
@@ -372,6 +418,116 @@ function BodyScreen({ quiet, selected, onPick, onStop, speak }: { quiet: boolean
   );
 }
 
+function ThoughtScreen({
+  quiet, chirpyName, selected, onPick, onStop, speak,
+}: { quiet: boolean; chirpyName: string; selected: string | null; onPick: (text: string) => void; onStop: () => void; speak: Speak }) {
+  const heard = selected && selected !== 'none';
+  useEffect(() => { speak(quiet ? "What's in your head?" : `Listen. What's ${chirpyName} saying?`); }, [quiet, chirpyName, speak]);
+
+  const pick = (text: string) => {
+    // Chirpy actually speaks the guess, in his own voice — the bubble below
+    // echoes it as text, same as the prototype's pickThought().
+    speak(text, { who: 'chirpy' });
+    onPick(text);
+  };
+
+  const options = quiet ? THOUGHTS.slice(0, 3) : THOUGHTS;
+
+  return (
+    <div>
+      {!quiet && (
+        <ChirpyBar pose="said1" size="sm" waiting={!heard} line={heard ? selected : 'shhh… listening'} />
+      )}
+      <h1 className="text-[28px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT_DISPLAY }}>
+        {quiet ? "What's in your head?" : `Listen. What's ${chirpyName} saying?`}
+      </h1>
+      <div className="mt-4 flex flex-col gap-2">
+        {options.map((t) => (
+          <Pill key={t} big={quiet} label={t} pressed={selected === t} onClick={() => pick(t)} />
+        ))}
+        <Pill big={quiet} label="Something else" emoji="🎤" pressed={selected === 'none'} onClick={() => onPick('none')} />
+      </div>
+      {quiet && (
+        <button onClick={onStop} className="mt-3 w-full rounded-full py-3 text-[16px] font-semibold text-white/85" style={{ background: 'rgba(255,255,255,0.11)', border: '1px solid rgba(255,255,255,0.24)' }}>
+          Stop here for now
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SituationScreen({ selected, onPick, speak }: { selected: string | null; onPick: (id: string) => void; speak: Speak }) {
+  useEffect(() => { speak("What did your eyes see? Just the bit that happened out there, in the room."); }, [speak]);
+  return (
+    <div>
+      <ChirpyBar pose="curious" line="What happened?" size="sm" />
+      <h1 className="text-[28px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT_DISPLAY }}>What did your eyes see?</h1>
+      <p className="mt-1.5 text-[14px] leading-relaxed text-white/60">Just the bit that happened out there, in the room.</p>
+      <div className="mt-3 flex flex-col gap-2">
+        {SITUATIONS.map((s) => (
+          <Pill key={s.id} label={s.label} emoji={s.emoji} pressed={selected === s.id} onClick={() => onPick(s.id)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StoryScreen({
+  quiet, feeling, body, thought, situation, chirpyName, speak,
+}: {
+  quiet: boolean;
+  feeling: (typeof FEELINGS)[number];
+  body: BodyZoneId | null;
+  thought: string | null;
+  situation: string | null;
+  chirpyName: string;
+  speak: Speak;
+}) {
+  const s = SITUATIONS.find((x) => x.id === situation);
+  const bodyWord = body ? BODY_ZONE_WORDS[body] : 'body';
+  const th = thought && thought !== 'none' ? thought : "something you didn't like";
+  const opener = s ? s.past.charAt(0).toUpperCase() + s.past.slice(1) : 'Something happened';
+
+  const lines = [
+    `${opener}.`,
+    `You felt ${feeling.label.toLowerCase()}. It was in your ${bodyWord}.`,
+    quiet ? null : `And ${chirpyName} went: "${th}"`,
+  ].filter((l): l is string => l !== null);
+
+  useEffect(() => { speak(quiet ? "Here's what happened." : 'Look what we made.'); }, [quiet, speak]);
+
+  return (
+    <div>
+      <ChirpyBar pose="jumping" size="sm" />
+      <h1 className="text-[28px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT_DISPLAY }}>
+        {quiet ? "Here's what happened." : 'Look what we made!'}
+      </h1>
+      <div className="mt-3 flex flex-col gap-2">
+        {lines.map((line, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.45, duration: 0.5 }}
+            className="rounded-2xl px-4 py-3 text-[16px] font-bold leading-snug text-white"
+            style={{
+              background: i === 2 ? 'rgba(178,150,255,0.24)' : 'rgba(255,255,255,0.11)',
+              border: `1px solid ${i === 2 ? 'rgba(203,186,255,0.45)' : 'rgba(255,255,255,0.17)'}`,
+            }}
+          >
+            {line}
+          </motion.div>
+        ))}
+      </div>
+      {!quiet && (
+        <p className="mt-2.5 text-[13.5px] leading-relaxed text-white/50">
+          Two of those really happened out there. One of them {chirpyName} made up in your head.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function GoodScreen({ onPick, speak }: { onPick: (text: string) => void; speak: Speak }) {
   useEffect(() => { speak('What made it a good one?'); }, [speak]);
   return (
@@ -454,7 +610,7 @@ function GrownUpsPanel({ quiet, feeling, onClose, onExitToHub }: { quiet: boolea
         The quiet state switches on by itself when a hard feeling is <em>really big</em>. Chirpy leaves, choices shrink, and a real way out appears — neither of you gets told.
       </div>
       <div className="mt-2.5 rounded-2xl p-4 text-[12.5px] text-white/60" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
-        This is a first slice of the check-in path — feeling, size, and one reflection question. The rest of the path (thought, situation, story, maybes) and the practice rooms are separate, already-built pieces, not yet joined to this flow.
+        This check-in currently runs feeling → size → body → thought → situation → story, then closes. The eyes/camera test, the "other maybes" reframe, the five closing teachings, and the practice rooms are separate pieces, not yet joined to this flow.
       </div>
 
       <Cta label="Back" onClick={onClose} />

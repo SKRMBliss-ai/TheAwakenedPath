@@ -47,3 +47,37 @@ export const GOODBITS = [
   'I was with someone I love',
   'It was just a good day',
 ];
+
+/** What the chatterbox guesses — the child picks which one it said, or names their own. */
+export const THOUGHTS = [
+  'Nobody wants to play with me.',
+  "I'm going to get in trouble.",
+  "That's not fair!",
+  "I'm rubbish at this.",
+  'Something bad is going to happen.',
+];
+
+export interface SituationDef {
+  id: string;
+  emoji: string;
+  label: string;
+  /** Past-tense form, dropped into the story screen: "{past}." */
+  past: string;
+}
+
+export const SITUATIONS: SituationDef[] = [
+  { id: 'said', emoji: '💬', label: 'Someone said something mean', past: 'someone said something to you' },
+  { id: 'turn', emoji: '🎲', label: "I didn't get a turn", past: "you didn't get a turn" },
+  { id: 'toldoff', emoji: '🙅', label: 'I got told off', past: 'you got told off' },
+  { id: 'broke', emoji: '🧩', label: "Something wouldn't work", past: "something wouldn't work" },
+  { id: 'left', emoji: '🚪', label: 'Someone went away', past: 'someone went away' },
+  { id: 'changed', emoji: '📅', label: 'We had to do something else', past: 'the plan changed' },
+];
+
+export const BODY_ZONE_WORDS: Record<BodyZoneId, string> = {
+  head: 'head',
+  heart: 'chest',
+  tummy: 'tummy',
+  hands: 'hands',
+  cant: 'somewhere',
+};
