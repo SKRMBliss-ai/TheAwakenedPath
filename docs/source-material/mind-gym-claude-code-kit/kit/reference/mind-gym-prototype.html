@@ -1,0 +1,826 @@
+<title>Mind Gym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   MIND GYM — ages 3–8
+   Teaching moves per MIND_GYM_TEACHING_MOVES.md
+   Nothing here is ever marked correct.
+   ============================================================ */
+:root{
+  --font-display:'Fredoka', ui-rounded, system-ui, sans-serif;
+  --font-body:'Nunito', system-ui, -apple-system, sans-serif;
+  --ink:#fdfcff;
+  --ink-soft:rgba(253,252,255,.78);
+  --ink-faint:rgba(253,252,255,.52);
+  --pill:rgba(255,255,255,.11);
+  --pill-line:rgba(255,255,255,.24);
+  --pill-on:rgba(255,236,190,.34);
+  --pill-on-line:rgba(255,224,160,.9);
+  --cta:rgba(255,255,255,.94);
+  --cta-ink:#241d3d;
+  --r-pill:999px; --r-card:22px; --tap:62px;
+  --dur:400ms; --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0; background:#07070d; color:var(--ink); font-family:var(--font-body);
+  display:flex; align-items:center; justify-content:center; overflow:hidden}
+
+#device{position:relative; width:min(430px,100vw); height:min(932px,100dvh);
+  aspect-ratio:430/932; max-height:100dvh; overflow:hidden; background:#0b0d1c;
+  box-shadow:0 40px 120px rgba(0,0,0,.7)}
+@media (min-width:900px) and (min-height:820px){
+  #device{border-radius:44px; height:min(880px,94dvh); outline:1px solid rgba(255,255,255,.08)}}
+
+/* scenes */
+#scene{position:absolute; inset:0; transition:background var(--dur) var(--ease)}
+#scene svg{position:absolute; inset:0; width:100%; height:100%}
+#scrim{position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(to bottom, rgba(6,6,16,.14) 0%, rgba(6,6,16,0) 24%, rgba(6,6,16,.34) 56%, rgba(6,6,16,.76) 100%);
+  transition:opacity var(--dur)}
+.sc-night{background:radial-gradient(120% 80% at 50% 8%, #2c3566, #171c3d 42%, #0d1026)}
+.sc-den  {background:radial-gradient(110% 70% at 50% 88%, #6b3a24, #38201d 45%, #1b1013)}
+.sc-look {background:radial-gradient(120% 80% at 50% 30%, #1c4453, #122c39 46%, #0a1720)}
+.sc-dawn {background:radial-gradient(120% 90% at 50% 96%, #ffa76b, #7a4a63 40%, #2e2140 78%, #1c1730)}
+.sc-still{background:radial-gradient(130% 90% at 50% 50%, #2a2740, #191a2e 55%, #101120)}
+.sc-dark {background:radial-gradient(130% 90% at 50% 46%, #14162c, #0b0c18 60%, #06070f)}
+body.quiet #scene{filter:brightness(1.16) saturate(.82)}
+body.quiet #scrim{opacity:.55}
+
+/* chrome */
+#ui{position:absolute; inset:0; display:flex; flex-direction:column; z-index:3}
+#top{display:flex; align-items:center; gap:8px; padding:14px 14px 0; min-height:52px; flex:0 0 auto}
+.icobtn{appearance:none; border:1px solid var(--pill-line); background:var(--pill); color:var(--ink-soft);
+  width:40px; height:40px; border-radius:var(--r-pill); font-size:17px; cursor:pointer;
+  backdrop-filter:blur(14px); display:grid; place-items:center}
+.icobtn:hover{color:var(--ink)}
+.icobtn[hidden]{display:none}
+#adultbtn{position:relative; width:auto; padding:0 13px; height:32px; font-size:11px;
+  letter-spacing:.06em; text-transform:uppercase; font-weight:800; color:var(--ink-faint); overflow:hidden}
+#adultfill{position:absolute; left:0; top:0; bottom:0; width:0%; background:rgba(255,255,255,.22)}
+
+#screen{flex:1 1 auto; display:flex; flex-direction:column; justify-content:flex-end;
+  padding:6px 20px 0; min-height:0; overflow:hidden}
+#screen.center{justify-content:center}
+.inner{width:100%; animation:rise var(--dur) var(--ease) both}
+@keyframes rise{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:none}}
+
+h1{font-family:var(--font-display); font-weight:600; font-size:clamp(27px,7.6vw,35px);
+  line-height:1.15; margin:0; text-wrap:balance; text-shadow:0 2px 20px rgba(0,0,0,.4)}
+h1 em{font-style:normal; color:#ffd79a}
+.sub{color:var(--ink-soft); font-size:17px; line-height:1.45; margin:10px 0 0; font-weight:600}
+.tiny{color:var(--ink-faint); font-size:13.5px; line-height:1.5; margin:11px 0 0}
+
+/* Chirpy — present nearly everywhere */
+#chirpybar{display:flex; align-items:flex-end; gap:10px; margin-bottom:10px; min-height:84px}
+#chirpybar.sm{min-height:62px; margin-bottom:8px}
+#chirpybar.sm img{height:62px}
+#chirpybar.sm .bubble{font-size:15.5px; padding:10px 14px; margin-bottom:8px}
+#chirpybar.big{min-height:180px}
+#chirpybar img{display:block; height:84px; width:auto; flex:0 0 auto;
+  filter:drop-shadow(0 12px 30px rgba(0,0,0,.55)); animation:fidget 3.6s ease-in-out infinite}
+#chirpybar.big img{height:180px}
+#chirpybar.pop img{animation:pop 700ms var(--ease), fidget 3.6s ease-in-out 700ms infinite}
+@keyframes fidget{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-5px) rotate(-2deg)}
+  55%{transform:translateY(2px) rotate(1.4deg)}80%{transform:translateY(-2px) rotate(-.7deg)}}
+@keyframes pop{0%{transform:scale(.2) translateY(40px); opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.bubble{flex:1 1 auto; position:relative; border-radius:20px; padding:13px 16px; margin-bottom:14px;
+  background:rgba(255,255,255,.95); color:#241d3d; font-weight:800; font-size:17px; line-height:1.3;
+  box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.bubble:after{content:''; position:absolute; right:-7px; bottom:14px; width:16px; height:16px;
+  background:rgba(255,255,255,.95); transform:rotate(45deg); border-radius:0 0 5px 0}
+.bubble.wait{color:#9b93b4; font-weight:700}
+
+/* pills */
+.stack{display:flex; flex-direction:column; gap:8px; margin-top:16px}
+.pill{appearance:none; width:100%; min-height:var(--tap); display:flex; align-items:center; gap:12px;
+  text-align:left; padding:11px 17px; border-radius:var(--r-pill); border:1px solid var(--pill-line);
+  background:var(--pill); color:var(--ink); font-family:var(--font-body); font-size:17px; font-weight:700;
+  cursor:pointer; backdrop-filter:blur(16px); transition:background 140ms, border-color 140ms, transform 140ms}
+.pill:hover{background:rgba(255,255,255,.17)}
+.pill[aria-pressed="true"]{background:var(--pill-on); border-color:var(--pill-on-line); transform:scale(1.02)}
+.pill .emoji{font-size:22px; line-height:1}
+.pill.big{min-height:72px; font-size:19px}
+input.pill{font-family:var(--font-display); font-size:21px}
+
+/* faces */
+.faces{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px}
+.face{appearance:none; border:1px solid var(--pill-line); background:var(--pill); border-radius:var(--r-card);
+  padding:10px 4px 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px;
+  color:var(--ink); font-family:var(--font-body); font-weight:800; font-size:14px; backdrop-filter:blur(16px);
+  transition:background 140ms, border-color 140ms, transform 180ms var(--ease)}
+.face:hover{background:rgba(255,255,255,.17)}
+.face[aria-pressed="true"]{background:var(--pill-on); border-color:var(--pill-on-line); transform:translateY(-3px) scale(1.04)}
+.face svg{width:54px; height:54px}
+
+/* sizes */
+.sizes{display:flex; align-items:flex-end; gap:9px; margin-top:18px}
+.sizebtn{flex:1; appearance:none; border:1px solid var(--pill-line); background:var(--pill);
+  border-radius:var(--r-card); padding:13px 5px 11px; cursor:pointer; color:var(--ink);
+  font-family:var(--font-body); font-weight:800; font-size:13.5px; display:flex; flex-direction:column;
+  align-items:center; justify-content:flex-end; gap:9px; min-height:var(--tap); backdrop-filter:blur(16px)}
+.sizebtn:hover{background:rgba(255,255,255,.17)}
+.sizebtn[aria-pressed="true"]{background:var(--pill-on); border-color:var(--pill-on-line)}
+.blob{border-radius:50%; background:currentColor; opacity:.92}
+
+/* body map */
+.bodywrap{position:relative; margin:6px auto 0; width:222px; height:238px}
+.bodywrap svg{width:100%; height:100%; overflow:visible}
+.zone{cursor:pointer}
+.zone .ring{fill:rgba(255,255,255,.07); stroke:rgba(255,255,255,.36); stroke-width:2; stroke-dasharray:4 5;
+  transition:all 220ms var(--ease)}
+.zone:hover .ring{fill:rgba(255,255,255,.17); stroke:rgba(255,255,255,.65)}
+.zone[data-on="1"] .ring{fill:rgba(255,206,138,.4); stroke:#ffdca8; stroke-dasharray:none; stroke-width:2.6}
+.zone .zt{fill:rgba(253,252,255,.9); font-size:12px; font-weight:800; font-family:var(--font-body);
+  text-anchor:middle; pointer-events:none}
+
+/* story */
+.story{display:flex; flex-direction:column; gap:8px; margin-top:14px}
+.line{border-radius:16px; padding:12px 15px; font-size:16.5px; line-height:1.35; font-weight:700;
+  background:rgba(255,255,255,.11); border:1px solid rgba(255,255,255,.17); backdrop-filter:blur(12px);
+  opacity:0; transform:translateY(10px); animation:lineIn 560ms var(--ease) forwards}
+@keyframes lineIn{to{opacity:1; transform:none}}
+.line b{color:#ffd9a6}
+.line.says{background:rgba(178,150,255,.24); border-color:rgba(203,186,255,.45)}
+
+/* teaching screen */
+.teachline{font-family:var(--font-display); font-weight:500; font-size:clamp(25px,7vw,32px);
+  line-height:1.25; text-shadow:0 2px 20px rgba(0,0,0,.45); min-height:170px; display:flex; align-items:center}
+.teachline span{animation:rise 460ms var(--ease) both}
+.tapnote{color:var(--ink-faint); font-size:13.5px; font-weight:700; text-align:center; padding-top:6px}
+
+/* two-up */
+.twoup{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px}
+.bigchoice{appearance:none; border:1px solid var(--pill-line); background:var(--pill); border-radius:var(--r-card);
+  padding:18px 10px; cursor:pointer; color:var(--ink); font-family:var(--font-body); font-weight:800;
+  font-size:15px; line-height:1.25; display:flex; flex-direction:column; align-items:center; gap:9px;
+  min-height:126px; justify-content:center; backdrop-filter:blur(16px)}
+.bigchoice:hover{background:rgba(255,255,255,.17)}
+.bigchoice .ico{font-size:33px}
+.card-under{border-radius:18px; padding:15px 17px; margin-top:14px; font-size:17px; font-weight:800;
+  line-height:1.35; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.22)}
+
+/* countdown */
+.count{font-family:var(--font-display); font-weight:600; font-size:96px; text-align:center;
+  line-height:1; padding:26px 0; color:#ffe2b4; text-shadow:0 4px 40px rgba(255,190,110,.4)}
+.count.small{font-size:64px}
+
+/* footer */
+#bottom{flex:0 0 auto; padding:12px 20px calc(14px + env(safe-area-inset-bottom))}
+.cta{appearance:none; width:100%; min-height:56px; border-radius:var(--r-pill); border:0; background:var(--cta);
+  color:var(--cta-ink); font-family:var(--font-display); font-weight:500; font-size:19px; cursor:pointer;
+  transition:opacity 200ms, transform 140ms}
+.cta:active{transform:scale(.985)}
+.cta.ghost{background:transparent; color:var(--ink-soft); border:1px solid var(--pill-line);
+  font-size:16px; min-height:48px; margin-top:8px}
+#exit{display:block; width:100%; margin-top:9px; appearance:none; border:0; background:none;
+  color:var(--ink-faint); font-family:var(--font-body); font-size:13.5px; font-weight:800; padding:8px; cursor:pointer}
+#exit:hover{color:var(--ink-soft)}
+body.quiet #exit{color:var(--ink); font-size:16px; padding:15px; margin-top:11px;
+  border:1px solid var(--pill-line); border-radius:var(--r-pill); background:var(--pill)}
+.dots{display:flex; gap:5px; justify-content:center; padding:9px 0 0}
+.dot{width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.2)}
+.dot.on{background:rgba(255,255,255,.72)}
+body.quiet .dots{display:none}
+.badge{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink-faint); border:1px solid var(--pill-line); border-radius:999px; padding:4px 10px; margin-bottom:12px}
+
+/* adult */
+#adult{position:absolute; inset:0; z-index:9; background:#12121f; padding:26px 22px; overflow:auto;
+  display:none; font-size:14.5px; line-height:1.6; color:var(--ink-soft)}
+#adult.on{display:block}
+#adult h2{font-family:var(--font-display); font-weight:500; color:var(--ink); font-size:23px; margin:0 0 4px}
+#adult h3{font-size:11.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-faint);
+  margin:22px 0 8px; font-weight:800}
+#adult .row{display:flex; justify-content:space-between; gap:14px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.08)}
+#adult .row span:last-child{color:var(--ink); font-weight:800; text-align:right}
+#adult .note{background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09); border-radius:14px;
+  padding:13px 15px; font-size:13.5px; margin-top:10px}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:110ms !important}}
+body.quiet #chirpybar{display:none !important}
+</style>
+
+<div id="device">
+  <div id="scene" class="sc-night"></div>
+  <div id="scrim"></div>
+  <div id="ui">
+    <header id="top">
+      <button class="icobtn" id="backbtn" hidden aria-label="Go back">←</button>
+      <div style="flex:1"></div>
+      <button class="icobtn" id="soundbtn" aria-label="Turn the voice off"><svg id="sndico" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+      <button class="icobtn" id="adultbtn" aria-label="Hold for grown-ups"><span id="adultfill"></span><span style="position:relative">Grown-ups</span></button>
+    </header>
+    <main id="screen"></main>
+    <footer id="bottom">
+      <div id="ctaslot"></div>
+      <button id="exit">Get a grown-up</button>
+      <div class="dots" id="dots"></div>
+    </footer>
+  </div>
+  <div id="adult"></div>
+</div>
+
+<script>
+const SP = {
+  idle:"__SPRITE_idle__", curious:"__SPRITE_curious__", worried:"__SPRITE_worried__",
+  excited:"__SPRITE_excited__", jumping:"__SPRITE_jumping__", hopeful:"__SPRITE_hopeful__",
+  said1:"__SPRITE_said1__", said2:"__SPRITE_said2__", said3:"__SPRITE_said3__"
+};
+
+const store={get(k,d){try{const v=localStorage.getItem('mg_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+             set(k,v){try{localStorage.setItem('mg_'+k,JSON.stringify(v))}catch(e){}}};
+
+let S={ child:store.get('child',''), age:store.get('age',null), chirpy:store.get('chirpy','Chirpy'),
+  feeling:null,size:null,body:null,thought:null,situation:null,cameraStep:0,maybe:null,noticed:null,
+  quiet:false, history:[], teach:null, ti:0 };
+
+/* ---------------- content ---------------- */
+const FEELINGS=[
+ {id:'happy',  label:'Happy',  ok:1, hue:44,  face:'happy'},
+ {id:'excited',label:'Excited',ok:1, hue:22,  face:'excited'},
+ {id:'sad',    label:'Sad',    ok:0, hue:212, face:'sad'},
+ {id:'angry',  label:'Angry',  ok:0, hue:8,   face:'angry'},
+ {id:'scared', label:'Scared', ok:0, hue:268, face:'scared'},
+ {id:'worried',label:'Worried',ok:0, hue:180, face:'worried'}
+];
+const THOUGHTS=[
+ "Nobody wants to play with me.",
+ "I'm going to get in trouble.",
+ "That's not fair!",
+ "I'm rubbish at this.",
+ "Something bad is going to happen."
+];
+const SITUATIONS=[
+ {id:'said',   emoji:'💬', label:'Someone said something mean', past:'someone said something to you'},
+ {id:'turn',   emoji:'🎲', label:"I didn't get a turn",         past:"you didn't get a turn"},
+ {id:'toldoff',emoji:'🙅', label:'I got told off',              past:'you got told off'},
+ {id:'broke',  emoji:'🧩', label:"Something wouldn't work",     past:"something wouldn't work"},
+ {id:'left',   emoji:'🚪', label:'Someone went away',           past:'someone went away'},
+ {id:'changed',emoji:'📅', label:'We had to do something else', past:'the plan changed'}
+];
+const MAYBES={
+ said:["Maybe they were having a rotten day","Maybe it came out wrong","Maybe they felt bad after","Maybe they were cross about something else"],
+ turn:["Maybe they forgot whose go it was","Maybe they didn't see you waiting","Maybe they got too excited","Maybe there wasn't time"],
+ toldoff:["Maybe the grown-up was tired","Maybe they only saw the end bit","Maybe they got a fright","Maybe they'd said it lots already"],
+ broke:["Maybe it was already broken","Maybe it's a really tricky one","Maybe it needs a different way","Maybe nobody could do it"],
+ left:["Maybe they had to go somewhere","Maybe they're coming back","Maybe they didn't know you wanted them","Maybe they were sad to go too"],
+ changed:["Maybe something happened nobody planned","Maybe a grown-up had to change it","Maybe it can happen another day","Maybe nobody knew till the end"],
+ other:["Maybe there's a bit you couldn't see","Maybe it wasn't about you","Maybe someone was having a hard day","Maybe nobody meant it"]
+};
+const NOTICED=["I caught a feeling","I caught where it was hiding","I caught what CHIRPY said","I caught another maybe"];
+const GOODBITS=["Someone was kind to me","I did something I like","Something worked!","I was with someone I love","It was just a good day"];
+
+/* the closing teaching — one per feeling, from the teaching-moves doc */
+const CLOSERS={
+ angry:{scene:'den', pose:'worried', lines:[
+   "One more thing before you go.",
+   "When a dog is scared… what does it do?",
+   "It BARKS. Big and loud and fierce.",
+   "So you think it's cross.",
+   "It isn't. It's scared — standing in front of the scared with something loud.",
+   "People do that too.",
+   "Sometimes there's a smaller, quieter feeling hiding behind the shouty one."]},
+ sad:{scene:'dawn', pose:'hopeful', lines:[
+   "One more thing before you go.",
+   "When you were really little, you used to cry about the blue cup.",
+   "Someone gave you the red one.",
+   "And it was the worst thing that had EVER happened.",
+   "Do you still mind about the blue cup?",
+   "It really was that bad then. That bit was true.",
+   "And then, all by itself, it went."]},
+ scared:{scene:'still', pose:'curious', lines:[
+   "One more thing before you go.",
+   "When there's a scary bit in a film, you get scared. Properly scared.",
+   "But you also know you're sitting on the sofa.",
+   "Both at once!",
+   "The scared you — and the you that knows where the sofa is.",
+   "That second one never goes anywhere.",
+   "It's there even when a feeling is really really big."]},
+ worried:{scene:'night', pose:'said2', lines:[
+   "One more thing before you go.",
+   "Your brain has a guard dog.",
+   "Its whole job is to bark if something's coming.",
+   "Sometimes it's right!",
+   "Mostly… it's the postman.",
+   "You wouldn't get rid of the dog. It's looking after you.",
+   "You just learn to check. Postman? Or a real thing?"]},
+ happy:{scene:'dawn', pose:'excited', lines:[
+   "Here's a game nobody can see you playing.",
+   "Next time you're waiting — in the car, in a queue, on the carpet —",
+   "can you feel your feet? Inside your shoes.",
+   "Wiggle your toes. Nobody will know.",
+   "That's it. That's the whole game.",
+   "Your head can be miles away.",
+   "Your feet are always right here."]},
+ dunno:{scene:'still', pose:'curious', lines:[
+   "One more thing before you go.",
+   "Not knowing is allowed.",
+   "Nobody knows what they feel all the time. Not even grown-ups.",
+   "You can just be here, not knowing, and that's a fine place to be."]}
+};
+CLOSERS.excited = CLOSERS.happy;
+
+/* ---------------- scenes ---------------- */
+const SCENES={
+night:`<svg viewBox="0 0 430 932" preserveAspectRatio="xMidYMid slice"><defs>
+ <radialGradient id="lamp" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffc478" stop-opacity=".85"/><stop offset="1" stop-color="#ffb765" stop-opacity="0"/></radialGradient>
+ <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a5aa0" stop-opacity=".5"/><stop offset="1" stop-color="#1a1f45" stop-opacity=".2"/></linearGradient></defs>
+ <g opacity=".85"><circle cx="72" cy="118" r="1.5" fill="#fff" opacity=".7"/><circle cx="128" cy="76" r="1" fill="#fff" opacity=".5"/><circle cx="196" cy="132" r="1.3" fill="#fff" opacity=".6"/><circle cx="264" cy="88" r="1" fill="#fff" opacity=".45"/><circle cx="336" cy="146" r="1.6" fill="#fff" opacity=".7"/><circle cx="380" cy="98" r="1.1" fill="#fff" opacity=".5"/></g>
+ <rect x="56" y="150" width="318" height="320" rx="14" fill="url(#glass)" stroke="rgba(255,255,255,.16)" stroke-width="2"/>
+ <line x1="215" y1="150" x2="215" y2="470" stroke="rgba(255,255,255,.13)" stroke-width="2"/><line x1="56" y1="310" x2="374" y2="310" stroke="rgba(255,255,255,.13)" stroke-width="2"/>
+ <g opacity=".55" fill="#0e1230"><rect x="60" y="386" width="52" height="84"/><rect x="120" y="410" width="40" height="60"/><rect x="168" y="374" width="60" height="96"/><rect x="238" y="418" width="46" height="52"/><rect x="292" y="394" width="78" height="76"/></g>
+ <g opacity=".7" fill="#ffcf8a"><rect x="70" y="398" width="7" height="9"/><rect x="86" y="422" width="7" height="9"/><rect x="180" y="390" width="7" height="9"/><rect x="204" y="434" width="7" height="9"/><rect x="308" y="410" width="7" height="9"/><rect x="340" y="438" width="7" height="9"/></g>
+ <ellipse cx="352" cy="524" rx="150" ry="118" fill="url(#lamp)"/><path d="M330 524 l22-46 22 46z" fill="#f2c98a" opacity=".9"/><rect x="349" y="524" width="6" height="42" fill="#c9a173" opacity=".8"/></svg>`,
+den:`<svg viewBox="0 0 430 932" preserveAspectRatio="xMidYMid slice"><defs>
+ <radialGradient id="fire" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb066" stop-opacity=".82"/><stop offset=".55" stop-color="#e8703a" stop-opacity=".28"/><stop offset="1" stop-color="#c2451f" stop-opacity="0"/></radialGradient></defs>
+ <ellipse cx="215" cy="820" rx="290" ry="230" fill="url(#fire)"/>
+ <g opacity=".75"><path d="M172 800 q18-52 44-70 q-8 34 12 48 q16-16 14-42 q30 34 24 74 q-6 40-48 44 q-52-4-46-54z" fill="#ff9a4d" opacity=".55"/><path d="M192 806 q10-34 26-44 q-4 22 8 30 q10-10 8-26 q18 22 14 48 q-4 24-28 26 q-32-2-28-34z" fill="#ffd08a" opacity=".65"/></g>
+ <g opacity=".45" fill="#3a221c"><rect x="150" y="836" width="130" height="12" rx="6"/><rect x="164" y="822" width="102" height="12" rx="6" transform="rotate(-6 215 828)"/></g></svg>`,
+look:`<svg viewBox="0 0 430 932" preserveAspectRatio="xMidYMid slice"><defs>
+ <radialGradient id="cool" cx=".5" cy=".35" r=".6"><stop offset="0" stop-color="#8ce0f0" stop-opacity=".22"/><stop offset="1" stop-color="#8ce0f0" stop-opacity="0"/></radialGradient></defs>
+ <ellipse cx="215" cy="330" rx="250" ry="250" fill="url(#cool)"/>
+ <g stroke="rgba(160,225,240,.09)" stroke-width="1"><line x1="0" y1="200" x2="430" y2="200"/><line x1="0" y1="330" x2="430" y2="330"/><line x1="0" y1="460" x2="430" y2="460"/><line x1="107" y1="0" x2="107" y2="932"/><line x1="215" y1="0" x2="215" y2="932"/><line x1="323" y1="0" x2="323" y2="932"/></g>
+ <g fill="none" stroke="rgba(180,235,250,.15)" stroke-width="1.5"><circle cx="215" cy="330" r="120"/><circle cx="215" cy="330" r="182"/></g></svg>`,
+dawn:`<svg viewBox="0 0 430 932" preserveAspectRatio="xMidYMid slice"><defs>
+ <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff0cf" stop-opacity=".95"/><stop offset=".4" stop-color="#ffb06a" stop-opacity=".5"/><stop offset="1" stop-color="#ff8a5c" stop-opacity="0"/></radialGradient></defs>
+ <ellipse cx="215" cy="880" rx="320" ry="280" fill="url(#sun)"/><circle cx="215" cy="884" r="70" fill="#fff2d6" opacity=".8"/>
+ <g opacity=".35" fill="#2b1e33"><path d="M0 806 q56-30 108-6 q54 26 108 0 q56-26 106-2 q56 26 108 4 v130 H0z"/></g></svg>`,
+still:`<svg viewBox="0 0 430 932" preserveAspectRatio="xMidYMid slice"><defs>
+ <radialGradient id="hold" cx=".5" cy=".46" r=".55"><stop offset="0" stop-color="#ffd9a8" stop-opacity=".2"/><stop offset="1" stop-color="#ffd9a8" stop-opacity="0"/></radialGradient></defs>
+ <ellipse cx="215" cy="430" rx="260" ry="260" fill="url(#hold)"/></svg>`,
+dark:`<svg viewBox="0 0 430 932"><g opacity=".5"><circle cx="90" cy="180" r="1.2" fill="#fff"/><circle cx="330" cy="240" r="1" fill="#fff"/><circle cx="210" cy="120" r="1.3" fill="#fff"/></g></svg>`
+};
+
+/* ---------------- faces ---------------- */
+function faceSVG(k){
+ const eyes={happy:'<path d="M20 26 q5-6 10 0"/><path d="M45 26 q5-6 10 0"/>',
+  excited:'<circle cx="25" cy="26" r="4.6" fill="currentColor" stroke="none"/><circle cx="50" cy="26" r="4.6" fill="currentColor" stroke="none"/>',
+  sad:'<path d="M20 24 q5 5 10 0"/><path d="M45 24 q5 5 10 0"/>',
+  angry:'<path d="M18 20 l13 6"/><path d="M57 20 l-13 6"/><circle cx="26" cy="29" r="3.4" fill="currentColor" stroke="none"/><circle cx="49" cy="29" r="3.4" fill="currentColor" stroke="none"/>',
+  scared:'<circle cx="25" cy="26" r="6" fill="currentColor" stroke="none"/><circle cx="50" cy="26" r="6" fill="currentColor" stroke="none"/>',
+  worried:'<path d="M18 21 l12 3"/><path d="M57 21 l-12 3"/><circle cx="26" cy="29" r="3.6" fill="currentColor" stroke="none"/><circle cx="49" cy="29" r="3.6" fill="currentColor" stroke="none"/>'};
+ const mouth={happy:'<path d="M26 44 q11 11 22 0"/>',
+  excited:'<path d="M25 41 q12 15 25 0 q-12 6 -25 0z" fill="currentColor"/>',
+  sad:'<path d="M27 50 q11-10 21 0"/>', angry:'<path d="M26 50 q11-9 22 0"/>',
+  scared:'<ellipse cx="37" cy="47" rx="7" ry="9" fill="currentColor" stroke="none"/>',
+  worried:'<path d="M26 47 q6 5 11 0 q5-5 11 0"/>'};
+ return `<svg viewBox="0 0 75 68" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round">
+  <circle cx="37.5" cy="36" r="30" fill="rgba(255,255,255,.1)" stroke="currentColor" stroke-width="2.6"/>${eyes[k]}${mouth[k]}</svg>`;
+}
+
+/* ---------------- engine ---------------- */
+const $=s=>document.querySelector(s);
+const el={scene:$('#scene'),screen:$('#screen'),cta:$('#ctaslot'),back:$('#backbtn'),
+  exit:$('#exit'),dots:$('#dots'),adult:$('#adult'),sound:$('#soundbtn')};
+let soundOn=true, current=null, lock=false;
+
+/* Two voices. The narrator is warm and unhurried; Chirpy is lighter,
+   quicker and a bit breathless — he must never sound like the narrator. */
+let VOICES=[], vNarr=null, vChirp=null;
+function pickVoices(){
+  if(!window.speechSynthesis) return;
+  VOICES=speechSynthesis.getVoices()||[];
+  const en=VOICES.filter(v=>/^en/i.test(v.lang));
+  const pool=en.length?en:VOICES;
+  const find=re=>pool.find(v=>re.test(v.name));
+  vNarr = find(/Daniel|Google UK English Male|Arthur|Male/i) || pool[0] || null;
+  vChirp = find(/Karen|Samantha|Google UK English Female|Martha|Tessa|Female/i)
+        || pool.find(v=>v!==vNarr) || vNarr;
+}
+if(window.speechSynthesis){ pickVoices(); speechSynthesis.onvoiceschanged=pickVoices }
+
+function say(t,who){ if(!soundOn||!window.speechSynthesis||!t) return;
+  try{ speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(String(t).replace(/<[^>]+>/g,''));
+    if(who==='chirpy'){
+      if(vChirp) u.voice=vChirp;
+      u.rate=1.14; u.pitch=1.75;           // lighter, quicker, never authoritative
+    } else {
+      if(vNarr) u.voice=vNarr;
+      u.rate=S.quiet?.8:.92; u.pitch=S.quiet?.92:1;
+    }
+    speechSynthesis.speak(u);
+  }catch(e){} }
+function sayChirpy(t){ say(t,'chirpy') }
+
+function setScene(n){ el.scene.className='sc-'+n; el.scene.innerHTML=SCENES[n]||'' }
+
+const ORDER=['p01','p01b','jump','p02','p03','p04','p05','p06','p07','p08'];
+
+/* Chirpy bar — on nearly every screen */
+function bar(pose,line,opts){
+  opts=opts||{};
+  if(S.quiet) return '';
+  return `<div id="chirpybar" class="${opts.big?'big':''} ${opts.sm?'sm':''} ${opts.pop?'pop':''}">
+    ${line?`<div class="bubble ${opts.wait?'wait':''}">${line}</div>`:'<div style="flex:1"></div>'}
+    <img alt="${S.chirpy}" src="${SP[pose||'idle']}"></div>`;
+}
+
+function render(id,opts){
+  opts=opts||{}; const def=SCREENS[id]; if(!def) return;
+  if(!opts.back) S.history.push(id);
+  current=id; lock=false;
+  const v=def();
+  setScene(v.scene);
+  el.screen.className=v.center?'center':'';
+  el.screen.innerHTML='<div class="inner">'+v.html+'</div>';
+  el.cta.innerHTML=v.cta||'';
+  el.back.hidden=!(S.history.length>1&&v.canBack!==false);
+  el.exit.style.display=v.hideExit?'none':'block';
+  const path=ORDER.filter(x=>x!=='p01b');
+  el.dots.innerHTML=(ORDER.indexOf(id)>=0&&!S.quiet)
+    ? path.map((x,n)=>`<div class="dot ${path.indexOf(id)>=n?'on':''}"></div>`).join('') : '';
+  if(v.after) v.after();
+  if(v.speak!==false) say(v.speak||v.voice);
+}
+function go(id){ render(id) }
+function back(){ S.history.pop(); const p=S.history[S.history.length-1]; if(p) render(p,{back:true}) }
+el.back.onclick=back;
+
+/* tap a choice → it fills, then the app moves on by itself */
+function markChosen(node){
+  if(!node) return;
+  document.querySelectorAll('#screen [aria-pressed]').forEach(b=>b.setAttribute('aria-pressed','false'));
+  document.querySelectorAll('#screen [data-on]').forEach(b=>b.setAttribute('data-on','0'));
+  node.setAttribute(node.hasAttribute('data-on')?'data-on':'aria-pressed', node.hasAttribute('data-on')?'1':'true');
+}
+function choose(setter,next,delay,node){
+  if(lock) return; lock=true; setter(); markChosen(node);
+  setTimeout(()=>{ lock=false; typeof next==='function'?next():go(next) }, delay||520);
+}
+function btn(label,onclick,o){o=o||{};
+  return `<button class="cta ${o.ghost?'ghost':''}" ${o.disabled?'disabled':''} onclick="${onclick}">${label}</button>`}
+
+/* ---------------- screens ---------------- */
+const SCREENS={
+
+'set-gate':()=>({scene:'still',center:true,hideExit:true,canBack:false,speak:false,
+ html:`<span class="badge">For a grown-up</span><h1>This bit's for a grown-up.</h1>
+  <p class="sub">Two questions, then it's theirs. Mind Gym keeps a first name and an age. Nothing else.</p>`,
+ cta:btn("I'm the grown-up","go('set-name')")}),
+
+'set-name':()=>({scene:'still',center:true,hideExit:true,speak:false,
+ html:`<span class="badge">For a grown-up</span><h1>What shall we call them?</h1>
+  <p class="sub">First name or nickname — whatever they'd answer to.</p>
+  <div class="stack"><input id="nm" class="pill" placeholder="First name" value="${S.child||''}" autocomplete="off"></div>`,
+ cta:btn("Next","S.child=(document.getElementById('nm').value||'').trim()||'Ada'; store.set('child',S.child); go('set-age')"),
+ after(){const n=document.getElementById('nm'); if(n) setTimeout(()=>n.focus(),160)}}),
+
+'set-age':()=>({scene:'still',center:true,hideExit:true,speak:false,
+ html:`<span class="badge">For a grown-up</span><h1>How old is ${S.child}?</h1>
+  <p class="sub">This sets the whole reading level, so it matters more than it looks.</p>
+  <div class="faces">${[3,4,5,6,7,8].map(a=>`<button class="face" data-age="${a}" aria-pressed="${S.age===a}" onclick="pickAge(${a},this)"><div style="font-family:var(--font-display);font-size:30px">${a}</div></button>`).join('')}</div>
+  <p class="tiny">This build is ages 3–8. The 9–14 path is separate.</p>`,
+ cta:''}),
+
+'set-hand':()=>({scene:'still',center:true,hideExit:true,speak:false,
+ html:`<h1>Now hand it to ${S.child}.</h1>
+  <p class="sub">The rest is theirs. Nothing is scored, and you won't see it unless they show you.</p>
+  <p class="tiny">Sit next to them for the first go. Don't help them answer.</p>`,
+ cta:btn("Passing it over","go('hello')")}),
+
+/* ---------- the discovery of Chirpy ---------- */
+hello:()=>({scene:'night',center:true,canBack:false,
+ voice:`Hello! Want to try something a bit weird?`,
+ html:`<h1>Hello ${S.child}!</h1><p class="sub">Want to try something a bit weird?</p>`,
+ cta:btn("Go on then","go('quiet-1')")}),
+
+'quiet-1':()=>({scene:'dark',center:true,
+ voice:"Make your head go quiet. Completely quiet. No thinking at all. Ready?",
+ html:`<h1>Make your head go <em>quiet</em>.</h1>
+  <p class="sub">Completely quiet. No thinking at all.<br>Not one single thought.</p>`,
+ cta:btn("Ready","go('quiet-2')")}),
+
+'quiet-2':()=>({scene:'dark',center:true,canBack:false,speak:false,
+ html:`<div class="count" id="cd">10</div><p class="sub" style="text-align:center">Shhhhh…</p>`,
+ after(){ let n=10; const t=setInterval(()=>{ n--; const c=document.getElementById('cd');
+   if(!c){clearInterval(t);return} c.textContent=n>0?n:'…';
+   if(n<=0){clearInterval(t); setTimeout(()=>go('quiet-3'),700)} },1000) },
+ cta:''}),
+
+'quiet-3':()=>({scene:'night',center:true,canBack:false,
+ voice:"So. Did it stay quiet?",
+ html:`<h1>So… did it stay quiet?</h1>`,
+ cta:btn("No!","go('quiet-4')")+btn("Sort of","go('quiet-4')",{ghost:true})}),
+
+'quiet-4':()=>({scene:'night',
+ voice:"Something started talking, didn't it. Probably about how weird this was. That's the one we're looking for!",
+ html:`${bar('excited',"Something started talking, didn't it!",{big:true,pop:true})}
+  <h1>Found it.</h1>
+  <p class="sub">Probably saying something about how weird this was.<br>It never stops. It's talking <em>right now</em>. About this.</p>`,
+ cta:btn("Who IS that?","go('name-it')")}),
+
+'name-it':()=>({scene:'night',
+ voice:"This is your chatterbox. It lives on your shoulder and it talks all day. What shall we call it?",
+ html:`${bar('curious',null,{big:true})}
+  <h1>This one lives on your shoulder.</h1>
+  <p class="sub">It talks all day long. It notices everything. And it gets things wrong ALL the time.</p>
+  <div class="stack"><input id="cn" class="pill" placeholder="Chirpy" value="${S.chirpy||''}" autocomplete="off"></div>
+  <p class="tiny">Pick any name you like.</p>`,
+ cta:btn("That's its name!","S.chirpy=(document.getElementById('cn').value||'').trim()||'Chirpy'; store.set('chirpy',S.chirpy); teachGo('alarm')")}),
+
+/* ---------- P-01 ---------- */
+p01:()=>({scene:'night',canBack:false,
+ voice:"How do you feel right now?",
+ html:`${bar('idle',`Hello again!`,{sm:1})}
+  <h1>How do you feel right now?</h1>
+  <div class="faces">${FEELINGS.map(f=>`<button class="face" style="color:hsl(${f.hue} 82% 78%)" aria-pressed="${S.feeling===f.id}" onclick="pickFeeling('${f.id}',this)">${faceSVG(f.face)}<span style="color:var(--ink)">${f.label}</span></button>`).join('')}</div>
+  <div class="stack" style="margin-top:9px"><button class="pill" aria-pressed="${S.feeling==='dunno'}" onclick="pickFeeling('dunno',this)"><span class="emoji">🤷</span>I don't know</button></div>`,
+ cta:''}),
+
+p01b:()=>{const f=FEELINGS.find(x=>x.id===S.feeling)||{label:'it',hue:212};
+ const sizes=[[26,'A bit','bit'],[48,'Quite big','quite'],[74,'REALLY big','really']];
+ return {scene:'night', voice:`How big is the ${f.label.toLowerCase()} one?`,
+ html:`${bar('curious',`How big?`)}
+  <h1>How big is the ${f.label.toLowerCase()} one?</h1>
+  <div class="sizes">${sizes.map(([d,l,i])=>`<button class="sizebtn" style="color:hsl(${f.hue} 80% 74%)" aria-pressed="${S.size===i}" onclick="pickSize('${i}',this)"><div class="blob" style="width:${d}px;height:${d}px"></div><span style="color:var(--ink)">${l}</span></button>`).join('')}</div>
+  <p class="tiny">All three are fine. There's no better one.</p>`, cta:''}},
+
+/* ---------- the jump experiment (move 12) ---------- */
+jump:()=>({scene:'look',center:true,
+ voice:"Quick! Jump up and down. Ten times. Go on, properly!",
+ html:`${bar('excited',"JUMP!",{big:true})}
+  <h1>Quick — <em>jump</em>!</h1>
+  <p class="sub">Up and down. Ten times. Go on, properly.</p>`,
+ cta:btn("I did it","go('jump-2')")+btn("Not right now","go('p02')",{ghost:true})}),
+
+'jump-2':()=>({scene:'look',center:true,
+ voice:"Now stop. Stand really still. What's your heart doing?",
+ html:`<h1>Now stop.<br>Stand really still.</h1>
+  <p class="sub">What's your heart doing in there?</p>`,
+ cta:btn("It's going fast!","go('jump-3')")}),
+
+'jump-3':()=>({scene:'look',center:true,
+ voice:"You can feel it, can't you. You just found something happening inside you. That's the whole game.",
+ html:`${bar('hopeful',"You felt it!")}
+  <h1>You felt it.</h1>
+  <p class="sub">You just found something happening inside you.<br>Feelings do that too. They turn up <em>somewhere</em> in there.</p>`,
+ cta:btn("Let's look","go('p02')")}),
+
+/* ---------- P-02 body ---------- */
+p02:()=>({scene:'look',
+ voice:S.quiet?"Where is it?":"Where's the feeling hiding?",
+ html:`${bar('curious',"Where's it hiding?",{sm:1})}
+  <h1>${S.quiet?'Where is it?':"Where's it <em>hiding</em>?"}</h1>
+  <div class="bodywrap"><svg viewBox="0 0 222 238">
+   <g fill="rgba(255,255,255,.16)" stroke="rgba(255,255,255,.38)" stroke-width="2" stroke-linejoin="round">
+    <circle cx="111" cy="36" r="26"/>
+    <path d="M111 62 q-29 2-33 24 l-6 56 q-1 9 8 10 l2 40 q0 7 7 7 h44 q7 0 7-7 l2-40 q9-1 8-10 l-6-56 q-4-22-33-24z"/>
+    <path d="M76 90 q-15 7-17 27 l-6 36 q-1 8 7 9 q7 1 9-7 l6-34z"/>
+    <path d="M146 90 q15 7 17 27 l6 36 q1 8-7 9 q-7 1-9-7 l-6-34z"/></g>
+   <g><g class="zone" data-on="${S.body==='head'?1:0}" onclick="pickBody('head',this)"><circle class="ring" cx="111" cy="36" r="28"/><text class="zt" x="111" y="6">head</text></g>
+    <g class="zone" data-on="${S.body==='heart'?1:0}" onclick="pickBody('heart',this)"><circle class="ring" cx="111" cy="100" r="25"/><text class="zt" x="111" y="104">chest</text></g>
+    <g class="zone" data-on="${S.body==='tummy'?1:0}" onclick="pickBody('tummy',this)"><circle class="ring" cx="111" cy="154" r="25"/><text class="zt" x="111" y="158">tummy</text></g>
+    <g class="zone" data-on="${S.body==='hands'?1:0}" onclick="pickBody('hands',this)"><circle class="ring" cx="42" cy="166" r="23"/><circle class="ring" cx="180" cy="166" r="23"/><text class="zt" x="42" y="202">hands</text><text class="zt" x="180" y="202">hands</text></g></g></svg></div>
+  <div class="stack" style="margin-top:6px"><button class="pill" aria-pressed="${S.body==='cant'}" onclick="pickBody('cant',this)"><span class="emoji">🌫️</span>Can't find it</button></div>
+  ${S.quiet?'':`<p class="tiny">No right place. My cross lives in my jaw. Yours lives wherever yours lives.</p>`}`,
+ cta:S.quiet?btn("Stop here for now","go('stop')",{ghost:true}):''}),
+
+/* ---------- P-03 the thought ---------- */
+p03:()=>{
+ if(S.quiet) return {scene:'still', voice:"What's in your head right now?",
+  html:`<h1>What's in your head?</h1><div class="stack">
+   ${THOUGHTS.slice(0,3).map((t,i)=>`<button class="pill big" aria-pressed="${S.thought===t}" onclick="pickThought(${i},this)">${t}</button>`).join('')}
+   <button class="pill big" aria-pressed="${S.thought==='none'}" onclick="pickThoughtNone(this)">Something else</button></div>`,
+  cta:btn("Stop here for now","go('stop')",{ghost:true})};
+ return {scene:'night', voice:`Listen. What's it saying?`,
+  html:`${bar('said1', S.thought&&S.thought!=='none'?S.thought:'shhh… listening',{sm:1,wait:!(S.thought&&S.thought!=='none')})}
+   <h1>Listen. What's ${S.chirpy} saying?</h1>
+   <div class="stack">${THOUGHTS.map((t,i)=>`<button class="pill" aria-pressed="${S.thought===t}" onclick="pickThought(${i},this)">${t}</button>`).join('')}
+   <button class="pill" aria-pressed="${S.thought==='none'}" onclick="pickThoughtNone(this)"><span class="emoji">🎤</span>Something else</button></div>`,
+  cta:''};
+},
+
+/* ---------- P-04 what happened ---------- */
+p04:()=>({scene:'look',
+ voice:"What did your eyes see? Just the bit that happened out there, in the room.",
+ html:`${bar('curious',"What happened?",{sm:1})}
+  <h1>What did your <em>eyes</em> see?</h1>
+  <p class="sub">Just the bit that happened out there, in the room.</p>
+  <div class="stack">${SITUATIONS.map(s=>`<button class="pill" aria-pressed="${S.situation===s.id}" onclick="pickSit('${s.id}',this)"><span class="emoji">${s.emoji}</span>${s.label}</button>`).join('')}</div>`,
+ cta:''}),
+
+/* ---------- P-05 the story ---------- */
+p05:()=>{const f=FEELINGS.find(x=>x.id===S.feeling),s=SITUATIONS.find(x=>x.id===S.situation);
+ const bw={head:'head',heart:'chest',tummy:'tummy',hands:'hands',cant:'somewhere'}[S.body]||'body';
+ const th=(S.thought&&S.thought!=='none')?S.thought:"something you didn't like";
+ const lines=[`<b>${s?s.past.charAt(0).toUpperCase()+s.past.slice(1):'Something happened'}.</b>`,
+  `You felt <b>${f?f.label.toLowerCase():'something'}</b>. It was in your <b>${bw}</b>.`,
+  S.quiet?null:`And ${S.chirpy} went: <b>"${th}"</b>`].filter(Boolean);
+ return {scene:'den', voice:S.quiet?"Here's what happened.":"Look what we made.",
+  html:`${bar('jumping',null)}
+   <h1>${S.quiet?"Here's what happened.":'Look what we made!'}</h1>
+   <div class="story">${lines.map((l,i)=>`<div class="line ${i===2?'says':''}" style="animation-delay:${i*520}ms">${l}</div>`).join('')}</div>
+   ${S.quiet?'':`<p class="tiny">Two of those really happened out there. One of them ${S.chirpy} made up in your head.</p>`}`,
+  cta:S.quiet?btn("Next","go('p08')")+btn("Stop here for now","go('stop')",{ghost:true}):btn("Which one?","go('p06')")}},
+
+/* ---------- P-06 camera test ---------- */
+p06:()=>{const s=SITUATIONS.find(x=>x.id===S.situation);
+ const th=(S.thought&&S.thought!=='none')?S.thought:"Something bad is going to happen.";
+ const first=S.cameraStep===0;
+ const card=first?(s?s.label:'Something happened'):`${S.chirpy} said: "${th}"`;
+ return {scene:'look',
+  voice:"This bit. Did your eyes see it happen? Or did it happen in your head?",
+  html:`${bar('curious',"Which one?",{sm:1})}
+   <h1>Did your <em>eyes</em> see it?</h1>
+   <div class="card-under">${card}</div>
+   <div class="twoup">
+    <button class="bigchoice" onclick="camera('cam')"><span class="ico">👀</span>My eyes<br>saw it</button>
+    <button class="bigchoice" onclick="camera('brain')"><span class="ico">🧠</span>It happened<br>in my head</button></div>
+   <p class="tiny">Both are allowed. They're just different kinds of bits.</p>`,
+  cta:''}},
+
+/* ---------- P-07 the maybes ---------- */
+p07:()=>{const l=MAYBES[S.situation]||MAYBES.other;
+ return {scene:'den', voice:`It only thought of one story. Let's make some more.`,
+  html:`${bar('hopeful',"I only thought of one!",{sm:1})}
+   <h1>${S.chirpy} made <em>one</em> story.</h1>
+   <p class="sub">Here are some others it never thought of.</p>
+   <div class="stack">${l.map((m,i)=>`<button class="pill" aria-pressed="${S.maybe===i}" onclick="pickMaybe(${i},this)">${m}</button>`).join('')}</div>`,
+  cta:''}},
+
+p07b:()=>({scene:'den',center:true,
+ voice:"Which one is true? Nobody knows. Not you. Not me. Not your chatterbox either. And that's allowed.",
+ html:`${bar('curious',"Nobody knows!",{big:true})}
+  <h1>Which one's true?</h1>
+  <p class="sub"><em>Nobody knows.</em> Not you. Not me. Definitely not ${S.chirpy}.<br>And that's allowed.</p>`,
+ cta:btn("Okay!","go('p08')")}),
+
+/* ---------- pleasant branch ---------- */
+g01:()=>({scene:'dawn',
+ voice:"What made it a good one?",
+ html:`${bar('excited',"Ooh, tell me!",{sm:1})}
+  <h1>What made it a good one?</h1>
+  <div class="stack">${GOODBITS.map((t,i)=>`<button class="pill" aria-pressed="${S.noticed===t}" onclick="pickGood(${i},this)">${t}</button>`).join('')}</div>`,
+ cta:''}),
+
+/* ---------- P-08 reflection ---------- */
+p08:()=>({scene:'dawn',
+ voice:"What did you catch today?",
+ html:`${bar('hopeful',"What did we catch?",{sm:1})}
+  <h1>What did you <em>catch</em>?</h1>
+  <div class="stack">${NOTICED.slice(0,S.quiet?2:4).map((t,i)=>`<button class="pill" aria-pressed="${S.noticed===NOTICED[i]}" onclick="pickNoticed(${i},this)">${t.replace('CHIRPY',S.chirpy)}</button>`).join('')}</div>`,
+ cta:''}),
+
+/* ---------- the teaching, spoken ---------- */
+teach:()=>{const t=S.teach, last=S.ti>=t.lines.length-1;
+ return {scene:t.scene, canBack:false, center:true,
+  voice:t.lines[S.ti],
+  html:`${bar(t.pose,null,{big:S.ti===0})}
+   <div class="teachline"><span key="${S.ti}">${t.lines[S.ti]}</span></div>
+   <p class="tapnote">${last?'':'&nbsp;'}</p>`,
+  cta:last?btn(t.endLabel||"Okay",t.endGo||"go('done')"):btn("Next","teachNext()")}},
+
+done:()=>({scene:'dawn',center:true,canBack:false,
+ voice:"See you next time.",
+ html:`${bar('excited',"Bye!",{big:true})}
+  <h1>See you next time.</h1>
+  <p class="sub">It's in your book. Nobody sees it unless you show them.</p>`,
+ cta:btn("Go again","resetSession(); go('p01')",{ghost:true})}),
+
+stop:()=>({scene:'still',center:true,canBack:false,
+ voice:"That's completely fine. You can stop whenever you like.",
+ html:`<h1>That's completely fine.</h1><p class="sub">You can stop whenever you like.</p>`,
+ cta:btn("Get a grown-up","go('sup01')")+btn("Just close it","resetSession(); go('p01')",{ghost:true})}),
+
+sup01:()=>({scene:'still',center:true,hideExit:true,
+ voice:"Who do you want?",
+ html:`<h1>Who do you want?</h1>
+  <p class="sub">Tell them anything you like. You don't have to show them what's in here.</p>
+  <div class="stack" style="margin-top:18px">
+   <button class="pill big" onclick="go('sup01b')">Mum</button>
+   <button class="pill big" onclick="go('sup01b')">Dad</button>
+   <button class="pill big" onclick="go('sup01b')">Someone at school</button></div>`,
+ cta:btn("Go back","back()",{ghost:true})}),
+
+sup01b:()=>({scene:'still',center:true,hideExit:true,canBack:false,
+ voice:"Go and find them.",
+ html:`<h1>Go and find them.</h1>
+  <p class="sub">If they're busy right now, that's okay. Try again in a bit, or try someone else.</p>
+  <p class="tiny">The real app needs a safeguarding policy here. It isn't written yet — see the open decisions in the master plan.</p>`,
+ cta:btn("Okay","resetSession(); go('p01')")})
+};
+
+/* ---------------- teaching runner ---------------- */
+const TEACH={
+ alarm:{scene:'night',pose:'worried',lines:[
+   `Is ${S=>S.chirpy} naughty?`],endLabel:''}
+};
+function teachGo(key){
+  if(key==='alarm'){
+    S.teach={scene:'night',pose:'worried',
+     lines:[`Quick question. Is it naughty?`,
+      "Have you ever burnt the toast?",
+      "And the smoke alarm goes off. SCREAMING. The whole house.",
+      "For toast.",
+      "Was the alarm being naughty? No — it was doing its job.",
+      "It just can't tell toast from a real fire.",
+      `Yours is one of those. Very loud. Very keen. Not broken.`],
+     endLabel:"Got it", endGo:"S.history=[]; go('p01')"};
+  } else {
+    const c=CLOSERS[S.feeling]||CLOSERS.dunno;
+    S.teach={scene:c.scene,pose:c.pose,lines:c.lines,endLabel:"Bye "+S.chirpy,endGo:"go('done')"};
+  }
+  S.ti=0; go('teach');
+}
+function teachNext(){ S.ti++; render('teach',{back:true}) }
+
+/* ---------------- picks — every one auto-advances ---------------- */
+function pickAge(a,n){ choose(()=>{S.age=a; store.set('age',a)},'set-hand',430,n) }
+function pickFeeling(id,n){ choose(()=>S.feeling=id, ()=>{
+  const f=FEELINGS.find(x=>x.id===id);
+  if(id==='dunno'){ setQuiet(false); return go('jump') }
+  if(f&&f.ok){ setQuiet(false); return go('g01') }
+  go('p01b');
+}, 520, n) }
+function pickSize(i,n){ choose(()=>S.size=i, ()=>{ setQuiet(i==='really'); go(S.quiet?'p02':'jump') }, 520, n) }
+function pickBody(z,n){ choose(()=>S.body=z,'p03',520,n) }
+function pickThought(i,n){ choose(()=>{S.thought=THOUGHTS[i]; sayChirpy(THOUGHTS[i]); const b=document.querySelector('#chirpybar .bubble'); if(b){b.textContent=THOUGHTS[i]; b.classList.remove('wait')}},'p04',1600,n) }
+function pickThoughtNone(n){ choose(()=>S.thought='none','p04',520,n) }
+function pickSit(id,n){ choose(()=>S.situation=id,'p05',520,n) }
+function pickMaybe(i,n){ choose(()=>S.maybe=i,'p07b',520,n) }
+function pickGood(i,n){ choose(()=>S.noticed=GOODBITS[i],'p08',520,n) }
+function pickNoticed(i,n){ choose(()=>S.noticed=NOTICED[i], ()=>teachGo('closer'), 520, n) }
+
+function setQuiet(v){ S.quiet=v; document.body.classList.toggle('quiet',v) }
+
+/* camera test — a replay, never a score */
+/* Eyes or head. Never a score — the app just replays what eyes can and can't do. */
+function camera(choice){
+  if(S.cameraStep===0){
+    S.teach={scene:'look',pose: choice==='cam'?'excited':'curious',
+      lines: choice==='cam'
+        ? ["Yes! Your eyes saw that one.",
+           "It happened out there, in the room.",
+           "Anyone standing next to you would have seen it too."]
+        : ["Have a look again.",
+           "Could you point at it? With your finger?",
+           "You could, couldn't you. It happened out there, in the room.",
+           "Anyone standing next to you would have seen it too."],
+      endLabel:"Next one", endGo:"S.cameraStep=1; go('p06')"};
+  } else {
+    S.teach={scene:'look',pose: choice==='brain'?'hopeful':'worried',
+      lines: choice==='brain'
+        ? ["That's it. Nobody's eyes saw that one.",
+           "It happened in here.",
+           "Nobody standing next to you heard it. Not one person.",
+           "Only you.",
+           "Both bits are allowed. They're just different kinds of bits."]
+        : ["Try pointing at this one. Go on, with your finger.",
+           "You can't, can you.",
+           "There's nothing out there to point at.",
+           "That one happened in here, where only you can hear it.",
+           "Both bits are allowed. They're just different kinds of bits."],
+      endLabel:"Okay!", endGo:"go('p07')"};
+  }
+  S.ti=0; go('teach');
+}
+
+function resetSession(){
+  S.feeling=S.size=S.body=S.thought=S.situation=S.maybe=S.noticed=null;
+  S.cameraStep=0; S.ti=0; S.history=[]; setQuiet(false);
+}
+
+/* ---------------- chrome ---------------- */
+el.exit.onclick=()=>go('sup01');
+el.sound.onclick=()=>{ soundOn=!soundOn;
+  document.getElementById('sndico').innerHTML = soundOn
+   ? '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>'
+   : '<path d="M11 5 6 9H2v6h4l5 4z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/>';
+  el.sound.setAttribute('aria-label', soundOn?'Turn the voice off':'Turn the voice on');
+  if(!soundOn&&window.speechSynthesis) speechSynthesis.cancel(); };
+
+const ab=document.getElementById('adultbtn'), af=document.getElementById('adultfill');
+let ht=null,hs=0;
+function hd(e){e.preventDefault(); hs=Date.now(); ht=setInterval(()=>{const p=Math.min((Date.now()-hs)/1400,1);
+  af.style.width=(p*100)+'%'; if(p>=1){hu(); openAdult()}},30)}
+function hu(){clearInterval(ht); ht=null; af.style.width='0%'}
+ab.addEventListener('pointerdown',hd); ab.addEventListener('pointerup',hu); ab.addEventListener('pointerleave',hu);
+
+function openAdult(){ const f=FEELINGS.find(x=>x.id===S.feeling);
+ el.adult.className='on';
+ el.adult.innerHTML=`<h2>For grown-ups</h2><p style="margin:6px 0 0">Behind a press-and-hold, so a child doesn't wander in.</p>
+  <h3>What this app holds</h3>
+  <div class="row"><span>First name</span><span>${S.child||'—'}</span></div>
+  <div class="row"><span>Age</span><span>${S.age||'—'}</span></div>
+  <div class="row"><span>Their creature</span><span>${S.chirpy}</span></div>
+  <div class="row"><span>Surname, DOB, photo, school, location</span><span>Never collected</span></div>
+  <h3>This session</h3>
+  <div class="row"><span>Feeling</span><span>${f?f.label:'—'}</span></div>
+  <div class="row"><span>Size</span><span>${S.size||'—'}</span></div>
+  <div class="row"><span>Quiet state</span><span>${S.quiet?'On':'Off'}</span></div>
+  <div class="note"><strong style="color:var(--ink)">There is no score in here.</strong> No streak, no level, nothing marked correct. If you ask them how they did, the app stops working — there's no "did" to report. Ask what they caught instead, and let a shrug be a fine answer.</div>
+  <div class="note">The quiet state switches on by itself when a hard feeling is <em>really big</em>. All the games and jokes stop, choices shrink, ${S.chirpy} leaves, and a real way out appears. Neither of you gets told.</div>
+  <h3>Prototype notes</h3>
+  <div class="note" style="font-size:12.5px">Ages 3–8 only. ${S.chirpy}'s art is real; faces and scenes are placeholder. The voice is your browser's built-in speech standing in for a recorded narrator. Nothing leaves this device.</div>
+  <button class="cta" style="margin-top:20px" onclick="document.getElementById('adult').className=''">Back to ${S.child||'the app'}</button>`;
+}
+
+resetSession();
+go(S.child&&S.age?'p01':'set-gate');
+</script>
