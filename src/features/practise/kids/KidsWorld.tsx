@@ -9,6 +9,7 @@ import { SkyBackdrop } from './SkyBackdrop';
 import { CinematicRoom } from './CinematicRoom';
 import { KIDS_WORLD, roomCard, roomFull, type KidsRoomConfig, type RoomId } from './rooms';
 import * as sound from './sound';
+import { CheckInFlow } from './checkin/CheckInFlow';
 
 /**
  * Kids Gym — a world the child enters, not a dashboard they read.
@@ -105,6 +106,7 @@ function CardSparklesOverlay({ active }: { active: boolean }) {
 export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
   const store = usePractiseStore();
   const [active, setActive] = useState<KidsRoomConfig | null>(null);
+  const [checkingIn, setCheckingIn] = useState(false);
   const [muted, setMutedState] = useState(isMuted());
   const [hoveredId, setHoveredId] = useState<RoomId | null>(null);
 
@@ -131,6 +133,10 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
         onComplete={() => store.completeSession(asPracticeRoom(active), 4)}
       />
     );
+  }
+
+  if (checkingIn) {
+    return <CheckInFlow onExit={() => setCheckingIn(false)} />;
   }
 
   return (
@@ -194,8 +200,25 @@ export function KidsWorld({ onExitGym }: { onExitGym: () => void }) {
           )}
         </motion.div>
 
+        {/* The check-in — how a child arrives here, per the Mind Gym build
+            brief. Sits above the room grid, doesn't replace it: a child with
+            nothing specific on their mind can still just pick a room. */}
+        <motion.button
+          layout="position"
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setCheckingIn(true)}
+          className="mt-5 flex w-full items-center justify-between gap-3 rounded-[20px] px-5 py-4 text-left shadow-lg transition"
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)' }}
+        >
+          <div>
+            <p className="text-[16px] font-extrabold text-white" style={{ fontFamily: FONT }}>How are you feeling right now?</p>
+            <p className="mt-0.5 text-[12.5px] text-white/65">Check in with Chirpy before you pick a room</p>
+          </div>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white/80" style={{ background: 'rgba(255,255,255,0.14)' }}>→</span>
+        </motion.button>
+
         {/* Room cards — static art at rest; hover brings each world to life */}
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-7 xl:grid-cols-5 xl:gap-8">
+        <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-7 xl:grid-cols-5 xl:gap-8">
           {KIDS_WORLD.map((room, i) => (
             <motion.button
               key={room.id}
