@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, Volume2, VolumeX } from 'lucide-react';
 import { isMuted, setMuted } from '../../../../lib/sfx';
-import { BODY_ZONE_WORDS, FEELINGS, GOODBITS, SITUATIONS, SIZES, THOUGHTS, type BodyZoneId, type IntensityId } from './content';
+import {
+  BODY_ZONE_WORDS, cameraTeach, FEELINGS, GOODBITS, MAYBES, SITUATIONS, SIZES, THOUGHTS,
+  type BodyZoneId, type IntensityId, type TeachSequence,
+} from './content';
 import { FaceIcon } from './FaceIcon';
 import { BodyMap } from './BodyMap';
 import { ChirpyBar } from './ChirpyBar';
+import { TeachScreen } from './TeachScreen';
 import { SCENE_GRADIENT, type SceneId } from './scenes';
 import { say, stopSpeech } from './voice';
 
@@ -18,10 +22,14 @@ import { say, stopSpeech } from './voice';
  *   line — with "Get a grown-up" reachable from every screen and the quiet
  *   state taking over completely if a feeling is picked "really big".
  *
- * Still not built: the eyes/camera test (P-06), the "other maybes" reframe
- * (P-07), and the five closing teaching moves (one per feeling) — the story
- * screen's CTA goes straight to the closing line instead of into those. See
- * the report back to the founder for what's deliberately missing.
+ * After the story: the eyes/camera test (P-06, "did your eyes see it, or did
+ * it happen in your head?") then the "other maybes" reframe (P-07, other
+ * stories Chirpy never thought of) before the closing line.
+ *
+ * Still not built: the five closing teaching moves (one per feeling — the
+ * angry/sad/scared/worried/happy closers). TeachScreen already renders any
+ * such sequence, so wiring those in is data, not new engineering. See the
+ * report back to the founder for what's deliberately missing.
  *
  * Chirpy, the quiet state, and auto-advance are the three non-negotiables
  * (BUILD_BRIEF.md's "do not relitigate" list) and all three are live here.
@@ -30,7 +38,10 @@ import { say, stopSpeech } from './voice';
 const FONT_DISPLAY = "'Baloo 2', 'Outfit', ui-rounded, system-ui, sans-serif";
 const FONT_BODY = "'Outfit', system-ui, -apple-system, sans-serif";
 
-type ScreenId = 'feeling' | 'intensity' | 'body' | 'thought' | 'situation' | 'story' | 'good' | 'stop' | 'trusted-who' | 'trusted-go' | 'done';
+type ScreenId =
+  | 'feeling' | 'intensity' | 'body' | 'thought' | 'situation' | 'story'
+  | 'camera' | 'teach' | 'maybes' | 'maybes-reveal'
+  | 'good' | 'stop' | 'trusted-who' | 'trusted-go' | 'done';
 
 interface Session {
   feeling: string | null;
@@ -39,11 +50,18 @@ interface Session {
   /** A THOUGHTS entry, 'none' for "something else", or null before it's picked. */
   thought: string | null;
   situation: string | null;
+  /** Which half of the eyes/camera test (P-06) is showing — the situation first, then the thought. */
+  cameraStep: 0 | 1;
+  /** Index into MAYBES[situation] once picked. */
+  maybe: number | null;
   noticed: string | null;
   quiet: boolean;
 }
 
-const EMPTY_SESSION: Session = { feeling: null, size: null, body: null, thought: null, situation: null, noticed: null, quiet: false };
+const EMPTY_SESSION: Session = {
+  feeling: null, size: null, body: null, thought: null, situation: null,
+  cameraStep: 0, maybe: null, noticed: null, quiet: false,
+};
 
 function Pill({ label, emoji, pressed, onClick, big }: { label: string; emoji?: string; pressed?: boolean; onClick: () => void; big?: boolean }) {
   return (
@@ -95,8 +113,13 @@ export function CheckInFlow({ onExit }: { onExit: () => void }) {
   const [muted, setMutedState] = useState(isMuted());
   const [holdProgress, setHoldProgress] = useState(0);
   const [showGrownUps, setShowGrownUps] = useState(false);
+  const [teachSeq, setTeachSeq] = useState<TeachSequence | null>(null);
   const lockRef = useRef(false);
   const holdTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  /** What happens when the current TeachScreen finishes — set right before
+   *  going to 'teach', since the two camera-test passes lead somewhere
+   *  different (back to camera step 2, or on to maybes). */
+  const teachOnDone = useRef<() => void>(() => {});
 
   useEffect(() => () => stopSpeech(), []);
 
@@ -171,6 +194,30 @@ export function CheckInFlow({ onExit }: { onExit: () => void }) {
     () => go('done'),
   );
 
+  /** The eyes/camera test: each of its two passes (situation, then thought)
+   *  explains the answer via a TeachScreen, then either repeats for the
+   *  second pass or moves on to the maybes. Not run through `choose()` —
+   *  it's not a lingering-choice pick, it's an immediate cut to the
+   *  explanation, same as the prototype's camera(). */
+  const pickCamera = (choice: 'cam' | 'brain') => {
+    const step = session.cameraStep;
+    setTeachSeq(cameraTeach(step, choice));
+    teachOnDone.current = () => {
+      if (step === 0) {
+        setSession((s) => ({ ...s, cameraStep: 1 }));
+        go('camera');
+      } else {
+        go('maybes');
+      }
+    };
+    go('teach');
+  };
+
+  const pickMaybe = (i: number) => choose(
+    () => setSession((s) => ({ ...s, maybe: i })),
+    () => go('maybes-reveal'),
+  );
+
   const goAgain = () => {
     setSession(EMPTY_SESSION);
     setHistory(['feeling']);
@@ -199,11 +246,12 @@ export function CheckInFlow({ onExit }: { onExit: () => void }) {
 
   const feeling = FEELINGS.find((f) => f.id === session.feeling);
   const SCENE_BY_SCREEN: Partial<Record<ScreenId, SceneId>> = {
-    body: 'look', situation: 'look', story: 'den', good: 'dawn',
+    body: 'look', situation: 'look', camera: 'look', story: 'den', maybes: 'den', 'maybes-reveal': 'den', good: 'dawn',
     'trusted-who': 'still', 'trusted-go': 'still', stop: 'still',
   };
-  const scene: SceneId = SCENE_BY_SCREEN[screen] ?? 'night';
-  const canBack = history.length > 1 && screen !== 'feeling' && screen !== 'trusted-go' && screen !== 'stop';
+  // 'teach' has no fixed scene of its own — each sequence names its own (see cameraTeach()).
+  const scene: SceneId = screen === 'teach' && teachSeq ? teachSeq.scene : SCENE_BY_SCREEN[screen] ?? 'night';
+  const canBack = history.length > 1 && screen !== 'feeling' && screen !== 'trusted-go' && screen !== 'stop' && screen !== 'teach';
   const showExit = screen !== 'trusted-who' && screen !== 'trusted-go';
 
   return (
@@ -279,6 +327,29 @@ export function CheckInFlow({ onExit }: { onExit: () => void }) {
                   speak={speak}
                 />
               )}
+              {screen === 'camera' && (
+                <CameraScreen
+                  step={session.cameraStep}
+                  situation={SITUATIONS.find((x) => x.id === session.situation)?.label ?? 'Something happened'}
+                  thought={session.thought && session.thought !== 'none' ? session.thought : 'Something bad is going to happen.'}
+                  onPick={pickCamera}
+                  speak={speak}
+                />
+              )}
+              {screen === 'teach' && teachSeq && (
+                <TeachScreen sequence={teachSeq} onDone={() => teachOnDone.current()} speak={speak} />
+              )}
+              {screen === 'maybes' && (
+                <MaybesScreen
+                  options={MAYBES[session.situation ?? ''] ?? MAYBES.other}
+                  selected={session.maybe}
+                  onPick={pickMaybe}
+                  speak={speak}
+                />
+              )}
+              {screen === 'maybes-reveal' && (
+                <MaybesRevealScreen speak={speak} />
+              )}
               {screen === 'good' && (
                 <GoodScreen onPick={pickGood} speak={speak} />
               )}
@@ -292,7 +363,7 @@ export function CheckInFlow({ onExit }: { onExit: () => void }) {
                 <TrustedGoScreen speak={speak} />
               )}
               {screen === 'done' && (
-                <DoneScreen noticed={session.noticed} speak={speak} />
+                <DoneScreen quiet={session.quiet} noticed={session.noticed} speak={speak} />
               )}
             </motion.div>
           </AnimatePresence>
@@ -312,7 +383,8 @@ export function CheckInFlow({ onExit }: { onExit: () => void }) {
               <Cta label="Stop here for now" onClick={() => go('stop')} ghost />
             </>
           )}
-          {screen === 'story' && !session.quiet && <Cta label="Okay" onClick={() => go('done')} />}
+          {screen === 'story' && !session.quiet && <Cta label="Which one?" onClick={() => go('camera')} />}
+          {screen === 'maybes-reveal' && <Cta label="Okay!" onClick={() => go('done')} />}
           {screen === 'trusted-go' && <Cta label="Okay" onClick={goAgain} />}
           {screen === 'done' && <Cta label="Go again" onClick={goAgain} ghost />}
           {showExit && screen !== 'stop' && (
@@ -498,7 +570,7 @@ function StoryScreen({
 
   return (
     <div>
-      <ChirpyBar pose="jumping" size="sm" />
+      {!quiet && <ChirpyBar pose="jumping" size="sm" />}
       <h1 className="text-[28px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT_DISPLAY }}>
         {quiet ? "Here's what happened." : 'Look what we made!'}
       </h1>
@@ -524,6 +596,70 @@ function StoryScreen({
           Two of those really happened out there. One of them {chirpyName} made up in your head.
         </p>
       )}
+    </div>
+  );
+}
+
+function CameraScreen({
+  step, situation, thought, onPick, speak,
+}: { step: 0 | 1; situation: string; thought: string; onPick: (choice: 'cam' | 'brain') => void; speak: Speak }) {
+  const card = step === 0 ? situation : `Chirpy said: "${thought}"`;
+  useEffect(() => { speak('This bit. Did your eyes see it happen? Or did it happen in your head?'); }, [speak]);
+  return (
+    <div className="text-center">
+      <ChirpyBar pose="curious" line="Which one?" size="sm" />
+      <h1 className="text-[28px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT_DISPLAY }}>Did your eyes see it?</h1>
+      <div className="mt-3 rounded-2xl px-4 py-3.5 text-[17px] font-extrabold leading-snug text-white" style={{ background: 'rgba(255,255,255,0.13)', border: '1px solid rgba(255,255,255,0.22)' }}>
+        {card}
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
+        <button
+          onClick={() => onPick('cam')}
+          className="flex flex-col items-center justify-center gap-2 rounded-[22px] py-5 font-extrabold text-white"
+          style={{ minHeight: 126, background: 'rgba(255,255,255,0.11)', border: '1px solid rgba(255,255,255,0.24)' }}
+        >
+          <span className="text-[33px]">👀</span>
+          <span className="text-[15px] leading-tight">My eyes saw it</span>
+        </button>
+        <button
+          onClick={() => onPick('brain')}
+          className="flex flex-col items-center justify-center gap-2 rounded-[22px] py-5 font-extrabold text-white"
+          style={{ minHeight: 126, background: 'rgba(255,255,255,0.11)', border: '1px solid rgba(255,255,255,0.24)' }}
+        >
+          <span className="text-[33px]">🧠</span>
+          <span className="text-[15px] leading-tight">It happened in my head</span>
+        </button>
+      </div>
+      <p className="mt-2.5 text-[13.5px] leading-relaxed text-white/50">Both are allowed. They're just different kinds of bits.</p>
+    </div>
+  );
+}
+
+function MaybesScreen({
+  options, selected, onPick, speak,
+}: { options: string[]; selected: number | null; onPick: (i: number) => void; speak: Speak }) {
+  useEffect(() => { speak("It only thought of one story. Let's make some more."); }, [speak]);
+  return (
+    <div>
+      <ChirpyBar pose="hopeful" line="I only thought of one!" size="sm" />
+      <h1 className="text-[28px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT_DISPLAY }}>Chirpy made one story.</h1>
+      <p className="mt-1.5 text-[14px] leading-relaxed text-white/60">Here are some others it never thought of.</p>
+      <div className="mt-3 flex flex-col gap-2">
+        {options.map((m, i) => <Pill key={m} label={m} pressed={selected === i} onClick={() => onPick(i)} />)}
+      </div>
+    </div>
+  );
+}
+
+function MaybesRevealScreen({ speak }: { speak: Speak }) {
+  useEffect(() => { speak('Which one is true? Nobody knows. Not you. Not me. Not your chatterbox either. And that\'s allowed.'); }, [speak]);
+  return (
+    <div className="text-center">
+      <ChirpyBar pose="curious" line="Nobody knows!" size="big" />
+      <h1 className="text-[28px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT_DISPLAY }}>Which one's true?</h1>
+      <p className="mt-2 text-[16px] font-semibold leading-relaxed text-white/78">
+        Nobody knows. Not you. Not me. Definitely not Chirpy. And that's allowed.
+      </p>
     </div>
   );
 }
@@ -577,12 +713,12 @@ function TrustedGoScreen({ speak }: { speak: Speak }) {
   );
 }
 
-function DoneScreen({ noticed, speak }: { noticed: string | null; speak: Speak }) {
+function DoneScreen({ quiet, noticed, speak }: { quiet: boolean; noticed: string | null; speak: Speak }) {
   void noticed;
   useEffect(() => { speak('See you next time.'); }, [speak]);
   return (
     <div className="text-center">
-      <ChirpyBar pose="excited" line="Bye!" size="big" />
+      {!quiet && <ChirpyBar pose="excited" line="Bye!" size="big" />}
       <h1 className="text-[28px] font-extrabold leading-tight text-white" style={{ fontFamily: FONT_DISPLAY }}>See you next time.</h1>
       <p className="mt-2 text-[15px] leading-relaxed text-white/70">Nobody sees this unless you show them.</p>
     </div>
@@ -610,7 +746,7 @@ function GrownUpsPanel({ quiet, feeling, onClose, onExitToHub }: { quiet: boolea
         The quiet state switches on by itself when a hard feeling is <em>really big</em>. Chirpy leaves, choices shrink, and a real way out appears — neither of you gets told.
       </div>
       <div className="mt-2.5 rounded-2xl p-4 text-[12.5px] text-white/60" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
-        This check-in currently runs feeling → size → body → thought → situation → story, then closes. The eyes/camera test, the "other maybes" reframe, the five closing teachings, and the practice rooms are separate pieces, not yet joined to this flow.
+        This check-in runs feeling → size → body → thought → situation → story → the eyes test → other maybes, then closes. The five closing teachings (one per feeling) and the practice rooms are separate pieces, not yet joined to this flow. The quiet state skips straight from the story to closing.
       </div>
 
       <Cta label="Back" onClick={onClose} />

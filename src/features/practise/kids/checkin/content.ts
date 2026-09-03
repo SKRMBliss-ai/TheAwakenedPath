@@ -81,3 +81,56 @@ export const BODY_ZONE_WORDS: Record<BodyZoneId, string> = {
   hands: 'hands',
   cant: 'somewhere',
 };
+
+/** One line of a "teach" screen — stepped through one at a time, tap to advance. */
+export interface TeachSequence {
+  scene: 'night' | 'look' | 'still' | 'dark' | 'den' | 'dawn';
+  pose: ChirpyPose;
+  lines: string[];
+  /** Label on the final line's button — the sequence's own name for "done". */
+  endLabel: string;
+}
+
+/** Explains what the eyes/camera test just showed — ported from camera()'s two S.teach branches. */
+export function cameraTeach(step: 0 | 1, choice: 'cam' | 'brain'): TeachSequence {
+  if (step === 0) {
+    return choice === 'cam'
+      ? { scene: 'look', pose: 'excited', endLabel: 'Next one', lines: [
+        'Yes! Your eyes saw that one.',
+        'It happened out there, in the room.',
+        'Anyone standing next to you would have seen it too.',
+      ] }
+      : { scene: 'look', pose: 'curious', endLabel: 'Next one', lines: [
+        'Have a look again.',
+        'Could you point at it? With your finger?',
+        "You could, couldn't you. It happened out there, in the room.",
+        'Anyone standing next to you would have seen it too.',
+      ] };
+  }
+  return choice === 'brain'
+    ? { scene: 'look', pose: 'hopeful', endLabel: 'Okay!', lines: [
+      "That's it. Nobody's eyes saw that one.",
+      'It happened in here.',
+      'Nobody standing next to you heard it. Not one person.',
+      'Only you.',
+      'Both bits are allowed. They\'re just different kinds of bits.',
+    ] }
+    : { scene: 'look', pose: 'worried', endLabel: 'Okay!', lines: [
+      'Try pointing at this one. Go on, with your finger.',
+      "You can't, can you.",
+      "There's nothing out there to point at.",
+      'That one happened in here, where only you can hear it.',
+      'Both bits are allowed. They\'re just different kinds of bits.',
+    ] };
+}
+
+/** Other stories Chirpy never thought of — keyed by situation id (content.ts's SITUATIONS). */
+export const MAYBES: Record<string, string[]> = {
+  said: ['Maybe they were having a rotten day', 'Maybe it came out wrong', 'Maybe they felt bad after', 'Maybe they were cross about something else'],
+  turn: ["Maybe they forgot whose go it was", "Maybe they didn't see you waiting", 'Maybe they got too excited', "Maybe there wasn't time"],
+  toldoff: ['Maybe the grown-up was tired', 'Maybe they only saw the end bit', 'Maybe they got a fright', "Maybe they'd said it lots already"],
+  broke: ['Maybe it was already broken', "Maybe it's a really tricky one", 'Maybe it needs a different way', 'Maybe nobody could do it'],
+  left: ['Maybe they had to go somewhere', "Maybe they're coming back", "Maybe they didn't know you wanted them", 'Maybe they were sad to go too'],
+  changed: ['Maybe something happened nobody planned', 'Maybe a grown-up had to change it', 'Maybe it can happen another day', 'Maybe nobody knew till the end'],
+  other: ["Maybe there's a bit you couldn't see", "Maybe it wasn't about you", 'Maybe someone was having a hard day', 'Maybe nobody meant it'],
+};
