@@ -4,8 +4,9 @@ import { getRoom, type RoomConfig, type RoomId } from './rooms';
 import { CHROME, Cta, FONT, BackButton, GrownUpExit, Pill, Question, SceneLine } from './ui/chrome';
 import { useMotion, useQuiet } from './ui/quiet';
 import { Chirpy, RoomScene } from './ui/scene';
-import { FEELINGS, SIZES, GOODBITS, THOUGHTS, SITUATIONS, MAYBES } from './kit/checkinContent';
+import { FEELINGS, SIZES, GOODBITS, THOUGHTS, SITUATIONS, MAYBES, type FeelingDef } from './kit/checkinContent';
 import * as sound from './kit/sound';
+import { mostFrequentFeeling, type Progress } from './progress';
 
 /**
  * The check-in — P-01 through P-08. The front door, and the router.
@@ -28,13 +29,19 @@ import * as sound from './kit/sound';
  * Every screen auto-advances on selection, and every screen carries the
  * grown-up exit at the same position.
  *
- * THE SPINE HAPPENS IN THE ROOMS THEMSELVES. From the body screen onward, the
- * background is the actual matching room — not a neutral check-in scene —
- * so a child doing the body scan is standing in the Body Detective room, the
- * thought screen opens in the Thought Room, and so on (see `screenRoomId`
- * below). `feeling`, `size`, and `goodbit` stay in the generic check-in scene
- * because no room fits them yet — the feeling itself is what decides which
- * room the rest of the walk takes place in.
+ * THE SPINE HAPPENS IN THE ROOMS THEMSELVES. Every screen's background is the
+ * actual matching room, not a neutral check-in scene: the opener happens in
+ * the Feelings Room, the body scan in Body Detective, the thought screen (and
+ * the eyes test) in the Thought Room, and so on (see `screenRoomId` below).
+ *
+ * THE FEELING SCREEN IS A PYRAMID, not a grid of pills — six bubbles in three
+ * rows, tapped exactly like a pill would be. When this device has picked the
+ * same feeling twice or more, one bubble carries a quiet "you often feel
+ * this" marker (see FeelingPyramid) — never a redirect, never a value
+ * judgement, just a mirror. Backing that marker is a plain on-device tally of
+ * feelings picked at check-in (progress.ts's `feelingCounts`) — a narrow,
+ * deliberate exception to that file's usual "nothing about a feeling is ever
+ * kept" rule, scoped to counts only, no timestamps, no free text.
  */
 
 type Screen =
@@ -51,10 +58,16 @@ const EYES = [
 ];
 
 export function CheckIn({
+  progress,
+  onFeelingPicked,
   onFinish,
   onGrownUp,
   onQuiet,
 }: {
+  /** This device's tallies — read for the pyramid's "you often feel this" marker. */
+  progress: Progress;
+  /** Called once per real feeling picked (never for "I don't know"), so the app shell can tally it. */
+  onFeelingPicked: (feelingId: string) => void;
   /** Called with the room the child should land in, or null for the hub. */
   onFinish: (goTo: string | null) => void;
   onGrownUp: () => void;
@@ -100,6 +113,13 @@ export function CheckIn({
 
   const maybes = MAYBES[situation] ?? MAYBES.other;
 
+  /** A real feeling was picked (not "I don't know") — tally it and move on. */
+  const pickFeeling = (f: FeelingDef) => {
+    onFeelingPicked(f.id);
+    setFeeling(f);
+    advance(f.ok ? 'goodbit' : 'size');
+  };
+
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
       <RoomScene room={room} />
@@ -125,16 +145,24 @@ export function CheckIn({
                 <>
                   <Chirpy pose="curious" line="How are you doing, then?" align="left" />
                   <Question room={room}>How are you feeling right now?</Question>
-                  <Grid>
-                    {FEELINGS.map((f) => (
-                      <Pill
-                        key={f.id}
-                        label={f.label}
-                        onClick={() => { setFeeling(f); advance(f.ok ? 'goodbit' : 'size'); }}
-                        accent={room.palette.accent}
-                      />
-                    ))}
-                  </Grid>
+                  {quiet ? (
+                    <Grid>
+                      {FEELINGS.map((f) => (
+                        <Pill
+                          key={f.id}
+                          label={f.label}
+                          onClick={() => pickFeeling(f)}
+                          accent={room.palette.accent}
+                        />
+                      ))}
+                    </Grid>
+                  ) : (
+                    <FeelingPyramid
+                      accent={room.palette.accent}
+                      usualId={mostFrequentFeeling(progress)}
+                      onPick={pickFeeling}
+                    />
+                  )}
                   <Pill
                     label="I don’t know"
                     onClick={() => { setFeeling(null); advance('goodbit'); }}
@@ -338,6 +366,95 @@ function Grid({ children }: { children: React.ReactNode }) {
       style={{ gap: m.gap }}
     >
       {children}
+    </div>
+  );
+}
+
+/**
+ * The feeling screen's pyramid — the same six feelings as before, in three
+ * fixed rows (1 / 2 / 3) instead of a grid, so the shape reads as a pyramid
+ * without the layout itself needing to encode anything. The rows never
+ * reorder by how often a feeling is picked — a stable map matters more here
+ * than showing the data more cleverly, and a shuffling layout would make the
+ * "you often feel this" marker below harder to find, not easier.
+ *
+ * That marker is the one place frequency shows at all, and only once this
+ * device has seen the same feeling picked twice or more (mostFrequentFeeling
+ * in progress.ts). It's a plain caption pointing at a bubble, not a size
+ * change, a colour that means "correct", or a tick — a child choosing
+ * differently today is not choosing wrong (§2.4).
+ */
+function FeelingPyramid({
+  accent,
+  usualId,
+  onPick,
+}: {
+  accent: string;
+  usualId: string | null;
+  onPick: (feeling: FeelingDef) => void;
+}) {
+  const rows: FeelingDef[][] = [
+    [FEELINGS[0]],
+    [FEELINGS[1], FEELINGS[2]],
+    [FEELINGS[3], FEELINGS[4], FEELINGS[5]],
+  ];
+
+  return (
+    <div className="flex flex-col items-center gap-3.5 py-1">
+      {rows.map((row, i) => (
+        <div key={i} className="flex justify-center gap-3.5">
+          {row.map((f) => (
+            <FeelingBubble
+              key={f.id}
+              feeling={f}
+              accent={accent}
+              isUsual={f.id === usualId}
+              onClick={() => onPick(f)}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FeelingBubble({
+  feeling,
+  accent,
+  isUsual,
+  onClick,
+}: {
+  feeling: FeelingDef;
+  accent: string;
+  isUsual: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center" style={{ width: 92 }}>
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={onClick}
+        aria-label={feeling.label}
+        className="grid place-items-center rounded-full px-2 text-center text-[14px] font-extrabold leading-tight backdrop-blur-md transition-colors"
+        style={{
+          height: 88,
+          width: 88,
+          color: CHROME.text,
+          background: CHROME.pill,
+          border: isUsual ? `2px solid ${accent}` : `1px solid ${CHROME.pillBorder}`,
+          boxShadow: isUsual ? `0 0 22px -4px ${accent}` : 'none',
+        }}
+      >
+        {feeling.label}
+      </motion.button>
+      {/* Reserved space whether or not this bubble carries it, so the row
+          doesn't jump depending on which feeling is "usual". */}
+      <p
+        className="mt-1.5 min-h-[26px] text-center text-[10.5px] font-bold leading-tight"
+        style={{ color: accent }}
+      >
+        {isUsual ? '▲ You often feel this' : ''}
+      </p>
     </div>
   );
 }
