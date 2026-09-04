@@ -73,14 +73,10 @@ export function CheckIn({
 
   useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
-  // Which room the child is standing in for this screen. `feeling`, `size`,
-  // and `goodbit` get the neutral check-in scene (a plain night palette, no
-  // painted art) since the feeling hasn't picked a room yet; every screen
-  // from `body` onward happens inside the real matching room.
-  const room: RoomConfig =
-    screen === 'feeling' || screen === 'size' || screen === 'goodbit'
-      ? { ...getRoom('worry'), name: 'Check-in', painted: false, scene: 'night' }
-      : getRoom(screenRoomId(screen, feeling?.id));
+  // Which room the child is standing in for this screen — every screen of
+  // the check-in happens inside a real room now, starting with the Feelings
+  // Room for the opening "how are you feeling" beat (see `screenRoomId`).
+  const room: RoomConfig = getRoom(screenRoomId(screen, feeling?.id));
 
   const go = (next: Screen) => {
     setHistory((h) => [...h, screen]);
@@ -366,21 +362,28 @@ function feelingRoom(feelingId: string | undefined): RoomId {
 }
 
 /**
- * Which room the child is standing in for a given spine screen. Only called
- * for `body` onward — `feeling`/`size`/`goodbit` use the neutral check-in
- * scene instead, since the feeling is what picks the room for everything
- * after it.
+ * Which room the child is standing in for a given spine screen.
+ *
+ * `feeling`/`size`/`goodbit` open in the Feelings Room — "name what you
+ * feel" is exactly the front door of the check-in. The eyes test sits in the
+ * Thought Room rather than Reflection: sorting what your eyes actually saw
+ * from what your mind added is the same territory as noticing what your
+ * mind is saying, not a look-back — Reflection stays for `situation` (laying
+ * out what happened) and pairs with `maybes` living in the Different Story
+ * Room instead.
  */
 function screenRoomId(screen: Screen, feelingId: string | undefined): RoomId {
   switch (screen) {
+    case 'feeling':
+    case 'size':
+    case 'goodbit':   return 'feelings';
     case 'body':      return 'body';
     case 'thought':   return 'thought';
     case 'situation': return 'reflection';
     case 'story':     return 'story';
-    case 'eyes':      return 'reflection';
+    case 'eyes':      return 'thought';
     case 'maybes':    return 'story';
     case 'close':     return feelingRoom(feelingId);
-    default:          return 'worry';
   }
 }
 
