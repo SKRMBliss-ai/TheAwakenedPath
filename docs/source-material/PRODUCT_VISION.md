@@ -1,5 +1,13 @@
 # My Best Every Day — Product Vision
 
+> **Note on the kids build (current).** My Best Every Day's engine — the seven
+> virtues, the daily tick, points per virtue, the streak — is now the front
+> door of `/mindgymforkidsv1`, wearing the Kids Gym world: each virtue is a
+> room, with its own games and its own small thing to learn. Nothing about the
+> vision below changed; it got a world painted onto it. See
+> **`docs/source-material/KIDS_V1_CANONICAL.md`** for how that fits together
+> and what it deliberately refuses to do.
+
 MY BEST EVERY DAY
 The Practice Gym for the Mind
 Core Vision
