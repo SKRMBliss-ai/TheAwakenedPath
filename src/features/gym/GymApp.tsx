@@ -20,6 +20,12 @@ import { useGymRoute, type GymRoute } from './lib/gymRouter';
  */
 const AdultGym = lazy(() => import('../practise/Adult').then((m) => ({ default: m.AdultGym })));
 const KidsWorld = lazy(() => import('../practise/kids/KidsWorld').then((m) => ({ default: m.KidsWorld })));
+/** Kids Gym v1 — its own feature folder (`practise/kids-v1`), importing
+ *  nothing from `practise/kids` except the two things that are genuinely
+ *  shared assets rather than v0 behaviour (Chirpy's sprite paths and the
+ *  sound table). That separation is the point: v1 can be reworked freely
+ *  without any chance of moving the live /mindgymforkids page. */
+const KidsGymV1 = lazy(() => import('../practise/kids-v1/KidsGymV1').then((m) => ({ default: m.KidsGymV1 })));
 
 const GymFallback = () => (
   <div className="grid min-h-screen place-items-center bg-[#FBF7F0] text-[13px] text-[#8A8078]">
@@ -46,6 +52,14 @@ export default function GymApp({ initialRoute }: { initialRoute: GymRoute }) {
     return (
       <Suspense fallback={<GymFallback />}>
         <KidsWorld onExitGym={exit} />
+      </Suspense>
+    );
+  }
+
+  if (route === 'kidsV1') {
+    return (
+      <Suspense fallback={<GymFallback />}>
+        <KidsGymV1 onExitGym={exit} />
       </Suspense>
     );
   }
