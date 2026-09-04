@@ -24,12 +24,43 @@ import { useMotion } from '../ui/quiet';
  * feel, not a failure to answer.
  */
 
+/**
+ * What the room is doing right now.
+ *
+ * `pick` — the feeling beat. All of them are here, in their slots, tappable.
+ * `witness` — a later beat. Only the ones the child recognised are still
+ *   here, smaller, tucked around the edges, not tappable. They stay because
+ *   the journey is one continuous place: the Chirpy you recognised does not
+ *   evaporate the moment you look at where the feeling sits. It comes with
+ *   you and keeps you company while you do.
+ */
+export type RoomMode = 'pick' | 'witness';
+
+/**
+ * Where a Chirpy goes once it has been recognised and the room has moved on.
+ *
+ * Hard into the corners, top and bottom, and never across the middle band —
+ * that is where the beat's own words and buttons are, and a Chirpy sitting on
+ * top of "Quite big" is charming for about one second and then it is a child
+ * unable to answer the question.
+ */
+const PERCHES = [
+  { left: '-2%', top: '-4%' },
+  { left: '84%', top: '-2%' },
+  { left: '-2%', top: '84%' },
+  { left: '86%', top: '86%' },
+  { left: '30%', top: '-6%' },
+  { left: '58%', top: '90%' },
+];
+
 export function ChirpyRoom({
+  mode = 'pick',
   selected,
   familiarFeeling,
   accent,
   onToggle,
 }: {
+  mode?: RoomMode;
   selected: Set<string>;
   /**
    * The feeling id this device has picked most often, or null. The Chirpy
@@ -41,34 +72,66 @@ export function ChirpyRoom({
   onToggle: (stateId: string) => void;
 }) {
   const m = useMotion();
+  const witness = mode === 'witness';
+
+  // Stable perch order, so a Chirpy doesn't hop to a different edge just
+  // because the child changed their mind about a different one.
+  const perchFor = (id: string) => {
+    const order = CHIRPY_ROOM_SLOTS.filter((s) => selected.has(s.id)).map((s) => s.id);
+    return PERCHES[order.indexOf(id) % PERCHES.length];
+  };
 
   return (
-    <div className="relative w-full" style={{ height: 380 }}>
-      {CHIRPY_ROOM_SLOTS.map((slot, i) => {
-        const state = getChirpyState(slot.id);
-        if (!state) return null;
-        return (
-          <motion.div
-            key={slot.id}
-            className="absolute"
-            style={{ left: slot.left, top: slot.top, zIndex: Math.round((1 - slot.depth) * 10) }}
-            // They arrive one at a time, further-away ones first, as though
-            // the room were being noticed rather than switched on.
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: m.quiet ? 0 : (1 - slot.depth) * 0.5 + i * 0.09 }}
-          >
-            <ChirpyBeing
-              state={state}
-              depth={slot.depth}
-              selected={selected.has(slot.id)}
-              familiar={familiarFeeling !== null && state.feeling === familiarFeeling}
-              accent={accent}
-              onSelect={() => onToggle(slot.id)}
-            />
-          </motion.div>
-        );
-      })}
+    <div className="pointer-events-none relative h-full w-full">
+      <AnimatePresence>
+        {CHIRPY_ROOM_SLOTS.map((slot, i) => {
+          const state = getChirpyState(slot.id);
+          if (!state) return null;
+          const isSelected = selected.has(slot.id);
+          // Once the room moves on, the ones that weren't recognised drift
+          // off. Nothing is said about it; they were never wrong answers.
+          if (witness && !isSelected) return null;
+
+          const perch = witness ? perchFor(slot.id) : null;
+
+          return (
+            <motion.div
+              key={slot.id}
+              // Only pickable Chirpys take pointer events. Once they're just
+              // keeping the child company they must not sit in front of the
+              // controls and swallow taps meant for the beat underneath.
+              className={`absolute ${witness ? 'pointer-events-none' : 'pointer-events-auto'}`}
+              style={{ zIndex: Math.round((1 - slot.depth) * 10) }}
+              // They arrive one at a time, further-away ones first, as though
+              // the room were being noticed rather than switched on.
+              initial={{ opacity: 0, scale: 0.8, left: slot.left, top: slot.top }}
+              animate={{
+                opacity: 1,
+                scale: witness ? 0.62 : 1,
+                left: perch ? perch.left : slot.left,
+                top: perch ? perch.top : slot.top,
+              }}
+              exit={{ opacity: 0, scale: 0.6 }}
+              transition={{
+                duration: witness ? 0.9 : 0.5,
+                ease: 'easeInOut',
+                delay: witness || m.quiet ? 0 : (1 - slot.depth) * 0.5 + i * 0.09,
+              }}
+            >
+              <ChirpyBeing
+                state={state}
+                depth={slot.depth}
+                selected={!witness && isSelected}
+                familiar={!witness && familiarFeeling !== null && state.feeling === familiarFeeling}
+                accent={accent}
+                // Not pickable once the room has moved on — they're company
+                // at that point, not a question.
+                onSelect={witness ? undefined : () => onToggle(slot.id)}
+              />
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
     </div>
   );
 }

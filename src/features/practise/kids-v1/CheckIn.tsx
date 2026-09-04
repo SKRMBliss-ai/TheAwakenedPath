@@ -280,6 +280,27 @@ export function CheckIn({
           <GrownUpExit onClick={onGrownUp} />
         </div>
 
+        {/* THE ROOM'S INHABITANTS — mounted once, across the whole opening
+            stretch of the journey, and deliberately OUTSIDE the AnimatePresence
+            below. That is what makes this one continuous place rather than a
+            sequence of screens: when the child moves from noticing a Chirpy to
+            noticing where the feeling sits, the Chirpys they recognised don't
+            vanish and reappear, they drift to the edges of the same room and
+            stay with them. Absolutely positioned so each beat's own words and
+            controls flow underneath. Not in the quiet state, which gets the
+            plain still version instead. */}
+        {!quiet && (screen === 'feeling' || screen === 'size' || screen === 'body') && (
+          <div className="pointer-events-none absolute inset-x-5 z-10 sm:inset-x-7" style={{ top: '24%', height: 380 }}>
+            <ChirpyRoom
+              mode={screen === 'feeling' ? 'pick' : 'witness'}
+              selected={chirpySelection}
+              familiarFeeling={mostFrequentFeeling(progress)}
+              accent={room.palette.accent}
+              onToggle={toggleChirpy}
+            />
+          </div>
+        )}
+
         <div className="flex flex-1 flex-col justify-center py-6">
           <AnimatePresence mode="wait">
             <motion.div
@@ -313,12 +334,10 @@ export function CheckIn({
                       ))}
                     </div>
                   ) : (
-                    <ChirpyRoom
-                      selected={chirpySelection}
-                      familiarFeeling={mostFrequentFeeling(progress)}
-                      accent={room.palette.accent}
-                      onToggle={toggleChirpy}
-                    />
+                    // The Chirpys themselves live in the persistent layer
+                    // above; this just holds the space they occupy so the
+                    // aside and the way forward sit below them.
+                    <div aria-hidden style={{ height: 348 }} />
                   )}
                   <ChirpyAside stateId={lastChirpy} accent={room.palette.accent} />
                   {/* Always available, whether or not anything is chosen —
@@ -390,15 +409,14 @@ export function CheckIn({
                     <Chirpy
                       pose="curious"
                       line={suggested
-                        ? `Some people notice a ${feeling?.label.toLowerCase()} feeling in their ${BODY_ZONE_LABEL[suggested]}.`
+                        ? `Some people notice it in their ${BODY_ZONE_LABEL[suggested]}. Where do you notice yours?`
                         : 'Where’s it sitting?'}
                       align="left"
                     />
                     <Question room={room}>Where do you notice it?</Question>
                     <SceneLine>
-                      {suggested
-                        ? 'Is that where you notice it? Tap wherever feels right — you can pick more than one.'
-                        : 'There’s no right place. Tap wherever feels right — you can pick more than one.'}
+                      Anywhere at all — and as many places as you like. There’s no
+                      right place for it to be.
                     </SceneLine>
                     <BodyMap
                       accent={room.palette.accent}
@@ -406,7 +424,7 @@ export function CheckIn({
                       selected={new Set(Array.from(bodyZones).filter((z): z is BodyZoneId => z !== 'all' && z !== 'unsure'))}
                       onToggle={toggleBodyZone}
                     />
-                    <div className="flex gap-2.5">
+                    <div className="flex flex-wrap gap-2.5">
                       <Pill
                         label="All over"
                         selected={bodyZones.has('all')}
@@ -414,15 +432,21 @@ export function CheckIn({
                         accent={room.palette.accent}
                       />
                       <Pill
-                        label="I can’t tell"
+                        label="I don’t know"
                         selected={bodyZones.has('unsure')}
                         onClick={() => setBodyZones(new Set(['unsure']))}
                         accent={room.palette.accent}
                       />
                     </div>
-                    {bodyZones.size > 0 && (
-                      <Cta label="That’s it" onClick={() => advance('thought')} accent={room.palette.accent} />
-                    )}
+                    {/* Always available, whether or not anywhere was tapped —
+                        a child who doesn't notice it anywhere has still
+                        answered, and shouldn't have to invent a place to get
+                        past this. */}
+                    <Cta
+                      label={bodyZones.size > 0 ? 'That’s it' : 'Not anywhere really'}
+                      onClick={() => advance('thought')}
+                      accent={room.palette.accent}
+                    />
                   </>
                 );
               })()}
@@ -615,10 +639,16 @@ function feelingRoom(feelingId: string | undefined): RoomId {
  */
 function screenRoomId(screen: Screen, feelingId: string | undefined): RoomId {
   switch (screen) {
+    // `body` is in here with the opening beats on purpose: it stays in the
+    // Reflection Room rather than cutting to the Body Detective room.
+    // Noticing a Chirpy and then noticing where the feeling sits is meant to
+    // be one continuous move through one place — swapping the whole
+    // background underneath the child turns it back into two screens,
+    // whatever the transition looks like.
     case 'feeling':
     case 'size':
-    case 'goodbit':   return 'feelings';
-    case 'body':      return 'body';
+    case 'goodbit':
+    case 'body':      return 'feelings';
     case 'thought':   return 'thought';
     case 'situation': return 'reflection';
     case 'story':     return 'story';
