@@ -2,6 +2,17 @@
 
 **One app. One path. One document.**
 
+> **Note on the kids build (current).** The interaction model for
+> `/mindgymforkidsv1` described below — the check-in as the front door, the
+> rooms grid as the second screen — has been superseded. That shape tested as
+> too much to ask of a child before anything had given them a reason to care.
+> What ships now puts My Best Every Day's daily virtue tick first, inside
+> rooms, with the five-step reflection offered once a day rather than required
+> up front. See **`docs/source-material/KIDS_V1_CANONICAL.md`** for the
+> current direction. The principles in this document — the quiet state, the
+> teaching moves, Chirpy as companion rather than authority, nothing leaving
+> the device — all still hold and are still enforced in the code.
+
 **Owner:** Sim
 **Last updated:** 2 September 2026
 **Status:** Consolidated build plan — supersedes the earlier ten-phase structure

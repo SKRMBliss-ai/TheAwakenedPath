@@ -25,7 +25,15 @@ const KidsWorld = lazy(() => import('../practise/kids/KidsWorld').then((m) => ({
  *  shared assets rather than v0 behaviour (Chirpy's sprite paths and the
  *  sound table). That separation is the point: v1 can be reworked freely
  *  without any chance of moving the live /mindgymforkids page. */
-const KidsGymV1 = lazy(() => import('../practise/kids-v1/KidsGymV1').then((m) => ({ default: m.KidsGymV1 })));
+/**
+ * /mindgymforkidsv1 now serves the merged app: My Best Every Day's engine
+ * (the seven virtues, the daily tick, the points and streak that already
+ * work) wearing Kids Gym v1's world (rooms, Chirpy, the games, the five-step
+ * reflection). The old KidsGymV1 shell is still in the tree and still
+ * imports cleanly — its check-in, games and rooms are what this is built
+ * from — it simply isn't the front door any more.
+ */
+const KidsGymV1 = lazy(() => import('../practise/kids-v1/best/BestApp'));
 
 const GymFallback = () => (
   <div className="grid min-h-screen place-items-center bg-[#FBF7F0] text-[13px] text-[#8A8078]">
