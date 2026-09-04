@@ -21,6 +21,14 @@ export const GYM_PATHS = {
   all: '/mindgymforall',
   kids: '/mindgymforkids',
   adults: '/mindgymforadults',
+  /** Mind Gym for Kids v1 — the full check-in + 67-game build, shipped
+   *  alongside the original page rather than over it, so /mindgymforkids
+   *  keeps working untouched while v1 is reviewed. Listed AFTER `kids` on
+   *  purpose: matchGymRoute compares whole normalised paths, never
+   *  prefixes, so '/mindgymforkidsv1' can never be swallowed by '/mindgym
+   *  forkids' — but keeping the longer path second makes that obvious to
+   *  the next person reading this. */
+  kidsV1: '/mindgymforkidsv1',
 } as const;
 
 export type GymRoute = keyof typeof GYM_PATHS;
