@@ -26,7 +26,15 @@ const KEY = 'mindgym.kidsv1.progress.v1';
 /** One completed check-in's answers. */
 export interface CheckInEntry {
   at: number;
+  /** The routing hint derived from what was noticed, or null. */
   feeling: string | null;
+  /**
+   * Which Chirpy states felt familiar in the room — any number, possibly
+   * none. Kept as state ids rather than emotion names, because that is
+   * genuinely what happened: the child recognised something, they did not
+   * declare an emotion.
+   */
+  chirpys: string[];
   bodyZones: string[];
   thought: string;
   situation: string;

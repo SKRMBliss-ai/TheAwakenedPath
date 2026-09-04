@@ -7,7 +7,9 @@ import { useMotion, useQuiet } from './ui/quiet';
 import { Chirpy, RoomScene } from './ui/scene';
 import { BodyMap } from './ui/bodyMap';
 import { BODY_ZONE_LABEL, type BodyZoneId } from './ui/bodyZones';
-import { FEELINGS, SIZES, GOODBITS, THOUGHTS, SITUATIONS, MAYBES, type FeelingDef } from './kit/checkinContent';
+import { ChirpyRoom, ChirpyAside } from './chirpy/ChirpyRoom';
+import { SELECTABLE_CHIRPYS, getChirpyState } from './chirpy/states';
+import { FEELINGS, SIZES, GOODBITS, THOUGHTS, SITUATIONS, MAYBES } from './kit/checkinContent';
 import * as sound from './kit/sound';
 import { isSpeechSupported, startListening } from './kit/speech';
 import { mostFrequentFeeling, type CheckInEntry, type Progress } from './progress';
@@ -37,14 +39,16 @@ import { mostFrequentFeeling, type CheckInEntry, type Progress } from './progres
  * the Feelings Room, the body scan in Body Detective, the thought screen (and
  * `maybes`) in the Thought Room, and so on (see `screenRoomId` below).
  *
- * THE FEELING SCREEN IS A ROOM FULL OF BALLOONS, not a grid of pills — six
- * colour-filled balloons drifting and bouncing off the edges, each carrying
- * its feeling's name, each bursting when tapped (see FloatingFeelings). A
- * child who is playing answers more honestly than a child filling in a form,
- * and every balloon bursts identically so none of them reads as the right
- * one. When this device has picked the same feeling twice or more, one
- * balloon carries a quiet "you often feel this" marker — never a redirect,
- * never a value judgement, just a mirror.
+ * THE FEELING SCREEN IS A ROOM WITH CHIRPYS IN IT. Not an emotion picker of
+ * any kind — no balloons, no pills, no labels. Several Chirpys inhabit the
+ * space in different states, spread through it at different depths, and the
+ * child looks round and notices which ones are familiar (chirpy/ChirpyRoom).
+ * Any number can be noticed, including none; "not sure" is one of the
+ * Chirpys sitting quietly rather than a get-out button underneath. What a
+ * child notices is a routing hint for the rest of the walk and nothing more
+ * — it is never reflected back to them as a verdict on how they are. Where
+ * this device has seen a feeling often, that Chirpy carries a slightly
+ * warmer pool of light and no words at all.
  *
  * THE BODY SCREEN IS A MAP, not a list — a warm, rounded, non-anatomical
  * figure (ui/bodyMap.tsx) the child taps directly, and the only screen here
@@ -123,6 +127,10 @@ export function CheckIn({
 }) {
   const [screen, setScreen] = useState<Screen>('feeling');
   const [feeling, setFeeling] = useState<(typeof FEELINGS)[number] | null>(null);
+  /** Which Chirpys in the room felt familiar. Any number, including none. */
+  const [chirpySelection, setChirpySelection] = useState<Set<string>>(new Set());
+  /** The most recently touched one — whose aside Chirpy is currently on. */
+  const [lastChirpy, setLastChirpy] = useState<string | null>(null);
   const [bodyZones, setBodyZones] = useState<Set<BodySelection>>(new Set());
   const [situation, setSituation] = useState<string>('other');
   const [situationText, setSituationText] = useState('');
@@ -158,6 +166,7 @@ export function CheckIn({
       saved.current = true;
       onCheckInSaved({
         feeling: feeling?.id ?? null,
+        chirpys: Array.from(chirpySelection),
         bodyZones: Array.from(bodyZones),
         thought,
         situation: situationText.trim() || situation,
@@ -194,17 +203,44 @@ export function CheckIn({
 
   const maybes = MAYBES[situation] ?? MAYBES.other;
 
+  /** Noticing a Chirpy. A toggle, so changing your mind costs nothing. */
+  const toggleChirpy = (stateId: string) => {
+    sound.play('tap');
+    setChirpySelection((prev) => {
+      const next = new Set(prev);
+      if (next.has(stateId)) next.delete(stateId); else next.add(stateId);
+      return next;
+    });
+    setLastChirpy((prev) => (prev === stateId && chirpySelection.has(stateId) ? null : stateId));
+  };
+
   /**
-   * A real feeling was picked (not "I don't know") — tally it and move on.
-   * `popped` means a balloon already played its own burst sound and waited
-   * out the animation, so this skips the usual tap cue and pause rather than
-   * stacking a second one on top of it.
+   * Leaving the room and carrying on. Whatever was noticed becomes a routing
+   * hint for the rest of the walk — which room to offer at the end, which
+   * tally to add to — and nothing more than that. A child who recognised
+   * nothing, or only 'unsure' (which maps to no feeling at all), simply
+   * walks on; they have not failed to answer.
    */
-  const pickFeeling = (f: FeelingDef, popped = false) => {
-    onFeelingPicked(f.id);
-    setFeeling(f);
-    const next: Screen = f.ok ? 'goodbit' : 'size';
-    if (popped) go(next); else advance(next);
+  const commitChirpySelection = () => {
+    const picked = Array.from(chirpySelection)
+      .map(getChirpyState)
+      .filter((s): s is NonNullable<typeof s> => Boolean(s));
+
+    // The first pick that maps to a feeling steers the rest of the walk.
+    // Later picks still ride along in the saved record below.
+    const steer = picked.find((s) => s.feeling !== null);
+    const f = steer ? FEELINGS.find((x) => x.id === steer.feeling) ?? null : null;
+
+    if (f) {
+      onFeelingPicked(f.id);
+      setFeeling(f);
+      advance(f.ok ? 'goodbit' : 'size');
+      return;
+    }
+    // Nothing recognised, or only the quiet one. Straight to what's been
+    // good rather than down a reflection path about a problem not named.
+    setFeeling(null);
+    advance('goodbit');
   };
 
   const toggleBodyZone = (zone: BodyZoneId) => {
@@ -254,32 +290,43 @@ export function CheckIn({
               transition={m.transition}
               className="flex flex-col gap-5"
             >
-              {/* ── P-01 · the front door, and the router ────────────── */}
+              {/* ── P-01 · the room, and the Chirpys in it ───────────────
+                  Not an emotion picker. A room the child looks around,
+                  with several Chirpys living in it, any number of which
+                  may feel familiar — see chirpy/ChirpyRoom.tsx. */}
               {screen === 'feeling' && (
                 <>
-                  <Chirpy pose="curious" line="How are you doing, then?" align="left" />
-                  <Question room={room}>How are you feeling right now?</Question>
+                  <Chirpy pose="curious" line="Have a look round. See anyone you know?" align="left" />
+                  <Question room={room}>Which one feels a little like you?</Question>
                   {quiet ? (
-                    <Grid>
-                      {FEELINGS.map((f) => (
+                    // The quiet state gets the plain, still version: fewer,
+                    // larger, no drifting targets (§2.6/§7).
+                    <div className="flex flex-col" style={{ gap: m.gap }}>
+                      {SELECTABLE_CHIRPYS.map((s) => (
                         <Pill
-                          key={f.id}
-                          label={f.label}
-                          onClick={() => pickFeeling(f)}
+                          key={s.id}
+                          label={s.description}
+                          selected={chirpySelection.has(s.id)}
+                          onClick={() => toggleChirpy(s.id)}
                           accent={room.palette.accent}
                         />
                       ))}
-                    </Grid>
+                    </div>
                   ) : (
-                    <FloatingFeelings
+                    <ChirpyRoom
+                      selected={chirpySelection}
+                      familiarFeeling={mostFrequentFeeling(progress)}
                       accent={room.palette.accent}
-                      usualId={mostFrequentFeeling(progress)}
-                      onPick={(f) => pickFeeling(f, true)}
+                      onToggle={toggleChirpy}
                     />
                   )}
-                  <Pill
-                    label="I don’t know"
-                    onClick={() => { setFeeling(null); advance('goodbit'); }}
+                  <ChirpyAside stateId={lastChirpy} accent={room.palette.accent} />
+                  {/* Always available, whether or not anything is chosen —
+                      a child who doesn't recognise any of them has still
+                      answered honestly. */}
+                  <Cta
+                    label={chirpySelection.size > 0 ? 'That’s the one' : 'None of them, really'}
+                    onClick={commitChirpySelection}
                     accent={room.palette.accent}
                   />
                 </>
@@ -289,7 +336,11 @@ export function CheckIn({
               {screen === 'size' && (
                 <>
                   {!quiet && <Chirpy pose="worried" line="Okay. How big is it?" align="left" />}
-                  <Question room={room}>How big is the {feeling?.label.toLowerCase()} one?</Question>
+                  {/* Deliberately does NOT name the feeling back at the child.
+                      They noticed a Chirpy; that is not the same as declaring
+                      an emotion, and "how big is the worried one" would quietly
+                      turn their noticing into a diagnosis. */}
+                  <Question room={room}>How big does it feel right now?</Question>
                   <div className="flex flex-col" style={{ gap: m.gap }}>
                     {SIZES.map((s) => (
                       <Pill
@@ -507,179 +558,7 @@ export function CheckIn({
   );
 }
 
-function Grid({ children }: { children: React.ReactNode }) {
-  const quiet = useQuiet();
-  const m = useMotion();
-  // One column in the quiet state. Fewer, larger, further apart (§2.6/§7).
-  return (
-    <div
-      className={quiet ? 'flex flex-col' : 'grid grid-cols-2'}
-      style={{ gap: m.gap }}
-    >
-      {children}
-    </div>
-  );
-}
-
-/**
- * The feeling screen — six colour-filled balloons drifting and bouncing
- * around the room, each carrying its feeling's name, each bursting when it's
- * tapped.
- *
- * WHY BALLOONS RATHER THAN BUTTONS. The check-in asks a child to say
- * something hard on the very first screen. A grid of grey pills makes that
- * feel like a form to complete; balloons drifting past make it feel like
- * something to play with, and a child who is playing answers more honestly
- * than a child who is filling something in. The burst is the reward, and it's
- * the same for every balloon — no feeling pops more happily than any other
- * (§2.4: nothing here may read as the right answer).
- *
- * Each balloon takes its colour from the feeling's own `hue`, already in the
- * content table and previously unused here. Movement is a plain
- * requestAnimationFrame loop bouncing each balloon off the container edges —
- * cheap for six elements, and it means they never settle into a grid a child
- * could read as a ranking.
- *
- * The "you often feel this" marker rides along under whichever balloon it
- * belongs to (mostFrequentFeeling in progress.ts), still only once this
- * device has seen that feeling picked twice or more, and still just a label.
- *
- * There is no bouncing version of this in the quiet state — the caller
- * renders plain, still pills instead. Moving targets are the opposite of
- * what §7 asks for when a child is distressed.
- */
-const BALLOON_SIZE = 88;
-
-function FloatingFeelings({
-  accent,
-  usualId,
-  onPick,
-}: {
-  accent: string;
-  usualId: string | null;
-  onPick: (feeling: FeelingDef) => void;
-}) {
-  const box = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<Record<string, { x: number; y: number }>>({});
-  const vel = useRef<Record<string, { vx: number; vy: number }>>({});
-  const [popped, setPopped] = useState<string | null>(null);
-  // A balloon holds still while a pointer is on it, so reaching for one
-  // doesn't turn into chasing it. Touch taps land either way at this speed;
-  // this is what makes it comfortable with a mouse.
-  const held = useRef<Set<string>>(new Set());
-
-  // Scatter them once, on mount, at whatever size the container turned out.
-  useEffect(() => {
-    const el = box.current;
-    if (!el) return;
-    const { width, height } = el.getBoundingClientRect();
-    const spread = (span: number) => Math.max(span - BALLOON_SIZE, 0);
-    const start: Record<string, { x: number; y: number }> = {};
-    FEELINGS.forEach((f, i) => {
-      start[f.id] = {
-        x: (spread(width) / 5) * i + Math.random() * 18,
-        y: Math.random() * spread(height),
-      };
-      // Slow, lazy drift — this is a room to look around, not a game to win.
-      const angle = Math.random() * Math.PI * 2;
-      vel.current[f.id] = { vx: Math.cos(angle) * 0.32, vy: Math.sin(angle) * 0.32 };
-    });
-    setPos(start);
-  }, []);
-
-  // The drift itself. Stops dead while a balloon is bursting so the burst
-  // stays where the child's finger was.
-  useEffect(() => {
-    const el = box.current;
-    if (!el || popped) return;
-    let frame = 0;
-    const step = () => {
-      const { width, height } = el.getBoundingClientRect();
-      const maxX = Math.max(width - BALLOON_SIZE, 0);
-      const maxY = Math.max(height - BALLOON_SIZE, 0);
-      setPos((prev) => {
-        const next: typeof prev = {};
-        for (const [id, p] of Object.entries(prev)) {
-          if (held.current.has(id)) { next[id] = p; continue; }
-          const v = vel.current[id];
-          let x = p.x + v.vx;
-          let y = p.y + v.vy;
-          if (x <= 0 || x >= maxX) { v.vx *= -1; x = Math.min(Math.max(x, 0), maxX); }
-          if (y <= 0 || y >= maxY) { v.vy *= -1; y = Math.min(Math.max(y, 0), maxY); }
-          next[id] = { x, y };
-        }
-        return next;
-      });
-      frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [popped]);
-
-  const burst = (f: FeelingDef) => {
-    if (popped) return;
-    sound.play('balloonPop');
-    setPopped(f.id);
-    // Long enough to see it go; `pickFeeling` upstream adds its own beat.
-    window.setTimeout(() => onPick(f), 420);
-  };
-
-  return (
-    <div ref={box} className="relative w-full" style={{ height: 330 }}>
-      {FEELINGS.map((f) => {
-        const p = pos[f.id];
-        if (!p) return null;
-        const isPopped = popped === f.id;
-        const dimmed = popped !== null && !isPopped;
-        return (
-          <motion.button
-            key={f.id}
-            onClick={() => burst(f)}
-            onPointerEnter={() => held.current.add(f.id)}
-            onPointerLeave={() => held.current.delete(f.id)}
-            disabled={popped !== null}
-            aria-label={f.label}
-            className="absolute grid place-items-center rounded-full text-center text-[13.5px] font-extrabold leading-tight"
-            style={{
-              left: p.x,
-              top: p.y,
-              width: BALLOON_SIZE,
-              height: BALLOON_SIZE,
-              color: '#FFFFFF',
-              textShadow: '0 1px 6px rgba(0,0,0,0.45)',
-              // The balloon's own colour, lit from the top-left like the
-              // painted orbs in the room art behind it.
-              background: `radial-gradient(circle at 34% 26%, hsl(${f.hue} 92% 76%), hsl(${f.hue} 76% 46%) 72%)`,
-              border: f.id === usualId ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.4)',
-              boxShadow: f.id === usualId
-                ? `0 0 26px -2px ${accent}, inset 0 -8px 18px -8px rgba(0,0,0,0.5)`
-                : '0 10px 24px -8px rgba(0,0,0,0.55), inset 0 -8px 18px -8px rgba(0,0,0,0.5)',
-            }}
-            animate={
-              isPopped
-                ? { scale: [1, 1.32, 0.1], opacity: [1, 1, 0] }
-                : { scale: dimmed ? 0.88 : 1, opacity: dimmed ? 0.35 : 1 }
-            }
-            transition={isPopped ? { duration: 0.4, times: [0, 0.45, 1] } : { duration: 0.25 }}
-          >
-            {f.label}
-            {f.id === usualId && !popped && (
-              <span
-                className="pointer-events-none absolute -bottom-5 whitespace-nowrap text-[9.5px] font-extrabold"
-                style={{ color: accent, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}
-              >
-                ▲ you often feel this
-              </span>
-            )}
-            {isPopped && <BurstBits />}
-          </motion.button>
-        );
-      })}
-    </div>
-  );
-}
-
-/** The bits of a popped balloon, flying outwards. Purely decorative. */
+/** The bits of a popped thought-bubble, flying outwards. Purely decorative. */
 function BurstBits() {
   return (
     <span className="pointer-events-none absolute inset-0">
