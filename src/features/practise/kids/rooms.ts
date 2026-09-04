@@ -10,6 +10,8 @@
  *   {id}_card.webp   the animated room card, used on the hub
  */
 
+import type { ChirpyPose } from './checkin/content';
+
 export type RoomId =
   | 'feelings' | 'thought' | 'body' | 'pause' | 'story'
   | 'friendship' | 'anger' | 'worry' | 'kindness' | 'reflection'
@@ -69,6 +71,9 @@ export interface KidsRoomConfig {
    *  below set it, so the new visual language can be judged in place
    *  without touching anything already shipped. */
   immersive?: boolean;
+  /** Which Chirpy sprite frame shows in-world when `immersive` is set —
+   *  defaults to 'curious' (ChirpyInWorld's own default) when omitted. */
+  chirpyPose?: ChirpyPose;
 }
 
 export const KIDS_WORLD: KidsRoomConfig[] = [
@@ -249,6 +254,7 @@ export const KIDS_WORLD: KidsRoomConfig[] = [
     palette: { ink: '#EFF3FF', accent: '#6E86E8', scrim: '#0A1130' },
     art: 'painted',
     immersive: true,
+    chirpyPose: 'worried',
     steps: [
       { kind: 'tap', prompt: 'Tap the worry to make it smaller.', glyph: '☁️', taps: 4, hint: 'more taps' },
       { kind: 'pick', prompt: 'What is the worry about?', options: ['Something at school', 'A friend thing', 'Something at home', 'Something new I have to do'] },

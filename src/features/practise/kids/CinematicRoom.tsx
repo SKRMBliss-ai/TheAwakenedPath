@@ -102,7 +102,7 @@ export function CinematicRoom({
       {room.immersive && !cinematic && (
         <>
           <AmbientLife accent={room.palette.accent} />
-          <ChirpyInWorld visible={!inExercise} />
+          <ChirpyInWorld visible={!inExercise} pose={room.chirpyPose} />
         </>
       )}
 

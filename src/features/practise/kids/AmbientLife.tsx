@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { chirpySprite } from './checkin/content';
+import { chirpySprite, type ChirpyPose } from './checkin/content';
 
 /**
  * The "immersive" room treatment — opt-in via a room's `immersive: true`
@@ -66,11 +66,11 @@ export function AmbientLife({ accent }: { accent: string }) {
   );
 }
 
-export function ChirpyInWorld({ visible }: { visible: boolean }) {
+export function ChirpyInWorld({ visible, pose = 'curious' }: { visible: boolean; pose?: ChirpyPose }) {
   if (!visible) return null;
   return (
     <motion.img
-      src={chirpySprite('curious')}
+      src={chirpySprite(pose)}
       alt=""
       aria-hidden
       className="pointer-events-none absolute"
