@@ -14,4 +14,4 @@
  * discovered something", never "you won". There are no reward jingles.
  */
 
-export { play, stopAll, type Cue } from '../../kids/sound';
+export { play, stopAll, playMusic, stopMusic, type Cue } from '../../kids/sound';

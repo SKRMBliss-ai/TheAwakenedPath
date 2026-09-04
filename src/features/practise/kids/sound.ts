@@ -29,7 +29,7 @@ import breatheOut from '../../../assets/kids-pause-breathe-out.mp3';
 
 export type Cue =
   | 'tap' | 'roomCard' | 'enterRoom' | 'exitRoom' | 'discovery' | 'resolve'
-  | 'breathComplete' | 'tapHit' | 'breatheIn' | 'breatheOut';
+  | 'breathComplete' | 'tapHit' | 'breatheIn' | 'breatheOut' | 'storyTheme';
 
 interface CueDef { src: string; volume: number; interruptible?: boolean }
 
@@ -53,9 +53,17 @@ const TABLE: Record<Cue, CueDef> = {
   // the cycle. Quiet, since it sits under the child's own breathing.
   breatheIn:      { src: breatheIn,  volume: 0.5 },
   breatheOut:     { src: breatheOut, volume: 0.5 },
+
+  // Different Story Room's background bed while the story is on screen —
+  // the same calm piano used for `resolve`, looped low under the text
+  // rather than played once as a chime. See playMusic().
+  storyTheme:     { src: calmPiano, volume: 0.22 },
 };
 
 let current: HTMLAudioElement | null = null;
+/** Tracked separately from `current` — a background bed plays alongside
+ *  one-shot taps and discovery chimes rather than being replaced by them. */
+let music: HTMLAudioElement | null = null;
 
 /** Play a cue. Honours the same device mute toggle as the rest of the app. */
 export function play(cue: Cue, opts?: { stopOthers?: boolean }) {
@@ -71,8 +79,36 @@ export function play(cue: Cue, opts?: { stopOthers?: boolean }) {
   } catch { /* ignore */ }
 }
 
+/**
+ * Play a cue as a looping background bed rather than a one-shot — the Story
+ * Room's music, say. There are no dedicated ambient loops in src/assets (see
+ * the note above TABLE), so this loops one of the short "logo" pieces
+ * instead of pointing at a file that doesn't exist. Replaces any music
+ * already playing; does not touch one-shot cues from `play`.
+ */
+export function playMusic(cue: Cue) {
+  if (isMuted() || typeof window === 'undefined') return;
+  const def = TABLE[cue];
+  if (!def) return;
+  try {
+    stopMusic();
+    const a = new Audio(def.src);
+    a.volume = def.volume;
+    a.loop = true;
+    void a.play().catch(() => { /* autoplay policy — stay silent */ });
+    music = a;
+  } catch { /* ignore */ }
+}
+
+/** Stop just the background bed, leaving any one-shot cue alone. */
+export function stopMusic() {
+  try { music?.pause(); } catch { /* ignore */ }
+  music = null;
+}
+
 /** Stop whatever long cue is playing (used when leaving a room mid-sound). */
 export function stopAll() {
   try { current?.pause(); } catch { /* ignore */ }
   current = null;
+  stopMusic();
 }

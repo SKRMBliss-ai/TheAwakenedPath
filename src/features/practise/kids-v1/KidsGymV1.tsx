@@ -12,7 +12,7 @@ import { CheckIn } from './CheckIn';
 import { RoomView } from './RoomView';
 import { GameShell } from './GameShell';
 import { GrownUp } from './GrownUp';
-import { loadProgress, recordFeeling, recordPlayed, type Progress } from './progress';
+import { loadProgress, recordCheckIn, recordFeeling, recordPlayed, type CheckInEntry, type Progress } from './progress';
 import * as sound from './kit/sound';
 
 /**
@@ -83,6 +83,9 @@ export function KidsGymV1({ onExitGym }: { onExitGym: () => void }) {
         <CheckIn
           progress={progress}
           onFeelingPicked={(feelingId) => setProgress((p) => recordFeeling(p, feelingId))}
+          onCheckInSaved={(entry: Omit<CheckInEntry, 'at'>) =>
+            setProgress((p) => recordCheckIn(p, { ...entry, at: Date.now() }))
+          }
           onGrownUp={toGrownUp}
           onQuiet={setQuiet}
           onFinish={(goTo) => {
