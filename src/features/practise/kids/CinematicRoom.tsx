@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { RoomExercise } from './exercises';
 import { roomArt, type KidsRoomConfig } from './rooms';
+import { AmbientLife, ChirpyInWorld } from './AmbientLife';
 import * as sound from './sound';
 
 /**
@@ -96,6 +97,14 @@ export function CinematicRoom({
             : `linear-gradient(180deg, ${room.palette.scrim}B3 0%, transparent 26%, transparent 42%, ${room.palette.scrim}E6 88%)`,
         }}
       />
+
+      {/* ── Immersive-style trial (rooms.ts's `immersive` flag only) ────── */}
+      {room.immersive && !cinematic && (
+        <>
+          <AmbientLife accent={room.palette.accent} />
+          <ChirpyInWorld visible={!inExercise} />
+        </>
+      )}
 
       {/* ── Chrome ─────────────────────────────────────────────────────── */}
       <div className="relative flex min-h-[100svh] flex-col px-5 pb-8 pt-5">

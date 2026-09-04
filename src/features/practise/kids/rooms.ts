@@ -12,7 +12,12 @@
 
 export type RoomId =
   | 'feelings' | 'thought' | 'body' | 'pause' | 'story'
-  | 'friendship' | 'anger' | 'worry' | 'kindness' | 'reflection';
+  | 'friendship' | 'anger' | 'worry' | 'kindness' | 'reflection'
+  // Immersive-style trial duplicates (see KidsRoomConfig.immersive below) —
+  // reuse the pause/worry art verbatim under their own filenames
+  // (public/rooms/pause-lab*.webp etc.) so the original ten never share a
+  // file with these, and can't be affected by anything done here.
+  | 'pause-lab' | 'worry-lab';
 
 /** One beat of a room's exercise. */
 export type Step =
@@ -57,6 +62,13 @@ export interface KidsRoomConfig {
   steps: Step[];
   /** The closing line — a discovery, never a score. */
   ending: string;
+  /** Opt-in "living world" treatment (see AmbientLife.tsx): drifting light
+   *  motes at depth, and Chirpy present as a character in the scene rather
+   *  than pinned to a UI bar. Undefined/false for every original room —
+   *  this must never change their rendering. Only the *-lab trial rooms
+   *  below set it, so the new visual language can be judged in place
+   *  without touching anything already shipped. */
+  immersive?: boolean;
 }
 
 export const KIDS_WORLD: KidsRoomConfig[] = [
@@ -206,6 +218,43 @@ export const KIDS_WORLD: KidsRoomConfig[] = [
       { kind: 'pick', prompt: 'What did you notice today?', options: ['Feelings come and go', 'I can pause before I react', 'I can choose what I do next', 'I’m braver than I thought'] },
     ],
     ending: 'You looked back at your own mind — and saw it a little more clearly.',
+  },
+
+  // ── Immersive-style trial rooms ─────────────────────────────────────────
+  // Duplicates of Pause and Worry, same art and exercise, with `immersive:
+  // true` turning on the new "living world" treatment. Appended at the end
+  // of this array on purpose: KidsWorld.tsx renders the grid in array
+  // order, so these sit below all ten original rooms rather than among
+  // them — a side-by-side preview of the new style, not a replacement.
+  {
+    id: 'pause-lab',
+    name: 'Pause Room · New Style',
+    tagline: 'Let’s make a little space.',
+    invitation: 'Find the quiet',
+    practising: 'Breathing and slowing down',
+    palette: { ink: '#EAFBF3', accent: '#3FB37F', scrim: '#0B2C25' },
+    art: 'painted',
+    immersive: true,
+    steps: [
+      { kind: 'breath', prompt: 'Breathe the box with me.', rounds: 3 },
+    ],
+    ending: 'The forest is quiet. So are you.',
+  },
+  {
+    id: 'worry-lab',
+    name: 'Worry Room · New Style',
+    tagline: 'Let’s make that worry a little smaller.',
+    invitation: 'Explore my worry',
+    practising: 'Facing worries bravely',
+    palette: { ink: '#EFF3FF', accent: '#6E86E8', scrim: '#0A1130' },
+    art: 'painted',
+    immersive: true,
+    steps: [
+      { kind: 'tap', prompt: 'Tap the worry to make it smaller.', glyph: '☁️', taps: 4, hint: 'more taps' },
+      { kind: 'pick', prompt: 'What is the worry about?', options: ['Something at school', 'A friend thing', 'Something at home', 'Something new I have to do'] },
+      { kind: 'pick', prompt: 'Is there something small you could do about it?', options: ['Tell a grown-up I trust', 'Ask a question', 'Try one small bit of it', 'Nothing — I can let it pass'] },
+    ],
+    ending: 'Your worry got smaller, and you got braver.',
   },
 ];
 

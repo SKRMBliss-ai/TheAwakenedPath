@@ -32,6 +32,8 @@ const STRENGTHS_BY_ROOM: Record<RoomId, StrengthId[]> = {
   worry: ['letting-go', 'awareness'],
   kindness: ['self-compassion', 'perspective'],
   reflection: ['awareness', 'perspective'],
+  'pause-lab': ['pausing', 'awareness'],
+  'worry-lab': ['letting-go', 'awareness'],
 };
 
 /** Adapts a world to the shape the practice journey records. */
