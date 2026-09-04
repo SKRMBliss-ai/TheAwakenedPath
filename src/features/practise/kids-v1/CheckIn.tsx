@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getRoom, type RoomConfig } from './rooms';
-import { Cta, FONT, BackButton, GrownUpExit, Pill, Question, SceneLine } from './ui/chrome';
+import { getRoom, type RoomConfig, type RoomId } from './rooms';
+import { CHROME, Cta, FONT, BackButton, GrownUpExit, Pill, Question, SceneLine } from './ui/chrome';
 import { useMotion, useQuiet } from './ui/quiet';
 import { Chirpy, RoomScene } from './ui/scene';
 import { FEELINGS, SIZES, GOODBITS, THOUGHTS, SITUATIONS, MAYBES } from './kit/checkinContent';
@@ -27,6 +27,14 @@ import * as sound from './kit/sound';
  *
  * Every screen auto-advances on selection, and every screen carries the
  * grown-up exit at the same position.
+ *
+ * THE SPINE HAPPENS IN THE ROOMS THEMSELVES. From the body screen onward, the
+ * background is the actual matching room — not a neutral check-in scene —
+ * so a child doing the body scan is standing in the Body Detective room, the
+ * thought screen opens in the Thought Room, and so on (see `screenRoomId`
+ * below). `feeling`, `size`, and `goodbit` stay in the generic check-in scene
+ * because no room fits them yet — the feeling itself is what decides which
+ * room the rest of the walk takes place in.
  */
 
 type Screen =
@@ -65,9 +73,10 @@ export function CheckIn({
 
   useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
-  // The check-in runs against a night scene — the "night calm" palette from
-  // UI §3.1, which is what that table specifies for check-in and reflection.
-  const room: RoomConfig = { ...getRoom('worry'), name: 'Check-in', painted: false, scene: 'night' };
+  // Which room the child is standing in for this screen — every screen of
+  // the check-in happens inside a real room now, starting with the Feelings
+  // Room for the opening "how are you feeling" beat (see `screenRoomId`).
+  const room: RoomConfig = getRoom(screenRoomId(screen, feeling?.id));
 
   const go = (next: Screen) => {
     setHistory((h) => [...h, screen]);
@@ -184,17 +193,20 @@ export function CheckIn({
                 </>
               )}
 
-              {/* ── P-03 · the thought · Chirpy guesses, and is often wrong ── */}
+              {/* ── P-03 · the thought · Chirpy guesses, and is often wrong ──
+                  Rendered in the Thought Room, and the thoughts themselves
+                  float rather than sitting in a stacked list — this is the
+                  one screen in the app about a noisy, scattered mind, so the
+                  choices get to look like that instead of like a form. */}
               {screen === 'thought' && (
                 <>
                   {!quiet && <Chirpy pose="said2" line="I bet I know what it said. Do I?" align="left" />}
                   <Question room={room}>What’s your mind saying?</Question>
-                  <div className="flex flex-col" style={{ gap: m.gap }}>
-                    {THOUGHTS.map((t) => (
-                      <Pill key={t} label={t} onClick={() => { setThought(t); advance('situation'); }} accent={room.palette.accent} />
-                    ))}
-                    <Pill label="Something else" onClick={() => { setThought('something else'); advance('situation'); }} accent={room.palette.accent} />
-                  </div>
+                  <FloatingThoughts
+                    items={[...THOUGHTS, 'Something else']}
+                    accent={room.palette.accent}
+                    onPick={(t) => { setThought(t === 'Something else' ? 'something else' : t); advance('situation'); }}
+                  />
                 </>
               )}
 
@@ -331,17 +343,13 @@ function Grid({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Which room fits what the child came in with. Deliberately a suggestion
- * offered beside "take me to the rooms", never a redirect: a child who has
- * just said they're angry might want the Anger Room, or might very much not,
- * and the app doesn't get to decide that.
- *
- * When the quiet state is on, the answer is always the Pause Room. An upset
- * child needs company, not curriculum (TEACHING_MOVES §18) — every clever
- * room in the building is the wrong room at that moment.
+ * Which room fits the feeling the child came in with. There isn't a
+ * one-to-one room for all six feelings — Scared shares the Worry Room and
+ * Happy/Excited share the Kindness Room — by design, per the room list in
+ * rooms.ts; this is the single mapping everything else below reuses rather
+ * than each screen guessing on its own.
  */
-function suggestRoom(feelingId: string | undefined, quiet: boolean): string {
-  if (quiet) return 'pause';
+function feelingRoom(feelingId: string | undefined): RoomId {
   switch (feelingId) {
     case 'angry':   return 'anger';
     case 'worried': return 'worry';
@@ -351,4 +359,119 @@ function suggestRoom(feelingId: string | undefined, quiet: boolean): string {
     case 'excited': return 'kindness';
     default:        return 'feelings';
   }
+}
+
+/**
+ * Which room the child is standing in for a given spine screen.
+ *
+ * `feeling`/`size`/`goodbit` open in the Feelings Room — "name what you
+ * feel" is exactly the front door of the check-in. The eyes test sits in the
+ * Thought Room rather than Reflection: sorting what your eyes actually saw
+ * from what your mind added is the same territory as noticing what your
+ * mind is saying, not a look-back — Reflection stays for `situation` (laying
+ * out what happened) and pairs with `maybes` living in the Different Story
+ * Room instead.
+ */
+function screenRoomId(screen: Screen, feelingId: string | undefined): RoomId {
+  switch (screen) {
+    case 'feeling':
+    case 'size':
+    case 'goodbit':   return 'feelings';
+    case 'body':      return 'body';
+    case 'thought':   return 'thought';
+    case 'situation': return 'reflection';
+    case 'story':     return 'story';
+    case 'eyes':      return 'thought';
+    case 'maybes':    return 'story';
+    case 'close':     return feelingRoom(feelingId);
+  }
+}
+
+/**
+ * Which room fits what the child came in with, once the quiet state is
+ * accounted for. Deliberately a suggestion offered beside "take me to the
+ * rooms", never a forced redirect: a child who has just said they're angry
+ * might want the Anger Room, or might very much not, and the app doesn't get
+ * to decide that.
+ *
+ * When the quiet state is on, the answer is always the Pause Room. An upset
+ * child needs company, not curriculum (TEACHING_MOVES §18) — every clever
+ * room in the building is the wrong room at that moment.
+ */
+function suggestRoom(feelingId: string | undefined, quiet: boolean): string {
+  if (quiet) return 'pause';
+  return feelingRoom(feelingId);
+}
+
+/**
+ * The thought screen's scattered layout — a handful of thought-bubbles
+ * floating at fixed, hand-placed positions rather than stacked in a list,
+ * because this is the one screen about a noisy mind. Falls back to the
+ * ordinary stacked Pill list in the quiet state: scattered, moving targets
+ * are the opposite of "fewer, larger, further apart" (§2.6/§7).
+ */
+const FLOAT_LAYOUT = [
+  { top: '2%', left: '0%', rotate: -3 },
+  { top: '0%', left: '54%', rotate: 2 },
+  { top: '28%', left: '24%', rotate: -2 },
+  { top: '34%', left: '58%', rotate: 3 },
+  { top: '60%', left: '2%', rotate: 2 },
+  { top: '64%', left: '52%', rotate: -1 },
+];
+
+function FloatingThoughts({
+  items,
+  accent,
+  onPick,
+}: {
+  items: string[];
+  accent: string;
+  onPick: (item: string) => void;
+}) {
+  const quiet = useQuiet();
+  const m = useMotion();
+
+  if (quiet) {
+    return (
+      <div className="flex flex-col" style={{ gap: m.gap }}>
+        {items.map((t) => (
+          <Pill key={t} label={t} onClick={() => onPick(t)} accent={accent} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative" style={{ minHeight: 340 }}>
+      {items.map((t, i) => {
+        const pos = FLOAT_LAYOUT[i % FLOAT_LAYOUT.length];
+        return (
+          <motion.button
+            key={t}
+            onClick={() => onPick(t)}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1, y: [0, -7, 0] }}
+            transition={{
+              opacity: { duration: 0.3, delay: i * 0.08 },
+              scale: { duration: 0.3, delay: i * 0.08 },
+              y: { repeat: Infinity, duration: 4.5 + (i % 3) * 0.6, delay: i * 0.35, ease: 'easeInOut' },
+            }}
+            whileTap={{ scale: 0.96 }}
+            className="absolute max-w-[62%] rounded-[20px] px-4 py-3 text-left text-[14px] font-bold leading-snug backdrop-blur-md sm:max-w-[46%]"
+            style={{
+              top: pos.top,
+              left: pos.left,
+              transform: `rotate(${pos.rotate}deg)`,
+              color: CHROME.text,
+              background: CHROME.pill,
+              border: `1px solid ${CHROME.pillBorder}`,
+              boxShadow: '0 10px 26px -12px rgba(0,0,0,0.6)',
+            }}
+          >
+            {t}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
 }
