@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { RoomExercise } from './exercises';
 import { roomArt, type KidsRoomConfig } from './rooms';
 import { AmbientLife, ChirpyInWorld } from './AmbientLife';
+import { RoomIntroVideo } from './RoomIntroVideo';
+import { introVideoSeen, markIntroVideoSeen } from './introVideoStorage';
+import { isMuted } from '../../../lib/sfx';
+import { say } from './checkin/voice';
 import * as sound from './sound';
 
 /**
@@ -19,7 +23,7 @@ import * as sound from './sound';
  * on top of it. The world stays the interface.
  */
 
-type Phase = 'approach' | 'reveal' | 'title' | 'ready' | 'exercise';
+type Phase = 'intro-video' | 'approach' | 'reveal' | 'title' | 'ready' | 'exercise';
 
 const FONT = "'Outfit', system-ui, -apple-system, sans-serif";
 
@@ -32,19 +36,39 @@ export function CinematicRoom({
   onExit: () => void;
   onComplete: () => void;
 }) {
-  const [phase, setPhase] = useState<Phase>('approach');
+  const showIntroVideo = !!room.introVideo && !introVideoSeen(room.id);
+  const [phase, setPhase] = useState<Phase>(showIntroVideo ? 'intro-video' : 'approach');
   const [progress, setProgress] = useState(0);
+  const timersStarted = useRef(false);
+
+  const beginApproachSequence = () => {
+    if (timersStarted.current) return;
+    timersStarted.current = true;
+    sound.play('enterRoom');
+    setTimeout(() => setPhase('reveal'), 1100);
+    setTimeout(() => setPhase('title'), 1900);
+    setTimeout(() => setPhase('ready'), 2700);
+  };
 
   useEffect(() => {
-    sound.play('enterRoom');
-    const t1 = setTimeout(() => setPhase('reveal'), 1100);
-    const t2 = setTimeout(() => setPhase('title'), 1900);
-    const t3 = setTimeout(() => setPhase('ready'), 2700);
-    return () => { [t1, t2, t3].forEach(clearTimeout); sound.stopAll(); };
+    if (phase !== 'intro-video') beginApproachSequence();
+    return () => sound.stopAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (phase === 'intro-video') say(room.tagline, { muted: isMuted() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  const finishIntroVideo = () => {
+    markIntroVideoSeen(room.id);
+    setPhase('approach');
+    beginApproachSequence();
+  };
+
   const soft = room.art === 'upscaled';
-  const cinematic = phase === 'approach';
+  const cinematic = phase === 'approach' || phase === 'intro-video';
   const showTitle = phase === 'title' || phase === 'ready';
   const showInvite = phase === 'ready';
   const inExercise = phase === 'exercise';
@@ -97,6 +121,11 @@ export function CinematicRoom({
             : `linear-gradient(180deg, ${room.palette.scrim}B3 0%, transparent 26%, transparent 42%, ${room.palette.scrim}E6 88%)`,
         }}
       />
+
+      {/* ── Cinematic video intro (rooms.ts's `introVideo` field only) ──── */}
+      {phase === 'intro-video' && room.introVideo && (
+        <RoomIntroVideo sources={room.introVideo} onDone={finishIntroVideo} />
+      )}
 
       {/* ── Immersive-style trial (rooms.ts's `immersive` flag only) ────── */}
       {room.immersive && !cinematic && (

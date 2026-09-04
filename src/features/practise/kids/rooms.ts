@@ -74,6 +74,18 @@ export interface KidsRoomConfig {
   /** Which Chirpy sprite frame shows in-world when `immersive` is set —
    *  defaults to 'curious' (ChirpyInWorld's own default) when omitted. */
   chirpyPose?: ChirpyPose;
+  /** A cinematic video that plays once before the usual approach/reveal/
+   *  title sequence (see RoomIntroVideo.tsx). Two separate cuts, not one
+   *  stretched to fit both — mobile is a native portrait (9:16) render,
+   *  web a native landscape (16:9) one, so neither is ever cropped/
+   *  letterboxed on its target shape. Undefined for every room that
+   *  doesn't explicitly set it. */
+  introVideo?: {
+    mobile: string;
+    mobilePoster: string;
+    web: string;
+    webPoster: string;
+  };
 }
 
 export const KIDS_WORLD: KidsRoomConfig[] = [
@@ -255,6 +267,12 @@ export const KIDS_WORLD: KidsRoomConfig[] = [
     art: 'painted',
     immersive: true,
     chirpyPose: 'worried',
+    introVideo: {
+      mobile: '/rooms/worry-lab-intro-mobile.mp4',
+      mobilePoster: '/rooms/worry-lab-intro-mobile-poster.webp',
+      web: '/rooms/worry-lab-intro-web.mp4',
+      webPoster: '/rooms/worry-lab-intro-web-poster.webp',
+    },
     steps: [
       { kind: 'tap', prompt: 'Tap the worry to make it smaller.', glyph: '☁️', taps: 4, hint: 'more taps' },
       { kind: 'pick', prompt: 'What is the worry about?', options: ['Something at school', 'A friend thing', 'Something at home', 'Something new I have to do'] },
