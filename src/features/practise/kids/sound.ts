@@ -29,7 +29,8 @@ import breatheOut from '../../../assets/kids-pause-breathe-out.mp3';
 
 export type Cue =
   | 'tap' | 'roomCard' | 'enterRoom' | 'exitRoom' | 'discovery' | 'resolve'
-  | 'breathComplete' | 'tapHit' | 'breatheIn' | 'breatheOut' | 'storyTheme';
+  | 'breathComplete' | 'tapHit' | 'breatheIn' | 'breatheOut' | 'storyTheme'
+  | 'balloonPop';
 
 interface CueDef { src: string; volume: number; interruptible?: boolean }
 
@@ -58,6 +59,11 @@ const TABLE: Record<Cue, CueDef> = {
   // the same calm piano used for `resolve`, looped low under the text
   // rather than played once as a chime. See playMusic().
   storyTheme:     { src: calmPiano, volume: 0.22 },
+
+  // A feeling balloon bursting on the check-in screen. Louder than `tapHit`
+  // (same clip) because this one IS the interaction, not a background beat —
+  // it's the "pop" the child is playing for.
+  balloonPop:     { src: bubblePop, volume: 0.55 },
 };
 
 let current: HTMLAudioElement | null = null;

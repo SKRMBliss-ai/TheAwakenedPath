@@ -37,11 +37,14 @@ import { mostFrequentFeeling, type CheckInEntry, type Progress } from './progres
  * the Feelings Room, the body scan in Body Detective, the thought screen (and
  * `maybes`) in the Thought Room, and so on (see `screenRoomId` below).
  *
- * THE FEELING SCREEN IS A PYRAMID, not a grid of pills — six bubbles in three
- * rows, tapped exactly like a pill would be. When this device has picked the
- * same feeling twice or more, one bubble carries a quiet "you often feel
- * this" marker (see FeelingPyramid) — never a redirect, never a value
- * judgement, just a mirror.
+ * THE FEELING SCREEN IS A ROOM FULL OF BALLOONS, not a grid of pills — six
+ * colour-filled balloons drifting and bouncing off the edges, each carrying
+ * its feeling's name, each bursting when tapped (see FloatingFeelings). A
+ * child who is playing answers more honestly than a child filling in a form,
+ * and every balloon bursts identically so none of them reads as the right
+ * one. When this device has picked the same feeling twice or more, one
+ * balloon carries a quiet "you often feel this" marker — never a redirect,
+ * never a value judgement, just a mirror.
  *
  * THE BODY SCREEN IS A MAP, not a list — a warm, rounded, non-anatomical
  * figure (ui/bodyMap.tsx) the child taps directly, and the only screen here
@@ -191,11 +194,17 @@ export function CheckIn({
 
   const maybes = MAYBES[situation] ?? MAYBES.other;
 
-  /** A real feeling was picked (not "I don't know") — tally it and move on. */
-  const pickFeeling = (f: FeelingDef) => {
+  /**
+   * A real feeling was picked (not "I don't know") — tally it and move on.
+   * `popped` means a balloon already played its own burst sound and waited
+   * out the animation, so this skips the usual tap cue and pause rather than
+   * stacking a second one on top of it.
+   */
+  const pickFeeling = (f: FeelingDef, popped = false) => {
     onFeelingPicked(f.id);
     setFeeling(f);
-    advance(f.ok ? 'goodbit' : 'size');
+    const next: Screen = f.ok ? 'goodbit' : 'size';
+    if (popped) go(next); else advance(next);
   };
 
   const toggleBodyZone = (zone: BodyZoneId) => {
@@ -262,10 +271,10 @@ export function CheckIn({
                       ))}
                     </Grid>
                   ) : (
-                    <FeelingPyramid
+                    <FloatingFeelings
                       accent={room.palette.accent}
                       usualId={mostFrequentFeeling(progress)}
-                      onPick={pickFeeling}
+                      onPick={(f) => pickFeeling(f, true)}
                     />
                   )}
                   <Pill
@@ -379,7 +388,7 @@ export function CheckIn({
                   <FloatingThoughts
                     items={[...THOUGHTS, 'Something else']}
                     accent={room.palette.accent}
-                    onPick={(t) => { setThought(t === 'Something else' ? 'something else' : t); advance('situation'); }}
+                    onPick={(t) => { setThought(t === 'Something else' ? 'something else' : t); go('situation'); }}
                   />
                 </>
               )}
@@ -448,7 +457,7 @@ export function CheckIn({
                   <FloatingThoughts
                     items={[...maybes, 'None of these yet']}
                     accent={room.palette.accent}
-                    onPick={(mb) => { setMaybeChosen(mb); advance('close'); }}
+                    onPick={(mb) => { setMaybeChosen(mb); go('close'); }}
                   />
                 </>
               )}
@@ -513,20 +522,35 @@ function Grid({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * The feeling screen's pyramid — the same six feelings as before, in three
- * fixed rows (1 / 2 / 3) instead of a grid, so the shape reads as a pyramid
- * without the layout itself needing to encode anything. The rows never
- * reorder by how often a feeling is picked — a stable map matters more here
- * than showing the data more cleverly, and a shuffling layout would make the
- * "you often feel this" marker below harder to find, not easier.
+ * The feeling screen — six colour-filled balloons drifting and bouncing
+ * around the room, each carrying its feeling's name, each bursting when it's
+ * tapped.
  *
- * That marker is the one place frequency shows at all, and only once this
- * device has seen the same feeling picked twice or more (mostFrequentFeeling
- * in progress.ts). It's a plain caption pointing at a bubble, not a size
- * change, a colour that means "correct", or a tick — a child choosing
- * differently today is not choosing wrong (§2.4).
+ * WHY BALLOONS RATHER THAN BUTTONS. The check-in asks a child to say
+ * something hard on the very first screen. A grid of grey pills makes that
+ * feel like a form to complete; balloons drifting past make it feel like
+ * something to play with, and a child who is playing answers more honestly
+ * than a child who is filling something in. The burst is the reward, and it's
+ * the same for every balloon — no feeling pops more happily than any other
+ * (§2.4: nothing here may read as the right answer).
+ *
+ * Each balloon takes its colour from the feeling's own `hue`, already in the
+ * content table and previously unused here. Movement is a plain
+ * requestAnimationFrame loop bouncing each balloon off the container edges —
+ * cheap for six elements, and it means they never settle into a grid a child
+ * could read as a ranking.
+ *
+ * The "you often feel this" marker rides along under whichever balloon it
+ * belongs to (mostFrequentFeeling in progress.ts), still only once this
+ * device has seen that feeling picked twice or more, and still just a label.
+ *
+ * There is no bouncing version of this in the quiet state — the caller
+ * renders plain, still pills instead. Moving targets are the opposite of
+ * what §7 asks for when a child is distressed.
  */
-function FeelingPyramid({
+const BALLOON_SIZE = 88;
+
+function FloatingFeelings({
   accent,
   usualId,
   onPick,
@@ -535,69 +559,148 @@ function FeelingPyramid({
   usualId: string | null;
   onPick: (feeling: FeelingDef) => void;
 }) {
-  const rows: FeelingDef[][] = [
-    [FEELINGS[0]],
-    [FEELINGS[1], FEELINGS[2]],
-    [FEELINGS[3], FEELINGS[4], FEELINGS[5]],
-  ];
+  const box = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<Record<string, { x: number; y: number }>>({});
+  const vel = useRef<Record<string, { vx: number; vy: number }>>({});
+  const [popped, setPopped] = useState<string | null>(null);
+  // A balloon holds still while a pointer is on it, so reaching for one
+  // doesn't turn into chasing it. Touch taps land either way at this speed;
+  // this is what makes it comfortable with a mouse.
+  const held = useRef<Set<string>>(new Set());
+
+  // Scatter them once, on mount, at whatever size the container turned out.
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const { width, height } = el.getBoundingClientRect();
+    const spread = (span: number) => Math.max(span - BALLOON_SIZE, 0);
+    const start: Record<string, { x: number; y: number }> = {};
+    FEELINGS.forEach((f, i) => {
+      start[f.id] = {
+        x: (spread(width) / 5) * i + Math.random() * 18,
+        y: Math.random() * spread(height),
+      };
+      // Slow, lazy drift — this is a room to look around, not a game to win.
+      const angle = Math.random() * Math.PI * 2;
+      vel.current[f.id] = { vx: Math.cos(angle) * 0.32, vy: Math.sin(angle) * 0.32 };
+    });
+    setPos(start);
+  }, []);
+
+  // The drift itself. Stops dead while a balloon is bursting so the burst
+  // stays where the child's finger was.
+  useEffect(() => {
+    const el = box.current;
+    if (!el || popped) return;
+    let frame = 0;
+    const step = () => {
+      const { width, height } = el.getBoundingClientRect();
+      const maxX = Math.max(width - BALLOON_SIZE, 0);
+      const maxY = Math.max(height - BALLOON_SIZE, 0);
+      setPos((prev) => {
+        const next: typeof prev = {};
+        for (const [id, p] of Object.entries(prev)) {
+          if (held.current.has(id)) { next[id] = p; continue; }
+          const v = vel.current[id];
+          let x = p.x + v.vx;
+          let y = p.y + v.vy;
+          if (x <= 0 || x >= maxX) { v.vx *= -1; x = Math.min(Math.max(x, 0), maxX); }
+          if (y <= 0 || y >= maxY) { v.vy *= -1; y = Math.min(Math.max(y, 0), maxY); }
+          next[id] = { x, y };
+        }
+        return next;
+      });
+      frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [popped]);
+
+  const burst = (f: FeelingDef) => {
+    if (popped) return;
+    sound.play('balloonPop');
+    setPopped(f.id);
+    // Long enough to see it go; `pickFeeling` upstream adds its own beat.
+    window.setTimeout(() => onPick(f), 420);
+  };
 
   return (
-    <div className="flex flex-col items-center gap-3.5 py-1">
-      {rows.map((row, i) => (
-        <div key={i} className="flex justify-center gap-3.5">
-          {row.map((f) => (
-            <FeelingBubble
-              key={f.id}
-              feeling={f}
-              accent={accent}
-              isUsual={f.id === usualId}
-              onClick={() => onPick(f)}
-            />
-          ))}
-        </div>
-      ))}
+    <div ref={box} className="relative w-full" style={{ height: 330 }}>
+      {FEELINGS.map((f) => {
+        const p = pos[f.id];
+        if (!p) return null;
+        const isPopped = popped === f.id;
+        const dimmed = popped !== null && !isPopped;
+        return (
+          <motion.button
+            key={f.id}
+            onClick={() => burst(f)}
+            onPointerEnter={() => held.current.add(f.id)}
+            onPointerLeave={() => held.current.delete(f.id)}
+            disabled={popped !== null}
+            aria-label={f.label}
+            className="absolute grid place-items-center rounded-full text-center text-[13.5px] font-extrabold leading-tight"
+            style={{
+              left: p.x,
+              top: p.y,
+              width: BALLOON_SIZE,
+              height: BALLOON_SIZE,
+              color: '#FFFFFF',
+              textShadow: '0 1px 6px rgba(0,0,0,0.45)',
+              // The balloon's own colour, lit from the top-left like the
+              // painted orbs in the room art behind it.
+              background: `radial-gradient(circle at 34% 26%, hsl(${f.hue} 92% 76%), hsl(${f.hue} 76% 46%) 72%)`,
+              border: f.id === usualId ? `2px solid ${accent}` : '1px solid rgba(255,255,255,0.4)',
+              boxShadow: f.id === usualId
+                ? `0 0 26px -2px ${accent}, inset 0 -8px 18px -8px rgba(0,0,0,0.5)`
+                : '0 10px 24px -8px rgba(0,0,0,0.55), inset 0 -8px 18px -8px rgba(0,0,0,0.5)',
+            }}
+            animate={
+              isPopped
+                ? { scale: [1, 1.32, 0.1], opacity: [1, 1, 0] }
+                : { scale: dimmed ? 0.88 : 1, opacity: dimmed ? 0.35 : 1 }
+            }
+            transition={isPopped ? { duration: 0.4, times: [0, 0.45, 1] } : { duration: 0.25 }}
+          >
+            {f.label}
+            {f.id === usualId && !popped && (
+              <span
+                className="pointer-events-none absolute -bottom-5 whitespace-nowrap text-[9.5px] font-extrabold"
+                style={{ color: accent, textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}
+              >
+                ▲ you often feel this
+              </span>
+            )}
+            {isPopped && <BurstBits />}
+          </motion.button>
+        );
+      })}
     </div>
   );
 }
 
-function FeelingBubble({
-  feeling,
-  accent,
-  isUsual,
-  onClick,
-}: {
-  feeling: FeelingDef;
-  accent: string;
-  isUsual: boolean;
-  onClick: () => void;
-}) {
+/** The bits of a popped balloon, flying outwards. Purely decorative. */
+function BurstBits() {
   return (
-    <div className="flex flex-col items-center" style={{ width: 92 }}>
-      <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={onClick}
-        aria-label={feeling.label}
-        className="grid place-items-center rounded-full px-2 text-center text-[14px] font-extrabold leading-tight backdrop-blur-md transition-colors"
-        style={{
-          height: 88,
-          width: 88,
-          color: CHROME.text,
-          background: CHROME.pill,
-          border: isUsual ? `2px solid ${accent}` : `1px solid ${CHROME.pillBorder}`,
-          boxShadow: isUsual ? `0 0 22px -4px ${accent}` : 'none',
-        }}
-      >
-        {feeling.label}
-      </motion.button>
-      {/* Reserved space whether or not this bubble carries it, so the row
-          doesn't jump depending on which feeling is "usual". */}
-      <p
-        className="mt-1.5 min-h-[26px] text-center text-[10.5px] font-bold leading-tight"
-        style={{ color: accent }}
-      >
-        {isUsual ? '▲ You often feel this' : ''}
-      </p>
-    </div>
+    <span className="pointer-events-none absolute inset-0">
+      {Array.from({ length: 9 }).map((_, i) => {
+        const angle = (i / 9) * Math.PI * 2;
+        return (
+          <motion.span
+            key={i}
+            className="absolute left-1/2 top-1/2 block h-2 w-2 rounded-full bg-white"
+            initial={{ x: 0, y: 0, opacity: 0.95, scale: 1 }}
+            animate={{
+              x: Math.cos(angle) * 54,
+              y: Math.sin(angle) * 54,
+              opacity: 0,
+              scale: 0.4,
+            }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          />
+        );
+      })}
+    </span>
   );
 }
 
@@ -662,19 +765,26 @@ function suggestRoom(feelingId: string | undefined, quiet: boolean): string {
 }
 
 /**
- * The thought screen's scattered layout — a handful of thought-bubbles
- * floating at fixed, hand-placed positions rather than stacked in a list,
- * because this is the one screen about a noisy mind. Falls back to the
- * ordinary stacked Pill list in the quiet state: scattered, moving targets
- * are the opposite of "fewer, larger, further apart" (§2.6/§7).
+ * The thought screen's scattered layout, and the "teach Chirpy a happier
+ * one" screen's — thought-bubbles floating at fixed, hand-placed positions
+ * rather than stacked in a list, because these are the screens about a noisy
+ * mind. They pop the same way the feeling balloons do, so the whole check-in
+ * has one physical language: things here are picked by bursting them, not by
+ * ticking them.
+ *
+ * They bob rather than drift: unlike the feeling balloons these carry whole
+ * sentences, and a moving sentence is much harder to read than a moving
+ * word. Falls back to the ordinary stacked Pill list in the quiet state —
+ * scattered, moving targets are the opposite of "fewer, larger, further
+ * apart" (§2.6/§7).
  */
 const FLOAT_LAYOUT = [
-  { top: '2%', left: '0%', rotate: -3 },
-  { top: '0%', left: '54%', rotate: 2 },
-  { top: '28%', left: '24%', rotate: -2 },
-  { top: '34%', left: '58%', rotate: 3 },
-  { top: '60%', left: '2%', rotate: 2 },
-  { top: '64%', left: '52%', rotate: -1 },
+  { top: '2%', left: '0%', rotate: -3, hue: 268 },
+  { top: '0%', left: '54%', rotate: 2, hue: 190 },
+  { top: '28%', left: '24%', rotate: -2, hue: 44 },
+  { top: '34%', left: '58%', rotate: 3, hue: 330 },
+  { top: '60%', left: '2%', rotate: 2, hue: 150 },
+  { top: '64%', left: '52%', rotate: -1, hue: 22 },
 ];
 
 function FloatingThoughts({
@@ -688,6 +798,7 @@ function FloatingThoughts({
 }) {
   const quiet = useQuiet();
   const m = useMotion();
+  const [popped, setPopped] = useState<string | null>(null);
 
   if (quiet) {
     return (
@@ -699,34 +810,56 @@ function FloatingThoughts({
     );
   }
 
+  const burst = (t: string) => {
+    if (popped) return;
+    sound.play('balloonPop');
+    setPopped(t);
+    window.setTimeout(() => onPick(t), 400);
+  };
+
   return (
     <div className="relative" style={{ minHeight: 340 }}>
       {items.map((t, i) => {
         const pos = FLOAT_LAYOUT[i % FLOAT_LAYOUT.length];
+        const isPopped = popped === t;
+        const dimmed = popped !== null && !isPopped;
         return (
           <motion.button
             key={t}
-            onClick={() => onPick(t)}
+            onClick={() => burst(t)}
+            disabled={popped !== null}
             initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1, y: [0, -7, 0] }}
-            transition={{
-              opacity: { duration: 0.3, delay: i * 0.08 },
-              scale: { duration: 0.3, delay: i * 0.08 },
-              y: { repeat: Infinity, duration: 4.5 + (i % 3) * 0.6, delay: i * 0.35, ease: 'easeInOut' },
-            }}
+            animate={
+              isPopped
+                ? { opacity: [1, 1, 0], scale: [1, 1.25, 0.1] }
+                : { opacity: dimmed ? 0.3 : 1, scale: dimmed ? 0.9 : 1, y: [0, -7, 0] }
+            }
+            transition={
+              isPopped
+                ? { duration: 0.38, times: [0, 0.45, 1] }
+                : {
+                    opacity: { duration: 0.3, delay: popped ? 0 : i * 0.08 },
+                    scale: { duration: 0.3, delay: popped ? 0 : i * 0.08 },
+                    y: { repeat: Infinity, duration: 4.5 + (i % 3) * 0.6, delay: i * 0.35, ease: 'easeInOut' },
+                  }
+            }
             whileTap={{ scale: 0.96 }}
-            className="absolute max-w-[62%] rounded-[20px] px-4 py-3 text-left text-[14px] font-bold leading-snug backdrop-blur-md sm:max-w-[46%]"
+            className="absolute max-w-[62%] rounded-[24px] px-4 py-3 text-left text-[14px] font-bold leading-snug backdrop-blur-md sm:max-w-[46%]"
             style={{
               top: pos.top,
               left: pos.left,
               transform: `rotate(${pos.rotate}deg)`,
               color: CHROME.text,
-              background: CHROME.pill,
-              border: `1px solid ${CHROME.pillBorder}`,
+              textShadow: '0 1px 6px rgba(0,0,0,0.5)',
+              // Softer and more translucent than the feeling balloons — these
+              // sit over painted room art and have to stay readable.
+              background: `linear-gradient(150deg, hsl(${pos.hue} 78% 62% / 0.6), hsl(${pos.hue} 70% 40% / 0.55))`,
+              border: '1px solid rgba(255,255,255,0.34)',
               boxShadow: '0 10px 26px -12px rgba(0,0,0,0.6)',
             }}
           >
             {t}
+            {isPopped && <BurstBits />}
           </motion.button>
         );
       })}
