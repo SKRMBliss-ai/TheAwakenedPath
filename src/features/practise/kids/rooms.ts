@@ -89,6 +89,33 @@ export interface KidsRoomConfig {
 }
 
 export const KIDS_WORLD: KidsRoomConfig[] = [
+  // Worry Room · New Style leads the grid on purpose — it's the room
+  // getting active design attention right now (immersive treatment,
+  // cinematic intro video), so it's the first thing a child sees rather
+  // than buried after the ten original rooms.
+  {
+    id: 'worry-lab',
+    name: 'Worry Room · New Style',
+    tagline: 'Let’s make that worry a little smaller.',
+    invitation: 'Explore my worry',
+    practising: 'Facing worries bravely',
+    palette: { ink: '#EFF3FF', accent: '#6E86E8', scrim: '#0A1130' },
+    art: 'painted',
+    immersive: true,
+    chirpyPose: 'worried',
+    introVideo: {
+      mobile: '/rooms/worry-lab-intro-mobile.mp4',
+      mobilePoster: '/rooms/worry-lab-intro-mobile-poster.webp',
+      web: '/rooms/worry-lab-intro-web.mp4',
+      webPoster: '/rooms/worry-lab-intro-web-poster.webp',
+    },
+    steps: [
+      { kind: 'tap', prompt: 'Tap the worry to make it smaller.', glyph: '☁️', taps: 4, hint: 'more taps' },
+      { kind: 'pick', prompt: 'What is the worry about?', options: ['Something at school', 'A friend thing', 'Something at home', 'Something new I have to do'] },
+      { kind: 'pick', prompt: 'Is there something small you could do about it?', options: ['Tell a grown-up I trust', 'Ask a question', 'Try one small bit of it', 'Nothing — I can let it pass'] },
+    ],
+    ending: 'Your worry got smaller, and you got braver.',
+  },
   {
     id: 'feelings',
     name: 'Feelings Room',
@@ -237,12 +264,12 @@ export const KIDS_WORLD: KidsRoomConfig[] = [
     ending: 'You looked back at your own mind — and saw it a little more clearly.',
   },
 
-  // ── Immersive-style trial rooms ─────────────────────────────────────────
-  // Duplicates of Pause and Worry, same art and exercise, with `immersive:
-  // true` turning on the new "living world" treatment. Appended at the end
-  // of this array on purpose: KidsWorld.tsx renders the grid in array
-  // order, so these sit below all ten original rooms rather than among
-  // them — a side-by-side preview of the new style, not a replacement.
+  // ── Immersive-style trial room ──────────────────────────────────────────
+  // Duplicate of Pause, same art and exercise, with `immersive: true`
+  // turning on the new "living world" treatment. Sits after the ten
+  // original rooms — a side-by-side preview of the new style, not a
+  // replacement. (Worry Room · New Style, the other trial room, now leads
+  // the whole grid instead — see the top of this array.)
   {
     id: 'pause-lab',
     name: 'Pause Room · New Style',
@@ -256,29 +283,6 @@ export const KIDS_WORLD: KidsRoomConfig[] = [
       { kind: 'breath', prompt: 'Breathe the box with me.', rounds: 3 },
     ],
     ending: 'The forest is quiet. So are you.',
-  },
-  {
-    id: 'worry-lab',
-    name: 'Worry Room · New Style',
-    tagline: 'Let’s make that worry a little smaller.',
-    invitation: 'Explore my worry',
-    practising: 'Facing worries bravely',
-    palette: { ink: '#EFF3FF', accent: '#6E86E8', scrim: '#0A1130' },
-    art: 'painted',
-    immersive: true,
-    chirpyPose: 'worried',
-    introVideo: {
-      mobile: '/rooms/worry-lab-intro-mobile.mp4',
-      mobilePoster: '/rooms/worry-lab-intro-mobile-poster.webp',
-      web: '/rooms/worry-lab-intro-web.mp4',
-      webPoster: '/rooms/worry-lab-intro-web-poster.webp',
-    },
-    steps: [
-      { kind: 'tap', prompt: 'Tap the worry to make it smaller.', glyph: '☁️', taps: 4, hint: 'more taps' },
-      { kind: 'pick', prompt: 'What is the worry about?', options: ['Something at school', 'A friend thing', 'Something at home', 'Something new I have to do'] },
-      { kind: 'pick', prompt: 'Is there something small you could do about it?', options: ['Tell a grown-up I trust', 'Ask a question', 'Try one small bit of it', 'Nothing — I can let it pass'] },
-    ],
-    ending: 'Your worry got smaller, and you got braver.',
   },
 ];
 
