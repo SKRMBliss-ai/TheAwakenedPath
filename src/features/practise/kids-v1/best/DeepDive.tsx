@@ -5,6 +5,7 @@ import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from '../ui
 import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { useMotion, useQuiet } from '../ui/quiet';
+import { Eye, MessageCircle } from 'lucide-react';
 import { chirpySprite, type ChirpyPose } from '../ui/sprites';
 import { BodyMap } from '../ui/bodyMap';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
@@ -156,6 +157,8 @@ export function DeepDive({
     bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [stepIndex]);
 
+  /** All four cards are on the table — the case is assembled. */
+  const caseComplete = !!(answers.feeling && answers.body && answers.story && answers.eyes);
   const onFeelingStep = step.id === 'feeling' && phase === 'ask';
   const filmPlaying = onFeelingStep && !filmSettled && !quiet;
 
@@ -208,9 +211,26 @@ export function DeepDive({
               other step keeps its painted still. */}
           {onFeelingStep
             ? <FeelingsIntro onDone={finishFeelingIntro} flash={orbFlash} />
-            : <RoomScene room={art} dim={phase === 'ask' ? 0.25 : 0.55} />}
+            : <RoomScene room={art} dim={phase === 'ask' ? 0.25 : turned ? 0.08 : 0.55} />}
         </motion.div>
       </AnimatePresence>
+
+      {/*
+        THE ROOM ANSWERS THE FLIP.
+
+        This is the whole thesis of the walk, delivered as a toy instead of
+        a paragraph: turn the card to the other story and the room warms,
+        brightens and lifts; turn it back and it cools. The child finds out
+        with their thumb that changing the story changes the world, and they
+        will do it eight times, which is eight repetitions of the lesson
+        without a word of instruction. It is why the sentence that used to
+        explain all this could be deleted.
+
+        Not in the quiet state. A room that surges with light because a
+        distressed child touched something is the app being pleased with
+        itself at the wrong moment.
+      */}
+      <StoryLight on={turned && phase !== 'ask' && !quiet} />
 
       {/* Once the child has named it, the feeling turns up in the room and
           keeps them company for the rest of the walk. Not on the first step
@@ -246,7 +266,18 @@ export function DeepDive({
               a better version of the question that used to be asked here in
               words. */}
           {stepIndex > 0 && (
-            <div className="grid grid-cols-2 items-stretch gap-3">
+            /* The set completing is a moment and nothing marked it. Four
+               cards arriving one at a time is good; the fourth landing means
+               the case is assembled, and a small settle and glow earns that
+               beat without a word. Fires once — keyed on completeness, not
+               repeated on every later render. */
+            <motion.div
+              className="grid grid-cols-2 items-stretch gap-3 rounded-[24px]"
+              animate={caseComplete && !quiet
+                ? { scale: [1, 1.025, 1], boxShadow: [`0 0 0px ${accent}00`, `0 0 42px -6px ${accent}`, `0 0 0px ${accent}00`] }
+                : {}}
+              transition={{ duration: 1.1, ease: 'easeOut' }}
+            >
               {answers.feeling && (
                 <AnswerCard label="I felt" value={answers.feeling} accent={accent} />
               )}
@@ -259,15 +290,25 @@ export function DeepDive({
                   frontText={answers.story}
                   backLabel="What else could be true"
                   backText={answers.other ?? ''}
+                  accent={accent}
                   canTurn={!!answers.other}
                   turned={turned}
-                  onTurn={() => { sound.play('roomCard'); setTurned((t) => !t); }}
+                  onTurn={() => {
+                    // Paper first, then the room's chime a beat later if this
+                    // turn is the one that reveals the other story — the
+                    // sound arrives with the light rather than before it.
+                    sound.play('exitRoom');
+                    setTurned((t) => {
+                      if (!t) window.setTimeout(() => sound.play('discovery'), 260);
+                      return !t;
+                    });
+                  }}
                 />
               )}
               {answers.eyes && (
-                <Lantern eyebrow="What actually happened" text={answers.eyes} hue="#8FD9C4" sway={7.6} />
+                <Lantern eyebrow="What actually happened" text={answers.eyes} hue="#8FD9C4" sway={7.6} icon="eye" />
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* ── The step being asked now ──────────────────────────────── */}
@@ -355,12 +396,12 @@ export function DeepDive({
               transition={{ duration: 0.5 }}
               className="flex flex-col gap-4 pt-1"
             >
-              {answers.other && (
-                <SceneLine>
-                  Turn the left-hand card over. Same afternoon, other side.
-                </SceneLine>
-              )}
-              <WalkingChirpy lines={CONFESSION} />
+              {/* The instruction that used to live here is gone. The card
+                  has a lifted corner, a shimmer and a wobble; turning it
+                  floods the room with light. A seven-year-old does not need
+                  "that's the interesting bit" explained to them — they need
+                  it to happen. */}
+              <WalkingChirpy lines={CONFESSION} turned={turned} />
               <Cta
                 label="I've had a good look"
                 onClick={() => { sound.play('discovery'); setStepIndex((i) => i + 1); }}
@@ -376,7 +417,11 @@ export function DeepDive({
               className="flex flex-col gap-4 pt-2"
             >
               <Chirpy pose="hopeful" line="Look at that. You worked all of that out yourself." align="left" />
-              <Question room={art}>Two stories, both fitting the same afternoon. Nobody knows which one is true — not me, and not you.</Question>
+              {/* A case the child worked, not a lesson they sat through. The
+                  stamp says the not-knowing IS the finding — which is the
+                  same idea the old paragraph laboured, in two words a child
+                  can read at a glance. */}
+              <CaseStamp accent={accent} />
               {/* The teaching the walk exists for, said once and not pressed:
                   a choice is available. The app does not make it, does not
                   ask them to declare it, and does not check later — a child
@@ -476,6 +521,8 @@ function Lantern({
   hue,
   sway,
   hint,
+  icon,
+  peel,
 }: {
   eyebrow: string;
   text: string;
@@ -485,13 +532,23 @@ function Lantern({
   sway: number;
   /** A quiet line at the foot — only the turnable one has anything to say. */
   hint?: string;
+  /**
+   * The bottom row is a confrontation, not two more list items, and four
+   * identical cards were hiding that. A thought bubble on what the mind
+   * said, an open eye on what actually happened: the distinction lands
+   * before the eyebrow text is read, which for a seven-year-old means it
+   * lands at all.
+   */
+  icon?: 'thought' | 'eye';
+  /** The turnable card lifts a corner, so nobody has to be told it turns. */
+  peel?: boolean;
 }) {
   const m = useMotion();
   return (
     <motion.div
-      animate={m.loop ? { rotate: [-0.9, 0.9, -0.9] } : undefined}
-      transition={m.loop ? { rotate: { repeat: Infinity, duration: sway, ease: 'easeInOut' } } : undefined}
-      className="flex h-full min-h-[168px] flex-col items-center gap-1.5 rounded-[22px] px-3 pb-3 pt-4 text-center backdrop-blur-md"
+      animate={m.loop ? { rotate: peel ? [-1.8, 1.8, -1.8] : [-0.9, 0.9, -0.9] } : undefined}
+      transition={m.loop ? { rotate: { repeat: Infinity, duration: peel ? sway * 0.7 : sway, ease: 'easeInOut' } } : undefined}
+      className="relative flex h-full min-h-[168px] flex-col items-center gap-1.5 overflow-hidden rounded-[22px] px-3 pb-3 pt-4 text-center backdrop-blur-md"
       style={{
         transformOrigin: 'top center',
         background: `linear-gradient(180deg, ${hue}33 0%, rgba(12,10,26,0.58) 62%)`,
@@ -499,6 +556,45 @@ function Lantern({
         boxShadow: `0 0 34px -14px ${hue}`,
       }}
     >
+      {/*
+        THE CORNER THAT IS ALREADY LIFTING, with warm light showing under
+        it, a shimmer that sweeps the card every few seconds, and a wobble.
+        The ⤾ glyph was too polite; a card that looks alive needs no
+        instruction above it, which is what let the instruction go.
+      */}
+      {peel && (
+        <>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute right-0 top-0 h-0 w-0"
+            style={{
+              borderTop: '22px solid #FFD98A',
+              borderLeft: '22px solid transparent',
+              borderTopRightRadius: 22,
+              filter: 'drop-shadow(-2px 3px 5px rgba(0,0,0,0.5))',
+            }}
+          />
+          {m.loop && (
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-[22px]"
+              style={{
+                background:
+                  'linear-gradient(115deg, transparent 38%, rgba(255,255,255,0.28) 50%, transparent 62%)',
+              }}
+              animate={{ backgroundPositionX: ['-160%', '160%'] }}
+              transition={{ repeat: Infinity, duration: 2.4, repeatDelay: 3.2, ease: 'easeInOut' }}
+            />
+          )}
+        </>
+      )}
+
+      {icon && (
+        <span aria-hidden style={{ color: hue, opacity: 0.95 }}>
+          {icon === 'thought' ? <MessageCircle size={17} strokeWidth={2.6} /> : <Eye size={17} strokeWidth={2.6} />}
+        </span>
+      )}
+
       {/* The flame. Same size in both; only the colour differs. */}
       <motion.span
         className="block h-6 w-6 shrink-0 rounded-full"
@@ -535,12 +631,13 @@ function Lantern({
  * longer side and neither face is clipped when it comes round.
  */
 function FlipLantern({
-  frontLabel, frontText, backLabel, backText, canTurn, turned, onTurn,
+  frontLabel, frontText, backLabel, backText, canTurn, turned, onTurn, accent,
 }: {
   frontLabel: string;
   frontText: string;
   backLabel: string;
   backText: string;
+  accent: string;
   /** False until the child has answered "what else could be true" — until
    *  then there is genuinely nothing on the back to turn to. */
   canTurn: boolean;
@@ -552,8 +649,13 @@ function FlipLantern({
       onClick={canTurn ? onTurn : undefined}
       disabled={!canTurn}
       whileTap={canTurn ? { scale: 0.97 } : undefined}
-      className="relative w-full text-left"
-      style={{ perspective: 1000 }}
+      className="relative w-full rounded-[22px] text-left"
+      style={{
+        perspective: 1000,
+        // A soft ring of the room's own light, so the turnable card is
+        // visibly the live one among the four.
+        boxShadow: canTurn ? `0 0 26px -8px ${accent}` : 'none',
+      }}
       aria-label={canTurn ? `Turn the card over. Showing: ${turned ? backLabel : frontLabel}` : frontLabel}
     >
       <motion.div
@@ -568,7 +670,8 @@ function FlipLantern({
             text={frontText}
             hue="#C48BE8"
             sway={6.4}
-            hint={canTurn ? 'tap to turn me over' : undefined}
+            icon="thought"
+            peel={canTurn}
           />
         </div>
         <div
@@ -579,7 +682,7 @@ function FlipLantern({
             transform: 'rotateY(180deg)',
           }}
         >
-          <Lantern eyebrow={backLabel} text={backText} hue="#FFD98A" sway={7.2} hint="tap to turn me back" />
+          <Lantern eyebrow={backLabel} text={backText} hue="#FFD98A" sway={7.2} icon="thought" peel />
         </div>
       </motion.div>
     </motion.button>
@@ -598,10 +701,30 @@ function FlipLantern({
  * He stops on the last line rather than looping. Nothing here advances the
  * screen; the child leaves when they're ready, from the button below him.
  */
-function WalkingChirpy({ lines }: { lines: string[] }) {
+function WalkingChirpy({ lines, turned }: { lines: string[]; turned: boolean }) {
   const [i, setI] = useState(0);
   const quiet = useQuiet();
   const m = useMotion();
+
+  /**
+   * THE PAYOFF THAT DIDN'T EXIST.
+   *
+   * The child just taught Chirpy something. He should be visibly surprised
+   * by it — that inverts the authority the right way round: the small one
+   * explaining, the guide learning. It interrupts whatever he was confessing
+   * and then hands back, because a reaction that queues politely behind a
+   * monologue is not a reaction.
+   */
+  const [reacting, setReacting] = useState(false);
+  const seen = useRef(false);
+  useEffect(() => {
+    if (!turned) { seen.current = false; return; }
+    if (seen.current) return;
+    seen.current = true;
+    setReacting(true);
+    const t = window.setTimeout(() => setReacting(false), 3200);
+    return () => clearTimeout(t);
+  }, [turned]);
 
   useEffect(() => {
     if (i >= lines.length - 1) return; // he's said his piece; he waits.
@@ -613,7 +736,8 @@ function WalkingChirpy({ lines }: { lines: string[] }) {
   // him that has no exceptions.
   if (quiet) return null;
 
-  const pose: ChirpyPose = i < 2 ? 'worried' : i < 4 ? 'said1' : 'hopeful';
+  const pose: ChirpyPose = reacting ? 'excited' : i < 2 ? 'worried' : i < 4 ? 'said1' : 'hopeful';
+  const said = reacting ? 'Oh! I didn’t think of that one. You’re better at this than me.' : lines[i];
 
   return (
     <div className="flex flex-col gap-1">
@@ -622,7 +746,7 @@ function WalkingChirpy({ lines }: { lines: string[] }) {
       <div className="min-h-[64px]">
         <AnimatePresence mode="wait">
           <motion.p
-            key={i}
+            key={reacting ? 'reaction' : i}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -630,27 +754,135 @@ function WalkingChirpy({ lines }: { lines: string[] }) {
             className="rounded-[20px] px-4 py-2.5 text-[14.5px] font-extrabold leading-snug shadow-xl"
             style={{ background: 'rgba(255,255,255,0.95)', color: '#241D3D' }}
           >
-            {lines[i]}
+            {said}
           </motion.p>
         </AnimatePresence>
       </div>
 
       <div className="relative h-[86px] w-full">
+        {/* He jumps when it lands. Nothing else on this screen does, so the
+            child reads it as him reacting to them rather than as decoration. */}
         <motion.img
           src={chirpySprite(pose)}
           alt="Chirpy"
           className="absolute bottom-0"
           style={{ height: 78, width: 'auto', filter: 'drop-shadow(0 12px 26px rgba(0,0,0,0.55))' }}
-          // scaleX flips him to face the way he's walking.
-          animate={m.loop
-            ? { left: ['2%', '58%', '18%', '66%', '2%'], scaleX: [1, 1, -1, 1, -1] }
-            : { left: '2%' }}
-          transition={m.loop
-            ? { duration: 32, repeat: Infinity, ease: 'easeInOut', times: [0, 0.28, 0.5, 0.78, 1] }
-            : undefined}
+          // scaleX flips him to face the way he's walking. When the child
+          // turns the card he stops pacing and jumps on the spot instead —
+          // he has just been told something and is not going to keep
+          // strolling through it.
+          animate={
+            reacting
+              ? { y: [0, -26, 0, -14, 0], rotate: [0, -8, 6, -3, 0], scale: [1, 1.12, 1, 1.06, 1] }
+              : m.loop
+                ? { left: ['2%', '58%', '18%', '66%', '2%'], scaleX: [1, 1, -1, 1, -1] }
+                : { left: '2%' }
+          }
+          transition={
+            reacting
+              ? { duration: 1.1, ease: 'easeOut' }
+              : m.loop
+                ? { duration: 32, repeat: Infinity, ease: 'easeInOut', times: [0, 0.28, 0.5, 0.78, 1] }
+                : undefined
+          }
           draggable={false}
         />
       </div>
     </div>
+  );
+}
+
+/**
+ * THE ROOM, WHEN THE OTHER STORY IS SHOWING.
+ *
+ * Warm light floods up from the floor, motes lift through it, and the whole
+ * scene goes a few degrees warmer. It arrives over about a second — fast
+ * enough to feel caused by the thumb that turned the card, slow enough not
+ * to be a flash. Turning back takes it away just as smoothly, which is what
+ * makes the pair worth doing again.
+ */
+function StoryLight({ on }: { on: boolean }) {
+  return (
+    <AnimatePresence>
+      {on && (
+        <motion.div
+          aria-hidden
+          /* No z-index. z-[1] put the warm grade OVER the four cards and
+             washed the text off them — the light is supposed to fill the
+             room behind the case, not shine through the paper. With z-auto
+             it paints above the room art (which precedes it) and below the
+             content (which follows it), purely by DOM order. */
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.9, ease: 'easeOut' }}
+        >
+          {/* Light off the floor. */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(120% 62% at 50% 104%, rgba(255,214,150,0.5) 0%, rgba(255,186,120,0.22) 34%, transparent 70%)',
+            }}
+          />
+          {/* A warmer grade over the whole room. */}
+          <div
+            className="absolute inset-0 mix-blend-soft-light"
+            style={{ background: 'linear-gradient(180deg, rgba(255,196,120,0.5) 0%, rgba(255,164,96,0.28) 100%)' }}
+          />
+          {LIFT.map((p, i) => (
+            <motion.span
+              key={i}
+              className="absolute block rounded-full"
+              style={{
+                left: `${p.x}%`,
+                width: p.s,
+                height: p.s,
+                background: i % 2 ? '#FFE7B4' : '#FFD08A',
+                boxShadow: '0 0 12px rgba(255,214,150,0.9)',
+              }}
+              initial={{ bottom: '-4%', opacity: 0 }}
+              animate={{ bottom: '86%', opacity: [0, 0.95, 0] }}
+              transition={{ repeat: Infinity, duration: p.dur, delay: p.delay, ease: 'easeOut' }}
+            />
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/** Deterministic — random numbers during render are a purity error. */
+const LIFT = Array.from({ length: 14 }, (_, i) => ({
+  x: 4 + ((i * 27) % 92),
+  s: 3 + ((i * 13) % 5),
+  dur: 5.4 + ((i * 7) % 30) / 10,
+  delay: ((i * 11) % 40) / 10,
+}));
+
+/**
+ * The ending, as the stamp on a case file rather than a paragraph about
+ * epistemology. "Nobody knows which one is true" read as an anticlimax; a
+ * case that stays open reads as the good ending, and children like an
+ * unsolved case. Same idea, two words, no reading age required.
+ */
+function CaseStamp({ accent }: { accent: string }) {
+  const m = useMotion();
+  return (
+    <motion.div
+      className="self-start rounded-[10px] px-3.5 py-2"
+      initial={{ opacity: 0, scale: 1.5, rotate: -14 }}
+      animate={{ opacity: 1, scale: 1, rotate: -7 }}
+      transition={m.quiet ? { duration: 0.5 } : { type: 'spring', stiffness: 260, damping: 13, delay: 0.3 }}
+      style={{ border: `2.5px solid ${accent}`, background: 'rgba(12,10,26,0.4)' }}
+    >
+      <p
+        className="text-[15px] font-extrabold uppercase leading-none tracking-[0.16em]"
+        style={{ color: accent, fontFamily: FONT }}
+      >
+        Case stays open
+      </p>
+    </motion.div>
   );
 }
