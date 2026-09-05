@@ -18,7 +18,13 @@ import { BEHAVIOURS } from '../../../kids/data';
  * Used at two sizes: small on the hub card, large on the catch screen.
  */
 
-const JAR_COLOR = 'rgba(255,255,255,0.34)';
+/**
+ * Warm white, not white. The jar is always drawn over a warm dark ground
+ * (the amber portal door, the catch screen's night), and a neutral white at
+ * this opacity goes grey against that — it reads as grey plastic rather
+ * than glass with a lamp behind it.
+ */
+const JAR_COLOR = 'rgba(255,238,206,0.44)';
 
 export function FireflyJar({
   caught,
