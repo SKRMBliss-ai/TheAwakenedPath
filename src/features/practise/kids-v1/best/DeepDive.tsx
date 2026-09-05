@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getRoom, type RoomId } from '../rooms';
-import { CHROME, Cta, FONT, BackButton, GrownUpExit, Pill, Question, SceneLine } from '../ui/chrome';
+import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from '../ui/chrome';
+import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { chirpySprite, type ChirpyPose } from '../ui/sprites';
@@ -209,9 +210,13 @@ export function DeepDive({
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-5 pb-10 pt-4 sm:px-7">
+      {/* The way back out, as a fitting on the left wall rather than a
+          chevron in the corner. Present the whole time, asking nothing. */}
+      <DoorHandle side="left" label="Leave" onClick={leave} accent={accent} />
+
+      {/* Padded clear of both handles so nothing ever sits under them. */}
+      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-[68px] pb-10 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
-          <BackButton onClick={leave} label="Leave" />
           <StepDots total={STEPS.length} at={stepIndex} accent={accent} />
           <GrownUpExit onClick={onGrownUp} />
         </div>
@@ -370,7 +375,15 @@ export function DeepDive({
                   feel, and will start giving the answer they think is wanted
                   at the story step, which costs everything upstream. */}
               <SceneLine>You’re the one who decides which of them you carry about. And you can change your mind whenever you like.</SceneLine>
-              <Cta label="Done" onClick={() => { sound.play('resolve'); leave(); }} accent={accent} />
+              {/* No "Done" button. The way on is the handle on the right
+                  wall, which has been there the whole walk — the child
+                  leaves through the room, not through a form. */}
+              <DoorHandle
+                side="right"
+                label="Go on"
+                onClick={() => { sound.play('resolve'); leave(); }}
+                accent={accent}
+              />
             </motion.div>
           )}
 
