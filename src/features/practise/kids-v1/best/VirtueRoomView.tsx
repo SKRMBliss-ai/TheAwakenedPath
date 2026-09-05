@@ -31,14 +31,20 @@ import * as sound from '../kit/sound';
  */
 export function VirtueRoomView({
   room,
+  journey,
   onExit,
   onGrownUp,
   onDeepDive,
+  onNext,
 }: {
   room: VirtueRoom;
+  /** Where this room sits in the run, when the child is on the journey. */
+  journey?: { index: number; total: number };
   onExit: () => void;
   onGrownUp: () => void;
   onDeepDive: () => void;
+  /** Continue to the next room. Present only on the journey. */
+  onNext?: () => void;
 }) {
   const completions = useKidStore((s) => s.completions);
   const pointsByBehaviour = useKidStore((s) => s.pointsByBehaviour);
@@ -68,6 +74,22 @@ export function VirtueRoomView({
       <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-5 pb-28 pt-4 sm:px-7">
         <div className="flex items-center justify-between gap-3">
           <BackButton onClick={onExit} label="All rooms" />
+          {journey && (
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: journey.total }).map((_, i) => (
+                <span
+                  key={i}
+                  className="block h-2 w-2 rounded-full"
+                  style={{
+                    background: i < journey.index ? accent
+                      : i === journey.index ? '#fff'
+                      : 'rgba(255,255,255,0.28)',
+                    transform: i === journey.index ? 'scale(1.3)' : 'none',
+                  }}
+                />
+              ))}
+            </div>
+          )}
           <GrownUpExit onClick={onGrownUp} />
         </div>
 
@@ -164,8 +186,34 @@ export function VirtueRoomView({
               </button>
             ))}
 
-            {/* ── The deep dive, offered once, never pushed ─────────────── */}
-            <Cta label="Something’s still on my mind" onClick={onDeepDive} accent={accent} />
+            {/* ── Onward ────────────────────────────────────────────────
+                On the journey the way forward is always available, whether
+                or not the room got ticked. A child who didn't manage this
+                one today has still answered the question honestly, and
+                making them sit here would teach them to lie to it. */}
+            {onNext ? (
+              <Cta
+                label={
+                  journey && journey.index === journey.total - 1
+                    ? 'Finish — take me to the Observatory'
+                    : doneToday ? 'Next room →' : 'Not today — next room →'
+                }
+                onClick={onNext}
+                accent={accent}
+              />
+            ) : (
+              <Cta label="Something’s still on my mind" onClick={onDeepDive} accent={accent} />
+            )}
+
+            {onNext && (
+              <button
+                onClick={onDeepDive}
+                className="w-full text-[12.5px] font-bold"
+                style={{ color: CHROME.textSoft }}
+              >
+                Something’s still on my mind
+              </button>
+            )}
           </div>
         )}
       </div>

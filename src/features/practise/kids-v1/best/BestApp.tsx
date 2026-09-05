@@ -4,14 +4,14 @@ import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
 import { todayKey, levelFor } from '../../../kids/data';
 import { Onboarding } from '../../../kids/Onboarding';
-import { RewardsScreen, Friends, Reflection } from '../../../kids/screens';
+import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
 import { BoyAndChirpy, RoomScene } from '../ui/scene';
 import { chirpySprite } from '../ui/sprites';
 import { SCENE_MOODS, roomPoster, storageFallback } from '../rooms';
-import { CheckIn } from '../CheckIn';
 import { GrownUp } from '../GrownUp';
-import { loadProgress, recordCheckIn, recordFeeling, type CheckInEntry, type Progress } from '../progress';
+import { DeepDive } from './DeepDive';
+import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
 import * as sound from '../kit/sound';
@@ -43,7 +43,8 @@ import * as sound from '../kit/sound';
 
 type View =
   | { at: 'map' }
-  | { at: 'room'; room: VirtueRoom }
+  /** `step` is the position in the run when the child is on the journey. */
+  | { at: 'room'; room: VirtueRoom; step: number | null }
   | { at: 'pause' }
   | { at: 'deep' }
   | { at: 'reflection' }
@@ -55,11 +56,31 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
   const onboarded = useKidStore((s) => s.onboarded);
   const [view, setView] = useState<View>({ at: 'map' });
   const [quiet, setQuiet] = useState(false);
-  const [progress, setProgress] = useState<Progress>(() => loadProgress());
 
   if (!onboarded) return <Onboarding />;
 
   const back = () => setView({ at: 'map' });
+
+  /**
+   * The journey: room by room, in order, ending at the Observatory. Answering
+   * one room carries the child to the next, so the day's round is a walk
+   * through a building rather than seven separate trips out to a menu.
+   */
+  const startJourney = () => {
+    sound.play('enterRoom');
+    setView({ at: 'room', room: VIRTUE_ROOMS[0], step: 0 });
+  };
+
+  const nextRoom = (step: number) => {
+    const next = step + 1;
+    if (next >= VIRTUE_ROOMS.length) {
+      sound.play('resolve');
+      setView({ at: 'reflection' });
+      return;
+    }
+    sound.play('roomCard');
+    setView({ at: 'room', room: VIRTUE_ROOMS[next], step: next });
+  };
 
   return (
     <QuietProvider quiet={quiet}>
@@ -74,8 +95,10 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
           >
             {view.at === 'map' && (
               <RoomMap
-                onOpen={(r) => { sound.play('roomCard'); setView({ at: 'room', room: r }); }}
+                onOpen={(r) => { sound.play('roomCard'); setView({ at: 'room', room: r, step: null }); }}
+                onStartJourney={startJourney}
                 onPause={() => setView({ at: 'pause' })}
+                onReflection={() => setView({ at: 'reflection' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
               />
@@ -84,19 +107,16 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
             {view.at === 'room' && (
               <VirtueRoomView
                 room={view.room}
+                journey={view.step !== null ? { index: view.step, total: VIRTUE_ROOMS.length } : undefined}
                 onExit={back}
                 onGrownUp={() => setView({ at: 'grownup' })}
                 onDeepDive={() => setView({ at: 'deep' })}
+                onNext={view.step !== null ? () => nextRoom(view.step as number) : undefined}
               />
             )}
 
             {view.at === 'deep' && (
-              <CheckIn
-                progress={progress}
-                onFeelingPicked={(id) => setProgress((p) => recordFeeling(p, id))}
-                onCheckInSaved={(e: Omit<CheckInEntry, 'at'>) =>
-                  setProgress((p) => recordCheckIn(p, { ...e, at: Date.now() }))
-                }
+              <DeepDive
                 onQuiet={setQuiet}
                 onGrownUp={() => setView({ at: 'grownup' })}
                 onFinish={back}
@@ -104,7 +124,9 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
             )}
 
             {view.at === 'pause' && <PauseRoom onExit={back} />}
-            {view.at === 'reflection' && <Panel onClose={back}><Reflection onClose={back} /></Panel>}
+            {view.at === 'reflection' && (
+              <ReflectionRoom onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
+            )}
             {view.at === 'friends' && <Panel onClose={back}><Friends /></Panel>}
             {view.at === 'rewards' && <Panel onClose={back}><RewardsScreen /></Panel>}
             {view.at === 'grownup' && <GrownUp onBack={back} />}
@@ -131,12 +153,16 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 
 function RoomMap({
   onOpen,
+  onStartJourney,
   onPause,
+  onReflection,
   onExitGym,
   onGrownUp,
 }: {
   onOpen: (r: VirtueRoom) => void;
+  onStartJourney: () => void;
   onPause: () => void;
+  onReflection: () => void;
   onExitGym: () => void;
   onGrownUp: () => void;
 }) {
@@ -191,6 +217,25 @@ function RoomMap({
                 ? 'All seven, today. That’s the full rainbow.'
                 : `${doneCount} of ${VIRTUE_ROOMS.length} rooms so far today.`}
           </p>
+
+          {/* The adventure: one walk, room to room, ending at the
+              Observatory. Wandering in and out of single rooms still works —
+              this is just the guided way round for a child who'd rather be
+              taken than choose. */}
+          <div className="w-full max-w-sm pt-2">
+            <Cta
+              label={doneCount === VIRTUE_ROOMS.length ? 'Walk it again' : 'Start today’s round'}
+              onClick={onStartJourney}
+              accent="#FFD98A"
+            />
+            <button
+              onClick={onReflection}
+              className="mt-2.5 w-full text-[12.5px] font-bold"
+              style={{ color: CHROME.textSoft }}
+            >
+              Skip to the Observatory
+            </button>
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
