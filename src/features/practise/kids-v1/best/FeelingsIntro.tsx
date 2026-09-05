@@ -1,31 +1,54 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Volume2 } from 'lucide-react';
 import { CHROME, FONT } from '../ui/chrome';
+import { useMotion } from '../ui/quiet';
 import { isMuted } from '../../../../lib/sfx';
 import * as sound from '../kit/sound';
 
 /**
- * The Feelings Room's opening — the founder's animation, played sharp and
- * full-bleed, once, before the room hands over to the child.
+ * THE FEELINGS ROOM'S FILM — one clip, two jobs, no cut between them.
  *
- * This is a DIFFERENT job from OrbScene. OrbScene is the ambient loop that
- * sits blurred behind the tappable balls for as long as the step is open —
- * it has to repeat forever without becoming a spectacle. This clip is the
- * opposite: a single built arc (the orbs gather, then bloom into light
- * around the girl) that only means something once. Looping it would replay
- * that bloom every ten seconds regardless of anything the child has done,
- * which cheapens the real one — the one they make themselves a moment
- * later by tapping a ball. So it plays through exactly once per device
- * (see kit/introSeen.ts) and then gets out of the way for good.
+ * It opens in the foreground: sharp, whole, and audible, with the orbs
+ * gathering and blooming into light around the girl. When it finishes it
+ * doesn't stop and it doesn't get replaced — it recedes. The sharp copy
+ * fades away, the blurred copy underneath keeps turning, and the tappable
+ * balls rise over the top of it. The room the child ends up in is the room
+ * they just watched, still moving.
+ *
+ * WHY THIS IS ONE COMPONENT AND NOT TWO. It used to be two: a cinematic
+ * that played once per device, then a separate muted loop for every visit
+ * after. Which meant the sound worked exactly once and then appeared to
+ * break forever — the second visit showed the same film with no audio,
+ * because the loop was a different, deliberately silent element. Same
+ * picture, no sound, nothing a person could reasonably read as "working".
+ *
+ * So the film plays every time now. It costs ten seconds, it is skippable
+ * after two, and it is the difference between a room that greets you and a
+ * room that used to.
+ *
+ * The blurred copy is what fills the screen, and it always did: the clip is
+ * 16:9 and a phone is portrait, so a cover-crop of the sharp one would cut
+ * through the labels and throw half the orbs off both edges. Contained and
+ * centred for the film; blurred bokeh once it settles.
  */
 
 /** Under the app's own cues (0.3–0.55) it would be lost; at 1.0 it startles. */
 const VOLUME = 0.8;
 
-export function FeelingsIntro({ onDone }: { onDone: () => void }) {
+export function FeelingsIntro({
+  onDone,
+  flash = false,
+}: {
+  /** Fired when the film has receded and the balls should come up. */
+  onDone: () => void;
+  /** The bloom when every ball bursts at once. */
+  flash?: boolean;
+}) {
+  const m = useMotion();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [canSkip, setCanSkip] = useState(false);
+  const [settled, setSettled] = useState(false);
   /**
    * True when the browser refused sound and we fell back to a silent play.
    * Not the same as the device mute toggle: a child who muted the app wants
@@ -34,8 +57,6 @@ export function FeelingsIntro({ onDone }: { onDone: () => void }) {
   const [soundBlocked, setSoundBlocked] = useState(false);
 
   useEffect(() => {
-    // A beat before "Skip" appears, so it doesn't compete with the opening
-    // second of the clip for attention.
     const t = window.setTimeout(() => setCanSkip(true), 1800);
     return () => clearTimeout(t);
   }, []);
@@ -45,28 +66,24 @@ export function FeelingsIntro({ onDone }: { onDone: () => void }) {
     if (!v) return;
     const cleanup: (() => void)[] = [];
 
-    // The hub's fold chime may still be ringing as this mounts; two pieces
-    // of audio over one another is worse than either alone.
     sound.stopAll();
-
     v.volume = VOLUME;
     v.muted = isMuted();
 
     /**
-     * Sound needs a gesture, and this effect is not one.
-     *
-     * The child DID tap to get here, but that tap finished several renders
-     * ago. Chrome treats the page as activated and lets the sound through;
-     * iOS Safari wants play() called from inside the handler itself, which
-     * a mount effect can never be. So: ask for sound, and when the browser
-     * says no, keep the picture and go and get the sound from the next real
-     * touch — which is always a gesture, wherever on the screen it lands.
+     * Sound needs a gesture, and this effect is not one. The child DID tap
+     * to get here, but that tap finished several renders ago: Chrome treats
+     * the page as activated and lets it through, iOS Safari wants play()
+     * called from inside the handler itself, which a mount effect can never
+     * be. So when the browser says no, keep the picture and go and get the
+     * sound from the next real touch — anywhere on screen, because any
+     * touch is a gesture.
      */
     void v.play().catch(() => {
-      if (v.muted) { onDone(); return; }   // device-muted: silence is wanted
+      if (v.muted) { settle(); return; }
       v.muted = true;
       setSoundBlocked(true);
-      void v.play().catch(() => onDone());
+      void v.play().catch(() => settle());
 
       const rescue = () => {
         const el = videoRef.current;
@@ -80,9 +97,6 @@ export function FeelingsIntro({ onDone }: { onDone: () => void }) {
       cleanup.push(() => window.removeEventListener('pointerdown', rescue));
     });
 
-    // Leaving mid-clip (Skip, or the back arrow) must take the audio with
-    // it — React unmounting the element normally does that, but pausing
-    // first means it never outlives the picture even for a frame.
     return () => {
       cleanup.forEach((fn) => fn());
       try { v.pause(); } catch { /* ignore */ }
@@ -90,34 +104,42 @@ export function FeelingsIntro({ onDone }: { onDone: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function turnSoundOn() {
+  /**
+   * The film recedes. The soundtrack rides down rather than being cut, so
+   * the room goes quiet the way a room does; the sharp copy fades out over
+   * it, leaving the blurred one turning underneath.
+   */
+  function settle() {
+    if (settled) return;
+    setSettled(true);
+    onDone();
+
     const v = videoRef.current;
     if (!v) return;
-    v.muted = false;
-    v.volume = VOLUME;
-    setSoundBlocked(false);
-    void v.play().catch(() => { /* nothing more to try */ });
+    const from = v.volume;
+    const started = Date.now();
+    const id = window.setInterval(() => {
+      const el = videoRef.current;
+      if (!el) { clearInterval(id); return; }
+      const k = Math.min(1, (Date.now() - started) / 900);
+      el.volume = from * (1 - k);
+      if (k >= 1) { clearInterval(id); el.muted = true; try { el.pause(); } catch { /* ignore */ } }
+    }, 50);
   }
 
   return (
     <div className="absolute inset-0 overflow-hidden" style={{ background: '#0A061A' }}>
       {/*
-        A blurred, over-scaled copy of the same frame fills the letterbox.
-        The clip is 16:9 and the phone is portrait, so `object-cover` would
-        crop it to a slice — half the orbs gone, the labels sliced through
-        (which is exactly why OrbScene gives up and blurs the whole thing).
-        An intro can't do that: the whole point is that the child SEES the
-        six orbs gather and bloom. So the sharp copy is `contain`ed and the
-        bars are filled with the same picture, thrown out of focus.
-
-        Stays muted whatever the sharp copy is doing — one picture, one
-        soundtrack, never the same audio twice a few milliseconds apart.
+        The blurred copy. During the film it fills the letterbox around the
+        sharp one; afterwards it IS the room — warm coloured bokeh, moving,
+        alive, with the crisp balls reading cleanly on top because nothing
+        behind them competes for focus.
       */}
       <video
         aria-hidden
         className="absolute inset-0 h-full w-full object-cover"
-        style={{ filter: 'blur(28px) saturate(1.25) brightness(0.55)', transform: 'scale(1.2)' }}
-        autoPlay
+        style={{ filter: 'blur(26px) saturate(1.3) brightness(0.62)', transform: 'scale(1.2)' }}
+        autoPlay={!m.quiet}
         muted
         playsInline
         loop
@@ -126,23 +148,61 @@ export function FeelingsIntro({ onDone }: { onDone: () => void }) {
         <source src="/scenes/feelings-intro.mp4" type="video/mp4" />
       </video>
 
-      <video
+      {/* A dark wash so white text stays readable over whatever drifts past. */}
+      <motion.div
+        className="absolute inset-0"
+        animate={{ opacity: settled ? 1 : 0 }}
+        transition={{ duration: 1 }}
+        style={{ background: 'linear-gradient(180deg, rgba(10,6,26,0.3) 0%, rgba(10,6,26,0.34) 45%, rgba(10,6,26,0.62) 100%)' }}
+      />
+
+      {/* The sharp copy — the film itself. It fades rather than cutting, so
+          the room it leaves behind is visibly the room it was. */}
+      <motion.video
         ref={videoRef}
         poster="/scenes/feelings-intro-poster.webp"
         className="absolute inset-0 h-full w-full object-contain"
-        autoPlay
         playsInline
-        onEnded={onDone}
-        onError={onDone}
+        animate={{ opacity: settled ? 0 : 1 }}
+        transition={{ duration: 1.1, ease: 'easeInOut' }}
+        onEnded={settle}
+        onError={settle}
       >
         <source src="/scenes/feelings-intro.webm" type="video/webm" />
         <source src="/scenes/feelings-intro.mp4" type="video/mp4" />
-      </video>
+      </motion.video>
+
+      {/*
+        THE POP. Every ball bursting at once reads as one bloom of light
+        across the whole room rather than six separate little bursts.
+      */}
+      <AnimatePresence>
+        {flash && (
+          <motion.div
+            className="pointer-events-none absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.85, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.85, times: [0, 0.22, 1], ease: 'easeOut' }}
+            style={{
+              background:
+                'radial-gradient(58% 42% at 50% 46%, rgba(255,236,190,0.95) 0%, rgba(255,180,220,0.5) 38%, rgba(160,120,255,0.15) 62%, transparent 78%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Only when the browser took the sound away, never when the child did. */}
-      {soundBlocked && (
+      {!settled && soundBlocked && (
         <motion.button
-          onClick={turnSoundOn}
+          onClick={() => {
+            const v = videoRef.current;
+            if (!v) return;
+            v.muted = false;
+            v.volume = VOLUME;
+            setSoundBlocked(false);
+            void v.play().catch(() => { /* nothing more to try */ });
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
@@ -159,11 +219,10 @@ export function FeelingsIntro({ onDone }: { onDone: () => void }) {
       )}
 
       {/* No timers anywhere else in this app (§2.9), and this is no
-          exception — Skip is a plain tap-through, not a countdown, and it
-          only appears once the clip has had a moment to land. */}
-      {canSkip && (
+          exception — Skip is a plain tap-through, not a countdown. */}
+      {!settled && canSkip && (
         <motion.button
-          onClick={onDone}
+          onClick={settle}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
