@@ -51,6 +51,12 @@ export interface VirtueRoom {
   gamesFrom: GymRoomId | null;
   /** The small thing there is to know here. Shown once, quietly, never as a lesson. */
   learn: { title: string; body: string };
+  /**
+   * What Chirpy says as this room's firefly goes into the jar. Never praise
+   * for being good — an observation about the thing itself, so a child isn't
+   * being told they're a good person for ticking a box.
+   */
+  caughtLine: string;
 }
 
 const BEH = (id: string) => BEHAVIOURS.find((b) => b.id === id)!;
@@ -69,6 +75,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
       title: 'Kind is a thing you do, not a thing you are',
       body: 'Nobody is kind all the time — not your friends, not grown-ups, not anybody. Kindness is something you do, one go at a time, and every single time counts on its own. Missing one doesn’t undo the rest.',
     },
+    caughtLine: 'Warm one, that. They always are.',
   },
   {
     id: 'truth',
@@ -83,6 +90,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
       title: 'The hardest truths are the small ones',
       body: 'Big lies are easy to spot. The tricky ones are tiny — “it wasn’t me”, “I already did it”, “I only had one”. Telling a small truth when nobody would ever know is the whole skill. That’s the one worth practising.',
     },
+    caughtLine: 'Ooh, that one’s heavy. The honest ones usually are.',
   },
   {
     id: 'choices',
@@ -97,6 +105,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
       title: 'There’s a gap between what happens and what you do',
       body: 'Something happens. Then you do something. In between there’s a gap — usually about one breath long. The gap is where you get to choose. It’s small, but it’s always there, and it gets bigger with practice.',
     },
+    caughtLine: 'That one took a bit of nerve. I felt it from here.',
   },
   {
     id: 'include',
@@ -111,6 +120,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
       title: 'Being left out hurts in your body',
       body: 'Scientists checked: being left out lights up the same bits of your brain as being hurt. That’s why it feels so bad — it genuinely is a kind of hurt. It’s also why letting someone in matters more than it looks like it does.',
     },
+    caughtLine: 'That light’s for someone else as much as you.',
   },
   {
     id: 'body',
@@ -125,6 +135,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
       title: 'Tired and sad feel almost the same',
       body: 'A lot of the time when everything seems terrible, you’re actually just tired, or hungry, or you haven’t moved all day. It’s worth checking those first — not because your feelings aren’t real, but because sometimes the fix is a sandwich.',
     },
+    caughtLine: 'Steady little glow. Bodies like being noticed.',
   },
   {
     id: 'help',
@@ -139,6 +150,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
       title: 'Helping without being asked is a different thing',
       body: 'Doing what you’re told is fine. Noticing that something needs doing and just doing it is a whole other skill, and it’s much rarer. Grown-ups notice it far more than they let on.',
     },
+    caughtLine: 'Nobody asked you to catch that one, did they.',
   },
   {
     id: 'mindheart',
@@ -153,6 +165,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
       title: 'You can watch your own mind working',
       body: 'Here’s the strange bit: you can notice yourself thinking. The part that notices isn’t the same as the thought. Once you’ve spotted that once, you can’t really un-spot it — and it’s the most useful thing in this whole building.',
     },
+    caughtLine: 'The quiet ones shine longest. Odd, that.',
   },
 ];
 
@@ -178,6 +191,11 @@ export const PAUSE_ROOM = {
  */
 export function artRoomFor(v: { art: GymRoomId }): RoomConfig {
   return getRoom(v.art);
+}
+
+/** Convenience for screens that only need the room's colour. */
+export function accentFor(v: { art: GymRoomId }): string {
+  return getRoom(v.art).palette.accent;
 }
 
 export function getVirtueRoom(id: string): VirtueRoom | undefined {

@@ -141,6 +141,25 @@ export function DeepDive({
     setStepIndex((i) => i + 1);
   };
 
+  /** The child picks which story to carry. Nothing is scored either way. */
+  const carry = (pick: string) => {
+    sound.play('discovery');
+    setAnswers((a) => ({ ...a, carried: pick }));
+    setStepIndex((i) => i + 1); // → 'done'
+  };
+
+  // The Different Story Room plays its lullaby while the two stories are up.
+  // It stops when the child leaves the choice, and on unmount, so it can
+  // never follow them into another room.
+  useEffect(() => {
+    if (phase === 'choice') {
+      sound.playMusic('twoStories');
+      return () => sound.stopMusic();
+    }
+  }, [phase]);
+
+  useEffect(() => () => sound.stopMusic(), []);
+
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
       {/* The room cross-fades with the step — one building, several rooms. */}
@@ -291,29 +310,45 @@ export function DeepDive({
                 Two stories
               </p>
               <Question room={art}>Both of these fit today. Nobody knows which one’s true — not me, and not you.</Question>
-              <div className="flex flex-col gap-2.5">
-                <StoryChip label="What my mind said" text={answers.story ?? 'something about me'} accent="#C96A62" />
-                <StoryChip label="What else could be true" text={answers.other ?? 'something else'} accent={accent} />
+
+              {/*
+                SIDE BY SIDE, and the same size, and the same shape.
+                The mind's story is not drawn as the wrong one: no red, no
+                crack, no thorns, nothing that marks it as the version to be
+                talked out of. A child who can see which card the app prefers
+                will pick that one and learn nothing. The only difference
+                between them is the colour of their light, and even that is
+                just so they can be told apart.
+              */}
+              <div className="grid grid-cols-2 gap-3">
+                <StoryLantern
+                  eyebrow="What my mind said"
+                  text={answers.story ?? 'something about me'}
+                  hue="#C48BE8"
+                  sway={6.4}
+                  onPick={() => carry(answers.story ?? 'something about me')}
+                />
+                <StoryLantern
+                  eyebrow="What else could be true"
+                  text={answers.other ?? 'something else'}
+                  hue="#FFD98A"
+                  sway={7.6}
+                  onPick={() => carry(answers.other ?? 'something else')}
+                />
               </div>
-              <Question room={art}>Which one do you want to carry round for the rest of today?</Question>
-              <ChoiceList
-                items={[
-                  answers.story ?? 'something about me',
-                  answers.other ?? 'something else',
-                  'Both, for now',
-                  'Neither — I’ll leave it here',
-                ]}
-                accent={accent}
-                onPick={(pick) => {
-                  sound.play('discovery');
-                  setAnswers((a) => ({ ...a, carried: pick }));
-                  setStepIndex((i) => i + 1); // → 'done'
-                }}
-              />
+
+              <SceneLine>Tap the one you want to carry round for the rest of today.</SceneLine>
+
+              {/* Both and neither are real answers, and sit at the same
+                  weight as each other. Carrying both is honest — most days
+                  a child genuinely holds two stories at once. */}
+              <div className="flex gap-2.5">
+                <Pill label="Both, for now" accent={accent} onClick={() => carry('both')} />
+                <Pill label="Neither — leave it here" accent={accent} onClick={() => carry('neither')} />
+              </div>
             </motion.div>
           )}
 
-          {/* ── The end of the walk ───────────────────────────────────── */}
           {phase === 'done' && (
             <motion.div
               initial={{ opacity: 0, y: 14 }}
@@ -426,19 +461,61 @@ function ChoiceList({
   );
 }
 
-/** One of the two stories, shown side by side in the 'choice' phase. */
-function StoryChip({ label, text, accent }: { label: string; text: string; accent: string }) {
+/**
+ * One of the two stories, as a hanging lantern.
+ *
+ * Both lanterns are identical apart from the colour of their flame. The
+ * mind's story gets no crack, no thorn, no red — nothing that tells a child
+ * which one the app would like them to pick. If the preferred answer is
+ * visible, they will pick it to be agreeable and learn nothing, which
+ * wastes the whole walk that got them here.
+ *
+ * They sway very slightly, out of phase with each other, so the pair reads
+ * as two things hanging in a room rather than two buttons in a form.
+ */
+function StoryLantern({
+  eyebrow,
+  text,
+  hue,
+  sway,
+  onPick,
+}: {
+  eyebrow: string;
+  text: string;
+  hue: string;
+  /** Seconds per sway. Fixed per lantern rather than random, so the two are
+   *  out of phase with each other without the render being impure. */
+  sway: number;
+  onPick: () => void;
+}) {
   return (
-    <div
-      className="rounded-[18px] px-4 py-3 backdrop-blur-md"
-      style={{ background: CHROME.pill, border: `1px solid ${accent}66` }}
+    <motion.button
+      onClick={onPick}
+      whileTap={{ scale: 0.97 }}
+      whileHover={{ y: -4 }}
+      animate={{ rotate: [-0.9, 0.9, -0.9] }}
+      transition={{ rotate: { repeat: Infinity, duration: sway, ease: 'easeInOut' } }}
+      className="relative flex min-h-[190px] flex-col items-center gap-2 rounded-[22px] px-3 pb-4 pt-5 text-center backdrop-blur-md"
+      style={{
+        transformOrigin: 'top center',
+        background: `linear-gradient(180deg, ${hue}26 0%, rgba(255,255,255,0.06) 60%)`,
+        border: `1px solid ${hue}77`,
+        boxShadow: `0 0 34px -14px ${hue}`,
+      }}
     >
-      <p className="text-[10.5px] font-extrabold uppercase tracking-[0.16em]" style={{ color: accent }}>
-        {label}
+      {/* The flame. Same size in both; only the colour differs. */}
+      <motion.span
+        className="block h-7 w-7 shrink-0 rounded-full"
+        style={{ background: hue, filter: `blur(1px) drop-shadow(0 0 14px ${hue})` }}
+        animate={{ opacity: [0.75, 1, 0.75], scale: [1, 1.08, 1] }}
+        transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
+      />
+      <p className="text-[9.5px] font-extrabold uppercase tracking-[0.14em]" style={{ color: hue }}>
+        {eyebrow}
       </p>
-      <p className="mt-0.5 text-[15px] font-extrabold leading-snug" style={{ color: CHROME.text }}>
+      <p className="text-[14px] font-extrabold leading-snug" style={{ color: CHROME.text, textWrap: 'balance' }}>
         {text}
       </p>
-    </div>
+    </motion.button>
   );
 }

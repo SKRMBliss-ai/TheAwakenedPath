@@ -13,6 +13,7 @@ import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
+import { FireflyJar, KnotMark } from './FireflyJar';
 import { VirtueRoomView } from './VirtueRoomView';
 import * as sound from '../kit/sound';
 
@@ -97,6 +98,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               <RoomMap
                 onOpen={(r) => { sound.play('roomCard'); setView({ at: 'room', room: r, step: null }); }}
                 onStartJourney={startJourney}
+                onDeepDive={() => setView({ at: 'deep' })}
                 onPause={() => setView({ at: 'pause' })}
                 onReflection={() => setView({ at: 'reflection' })}
                 onExitGym={onExitGym}
@@ -154,6 +156,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 function RoomMap({
   onOpen,
   onStartJourney,
+  onDeepDive,
   onPause,
   onReflection,
   onExitGym,
@@ -161,6 +164,7 @@ function RoomMap({
 }: {
   onOpen: (r: VirtueRoom) => void;
   onStartJourney: () => void;
+  onDeepDive: () => void;
   onPause: () => void;
   onReflection: () => void;
   onExitGym: () => void;
@@ -172,7 +176,8 @@ function RoomMap({
   const completions = useKidStore((s) => s.completions);
   const pointsByBehaviour = useKidStore((s) => s.pointsByBehaviour);
   const today = completions[todayKey()] ?? {};
-  const doneCount = VIRTUE_ROOMS.filter((r) => today[r.id]).length;
+  const caughtToday = VIRTUE_ROOMS.filter((r) => today[r.id]).map((r) => r.id);
+  const doneCount = caughtToday.length;
   const { level } = levelFor(points);
 
   const night = SCENE_MOODS.night;
@@ -218,27 +223,47 @@ function RoomMap({
                 : `${doneCount} of ${VIRTUE_ROOMS.length} rooms so far today.`}
           </p>
 
-          {/* The adventure: one walk, room to room, ending at the
-              Observatory. Wandering in and out of single rooms still works —
-              this is just the guided way round for a child who'd rather be
-              taken than choose. */}
-          <div className="w-full max-w-sm pt-2">
-            <Cta
-              label={doneCount === VIRTUE_ROOMS.length ? 'Walk it again' : 'Start today’s round'}
+          {/*
+            TWO JOURNEYS, and they are deliberately different shapes.
+
+            Catching fireflies is the daily one: light, quick, seven small
+            true things about today. Untangling a knot is the occasional one,
+            for when something is actually bothering them — longer, slower,
+            and never suggested as the default. Putting them side by side as
+            equals would imply a child should do both every day, which is far
+            too much to ask of anybody. So the jar leads, and the knot waits
+            underneath for the days it's needed.
+          */}
+          <div className="w-full max-w-md space-y-3 pt-4">
+            <JourneyCard
+              title="Catch the Fireflies"
+              blurb={caughtToday.length
+                ? `${caughtToday.length === 1 ? 'One light' : `${caughtToday.length} lights`} so far today. Room for more.`
+                : 'Seven little lights from today. Let’s see which ones you’ve got.'}
               onClick={onStartJourney}
-              accent="#FFD98A"
+              art={<FireflyJar caught={caughtToday} size={56} />}
+            />
+            <JourneyCard
+              title="Untangle a Knot"
+              blurb="Something still bugging you? Let’s have a proper look at it."
+              onClick={onDeepDive}
+              art={<KnotMark size={58} />}
             />
             <button
               onClick={onReflection}
-              className="mt-2.5 w-full text-[12.5px] font-bold"
+              className="w-full pt-1 text-[12.5px] font-bold"
               style={{ color: CHROME.textSoft }}
             >
-              Skip to the Observatory
+              Just show me the whole map
             </button>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+        <h2 className="mt-7 text-[15.5px] font-extrabold" style={{ color: CHROME.text }}>
+          Or pick a room
+        </h2>
+
+        <div className="mt-3 grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           {VIRTUE_ROOMS.map((r, i) => (
             <RoomCard
               key={r.id}
@@ -265,6 +290,33 @@ function RoomMap({
  * What's added is the only new information a virtue room has — whether it was
  * ticked today, and what has been earned in it.
  */
+/** One of the two journeys on the hub. */
+function JourneyCard({
+  title, blurb, onClick, art,
+}: {
+  title: string; blurb: string; onClick: () => void; art: React.ReactNode;
+}) {
+  return (
+    <motion.button
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.99 }}
+      onClick={onClick}
+      className="flex w-full items-center gap-4 rounded-[24px] px-4 py-4 text-left backdrop-blur-md"
+      style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}` }}
+    >
+      <span className="grid w-[64px] shrink-0 place-items-center">{art}</span>
+      <span className="min-w-0">
+        <span className="block text-[19px] font-extrabold leading-tight" style={{ color: CHROME.text }}>
+          {title}
+        </span>
+        <span className="mt-1 block text-[13.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
+          {blurb}
+        </span>
+      </span>
+    </motion.button>
+  );
+}
+
 function RoomCard({
   room, index, doneToday, earned, onClick,
 }: {

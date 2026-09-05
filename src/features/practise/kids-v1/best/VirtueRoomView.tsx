@@ -8,7 +8,9 @@ import { Chirpy, RoomScene } from '../ui/scene';
 import { gamesInRoom } from '../games/library';
 import { roomGamesFor, type RoomGame } from './roomGames';
 import { RoomGamePlayer } from './RoomGamePlayer';
-import { artRoomFor, type VirtueRoom } from './rooms';
+import { artRoomFor, VIRTUE_ROOMS, type VirtueRoom } from './rooms';
+import { CaughtFirefly } from './CaughtFirefly';
+import { todayKey as dayKey } from '../../../kids/data';
 import * as sound from '../kit/sound';
 
 /**
@@ -53,6 +55,8 @@ export function VirtueRoomView({
 
   const [playing, setPlaying] = useState<RoomGame | null>(null);
   const [showLearn, setShowLearn] = useState(false);
+  /** Shows the jar the moment a firefly goes in, on the journey only. */
+  const [justCaught, setJustCaught] = useState(false);
 
   const art = artRoomFor(room);
   const accent = art.palette.accent;
@@ -67,9 +71,25 @@ export function VirtueRoomView({
     setPlaying(null);
   };
 
+  const caughtToday = VIRTUE_ROOMS
+    .filter((r) => completions[dayKey()]?.[r.id])
+    .map((r) => r.id);
+
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
       <RoomScene room={art} dim={playing ? 0.35 : 0.12} />
+
+      <AnimatePresence>
+        {justCaught && journey && (
+          <CaughtFirefly
+            room={room}
+            caught={caughtToday}
+            isLast={journey.index === journey.total - 1}
+            onNext={() => { setJustCaught(false); onNext?.(); }}
+            onStay={() => setJustCaught(false)}
+          />
+        )}
+      </AnimatePresence>
 
       <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-5 pb-28 pt-4 sm:px-7">
         <div className="flex items-center justify-between gap-3">
@@ -108,7 +128,15 @@ export function VirtueRoomView({
             {/* ── Today's tick — the actual point of the app ───────────── */}
             <motion.button
               whileTap={{ scale: 0.99 }}
-              onClick={() => { sound.play(doneToday ? 'tap' : 'discovery'); toggleBehaviour(room.id); }}
+              onClick={() => {
+                const catching = !doneToday;
+                sound.play(catching ? 'discovery' : 'tap');
+                toggleBehaviour(room.id);
+                // The jar only appears when a light goes IN, and only on the
+                // journey. Unticking is silent and costs nothing, which is
+                // the rule this whole app is built on.
+                if (catching && journey) setJustCaught(true);
+              }}
               className="flex w-full items-center gap-4 rounded-[24px] px-5 py-5 text-left backdrop-blur-md"
               style={{
                 background: doneToday ? CHROME.pillSelected : CHROME.pill,
