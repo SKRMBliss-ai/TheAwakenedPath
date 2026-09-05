@@ -5,10 +5,11 @@ import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from '../ui
 import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { useMotion, useQuiet } from '../ui/quiet';
-import { Eye, MessageCircle } from 'lucide-react';
+import { Eye, MessageCircle, Paintbrush, RotateCcw } from 'lucide-react';
 import { chirpySprite, type ChirpyPose } from '../ui/sprites';
 import { BodyMap } from '../ui/bodyMap';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
+import { DrawingCanvas, type DrawingCanvasHandle } from '../ui/DrawingCanvas';
 import { THOUGHTS, MAYBES } from '../kit/checkinContent';
 import { FeelingBalls } from './FeelingBalls';
 import { FeelingsIntro } from './FeelingsIntro';
@@ -90,6 +91,8 @@ export interface DeepDiveAnswers {
   story?: string;
   eyes?: string;
   other?: string;
+  /** What they drew of it, as a PNG data URL, when they made one. */
+  drawing?: string;
 }
 
 export function DeepDive({
@@ -429,6 +432,14 @@ export function DeepDive({
                   feel, and will start giving the answer they think is wanted
                   at the story step, which costs everything upstream. */}
               <SceneLine>You’re the one who decides which of them you carry about. And you can change your mind whenever you like.</SceneLine>
+              {/* The one place in the whole walk where the child MAKES
+                  something rather than choosing from something. Entirely
+                  optional and entirely unmarked — there is no picture that
+                  counts as trying harder than another. If they make one, it
+                  rides along in the case that gets kept (see kit/cases.ts),
+                  which is the only reason the Observatory ever has anything
+                  to look at besides words. */}
+              <DrawInvite accent={accent} onSave={(url) => setAnswers((a) => ({ ...a, drawing: url }))} />
               {/* No "Done" button. The way on is the handle on the right
                   wall, which has been there the whole walk — the child
                   leaves through the room, not through a form. */}
@@ -886,3 +897,141 @@ function CaseStamp({ accent }: { accent: string }) {
     </motion.div>
   );
 }
+
+/**
+ * THE COLOURS ON OFFER — one steady "ink" plus the six feeling hues from
+ * FeelingBalls (kit/checkinContent.ts's FEELINGS), so a knot a child draws
+ * uses the same palette as the room where they first named the feeling.
+ * Not decorative: it's the one piece of continuity between "I felt scared"
+ * as a tapped word, three steps ago, and scared as a colour they choose now.
+ */
+const INK = '#2B2438';
+const DRAW_COLORS = [
+  INK,
+  'hsl(44 85% 55%)',  // happy
+  'hsl(22 85% 55%)',  // excited
+  'hsl(212 70% 55%)', // sad
+  'hsl(8 75% 58%)',   // angry
+  'hsl(268 55% 64%)', // scared
+  'hsl(180 55% 45%)', // worried
+];
+
+/**
+ * THE ONE PLACE IN THE WALK WHERE THE CHILD MAKES SOMETHING.
+ *
+ * Everything else in the deep dive is picking from what's offered — a
+ * feeling ball, a body zone, a maybe. This is the single exception, and it
+ * stays optional the whole way through: a ghost pill to start, "Never mind"
+ * to back out mid-drawing, and a blank canvas at "Keep this" is treated as
+ * changing your mind rather than as an empty answer to be nagged about.
+ *
+ * NEVER MARKED, same as everywhere else here. There is no picture that
+ * counts as trying harder than another, no gallery ranking one drawing
+ * above the last, and nothing that treats an abstract scribble as "less
+ * finished" than a recognisable one — the point was making a mark, not
+ * making art.
+ */
+function DrawInvite({ accent, onSave }: { accent: string; onSave: (dataUrl: string) => void }) {
+  const m = useMotion();
+  const [stage, setStage] = useState<'invite' | 'drawing' | 'saved'>('invite');
+  const [color, setColor] = useState(INK);
+  const [thumb, setThumb] = useState<string | null>(null);
+  const canvas = useRef<DrawingCanvasHandle>(null);
+
+  if (stage === 'invite') {
+    return (
+      <motion.button
+        whileTap={{ scale: 0.98 }}
+        onClick={() => { sound.play('tap'); setStage('drawing'); }}
+        className="mx-auto flex items-center gap-2 rounded-[999px] px-4 text-[13.5px] font-bold backdrop-blur-md"
+        style={{ minHeight: m.target, background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}`, color: CHROME.text }}
+      >
+        <Paintbrush size={16} strokeWidth={2.4} />
+        Draw what the knot looked like
+      </motion.button>
+    );
+  }
+
+  if (stage === 'saved' && thumb) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-start gap-1.5">
+        <div
+          className="flex items-center gap-3 rounded-[18px] px-3.5 py-3 backdrop-blur-md"
+          style={{ background: 'rgba(12,10,26,0.52)', border: `1px solid ${CHROME.pillBorder}` }}
+        >
+          <img src={thumb} alt="" className="h-16 w-16 shrink-0 rounded-[10px] object-cover" />
+          <p className="text-[13px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
+            Kept, right there in your case.
+          </p>
+        </div>
+        <button
+          onClick={() => { canvas.current?.clear(); setStage('drawing'); }}
+          className="ml-1 text-[12px] font-bold"
+          style={{ color: CHROME.textSoft }}
+        >
+          Draw a different one
+        </button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-2.5">
+      <SceneLine>Any way at all. It doesn’t need to look like anything.</SceneLine>
+
+      <DrawingCanvas ref={canvas} color={color} />
+
+      <div className="flex items-center justify-center gap-2">
+        {DRAW_COLORS.map((c) => (
+          <button
+            key={c}
+            aria-label="Choose this colour"
+            aria-pressed={c === color}
+            onClick={() => setColor(c)}
+            className="rounded-full transition"
+            style={{
+              width: 30,
+              height: 30,
+              background: c,
+              border: c === color ? '3px solid rgba(255,255,255,0.9)' : '2px solid rgba(255,255,255,0.25)',
+              boxShadow: c === color ? '0 0 0 2px rgba(0,0,0,0.35)' : 'none',
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="flex gap-2.5">
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => { sound.play('roomCard'); canvas.current?.clear(); }}
+          className="flex items-center justify-center gap-1.5 rounded-[999px] px-4 text-[13.5px] font-bold"
+          style={{ minHeight: m.target, background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}`, color: CHROME.text }}
+        >
+          <RotateCcw size={15} strokeWidth={2.4} />
+          Clear
+        </motion.button>
+        <div className="flex-1">
+          <Cta
+            label="Keep this"
+            accent={accent}
+            onClick={() => {
+              // A blank canvas at "Keep this" reads as changing your mind,
+              // not as an answer that needs a nudge — this walk never nags.
+              if (canvas.current?.isBlank()) { setStage('invite'); return; }
+              const url = canvas.current?.toDataURL() ?? '';
+              sound.play('discovery');
+              onSave(url);
+              setThumb(url);
+              setStage('saved');
+            }}
+          />
+        </div>
+      </div>
+
+      <button onClick={() => setStage('invite')} className="mx-auto text-[12px] font-bold" style={{ color: CHROME.textSoft }}>
+        Never mind
+      </button>
+    </motion.div>
+  );
+}
+

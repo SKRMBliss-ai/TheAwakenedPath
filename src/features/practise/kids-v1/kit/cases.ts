@@ -35,16 +35,43 @@ const KEY = 'mindgym.kidsv1.cases';
 /** Enough to see a pattern, few enough not to bloat storage. */
 const KEEP = 40;
 
+/**
+ * Above this many characters, a drawing is dropped rather than risking the
+ * case that holds it — roughly 165KB decoded, well above what the drawing
+ * canvas ordinarily produces (a modest, dpr-capped PNG of simple line art).
+ * The case's WORDS are the precious thing here; losing an oversized drawing
+ * to stay under quota costs far less than losing everything, which is what
+ * a failed localStorage write would otherwise do.
+ */
+const MAX_DRAWING_CHARS = 220_000;
+
 export function saveCase(c: Omit<Case, 'day'>): void {
   // A walk where nothing was said is not a case. Half-finished ones are
   // dropped rather than shelved: a child looking back should find things
   // they actually worked out, not a list of times they wandered off.
   if (!c.feeling && !c.story) return;
+
+  const entry: Case = { ...c, day: new Date().toISOString().slice(0, 10) };
+  if (entry.drawing && entry.drawing.length > MAX_DRAWING_CHARS) {
+    delete entry.drawing;
+  }
+
+  const all = [entry, ...loadCases()].slice(0, KEEP);
+  if (writeCases(all)) return;
+
+  // The write failed even after capping this drawing — most likely because
+  // older cases' own drawings have accumulated toward the quota over weeks
+  // of use. Strip every drawing but the one just made and try once more: a
+  // child would miss TODAY's words and picture first, so those are what
+  // survive if anything has to give.
+  writeCases(all.map((x, i) => (i === 0 ? x : { ...x, drawing: undefined })));
+}
+
+function writeCases(all: Case[]): boolean {
   try {
-    const all = loadCases();
-    all.unshift({ ...c, day: new Date().toISOString().slice(0, 10) });
-    localStorage.setItem(KEY, JSON.stringify(all.slice(0, KEEP)));
-  } catch { /* storage off — the walk still happened, it just isn't kept */ }
+    localStorage.setItem(KEY, JSON.stringify(all));
+    return true;
+  } catch { return false; } // storage off, or full even after stripping — the walk still happened
 }
 
 export function loadCases(): Case[] {
