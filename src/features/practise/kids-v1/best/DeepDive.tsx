@@ -7,6 +7,7 @@ import { BodyMap } from '../ui/bodyMap';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { THOUGHTS, MAYBES } from '../kit/checkinContent';
 import { FeelingBalls } from './FeelingBalls';
+import { OrbScene } from './OrbScene';
 import * as sound from '../kit/sound';
 
 /**
@@ -108,6 +109,8 @@ export function DeepDive({
   /** Which line of CONFESSION is showing — its own counter, not stepIndex,
    *  since it advances on a tap rather than an answer. */
   const [confessionLine, setConfessionLine] = useState(0);
+  /** Set the instant a feeling ball is tapped, so the room blooms with it. */
+  const [orbFlash, setOrbFlash] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
 
   const step = STEPS[Math.min(stepIndex, STEPS.length - 1)];
@@ -165,14 +168,18 @@ export function DeepDive({
       {/* The room cross-fades with the step — one building, several rooms. */}
       <AnimatePresence>
         <motion.div
-          key={art.id}
+          key={phase === 'ask' && step.id === 'feeling' ? 'orbfilm' : art.id}
           className="absolute inset-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <RoomScene room={art} dim={0.25} />
+          {/* The feeling step plays the orb film; every other step keeps
+              its painted still. Same room either way — one of them moves. */}
+          {phase === 'ask' && step.id === 'feeling'
+            ? <OrbScene flash={orbFlash} />
+            : <RoomScene room={art} dim={0.25} />}
         </motion.div>
       </AnimatePresence>
 
@@ -205,7 +212,10 @@ export function DeepDive({
               {step.hint && <SceneLine>{step.hint}</SceneLine>}
 
               {step.id === 'feeling' && (
-                <FeelingBalls onPick={(_, label) => answer('feeling', label)} />
+                <FeelingBalls
+                  onPick={(_, label) => answer('feeling', label)}
+                  onBurst={() => setOrbFlash(true)}
+                />
               )}
 
               {step.id === 'body' && (

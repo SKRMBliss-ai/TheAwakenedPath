@@ -31,14 +31,22 @@ const SIDES = [
 
 const SIZE = 86;
 
-export function FeelingBalls({ onPick }: { onPick: (feelingId: string, label: string) => void }) {
+export function FeelingBalls({
+  onPick,
+  onBurst,
+}: {
+  onPick: (feelingId: string, label: string) => void;
+  /** Fired the instant a ball is tapped, so the room can bloom with it. */
+  onBurst?: () => void;
+}) {
   const [popped, setPopped] = useState<string | null>(null);
 
   const burst = (id: string, label: string) => {
     if (popped) return;
     sound.play('balloonPop');
     setPopped(id);
-    window.setTimeout(() => onPick(id, label), 430);
+    onBurst?.();
+    window.setTimeout(() => onPick(id, label), 560);
   };
 
   return (
@@ -46,7 +54,11 @@ export function FeelingBalls({ onPick }: { onPick: (feelingId: string, label: st
       {FEELINGS.map((f, i) => {
         const pos = SIDES[i % SIDES.length];
         const isPopped = popped === f.id;
-        const dimmed = popped !== null && !isPopped;
+        // When one goes, they all go. The tapped one leads by a beat and the
+        // rest follow in a quick ripple outwards, so the child's ball is
+        // clearly the one that started it — but the room ends up empty, which
+        // is far more satisfying than five survivors sitting there dimmed.
+        const alsoPopping = popped !== null && !isPopped;
         return (
           <motion.button
             key={f.id}
@@ -66,11 +78,11 @@ export function FeelingBalls({ onPick }: { onPick: (feelingId: string, label: st
               boxShadow: '0 10px 24px -8px rgba(0,0,0,0.55), inset 0 -8px 18px -8px rgba(0,0,0,0.5)',
             }}
             animate={
-              isPopped
+              isPopped || alsoPopping
                 ? { scale: [1, 1.32, 0.1], opacity: [1, 1, 0] }
                 : {
-                    scale: dimmed ? 0.86 : 1,
-                    opacity: dimmed ? 0.3 : 1,
+                    scale: 1,
+                    opacity: 1,
                     // Each one bounces to its own rhythm, so they never look
                     // like a row of things doing the same thing.
                     y: [0, -14, 0],
@@ -78,8 +90,13 @@ export function FeelingBalls({ onPick }: { onPick: (feelingId: string, label: st
                   }
             }
             transition={
-              isPopped
-                ? { duration: 0.42, times: [0, 0.45, 1] }
+              isPopped || alsoPopping
+                ? {
+                    duration: 0.42,
+                    times: [0, 0.45, 1],
+                    // The ripple: the tapped one first, the others a beat behind.
+                    delay: isPopped ? 0 : 0.09 + (i % 3) * 0.05,
+                  }
                 : {
                     scale: { duration: 0.25 },
                     opacity: { duration: 0.25 },
@@ -90,7 +107,7 @@ export function FeelingBalls({ onPick }: { onPick: (feelingId: string, label: st
             whileTap={{ scale: 0.94 }}
           >
             {f.label}
-            {isPopped && <Burst />}
+            {(isPopped || alsoPopping) && <Burst />}
           </motion.button>
         );
       })}
