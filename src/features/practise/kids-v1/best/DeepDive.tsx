@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getRoom, type RoomId } from '../rooms';
-import { CHROME, Cta, FONT, BackButton, GrownUpExit, Pill, Question, SceneLine } from '../ui/chrome';
+import { Cta, FONT, BackButton, GrownUpExit, Pill, Question, SceneLine } from '../ui/chrome';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { BodyMap } from '../ui/bodyMap';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { THOUGHTS, MAYBES } from '../kit/checkinContent';
 import { FeelingBalls } from './FeelingBalls';
 import { OrbScene } from './OrbScene';
+import { AnswerGrid } from './AnswerGrid';
+import { WanderingChirpy } from './WanderingChirpy';
+import type { ChirpyPose } from '../ui/sprites';
 import * as sound from '../kit/sound';
 
 /**
@@ -78,37 +81,30 @@ const CONFESSION = [
   'So next time I say something big about you — you’re allowed to stop and check. Did your eyes actually see that?',
 ];
 
+/** One pose per confession line, so his face follows what he's admitting. */
+const CONFESSION_POSES: ChirpyPose[] = ['curious', 'worried', 'worried', 'said1', 'said2', 'hopeful'];
+
 export interface DeepDiveAnswers {
   feeling?: string;
   body?: string[];
   story?: string;
   eyes?: string;
   other?: string;
-  /**
-   * Which of the two stories — the mind's, or the other maybe — the child
-   * chose to carry for the rest of today. The app never picks for them: see
-   * the 'choice' phase below for why that has to stay true. Like the rest of
-   * this walk, never persisted — it lives for the length of the screen and
-   * is gone when they leave (BUILD_BRIEF §4).
-   */
-  carried?: string;
 }
 
 export function DeepDive({
   onFinish,
   onGrownUp,
-  onQuiet,
 }: {
   onFinish: (answers: DeepDiveAnswers) => void;
   onGrownUp: () => void;
-  onQuiet: (q: boolean) => void;
+  /** Kept so the caller's contract doesn't change; this walk never turns the
+   *  quiet state on by itself — the intensity beat upstream is what does. */
+  onQuiet?: (q: boolean) => void;
 }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState<DeepDiveAnswers>({});
   const [bodyZones, setBodyZones] = useState<Set<BodyZoneId>>(new Set());
-  /** Which line of CONFESSION is showing — its own counter, not stepIndex,
-   *  since it advances on a tap rather than an answer. */
-  const [confessionLine, setConfessionLine] = useState(0);
   /** Set the instant a feeling ball is tapped, so the room blooms with it. */
   const [orbFlash, setOrbFlash] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
@@ -122,14 +118,13 @@ export function DeepDive({
    * rather than additions to that array. StepDots below still counts only
    * the five real steps; these two are the coda, same as `done` already was.
    */
-  const phase: 'ask' | 'confession' | 'choice' | 'done' =
+  const phase: 'ask' | 'confession' | 'done' =
     stepIndex < STEPS.length ? 'ask'
     : stepIndex === STEPS.length ? 'confession'
-    : stepIndex === STEPS.length + 1 ? 'choice'
     : 'done';
   const done = phase === 'done';
-  // The confession and the choice both happen in the room the story step
-  // used — "the hinge" — rather than cutting to Reflection early.
+  // The confession happens in the room the story step used — "the hinge" —
+  // rather than cutting to Reflection early.
   const art = getRoom(phase === 'done' ? 'reflection' : phase === 'ask' ? step.room : 'story');
   const accent = art.palette.accent;
 
@@ -144,18 +139,10 @@ export function DeepDive({
     setStepIndex((i) => i + 1);
   };
 
-  /** The child picks which story to carry. Nothing is scored either way. */
-  const carry = (pick: string) => {
-    sound.play('discovery');
-    setAnswers((a) => ({ ...a, carried: pick }));
-    setStepIndex((i) => i + 1); // → 'done'
-  };
-
-  // The Different Story Room plays its lullaby while the two stories are up.
-  // It stops when the child leaves the choice, and on unmount, so it can
-  // never follow them into another room.
+  // The lullaby plays over the cards, while Chirpy wanders and talks. It
+  // stops on unmount so it can never follow the child into another room.
   useEffect(() => {
-    if (phase === 'choice') {
+    if (phase !== 'ask') {
       sound.playMusic('twoStories');
       return () => sound.stopMusic();
     }
@@ -183,6 +170,16 @@ export function DeepDive({
         </motion.div>
       </AnimatePresence>
 
+      {/* He wanders the whole screen, over the cards, not inside the column
+          — a creature in the room rather than a row in the layout. */}
+      {!done && phase === 'confession' && (
+        <WanderingChirpy
+          lines={CONFESSION}
+          poses={CONFESSION_POSES}
+          onFinished={() => setStepIndex((i) => i + 1)}
+        />
+      )}
+
       <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-5 pb-10 pt-4 sm:px-7">
         <div className="flex items-center justify-between gap-3">
           <BackButton onClick={() => onFinish(answers)} label="Leave" />
@@ -191,12 +188,11 @@ export function DeepDive({
         </div>
 
         <div className="flex flex-1 flex-col gap-3 pt-5">
-          {/* ── The chain so far. This is the point of the screen. ────── */}
-          {STEPS.slice(0, stepIndex).map((s) => {
-            const v = answers[s.id === 'feeling' ? 'feeling' : s.id === 'body' ? 'body' : s.id];
-            if (!v) return null;
-            return <AnswerCard key={s.id} step={s} value={Array.isArray(v) ? v.join(', ') : v} accent={accent} />;
-          })}
+          {/* ── The chain so far, as four cards in two columns. The bottom
+                 row puts the story the mind wrote directly beside what
+                 actually happened, and the left one turns over to show the
+                 other thing that could be true. See AnswerGrid. ────────── */}
+          <AnswerGrid answers={answers} accent={accent} />
 
           {/* ── The step being asked now ──────────────────────────────── */}
           {phase === 'ask' && (
@@ -266,181 +262,44 @@ export function DeepDive({
             </motion.div>
           )}
 
-          {/* ── Chirpy owns up ─────────────────────────────────────────
-              The voice that just wrote the child's story a moment ago
-              admits, in its own words, that it guesses fast and gets it
-              wrong. Tap-through, one line at a time — the same pacing every
-              other beat in the walk uses, so this doesn't read as a
-              different kind of screen. */}
-          {phase === 'confession' && (
-            <motion.button
-              key={confessionLine}
-              onClick={() => {
-                sound.play('tap');
-                if (confessionLine < CONFESSION.length - 1) setConfessionLine((n) => n + 1);
-                else setStepIndex((i) => i + 1); // → 'choice'
-              }}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
-              className="flex w-full flex-col gap-5 pt-1 text-left"
-              aria-label="Next"
-            >
-              <Chirpy
-                pose={confessionLine < 2 ? 'worried' : confessionLine < 4 ? 'said1' : 'hopeful'}
-                line={CONFESSION[confessionLine]}
-                align="left"
-                size={104}
-              />
-              <p className="text-[12px] font-bold" style={{ color: CHROME.textSoft }}>
-                {confessionLine === CONFESSION.length - 1 ? 'Tap to carry on' : 'Tap anywhere'}
-              </p>
-            </motion.button>
-          )}
+          {/* ── The closing beat ───────────────────────────────────────
+                 Chirpy wanders the room saying his piece line by line on his
+                 own clock (see WanderingChirpy) while the child looks at
+                 their four cards and turns the left one over. Nothing to tap
+                 through: six tap-to-advance lines turn into a task to finish,
+                 and a child tapping fast reads none of them.
 
-          {/* ── The choice ─────────────────────────────────────────────
-              Two stories that both fit, and the child says which one goes
-              home with them. THE APP DOES NOT PICK. Every option below —
-              the mind's story, the kinder one, both, neither — gets the
-              same Pill, the same weight, the same warmth: steering toward
-              the nicer answer would be the app telling the child how to
-              feel, which is exactly what turned "Camera or Brain?" from a
-              discovery into a test the one time this app tried it before.
-              What the child is shown is that the choice exists and it's
-              theirs — the honest version of "you can choose the happier
-              way of thinking", and the version that still works on a day
-              when the happier story doesn't feel true yet. */}
-          {phase === 'choice' && (
+                 There is no "which one will you carry?" question any more.
+                 Asking a child to pick a story to keep quietly makes one of
+                 them the winner; the flip already says the honest thing —
+                 both are on the same card, and you can turn it whenever you
+                 like. */}
+          {!done && phase !== 'ask' && (
             <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col gap-4 pt-1"
-            >
-              <p className="text-[10.5px] font-extrabold uppercase tracking-[0.18em]" style={{ color: accent }}>
-                Two stories
-              </p>
-              <Question room={art}>Both of these fit today. Nobody knows which one’s true — not me, and not you.</Question>
-
-              {/*
-                SIDE BY SIDE, and the same size, and the same shape.
-                The mind's story is not drawn as the wrong one: no red, no
-                crack, no thorns, nothing that marks it as the version to be
-                talked out of. A child who can see which card the app prefers
-                will pick that one and learn nothing. The only difference
-                between them is the colour of their light, and even that is
-                just so they can be told apart.
-              */}
-              <div className="grid grid-cols-2 gap-3">
-                <StoryLantern
-                  eyebrow="What my mind said"
-                  text={answers.story ?? 'something about me'}
-                  hue="#C48BE8"
-                  sway={6.4}
-                  onPick={() => carry(answers.story ?? 'something about me')}
-                />
-                <StoryLantern
-                  eyebrow="What else could be true"
-                  text={answers.other ?? 'something else'}
-                  hue="#FFD98A"
-                  sway={7.6}
-                  onPick={() => carry(answers.other ?? 'something else')}
-                />
-              </div>
-
-              <SceneLine>Tap the one you want to carry round for the rest of today.</SceneLine>
-
-              {/* Both and neither are real answers, and sit at the same
-                  weight as each other. Carrying both is honest — most days
-                  a child genuinely holds two stories at once. */}
-              <div className="flex gap-2.5">
-                <Pill label="Both, for now" accent={accent} onClick={() => carry('both')} />
-                <Pill label="Neither — leave it here" accent={accent} onClick={() => carry('neither')} />
-              </div>
-            </motion.div>
-          )}
-
-          {phase === 'done' && (
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
               className="flex flex-col gap-4 pt-2"
             >
-              <Chirpy pose="hopeful" line="Look at that. You worked all of that out yourself." align="left" />
-              <Question room={art}>{closingLine(answers.carried)}</Question>
-              {answers.carried && answers.carried !== 'Both, for now' && answers.carried !== 'Neither — I’ll leave it here' && (
-                <SceneLine>And you can swap it later if you want. It’s yours — you’re the one holding it.</SceneLine>
-              )}
+              <p className="text-[10.5px] font-extrabold uppercase tracking-[0.18em]" style={{ color: accent }}>
+                Two stories, one card
+              </p>
+              <Question room={art}>
+                Turn the left card over. Both of them fit today — nobody knows which is true, and that’s the interesting bit.
+              </Question>
               <Cta label="Done" onClick={() => { sound.play('resolve'); onFinish(answers); }} accent={accent} />
             </motion.div>
           )}
 
-          {/* scroll-mb-16: scrollIntoView({block:'end'}) above aligns THIS
-              element's bottom edge with the viewport's — flush, with nothing
-              held back. The fixed "stop here" button (bottom-3, ~40px tall)
-              floats in exactly that band regardless of scroll position, so
-              without this the last real thing on the longest screen (the
-              'choice' phase's fourth pill) scrolls to sit directly behind it
-              and can't be tapped. scroll-margin is what scrollIntoView
-              actually honours for clearance — padding after this point in
-              the DOM does not, since nothing ever scrolls past it. */}
-          <div ref={bottom} className="scroll-mb-16" />
+          <div ref={bottom} className="scroll-mb-8" />
         </div>
       </div>
 
-      {/* The quiet state's own way out, on every step. */}
-      {!done && (
-        <button
-          onClick={() => { onQuiet(false); onFinish(answers); }}
-          className="fixed inset-x-0 bottom-3 mx-auto w-fit rounded-full px-4 py-2 text-[12px] font-bold backdrop-blur-md"
-          style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}`, color: CHROME.textSoft }}
-        >
-          Let’s stop here for now
-        </button>
-      )}
     </div>
   );
 }
 
-/**
- * The closing line, shaped by which story the child chose to carry. Every
- * branch gets the same warmth — none of them is the app's preferred answer,
- * including "leave it here", which is a complete choice and not a cop-out.
- */
-function closingLine(carried: string | undefined): string {
-  if (!carried) return 'Two stories, both fitting the same day. We don’t know which is true — that’s the interesting bit.';
-  if (carried === 'Both, for now') return 'You can hold two stories at once. People do it all the time.';
-  if (carried === 'Neither — I’ll leave it here') return 'Leaving it here is a proper choice too. It doesn’t have to come home with you.';
-  return 'Okay. That’s the one you’re carrying.';
-}
-
 /* ── An answer, kept on screen ───────────────────────────────────────── */
-
-const CARD_LABEL: Record<StepId, string> = {
-  feeling: 'I felt',
-  body: 'I noticed it in my',
-  story: 'My mind said',
-  eyes: 'My eyes saw',
-  other: 'It could also be',
-};
-
-function AnswerCard({ step, value, accent }: { step: Step; value: string; accent: string }) {
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.96 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="rounded-[18px] px-4 py-2.5 backdrop-blur-md"
-      style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}` }}
-    >
-      <p className="text-[10.5px] font-extrabold uppercase tracking-[0.16em]" style={{ color: accent }}>
-        {CARD_LABEL[step.id]}
-      </p>
-      <p className="mt-0.5 text-[14px] font-bold leading-snug" style={{ color: CHROME.text }}>
-        {value}
-      </p>
-    </motion.div>
-  );
-}
 
 function StepDots({ total, at, accent }: { total: number; at: number; accent: string }) {
   return (
@@ -483,49 +342,3 @@ function ChoiceList({
  * They sway very slightly, out of phase with each other, so the pair reads
  * as two things hanging in a room rather than two buttons in a form.
  */
-function StoryLantern({
-  eyebrow,
-  text,
-  hue,
-  sway,
-  onPick,
-}: {
-  eyebrow: string;
-  text: string;
-  hue: string;
-  /** Seconds per sway. Fixed per lantern rather than random, so the two are
-   *  out of phase with each other without the render being impure. */
-  sway: number;
-  onPick: () => void;
-}) {
-  return (
-    <motion.button
-      onClick={onPick}
-      whileTap={{ scale: 0.97 }}
-      whileHover={{ y: -4 }}
-      animate={{ rotate: [-0.9, 0.9, -0.9] }}
-      transition={{ rotate: { repeat: Infinity, duration: sway, ease: 'easeInOut' } }}
-      className="relative flex min-h-[190px] flex-col items-center gap-2 rounded-[22px] px-3 pb-4 pt-5 text-center backdrop-blur-md"
-      style={{
-        transformOrigin: 'top center',
-        background: `linear-gradient(180deg, ${hue}26 0%, rgba(255,255,255,0.06) 60%)`,
-        border: `1px solid ${hue}77`,
-        boxShadow: `0 0 34px -14px ${hue}`,
-      }}
-    >
-      {/* The flame. Same size in both; only the colour differs. */}
-      <motion.span
-        className="block h-7 w-7 shrink-0 rounded-full"
-        style={{ background: hue, filter: `blur(1px) drop-shadow(0 0 14px ${hue})` }}
-        animate={{ opacity: [0.75, 1, 0.75], scale: [1, 1.08, 1] }}
-        transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
-      />
-      <p className="text-[9.5px] font-extrabold uppercase tracking-[0.14em]" style={{ color: hue }}>
-        {eyebrow}
-      </p>
-      <p className="text-[14px] font-extrabold leading-snug" style={{ color: CHROME.text, textWrap: 'balance' }}>
-        {text}
-      </p>
-    </motion.button>
-  );
-}
