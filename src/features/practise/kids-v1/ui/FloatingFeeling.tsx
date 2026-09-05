@@ -21,11 +21,13 @@ import * as sound from '../kit/sound';
  * app not remembering that would be worse than never having let them. So:
  * he drifts until he is picked up, and after that he lives where he was put.
  *
- * WHERE HE PARKS BY DEFAULT: low and to the left. The questions live in the
- * upper third, the door handles hang at three-quarters height on both walls,
- * and the bottom bar owns the last 90px. Low-left is the biggest piece of
- * the screen that is nobody else's, and it is inside a right-handed child's
- * thumb arc, which matters because tapping him is the point.
+ * WHERE HE PARKS BY DEFAULT: bottom centre, on the floor of the screen.
+ * Questions live in the upper third and the door handles hang on both walls
+ * at three-quarters height, so the middle of the bottom edge is the one
+ * piece of the screen nobody else wants — and it is the easiest place on a
+ * phone for either thumb to reach, which matters because tapping him is the
+ * point. Centred by measurement rather than a fixed percentage, so he is
+ * actually centred on a tablet as well as a phone.
  *
  * HE HAS TO BE ON TOP TO BE TOUCHED. He used to sit behind the content so
  * he could never cover the question — which looked right and was broken:
@@ -34,10 +36,19 @@ import * as sound from '../kit/sound';
  * test that "proved" tapping worked called .click() in script, which skips
  * hit-testing entirely and hid it.)
  *
- * So he sits above the page now, and the tension that put him underneath is
- * answered differently: he parks somewhere nobody else is using, he is
- * translucent, and if he is ever in the way the child can simply pick him up
- * and move him. Being movable is what makes being on top acceptable.
+ * So he sits above the page now — above the bottom bar too, which is z-40
+ * and was swallowing him all over again once he moved to the floor. The
+ * tension that put him underneath is answered differently: he parks
+ * somewhere nobody is using for the answer itself, he is translucent, and
+ * if he is ever in the way the child can pick him up and move him. Being
+ * movable is what makes being on top acceptable.
+ *
+ * Standing on the floor rather than above the bar is the deliberate choice
+ * between two overlaps: the room's main button ends about 60px above the
+ * bar, which is not enough room for him, so he had to cover one or the
+ * other. He covers the nav — secondary chrome, reachable from the hub, and
+ * not what a child is reaching for mid-answer — rather than the one button
+ * the screen is asking them to press.
  *
  * THE QUIET STATE keeps him and stops him. Chirpy goes, because Chirpy is a
  * performer; this is the child's own answer made visible, and taking it away
@@ -45,8 +56,25 @@ import * as sound from '../kit/sound';
  * and still answers a tap.
  */
 
-/** Fractions of the viewport. Low and left — see the note above. */
-const DEFAULT_PERCH = { x: 0.04, y: 0.56 };
+/**
+ * How far his feet sit above the very bottom of the screen.
+ *
+ * Small on purpose. Standing him clear of the bottom bar put him straight
+ * on top of the room's main button — and since he has to be above the page
+ * to be touchable at all, that meant he ate taps meant for it. Dropped to
+ * the floor he clears the button entirely and overlaps only the bottom
+ * nav, which is chrome a child is not reaching for mid-answer, and which
+ * he is translucent over anyway.
+ */
+const FLOOR = 8;
+
+/** Bottom centre of whatever screen he actually finds himself on. */
+function defaultPerch(room: { w: number; h: number }, size: number) {
+  return {
+    x: Math.max(0, (room.w - size) / 2) / room.w,
+    y: Math.max(0, room.h - FLOOR - size * 1.2) / room.h,
+  };
+}
 
 export function FloatingFeeling({
   /** Omit to use whatever the child named today. */
@@ -60,7 +88,8 @@ export function FloatingFeeling({
   const [line, setLine] = useState<number | null>(null);
   const [burst, setBurst] = useState(0);
   const [held, setHeld] = useState(false);
-  const [perch, setPerch] = useState(() => loadPerch() ?? DEFAULT_PERCH);
+  /** Null until the child moves him; the default is measured, not stored. */
+  const [perch, setPerch] = useState(() => loadPerch());
   /** Null until measured; he can't drift sensibly without knowing the room. */
   const [room, setRoom] = useState<{ w: number; h: number } | null>(null);
   const dragged = useRef(false);
@@ -79,8 +108,16 @@ export function FloatingFeeling({
 
   if (!companion || !room) return null;
 
-  const left = perch.x * room.w;
-  const top = perch.y * room.h;
+  const spot = perch ?? defaultPerch(room, size);
+  const left = spot.x * room.w;
+  const top = spot.y * room.h;
+  /**
+   * Anything he says goes UNDER him normally and ABOVE his head once he is
+   * low on the screen — where he parks by default. Under his feet at the
+   * bottom edge means off the bottom of the screen, i.e. a label nobody
+   * ever reads.
+   */
+  const speakAbove = top > room.h * 0.5;
   /** Kept fully on screen whatever the child does with him. */
   const bounds = {
     left: -left + 4,
@@ -99,7 +136,7 @@ export function FloatingFeeling({
   }
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[15] overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
       <motion.div
         className="pointer-events-auto absolute"
         style={{ left, top, x, y, touchAction: 'none' }}
@@ -169,6 +206,36 @@ export function FloatingFeeling({
           />
         </motion.button>
 
+        {/*
+          "Tap me!" — because a bouncing boy in the corner is scenery until
+          somebody says otherwise, and a six-year-old should not have to
+          guess. It goes the moment they tap him for the first time: it has
+          done its job, and a hint that keeps hinting is nagging.
+        */}
+        <AnimatePresence>
+          {line === null && !held && (
+            <motion.span
+              aria-hidden
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={m.quiet ? { opacity: 1, scale: 1, y: 0 } : { opacity: 1, scale: 1, y: [0, -3, 0] }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={m.quiet
+                ? { duration: 0.3 }
+                : { y: { repeat: Infinity, duration: 1.6, ease: 'easeInOut' }, duration: 0.3 }}
+              className={`pointer-events-none absolute left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-extrabold ${speakAbove ? 'bottom-full mb-2' : ''}`}
+              style={{
+                top: speakAbove ? undefined : size - 2,
+                background: '#FFD98A',
+                color: '#221A08',
+                boxShadow: '0 4px 16px -2px rgba(255,217,138,0.8)',
+                fontFamily: FONT,
+              }}
+            >
+              Tap me!
+            </motion.span>
+          )}
+        </AnimatePresence>
+
         {/* What he has to say, under him rather than over the screen, so
             reading it never covers the question the child is answering. */}
         <AnimatePresence>
@@ -179,9 +246,9 @@ export function FloatingFeeling({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.96 }}
               transition={{ duration: m.quiet ? 0.5 : 0.32 }}
-              className="pointer-events-auto absolute left-1/2 z-30 w-[188px] -translate-x-1/2 rounded-2xl px-3.5 py-2.5 backdrop-blur-md"
+              className={`pointer-events-auto absolute left-1/2 z-30 w-[188px] -translate-x-1/2 rounded-2xl px-3.5 py-2.5 backdrop-blur-md ${speakAbove ? 'bottom-full mb-2' : ''}`}
               style={{
-                top: size - 6,
+                top: speakAbove ? undefined : size - 6,
                 background: 'rgba(14,10,30,0.86)',
                 border: `1px solid ${CHROME.pillBorder}`,
                 color: CHROME.text,
