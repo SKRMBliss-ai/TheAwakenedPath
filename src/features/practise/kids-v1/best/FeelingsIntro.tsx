@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Volume2 } from 'lucide-react';
 import { CHROME, FONT } from '../ui/chrome';
+import { isMuted } from '../../../../lib/sfx';
+import * as sound from '../kit/sound';
 
 /**
  * The Feelings Room's opening — the founder's animation, played sharp and
@@ -15,14 +18,20 @@ import { CHROME, FONT } from '../ui/chrome';
  * which cheapens the real one — the one they make themselves a moment
  * later by tapping a ball. So it plays through exactly once per device
  * (see kit/introSeen.ts) and then gets out of the way for good.
- *
- * Muted, same as every autoplaying clip in this app — unmuted autoplay is
- * blocked by most browsers regardless, and this app never autoplays sound
- * without a tap first.
  */
+
+/** Under the app's own cues (0.3–0.55) it would be lost; at 1.0 it startles. */
+const VOLUME = 0.8;
+
 export function FeelingsIntro({ onDone }: { onDone: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [canSkip, setCanSkip] = useState(false);
+  /**
+   * True when the browser refused sound and we fell back to a silent play.
+   * Not the same as the device mute toggle: a child who muted the app wants
+   * silence and must not be offered a button undoing that.
+   */
+  const [soundBlocked, setSoundBlocked] = useState(false);
 
   useEffect(() => {
     // A beat before "Skip" appears, so it doesn't compete with the opening
@@ -33,9 +42,41 @@ export function FeelingsIntro({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     const v = videoRef.current;
-    if (v) void v.play().catch(() => onDone());
+    if (!v) return;
+
+    // The hub's fold chime may still be ringing as this mounts; two pieces
+    // of audio over one another is worse than either alone.
+    sound.stopAll();
+
+    v.volume = VOLUME;
+    v.muted = isMuted();
+
+    void v.play().catch(() => {
+      // Unmuted autoplay is blocked unless the browser counts the tap that
+      // opened this screen as activation — Chrome usually does, iOS Safari
+      // often doesn't. Rather than lose the film, play it silently and let
+      // the child turn sound on with a fresh tap, which always counts.
+      if (v.muted) { onDone(); return; }
+      v.muted = true;
+      setSoundBlocked(true);
+      void v.play().catch(() => onDone());
+    });
+
+    // Leaving mid-clip (Skip, or the back arrow) must take the audio with
+    // it — React unmounting the element normally does that, but pausing
+    // first means it never outlives the picture even for a frame.
+    return () => { try { v.pause(); } catch { /* ignore */ } };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function turnSoundOn() {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = false;
+    v.volume = VOLUME;
+    setSoundBlocked(false);
+    void v.play().catch(() => { /* nothing more to try */ });
+  }
 
   return (
     <div className="absolute inset-0 overflow-hidden" style={{ background: '#0A061A' }}>
@@ -47,6 +88,9 @@ export function FeelingsIntro({ onDone }: { onDone: () => void }) {
         An intro can't do that: the whole point is that the child SEES the
         six orbs gather and bloom. So the sharp copy is `contain`ed and the
         bars are filled with the same picture, thrown out of focus.
+
+        Stays muted whatever the sharp copy is doing — one picture, one
+        soundtrack, never the same audio twice a few milliseconds apart.
       */}
       <video
         aria-hidden
@@ -66,7 +110,6 @@ export function FeelingsIntro({ onDone }: { onDone: () => void }) {
         poster="/scenes/feelings-intro-poster.webp"
         className="absolute inset-0 h-full w-full object-contain"
         autoPlay
-        muted
         playsInline
         onEnded={onDone}
         onError={onDone}
@@ -74,6 +117,20 @@ export function FeelingsIntro({ onDone }: { onDone: () => void }) {
         <source src="/scenes/feelings-intro.webm" type="video/webm" />
         <source src="/scenes/feelings-intro.mp4" type="video/mp4" />
       </video>
+
+      {/* Only when the browser took the sound away, never when the child did. */}
+      {soundBlocked && (
+        <motion.button
+          onClick={turnSoundOn}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          className="absolute bottom-5 left-5 flex items-center gap-1.5 rounded-full px-4 py-2 text-[12.5px] font-bold backdrop-blur-md"
+          style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}`, color: CHROME.text, fontFamily: FONT }}
+        >
+          <Volume2 size={15} /> Sound
+        </motion.button>
+      )}
 
       {/* No timers anywhere else in this app (§2.9), and this is no
           exception — Skip is a plain tap-through, not a countdown, and it
