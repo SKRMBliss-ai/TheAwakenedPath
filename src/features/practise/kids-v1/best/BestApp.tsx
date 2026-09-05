@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
@@ -6,6 +6,7 @@ import { todayKey, levelFor } from '../../../kids/data';
 import { Onboarding } from '../../../kids/Onboarding';
 import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
+import { useMotion, useQuiet } from '../ui/quiet';
 import { BoyAndChirpy, RoomScene } from '../ui/scene';
 import { chirpySprite } from '../ui/sprites';
 import { SCENE_MOODS, roomPoster, storageFallback } from '../rooms';
@@ -202,64 +203,72 @@ function RoomMap({
           <GrownUpExit onClick={onGrownUp} />
         </div>
 
-        {/* The pair from the character sheet, exactly as the Kids Gym hub had
-            them — facing the scene, not the child. */}
-        <div className="flex flex-col items-center gap-2 pt-3 text-center sm:pt-5">
-          <BoyAndChirpy size={168} pose="excited" gaze="scene" />
-          <h1
-            className="text-[30px] font-extrabold leading-tight sm:text-[38px]"
-            style={{ color: CHROME.text, letterSpacing: '-0.02em' }}
-          >
-            {name ? `Hello, ${name}` : 'Mind Gym'}
-          </h1>
-          <p className="max-w-sm text-[14.5px] font-semibold leading-relaxed" style={{ color: CHROME.textSoft }}>
-            {level.name} · {points} points{streak > 0 ? ` · ${streak}-day streak` : ''}
-          </p>
-          <p className="max-w-sm text-[13.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
-            {doneCount === 0
-              ? 'Seven rooms. Go in and say how today actually went.'
-              : doneCount === VIRTUE_ROOMS.length
-                ? 'All seven, today. That’s the full rainbow.'
-                : `${doneCount} of ${VIRTUE_ROOMS.length} rooms so far today.`}
-          </p>
+        {/*
+          THE WELCOME GETS OUT OF THE WAY.
 
-          {/*
-            TWO JOURNEYS, and they are deliberately different shapes.
+          It used to be a fixed 300-odd pixels of hello — the pair at full
+          size, the big name, the level line, the progress line — which meant
+          the rooms themselves started below the fold on a phone and a child
+          had to scroll to find the thing they came for. It now says hello
+          properly for five seconds and then folds itself into a single line,
+          with a chime and a scatter of sparks so the fold reads as a small
+          piece of magic rather than as the layout twitching.
 
-            Catching fireflies is the daily one: light, quick, seven small
-            true things about today. Untangling a knot is the occasional one,
-            for when something is actually bothering them — longer, slower,
-            and never suggested as the default. Putting them side by side as
-            equals would imply a child should do both every day, which is far
-            too much to ask of anybody. So the jar leads, and the knot waits
-            underneath for the days it's needed.
-          */}
-          <div className="w-full max-w-md space-y-3 pt-4">
-            <JourneyCard
-              title="Catch the Fireflies"
-              blurb={caughtToday.length
-                ? `${caughtToday.length === 1 ? 'One light' : `${caughtToday.length} lights`} so far today. Room for more.`
-                : 'Seven little lights from today. Let’s see which ones you’ve got.'}
-              onClick={onStartJourney}
-              art={<FireflyJar caught={caughtToday} size={56} />}
-            />
-            <JourneyCard
-              title="Untangle a Knot"
-              blurb="Something still bugging you? Let’s have a proper look at it."
-              onClick={onDeepDive}
-              art={<KnotMark size={58} />}
-            />
-            <button
-              onClick={onReflection}
-              className="w-full pt-1 text-[12.5px] font-bold"
-              style={{ color: CHROME.textSoft }}
-            >
-              Just show me the whole map
-            </button>
-          </div>
+          Five seconds because that's about how long the greeting is worth
+          looking at, and because nothing here is a countdown a child has to
+          beat — the rooms are already tappable underneath while it plays.
+        */}
+        <WelcomeBanner
+          name={name}
+          levelName={level.name}
+          points={points}
+          streak={streak}
+          doneCount={doneCount}
+          total={VIRTUE_ROOMS.length}
+        />
+
+        {/*
+          TWO DOORS, SIDE BY SIDE.
+
+          They were stacked, with the jar leading and the knot underneath, to
+          avoid implying a child should do both every day. Side by side says
+          the same thing better: two doors in a wall, you pick one, you don't
+          walk through both. What keeps them from reading as a daily
+          checklist is that neither is marked, counted or ticked — they're
+          places, not tasks.
+
+          Drawn as lit archways rather than rows, because a door you can see
+          light spilling out from under is a more inviting thing to a
+          six-year-old than a rectangle with a title in it.
+        */}
+        <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-3 pt-4">
+          <PortalDoor
+            title="Catch the Fireflies"
+            blurb={caughtToday.length
+              ? `${caughtToday.length === 1 ? 'One light' : `${caughtToday.length} lights`} so far`
+              : 'Seven little lights from today'}
+            hue="#FFC65C"
+            onClick={onStartJourney}
+            art={<FireflyJar caught={caughtToday} size={68} />}
+          />
+          <PortalDoor
+            title="Untangle a Knot"
+            blurb="Something still bugging you?"
+            hue="#C48BE8"
+            onClick={onDeepDive}
+            art={<KnotMark size={60} />}
+          />
         </div>
 
-        <h2 className="mt-7 text-[15.5px] font-extrabold" style={{ color: CHROME.text }}>
+        <button
+          onClick={onReflection}
+          className="mx-auto mt-3 block text-[12.5px] font-bold"
+          style={{ color: CHROME.textSoft }}
+        >
+          Just show me the whole map
+        </button>
+
+        <h2 className="mt-5 text-[15.5px] font-extrabold" style={{ color: CHROME.text, fontFamily: FONT }}>
           Or pick a room
         </h2>
 
@@ -290,28 +299,237 @@ function RoomMap({
  * What's added is the only new information a virtue room has — whether it was
  * ticked today, and what has been earned in it.
  */
-/** One of the two journeys on the hub. */
-function JourneyCard({
-  title, blurb, onClick, art,
+/* ── The welcome, and how it leaves ──────────────────────────────────── */
+
+/** How long the full greeting stays before folding itself away. */
+const WELCOME_MS = 5000;
+
+/**
+ * Says hello, then gets out of the way.
+ *
+ * Expanded it's the pair from the character sheet at full size, the child's
+ * name, and where they're up to. Folded it's one line: a small Chirpy, the
+ * name, and the same numbers. Everything below — the two doors, and the
+ * rooms — rises by about 260px when it goes, which is the difference between
+ * a child seeing the rooms on landing and having to scroll for them.
+ *
+ * `layout` on the shared container is what makes the rest of the page glide
+ * up rather than jump. The sparks and the chime fire once, at the moment of
+ * the fold, so it reads as the greeting doing something rather than the page
+ * reflowing.
+ */
+function WelcomeBanner({
+  name, levelName, points, streak, doneCount, total,
 }: {
-  title: string; blurb: string; onClick: () => void; art: React.ReactNode;
+  name: string;
+  levelName: string;
+  points: number;
+  streak: number;
+  doneCount: number;
+  total: number;
 }) {
+  const [dismissed, setDismissed] = useState(false);
+  const [sparks, setSparks] = useState(false);
+  const quiet = useQuiet();
+  /* Derived rather than stored, so turning Calm mode on folds the greeting
+     immediately without a second source of truth to keep in step. */
+  const open = !dismissed && !quiet;
+
+  useEffect(() => {
+    // The quiet state gets the folded version from the start and no chime —
+    // an upset child does not need a five-second flourish (§7).
+    if (quiet || dismissed) return;
+    const t = window.setTimeout(() => {
+      setDismissed(true);
+      setSparks(true);
+      sound.play('discovery');
+      window.setTimeout(() => setSparks(false), 1200);
+    }, WELCOME_MS);
+    return () => clearTimeout(t);
+  }, [quiet, dismissed]);
+
+  const stats = `${levelName} · ${points} points${streak > 0 ? ` · ${streak}-day streak` : ''}`;
+
+  return (
+    <motion.div layout className="relative flex flex-col items-center gap-1.5 pt-3 text-center">
+      <AnimatePresence mode="wait">
+        {open ? (
+          <motion.div
+            key="full"
+            layout
+            exit={{ opacity: 0, scale: 0.86, y: -18 }}
+            transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+            className="flex flex-col items-center gap-2"
+          >
+            <BoyAndChirpy size={168} pose="excited" gaze="scene" />
+            <h1
+              className="text-[30px] font-extrabold leading-tight sm:text-[38px]"
+              style={{ color: CHROME.text, letterSpacing: '-0.02em', fontFamily: FONT }}
+            >
+              {name ? `Hello, ${name}` : 'Mind Gym'}
+            </h1>
+            <p className="max-w-sm text-[14.5px] font-semibold leading-relaxed" style={{ color: CHROME.textSoft }}>
+              {stats}
+            </p>
+            <p className="max-w-sm text-[13.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
+              {doneCount === 0
+                ? 'Seven rooms. Go in and say how today actually went.'
+                : doneCount === total
+                  ? 'All seven, today. That’s the full rainbow.'
+                  : `${doneCount} of ${total} rooms so far today.`}
+            </p>
+          </motion.div>
+        ) : (
+          /* Folded. Tappable, so a child who wants the big hello back can
+             have it — nothing here is a one-way door. */
+          <motion.button
+            key="folded"
+            layout
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.15 }}
+            onClick={() => setDismissed(false)}
+            className="flex items-center gap-2.5 rounded-full py-1.5 pl-1.5 pr-4 backdrop-blur-md"
+            style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}` }}
+            aria-label="Show the welcome again"
+          >
+            <img
+              src={chirpySprite('excited')}
+              alt=""
+              aria-hidden
+              draggable={false}
+              style={{ height: 34, width: 'auto', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}
+            />
+            <span className="text-[14px] font-extrabold leading-none" style={{ color: CHROME.text }}>
+              {name ? `Hello, ${name}` : 'Mind Gym'}
+            </span>
+            <span className="text-[11.5px] font-bold leading-none" style={{ color: CHROME.textSoft }}>
+              {points} pts
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {sparks && <FoldSparks />}
+    </motion.div>
+  );
+}
+
+/** The scatter the greeting leaves behind. Fires once, decorative only. */
+function FoldSparks() {
+  return (
+    <span aria-hidden className="pointer-events-none absolute inset-x-0 top-8 grid place-items-center">
+      {Array.from({ length: 16 }).map((_, i) => {
+        const a = (i / 16) * Math.PI * 2 + (i % 3) * 0.2;
+        const d = 70 + ((i * 29) % 60);
+        return (
+          <motion.span
+            key={i}
+            className="absolute block rounded-full"
+            style={{
+              width: 5 + ((i * 13) % 5),
+              height: 5 + ((i * 13) % 5),
+              background: i % 3 === 0 ? '#FFD98A' : i % 3 === 1 ? '#C48BE8' : '#FFFFFF',
+              boxShadow: '0 0 12px rgba(255,214,150,0.9)',
+            }}
+            initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+            animate={{ x: Math.cos(a) * d, y: Math.sin(a) * d * 0.7, opacity: 0, scale: 0.3 }}
+            transition={{ duration: 1, ease: 'easeOut', delay: (i % 5) * 0.04 }}
+          />
+        );
+      })}
+    </span>
+  );
+}
+
+/* ── The two doors ───────────────────────────────────────────────────── */
+
+/**
+ * One of the two journeys, drawn as a lit archway.
+ *
+ * An arch rather than a card because a door is a place you go through, and
+ * that is the honest description of both of these — neither is a task to
+ * complete. The light pooling at the threshold is doing the real work: it
+ * says something is on in there, which is a far better invitation to a
+ * six-year-old than any wording would be.
+ *
+ * Both doors are identical in size, shape and treatment; only the colour of
+ * their light differs. Making the daily one bigger or brighter would tell a
+ * child which one they're supposed to pick, and the whole point of having
+ * two is that some days it's the other one.
+ */
+function PortalDoor({
+  title, blurb, hue, onClick, art,
+}: {
+  title: string; blurb: string; hue: string; onClick: () => void; art: React.ReactNode;
+}) {
+  const m = useMotion();
   return (
     <motion.button
-      whileHover={{ y: -3 }}
-      whileTap={{ scale: 0.99 }}
+      whileHover={m.quiet ? undefined : { y: -4 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="flex w-full items-center gap-4 rounded-[24px] px-4 py-4 text-left backdrop-blur-md"
-      style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}` }}
+      className="relative flex min-h-[212px] flex-col items-center overflow-hidden px-3 pb-4 pt-5 text-center backdrop-blur-md"
+      style={{
+        // Arched at the top, square at the foot — a doorway. A gentler dome
+        // than a full semicircle, which ate the width the art needs.
+        borderRadius: '150px 150px 22px 22px',
+        background: `linear-gradient(180deg, ${hue}2E 0%, rgba(12,10,26,0.55) 58%)`,
+        border: `1px solid ${hue}66`,
+        boxShadow: `0 0 30px -12px ${hue}`,
+      }}
     >
-      <span className="grid w-[64px] shrink-0 place-items-center">{art}</span>
-      <span className="min-w-0">
-        <span className="block text-[19px] font-extrabold leading-tight" style={{ color: CHROME.text }}>
-          {title}
+      {/* Light under the door. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
+        style={{ background: `radial-gradient(60% 100% at 50% 100%, ${hue}66 0%, transparent 72%)` }}
+      />
+
+      {/* Motes drifting up through the arch. */}
+      {!m.quiet && (
+        <span aria-hidden className="pointer-events-none absolute inset-0">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <motion.span
+              key={i}
+              className="absolute block rounded-full"
+              style={{
+                left: `${16 + i * 17}%`,
+                width: 4,
+                height: 4,
+                background: hue,
+                boxShadow: `0 0 8px ${hue}`,
+              }}
+              initial={{ bottom: '8%', opacity: 0 }}
+              animate={{ bottom: '78%', opacity: [0, 0.9, 0] }}
+              transition={{ repeat: Infinity, duration: 5 + i * 0.9, delay: i * 1.1, ease: 'easeOut' }}
+            />
+          ))}
         </span>
-        <span className="mt-1 block text-[13.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
-          {blurb}
-        </span>
+      )}
+
+      {/* The art has its own band so it never crowds the words, and the
+          words pin to the foot so the two doors read as a matched pair
+          however tall their art happens to be. */}
+      <motion.span
+        className="relative grid h-[76px] w-full place-items-center"
+        animate={m.loop ? { y: [0, -5, 0] } : undefined}
+        transition={m.loop ? { repeat: Infinity, duration: 4.2, ease: 'easeInOut' } : undefined}
+      >
+        {art}
+      </motion.span>
+
+      <span
+        className="relative mt-auto block text-[14.5px] font-extrabold leading-tight"
+        style={{ color: CHROME.text, textWrap: 'balance', fontFamily: FONT }}
+      >
+        {title}
+      </span>
+      <span
+        className="relative mt-1 block text-[11px] font-semibold leading-snug"
+        style={{ color: CHROME.textSoft, textWrap: 'balance' }}
+      >
+        {blurb}
       </span>
     </motion.button>
   );

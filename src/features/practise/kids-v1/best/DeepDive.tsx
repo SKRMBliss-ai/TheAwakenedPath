@@ -10,6 +10,8 @@ import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { THOUGHTS, MAYBES } from '../kit/checkinContent';
 import { FeelingBalls } from './FeelingBalls';
 import { OrbScene } from './OrbScene';
+import { FeelingsIntro } from './FeelingsIntro';
+import { introSeen, markIntroSeen } from '../kit/introSeen';
 import * as sound from '../kit/sound';
 
 /**
@@ -104,9 +106,20 @@ export function DeepDive({
   const [turned, setTurned] = useState(false);
   /** Set the instant a feeling ball is tapped, so the room blooms with it. */
   const [orbFlash, setOrbFlash] = useState(false);
+  /**
+   * Whether the Feelings Room's opening cinematic still needs to play.
+   * Starts false already on a device that's seen it — or in the quiet
+   * state, which gets no cinematics at all (§7) — so it never delays a
+   * child who's already upset or who's done this before.
+   */
+  const [feelingIntroDone, setFeelingIntroDone] = useState(
+    () => introSeen('feelings') || false,
+  );
   const bottom = useRef<HTMLDivElement>(null);
 
   const step = STEPS[Math.min(stepIndex, STEPS.length - 1)];
+  const quiet = useQuiet();
+  const showFeelingIntro = step.id === 'feeling' && !feelingIntroDone && !quiet;
   /**
    * ONE beat runs after the five answered STEPS: the reveal. The four cards
    * sit as a grid, the mind's-story card can be turned over to its other
@@ -138,6 +151,11 @@ export function DeepDive({
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [stepIndex]);
+
+  const finishFeelingIntro = () => {
+    markIntroSeen('feelings');
+    setFeelingIntroDone(true);
+  };
 
   /**
    * The one way out, used by both exits.
@@ -172,18 +190,22 @@ export function DeepDive({
       {/* The room cross-fades with the step — one building, several rooms. */}
       <AnimatePresence>
         <motion.div
-          key={phase === 'ask' && step.id === 'feeling' ? 'orbfilm' : art.id}
+          key={showFeelingIntro ? 'feelingintro' : phase === 'ask' && step.id === 'feeling' ? 'orbfilm' : art.id}
           className="absolute inset-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
         >
-          {/* The feeling step plays the orb film; every other step keeps
-              its painted still. Same room either way — one of them moves. */}
-          {phase === 'ask' && step.id === 'feeling'
-            ? <OrbScene flash={orbFlash} />
-            : <RoomScene room={art} dim={phase === 'ask' ? 0.25 : 0.55} />}
+          {/* The Feelings Room opens with its cinematic exactly once (see
+              kit/introSeen.ts), then the orb film takes over as the ambient
+              loop behind the tappable balls for every step after — and every
+              return visit. Every other step keeps its painted still. */}
+          {showFeelingIntro
+            ? <FeelingsIntro onDone={finishFeelingIntro} />
+            : phase === 'ask' && step.id === 'feeling'
+              ? <OrbScene flash={orbFlash} />
+              : <RoomScene room={art} dim={phase === 'ask' ? 0.25 : 0.55} />}
         </motion.div>
       </AnimatePresence>
 
@@ -235,7 +257,7 @@ export function DeepDive({
           )}
 
           {/* ── The step being asked now ──────────────────────────────── */}
-          {phase === 'ask' && (
+          {phase === 'ask' && !showFeelingIntro && (
             <motion.div
               key={step.id}
               initial={{ opacity: 0, y: 16 }}
