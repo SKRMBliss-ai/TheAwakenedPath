@@ -12,6 +12,7 @@ import { THOUGHTS, MAYBES } from '../kit/checkinContent';
 import { FeelingBalls } from './FeelingBalls';
 import { FeelingsIntro } from './FeelingsIntro';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
+import { setTodaysFeeling } from '../kit/todaysFeeling';
 import * as sound from '../kit/sound';
 
 /**
@@ -284,7 +285,7 @@ export function DeepDive({
 
               {step.id === 'feeling' && (
                 <FeelingBalls
-                  onPick={(_, label) => answer('feeling', label)}
+                  onPick={(_, label) => { setTodaysFeeling(label); answer('feeling', label); }}
                   onBurst={() => setOrbFlash(true)}
                 />
               )}

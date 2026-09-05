@@ -5,6 +5,7 @@ import { BEHAVIOURS, levelFor } from '../../../kids/data';
 import { getRoom } from '../rooms';
 import { CHROME, Cta, FONT, GrownUpExit, Question } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
+import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { Chirpy, RoomScene } from '../ui/scene';
 
 /**
@@ -63,6 +64,10 @@ export function ReflectionRoom({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
+      {/* Whatever the child named today comes with them into this room —
+          bouncing, draggable, and parked wherever they last put him. */}
+      <FloatingFeeling />
+
       {/* The way out is a fitting on the left wall, the same one on every
           screen in the app. No chevron in the corner any more: a child who
           learns one door learns them all. */}
