@@ -14,76 +14,25 @@
 /** Line IDs match docs/.../MIND_GYM_VOICE_SCRIPT.md, e.g. "p01.01", "intro.07". */
 export const AUDIO_MANIFEST: Record<string, string> = {};
 
-let voices: SpeechSynthesisVoice[] = [];
-let narrator: SpeechSynthesisVoice | null = null;
-let chirpyVoice: SpeechSynthesisVoice | null = null;
+import { calmVoice } from '../../../../lib/calmVoice';
 
 /**
- * WHY BOTH VOICES ARE FEMALE AND SLOW NOW.
+ * BOTH VOICES ARE CALM AND FEMALE NOW.
  *
- * The first pass gave the narrator a male voice and Chirpy pitch 1.75 at
- * rate 1.14, which on most devices comes out squeaky and hurried. Children
- * are being asked here to slow down and notice something, and a fast bright
- * voice pulls in exactly the wrong direction — it reads as a cartoon
- * announcer rather than someone sitting next to you.
+ * The first pass gave the narrator a male voice and ran Chirpy at rate
+ * 1.14, pitch 1.75, which on most devices comes out squeaky and hurried.
+ * Children are being asked here to slow down and notice something, and a
+ * fast bright voice pulls the other way.
  *
- * So the narrator is now a calm female voice, unhurried, pitched slightly
- * low. Chirpy keeps a separate voice so the two never blur together, but he
- * is only a little lighter and quicker than she is, not a chipmunk.
+ * Choosing the voice is lib/calmVoice's job — shared with the kids gym and
+ * the meditation fallback, because all three had the same bug: a voice list
+ * that is empty on the first call, cached as "none", leaving the platform
+ * default (usually male) in place.
  *
- * The names below are ordered best-first and matched in order, because
- * browser voice lists are wildly uneven. Named voices are checked before the
- * generic /female/ catch-all, otherwise a poor eSpeak voice that merely has
- * "female" in its label wins over Samantha sitting further down the list.
+ * Chirpy is now separated from the narrator by pitch and rate rather than
+ * by a second voice. On Android there is often only one English voice
+ * installed, so a second one cannot be relied on to exist.
  */
-const CALM_FEMALE = [
-  /Samantha/i,
-  /Google UK English Female/i,
-  /Google US English/i,
-  /Serena/i,
-  /Moira/i,
-  /Fiona/i,
-  /Tessa/i,
-  /Karen/i,
-  /Microsoft (Aria|Jenny|Sonia|Libby|Zira)/i,
-  /Martha/i,
-  /female/i,
-];
-
-/** A second female voice for Chirpy, so he never sounds like the narrator. */
-const CHIRPY_FEMALE = [
-  /Google UK English Female/i,
-  /Karen/i,
-  /Tessa/i,
-  /Fiona/i,
-  /Microsoft (Jenny|Libby|Zira)/i,
-  /Samantha/i,
-  /Moira/i,
-  /female/i,
-];
-
-function pickVoices() {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
-  voices = window.speechSynthesis.getVoices() ?? [];
-  const en = voices.filter((v) => /^en/i.test(v.lang));
-  const pool = en.length ? en : voices;
-  const first = (patterns: RegExp[], exclude?: SpeechSynthesisVoice | null) => {
-    for (const re of patterns) {
-      const hit = pool.find((v) => v !== exclude && re.test(v.name));
-      if (hit) return hit;
-    }
-    return null;
-  };
-  narrator = first(CALM_FEMALE) ?? pool[0] ?? null;
-  chirpyVoice = first(CHIRPY_FEMALE, narrator)
-    ?? pool.find((v) => v !== narrator)
-    ?? narrator;
-}
-
-if (typeof window !== 'undefined' && window.speechSynthesis) {
-  pickVoices();
-  window.speechSynthesis.onvoiceschanged = pickVoices;
-}
 
 /**
  * Speaks a line. `lineId` looks up a real recording first; `fallbackText` is
@@ -103,18 +52,22 @@ export function say(
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(fallbackText.replace(/<[^>]+>/g, ''));
+    const { voice, confident } = calmVoice();
+    if (voice) u.voice = voice;
+    // When the voice couldn't be recognised by name it may well be the
+    // platform default, which is often male. Pitch is the only lever left
+    // at that point, so everything shifts up a little.
+    const lift = confident ? 0 : 0.18;
     if (opts.who === 'chirpy') {
-      if (chirpyVoice) u.voice = chirpyVoice;
       // Lighter and a touch quicker than the narrator so he is clearly
       // someone else — but nowhere near the old 1.14/1.75, which turned
       // every line of his into a squeak.
       u.rate = 0.95;
-      u.pitch = 1.2;
+      u.pitch = 1.2 + lift;
     } else {
-      if (narrator) u.voice = narrator;
       // Slow and slightly low. The quiet state goes slower still.
       u.rate = opts.quiet ? 0.72 : 0.84;
-      u.pitch = opts.quiet ? 0.86 : 0.94;
+      u.pitch = (opts.quiet ? 0.86 : 0.94) + lift;
     }
     window.speechSynthesis.speak(u);
   } catch { /* ignore */ }
