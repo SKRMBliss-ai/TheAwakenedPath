@@ -14,7 +14,6 @@ import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
-import { FireflyJar, KnotMark } from './FireflyJar';
 import { VirtueRoomView } from './VirtueRoomView';
 import * as sound from '../kit/sound';
 
@@ -241,22 +240,22 @@ function RoomMap({
           light spilling out from under is a more inviting thing to a
           six-year-old than a rectangle with a title in it.
         */}
-        <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-3 pt-4">
-          <PortalDoor
+        <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-2 pt-3">
+          <PortalHandle
             title="Catch the Fireflies"
             blurb={caughtToday.length
               ? `${caughtToday.length === 1 ? 'One light' : `${caughtToday.length} lights`} so far`
-              : 'Seven little lights from today'}
+              : 'Seven lights from today'}
             hue="#FFC65C"
             onClick={onStartJourney}
-            art={<FireflyJar caught={caughtToday} size={68} />}
+            facing="right"
           />
-          <PortalDoor
+          <PortalHandle
             title="Untangle a Knot"
             blurb="Something still bugging you?"
             hue="#C48BE8"
             onClick={onDeepDive}
-            art={<KnotMark size={60} />}
+            facing="left"
           />
         </div>
 
@@ -302,7 +301,7 @@ function RoomMap({
 /* ── The welcome, and how it leaves ──────────────────────────────────── */
 
 /** How long the full greeting stays before folding itself away. */
-const WELCOME_MS = 3000;
+const WELCOME_MS = 2000;
 
 /**
  * Says hello, then gets out of the way.
@@ -458,75 +457,67 @@ function FoldSparks() {
  * child which one they're supposed to pick, and the whole point of having
  * two is that some days it's the other one.
  */
-function PortalDoor({
-  title, blurb, hue, onClick, art,
+/**
+ * A journey, as a handle floating in the dark rather than a doorway.
+ *
+ * The arches these replace were 212px tall and honest about it: two big
+ * lit domes that pushed the rooms most of the way off the bottom of the
+ * screen. The handle says the same thing in a third of the height — a
+ * fitting hanging in the air with light behind it is still unmistakably
+ * a way through, and the rooms are what the child came for.
+ *
+ * The two face each other, so the pair reads as one choice with two
+ * doors rather than two unrelated buttons. Same plate as the in-room
+ * handles (ui/DoorHandle), so the gesture a child learns here is the
+ * same one that gets them out of every room afterwards.
+ */
+function PortalHandle({
+  title, blurb, hue, onClick, facing,
 }: {
-  title: string; blurb: string; hue: string; onClick: () => void; art: React.ReactNode;
+  title: string; blurb: string; hue: string; onClick: () => void; facing: 'left' | 'right';
 }) {
   const m = useMotion();
   return (
     <motion.button
-      whileHover={m.quiet ? undefined : { y: -4 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={m.quiet ? undefined : { y: -3 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className="relative flex min-h-[212px] flex-col items-center overflow-hidden px-3 pb-4 pt-5 text-center backdrop-blur-md"
+      className="relative flex flex-col items-center gap-1 overflow-hidden rounded-2xl px-2 pb-2.5 pt-2 text-center"
       style={{
-        // Arched at the top, square at the foot — a doorway. A gentler dome
-        // than a full semicircle, which ate the width the art needs.
-        borderRadius: '150px 150px 22px 22px',
-        background: `linear-gradient(180deg, ${hue}2E 0%, rgba(12,10,26,0.55) 58%)`,
-        border: `1px solid ${hue}66`,
-        boxShadow: `0 0 30px -12px ${hue}`,
+        background: `linear-gradient(180deg, ${hue}1F 0%, rgba(12,10,26,0.42) 76%)`,
+        border: `1px solid ${hue}44`,
       }}
     >
-      {/* Light under the door. */}
+      {/* The glow the handle hangs in — the light of the room beyond it. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
-        style={{ background: `radial-gradient(60% 100% at 50% 100%, ${hue}66 0%, transparent 72%)` }}
+        className="pointer-events-none absolute inset-x-0 top-0 h-[54px]"
+        style={{ background: `radial-gradient(58% 100% at 50% 30%, ${hue}55 0%, transparent 74%)` }}
       />
 
-      {/* Motes drifting up through the arch. */}
-      {!m.quiet && (
-        <span aria-hidden className="pointer-events-none absolute inset-0">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <motion.span
-              key={i}
-              className="absolute block rounded-full"
-              style={{
-                left: `${16 + i * 17}%`,
-                width: 4,
-                height: 4,
-                background: hue,
-                boxShadow: `0 0 8px ${hue}`,
-              }}
-              initial={{ bottom: '8%', opacity: 0 }}
-              animate={{ bottom: '78%', opacity: [0, 0.9, 0] }}
-              transition={{ repeat: Infinity, duration: 5 + i * 0.9, delay: i * 1.1, ease: 'easeOut' }}
-            />
-          ))}
-        </span>
-      )}
-
-      {/* The art has its own band so it never crowds the words, and the
-          words pin to the foot so the two doors read as a matched pair
-          however tall their art happens to be. */}
-      <motion.span
-        className="relative grid h-[76px] w-full place-items-center"
-        animate={m.loop ? { y: [0, -5, 0] } : undefined}
-        transition={m.loop ? { repeat: Infinity, duration: 4.2, ease: 'easeInOut' } : undefined}
-      >
-        {art}
-      </motion.span>
+      <motion.img
+        src="/ui/handles/handle.webp"
+        alt=""
+        aria-hidden
+        draggable={false}
+        width={78}
+        className="relative max-w-none select-none"
+        style={{
+          transform: facing === 'left' ? 'scaleX(-1)' : undefined,
+          filter: `drop-shadow(0 0 14px ${hue}AA)`,
+        }}
+        animate={m.loop ? { y: [0, -4, 0] } : undefined}
+        transition={m.loop ? { repeat: Infinity, duration: 4.4, ease: 'easeInOut' } : undefined}
+      />
 
       <span
-        className="relative mt-auto block text-[14.5px] font-extrabold leading-tight"
+        className="relative block text-[13px] font-extrabold leading-tight"
         style={{ color: CHROME.text, textWrap: 'balance', fontFamily: FONT }}
       >
         {title}
       </span>
       <span
-        className="relative mt-1 block text-[11px] font-semibold leading-snug"
+        className="relative block text-[10.5px] font-semibold leading-snug"
         style={{ color: CHROME.textSoft, textWrap: 'balance' }}
       >
         {blurb}
