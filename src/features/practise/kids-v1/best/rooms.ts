@@ -24,7 +24,7 @@
  */
 
 import { BEHAVIOURS } from '../../../kids/data';
-import type { RoomId as GymRoomId } from '../rooms';
+import { getRoom, type RoomConfig, type RoomId as GymRoomId } from '../rooms';
 
 export interface VirtueRoom {
   /** Same id as the behaviour in My Best Every Day. Do not renumber. */
@@ -36,11 +36,13 @@ export interface VirtueRoom {
   prompt: string;
   points: number;
   emoji: string;
-  /** Two-stop gradient, darkest last. */
-  ground: [string, string];
-  accent: string;
-  /** The warm light every room must have (UI §2.3) — never a cool hue. */
-  glow: string;
+  /**
+   * Which painted Kids Gym room supplies this room's LOOK — the artwork in
+   * /public/rooms, the palette, the scrim. The whole point of the merge is
+   * that these rooms are the ones that already looked good; nothing here
+   * invents a new visual language, it points at the existing one.
+   */
+  art: GymRoomId;
   /**
    * Which Kids Gym v1 room this virtue draws its existing games from, so the
    * 67-game library lands in sensible places instead of being rebuilt. Null
@@ -61,9 +63,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
     prompt: BEH('kind').prompt,
     points: BEH('kind').points,
     emoji: '🌱',
-    ground: ['#3D1F4A', '#160A1E'],
-    accent: '#FF6B9D',
-    glow: 'rgba(255,183,214,0.34)',
+    art: 'kindness',
     gamesFrom: 'kindness',
     learn: {
       title: 'Kind is a thing you do, not a thing you are',
@@ -77,9 +77,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
     prompt: BEH('truth').prompt,
     points: BEH('truth').points,
     emoji: '🔬',
-    ground: ['#0E3038', '#04141A'],
-    accent: '#4EA8DE',
-    glow: 'rgba(255,206,138,0.28)',
+    art: 'thought',
     gamesFrom: 'thought',
     learn: {
       title: 'The hardest truths are the small ones',
@@ -93,9 +91,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
     prompt: BEH('choices').prompt,
     points: BEH('choices').points,
     emoji: '🏰',
-    ground: ['#2B2140', '#0D0916'],
-    accent: '#9B5DE5',
-    glow: 'rgba(255,190,120,0.32)',
+    art: 'anger',
     gamesFrom: 'story',
     learn: {
       title: 'There’s a gap between what happens and what you do',
@@ -109,9 +105,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
     prompt: BEH('include').prompt,
     points: BEH('include').points,
     emoji: '🌈',
-    ground: ['#3B1E12', '#140A06'],
-    accent: '#F15BB5',
-    glow: 'rgba(255,183,94,0.36)',
+    art: 'friendship',
     gamesFrom: 'friendship',
     learn: {
       title: 'Being left out hurts in your body',
@@ -125,9 +119,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
     prompt: BEH('body').prompt,
     points: BEH('body').points,
     emoji: '🍎',
-    ground: ['#0B2C25', '#04120F'],
-    accent: '#43BC5F',
-    glow: 'rgba(255,214,150,0.3)',
+    art: 'body',
     gamesFrom: 'body',
     learn: {
       title: 'Tired and sad feel almost the same',
@@ -141,9 +133,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
     prompt: BEH('help').prompt,
     points: BEH('help').points,
     emoji: '🤝',
-    ground: ['#3A2410', '#150D06'],
-    accent: '#FFB703',
-    glow: 'rgba(255,196,120,0.36)',
+    art: 'story',
     gamesFrom: 'together',
     learn: {
       title: 'Helping without being asked is a different thing',
@@ -157,9 +147,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
     prompt: BEH('mindheart').prompt,
     points: BEH('mindheart').points,
     emoji: '🔭',
-    ground: ['#070B24', '#03050F'],
-    accent: '#00BBF9',
-    glow: 'rgba(255,190,120,0.3)',
+    art: 'reflection',
     gamesFrom: 'reflection',
     learn: {
       title: 'You can watch your own mind working',
@@ -179,11 +167,18 @@ export const PAUSE_ROOM = {
   name: 'Pause Room',
   tagline: 'Nothing to catch in here. We’re just going slow.',
   emoji: '🌙',
-  ground: ['#0B2C25', '#050F0D'] as [string, string],
-  accent: '#3FB37F',
-  glow: 'rgba(255,214,150,0.26)',
+  art: 'pause' as GymRoomId,
   gamesFrom: 'pause' as GymRoomId,
 };
+
+/**
+ * The painted room behind a virtue room — artwork, palette, scrim. Everything
+ * visual comes from here, so these rooms look exactly like the Kids Gym rooms
+ * they're built on rather than like a second, flatter design.
+ */
+export function artRoomFor(v: { art: GymRoomId }): RoomConfig {
+  return getRoom(v.art);
+}
 
 export function getVirtueRoom(id: string): VirtueRoom | undefined {
   return VIRTUE_ROOMS.find((r) => r.id === id);
