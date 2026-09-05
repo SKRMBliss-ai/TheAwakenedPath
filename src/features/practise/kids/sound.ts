@@ -13,6 +13,7 @@ import calmPiano from '../../../assets/alexzavesa-calm-inspiring-piano-logo-shor
 import notify09 from '../../../assets/universfield-new-notification-09-352705.mp3';
 import breatheIn from '../../../assets/kids-pause-breathe-in.mp3';
 import breatheOut from '../../../assets/kids-pause-breathe-out.mp3';
+import forestLullaby from '../../../assets/StockTune-Magical Forest Lullaby_1788600288.mp3';
 
 /**
  * The Kids Gym sound design table, as code.
@@ -30,7 +31,7 @@ import breatheOut from '../../../assets/kids-pause-breathe-out.mp3';
 export type Cue =
   | 'tap' | 'roomCard' | 'enterRoom' | 'exitRoom' | 'discovery' | 'resolve'
   | 'breathComplete' | 'tapHit' | 'breatheIn' | 'breatheOut' | 'storyTheme'
-  | 'balloonPop';
+  | 'balloonPop' | 'twoStories';
 
 interface CueDef { src: string; volume: number; interruptible?: boolean }
 
@@ -64,6 +65,11 @@ const TABLE: Record<Cue, CueDef> = {
   // (same clip) because this one IS the interaction, not a background beat —
   // it's the "pop" the child is playing for.
   balloonPop:     { src: bubblePop, volume: 0.55 },
+
+  // The Different Story Room, while the child looks at the two stories side
+  // by side and decides which to carry. A real bed rather than a looped
+  // sting, so the room can be sat in for as long as that takes.
+  twoStories:     { src: forestLullaby, volume: 0.3 },
 };
 
 let current: HTMLAudioElement | null = null;
