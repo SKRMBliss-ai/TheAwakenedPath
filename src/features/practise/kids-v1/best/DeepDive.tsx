@@ -12,6 +12,7 @@ import { THOUGHTS, MAYBES } from '../kit/checkinContent';
 import { FeelingBalls } from './FeelingBalls';
 import { OrbScene } from './OrbScene';
 import { FeelingsIntro } from './FeelingsIntro';
+import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { introSeen, markIntroSeen } from '../kit/introSeen';
 import * as sound from '../kit/sound';
 
@@ -209,6 +210,13 @@ export function DeepDive({
               : <RoomScene room={art} dim={phase === 'ask' ? 0.25 : 0.55} />}
         </motion.div>
       </AnimatePresence>
+
+      {/* Once the child has named it, the feeling turns up in the room and
+          keeps them company for the rest of the walk. Not on the first step
+          — there is nothing to be company about until they have answered,
+          and putting a face on the screen while they choose would be the
+          app suggesting one. */}
+      <FloatingFeeling feeling={answers.feeling ?? null} />
 
       {/* The way back out, as a fitting on the left wall rather than a
           chevron in the corner. Present the whole time, asking nothing. */}
