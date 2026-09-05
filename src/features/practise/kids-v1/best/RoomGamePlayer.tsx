@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { chirpySprite } from '../ui/sprites';
 import type { RoomGame, RoomGameOption } from './roomGames';
 import * as sound from '../kit/sound';
 
@@ -42,7 +41,6 @@ export function RoomGamePlayer({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start gap-3">
-        <img src={chirpySprite('curious')} alt="" className="h-16 w-auto shrink-0" draggable={false} />
         <div className="min-w-0">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.18em]" style={{ color: accent }}>
             {game.title}
