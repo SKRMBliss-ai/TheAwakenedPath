@@ -127,7 +127,9 @@ function Motes() {
  * is enforced in one place instead of at nine call sites.
  */
 export function Chirpy({
-  pose = 'curious',
+  // Accepted, not read: every call site still passes a pose, and there is
+  // only one boy sprite to show it on. Left in the type so none of them
+  // need editing.
   line,
   size = 54,
   align = 'right',
@@ -159,29 +161,36 @@ export function Chirpy({
 
   if (quiet || !line) return null;
 
-  // HE IS BACK, AND HE IS SMALLER.
+  // THE BOY STANDS BESIDE HIS OWN LINE NOW, NOT CHIRPY.
   //
-  // For a while the rooms kept his lines and dropped the sprite, because at
-  // 92px he was a cutout sitting on top of the painting and there was a
-  // second version of him in the drifting feeling companion. Losing him
-  // altogether was the wrong trade: a white bubble floating on its own has
-  // no one behind it, and Chirpy is the character a child is meant to be
-  // walking around with. A bubble is not company.
+  // This is the one figure every room already has: the same character who
+  // drifts and bounces through the room once a feeling's been named
+  // (ui/FloatingFeeling) is now who's standing here too, next to whatever
+  // the room is saying. One character carrying every line, everywhere,
+  // rather than two competing for the same job — Chirpy as a small sprite
+  // beside the text, and the boy as a second, separate floating figure a
+  // few pixels away. A child was never going to read those as one
+  // conversation.
   //
-  // So he stands next to his line again, at roughly half the old height. At
-  // this size he perches beside the text rather than in front of the room,
-  // which was the real complaint about the 92px version — and it leaves the
-  // drifting feeling plate (ui/FloatingFeeling) room to be its own thing.
+  // `pose` stays in the signature even though it does nothing here — every
+  // call site still passes it, and there is only one boy sprite to show.
+  // Chirpy keeps his own face precisely where he is still HIMSELF as a
+  // character with something at stake (HelpChirpy.tsx, where the child is
+  // asked to help HIM specifically) — this component was never his only
+  // appearance, just his most common one.
   return (
     <div className={`flex items-end gap-2 ${align === 'left' ? 'flex-row' : 'flex-row-reverse'}`}>
       <motion.img
-        src={chirpySprite(pose)}
-        alt="Chirpy"
+        src={BOY_SRC}
+        srcSet={BOY_SRCSET}
+        sizes={`${size}px`}
+        alt=""
+        aria-hidden
         draggable={false}
         className="shrink-0"
         style={{ height: size, width: 'auto', filter: 'drop-shadow(0 10px 22px rgba(0,0,0,0.55))' }}
-        animate={{ y: [0, -5, 2, -2, 0], rotate: [0, -2, 1.4, -0.7, 0] }}
-        transition={m.loop ? { ...m.loop, duration: 3.6 } : undefined}
+        animate={{ y: [0, -6, 0] }}
+        transition={m.loop ? { ...m.loop, duration: 5.5 } : undefined}
       />
       <motion.div
         key={line}

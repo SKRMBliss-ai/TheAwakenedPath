@@ -6,7 +6,7 @@ import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { Eye, MessageCircle, Paintbrush, RotateCcw } from 'lucide-react';
-import { chirpySprite, type ChirpyPose } from '../ui/sprites';
+import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
 import { BodyMap } from '../ui/bodyMap';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { DrawingCanvas, type DrawingCanvasHandle } from '../ui/DrawingCanvas';
@@ -747,7 +747,6 @@ function WalkingChirpy({ lines, turned }: { lines: string[]; turned: boolean }) 
   // him that has no exceptions.
   if (quiet) return null;
 
-  const pose: ChirpyPose = reacting ? 'excited' : i < 2 ? 'worried' : i < 4 ? 'said1' : 'hopeful';
   const said = reacting ? 'Oh! I didn’t think of that one. You’re better at this than me.' : lines[i];
 
   return (
@@ -771,11 +770,17 @@ function WalkingChirpy({ lines, turned }: { lines: string[]; turned: boolean }) 
       </div>
 
       <div className="relative h-[86px] w-full">
-        {/* He jumps when it lands. Nothing else on this screen does, so the
-            child reads it as him reacting to them rather than as decoration. */}
+        {/* The boy walks this confession now, not Chirpy — see ui/scene.tsx's
+            Chirpy() for why: one character carries every line in the room,
+            and by this point in the walk he's the one the child has been
+            talking to the whole way through. Only his pose logic is gone
+            with him; there's one boy sprite, not six expressions, so the
+            jump-on-reaction below is doing the expressive work instead. */}
         <motion.img
-          src={chirpySprite(pose)}
-          alt="Chirpy"
+          src={BOY_SRC}
+          srcSet={BOY_SRCSET}
+          alt=""
+          aria-hidden
           className="absolute bottom-0"
           style={{ height: 78, width: 'auto', filter: 'drop-shadow(0 12px 26px rgba(0,0,0,0.55))' }}
           // scaleX flips him to face the way he's walking. When the child

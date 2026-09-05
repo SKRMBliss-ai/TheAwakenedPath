@@ -8,7 +8,7 @@ import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { BoyAndChirpy, RoomScene } from '../ui/scene';
-import { chirpySprite } from '../ui/sprites';
+import { BOY_SRC, BOY_SRCSET, chirpySprite } from '../ui/sprites';
 import { SCENE_MOODS, roomPoster, storageFallback } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
@@ -609,9 +609,15 @@ function PauseRoom({ onExit }: { onExit: () => void }) {
       <RoomScene room={art} dim={0.2} />
       <div className="relative grid min-h-[100svh] place-items-center px-6">
         <div className="flex max-w-sm flex-col items-center gap-5 text-center">
+          {/* The boy, not Chirpy — same swap as everywhere else the app
+              narrates a room (ui/scene.tsx's Chirpy()), and the copy below
+              follows him rather than naming a character who isn't on
+              screen. */}
           <motion.img
-            src={chirpySprite('idle')}
+            src={BOY_SRC}
+            srcSet={BOY_SRCSET}
             alt=""
+            aria-hidden
             className="h-28 w-auto"
             draggable={false}
             style={{ filter: 'drop-shadow(0 12px 26px rgba(0,0,0,0.55))' }}
@@ -622,7 +628,7 @@ function PauseRoom({ onExit }: { onExit: () => void }) {
             Nothing to catch in here.
           </p>
           <p className="text-[15px] font-semibold leading-relaxed" style={{ color: CHROME.textSoft }}>
-            Breathe in while Chirpy floats up. Out while he comes down. That’s all this room does.
+            Breathe in while he floats up. Out while he comes down. That’s all this room does.
           </p>
           <Cta label="I’m ready" onClick={onExit} accent={art.palette.accent} />
         </div>
