@@ -13,6 +13,7 @@ import { SCENE_MOODS, roomPoster, storageFallback } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
 import { DoorHandle } from '../ui/DoorHandle';
+import { HelpChirpy } from './HelpChirpy';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
@@ -51,6 +52,7 @@ type View =
   | { at: 'room'; room: VirtueRoom; step: number | null }
   | { at: 'pause' }
   | { at: 'deep' }
+  | { at: 'helpchirpy' }
   | { at: 'reflection' }
   | { at: 'friends' }
   | { at: 'rewards' }
@@ -102,6 +104,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onOpen={(r) => { sound.play('roomCard'); setView({ at: 'room', room: r, step: null }); }}
                 onStartJourney={startJourney}
                 onDeepDive={() => setView({ at: 'deep' })}
+                onHelpChirpy={() => setView({ at: 'helpchirpy' })}
                 onPause={() => setView({ at: 'pause' })}
                 onReflection={() => setView({ at: 'reflection' })}
                 onExitGym={onExitGym}
@@ -129,6 +132,10 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                    Observatory can show a child about themselves. */
                 onFinish={(answers) => { saveCase(answers); back(); }}
               />
+            )}
+
+            {view.at === 'helpchirpy' && (
+              <HelpChirpy onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
             )}
 
             {view.at === 'pause' && <PauseRoom onExit={back} />}
@@ -163,6 +170,7 @@ function RoomMap({
   onOpen,
   onStartJourney,
   onDeepDive,
+  onHelpChirpy,
   onPause,
   onReflection,
   onExitGym,
@@ -171,6 +179,7 @@ function RoomMap({
   onOpen: (r: VirtueRoom) => void;
   onStartJourney: () => void;
   onDeepDive: () => void;
+  onHelpChirpy: () => void;
   onPause: () => void;
   onReflection: () => void;
   onExitGym: () => void;
@@ -263,6 +272,11 @@ function RoomMap({
           container), so they cost the rooms nothing at all. What used to be
           110px of cards here is 0px.
         */}
+
+        {/* Chirpy asking for himself. Not a third door on the walls — he is
+            a friend with a problem, and a friend asks rather than being
+            filed as a menu option. */}
+        <ChirpyAsks onClick={onHelpChirpy} />
 
         <button
           onClick={onReflection}
@@ -712,5 +726,48 @@ function StarSky({ count }: { count: number }) {
         {count === 1 ? 'One night in the gym' : `${count} nights in the gym`}
       </p>
     </div>
+  );
+}
+
+/**
+ * CHIRPY, ASKING FOR HIMSELF.
+ *
+ * Deliberately not a third handle on the walls. The two doors are places
+ * the child chooses to go; this is a friend tapping them on the shoulder,
+ * and filing it as a menu item would make him furniture. He sits under the
+ * rooms, small, and says what he wants in his own words.
+ *
+ * It is also the only place in the app where somebody needs the child
+ * rather than the other way round, which is why it gets to interrupt the
+ * layout slightly rather than lining up with everything else.
+ */
+function ChirpyAsks({ onClick }: { onClick: () => void }) {
+  const m = useMotion();
+  return (
+    <motion.button
+      onClick={onClick}
+      whileTap={{ scale: 0.98 }}
+      whileHover={m.quiet ? undefined : { y: -2 }}
+      className="mx-auto mt-4 flex w-full max-w-md items-center gap-3 rounded-[20px] px-3 py-2.5 text-left backdrop-blur-md"
+      style={{ background: 'rgba(196,139,232,0.16)', border: '1px solid rgba(196,139,232,0.42)' }}
+    >
+      <motion.img
+        src={chirpySprite('worried')}
+        alt=""
+        aria-hidden
+        draggable={false}
+        style={{ height: 46, width: 'auto', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.5))' }}
+        animate={m.loop ? { y: [0, -3, 0] } : undefined}
+        transition={m.loop ? { repeat: Infinity, duration: 3.4, ease: 'easeInOut' } : undefined}
+      />
+      <span className="flex flex-col">
+        <span className="text-[13.5px] font-extrabold leading-tight" style={{ color: CHROME.text, fontFamily: FONT }}>
+          Chirpy’s got a funny feeling
+        </span>
+        <span className="text-[11.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
+          He can’t work out what it is. Can you help?
+        </span>
+      </span>
+    </motion.button>
   );
 }
