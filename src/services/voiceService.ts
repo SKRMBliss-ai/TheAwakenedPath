@@ -528,10 +528,31 @@ export class VoiceService {
         if (!window.speechSynthesis) return;
 
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.95;
-        utterance.pitch = 0.9;
+        // Slow and low. This is the fallback for guided practice, so it
+        // should sound like someone sitting with you rather than a device
+        // reading out a notification.
+        utterance.rate = 0.85;
+        utterance.pitch = 0.92;
         const voices = window.speechSynthesis.getVoices();
-        utterance.voice = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en')) || voices[0];
+        const en = voices.filter(v => v.lang.startsWith('en'));
+        const pool = en.length ? en : voices;
+        // Best-first, because browser voice lists vary enormously. Named
+        // voices are tried before the generic /female/ match so a thin
+        // eSpeak voice labelled "female" doesn't beat a good one further down.
+        const preferred = [
+            /Samantha/i,
+            /Google UK English Female/i,
+            /Google US English/i,
+            /Serena/i,
+            /Moira/i,
+            /Fiona/i,
+            /Microsoft (Aria|Jenny|Sonia|Libby)/i,
+            /female/i,
+        ];
+        utterance.voice = preferred.reduce<SpeechSynthesisVoice | undefined>(
+            (found, re) => found ?? pool.find(v => re.test(v.name)),
+            undefined,
+        ) ?? pool[0];
 
         this.setStatus('playing');
         utterance.onend = () => {

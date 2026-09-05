@@ -22,14 +22,45 @@ import { isMuted } from '../../../../lib/sfx';
 
 let cachedVoice: SpeechSynthesisVoice | null | undefined;
 
-/** A young, unhurried voice if the platform offers one; the default otherwise. */
+/**
+ * A calm female voice, best-first.
+ *
+ * The first pass asked for /child|kids|junior/ and otherwise took whatever
+ * English voice happened to come first in the list. On most devices no
+ * child voice exists, so what actually played was the platform default —
+ * frequently male, frequently brisk, and grating over a whole session.
+ *
+ * Chirpy is company on a screen that keeps asking a child to slow down and
+ * notice something, so he should sound like someone sitting next to them.
+ * The named voices below are the good calm female ones across the platforms
+ * this runs on, checked in order. The generic /female/ match comes last on
+ * purpose: a thin eSpeak voice that merely has "female" in its label would
+ * otherwise beat Samantha sitting further down the list.
+ */
+const CALM_FEMALE = [
+  /Samantha/i,
+  /Google UK English Female/i,
+  /Google US English/i,
+  /Serena/i,
+  /Moira/i,
+  /Fiona/i,
+  /Tessa/i,
+  /Karen/i,
+  /Microsoft (Aria|Jenny|Sonia|Libby|Zira)/i,
+  /female/i,
+];
+
 function pickVoice(): SpeechSynthesisVoice | null {
   if (cachedVoice !== undefined) return cachedVoice;
   const voices = window.speechSynthesis.getVoices();
+  const en = voices.filter((v) => /^en/i.test(v.lang));
+  const pool = en.length ? en : voices;
   cachedVoice =
-    voices.find((v) => /en/i.test(v.lang) && /child|kids|junior/i.test(v.name)) ||
-    voices.find((v) => /en/i.test(v.lang)) ||
-    voices[0] ||
+    CALM_FEMALE.reduce<SpeechSynthesisVoice | undefined>(
+      (found, re) => found ?? pool.find((v) => re.test(v.name)),
+      undefined,
+    ) ??
+    pool[0] ??
     null;
   return cachedVoice;
 }
@@ -48,10 +79,11 @@ export function speak(text: string, quiet: boolean) {
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    // A little slower and a little higher than the browser default — closer
-    // to how the character sounds than to how a screen reader sounds.
-    u.rate = 0.92;
-    u.pitch = 1.15;
+    // Slow, and barely above neutral. It was 0.92/1.15, which read as
+    // bright and hurried once you'd heard it a dozen times in a sitting.
+    // Unhurried is the whole point of the room he's standing in.
+    u.rate = 0.84;
+    u.pitch = 1.02;
     const v = pickVoice();
     if (v) u.voice = v;
     window.speechSynthesis.speak(u);
