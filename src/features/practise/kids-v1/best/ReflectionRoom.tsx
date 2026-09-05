@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useKidStore } from '../../../kids/store';
-import { BEHAVIOURS, levelFor } from '../../../kids/data';
+import { BEHAVIOURS } from '../../../kids/data';
 import { getRoom } from '../rooms';
 import { CHROME, Cta, FONT, GrownUpExit, Question } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
+import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { Chirpy, RoomScene } from '../ui/scene';
+import { starCount } from '../kit/sky';
+import { agoLabel, loadCases, type Case } from '../kit/cases';
 
 /**
  * THE REFLECTION OBSERVATORY — where the day's journey ends.
@@ -50,8 +53,8 @@ export function ReflectionRoom({
   const totalFor = (behaviourId: string) =>
     days.reduce((n, d) => n + (s.completions[keyFor(d)]?.[behaviourId] ? 1 : 0), 0);
 
+  const stars = starCount();
   const monthTotal = BEHAVIOURS.reduce((n, b) => n + totalFor(b.id), 0);
-  const { level } = levelFor(s.points);
   const review = s.monthReviews[monthKey] ?? {};
 
   const QUESTIONS = [
@@ -63,6 +66,10 @@ export function ReflectionRoom({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
+      {/* Whatever the child named today comes with them into this room —
+          bouncing, draggable, and parked wherever they last put him. */}
+      <FloatingFeeling />
+
       {/* The way out is a fitting on the left wall, the same one on every
           screen in the app. No chevron in the corner any more: a child who
           learns one door learns them all. */}
@@ -79,15 +86,25 @@ export function ReflectionRoom({
           <Chirpy pose="hopeful" line="Come and see the whole map." align="left" />
           <Question room={art}>Look Back &amp; Learn</Question>
           <p className="max-w-md text-[13.5px] font-semibold" style={{ color: CHROME.textSoft }}>
-            {level.name} · {s.points} points{s.streak > 0 ? ` · ${s.streak}-day streak` : ''}
+            {stars === 1 ? 'One night in the gym' : `${stars} nights in the gym`}
           </p>
         </div>
 
-        {/* ── The counts ─────────────────────────────────────────────── */}
-        <div className="mt-5 grid grid-cols-3 gap-2.5">
+        {/* ── The cases the child has worked ─────────────────────────
+            This is what the Observatory is for, and until now it did not
+            exist: the child's own words, handed back. A single walk teaches
+            them to catch one story; three of their own, weeks apart, teaches
+            them they HAVE a pattern — which is what the whole app is for and
+            what no single session can deliver.
+
+            The day-streak count that used to sit here is gone with the rest
+            of the streak. What is left describes the child rather than the
+            app's opinion of them. */}
+        <CaseShelf accent={accent} />
+
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
           <Stat big={String(monthTotal)} label="good choices this month" accent={accent} />
           <Stat big={String(s.badges.length)} label="badges earned" accent={accent} />
-          <Stat big={String(s.streak)} label="day streak" accent={accent} />
         </div>
 
         {/* ── The star map ───────────────────────────────────────────── */}
@@ -216,6 +233,68 @@ function Stat({ big, label, accent }: { big: string; label: string; accent: stri
     >
       <p className="text-[22px] font-extrabold leading-none" style={{ color: accent }}>{big}</p>
       <p className="mt-1 text-[10.5px] font-bold leading-tight" style={{ color: CHROME.textSoft }}>{label}</p>
+    </div>
+  );
+}
+
+/**
+ * THE SHELF — every case this child has worked, newest first.
+ *
+ * Two lines each: what their mind said, and what else they found could be
+ * true. Nothing else fits on a card and nothing else is the point. The
+ * distance is given in weeks rather than dates, because "3 weeks ago" means
+ * something to a seven-year-old and "2026-08-15" means nothing at all.
+ *
+ * No case is ever marked good or better. They are things that happened and
+ * things the child worked out, sitting next to each other, which is the only
+ * form this can take without becoming a report card.
+ */
+function CaseShelf({ accent }: { accent: string }) {
+  const cases = loadCases();
+  if (!cases.length) {
+    return (
+      <div
+        className="mt-5 rounded-[22px] px-4 py-5 text-center backdrop-blur-md"
+        style={{ background: 'rgba(12,10,26,0.42)', border: `1px solid ${CHROME.pillBorder}` }}
+      >
+        <p className="text-[13.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
+          Nothing on the shelf yet. Untangle a knot and it will be kept here for you.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-5 flex flex-col gap-2.5">
+      <p className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: accent }}>
+        Cases you worked out
+      </p>
+      {cases.slice(0, 8).map((c: Case, i: number) => (
+        <motion.div
+          key={`${c.day}-${i}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: Math.min(i, 6) * 0.05 }}
+          className="rounded-[20px] px-4 py-3 backdrop-blur-md"
+          style={{ background: 'rgba(12,10,26,0.52)', border: `1px solid ${CHROME.pillBorder}` }}
+        >
+          <p className="text-[10.5px] font-extrabold uppercase tracking-[0.12em]" style={{ color: accent }}>
+            {agoLabel(c.day)}{c.feeling ? ` · ${c.feeling.toLowerCase()}` : ''}
+          </p>
+          {c.story && (
+            <p className="mt-1.5 text-[14px] font-bold leading-snug" style={{ color: CHROME.text }}>
+              Your mind said: “{c.story}”
+            </p>
+          )}
+          {c.other && (
+            <p className="mt-1 text-[13.5px] font-semibold leading-snug" style={{ color: '#FFD98A' }}>
+              You found: “{c.other}”
+            </p>
+          )}
+          {c.drawing && (
+            <img src={c.drawing} alt="" className="mt-2 w-full rounded-[14px]" style={{ background: 'rgba(255,255,255,0.06)' }} />
+          )}
+        </motion.div>
+      ))}
     </div>
   );
 }

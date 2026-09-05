@@ -2,20 +2,23 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
-import { todayKey, levelFor } from '../../../kids/data';
+import { todayKey } from '../../../kids/data';
 import { Onboarding } from '../../../kids/Onboarding';
 import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
-import { useQuiet } from '../ui/quiet';
+import { useMotion, useQuiet } from '../ui/quiet';
 import { BoyAndChirpy, RoomScene } from '../ui/scene';
 import { chirpySprite } from '../ui/sprites';
 import { SCENE_MOODS, roomPoster, storageFallback } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
 import { DoorHandle } from '../ui/DoorHandle';
+import { HelpChirpy } from './HelpChirpy';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
+import { saveCase } from '../kit/cases';
+import { markVisit } from '../kit/sky';
 import * as sound from '../kit/sound';
 
 /**
@@ -49,6 +52,7 @@ type View =
   | { at: 'room'; room: VirtueRoom; step: number | null }
   | { at: 'pause' }
   | { at: 'deep' }
+  | { at: 'helpchirpy' }
   | { at: 'reflection' }
   | { at: 'friends' }
   | { at: 'rewards' }
@@ -100,6 +104,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onOpen={(r) => { sound.play('roomCard'); setView({ at: 'room', room: r, step: null }); }}
                 onStartJourney={startJourney}
                 onDeepDive={() => setView({ at: 'deep' })}
+                onHelpChirpy={() => setView({ at: 'helpchirpy' })}
                 onPause={() => setView({ at: 'pause' })}
                 onReflection={() => setView({ at: 'reflection' })}
                 onExitGym={onExitGym}
@@ -122,8 +127,15 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               <DeepDive
                 onQuiet={setQuiet}
                 onGrownUp={() => setView({ at: 'grownup' })}
-                onFinish={back}
+                /* The five answers used to be dropped here. They are the
+                   hardest thinking in the app and the only material the
+                   Observatory can show a child about themselves. */
+                onFinish={(answers) => { saveCase(answers); back(); }}
               />
+            )}
+
+            {view.at === 'helpchirpy' && (
+              <HelpChirpy onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
             )}
 
             {view.at === 'pause' && <PauseRoom onExit={back} />}
@@ -158,6 +170,7 @@ function RoomMap({
   onOpen,
   onStartJourney,
   onDeepDive,
+  onHelpChirpy,
   onPause,
   onReflection,
   onExitGym,
@@ -166,20 +179,18 @@ function RoomMap({
   onOpen: (r: VirtueRoom) => void;
   onStartJourney: () => void;
   onDeepDive: () => void;
+  onHelpChirpy: () => void;
   onPause: () => void;
   onReflection: () => void;
   onExitGym: () => void;
   onGrownUp: () => void;
 }) {
   const name = useKidStore((s) => s.name);
-  const points = useKidStore((s) => s.points);
-  const streak = useKidStore((s) => s.streak);
   const completions = useKidStore((s) => s.completions);
   const pointsByBehaviour = useKidStore((s) => s.pointsByBehaviour);
   const today = completions[todayKey()] ?? {};
   const caughtToday = VIRTUE_ROOMS.filter((r) => today[r.id]).map((r) => r.id);
   const doneCount = caughtToday.length;
-  const { level } = levelFor(points);
 
   const night = SCENE_MOODS.night;
 
@@ -236,9 +247,6 @@ function RoomMap({
         <div className="-mx-[58px] sm:mx-0">
           <WelcomeBanner
             name={name}
-            levelName={level.name}
-            points={points}
-            streak={streak}
             doneCount={doneCount}
             total={VIRTUE_ROOMS.length}
           />
@@ -264,6 +272,11 @@ function RoomMap({
           container), so they cost the rooms nothing at all. What used to be
           110px of cards here is 0px.
         */}
+
+        {/* Chirpy asking for himself. Not a third door on the walls — he is
+            a friend with a problem, and a friend asks rather than being
+            filed as a menu option. */}
+        <ChirpyAsks onClick={onHelpChirpy} />
 
         <button
           onClick={onReflection}
@@ -324,16 +337,15 @@ const WELCOME_MS = 2000;
  * reflowing.
  */
 function WelcomeBanner({
-  name, levelName, points, streak, doneCount, total,
+  name, doneCount, total,
 }: {
   name: string;
-  levelName: string;
-  points: number;
-  streak: number;
   doneCount: number;
   total: number;
 }) {
   const [dismissed, setDismissed] = useState(false);
+  /** Recorded once per mount; the star for today arrives on the way in. */
+  const [stars] = useState(() => markVisit());
   const [sparks, setSparks] = useState(false);
   const quiet = useQuiet();
   /* Derived rather than stored, so turning Calm mode on folds the greeting
@@ -353,7 +365,14 @@ function WelcomeBanner({
     return () => clearTimeout(t);
   }, [quiet, dismissed]);
 
-  const stats = `${levelName} · ${points} points${streak > 0 ? ` · ${streak}-day streak` : ''}`;
+  /**
+   * No level, no points, no streak. The greeting used to read "Kindness
+   * Explorer · 45 points · 2-day streak", which is a scoreboard bolted onto
+   * an app whose own rules say nothing is scored — and the streak in
+   * particular took something away on the days a child was too sad to come,
+   * which are the days this is for. The sky only ever grows.
+   */
+
 
   return (
     <motion.div layout className="relative flex flex-col items-center gap-1.5 pt-3 text-center">
@@ -373,9 +392,7 @@ function WelcomeBanner({
             >
               {name ? `Hello, ${name}` : 'Mind Gym'}
             </h1>
-            <p className="max-w-sm text-[14.5px] font-semibold leading-relaxed" style={{ color: CHROME.textSoft }}>
-              {stats}
-            </p>
+            <StarSky count={stars} />
             <p className="max-w-sm text-[13.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
               {doneCount === 0
                 ? 'Seven rooms. Go in and say how today actually went.'
@@ -409,7 +426,7 @@ function WelcomeBanner({
               {name ? `Hello, ${name}` : 'Mind Gym'}
             </span>
             <span className="text-[11.5px] font-bold leading-none" style={{ color: CHROME.textSoft }}>
-              {points} pts
+              {stars === 1 ? '1 night' : `${stars} nights`}
             </span>
           </motion.button>
         )}
@@ -667,5 +684,90 @@ function BottomBar({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * ONE STAR PER DAY THE CHILD CAME.
+ *
+ * The replacement for "2-day streak". It only ever grows: come every day
+ * and it fills quickly, come once a fortnight and it fills slowly, and
+ * nothing is ever taken back. A child who was too sad to open the app on
+ * Tuesday has not lost anything on Wednesday, which is the entire point.
+ *
+ * Past twelve it stops drawing every star and says the number instead —
+ * a hundred dots is noise, and the sky should stay a picture rather than
+ * becoming the scoreboard it replaced.
+ */
+function StarSky({ count }: { count: number }) {
+  const m = useMotion();
+  const shown = Math.min(count, 12);
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="flex items-center justify-center gap-1.5">
+        {Array.from({ length: shown }).map((_, i) => (
+          <motion.span
+            key={i}
+            className="block rounded-full"
+            style={{
+              width: 7,
+              height: 7,
+              background: '#FFE7B4',
+              boxShadow: '0 0 10px rgba(255,214,150,0.95)',
+            }}
+            animate={m.loop ? { opacity: [0.55, 1, 0.55] } : undefined}
+            transition={m.loop
+              ? { repeat: Infinity, duration: 2.6 + (i % 4) * 0.7, ease: 'easeInOut', delay: (i % 5) * 0.3 }
+              : undefined}
+          />
+        ))}
+      </div>
+      <p className="text-[13px] font-semibold" style={{ color: CHROME.textSoft }}>
+        {count === 1 ? 'One night in the gym' : `${count} nights in the gym`}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * CHIRPY, ASKING FOR HIMSELF.
+ *
+ * Deliberately not a third handle on the walls. The two doors are places
+ * the child chooses to go; this is a friend tapping them on the shoulder,
+ * and filing it as a menu item would make him furniture. He sits under the
+ * rooms, small, and says what he wants in his own words.
+ *
+ * It is also the only place in the app where somebody needs the child
+ * rather than the other way round, which is why it gets to interrupt the
+ * layout slightly rather than lining up with everything else.
+ */
+function ChirpyAsks({ onClick }: { onClick: () => void }) {
+  const m = useMotion();
+  return (
+    <motion.button
+      onClick={onClick}
+      whileTap={{ scale: 0.98 }}
+      whileHover={m.quiet ? undefined : { y: -2 }}
+      className="mx-auto mt-4 flex w-full max-w-md items-center gap-3 rounded-[20px] px-3 py-2.5 text-left backdrop-blur-md"
+      style={{ background: 'rgba(196,139,232,0.16)', border: '1px solid rgba(196,139,232,0.42)' }}
+    >
+      <motion.img
+        src={chirpySprite('worried')}
+        alt=""
+        aria-hidden
+        draggable={false}
+        style={{ height: 46, width: 'auto', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.5))' }}
+        animate={m.loop ? { y: [0, -3, 0] } : undefined}
+        transition={m.loop ? { repeat: Infinity, duration: 3.4, ease: 'easeInOut' } : undefined}
+      />
+      <span className="flex flex-col">
+        <span className="text-[13.5px] font-extrabold leading-tight" style={{ color: CHROME.text, fontFamily: FONT }}>
+          Chirpy’s got a funny feeling
+        </span>
+        <span className="text-[11.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
+          He can’t work out what it is. Can you help?
+        </span>
+      </span>
+    </motion.button>
   );
 }
