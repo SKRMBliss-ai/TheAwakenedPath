@@ -115,7 +115,7 @@ export function DeepDive({
    * child who's already upset or who's done this before.
    */
   const [feelingIntroDone, setFeelingIntroDone] = useState(
-    () => introSeen('feelings') || false,
+    () => introSeen('feelings-sound') || false,
   );
   const bottom = useRef<HTMLDivElement>(null);
 
@@ -155,7 +155,7 @@ export function DeepDive({
   }, [stepIndex]);
 
   const finishFeelingIntro = () => {
-    markIntroSeen('feelings');
+    markIntroSeen('feelings-sound');
     setFeelingIntroDone(true);
   };
 
