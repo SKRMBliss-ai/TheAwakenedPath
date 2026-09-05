@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { useKidStore } from '../../../kids/store';
 import { BEHAVIOURS, levelFor } from '../../../kids/data';
 import { getRoom } from '../rooms';
-import { CHROME, Cta, FONT, BackButton, GrownUpExit, Question } from '../ui/chrome';
+import { CHROME, Cta, FONT, GrownUpExit, Question } from '../ui/chrome';
+import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
 
 /**
@@ -62,11 +63,15 @@ export function ReflectionRoom({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
+      {/* The way out is a fitting on the left wall, the same one on every
+          screen in the app. No chevron in the corner any more: a child who
+          learns one door learns them all. */}
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
+
       <RoomScene room={art} dim={0.42} />
 
-      <div className="relative mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6">
+      <div className="relative mx-auto w-full max-w-4xl px-[74px] pb-28 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
-          <BackButton onClick={onExit} label="All rooms" />
           <GrownUpExit onClick={onGrownUp} />
         </div>
 

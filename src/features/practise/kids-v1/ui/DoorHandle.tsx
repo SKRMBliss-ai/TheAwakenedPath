@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CHROME, FONT } from './chrome';
 import { useMotion } from './quiet';
 import * as sound from '../kit/sound';
 
@@ -45,6 +46,9 @@ const PRESS_DEG = 8;
 /** Where the rose sits in the plate — the point a real lever pivots about. */
 const PIVOT = '19% 50%';
 
+/** How long the name hangs there on arrival before it fades back. */
+const TIP_MS = 2800;
+
 export function DoorHandle({
   side,
   label,
@@ -53,6 +57,7 @@ export function DoorHandle({
   accent = '#FFD98A',
 }: {
   side: 'left' | 'right';
+  /** Both the accessible name and the words on the tooltip. */
   label: string;
   onClick: () => void;
   accent?: string;
@@ -61,11 +66,27 @@ export function DoorHandle({
   const [awake, setAwake] = useState(false);
   const [pressed, setPressed] = useState(false);
 
+  /**
+   * The name shows itself once, unprompted, then fades.
+   *
+   * Hover is not available to most of the children using this. A tooltip
+   * that only appears on hover is a tooltip that never appears on a phone,
+   * so the handle says what it is on arrival — long enough to read, short
+   * enough not to nag — and after that on hover or focus for anyone with a
+   * pointer or a keyboard.
+   */
+  const [introTip, setIntroTip] = useState(true);
+  useEffect(() => {
+    const t = window.setTimeout(() => setIntroTip(false), TIP_MS);
+    return () => clearTimeout(t);
+  }, []);
+
   // The plate is drawn for the LEFT wall: its rose is at the left and the
   // lever sweeps inward, into the room. The right-hand fitting is the same
   // file mirrored, so both levers point into the room the child is in.
   const forward = side === 'right';
   const live = awake || pressed;
+  const tip = introTip || awake || pressed;
 
   function press() {
     if (pressed) return;
@@ -78,7 +99,15 @@ export function DoorHandle({
 
   return (
     <div
-      className="pointer-events-none absolute inset-y-0 z-20 flex items-end"
+      /*
+        FIXED, not absolute. Absolute made the handle span the whole
+        document, which is fine on a screen that fits and useless on the hub,
+        where the page scrolls: the fitting ended up pinned three-quarters of
+        the way down a very long page, i.e. nowhere a child would ever see
+        it. Fixed keeps it on the wall of the room rather than on the wall of
+        the document, so it is reachable at every scroll position.
+      */
+      className="pointer-events-none fixed inset-y-0 z-20 flex items-end"
       style={{ [side]: 0, paddingBottom: '26vh' } as React.CSSProperties}
     >
       {/* The seam. Always there, and at rest doing the whole job on its own —
@@ -123,7 +152,7 @@ export function DoorHandle({
                 // would be hunting for a control that is hiding from them.
                 // Waking is still a clear event: full opacity, a warm bloom
                 // and motes, none of which the resting state has.
-                opacity: live ? 1 : [0.6, 0.48, 0.6],
+                opacity: live ? 1 : [0.85, 0.66, 0.85],
                 x: live ? (forward ? -5 : 5) : 0,
               }
         }
@@ -138,6 +167,22 @@ export function DoorHandle({
               }
         }
       >
+        {/*
+          A slow ring of light behind the fitting. Nothing else on these
+          screens pulses, so a child reads it as "this one does something"
+          without being told — which is the whole job, since a handle that
+          looks like scenery gets treated as scenery.
+        */}
+        {!m.quiet && (
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute rounded-full"
+            style={{ width: 86, height: 86, background: `radial-gradient(circle, ${accent}77 0%, ${accent}22 42%, transparent 70%)` }}
+            animate={{ scale: [1, 1.4, 1], opacity: [0.85, 0.25, 0.85] }}
+            transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
+          />
+        )}
+
         {/*
           Mirroring and rotation are separated on purpose. A CSS `transform`
           in style silently replaces the one framer-motion builds for
@@ -171,11 +216,43 @@ export function DoorHandle({
               // throwing light onto the wall around it.
               filter: live
                 ? `brightness(1.34) saturate(1.28) drop-shadow(0 0 20px ${accent}CC)`
-                : `brightness(${forward ? 0.94 : 0.82}) saturate(${forward ? 1 : 0.88}) drop-shadow(0 0 7px ${accent}55)`,
+                : `brightness(${forward ? 1.12 : 1}) saturate(${forward ? 1.05 : 0.94}) drop-shadow(0 0 13px ${accent}88)`,
               transition: 'filter 520ms ease-out',
             }}
           />
         </div>
+
+        {/*
+          The name, horizontal and readable. Never rotated down the edge of
+          the screen: a six-year-old cannot read sideways text, and a label
+          they cannot read is not a label.
+        */}
+        <AnimatePresence>
+          {tip && (
+            <motion.span
+              aria-hidden
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.28 }}
+              className="pointer-events-none absolute bottom-full mb-1 whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-extrabold"
+              style={{
+                // ABOVE the fitting, not beside it. Beside it put the words
+                // straight over whatever the screen was already showing —
+                // on the hub, exactly on top of a room's name. Above, they
+                // sit in the gap and read against the dark.
+                [forward ? 'right' : 'left']: 2,
+                background: '#0B0818',
+                border: `1.5px solid ${accent}`,
+                boxShadow: `0 4px 18px rgba(0,0,0,0.7), 0 0 18px -4px ${accent}`,
+                color: CHROME.text,
+                fontFamily: FONT,
+              } as React.CSSProperties}
+            >
+              {label}
+            </motion.span>
+          )}
+        </AnimatePresence>
 
         {/* Motes gather when a hand nears and spiral away on the press.
             Never when quiet — a child who is upset is not charmed by these. */}

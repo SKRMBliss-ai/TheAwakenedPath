@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Mic, Send, Square } from 'lucide-react';
 import { getRoom, type RoomConfig, type RoomId } from './rooms';
-import { CHROME, Cta, FONT, BackButton, GrownUpExit, Pill, Question, SceneLine } from './ui/chrome';
+import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from './ui/chrome';
+import { DoorHandle } from './ui/DoorHandle';
 import { useMotion, useQuiet } from './ui/quiet';
 import { Chirpy, RoomScene } from './ui/scene';
 import { BodyMap } from './ui/bodyMap';
@@ -272,11 +273,15 @@ export function CheckIn({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
+      {/* The way out is a fitting on the left wall, the same one on every
+          screen in the app. No chevron in the corner any more: a child who
+          learns one door learns them all. */}
+      <DoorHandle side="left" label="Back" onClick={back} accent={room.palette.accent} />
+
       <RoomScene room={room} />
 
-      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-5 pb-8 pt-4 sm:px-7">
+      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-[74px] pb-8 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
-          <BackButton onClick={back} />
           <GrownUpExit onClick={onGrownUp} />
         </div>
 

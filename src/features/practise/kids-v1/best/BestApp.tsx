@@ -6,12 +6,13 @@ import { todayKey, levelFor } from '../../../kids/data';
 import { Onboarding } from '../../../kids/Onboarding';
 import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
-import { useMotion, useQuiet } from '../ui/quiet';
+import { useQuiet } from '../ui/quiet';
 import { BoyAndChirpy, RoomScene } from '../ui/scene';
 import { chirpySprite } from '../ui/sprites';
 import { SCENE_MOODS, roomPoster, storageFallback } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
+import { DoorHandle } from '../ui/DoorHandle';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
@@ -196,7 +197,18 @@ function RoomMap({
         style={{ background: `radial-gradient(52% 38% at 76% 12%, ${night.glow} 0%, transparent 72%)` }}
       />
 
-      <div className="relative mx-auto w-full max-w-6xl px-5 pb-32 pt-4 sm:px-7">
+      {/*
+        THE HUB IS A ROOM, AND THESE ARE ITS TWO DOORS.
+        Fixed to the walls rather than sitting in the scroll, so the two
+        journeys cost the rooms no vertical space whatsoever — and so the
+        gesture a child learns here is the same one that gets them out of
+        every room afterwards. Amber on the left for their lights, violet on
+        the right for the knot; each says its own name on arrival.
+      */}
+      <DoorHandle side="left" label="Catch the Fireflies" onClick={onStartJourney} accent="#FFC65C" />
+      <DoorHandle side="right" label="Untangle a Knot" onClick={onDeepDive} accent="#C48BE8" />
+
+      <div className="relative mx-auto w-full max-w-6xl px-[74px] pb-32 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
           <BackButton onClick={onExitGym} label="Leave the gym" />
           <GrownUpExit onClick={onGrownUp} />
@@ -217,14 +229,20 @@ function RoomMap({
           looking at, and because nothing here is a countdown a child has to
           beat — the rooms are already tappable underneath while it plays.
         */}
-        <WelcomeBanner
-          name={name}
-          levelName={level.name}
-          points={points}
-          streak={streak}
-          doneCount={doneCount}
-          total={VIRTUE_ROOMS.length}
-        />
+        {/* Reclaims the width the door handles reserve. The greeting lives
+            at the top of the page and the fittings hang at three-quarters
+            height, so these two never share a line — and "Hello, Shaarav"
+            deserves to be one. */}
+        <div className="-mx-[58px] sm:mx-0">
+          <WelcomeBanner
+            name={name}
+            levelName={level.name}
+            points={points}
+            streak={streak}
+            doneCount={doneCount}
+            total={VIRTUE_ROOMS.length}
+          />
+        </div>
 
         {/*
           TWO DOORS, SIDE BY SIDE.
@@ -240,24 +258,12 @@ function RoomMap({
           light spilling out from under is a more inviting thing to a
           six-year-old than a rectangle with a title in it.
         */}
-        <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-2 pt-3">
-          <PortalHandle
-            title="Catch the Fireflies"
-            blurb={caughtToday.length
-              ? `${caughtToday.length === 1 ? 'One light' : `${caughtToday.length} lights`} so far`
-              : 'Seven lights from today'}
-            hue="#FFC65C"
-            onClick={onStartJourney}
-            facing="right"
-          />
-          <PortalHandle
-            title="Untangle a Knot"
-            blurb="Something still bugging you?"
-            hue="#C48BE8"
-            onClick={onDeepDive}
-            facing="left"
-          />
-        </div>
+        {/*
+          The two journeys have left the scroll flow entirely — they are the
+          hub's own left and right doors now (see the DoorHandles above this
+          container), so they cost the rooms nothing at all. What used to be
+          110px of cards here is 0px.
+        */}
 
         <button
           onClick={onReflection}
@@ -457,75 +463,6 @@ function FoldSparks() {
  * child which one they're supposed to pick, and the whole point of having
  * two is that some days it's the other one.
  */
-/**
- * A journey, as a handle floating in the dark rather than a doorway.
- *
- * The arches these replace were 212px tall and honest about it: two big
- * lit domes that pushed the rooms most of the way off the bottom of the
- * screen. The handle says the same thing in a third of the height — a
- * fitting hanging in the air with light behind it is still unmistakably
- * a way through, and the rooms are what the child came for.
- *
- * The two face each other, so the pair reads as one choice with two
- * doors rather than two unrelated buttons. Same plate as the in-room
- * handles (ui/DoorHandle), so the gesture a child learns here is the
- * same one that gets them out of every room afterwards.
- */
-function PortalHandle({
-  title, blurb, hue, onClick, facing,
-}: {
-  title: string; blurb: string; hue: string; onClick: () => void; facing: 'left' | 'right';
-}) {
-  const m = useMotion();
-  return (
-    <motion.button
-      whileHover={m.quiet ? undefined : { y: -3 }}
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      className="relative flex flex-col items-center gap-1 overflow-hidden rounded-2xl px-2 pb-2.5 pt-2 text-center"
-      style={{
-        background: `linear-gradient(180deg, ${hue}1F 0%, rgba(12,10,26,0.42) 76%)`,
-        border: `1px solid ${hue}44`,
-      }}
-    >
-      {/* The glow the handle hangs in — the light of the room beyond it. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[54px]"
-        style={{ background: `radial-gradient(58% 100% at 50% 30%, ${hue}55 0%, transparent 74%)` }}
-      />
-
-      <motion.img
-        src="/ui/handles/handle.webp"
-        alt=""
-        aria-hidden
-        draggable={false}
-        width={78}
-        className="relative max-w-none select-none"
-        style={{
-          transform: facing === 'left' ? 'scaleX(-1)' : undefined,
-          filter: `drop-shadow(0 0 14px ${hue}AA)`,
-        }}
-        animate={m.loop ? { y: [0, -4, 0] } : undefined}
-        transition={m.loop ? { repeat: Infinity, duration: 4.4, ease: 'easeInOut' } : undefined}
-      />
-
-      <span
-        className="relative block text-[13px] font-extrabold leading-tight"
-        style={{ color: CHROME.text, textWrap: 'balance', fontFamily: FONT }}
-      >
-        {title}
-      </span>
-      <span
-        className="relative block text-[10.5px] font-semibold leading-snug"
-        style={{ color: CHROME.textSoft, textWrap: 'balance' }}
-      >
-        {blurb}
-      </span>
-    </motion.button>
-  );
-}
-
 function RoomCard({
   room, index, doneToday, earned, onClick,
 }: {
