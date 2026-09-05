@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
@@ -8,6 +8,7 @@ import type { RoomConfig } from '../rooms';
 import { chirpySprite, type ChirpyPose } from '../ui/sprites';
 import { getRoom } from '../rooms';
 import { knotForToday } from '../kit/chirpyKnots';
+import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import * as sound from '../kit/sound';
 
 /**
@@ -110,7 +111,7 @@ export function HelpChirpy({ onExit, onGrownUp }: { onExit: () => void; onGrownU
             {gave && <Kept label="You said" value={gave} accent="#FFD98A" />}
           </div>
 
-          <ChirpyOnStage line={said[beat]} pose={pose[beat]} cheer={beat === 'thanks'} />
+          <ChirpyOnStage line={said[beat]} pose={pose[beat]} cheer={beat === 'thanks'} quiet={quiet} />
 
           {beat === 'ask' && (
             <>
@@ -205,8 +206,17 @@ function Kept({ label, value, accent }: { label: string; value: string; accent: 
 }
 
 /** Him, talking, at a size that actually inhabits the room. */
-function ChirpyOnStage({ line, pose, cheer }: { line: string; pose: ChirpyPose; cheer: boolean }) {
+function ChirpyOnStage({ line, pose, cheer, quiet }: { line: string; pose: ChirpyPose; cheer: boolean; quiet: boolean }) {
   const m = useMotion();
+
+  // Same voice, same rules as everywhere else Chirpy talks — see the note
+  // in ui/scene.tsx. This screen builds its own Chirpy rather than reusing
+  // the shared one (he stands full-size here, not tucked in a corner), so
+  // it needs its own copy of the wiring rather than getting it for free.
+  useEffect(() => {
+    if (line) speak(line, quiet);
+    return () => stopSpeaking();
+  }, [line, quiet]);
 
   return (
     <div className="flex items-end gap-2.5">

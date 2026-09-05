@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { SCENE_MOODS, roomArt, storageFallback, type RoomConfig } from '../rooms';
 import { FONT, Scrim } from './chrome';
 import { useMotion, useQuiet } from './quiet';
+import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import { BOY_SRC, BOY_SRCSET, chirpySprite, type ChirpyPose } from './sprites';
 
 /**
@@ -136,6 +138,24 @@ export function Chirpy({
 }) {
   const quiet = useQuiet();
   const m = useMotion();
+
+  // THE VOICE IS LITERAL NOW, TOO. Under-8s read slowly, and this app is
+  // mostly Chirpy's dialogue — a child who can't keep up with the words on
+  // screen is locked out of half of it. Speaking is automatic rather than
+  // tap-to-hear because the audience this matters most for (pre-readers)
+  // is exactly the audience least likely to find and use a small icon.
+  //
+  // One escape hatch, not two: it honours the same mute toggle as every
+  // sound effect in the app (kit/chirpyVoice.ts), so a child who has
+  // muted the app gets silence here as well, without a second switch to
+  // find. And it never speaks in the quiet state — a calm, unhurried
+  // reading voice is still a voice, and a distressed child gets to choose
+  // whether anything talks at them right now.
+  useEffect(() => {
+    if (line) speak(line, quiet);
+    return () => stopSpeaking();
+  }, [line, quiet]);
+
   if (quiet || !line) return null;
 
   // THE SPRITE IS GONE, THE VOICE IS NOT.
