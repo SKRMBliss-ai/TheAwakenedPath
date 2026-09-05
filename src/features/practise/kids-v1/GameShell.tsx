@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type { RoomConfig } from './rooms';
 import type { Game } from './games/types';
 import { BAND_LABEL } from './games/types';
-import { CHROME, Cta, FONT, BackButton, GrownUpExit, Question } from './ui/chrome';
+import { CHROME, Cta, FONT, GrownUpExit, Question } from './ui/chrome';
+import { DoorHandle } from './ui/DoorHandle';
 import { useMotion } from './ui/quiet';
 import { Chirpy, RoomScene } from './ui/scene';
 import { ChooseEngine } from './engines/Choose';
@@ -86,6 +87,11 @@ export function GameShell({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
+      {/* The way out is a fitting on the left wall, the same one on every
+          screen in the app. No chevron in the corner any more: a child who
+          learns one door learns them all. */}
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={room.palette.accent} />
+
       {/* The scrim is not optional (UI §3.1) — but it covers the bottom
           55%, and these screens centre their content vertically, so it lands
           over the brightest part of a painting. The title beat keeps the art
@@ -93,9 +99,8 @@ export function GameShell({
           top of the scrim. Art is the room, not the page. */}
       <RoomScene room={room} dim={phase === 'name' ? 0.34 : 0.5} />
 
-      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-5 pb-8 pt-4 sm:px-7">
+      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-[74px] pb-8 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
-          <BackButton onClick={onExit} label="Back to the room" />
           <GrownUpExit onClick={onGrownUp} />
         </div>
 

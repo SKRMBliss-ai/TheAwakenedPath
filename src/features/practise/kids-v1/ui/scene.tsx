@@ -125,11 +125,10 @@ function Motes() {
  * is enforced in one place instead of at nine call sites.
  */
 export function Chirpy({
-  pose = 'curious',
   line,
-  size = 92,
   align = 'right',
 }: {
+  /** Kept in the signature so the 17 call sites need no edit. */
   pose?: ChirpyPose;
   line?: string | null;
   size?: number;
@@ -137,51 +136,38 @@ export function Chirpy({
 }) {
   const quiet = useQuiet();
   const m = useMotion();
-  if (quiet) return null;
+  if (quiet || !line) return null;
 
-  const sprite = (
-    <motion.img
-      src={chirpySprite(pose)}
-      alt="Chirpy"
-      style={{ height: size, width: 'auto', filter: 'drop-shadow(0 12px 26px rgba(0,0,0,0.55))' }}
-      animate={{ y: [0, -5, 2, -2, 0], rotate: [0, -2, 1.4, -0.7, 0] }}
-      transition={m.loop ? { ...m.loop, duration: 3.6 } : undefined}
-      draggable={false}
-    />
-  );
-
+  // THE SPRITE IS GONE, THE VOICE IS NOT.
+  //
+  // Chirpy used to stand next to every line he said, on every screen. Now
+  // that the child's own feeling turns up in the room — and has Chirpy in
+  // its arms — there were two of him on screen at once, one of them a
+  // 92px cutout sitting on top of the painting.
+  //
+  // So the rooms keep what he says and lose the second copy of him. The
+  // bubble is still unmistakably his: same voice, same warmth, same place
+  // on the screen. He is in the room, just not standing in front of it.
+  //
+  // (He still appears in person where being present IS the point: walking
+  // and talking through the reveal in DeepDive, and alone in the Pause
+  // Room, where he is the entire screen.)
   return (
-    <div className={`flex items-end gap-2.5 ${align === 'left' ? 'flex-row' : 'flex-row-reverse'}`}>
-      {sprite}
-      {line ? (
-        <motion.div
-          key={line}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={m.transition}
-          className="max-w-[78%] rounded-[20px] px-4 py-2.5 text-[14.5px] font-extrabold leading-snug shadow-xl"
-          style={{ background: 'rgba(255,255,255,0.95)', color: '#241D3D', fontFamily: FONT }}
-        >
-          {line}
-        </motion.div>
-      ) : null}
+    <div className={`flex ${align === 'left' ? 'justify-start' : 'justify-end'}`}>
+      <motion.div
+        key={line}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={m.transition}
+        className="max-w-[88%] rounded-[20px] px-4 py-2.5 text-[14.5px] font-extrabold leading-snug shadow-xl"
+        style={{ background: 'rgba(255,255,255,0.95)', color: '#241D3D', fontFamily: FONT }}
+      >
+        {line}
+      </motion.div>
     </div>
   );
 }
 
-/* ── The boy ────────────────────────────────────────────────────────── */
-
-/**
- * The app's main character, from the founder's character sheet — the same
- * boy Chirpy sits on the shoulder of. Real art, already in the repo at
- * /public/assets/gym/kids-character@{160,320}.webp.
- *
- * `gaze` is the §2.2 rule made into an API. 'scene' turns him slightly away
- * so he and the child are looking at the same thing (shared gaze); 'child'
- * faces out, and is only correct on an invitation — a room's front door, a
- * "shall we?" — never on a screen where the child is about to say how they
- * actually feel.
- */
 export function TheBoy({
   size = 190,
   gaze = 'scene',

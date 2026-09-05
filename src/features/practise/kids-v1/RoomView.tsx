@@ -4,7 +4,8 @@ import type { RoomConfig } from './rooms';
 import type { Game, TeachMove } from './games/types';
 import { MOVE_LABEL } from './games/types';
 import { filterGames, gamesInRoom, pickNextGame } from './games/library';
-import { CHROME, Cta, FONT, BackButton, GrownUpExit } from './ui/chrome';
+import { CHROME, Cta, FONT, GrownUpExit } from './ui/chrome';
+import { DoorHandle } from './ui/DoorHandle';
 import { useMotion, useQuiet } from './ui/quiet';
 import { Chirpy, RoomScene } from './ui/scene';
 import * as sound from './kit/sound';
@@ -72,14 +73,18 @@ export function RoomView({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
+      {/* The way out is a fitting on the left wall, the same one on every
+          screen in the app. No chevron in the corner any more: a child who
+          learns one door learns them all. */}
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={room.palette.accent} />
+
       {/* Arriving is cinematic — the painting is the point. The shelf is a
           list to read, so it sits behind a much heavier veil. Same reasoning
           as GameShell's. */}
       <RoomScene room={room} dim={phase === 'arrive' ? 0.26 : 0.55} />
 
-      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-3xl flex-col px-5 pb-12 pt-4 sm:px-7">
+      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-3xl flex-col px-[74px] pb-12 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
-          <BackButton onClick={onExit} label="Back to the gym" />
           <GrownUpExit onClick={onGrownUp} />
         </div>
 

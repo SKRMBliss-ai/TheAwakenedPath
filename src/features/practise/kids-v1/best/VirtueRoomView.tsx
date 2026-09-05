@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
 import { todayKey } from '../../../kids/data';
-import { CHROME, Cta, FONT, BackButton, GrownUpExit, Question, SceneLine } from '../ui/chrome';
+import { CHROME, Cta, FONT, GrownUpExit, Question, SceneLine } from '../ui/chrome';
+import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { gamesInRoom } from '../games/library';
 import { roomGamesFor, type RoomGame } from './roomGames';
@@ -77,6 +78,11 @@ export function VirtueRoomView({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
+      {/* The way out is a fitting on the left wall, the same one on every
+          screen in the app. No chevron in the corner any more: a child who
+          learns one door learns them all. */}
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
+
       <RoomScene room={art} dim={playing ? 0.35 : 0.12} />
 
       <AnimatePresence>
@@ -91,9 +97,8 @@ export function VirtueRoomView({
         )}
       </AnimatePresence>
 
-      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-5 pb-28 pt-4 sm:px-7">
+      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-[74px] pb-28 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
-          <BackButton onClick={onExit} label="All rooms" />
           {journey && (
             <div className="flex items-center gap-1.5">
               {Array.from({ length: journey.total }).map((_, i) => (

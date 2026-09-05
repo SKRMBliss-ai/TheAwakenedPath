@@ -46,6 +46,7 @@ const DRIFT = {
 export function FloatingFeeling({ feeling, size = 112 }: { feeling: string | null; size?: number }) {
   const m = useMotion();
   const [line, setLine] = useState<number | null>(null);
+  const [burst, setBurst] = useState(0);
   const companion = companionFor(feeling);
 
   if (!companion) return null;
@@ -56,6 +57,10 @@ export function FloatingFeeling({ feeling, size = 112 }: { feeling: string | nul
     // Cycles rather than repeats — four taps get four things, not the same
     // sentence four times.
     setLine((n) => (n === null ? 0 : (n + 1) % companion.guidance.length));
+    // And the room answers. A new burst each tap, keyed so an already-running
+    // one is replaced rather than queued — a child tapping fast should get
+    // sparks every time, not a backlog of them.
+    setBurst((n) => n + 1);
   }
 
   return (
@@ -79,6 +84,12 @@ export function FloatingFeeling({ feeling, size = 112 }: { feeling: string | nul
           animate={m.quiet ? { y: 0 } : { y: [0, -9, 0] }}
           transition={m.quiet ? undefined : { repeat: Infinity, duration: 5.4, ease: 'easeInOut' }}
         >
+          {/* The magic. Light blooms out of him and a ring of motes throws
+              itself outward — the room noticing that the child reached for
+              their own feeling. Suppressed when quiet, where a burst of
+              light at a distressed child would be the opposite of help. */}
+          {!m.quiet && burst > 0 && <Sparkle key={burst} />}
+
           <img
             src={companion.src}
             alt=""
@@ -120,5 +131,46 @@ export function FloatingFeeling({ feeling, size = 112 }: { feeling: string | nul
         </AnimatePresence>
       </motion.div>
     </div>
+  );
+}
+
+/**
+ * One bloom of light and twelve motes thrown outward. Mounted fresh on each
+ * tap (keyed on a counter) so it always plays from the start, and dropped
+ * as soon as it has finished — nothing here loops, because a companion that
+ * sparkles forever stops meaning "you touched me".
+ */
+const SPARK = Array.from({ length: 12 }, (_, i) => ({
+  a: (i / 12) * Math.PI * 2 + (i % 3) * 0.18,
+  d: 58 + ((i * 23) % 44),
+  s: 4 + ((i * 11) % 4),
+  hue: i % 3 === 0 ? '#FFD98A' : i % 3 === 1 ? '#C48BE8' : '#FFFFFF',
+}));
+
+function Sparkle() {
+  return (
+    <span aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
+      <motion.span
+        className="absolute rounded-full"
+        style={{
+          width: 150,
+          height: 150,
+          background: 'radial-gradient(circle, rgba(255,236,190,0.85) 0%, rgba(196,139,232,0.35) 44%, transparent 72%)',
+        }}
+        initial={{ opacity: 0, scale: 0.4 }}
+        animate={{ opacity: [0, 0.9, 0], scale: [0.4, 1.35, 1.6] }}
+        transition={{ duration: 0.9, ease: 'easeOut' }}
+      />
+      {SPARK.map((p, i) => (
+        <motion.span
+          key={i}
+          className="absolute block rounded-full"
+          style={{ width: p.s, height: p.s, background: p.hue, boxShadow: `0 0 10px ${p.hue}` }}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+          animate={{ x: Math.cos(p.a) * p.d, y: Math.sin(p.a) * p.d, opacity: 0, scale: 0.3 }}
+          transition={{ duration: 1, ease: 'easeOut', delay: (i % 4) * 0.04 }}
+        />
+      ))}
+    </span>
   );
 }
