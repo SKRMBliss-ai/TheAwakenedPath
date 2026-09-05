@@ -125,10 +125,11 @@ function Motes() {
  * is enforced in one place instead of at nine call sites.
  */
 export function Chirpy({
+  pose = 'curious',
   line,
+  size = 54,
   align = 'right',
 }: {
-  /** Kept in the signature so the 17 call sites need no edit. */
   pose?: ChirpyPose;
   line?: string | null;
   size?: number;
@@ -138,28 +139,36 @@ export function Chirpy({
   const m = useMotion();
   if (quiet || !line) return null;
 
-  // THE SPRITE IS GONE, THE VOICE IS NOT.
+  // HE IS BACK, AND HE IS SMALLER.
   //
-  // Chirpy used to stand next to every line he said, on every screen. Now
-  // that the child's own feeling turns up in the room — and has Chirpy in
-  // its arms — there were two of him on screen at once, one of them a
-  // 92px cutout sitting on top of the painting.
+  // For a while the rooms kept his lines and dropped the sprite, because at
+  // 92px he was a cutout sitting on top of the painting and there was a
+  // second version of him in the drifting feeling companion. Losing him
+  // altogether was the wrong trade: a white bubble floating on its own has
+  // no one behind it, and Chirpy is the character a child is meant to be
+  // walking around with. A bubble is not company.
   //
-  // So the rooms keep what he says and lose the second copy of him. The
-  // bubble is still unmistakably his: same voice, same warmth, same place
-  // on the screen. He is in the room, just not standing in front of it.
-  //
-  // (He still appears in person where being present IS the point: walking
-  // and talking through the reveal in DeepDive, and alone in the Pause
-  // Room, where he is the entire screen.)
+  // So he stands next to his line again, at roughly half the old height. At
+  // this size he perches beside the text rather than in front of the room,
+  // and the drifting feeling plate has been pulled back to match (see
+  // ui/FloatingFeeling) so the two are never competing for the same job.
   return (
-    <div className={`flex ${align === 'left' ? 'justify-start' : 'justify-end'}`}>
+    <div className={`flex items-end gap-2 ${align === 'left' ? 'flex-row' : 'flex-row-reverse'}`}>
+      <motion.img
+        src={chirpySprite(pose)}
+        alt="Chirpy"
+        draggable={false}
+        className="shrink-0"
+        style={{ height: size, width: 'auto', filter: 'drop-shadow(0 10px 22px rgba(0,0,0,0.55))' }}
+        animate={{ y: [0, -5, 2, -2, 0], rotate: [0, -2, 1.4, -0.7, 0] }}
+        transition={m.loop ? { ...m.loop, duration: 3.6 } : undefined}
+      />
       <motion.div
         key={line}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={m.transition}
-        className="max-w-[88%] rounded-[20px] px-4 py-2.5 text-[14.5px] font-extrabold leading-snug shadow-xl"
+        className="max-w-[80%] rounded-[20px] px-4 py-2.5 text-[14.5px] font-extrabold leading-snug shadow-xl"
         style={{ background: 'rgba(255,255,255,0.95)', color: '#241D3D', fontFamily: FONT }}
       >
         {line}

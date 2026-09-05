@@ -43,7 +43,7 @@ const DRIFT = {
   top: ['54%', '50%', '70%', '73%', '54%'],
 };
 
-export function FloatingFeeling({ feeling, size = 112 }: { feeling: string | null; size?: number }) {
+export function FloatingFeeling({ feeling, size = 88 }: { feeling: string | null; size?: number }) {
   const m = useMotion();
   const [line, setLine] = useState<number | null>(null);
   const [burst, setBurst] = useState(0);
@@ -100,7 +100,12 @@ export function FloatingFeeling({ feeling, size = 112 }: { feeling: string | nul
               // Sits back in the room. It is company, not the subject —
               // the question a child is answering has to stay the brightest
               // thing on the screen.
-              opacity: 0.72,
+              // Pulled back from 0.72 once Chirpy returned to the rooms in
+              // person. Two figures on one screen is fine as long as only
+              // one of them is asking to be looked at; this plate is the
+              // child's answer hanging about in the background, and Chirpy
+              // is the one doing the talking.
+              opacity: 0.55,
               filter: 'drop-shadow(0 10px 26px rgba(0,0,0,0.55))',
             }}
           />
