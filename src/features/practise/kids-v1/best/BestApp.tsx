@@ -302,7 +302,7 @@ function RoomMap({
 /* ── The welcome, and how it leaves ──────────────────────────────────── */
 
 /** How long the full greeting stays before folding itself away. */
-const WELCOME_MS = 5000;
+const WELCOME_MS = 3000;
 
 /**
  * Says hello, then gets out of the way.
