@@ -1,17 +1,21 @@
 # Door handle plates
 
-Drop the five generated PNGs here, exactly these names:
+`handle.webp` — the rendered brass fitting, alpha-trimmed to its bounding box
+and scaled to 460px. Drawn for the LEFT wall: the rose is at the left and the
+lever sweeps inward, into the room. The right-hand fitting is this same file
+mirrored in CSS, so the two cannot drift apart.
 
-    01-handle-resting.png
-    02-handle-awake.png
-    03-threshold-seam.png
-    04-handle-pressed.png
+`seam.webp` — the threshold light, alpha-trimmed, 140px wide. Sat mostly off
+the screen edge and blurred, so what shows is the outer falloff rather than
+the bright core.
 
-All right-facing. The left-hand handle is the same file mirrored in CSS, so
-the two cannot drift apart. Transparent background; if the generator gave a
-flat magenta (#FF00FF) matte instead, leave it — it gets keyed out on import.
+There is deliberately no separate "awake" plate. The generated one came back
+with a wooden door baked into it and no alpha, so cross-fading the two would
+have jumped; the awake look is driven from these same pixels with a CSS
+filter instead, which keeps the geometry identical for free.
 
-Until these exist, ui/DoorHandle.tsx draws the fitting as SVG. Swapping to
-the plates replaces <HandleArt> only; every bit of the behaviour around it
-(the seam, the wake-on-approach, the press, the motes, the quiet state)
-stays exactly as it is.
+Sources live in `src/assets/the handle, *.png`. Regenerate with:
+
+    ffmpeg -i "src/assets/the handle, resting.png" \
+      -vf "crop=1205:716:30:239,scale=460:-1" \
+      -c:v libwebp -pix_fmt yuva420p -quality 92 public/ui/handles/handle.webp
