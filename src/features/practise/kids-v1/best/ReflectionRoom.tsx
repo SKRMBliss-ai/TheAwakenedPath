@@ -9,6 +9,7 @@ import { DoorHandle } from '../ui/DoorHandle';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { MicButton } from '../ui/MicButton';
 import { Chirpy, RoomScene } from '../ui/scene';
+import { LifetimeJar } from './LifetimeJar';
 import { starCount } from '../kit/sky';
 import { agoLabel, deleteCaseAt, deleteDrawingAt, loadCases, type Case } from '../kit/cases';
 
@@ -70,6 +71,19 @@ export function ReflectionRoom({
   const monthTotal = BEHAVIOURS.reduce((n, b) => n + totalFor(b.id), 0);
   const review = s.monthReviews[monthKey] ?? {};
 
+  /**
+   * EVERY FIREFLY THIS CHILD HAS EVER CAUGHT — not just the month the grid
+   * happens to be showing. One entry per virtue per day it was ticked, so
+   * a virtue done on ten different days contributes ten lights rather than
+   * one; the lifetime jar is exactly the place a repeat is allowed to be a
+   * second light instead of overwriting the first, which is what both the
+   * grid and the daily catch jar do on purpose.
+   */
+  const allCaught = BEHAVIOURS.flatMap((b) => {
+    const n = Object.values(s.completions).filter((day) => day[b.id]).length;
+    return Array<string>(n).fill(b.id);
+  });
+
   const QUESTIONS = [
     { key: 'learned', emoji: '💗', q: 'What did I learn about myself this month?' },
     { key: 'proud', emoji: '🌟', q: 'What made me feel proud?' },
@@ -82,6 +96,11 @@ export function ReflectionRoom({
       {/* Whatever the child named today comes with them into this room —
           bouncing, draggable, and parked wherever they last put him. */}
       <FloatingFeeling />
+
+      {/* Every firefly this child has ever caught, floating free and
+          draggable — the one number in this room that isn't scoped to
+          whichever month the grid happens to be showing. */}
+      <LifetimeJar caught={allCaught} />
 
       {/* The way out is a fitting on the left wall, the same one on every
           screen in the app. No chevron in the corner any more: a child who
