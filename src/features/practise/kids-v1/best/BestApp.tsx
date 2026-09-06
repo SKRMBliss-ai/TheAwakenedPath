@@ -20,12 +20,18 @@ import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
 import { VillageRow } from './VillageRow';
 import { ChirpyRemembers } from './ChirpyRemembers';
+import { ReleasedSky } from './LetThemGo';
+import { TheVisitor } from './TheVisitor';
+import { NoteFound } from './NoteFound';
+import { LeaveANote } from './LeaveANote';
 import { recollectionForToday, type ChirpyRecollection } from '../kit/chirpyMemory';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
+import { visitorForToday, type Visitor } from '../kit/visitor';
+import { noteWaiting, type Note } from '../kit/notes';
 import { saveCase } from '../kit/cases';
 import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
 import { COMPANY } from '../kit/feelingCompanions';
-import { markVisit } from '../kit/sky';
+import { markVisit, releasedCount } from '../kit/sky';
 import * as sound from '../kit/sound';
 
 /**
@@ -63,7 +69,10 @@ type View =
   | { at: 'reflection' }
   | { at: 'friends' }
   | { at: 'rewards' }
-  | { at: 'grownup' };
+  | { at: 'grownup' }
+  /** The parent's note composer. Nothing to do with 'grownup', which is the
+   *  safety screen — see LeaveANote's note on why they must not be conflated. */
+  | { at: 'leavenote' };
 
 /**
  * WALKING THROUGH, NOT FADING THROUGH.
@@ -209,8 +218,13 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 
             {view.at === 'pause' && <PauseRoom onExit={back} />}
             {view.at === 'reflection' && (
-              <ReflectionRoom onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
+              <ReflectionRoom
+                onExit={back}
+                onGrownUp={() => setView({ at: 'grownup' })}
+                onLeaveNote={() => setView({ at: 'leavenote' })}
+              />
             )}
+            {view.at === 'leavenote' && <LeaveANote onBack={back} />}
             {view.at === 'friends' && <Panel onClose={back}><Friends /></Panel>}
             {view.at === 'rewards' && <Panel onClose={back}><RewardsScreen /></Panel>}
             {view.at === 'grownup' && <GrownUp onBack={back} />}
@@ -286,6 +300,25 @@ function RoomMap({
     if (!quiet) setRecollection(recollectionForToday());
   }, [quiet]);
 
+  /**
+   * And whether anybody else is in tonight — almost never; see kit/visitor
+   * for the odds and, more importantly, for why this is a guest rather than
+   * an effect. Rolled once in an effect rather than during render, because
+   * the roll writes to storage.
+   */
+  const [visitor, setVisitor] = useState<Visitor | null>(null);
+  useEffect(() => {
+    if (!quiet) setVisitor(visitorForToday());
+  }, [quiet]);
+
+  /**
+   * And whether anyone at home has left them anything. Read on arrival so a
+   * note written while the child is looking at the hub doesn't materialise
+   * under their hands — it will be there next time, which is how notes work.
+   */
+  const [note, setNote] = useState<Note | null>(null);
+  useEffect(() => { setNote(noteWaiting()); }, []);
+
   return (
     <div
       className="relative min-h-[100svh] w-full overflow-hidden"
@@ -299,6 +332,17 @@ function RoomMap({
         className="pointer-events-none absolute inset-0"
         style={{ background: `radial-gradient(52% 38% at 76% 12%, ${night.glow} 0%, transparent 72%)` }}
       />
+
+      {/* Every firefly the child has taken to the Observatory and let go of,
+          drifting in the gym's own sky. Never counted anywhere on screen —
+          a number beside it would turn letting go into scoring. */}
+      <ReleasedSky count={releasedCount()} />
+
+      {/* Somebody who isn't Chirpy, roughly one evening in twenty, saying one
+          thing and then going. Nothing anywhere calls it rare. */}
+      <AnimatePresence>
+        {visitor && <TheVisitor visitor={visitor} onGone={() => setVisitor(null)} />}
+      </AnimatePresence>
 
       <DoorWall
         onFireflies={onStartJourney}
@@ -342,6 +386,12 @@ function RoomMap({
             total={VIRTUE_ROOMS.length}
           />
         </div>
+
+        {/* A note somebody at home left them, folded, waiting to be opened.
+            Above Chirpy's recollection because it came from a person. */}
+        <AnimatePresence>
+          {note && <NoteFound note={note} onDone={() => setNote(null)} />}
+        </AnimatePresence>
 
         {/* Every so often — see kit/chirpyMemory for how rarely — he brings
             back something they said weeks ago, mostly right. Never in the

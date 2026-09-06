@@ -3,13 +3,17 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, X } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
 import { BEHAVIOURS } from '../../../kids/data';
+import { oneTrueLine } from '../kit/oneTrueLine';
 import { getRoom } from '../rooms';
 import { CHROME, Cta, FONT, GrownUpExit, Question } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { MicButton } from '../ui/MicButton';
+import { HearYourself } from '../ui/HearYourself';
+import { linkClip } from '../kit/voiceStore';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { LifetimeJar } from './LifetimeJar';
+import { LetThemGo } from './LetThemGo';
 import { starCount } from '../kit/sky';
 import { agoLabel, deleteCaseAt, deleteDrawingAt, loadCases, type Case } from '../kit/cases';
 
@@ -35,9 +39,12 @@ import { agoLabel, deleteCaseAt, deleteDrawingAt, loadCases, type Case } from '.
 export function ReflectionRoom({
   onExit,
   onGrownUp,
+  onLeaveNote,
 }: {
   onExit: () => void;
   onGrownUp: () => void;
+  /** Opens the parent's note composer — NOT the safety screen. */
+  onLeaveNote: () => void;
 }) {
   const s = useKidStore();
   const art = getRoom('reflection');
@@ -121,6 +128,24 @@ export function ReflectionRoom({
             {stars === 1 ? 'One night in the gym' : `${stars} nights in the gym`}
           </p>
         </div>
+
+        {/* THE ONE SENTENCE. Everything else in this room is a record a child
+            of six has to be taught to read — a grid, a shelf, a jar. This is
+            the room saying the thing out loud, in words, once. See
+            kit/oneTrueLine for the rules it keeps (never a target, never the
+            virtue they do least, and no favourite unless there really is
+            one). */}
+        <p
+          className="mx-auto mt-4 max-w-md text-center text-[18px] font-extrabold leading-snug sm:text-[20px]"
+          style={{ color: CHROME.text, textWrap: 'balance' }}
+        >
+          {oneTrueLine(s.completions)}
+        </p>
+
+        {/* The other thing you can do with a jar. Sits under the sentence
+            rather than on the jar itself — see LetThemGo on why this is not
+            a second gesture hung off a thing a child already taps. */}
+        <LetThemGo lifetimeTotal={allCaught.length} />
 
         {/* ── The star map, ALWAYS FIRST ──────────────────────────────
             It used to sit below the cases shelf, which meant a child with
@@ -250,7 +275,17 @@ export function ReflectionRoom({
                     const prev = review[q.key] ?? '';
                     s.setMonthReview(monthKey, q.key, prev ? `${prev} ${t}` : t);
                   }}
+                  /* And keep the voice, not just the words. These four
+                     questions are the only place in the app a child talks at
+                     length about themselves, which makes them the only
+                     recordings worth having in a year's time. */
+                  onVoice={(clipId) => linkClip(`${monthKey}:${q.key}`, clipId)}
                 />
+              </div>
+
+              {/* Only appears once there IS a recording — see HearYourself. */}
+              <div className="mt-2 flex">
+                <HearYourself answerKey={`${monthKey}:${q.key}`} accent={accent} />
               </div>
             </motion.div>
           ))}
@@ -282,6 +317,19 @@ export function ReflectionRoom({
         </p>
 
         <Cta label="Back to the rooms" onClick={onExit} accent={accent} />
+
+        {/* THE WAY IN FOR A PARENT, and deliberately the dullest thing on the
+            screen: small, grey, at the very bottom, under the way out. An
+            adult scrolling to the end of this room will find it; a
+            six-year-old has already tapped "Back to the rooms". What's behind
+            it is the note composer, not the safety screen — see LeaveANote. */}
+        <button
+          onClick={onLeaveNote}
+          className="mx-auto mt-6 block text-[11.5px] font-bold"
+          style={{ color: 'rgba(255,255,255,0.42)', minHeight: 40 }}
+        >
+          For a grown-up · leave a note
+        </button>
       </div>
     </div>
   );

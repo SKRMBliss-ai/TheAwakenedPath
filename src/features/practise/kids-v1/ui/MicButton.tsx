@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Mic, Square } from 'lucide-react';
 import { CHROME } from './chrome';
 import { isSpeechSupported, startListening } from '../kit/speech';
+import { startRecording, type VoiceTake } from '../kit/voiceStore';
 
 /**
  * "SAY IT INSTEAD OF TYPING" — on every box in the app that asks for words.
@@ -31,16 +32,30 @@ import { isSpeechSupported, startListening } from '../kit/speech';
  */
 export function MicButton({
   onText,
+  onVoice,
   accent = '#FFD98A',
   className = '',
 }: {
   /** One utterance, already trimmed. Append it; never overwrite. */
   onText: (text: string) => void;
+  /**
+   * Optional. When given, the microphone is ALSO recorded and the clip kept
+   * on the device, and this is called with its id once it's stored — so a
+   * child can hear themselves say it months later (see kit/voiceStore).
+   *
+   * Opt-in per call site rather than on everywhere, because keeping audio is
+   * a meaningfully different promise from keeping text and only the screens
+   * that hold a child's own account of something want to make it. Every
+   * failure path is silent: no recorder, no permission, no room on the disk,
+   * and this simply never fires while the transcript arrives as usual.
+   */
+  onVoice?: (clipId: string) => void;
   accent?: string;
   className?: string;
 }) {
   const [listening, setListening] = useState(false);
   const rec = useRef<ReturnType<typeof startListening>>(null);
+  const take = useRef<VoiceTake | null>(null);
 
   /**
    * The recogniser keeps whichever callback it was handed when it started,
@@ -51,27 +66,58 @@ export function MicButton({
    */
   const latest = useRef(onText);
   useEffect(() => { latest.current = onText; });
+  const latestVoice = useRef(onVoice);
+  useEffect(() => { latestVoice.current = onVoice; });
 
   // A recogniser left running after the screen has gone keeps the mic light
-  // on and the child has nothing left to tap to stop it.
-  useEffect(() => () => { rec.current?.stop(); rec.current = null; }, []);
+  // on and the child has nothing left to tap to stop it. The recorder is torn
+  // down alongside it for the same reason — an abandoned MediaRecorder holds
+  // the microphone open with nothing on screen to explain why.
+  useEffect(() => () => {
+    rec.current?.stop();
+    rec.current = null;
+    void take.current?.stop();
+    take.current = null;
+  }, []);
 
   if (!isSpeechSupported()) return null;
+
+  /** Ends the take, if there was one, and hands the clip id to the caller. */
+  const finishTake = () => {
+    const t = take.current;
+    take.current = null;
+    if (!t) return;
+    void t.stop().then((id) => { if (id) latestVoice.current?.(id); });
+  };
 
   const toggle = () => {
     if (listening) {
       rec.current?.stop();
       rec.current = null;
+      finishTake();
       setListening(false);
       return;
     }
     const started = startListening((t) => latest.current(t), () => {
       rec.current = null;
+      finishTake();
       setListening(false);
     });
     if (started) {
       rec.current = started;
       setListening(true);
+      // Fired off alongside, never awaited: the recogniser is already
+      // listening and the child is already talking. If the recording never
+      // starts, or the take lands after they've stopped, the transcript is
+      // completely unaffected.
+      if (latestVoice.current) {
+        void startRecording().then((t) => {
+          if (rec.current) take.current = t;
+          // Stopped talking before the mic was granted — don't leave a
+          // recorder running against a screen that has moved on.
+          else void t?.stop();
+        });
+      }
     }
   };
 
