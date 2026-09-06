@@ -258,7 +258,7 @@ function CaseShelf({ accent }: { accent: string }) {
         style={{ background: 'rgba(12,10,26,0.42)', border: `1px solid ${CHROME.pillBorder}` }}
       >
         <p className="text-[13.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
-          Nothing on the shelf yet. Untangle a knot and it will be kept here for you.
+          Nothing on the shelf yet. Work something out and it’ll be kept here for you.
         </p>
       </div>
     );

@@ -214,10 +214,21 @@ function RoomMap({
         journeys cost the rooms no vertical space whatsoever — and so the
         gesture a child learns here is the same one that gets them out of
         every room afterwards. Amber on the left for their lights, violet on
-        the right for the knot; each says its own name on arrival.
+        the right for whatever is stuck; each says its own name on arrival.
+
+        WHY THAT DOOR ASKS A QUESTION. It used to say "Untangle a Knot",
+        which is a grown-up's picture of a problem and two words a
+        six-year-old has to decode before they can decide anything. "Stuck"
+        is a word children already own — stuck on a level, stuck in a
+        jumper, stuck on a sum — and it describes the feeling without
+        naming it as a worry or a problem. Asking rather than instructing
+        also leaves the child free to walk past: a door that says "come in
+        if something's stuck" is easy to ignore on a day when nothing is,
+        and a door that tells you to untangle something implies you have a
+        knot whether you turned up with one or not.
       */}
       <DoorHandle side="left" label="Catch the Fireflies" onClick={onStartJourney} accent="#FFC65C" />
-      <DoorHandle side="right" label="Untangle a Knot" onClick={onDeepDive} accent="#C48BE8" />
+      <DoorHandle side="right" label="Something Stuck?" onClick={onDeepDive} accent="#C48BE8" />
 
       <div className="relative mx-auto w-full max-w-6xl px-[74px] pb-32 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">

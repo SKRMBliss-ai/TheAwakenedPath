@@ -165,7 +165,7 @@ export function HelpChirpy({ onExit, onGrownUp }: { onExit: () => void; onGrownU
                   something rather than noticed for it. He is better because
                   of them, and that is the whole reason this screen exists. */}
               <SceneLine>
-                You did the thing you do in the knot room. On somebody else.
+                You did the thing you do when something’s stuck. On somebody else.
               </SceneLine>
               <DoorHandle side="right" label="Go on" onClick={onExit} accent={accent} />
             </motion.div>
