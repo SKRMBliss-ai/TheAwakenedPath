@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
-import { todayKey } from '../../../kids/data';
+import { BEHAVIOURS, todayKey } from '../../../kids/data';
 import { CHROME, Cta, FONT, GrownUpExit, Question, SceneLine } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
@@ -12,6 +12,7 @@ import { roomGamesFor, type RoomGame } from './roomGames';
 import { RoomGamePlayer } from './RoomGamePlayer';
 import { artRoomFor, VIRTUE_ROOMS, type VirtueRoom } from './rooms';
 import { CaughtFirefly } from './CaughtFirefly';
+import { GardenTree } from './GardenTree';
 import { todayKey as dayKey } from '../../../kids/data';
 import * as sound from '../kit/sound';
 
@@ -63,6 +64,17 @@ export function VirtueRoomView({
   const art = artRoomFor(room);
   const accent = art.palette.accent;
   const doneToday = !!completions[todayKey()]?.[room.id];
+
+  /**
+   * Every firefly ever caught, counted the same way the Observatory's jar
+   * counts them — one per virtue per day it was ticked. Only the Kindness
+   * Garden's tree reads it, but the arithmetic lives here rather than in the
+   * tree so the tree stays a drawing and this stays the one definition.
+   */
+  const lifetimeCaught = BEHAVIOURS.reduce(
+    (n, b) => n + Object.values(completions).filter((day) => day[b.id]).length,
+    0,
+  );
   const earned = pointsByBehaviour[room.id] ?? 0;
   const newGames = roomGamesFor(room.id);
   const libraryGames = room.gamesFrom ? gamesInRoom(room.gamesFrom) : [];
@@ -89,6 +101,20 @@ export function VirtueRoomView({
       <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
 
       <RoomScene room={art} dim={playing ? 0.35 : 0.12} />
+
+      {/* THE GARDEN'S OWN TREE, in the garden and nowhere else. It carries the
+          same lifetime total the Observatory's jar does, grown into something
+          you look at rather than read. Scenery: it sits behind the room's
+          content on purpose, and the pills pass in front of it the way things
+          in a room pass in front of a tree. */}
+      {room.id === 'kind' && !playing && (
+        /* Clear of the bottom bar, which is fixed and about 112px tall — at
+           bottom-0 the tree grew entirely behind it and the only thing a child
+           could see of a season's work was two leaves poking out. */
+        <div aria-hidden className="pointer-events-none absolute bottom-28 right-3 z-0 opacity-90 sm:right-7">
+          <GardenTree total={lifetimeCaught} />
+        </div>
+      )}
 
       <AnimatePresence>
         {justCaught && journey && (

@@ -48,6 +48,47 @@ export const SCENE_MOODS: Record<SceneMood, SceneDef> = {
   storm:         { ground: ['#2B3140', '#0C0F16'], glow: 'rgba(255,170,110,0.24)', glowAt: ['64%', '72%'] },
 };
 
+/**
+ * THE HUB SKY KNOWS WHAT TIME IT IS.
+ *
+ * The gym's sky used to be night whatever hour a child actually opened it. A
+ * six-year-old who plays before school got the same midnight as one playing at
+ * bedtime, which quietly says the place isn't real — it's a screen that was
+ * always going to look like that. These four skies say the opposite: the gym
+ * exists in time, alongside them, and it never has to tell them so.
+ *
+ * These are their own palettes rather than borrowed SCENE_MOODS. The room moods
+ * are lit for rooms — teal for an investigation, grey for a storm — and pressing
+ * one of those into service as "midday" would have given a child a cold green
+ * sky at lunchtime. Same rule still holds though (§2.3): every one carries a
+ * warm light source, including the daylit ones.
+ *
+ * Purely ambient. Nothing here is measured, scored, or shown back to the child
+ * as a fact about their day.
+ */
+export type TimeOfDay = 'dawn' | 'midday' | 'dusk' | 'night';
+
+export const SKY_BY_TIME: Record<TimeOfDay, SceneDef> = {
+  dawn:   { ground: ['#6B4A63', '#2A1B3D'], glow: 'rgba(255,183,140,0.34)', glowAt: ['50%', '84%'] },
+  midday: { ground: ['#3E6B8F', '#16243D'], glow: 'rgba(255,224,164,0.30)', glowAt: ['62%', '16%'] },
+  dusk:   { ground: ['#4A2A50', '#160E28'], glow: 'rgba(255,158,88,0.36)',  glowAt: ['48%', '82%'] },
+  night:  { ground: ['#1B1F4A', '#080A1F'], glow: 'rgba(255,214,150,0.30)', glowAt: ['72%', '18%'] },
+};
+
+/** Which sky belongs to an hour of the local clock. Split out from the lookup
+ *  so it can be tested without stubbing Date. */
+export function timeOfDayForHour(hour: number): TimeOfDay {
+  if (hour >= 5 && hour < 9) return 'dawn';
+  if (hour >= 9 && hour < 17) return 'midday';
+  if (hour >= 17 && hour < 20) return 'dusk';
+  return 'night';
+}
+
+/** The sky as it stands right now, on the child's own clock. */
+export function skyNow(): SceneDef {
+  return SKY_BY_TIME[timeOfDayForHour(new Date().getHours())];
+}
+
 export interface RoomPalette {
   /** Text colour that sits on the artwork. */
   ink: string;

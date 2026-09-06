@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
 import { todayKey } from '../../../kids/data';
@@ -9,7 +9,7 @@ import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui
 import { useMotion, useQuiet } from '../ui/quiet';
 import { BoyAndChirpy, RoomScene } from '../ui/scene';
 import { chirpySprite } from '../ui/sprites';
-import { SCENE_MOODS, roomPoster, storageFallback } from '../rooms';
+import { skyNow, roomPoster, storageFallback } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
 import { DoorHandle } from '../ui/DoorHandle';
@@ -18,6 +18,7 @@ import { HelpChirpy } from './HelpChirpy';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
+import { VillageRow } from './VillageRow';
 import { saveCase } from '../kit/cases';
 import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
 import { COMPANY } from '../kit/feelingCompanions';
@@ -61,10 +62,59 @@ type View =
   | { at: 'rewards' }
   | { at: 'grownup' };
 
+/**
+ * WALKING THROUGH, NOT FADING THROUGH.
+ *
+ * Every screen change used to be the same soft fade, which is what an app does
+ * when one page swaps for another. This app claims to be a building, and the
+ * whole of its navigation is door handles — so a room should arrive the way a
+ * room does when you walk into it: through a doorway that opens.
+ *
+ * The doorway is an inset() clip-path with its top corners rounded, growing
+ * from a small arch at the foot of the screen until it is the screen. Same
+ * arch as the fittings in DoorHandle, so one motif carries the app.
+ *
+ * Both keyframes are written with identical structure — four insets, four
+ * radii, all in percent — because framer-motion interpolates a clip-path
+ * string by walking the numbers in it. Drop the `round` from one side, or
+ * mix px and %, and the animation silently becomes a hard cut.
+ *
+ * `plain` is the reduced-motion and quiet-state path: the old fade, unchanged.
+ */
+const ARCH_SHUT = 'inset(84% 43% 0% 43% round 44% 44% 0% 0%)';
+const ARCH_OPEN = 'inset(0% 0% 0% 0% round 0% 0% 0% 0%)';
+
+function archWipe(plain: boolean) {
+  if (plain) {
+    return {
+      initial: { opacity: 0, y: 10 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: -8 },
+      transition: { duration: 0.28 },
+    };
+  }
+  return {
+    initial: { clipPath: ARCH_SHUT, opacity: 0.4 },
+    animate: { clipPath: ARCH_OPEN, opacity: 1 },
+    exit: { opacity: 0 },
+    transition: {
+      clipPath: { duration: 0.52, ease: [0.4, 0, 0.2, 1] as const },
+      opacity: { duration: 0.22 },
+    },
+  };
+}
+
 export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
   const onboarded = useKidStore((s) => s.onboarded);
   const [view, setView] = useState<View>({ at: 'map' });
   const [quiet, setQuiet] = useState(false);
+  const reduced = useReducedMotion();
+
+  // The two reasons a screen change stays a plain fade: the child asked their
+  // device for less motion, or the app has quietened itself because they're
+  // upset (§7). A doorway sweeping open is a flourish, and a flourish is the
+  // first thing to go in both cases.
+  const plainMotion = quiet || !!reduced;
 
   if (!onboarded) return <Onboarding />;
 
@@ -97,10 +147,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
         <AnimatePresence mode="wait">
           <motion.div
             key={view.at + (view.at === 'room' ? view.room.id : '')}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.28 }}
+            {...archWipe(plainMotion)}
           >
             {view.at === 'map' && (
               <RoomMap
@@ -192,7 +239,10 @@ function RoomMap({
   const caughtToday = VIRTUE_ROOMS.filter((r) => today[r.id]).map((r) => r.id);
   const doneCount = caughtToday.length;
 
-  const night = SCENE_MOODS.night;
+  // The sky the child actually walks in under — dawn, midday, dusk or night,
+  // on their own clock. Never announced; it's just what the place looks like
+  // at that hour.
+  const night = skyNow();
 
   return (
     <div
@@ -280,6 +330,20 @@ function RoomMap({
         <h2 className="mt-5 text-[15.5px] font-extrabold" style={{ color: CHROME.text, fontFamily: FONT }}>
           Or pick a room
         </h2>
+
+        {/* THE STREET, above the posters. The same seven rooms drawn as
+            buildings you walk past — lit by what's been done in each — with
+            the painted cards still underneath for now, so the two ways of
+            showing a room can be watched side by side before either wins. */}
+        <div className="mt-3">
+          <VillageRow
+            rooms={VIRTUE_ROOMS}
+            today={today}
+            pointsByBehaviour={pointsByBehaviour}
+            onOpen={onOpen}
+            onPause={onPause}
+          />
+        </div>
 
         <div className="mt-3 grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           {VIRTUE_ROOMS.map((r, i) => (
