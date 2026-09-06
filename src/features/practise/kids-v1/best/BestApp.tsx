@@ -19,6 +19,9 @@ import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
 import { VillageRow } from './VillageRow';
+import { ChirpyRemembers } from './ChirpyRemembers';
+import { recollectionForToday, type ChirpyRecollection } from '../kit/chirpyMemory';
+import { reportingDay, type ReportingDay } from '../kit/reportingDay';
 import { saveCase } from '../kit/cases';
 import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
 import { COMPANY } from '../kit/feelingCompanions';
@@ -110,6 +113,21 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
   const [quiet, setQuiet] = useState(false);
   const reduced = useReducedMotion();
 
+  /**
+   * WHICH DAY THIS WHOLE SESSION IS ABOUT — decided once, on arrival, and
+   * then held.
+   *
+   * It cannot be recomputed per render, because the rule that picks it
+   * ("yesterday, if yesterday is still empty") is invalidated by the very
+   * first tick the child makes: they answer the Kindness Garden for
+   * yesterday, yesterday is no longer empty, the next render says "today",
+   * and the room they are still standing in flips to a day with nothing in
+   * it — so their tick reads as having done nothing at all. Deciding it at
+   * the door and passing it down is what stops the app changing the subject
+   * mid-sentence.
+   */
+  const [reporting] = useState(() => reportingDay(useKidStore.getState().completions));
+
   // The two reasons a screen change stays a plain fade: the child asked their
   // device for less motion, or the app has quietened itself because they're
   // upset (§7). A doorway sweeping open is a flourish, and a flourish is the
@@ -151,6 +169,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
           >
             {view.at === 'map' && (
               <RoomMap
+                reporting={reporting}
                 onOpen={(r) => { sound.play('roomCard'); setView({ at: 'room', room: r, step: null }); }}
                 onStartJourney={startJourney}
                 onDeepDive={() => setView({ at: 'deep' })}
@@ -164,6 +183,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
             {view.at === 'room' && (
               <VirtueRoomView
                 room={view.room}
+                reporting={reporting}
                 journey={view.step !== null ? { index: view.step, total: VIRTUE_ROOMS.length } : undefined}
                 onExit={back}
                 onGrownUp={() => setView({ at: 'grownup' })}
@@ -216,6 +236,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 /* ── The map ─────────────────────────────────────────────────────────── */
 
 function RoomMap({
+  reporting,
   onOpen,
   onStartJourney,
   onDeepDive,
@@ -224,6 +245,8 @@ function RoomMap({
   onExitGym,
   onGrownUp,
 }: {
+  /** The day this session is answering for — see BestApp, where it's fixed. */
+  reporting: ReportingDay;
   onOpen: (r: VirtueRoom) => void;
   onStartJourney: () => void;
   onDeepDive: () => void;
@@ -235,7 +258,14 @@ function RoomMap({
   const name = useKidStore((s) => s.name);
   const completions = useKidStore((s) => s.completions);
   const pointsByBehaviour = useKidStore((s) => s.pointsByBehaviour);
-  const today = completions[todayKey()] ?? {};
+
+  /**
+   * The jar has to show the same day the rooms are writing to. Before the
+   * afternoon that can be YESTERDAY (see kit/reportingDay) — and a hub still
+   * showing an empty "today" while the rooms filed a tick against yesterday
+   * would mean a child taps a firefly in and watches nothing arrive.
+   */
+  const today = completions[reporting.key] ?? {};
   const caughtToday = VIRTUE_ROOMS.filter((r) => today[r.id]).map((r) => r.id);
   const doneCount = caughtToday.length;
 
@@ -243,6 +273,18 @@ function RoomMap({
   // on their own clock. Never announced; it's just what the place looks like
   // at that hour.
   const night = skyNow();
+
+  /**
+   * Whether Chirpy has something of theirs to bring back tonight — usually
+   * not; see kit/chirpyMemory for the rest interval. Read once on arrival
+   * rather than every render, so it can't appear mid-session or vanish under
+   * the child's finger, and skipped entirely in the quiet state.
+   */
+  const quiet = useQuiet();
+  const [recollection, setRecollection] = useState<ChirpyRecollection | null>(null);
+  useEffect(() => {
+    if (!quiet) setRecollection(recollectionForToday());
+  }, [quiet]);
 
   return (
     <div
@@ -300,6 +342,19 @@ function RoomMap({
             total={VIRTUE_ROOMS.length}
           />
         </div>
+
+        {/* Every so often — see kit/chirpyMemory for how rarely — he brings
+            back something they said weeks ago, mostly right. Never in the
+            quiet state: a child who is already upset is not asked to go back
+            to an afternoon that upset them. */}
+        <AnimatePresence>
+          {recollection && (
+            <ChirpyRemembers
+              recollection={recollection}
+              onDone={() => setRecollection(null)}
+            />
+          )}
+        </AnimatePresence>
 
         {/*
           TWO DOORS, SIDE BY SIDE.

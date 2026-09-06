@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
-import { BEHAVIOURS, todayKey } from '../../../kids/data';
+import { BEHAVIOURS } from '../../../kids/data';
 import { CHROME, Cta, FONT, GrownUpExit, Question, SceneLine } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
@@ -13,7 +13,7 @@ import { RoomGamePlayer } from './RoomGamePlayer';
 import { artRoomFor, VIRTUE_ROOMS, type VirtueRoom } from './rooms';
 import { CaughtFirefly } from './CaughtFirefly';
 import { GardenTree } from './GardenTree';
-import { todayKey as dayKey } from '../../../kids/data';
+import { type ReportingDay } from '../kit/reportingDay';
 import * as sound from '../kit/sound';
 
 /**
@@ -36,6 +36,7 @@ import * as sound from '../kit/sound';
  */
 export function VirtueRoomView({
   room,
+  reporting,
   journey,
   onExit,
   onGrownUp,
@@ -43,6 +44,14 @@ export function VirtueRoomView({
   onNext,
 }: {
   room: VirtueRoom;
+  /**
+   * The day this session is answering for — today, or yesterday before the
+   * afternoon when yesterday is still open. Handed down from BestApp rather
+   * than worked out here: the first tick would otherwise change the answer
+   * (see the note where it is fixed), and the room would swap days under a
+   * child who is standing in it.
+   */
+  reporting: ReportingDay;
   /** Where this room sits in the run, when the child is on the journey. */
   journey?: { index: number; total: number };
   onExit: () => void;
@@ -53,7 +62,7 @@ export function VirtueRoomView({
 }) {
   const completions = useKidStore((s) => s.completions);
   const pointsByBehaviour = useKidStore((s) => s.pointsByBehaviour);
-  const toggleBehaviour = useKidStore((s) => s.toggleBehaviour);
+  const setBehaviourOn = useKidStore((s) => s.setBehaviourOn);
   const awardPoints = useKidStore((s) => s.awardPoints);
 
   const [playing, setPlaying] = useState<RoomGame | null>(null);
@@ -63,7 +72,8 @@ export function VirtueRoomView({
 
   const art = artRoomFor(room);
   const accent = art.palette.accent;
-  const doneToday = !!completions[todayKey()]?.[room.id];
+
+  const doneToday = !!completions[reporting.key]?.[room.id];
 
   /**
    * Every firefly ever caught, counted the same way the Observatory's jar
@@ -85,8 +95,11 @@ export function VirtueRoomView({
     setPlaying(null);
   };
 
+  /* The jar that flies up on a catch has to hold the same day's lights as the
+     tick that opened it — reporting.key, not today, or a morning catch-up
+     shows an empty jar for the firefly the child just put in. */
   const caughtToday = VIRTUE_ROOMS
-    .filter((r) => completions[dayKey()]?.[r.id])
+    .filter((r) => completions[reporting.key]?.[r.id])
     .map((r) => r.id);
 
   return (
@@ -161,13 +174,29 @@ export function VirtueRoomView({
             <Chirpy pose={doneToday ? 'excited' : 'curious'} line={room.tagline} align="left" />
             <Question room={art}>{room.name}</Question>
 
-            {/* ── Today's tick — the actual point of the app ───────────── */}
+            {/* ── The tick — the actual point of the app ───────────────── */}
+
+            {/* WHICH DAY THIS IS ABOUT, said plainly, and only when it isn't
+                the obvious one. The seven prompts don't all carry the word
+                "today" anywhere it could be swapped for "yesterday", so the
+                day is labelled above the question rather than edited into
+                it — and a labelled day is unambiguous where a reworded
+                sentence is a thing a child might not notice at all. */}
+            {reporting.isYesterday && (
+              <span
+                className="-mb-2 block text-[11.5px] font-extrabold uppercase tracking-[0.14em]"
+                style={{ color: accent }}
+              >
+                About yesterday
+              </span>
+            )}
+
             <motion.button
               whileTap={{ scale: 0.99 }}
               onClick={() => {
                 const catching = !doneToday;
                 sound.play(catching ? 'discovery' : 'tap');
-                toggleBehaviour(room.id);
+                setBehaviourOn(reporting.key, room.id, catching);
                 // The jar only appears when a light goes IN, and only on the
                 // journey. Unticking is silent and costs nothing, which is
                 // the rule this whole app is built on.
@@ -195,7 +224,7 @@ export function VirtueRoomView({
                 </span>
                 <span className="mt-1 block text-[12.5px] font-semibold" style={{ color: CHROME.textSoft }}>
                   {doneToday
-                    ? `Ticked for today · +${room.points}. Tap to change it.`
+                    ? `Ticked for ${reporting.isYesterday ? 'yesterday' : 'today'} · +${room.points}. Tap to change it.`
                     : 'Tap if you did. Tap again if you change your mind.'}
                 </span>
               </span>
