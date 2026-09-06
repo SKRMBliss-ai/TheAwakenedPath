@@ -83,24 +83,38 @@ function write(a: Away): void {
 }
 
 /**
- * Chirpy's line if this is a return, or null.
+ * Chirpy's line if this is a return, or null — WITHOUT committing to having
+ * said it.
  *
- * CALLING THIS STAMPS TODAY as seen, so the gap is measured from the last
- * visit rather than from the last long absence — and the welcome shows once
- * on the day they come back, not on every trip to the hub that evening.
+ * Split from the commit because the hub now shows one thing a night and has
+ * to compare candidates before choosing (see kit/hubMoment). The old single
+ * function stamped "greeted" simply for being asked, so merely considering
+ * the welcome burned it: a child who was shown a note from home instead would
+ * have silently lost the welcome they were owed, and nothing on any screen
+ * would ever have revealed it.
+ *
+ * Stamping TODAY AS SEEN still happens on every call, and must — that is how
+ * the gap gets measured at all, and it is true whether or not anything is
+ * shown.
+ *
  * Which line they get is fixed by the date, so it can't reshuffle itself
  * while they're reading it.
  */
-export function welcomeBackLine(): string | null {
+export function peekWelcomeBack(): string | null {
   const t = today();
   const a = read();
 
   const gap = a.seen ? daysBetween(a.seen, t) : 0;
   const returning = gap >= AWAY_DAYS && a.greeted !== t;
 
-  write({ seen: t, greeted: returning ? t : a.greeted });
+  write({ ...a, seen: t });
   if (!returning) return null;
 
   const seed = t.split('-').reduce((n, part) => n + Number(part), 0);
   return NEWS[seed % NEWS.length];
+}
+
+/** It was actually shown. Spends the welcome for today. */
+export function welcomeBackShown(): void {
+  write({ ...read(), greeted: today() });
 }

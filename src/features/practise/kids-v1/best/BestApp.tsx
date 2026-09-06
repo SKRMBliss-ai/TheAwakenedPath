@@ -27,13 +27,11 @@ import { LeaveANote } from './LeaveANote';
 import { OneMinute } from './OneMinute';
 import { SeasonEnd } from './SeasonEnd';
 import { FirstNight } from './FirstNight';
-import { recollectionForToday, type ChirpyRecollection } from '../kit/chirpyMemory';
-import { arcBeatForToday, type ArcBeat } from '../kit/chirpyArc';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
 import { visitorForToday, type Visitor } from '../kit/visitor';
-import { noteWaiting, type Note } from '../kit/notes';
-import { welcomeBackLine } from '../kit/awayFor';
+import { hubMoment, type HubMoment } from '../kit/hubMoment';
+import { welcomeBackShown } from '../kit/awayFor';
 import { othersToday } from '../kit/others';
 import { saveCase } from '../kit/cases';
 import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
@@ -350,22 +348,15 @@ function RoomMap({
   const quiet = useQuiet();
 
   /**
-   * Whether Chirpy is mentioning the thing he's worried about tonight — see
-   * kit/chirpyArc. Read before the recollection because the two are both
-   * Chirpy talking, and TWO Chirpy cards stacked on one hub is not a
-   * character, it's a feed.
+   * THE ONE THING THIS HUB HAS TO SAY TONIGHT — a note from home, or Chirpy,
+   * or nothing, and never more than one. See kit/hubMoment for the order and
+   * for what stacking four of these actually looked like.
+   *
+   * Chosen once on arrival rather than per render, so it can't change under
+   * a child mid-read.
    */
-  const [arcBeat, setArcBeat] = useState<ArcBeat | null>(null);
-  useEffect(() => {
-    if (!quiet) setArcBeat(arcBeatForToday());
-  }, [quiet]);
-
-  const [recollection, setRecollection] = useState<ChirpyRecollection | null>(null);
-  useEffect(() => {
-    // He gets one thing to say a night. The arc wins, because it moves and
-    // the recollection will keep.
-    if (!quiet && !arcBeatForToday()) setRecollection(recollectionForToday());
-  }, [quiet]);
+  const [moment, setMoment] = useState<HubMoment | null>(null);
+  useEffect(() => { setMoment(hubMoment(quiet)); }, [quiet]);
 
   /**
    * And whether anybody else is in tonight — almost never; see kit/visitor
@@ -377,22 +368,6 @@ function RoomMap({
   useEffect(() => {
     if (!quiet) setVisitor(visitorForToday());
   }, [quiet]);
-
-  /**
-   * And whether anyone at home has left them anything. Read on arrival so a
-   * note written while the child is looking at the hub doesn't materialise
-   * under their hands — it will be there next time, which is how notes work.
-   */
-  const [note, setNote] = useState<Note | null>(null);
-  useEffect(() => { setNote(noteWaiting()); }, []);
-
-  /**
-   * And whether this is a coming-back, after a real absence. Read once on
-   * arrival because the call stamps today as seen — see kit/awayFor, and
-   * particularly its list of the things this must never say.
-   */
-  const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
-  useEffect(() => { setWelcomeBack(welcomeBackLine()); }, []);
 
   /**
    * How many other children caught one tonight — null on every install that
@@ -471,92 +446,31 @@ function RoomMap({
             name={name}
             doneCount={doneCount}
             total={VIRTUE_ROOMS.length}
+            others={others}
+            onOneMinute={onOneMinute}
           />
         </div>
 
         {/*
-          BACK AFTER A WHILE. Chirpy's own news, never a word about the gap —
-          see kit/awayFor. Dismissed by tapping it, and gone for the day
-          either way.
+          ONE CARD. Whatever tonight's single thing is — a note from home, or
+          Chirpy, or nothing at all. See kit/hubMoment for the order, and for
+          what four of these stacked together actually did to this page.
         */}
-        <AnimatePresence>
-          {welcomeBack && (
-            <motion.button
-              key="welcomeback"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.5, delay: 0.35 }}
-              onClick={() => setWelcomeBack(null)}
-              className="mt-3 flex w-full items-center gap-2.5 rounded-[20px] px-3.5 py-3 text-left backdrop-blur-md"
-              style={{
-                background: CHROME.pill,
-                border: '1px solid rgba(143,217,196,0.45)',
-              }}
-            >
-              <img
-                src={chirpySprite('excited')}
-                alt=""
-                aria-hidden
-                draggable={false}
-                className="h-9 w-9 shrink-0 select-none"
-              />
-              <span className="text-[13.5px] font-bold leading-snug" style={{ color: CHROME.text }}>
-                {welcomeBack}
-              </span>
-            </motion.button>
+        <AnimatePresence mode="wait">
+          {moment?.kind === 'note' && (
+            <NoteFound key="note" note={moment.note} onDone={() => setMoment(null)} />
           )}
-        </AnimatePresence>
-
-        {/*
-          OTHERS, OUT THERE SOMEWHERE. One line, no names, nothing to beat,
-          and nothing at all when there's no server to ask — see kit/others.
-        */}
-        {others !== null && (
-          <p className="mt-3 text-[12.5px] font-semibold" style={{ color: CHROME.textSoft }}>
-            {others} other children caught one tonight, too.
-          </p>
-        )}
-
-        {/*
-          THE SHORT WAY IN, and deliberately not a fourth door.
-
-          The three fittings on the right wall are the things there are to
-          DO here; a fourth brass handle beside them would read as a fourth
-          activity, which is the opposite of what this is. It's one quiet
-          line saying the app will take a minute if a minute is all there
-          is — phrased as capacity rather than as feeling, because a
-          six-year-old on a bad evening can tell you he doesn't want to do
-          much long before he can tell you he's sad.
-        */}
-        <button
-          onClick={onOneMinute}
-          className="mt-3 block text-[12.5px] font-bold"
-          style={{ color: CHROME.textSoft, minHeight: 40 }}
-        >
-          Only got a minute? Come and sit down →
-        </button>
-
-        {/* A note somebody at home left them, folded, waiting to be opened.
-            Above Chirpy's recollection because it came from a person. */}
-        <AnimatePresence>
-          {note && <NoteFound note={note} onDone={() => setNote(null)} />}
-        </AnimatePresence>
-
-        {/* The thing he's circling, weeks apart, never announced. */}
-        <AnimatePresence>
-          {arcBeat && <ChirpyArc beat={arcBeat} onDone={() => setArcBeat(null)} />}
-        </AnimatePresence>
-
-        {/* Every so often — see kit/chirpyMemory for how rarely — he brings
-            back something they said weeks ago, mostly right. Never in the
-            quiet state: a child who is already upset is not asked to go back
-            to an afternoon that upset them. */}
-        <AnimatePresence>
-          {recollection && (
+          {moment?.kind === 'welcome' && (
+            <WelcomeBackCard key="welcome" line={moment.line} onDone={() => setMoment(null)} />
+          )}
+          {moment?.kind === 'arc' && (
+            <ChirpyArc key="arc" beat={moment.beat} onDone={() => setMoment(null)} />
+          )}
+          {moment?.kind === 'memory' && (
             <ChirpyRemembers
-              recollection={recollection}
-              onDone={() => setRecollection(null)}
+              key="memory"
+              recollection={moment.recollection}
+              onDone={() => setMoment(null)}
             />
           )}
         </AnimatePresence>
@@ -652,11 +566,14 @@ const WELCOME_MS = 2000;
  * reflowing.
  */
 function WelcomeBanner({
-  name, doneCount, total,
+  name, doneCount, total, others, onOneMinute,
 }: {
   name: string;
   doneCount: number;
   total: number;
+  /** Other children tonight, or null when there's no server to ask. */
+  others: number | null;
+  onOneMinute: () => void;
 }) {
   const [dismissed, setDismissed] = useState(false);
   /** Recorded once per mount; the star for today arrives on the way in. */
@@ -734,16 +651,20 @@ function WelcomeBanner({
                   ? 'All seven, today. That’s the full rainbow.'
                   : `${doneCount} of ${total} rooms so far today.`}
             </p>
+            <MinutePill onClick={onOneMinute} />
           </motion.div>
         ) : (
           /* Folded. Tappable, so a child who wants the big hello back can
              have it — nothing here is a one-way door. */
-          <motion.button
+          <motion.div
             key="folded"
             layout
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.15 }}
+            className="flex flex-wrap items-center justify-center gap-2"
+          >
+          <button
             onClick={() => setDismissed(false)}
             className="flex items-center gap-2.5 rounded-full py-1.5 pl-1.5 pr-4 backdrop-blur-md"
             style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}` }}
@@ -762,12 +683,82 @@ function WelcomeBanner({
             <span className="text-[11.5px] font-bold leading-none" style={{ color: CHROME.textSoft }}>
               {stars === 1 ? '1 night' : `${stars} nights`}
             </span>
-          </motion.button>
+          </button>
+
+          <MinutePill onClick={onOneMinute} />
+          </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Other children, out there somewhere — and nothing at all when
+          there's no server to ask. See kit/others. */}
+      {others !== null && (
+        <p className="text-[11.5px] font-semibold" style={{ color: CHROME.textSoft }}>
+          {others} other children caught one tonight, too.
+        </p>
+      )}
+
       {sparks && <FoldSparks />}
     </motion.div>
+  );
+}
+
+/**
+ * THE SHORT WAY IN.
+ *
+ * It used to be a row of its own between the hello and the rooms, which cost
+ * the page a whole line and put one more thing between a child and what they
+ * came for. It now rides along with the greeting in both of that banner's
+ * states, so it costs no height at all.
+ *
+ * IN BOTH STATES, and that matters more than it looks. Putting it only on the
+ * folded greeting meant it was absent for the first five seconds of every
+ * single visit — which is precisely the wrong five seconds, because the child
+ * this exists for is the one who opened the app with nothing in the tank and
+ * should not have to sit through a flourish to find the door built for them.
+ */
+function MinutePill({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-full px-3.5 py-2 text-[11.5px] font-bold"
+      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.22)', color: CHROME.textSoft }}
+    >
+      Only got a minute?
+    </button>
+  );
+}
+
+/**
+ * Chirpy, pleased you're back. One of the four things kit/hubMoment can
+ * choose between, and the only one that is only true today — which is why it
+ * outranks the two that keep.
+ *
+ * Tapping it dismisses it, and it's spent for the day either way: see
+ * awayFor's split between peeking and committing.
+ */
+function WelcomeBackCard({ line, onDone }: { line: string; onDone: () => void }) {
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.5, delay: 0.35 }}
+      onClick={() => { welcomeBackShown(); onDone(); }}
+      className="mt-3 flex w-full items-center gap-2.5 rounded-[20px] px-3.5 py-3 text-left backdrop-blur-md"
+      style={{ background: CHROME.pill, border: '1px solid rgba(143,217,196,0.45)' }}
+    >
+      <img
+        src={chirpySprite('excited')}
+        alt=""
+        aria-hidden
+        draggable={false}
+        className="h-9 w-9 shrink-0 select-none"
+      />
+      <span className="text-[13.5px] font-bold leading-snug" style={{ color: CHROME.text }}>
+        {line}
+      </span>
+    </motion.button>
   );
 }
 
