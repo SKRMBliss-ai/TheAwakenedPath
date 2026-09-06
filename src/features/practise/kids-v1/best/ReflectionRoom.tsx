@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronDown, X } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
 import { BEHAVIOURS } from '../../../kids/data';
 import { getRoom } from '../rooms';
@@ -8,7 +9,7 @@ import { DoorHandle } from '../ui/DoorHandle';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { starCount } from '../kit/sky';
-import { agoLabel, loadCases, type Case } from '../kit/cases';
+import { agoLabel, deleteDrawingAt, loadCases, type Case } from '../kit/cases';
 
 /**
  * THE REFLECTION OBSERVATORY — where the day's journey ends.
@@ -39,6 +40,16 @@ export function ReflectionRoom({
   const s = useKidStore();
   const art = getRoom('reflection');
   const accent = art.palette.accent;
+
+  /**
+   * Lifted out of the shelf/wall components and into state here, rather
+   * than each of them calling loadCases() straight from localStorage on
+   * every render: deleting a doodle needs the SAME list both of them are
+   * reading to update in one place, or the wall could clear a picture the
+   * shelf still thinks is there.
+   */
+  const [cases, setCases] = useState(() => loadCases());
+  const deleteDrawing = (index: number) => setCases(deleteDrawingAt(index));
 
   const now = new Date();
   const [month, setMonth] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1));
@@ -90,24 +101,12 @@ export function ReflectionRoom({
           </p>
         </div>
 
-        {/* ── The cases the child has worked ─────────────────────────
-            This is what the Observatory is for, and until now it did not
-            exist: the child's own words, handed back. A single walk teaches
-            them to catch one story; three of their own, weeks apart, teaches
-            them they HAVE a pattern — which is what the whole app is for and
-            what no single session can deliver.
-
-            The day-streak count that used to sit here is gone with the rest
-            of the streak. What is left describes the child rather than the
-            app's opinion of them. */}
-        <CaseShelf accent={accent} />
-
-        <div className="mt-5 grid grid-cols-2 gap-2.5">
-          <Stat big={String(monthTotal)} label="good choices this month" accent={accent} />
-          <Stat big={String(s.badges.length)} label="badges earned" accent={accent} />
-        </div>
-
-        {/* ── The star map ───────────────────────────────────────────── */}
+        {/* ── The star map, ALWAYS FIRST ──────────────────────────────
+            It used to sit below the cases shelf, which meant a child with
+            a growing pile of worked-out cases had to scroll past all of
+            them to reach the one thing this room is actually for: marking
+            today. The shelf and the doodle wall below can both grow without
+            limit; this can't be allowed to move because of it. */}
         <div
           className="mt-5 rounded-[22px] p-3 backdrop-blur-md sm:p-4"
           style={{ background: 'rgba(10,8,24,0.55)', border: `1px solid ${CHROME.pillBorder}` }}
@@ -190,6 +189,14 @@ export function ReflectionRoom({
           </p>
         </div>
 
+        {/* Kept beside the grid rather than down with the cases — this
+            summarises the SAME data the grid just showed, not the child's
+            own words, so it belongs with the thing it's counting. */}
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
+          <Stat big={String(monthTotal)} label="good choices this month" accent={accent} />
+          <Stat big={String(s.badges.length)} label="badges earned" accent={accent} />
+        </div>
+
         {/* ── The four questions ─────────────────────────────────────── */}
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {QUESTIONS.map((q) => (
@@ -215,6 +222,27 @@ export function ReflectionRoom({
           ))}
         </div>
 
+        {/* ── The cases, folded away by default ───────────────────────
+            This used to sit right under the grid. It's down here now for
+            the same reason the grid had to move up in the first place: the
+            grid is what this room is FOR, and a growing pile of case text
+            pushed it further down every time a child worked something out.
+            Collapsed rather than removed, because the words underneath are
+            still the most important thing this app keeps — just not the
+            first thing this particular room needs to show. This section is
+            also expected to move house entirely once there's a better room
+            for it; it stays lightweight here on purpose. */}
+        <CaseShelf accent={accent} cases={cases} />
+
+        {/* ── The doodle wall, LAST ───────────────────────────────────
+            Everything the child has drawn while working something out,
+            gathered into one gallery rather than left scattered inside
+            each case card — a fridge door, not a filing cabinet. It sits
+            at the very bottom on purpose: the grid at the top is what this
+            room is FOR, the pictures are what make it worth lingering on
+            the way out. */}
+        <DoodleWall cases={cases} onDelete={deleteDrawing} />
+
         <p className="py-5 text-center text-[13px] font-bold" style={{ color: accent }}>
           I am the master of my choices.
         </p>
@@ -238,7 +266,8 @@ function Stat({ big, label, accent }: { big: string; label: string; accent: stri
 }
 
 /**
- * THE SHELF — every case this child has worked, newest first.
+ * THE SHELF — every case this child has worked, newest first, folded away
+ * behind a header until tapped open.
  *
  * Two lines each: what their mind said, and what else they found could be
  * true. Nothing else fits on a card and nothing else is the point. The
@@ -248,53 +277,165 @@ function Stat({ big, label, accent }: { big: string; label: string; accent: stri
  * No case is ever marked good or better. They are things that happened and
  * things the child worked out, sitting next to each other, which is the only
  * form this can take without becoming a report card.
+ *
+ * Text only. Whatever picture a case came with lives in DoodleWall now, not
+ * here — one gallery for every drawing, rather than one image buried inside
+ * each card, which is also what lets a picture be cleared without touching
+ * the words it was drawn next to.
+ *
+ * COLLAPSED BY DEFAULT, and this is provisional plumbing rather than a
+ * finished design — the plan is for this whole shelf to move into a room
+ * of its own eventually, and it isn't worth the visual weight of a fully
+ * expanded, always-on list here in the meantime. Nothing renders at all
+ * when there are no cases yet: a header for an empty thing you can't even
+ * open is a dead end, not an invitation.
  */
-function CaseShelf({ accent }: { accent: string }) {
-  const cases = loadCases();
-  if (!cases.length) {
-    return (
-      <div
-        className="mt-5 rounded-[22px] px-4 py-5 text-center backdrop-blur-md"
+function CaseShelf({ accent, cases }: { accent: string; cases: Case[] }) {
+  const [open, setOpen] = useState(false);
+  if (!cases.length) return null;
+
+  return (
+    <div className="mt-5">
+      <motion.button
+        onClick={() => setOpen((o) => !o)}
+        whileTap={{ scale: 0.98 }}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-2 rounded-[16px] px-4 py-3 backdrop-blur-md"
         style={{ background: 'rgba(12,10,26,0.42)', border: `1px solid ${CHROME.pillBorder}` }}
       >
-        <p className="text-[13.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
-          Nothing on the shelf yet. Work something out and it’ll be kept here for you.
-        </p>
-      </div>
-    );
-  }
+        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: accent }}>
+          Cases you worked out · {cases.length}
+        </span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25 }}>
+          <ChevronDown size={16} color={CHROME.textSoft} />
+        </motion.span>
+      </motion.button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="flex flex-col gap-2.5 pt-2.5">
+              {cases.slice(0, 8).map((c: Case, i: number) => (
+                <motion.div
+                  key={`${c.day}-${i}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: Math.min(i, 6) * 0.04 }}
+                  className="rounded-[20px] px-4 py-3 backdrop-blur-md"
+                  style={{ background: 'rgba(12,10,26,0.52)', border: `1px solid ${CHROME.pillBorder}` }}
+                >
+                  <p className="text-[10.5px] font-extrabold uppercase tracking-[0.12em]" style={{ color: accent }}>
+                    {agoLabel(c.day)}{c.feeling ? ` · ${c.feeling.toLowerCase()}` : ''}
+                  </p>
+                  {c.story && (
+                    <p className="mt-1.5 text-[14px] font-bold leading-snug" style={{ color: CHROME.text }}>
+                      Your mind said: “{c.story}”
+                    </p>
+                  )}
+                  {c.other && (
+                    <p className="mt-1 text-[13.5px] font-semibold leading-snug" style={{ color: '#FFD98A' }}>
+                      You found: “{c.other}”
+                    </p>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/**
+ * THE DOODLE WALL — every drawing the child has kept, as a gallery.
+ *
+ * A grid of pictures reads as a fridge door; a picture buried at the foot
+ * of a paragraph of text (the old layout) reads as an attachment. Kids —
+ * and the grown-ups they show this to — look at a wall of drawings for its
+ * own sake, which the shelf's cards were never built to invite.
+ *
+ * DELETING ONE removes just that image, wherever it sits in `cases`, and
+ * leaves the case's own words untouched in the shelf above: tidying up a
+ * pile of pictures is not the same act as deciding a reflection didn't
+ * happen. There is no confirm dialog — nothing else in this app interrupts
+ * a tap with one — but the button itself needs a second tap to commit
+ * (armed for a couple of seconds, then it resets) because unlike every
+ * other tap in this feature, this one cannot be undone by tapping again.
+ */
+function DoodleWall({
+  cases,
+  onDelete,
+}: {
+  cases: Case[];
+  onDelete: (index: number) => void;
+}) {
+  const [arming, setArming] = useState<number | null>(null);
+  const drawn = cases
+    .map((c, index) => ({ c, index }))
+    .filter((x) => !!x.c.drawing);
+
+  if (!drawn.length) return null;
+
   return (
-    <div className="mt-5 flex flex-col gap-2.5">
-      <p className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: accent }}>
-        Cases you worked out
+    <div className="mt-5">
+      <p className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: '#FFD98A' }}>
+        Doodles
       </p>
-      {cases.slice(0, 8).map((c: Case, i: number) => (
-        <motion.div
-          key={`${c.day}-${i}`}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: Math.min(i, 6) * 0.05 }}
-          className="rounded-[20px] px-4 py-3 backdrop-blur-md"
-          style={{ background: 'rgba(12,10,26,0.52)', border: `1px solid ${CHROME.pillBorder}` }}
-        >
-          <p className="text-[10.5px] font-extrabold uppercase tracking-[0.12em]" style={{ color: accent }}>
-            {agoLabel(c.day)}{c.feeling ? ` · ${c.feeling.toLowerCase()}` : ''}
-          </p>
-          {c.story && (
-            <p className="mt-1.5 text-[14px] font-bold leading-snug" style={{ color: CHROME.text }}>
-              Your mind said: “{c.story}”
-            </p>
-          )}
-          {c.other && (
-            <p className="mt-1 text-[13.5px] font-semibold leading-snug" style={{ color: '#FFD98A' }}>
-              You found: “{c.other}”
-            </p>
-          )}
-          {c.drawing && (
-            <img src={c.drawing} alt="" className="mt-2 w-full rounded-[14px]" style={{ background: 'rgba(255,255,255,0.06)' }} />
-          )}
-        </motion.div>
-      ))}
+      <div className="mt-2.5 grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+        {drawn.map(({ c, index }) => {
+          const armed = arming === index;
+          return (
+            <motion.div
+              key={`${c.day}-${index}`}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              className="relative aspect-square overflow-hidden rounded-[14px]"
+              style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${CHROME.pillBorder}` }}
+            >
+              <img src={c.drawing} alt="" className="h-full w-full object-cover" />
+
+              <button
+                onClick={() => {
+                  if (armed) { onDelete(index); setArming(null); return; }
+                  setArming(index);
+                  window.setTimeout(() => setArming((cur) => (cur === index ? null : cur)), 2400);
+                }}
+                aria-label={armed ? 'Tap again to delete this doodle' : 'Delete this doodle'}
+                className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-full backdrop-blur-md transition-colors"
+                style={{
+                  background: armed ? '#E8735F' : 'rgba(10,8,24,0.6)',
+                  border: `1px solid ${armed ? '#E8735F' : CHROME.pillBorder}`,
+                }}
+              >
+                <X size={14} strokeWidth={3} color="#FFFFFF" />
+              </button>
+
+              <AnimatePresence>
+                {armed && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="pointer-events-none absolute inset-0 flex items-end justify-center pb-1.5"
+                    style={{ background: 'linear-gradient(0deg, rgba(0,0,0,0.65) 0%, transparent 55%)' }}
+                  >
+                    <span className="text-[10px] font-extrabold text-white">Tap again</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
     </div>
   );
 }

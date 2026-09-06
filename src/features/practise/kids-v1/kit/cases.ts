@@ -74,6 +74,25 @@ function writeCases(all: Case[]): boolean {
   } catch { return false; } // storage off, or full even after stripping — the walk still happened
 }
 
+/**
+ * Removes just the DRAWING from one case, by its position in loadCases()'s
+ * newest-first order — not the case itself. The Observatory's doodle wall
+ * is a gallery of pictures, and clearing one out of it is a tidying-up
+ * action, not a "this never happened" one; the words that case holds (what
+ * their mind said, what they found instead) are the point of the whole
+ * feature and stay exactly where they are, in the case shelf, whether or
+ * not a picture ever sat next to them.
+ *
+ * Returns the updated list so the caller can put it straight into state
+ * without a second read of localStorage.
+ */
+export function deleteDrawingAt(index: number): Case[] {
+  const all = loadCases();
+  if (all[index]?.drawing) delete all[index].drawing;
+  writeCases(all);
+  return all;
+}
+
 export function loadCases(): Case[] {
   try {
     const raw = localStorage.getItem(KEY);
