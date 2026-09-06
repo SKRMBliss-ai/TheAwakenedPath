@@ -3,7 +3,6 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
 import { BEHAVIOURS } from '../../../kids/data';
-import { Onboarding } from '../../../kids/Onboarding';
 import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
 import { useMotion, useQuiet } from '../ui/quiet';
@@ -20,16 +19,22 @@ import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
 import { VillageRow } from './VillageRow';
 import { ChirpyRemembers } from './ChirpyRemembers';
+import { ChirpyArc } from './ChirpyArc';
 import { ReleasedSky } from './LetThemGo';
 import { TheVisitor } from './TheVisitor';
 import { NoteFound } from './NoteFound';
 import { LeaveANote } from './LeaveANote';
 import { OneMinute } from './OneMinute';
+import { SeasonEnd } from './SeasonEnd';
+import { FirstNight } from './FirstNight';
 import { recollectionForToday, type ChirpyRecollection } from '../kit/chirpyMemory';
+import { arcBeatForToday, type ArcBeat } from '../kit/chirpyArc';
+import { seasonJustEnded, type Keepsake } from '../kit/seasons';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
 import { visitorForToday, type Visitor } from '../kit/visitor';
 import { noteWaiting, type Note } from '../kit/notes';
 import { welcomeBackLine } from '../kit/awayFor';
+import { othersToday } from '../kit/others';
 import { saveCase } from '../kit/cases';
 import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
 import { COMPANY } from '../kit/feelingCompanions';
@@ -149,13 +154,40 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
    */
   const [reporting] = useState(() => reportingDay(useKidStore.getState().completions));
 
+  /**
+   * Whether three months just closed. Read once on arrival — the check writes
+   * the season's start date on a first ever run, and it must not re-fire
+   * while the child is looking at the curtain.
+   */
+  const [seasonOver, setSeasonOver] = useState<Keepsake | null>(null);
+  useEffect(() => {
+    setSeasonOver(seasonJustEnded(useKidStore.getState().completions));
+  }, []);
+
   // The two reasons a screen change stays a plain fade: the child asked their
   // device for less motion, or the app has quietened itself because they're
   // upset (§7). A doorway sweeping open is a flourish, and a flourish is the
   // first thing to go in both cases.
   const plainMotion = quiet || !!reduced;
 
-  if (!onboarded) return <Onboarding />;
+  // The gym's own opening, not the shared one — see FirstNight. The old
+  // Onboarding is still what MyBestEveryDay uses and is untouched.
+  if (!onboarded) return <FirstNight />;
+
+  /*
+    THE CURTAIN COMES DOWN OVER EVERYTHING. A season ending is not a card on
+    the hub competing with a note and a visitor — it is the screen, once,
+    and the child gets to it whatever they were about to do. It is also the
+    only thing here allowed to pre-empt the hub, which is why it sits above
+    the view switch rather than inside it.
+  */
+  if (seasonOver) {
+    return (
+      <QuietProvider quiet={quiet}>
+        <SeasonEnd keepsake={seasonOver} onDone={() => setSeasonOver(null)} />
+      </QuietProvider>
+    );
+  }
 
   const back = () => setView({ at: 'map' });
 
@@ -316,9 +348,23 @@ function RoomMap({
    * the child's finger, and skipped entirely in the quiet state.
    */
   const quiet = useQuiet();
+
+  /**
+   * Whether Chirpy is mentioning the thing he's worried about tonight — see
+   * kit/chirpyArc. Read before the recollection because the two are both
+   * Chirpy talking, and TWO Chirpy cards stacked on one hub is not a
+   * character, it's a feed.
+   */
+  const [arcBeat, setArcBeat] = useState<ArcBeat | null>(null);
+  useEffect(() => {
+    if (!quiet) setArcBeat(arcBeatForToday());
+  }, [quiet]);
+
   const [recollection, setRecollection] = useState<ChirpyRecollection | null>(null);
   useEffect(() => {
-    if (!quiet) setRecollection(recollectionForToday());
+    // He gets one thing to say a night. The arc wins, because it moves and
+    // the recollection will keep.
+    if (!quiet && !arcBeatForToday()) setRecollection(recollectionForToday());
   }, [quiet]);
 
   /**
@@ -347,6 +393,18 @@ function RoomMap({
    */
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
   useEffect(() => { setWelcomeBack(welcomeBackLine()); }, []);
+
+  /**
+   * How many other children caught one tonight — null on every install that
+   * has no endpoint configured, which is currently all of them. See
+   * kit/others, and particularly why this is never invented.
+   */
+  const [others, setOthers] = useState<number | null>(null);
+  useEffect(() => {
+    let dead = false;
+    void othersToday().then((n) => { if (!dead) setOthers(n); });
+    return () => { dead = true; };
+  }, []);
 
   return (
     <div
@@ -451,6 +509,16 @@ function RoomMap({
         </AnimatePresence>
 
         {/*
+          OTHERS, OUT THERE SOMEWHERE. One line, no names, nothing to beat,
+          and nothing at all when there's no server to ask — see kit/others.
+        */}
+        {others !== null && (
+          <p className="mt-3 text-[12.5px] font-semibold" style={{ color: CHROME.textSoft }}>
+            {others} other children caught one tonight, too.
+          </p>
+        )}
+
+        {/*
           THE SHORT WAY IN, and deliberately not a fourth door.
 
           The three fittings on the right wall are the things there are to
@@ -473,6 +541,11 @@ function RoomMap({
             Above Chirpy's recollection because it came from a person. */}
         <AnimatePresence>
           {note && <NoteFound note={note} onDone={() => setNote(null)} />}
+        </AnimatePresence>
+
+        {/* The thing he's circling, weeks apart, never announced. */}
+        <AnimatePresence>
+          {arcBeat && <ChirpyArc beat={arcBeat} onDone={() => setArcBeat(null)} />}
         </AnimatePresence>
 
         {/* Every so often — see kit/chirpyMemory for how rarely — he brings

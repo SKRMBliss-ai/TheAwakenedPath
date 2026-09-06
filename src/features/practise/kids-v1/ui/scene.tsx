@@ -4,6 +4,7 @@ import { SCENE_MOODS, roomArt, storageFallback, type RoomConfig } from '../rooms
 import { FONT, Scrim } from './chrome';
 import { useMotion, useQuiet } from './quiet';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
+import { startAmbience, stopAmbience } from '../kit/ambience';
 import { BOY_SRC, BOY_SRCSET, boySpriteForEmotion, boySpritesetForEmotion, type ChirpyPose } from './sprites';
 
 /**
@@ -31,6 +32,22 @@ import { BOY_SRC, BOY_SRCSET, boySpriteForEmotion, boySpritesetForEmotion, type 
 export function RoomScene({ room, dim = 0 }: { room: RoomConfig; dim?: number }) {
   const mood = SCENE_MOODS[room.scene];
   const quiet = useQuiet();
+
+  /**
+   * THE ROOM'S OWN SOUND. Every screen in the app renders one of these, so
+   * this is the single place that knows which room a child is standing in —
+   * which makes it the only sane place to hang the room tone.
+   *
+   * Silent in the quiet state, like the motes above and Chirpy himself: a
+   * distressed child gets a still, silent room, and that rule is enforced
+   * here rather than trusted to nine call sites. See kit/ambience for why
+   * this is synthesised rather than sampled, and why it is so very quiet.
+   */
+  useEffect(() => {
+    if (quiet) { stopAmbience(); return; }
+    startAmbience(room.scene);
+    return () => stopAmbience();
+  }, [room.scene, quiet]);
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">

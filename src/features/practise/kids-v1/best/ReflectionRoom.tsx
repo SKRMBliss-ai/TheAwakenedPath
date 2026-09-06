@@ -18,6 +18,7 @@ import { starCount } from '../kit/sky';
 import { agoLabel, deleteCaseAt, deleteDrawingAt, loadCases, type Case } from '../kit/cases';
 import { shownIds, toggleShown } from '../kit/shown';
 import { allHung, hangIn, takeDown } from '../kit/hung';
+import { pastSeasons } from '../kit/seasons';
 import { VIRTUE_ROOMS } from './rooms';
 
 /**
@@ -63,6 +64,10 @@ export function ReflectionRoom({
   const [cases, setCases] = useState(() => loadCases());
   const deleteDrawing = (index: number) => setCases(deleteDrawingAt(index));
   const deleteCase = (index: number) => setCases(deleteCaseAt(index));
+
+  /** Seasons already closed — see kit/seasons. Empty for the first three
+   *  months of a child's life in here, and the shelf hides itself until then. */
+  const [seasons] = useState(() => pastSeasons());
 
   /**
    * Which of the four answers have a recording, held in state rather than
@@ -161,6 +166,39 @@ export function ReflectionRoom({
             rather than on the jar itself — see LetThemGo on why this is not
             a second gesture hung off a thing a child already taps. */}
         <LetThemGo lifetimeTotal={allCaught.length} />
+
+        {/* SEASONS ALREADY FINISHED. Only ever appears once at least one has
+            closed, which is three months in — so the room stays exactly as it
+            was for every child who hasn't got one yet, rather than showing
+            them an empty shelf labelled with something they haven't reached. */}
+        {seasons.length > 0 && (
+          <div className="mt-5">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: accent }}>
+              Seasons you’ve finished
+            </p>
+            <div className="mt-2.5 flex flex-col gap-2">
+              {seasons.slice().reverse().map((k) => (
+                <div
+                  key={k.n}
+                  className="rounded-[18px] px-4 py-3"
+                  style={{ background: 'rgba(10,8,24,0.5)', border: `1px solid ${CHROME.pillBorder}` }}
+                >
+                  <p className="text-[13.5px] font-extrabold" style={{ color: CHROME.text }}>
+                    Season {k.n}
+                    <span className="ml-2 text-[11.5px] font-bold" style={{ color: CHROME.textSoft }}>
+                      {agoLabel(k.to)}
+                    </span>
+                  </p>
+                  <p className="mt-0.5 text-[12.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
+                    {k.fireflies} {k.fireflies === 1 ? 'firefly' : 'fireflies'} · {k.days}{' '}
+                    {k.days === 1 ? 'day' : 'days'} you came
+                    {k.mostDone ? ` · mostly ${k.mostDone.toLowerCase()}` : ''}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── The star map, ALWAYS FIRST ──────────────────────────────
             It used to sit below the cases shelf, which meant a child with
