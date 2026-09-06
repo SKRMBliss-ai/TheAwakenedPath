@@ -952,7 +952,7 @@ function DrawInvite({ accent, onSave }: { accent: string; onSave: (dataUrl: stri
         style={{ minHeight: m.target, background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}`, color: CHROME.text }}
       >
         <Paintbrush size={16} strokeWidth={2.4} />
-        Draw what the knot looked like
+        Draw what it felt like
       </motion.button>
     );
   }

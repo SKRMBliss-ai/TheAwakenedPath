@@ -104,33 +104,3 @@ export function FireflyJar({
     </svg>
   );
 }
-
-/** The knot, for the other journey. Two threads, one snagged, one loose. */
-export function KnotMark({ size = 96, untangled = false }: { size?: number; untangled?: boolean }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden>
-      <motion.path
-        d={untangled
-          ? 'M24 30 Q50 26 76 30'
-          : 'M24 26 Q46 30 40 46 Q34 62 54 62 Q74 62 66 44'}
-        fill="none"
-        stroke="#B98CE0"
-        strokeWidth="6"
-        strokeLinecap="round"
-        animate={{ pathLength: [0.92, 1, 0.92] }}
-        transition={{ repeat: Infinity, duration: 4.5, ease: 'easeInOut' }}
-      />
-      <motion.path
-        d={untangled
-          ? 'M24 62 Q50 66 76 62'
-          : 'M30 74 Q52 78 62 66 Q72 54 56 48 Q42 43 48 32'}
-        fill="none"
-        stroke="#FFD98A"
-        strokeWidth="6"
-        strokeLinecap="round"
-        animate={{ pathLength: [1, 0.94, 1] }}
-        transition={{ repeat: Infinity, duration: 5.2, ease: 'easeInOut' }}
-      />
-    </svg>
-  );
-}
