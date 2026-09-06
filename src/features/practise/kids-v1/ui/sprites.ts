@@ -21,3 +21,18 @@ export const chirpySprite = (pose: ChirpyPose) => `/chirpy/chirpy-${pose}.webp`;
 export const BOY_SRC = '/assets/gym/kids-character@320.webp';
 export const BOY_SRCSET =
   '/assets/gym/kids-character@160.webp 160w, /assets/gym/kids-character@320.webp 320w';
+
+/**
+ * Get the boy sprite path for a specific emotion. Falls back to the default
+ * (calm/neutral) sprite if the emotion version doesn't exist yet.
+ * Emotions: calm (default), worry, scared, sad.
+ */
+export const boySpriteForEmotion = (emotion: 'calm' | 'worry' | 'scared' | 'sad' = 'calm') => {
+  // When emotion-specific sprites are added, they'll be returned here.
+  // For now, all emotions use the neutral sprite.
+  return '/assets/gym/kids-character@320.webp';
+};
+
+export const boySpritesetForEmotion = (emotion: 'calm' | 'worry' | 'scared' | 'sad' = 'calm') => {
+  return '/assets/gym/kids-character@160.webp 160w, /assets/gym/kids-character@320.webp 320w';
+};

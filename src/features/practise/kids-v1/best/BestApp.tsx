@@ -864,6 +864,7 @@ function DoorWall({
         nudge={active?.door === 0 ? active.line : null}
         onClick={onFireflies}
         accent="#FFC65C"
+        peephole="fireflies"
       />
       <DoorHandle
         side="right"
@@ -872,6 +873,7 @@ function DoorWall({
         nudge={active?.door === 1 ? active.line : null}
         onClick={onStuck}
         accent="#C48BE8"
+        peephole="thread"
       />
       <DoorHandle
         side="right"
@@ -880,6 +882,7 @@ function DoorWall({
         nudge={active?.door === 2 ? active.line : null}
         onClick={onChirpy}
         accent="#8FD9C4"
+        peephole="pacer"
       />
     </>
   );

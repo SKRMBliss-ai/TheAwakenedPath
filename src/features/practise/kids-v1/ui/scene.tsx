@@ -4,7 +4,7 @@ import { SCENE_MOODS, roomArt, storageFallback, type RoomConfig } from '../rooms
 import { FONT, Scrim } from './chrome';
 import { useMotion, useQuiet } from './quiet';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
-import { BOY_SRC, BOY_SRCSET, chirpySprite, type ChirpyPose } from './sprites';
+import { BOY_SRC, BOY_SRCSET, boySpriteForEmotion, boySpritesetForEmotion, chirpySprite, type ChirpyPose } from './sprites';
 
 /**
  * The place: a full-bleed scene, and the two characters who live in it.
@@ -210,16 +210,18 @@ export function TheBoy({
   size = 190,
   gaze = 'scene',
   className = '',
+  emotion = 'calm',
 }: {
   size?: number;
   gaze?: 'scene' | 'child';
   className?: string;
+  emotion?: 'calm' | 'worry' | 'scared' | 'sad';
 }) {
   const m = useMotion();
   return (
     <motion.img
-      src={BOY_SRC}
-      srcSet={BOY_SRCSET}
+      src={boySpriteForEmotion(emotion)}
+      srcSet={boySpritesetForEmotion(emotion)}
       sizes={`${size}px`}
       alt=""
       aria-hidden
@@ -249,43 +251,24 @@ const CHIRPY_ASPECT = 240 / 288;
 
 /** The pair, as they appear on the character sheet — Chirpy on the shoulder. */
 export function BoyAndChirpy({
-  size = 190,
+  size = 240,
   pose = 'curious',
   gaze = 'scene',
+  emotion = 'calm',
 }: {
   size?: number;
   pose?: ChirpyPose;
   gaze?: 'scene' | 'child';
+  emotion?: 'calm' | 'worry' | 'scared' | 'sad';
 }) {
   const quiet = useQuiet();
   const boyW = size * BOY_ASPECT;
-  const chirpyH = size * 0.34;
-  const chirpyW = chirpyH * CHIRPY_ASPECT;
 
-  // He perches on the shoulder the raised arm ISN'T on. The art waves with
-  // its right hand, and `gaze="scene"` mirrors the whole figure — so the
-  // free shoulder swaps sides with the gaze.
-  const shoulder = gaze === 'scene' ? { right: -chirpyW * 0.42 } : { left: -chirpyW * 0.42 };
-
+  // Chirpy is now rendered on the boy sprite itself (built in), so no need
+  // to render him separately here. The boy is bigger now (default 240 instead of 190).
   return (
     <div className="relative" style={{ height: size, width: boyW }}>
-      <TheBoy size={size} gaze={gaze} />
-      {!quiet && (
-        <img
-          src={chirpySprite(pose)}
-          alt=""
-          aria-hidden
-          draggable={false}
-          className="absolute"
-          style={{
-            height: chirpyH,
-            width: chirpyW,
-            top: size * 0.13,
-            ...shoulder,
-            filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.5))',
-          }}
-        />
-      )}
+      <TheBoy size={size} gaze={gaze} emotion={emotion} />
     </div>
   );
 }
