@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CHROME, FONT } from '../ui/chrome';
+import { FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
 import { agoLabel } from '../kit/cases';
 import { tuckAway, type Note } from '../kit/notes';

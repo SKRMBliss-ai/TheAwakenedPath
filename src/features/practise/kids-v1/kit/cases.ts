@@ -17,6 +17,17 @@
  */
 
 export interface Case {
+  /**
+   * Stable across deletions, unlike a position in this array.
+   *
+   * Added when the child gained the ability to SHOW one of these to a
+   * grown-up (see kit/shown): a share pinned to "the third case" silently
+   * becomes a share of somebody else's afternoon the moment an earlier one
+   * is deleted, which is the worst bug this feature could have. Optional
+   * only because cases written before it existed have none; loadCases
+   * backfills them.
+   */
+  id?: string;
   /** ISO day, so the shelf can say "three weeks ago" without storing a clock. */
   day: string;
   feeling?: string;
@@ -51,7 +62,7 @@ export function saveCase(c: Omit<Case, 'day'>): void {
   // they actually worked out, not a list of times they wandered off.
   if (!c.feeling && !c.story) return;
 
-  const entry: Case = { ...c, day: new Date().toISOString().slice(0, 10) };
+  const entry: Case = { ...c, id: newCaseId(), day: new Date().toISOString().slice(0, 10) };
   if (entry.drawing && entry.drawing.length > MAX_DRAWING_CHARS) {
     delete entry.drawing;
   }
@@ -112,12 +123,26 @@ export function deleteCaseAt(index: number): Case[] {
   return all;
 }
 
+function newCaseId(): string {
+  return `c-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function loadCases(): Case[] {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return [];
     const v = JSON.parse(raw);
-    return Array.isArray(v) ? (v as Case[]) : [];
+    if (!Array.isArray(v)) return [];
+    const all = v as Case[];
+
+    // Backfill ids for cases written before they existed, once, and keep
+    // them — an id that regenerated on every read would be no more stable
+    // than the array position it replaced.
+    if (all.some((c) => !c.id)) {
+      for (const c of all) if (!c.id) c.id = newCaseId();
+      writeCases(all);
+    }
+    return all;
   } catch { return []; }
 }
 

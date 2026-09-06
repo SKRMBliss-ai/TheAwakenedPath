@@ -22,17 +22,28 @@ export const BOY_SRC = '/assets/gym/kids-character@320.webp';
 export const BOY_SRCSET =
   '/assets/gym/kids-character@160.webp 160w, /assets/gym/kids-character@320.webp 320w';
 
+export type BoyEmotion = 'calm' | 'worry' | 'scared' | 'sad';
+
 /**
- * Get the boy sprite path for a specific emotion. Falls back to the default
- * (calm/neutral) sprite if the emotion version doesn't exist yet.
- * Emotions: calm (default), worry, scared, sad.
+ * WHICH PLATE OF THE BOY TO DRAW.
+ *
+ * Only the calm one has actually been drawn, so every emotion currently
+ * resolves to it. This is a real map rather than a function that ignores its
+ * argument, so that adding `worry.webp` is a one-line change here and not a
+ * hunt through the call sites — and so the map itself is the honest record of
+ * what art exists, rather than a comment claiming art that doesn't.
+ *
+ * A missing plate must never 404: a broken image where a child expects to see
+ * themselves is worse than the wrong expression, so an emotion is only
+ * repointed here once its file is actually in /public.
  */
-export const boySpriteForEmotion = (emotion: 'calm' | 'worry' | 'scared' | 'sad' = 'calm') => {
-  // When emotion-specific sprites are added, they'll be returned here.
-  // For now, all emotions use the neutral sprite.
-  return '/assets/gym/kids-character@320.webp';
+const BOY_PLATE: Record<BoyEmotion, { src: string; srcset: string }> = {
+  calm:   { src: BOY_SRC, srcset: BOY_SRCSET },
+  worry:  { src: BOY_SRC, srcset: BOY_SRCSET },
+  scared: { src: BOY_SRC, srcset: BOY_SRCSET },
+  sad:    { src: BOY_SRC, srcset: BOY_SRCSET },
 };
 
-export const boySpritesetForEmotion = (emotion: 'calm' | 'worry' | 'scared' | 'sad' = 'calm') => {
-  return '/assets/gym/kids-character@160.webp 160w, /assets/gym/kids-character@320.webp 320w';
-};
+export const boySpriteForEmotion = (emotion: BoyEmotion = 'calm') => BOY_PLATE[emotion].src;
+
+export const boySpritesetForEmotion = (emotion: BoyEmotion = 'calm') => BOY_PLATE[emotion].srcset;

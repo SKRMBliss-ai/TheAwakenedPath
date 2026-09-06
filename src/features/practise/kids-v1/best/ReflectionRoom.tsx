@@ -16,6 +16,7 @@ import { LifetimeJar } from './LifetimeJar';
 import { LetThemGo } from './LetThemGo';
 import { starCount } from '../kit/sky';
 import { agoLabel, deleteCaseAt, deleteDrawingAt, loadCases, type Case } from '../kit/cases';
+import { shownIds, toggleShown } from '../kit/shown';
 
 /**
  * THE REFLECTION OBSERVATORY — where the day's journey ends.
@@ -418,6 +419,17 @@ function CaseShelf({
   const [open, setOpen] = useState(false);
   const [showOlder, setShowOlder] = useState(false);
   const [arming, setArming] = useState<number | null>(null);
+
+  /**
+   * Which of these the child has handed to a grown-up. Held in state so the
+   * label flips under their finger; the truth is in localStorage (kit/shown).
+   */
+  const [sharedWith, setSharedWith] = useState<Set<string>>(() => shownIds());
+  const flipShown = (id: string) => {
+    toggleShown(id);
+    setSharedWith(shownIds());
+  };
+
   if (!cases.length) return null;
 
   const cutoff = shelfCutoff();
@@ -500,6 +512,31 @@ function CaseShelf({
                             <p className="mt-1 text-[13.5px] font-semibold leading-snug" style={{ color: '#FFD98A' }}>
                               You found: “{c.other}”
                             </p>
+                          )}
+
+                          {/*
+                            HANDING IT TO SOMEBODY, and taking it back.
+
+                            Plain words rather than an icon: "share" is a verb
+                            a six-year-old knows from a very different context
+                            (a button that sends things to strangers), and the
+                            one thing this must be unambiguous about is that
+                            it goes to a person in this house and nowhere
+                            else. Taking it back is the same tap, and leaves
+                            nothing behind — see kit/shown.
+                          */}
+                          {c.id && (
+                            <button
+                              onClick={() => flipShown(c.id!)}
+                              className="mt-2.5 rounded-full px-3 py-1.5 text-[11.5px] font-extrabold"
+                              style={{
+                                background: sharedWith.has(c.id) ? '#8FD9C4' : 'rgba(255,255,255,0.06)',
+                                border: `1px solid ${sharedWith.has(c.id) ? '#8FD9C4' : CHROME.pillBorder}`,
+                                color: sharedWith.has(c.id) ? '#0E1A1C' : CHROME.textSoft,
+                              }}
+                            >
+                              {sharedWith.has(c.id) ? 'A grown-up can see this · tap to stop' : 'Show this to a grown-up'}
+                            </button>
                           )}
 
                           <button

@@ -4,7 +4,7 @@ import { SCENE_MOODS, roomArt, storageFallback, type RoomConfig } from '../rooms
 import { FONT, Scrim } from './chrome';
 import { useMotion, useQuiet } from './quiet';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
-import { BOY_SRC, BOY_SRCSET, boySpriteForEmotion, boySpritesetForEmotion, chirpySprite, type ChirpyPose } from './sprites';
+import { BOY_SRC, BOY_SRCSET, boySpriteForEmotion, boySpritesetForEmotion, type ChirpyPose } from './sprites';
 
 /**
  * The place: a full-bleed scene, and the two characters who live in it.
@@ -247,21 +247,24 @@ export function TheBoy({
  * the boy's face.
  */
 const BOY_ASPECT = 320 / 558;
-const CHIRPY_ASPECT = 240 / 288;
 
 /** The pair, as they appear on the character sheet — Chirpy on the shoulder. */
 export function BoyAndChirpy({
   size = 240,
-  pose = 'curious',
   gaze = 'scene',
   emotion = 'calm',
 }: {
   size?: number;
+  /**
+   * Accepted, not read. Chirpy lives on the boy's back in the artwork now
+   * rather than being a second sprite pinned to his shoulder, so there is
+   * nothing left here for a pose to change — but every call site still
+   * passes one, and they shouldn't all need editing to say so.
+   */
   pose?: ChirpyPose;
   gaze?: 'scene' | 'child';
   emotion?: 'calm' | 'worry' | 'scared' | 'sad';
 }) {
-  const quiet = useQuiet();
   const boyW = size * BOY_ASPECT;
 
   // Chirpy is now rendered on the boy sprite itself (built in), so no need

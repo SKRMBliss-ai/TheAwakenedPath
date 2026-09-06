@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CHROME, FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
-import { release, releasedCount, stillHeld } from '../kit/sky';
+import { release, releasedCount } from '../kit/sky';
 import * as sound from '../kit/sound';
 
 /**

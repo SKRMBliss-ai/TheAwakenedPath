@@ -3,6 +3,8 @@ import { ChevronLeft } from 'lucide-react';
 import { SCENE_MOODS } from '../rooms';
 import { CHROME, FONT } from '../ui/chrome';
 import { addNote, loadNotes, MAX_NOTE } from '../kit/notes';
+import { agoLabel, loadCases } from '../kit/cases';
+import { shownIds } from '../kit/shown';
 
 /**
  * WHERE A GROWN-UP WRITES THE ONE LINE. See kit/notes for the rules this
@@ -39,6 +41,16 @@ export function LeaveANote({ onBack }: { onBack: () => void }) {
   const [sent, setSent] = useState(false);
 
   const written = loadNotes();
+
+  /**
+   * WHAT THE CHILD CHOSE TO HAND OVER — and nothing else. There is no view
+   * anywhere in this app of the cases they didn't share, and there is not
+   * going to be one; see kit/shown.
+   */
+  const shared = (() => {
+    const ids = shownIds();
+    return loadCases().filter((c) => c.id && ids.has(c.id));
+  })();
 
   const send = () => {
     if (!text.trim()) return;
@@ -143,6 +155,47 @@ export function LeaveANote({ onBack }: { onBack: () => void }) {
               <p className="text-[13px] font-bold" style={{ color: '#8FD9C4' }}>
                 It’s in. They’ll find it next time they open the gym.
               </p>
+            )}
+
+            {shared.length > 0 && (
+              <div className="mt-4 flex flex-col gap-2.5">
+                <span className="text-[12px] font-extrabold uppercase tracking-[0.12em]" style={{ color: '#8FD9C4' }}>
+                  Shown to you
+                </span>
+                <p className="text-[12.5px] font-semibold leading-relaxed" style={{ color: CHROME.textSoft }}>
+                  Only what they picked out for you. They can take any of it
+                  back whenever they like, and you won’t be told when they do.
+                </p>
+                {shared.map((c) => (
+                  <div
+                    key={c.id}
+                    className="rounded-[16px] px-3.5 py-3"
+                    style={{ background: 'rgba(143,217,196,0.10)', border: '1px solid rgba(143,217,196,0.34)' }}
+                  >
+                    <p className="text-[10.5px] font-extrabold uppercase tracking-[0.12em]" style={{ color: CHROME.textSoft }}>
+                      {agoLabel(c.day)}{c.feeling ? ` · ${c.feeling.toLowerCase()}` : ''}
+                    </p>
+                    {c.story && (
+                      <p className="mt-1.5 text-[13.5px] font-bold leading-snug" style={{ color: CHROME.text }}>
+                        Their mind said: “{c.story}”
+                      </p>
+                    )}
+                    {c.other && (
+                      <p className="mt-1 text-[13px] font-semibold leading-snug" style={{ color: '#FFD98A' }}>
+                        They found: “{c.other}”
+                      </p>
+                    )}
+                    {c.drawing && (
+                      <img
+                        src={c.drawing}
+                        alt=""
+                        className="mt-2 w-full max-w-[180px] rounded-[12px]"
+                        style={{ background: 'rgba(255,255,255,0.9)' }}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
 
             {written.length > 0 && (

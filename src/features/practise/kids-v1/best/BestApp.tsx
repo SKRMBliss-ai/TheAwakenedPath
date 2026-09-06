@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
-import { BEHAVIOURS, todayKey } from '../../../kids/data';
+import { BEHAVIOURS } from '../../../kids/data';
 import { Onboarding } from '../../../kids/Onboarding';
 import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
@@ -236,7 +236,10 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onLeaveNote={() => setView({ at: 'leavenote' })}
               />
             )}
-            {view.at === 'leavenote' && <LeaveANote onBack={back} />}
+            {/* Back to the Observatory, not the hub — it is the only way in
+                here, and a grown-up who came to read what was shown to them
+                should land where they were rather than at the front door. */}
+            {view.at === 'leavenote' && <LeaveANote onBack={() => setView({ at: 'reflection' })} />}
             {view.at === 'oneminute' && (
               <OneMinute lifetimeFireflies={lifetimeFireflies} onExit={back} />
             )}
