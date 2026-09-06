@@ -10,7 +10,7 @@ import { DoorHandle } from '../ui/DoorHandle';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { MicButton } from '../ui/MicButton';
 import { HearYourself } from '../ui/HearYourself';
-import { linkClip } from '../kit/voiceStore';
+import { allLinks, linkClip } from '../kit/voiceStore';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { LifetimeJar } from './LifetimeJar';
 import { LetThemGo } from './LetThemGo';
@@ -60,6 +60,18 @@ export function ReflectionRoom({
   const [cases, setCases] = useState(() => loadCases());
   const deleteDrawing = (index: number) => setCases(deleteDrawingAt(index));
   const deleteCase = (index: number) => setCases(deleteCaseAt(index));
+
+  /**
+   * Which of the four answers have a recording, held in state rather than
+   * read from storage at render time — writing the link doesn't re-render
+   * React, so a child who had just spoken their answer got no play button
+   * until they left the room and came back.
+   */
+  const [voiceClips, setVoiceClips] = useState<Record<string, string>>(() => allLinks());
+  const keepVoice = (answerKey: string, clipId: string) => {
+    linkClip(answerKey, clipId);
+    setVoiceClips((v) => ({ ...v, [answerKey]: clipId }));
+  };
 
   const now = new Date();
   const [month, setMonth] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1));
@@ -279,13 +291,13 @@ export function ReflectionRoom({
                      questions are the only place in the app a child talks at
                      length about themselves, which makes them the only
                      recordings worth having in a year's time. */
-                  onVoice={(clipId) => linkClip(`${monthKey}:${q.key}`, clipId)}
+                  onVoice={(clipId) => keepVoice(`${monthKey}:${q.key}`, clipId)}
                 />
               </div>
 
               {/* Only appears once there IS a recording — see HearYourself. */}
               <div className="mt-2 flex">
-                <HearYourself answerKey={`${monthKey}:${q.key}`} accent={accent} />
+                <HearYourself clipId={voiceClips[`${monthKey}:${q.key}`] ?? null} accent={accent} />
               </div>
             </motion.div>
           ))}

@@ -135,8 +135,9 @@ function readLinks(): Record<string, string> {
   } catch { return {}; }
 }
 
-export function clipFor(answerKey: string): string | null {
-  return readLinks()[answerKey] ?? null;
+/** Every answer→clip link, for a screen that wants to seed its own state. */
+export function allLinks(): Record<string, string> {
+  return readLinks();
 }
 
 export function allLinkedClips(): Set<string> {

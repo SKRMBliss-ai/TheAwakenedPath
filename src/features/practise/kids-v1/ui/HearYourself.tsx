@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Play, Square } from 'lucide-react';
 import { CHROME } from './chrome';
-import { clipFor, getClip } from '../kit/voiceStore';
+import { getClip } from '../kit/voiceStore';
 
 /**
  * "HEAR YOURSELF SAYING IT."
@@ -20,12 +20,19 @@ import { clipFor, getClip } from '../kit/voiceStore';
  * browser with no recorder, a permission the parent declined — all of them
  * simply have no button, rather than a disabled one that invites a child to
  * keep pressing something broken.
+ *
+ * THE CLIP ID IS A PROP, not something this looks up for itself. It used to
+ * read the answer→clip map straight out of localStorage during render, which
+ * tested fine and was wrong in the one way that mattered: writing a link
+ * doesn't re-render React, so a child who had just spoken their answer saw no
+ * button at all until they left the room and came back. The owning screen
+ * holds the links in state now and hands them down.
  */
-export function HearYourself({ answerKey, accent = '#FFD98A' }: { answerKey: string; accent?: string }) {
+export function HearYourself({ clipId, accent = '#FFD98A' }: { clipId: string | null; accent?: string }) {
   const [url, setUrl] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
   const audio = useRef<HTMLAudioElement | null>(null);
-  const id = clipFor(answerKey);
+  const id = clipId;
 
   // The object URL is made once per clip and revoked when this goes away —
   // a screen that mounts a dozen of these and leaks every blob would hold
@@ -33,6 +40,12 @@ export function HearYourself({ answerKey, accent = '#FFD98A' }: { answerKey: str
   useEffect(() => {
     let dead = false;
     let made: string | null = null;
+    // A re-record swaps the id under us; the element built around the old
+    // URL has to go with it, or the child hears their previous attempt.
+    audio.current?.pause();
+    audio.current = null;
+    setPlaying(false);
+    setUrl(null);
     if (id) {
       void getClip(id).then((blob) => {
         if (dead || !blob) return;
