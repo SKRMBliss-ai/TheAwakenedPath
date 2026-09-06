@@ -29,6 +29,7 @@ import { recollectionForToday, type ChirpyRecollection } from '../kit/chirpyMemo
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
 import { visitorForToday, type Visitor } from '../kit/visitor';
 import { noteWaiting, type Note } from '../kit/notes';
+import { welcomeBackLine } from '../kit/awayFor';
 import { saveCase } from '../kit/cases';
 import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
 import { COMPANY } from '../kit/feelingCompanions';
@@ -339,6 +340,14 @@ function RoomMap({
   const [note, setNote] = useState<Note | null>(null);
   useEffect(() => { setNote(noteWaiting()); }, []);
 
+  /**
+   * And whether this is a coming-back, after a real absence. Read once on
+   * arrival because the call stamps today as seen — see kit/awayFor, and
+   * particularly its list of the things this must never say.
+   */
+  const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
+  useEffect(() => { setWelcomeBack(welcomeBackLine()); }, []);
+
   return (
     <div
       className="relative min-h-[100svh] w-full overflow-hidden"
@@ -406,6 +415,40 @@ function RoomMap({
             total={VIRTUE_ROOMS.length}
           />
         </div>
+
+        {/*
+          BACK AFTER A WHILE. Chirpy's own news, never a word about the gap —
+          see kit/awayFor. Dismissed by tapping it, and gone for the day
+          either way.
+        */}
+        <AnimatePresence>
+          {welcomeBack && (
+            <motion.button
+              key="welcomeback"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.5, delay: 0.35 }}
+              onClick={() => setWelcomeBack(null)}
+              className="mt-3 flex w-full items-center gap-2.5 rounded-[20px] px-3.5 py-3 text-left backdrop-blur-md"
+              style={{
+                background: CHROME.pill,
+                border: '1px solid rgba(143,217,196,0.45)',
+              }}
+            >
+              <img
+                src={chirpySprite('excited')}
+                alt=""
+                aria-hidden
+                draggable={false}
+                className="h-9 w-9 shrink-0 select-none"
+              />
+              <span className="text-[13.5px] font-bold leading-snug" style={{ color: CHROME.text }}>
+                {welcomeBack}
+              </span>
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {/*
           THE SHORT WAY IN, and deliberately not a fourth door.

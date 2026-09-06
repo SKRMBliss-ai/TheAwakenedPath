@@ -17,6 +17,8 @@ import { LetThemGo } from './LetThemGo';
 import { starCount } from '../kit/sky';
 import { agoLabel, deleteCaseAt, deleteDrawingAt, loadCases, type Case } from '../kit/cases';
 import { shownIds, toggleShown } from '../kit/shown';
+import { allHung, hangIn, takeDown } from '../kit/hung';
+import { VIRTUE_ROOMS } from './rooms';
 
 /**
  * THE REFLECTION OBSERVATORY — where the day's journey ends.
@@ -621,9 +623,21 @@ function DoodleWall({
   onDelete: (index: number) => void;
 }) {
   const [arming, setArming] = useState<number | null>(null);
+  /** The drawing whose room-picker is open. */
+  const [hanging, setHanging] = useState<string | null>(null);
+  /** roomId → case id, held in state so a wall changes under their finger. */
+  const [hungHere, setHungHere] = useState(() => allHung());
+
   const drawn = cases
     .map((c, index) => ({ c, index }))
     .filter((x) => !!x.c.drawing);
+
+  /** case id → the name of the room it's hanging in, for the tile's label. */
+  const hungRooms: Record<string, string> = {};
+  for (const r of VIRTUE_ROOMS) {
+    const id = hungHere[r.id];
+    if (id) hungRooms[id] = r.name;
+  }
 
   if (!drawn.length) return null;
 
@@ -631,6 +645,9 @@ function DoodleWall({
     <div className="mt-5">
       <p className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: '#FFD98A' }}>
         Doodles
+      </p>
+      <p className="mt-1 text-[12px] font-semibold" style={{ color: CHROME.textSoft }}>
+        Tap one to hang it up in a room.
       </p>
       <div className="mt-2.5 grid grid-cols-3 gap-2.5 sm:grid-cols-4">
         {drawn.map(({ c, index }) => {
@@ -645,7 +662,26 @@ function DoodleWall({
               className="relative aspect-square overflow-hidden rounded-[14px]"
               style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${CHROME.pillBorder}` }}
             >
-              <img src={c.drawing} alt="" className="h-full w-full object-cover" />
+              {/* THE PICTURE ITSELF IS THE CONTROL. Hanging one up is the
+                  nicest thing you can do on this wall, so it gets the whole
+                  tile; deleting keeps its small armed button in the corner. */}
+              <button
+                onClick={() => c.id && setHanging(hanging === c.id ? null : c.id)}
+                aria-label={hungRooms[c.id ?? ''] ? 'Hanging in a room. Tap to move it.' : 'Hang this in a room'}
+                className="absolute inset-0 block h-full w-full border-0 bg-transparent p-0"
+              >
+                <img src={c.drawing} alt="" className="h-full w-full object-cover" />
+              </button>
+
+              {/* Where it currently hangs, if anywhere. */}
+              {c.id && hungRooms[c.id] && (
+                <span
+                  className="pointer-events-none absolute inset-x-1 bottom-1 truncate rounded-full px-2 py-0.5 text-center text-[9px] font-extrabold"
+                  style={{ background: 'rgba(10,8,24,0.82)', color: '#FFD98A' }}
+                >
+                  {hungRooms[c.id]}
+                </span>
+              )}
 
               <button
                 onClick={() => {
@@ -680,6 +716,52 @@ function DoodleWall({
           );
         })}
       </div>
+
+      {/*
+        WHICH WALL. Seven rooms, named, plus a way to take it down again.
+        Deliberately a plain list rather than a picture-picker: the child has
+        just chosen the picture, and this is the other half of one decision.
+      */}
+      <AnimatePresence>
+        {hanging && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.28 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="mt-3 rounded-[18px] p-3" style={{ background: 'rgba(10,8,24,0.55)', border: `1px solid ${CHROME.pillBorder}` }}>
+              <p className="text-[12.5px] font-bold" style={{ color: CHROME.text }}>
+                Which room should it go in?
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {VIRTUE_ROOMS.map((r) => {
+                  const here = hungHere[r.id] === hanging;
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={() => {
+                        if (here) takeDown(r.id); else hangIn(r.id, hanging);
+                        setHungHere(allHung());
+                        setHanging(null);
+                      }}
+                      className="rounded-full px-3 py-1.5 text-[12px] font-extrabold"
+                      style={{
+                        background: here ? '#FFD98A' : 'rgba(255,255,255,0.07)',
+                        border: `1px solid ${here ? '#FFD98A' : CHROME.pillBorder}`,
+                        color: here ? '#2B1A05' : CHROME.text,
+                      }}
+                    >
+                      {here ? `Take it out of ${r.name}` : r.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

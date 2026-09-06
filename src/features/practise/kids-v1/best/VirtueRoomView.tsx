@@ -13,6 +13,7 @@ import { RoomGamePlayer } from './RoomGamePlayer';
 import { artRoomFor, VIRTUE_ROOMS, type VirtueRoom } from './rooms';
 import { CaughtFirefly } from './CaughtFirefly';
 import { GardenTree } from './GardenTree';
+import { HungDrawing } from './HungDrawing';
 import { type ReportingDay } from '../kit/reportingDay';
 import * as sound from '../kit/sound';
 
@@ -114,6 +115,10 @@ export function VirtueRoomView({
       <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
 
       <RoomScene room={art} dim={playing ? 0.35 : 0.12} />
+
+      {/* Whatever the child chose to hang in THIS room. Scenery, behind the
+          content, and nothing to tap — see HungDrawing. */}
+      {!playing && <HungDrawing roomId={room.id} />}
 
       {/* THE GARDEN'S OWN TREE, in the garden and nowhere else. It carries the
           same lifetime total the Observatory's jar does, grown into something
