@@ -6,9 +6,9 @@ that used to open the check-in.
 
 ## The change, in one line
 
-A child is no longer asked to pick an emotion. They are shown a room with
-several Chirpys in it, in different states, and asked whether any of them
-feels familiar.
+A child is no longer asked to pick an emotion. They are shown a short list of
+Chirpys in different states, described rather than named, and asked whether
+any of them sounds familiar.
 
 That is a smaller and safer question. "Which emotion are you?" asks a child to
 classify themselves and then hands the app a label to act on. "Which one feels
@@ -20,8 +20,14 @@ this app exists to teach, and leaves the label out of it entirely.
 | File | What it is |
 | --- | --- |
 | `states.ts` | The state registry, the room layout, and the mapping used for routing. Data only. |
-| `ChirpyBeing.tsx` | The single component that renders any Chirpy in any state. |
-| `ChirpyRoom.tsx` | The feeling beat: Chirpys placed through the room, plus Chirpy's asides. |
+| `ChirpyAside.tsx` | The line a chosen Chirpy leaves behind, once the child has picked one. |
+
+`ChirpyBeing.tsx` and `ChirpyRoom.tsx` are gone. They drew the states as
+sprites scattered across the painting and drifting about. That turned a
+question about how you feel into a matter of catching a moving target, and
+half a dozen small characters bobbing in one room read as busy rather than
+calm. The states themselves are unchanged — `states.ts` still holds them, and
+the check-in now lists their descriptions.
 
 Art lives in `/public/chirpy/*.webp` and is the founder's real character
 sheet, already cut into nine poses. Nothing in this folder invents Chirpy art.

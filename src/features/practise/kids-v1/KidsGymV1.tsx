@@ -81,7 +81,6 @@ export function KidsGymV1({ onExitGym }: { onExitGym: () => void }) {
 
       {view.at === 'checkin' && (
         <CheckIn
-          progress={progress}
           onFeelingPicked={(feelingId) => setProgress((p) => recordFeeling(p, feelingId))}
           onCheckInSaved={(entry: Omit<CheckInEntry, 'at'>) =>
             setProgress((p) => recordCheckIn(p, { ...entry, at: Date.now() }))

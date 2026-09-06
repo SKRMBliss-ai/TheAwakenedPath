@@ -8,12 +8,12 @@ import { useMotion, useQuiet } from './ui/quiet';
 import { Chirpy, RoomScene } from './ui/scene';
 import { BodyMap } from './ui/bodyMap';
 import { BODY_ZONE_LABEL, type BodyZoneId } from './ui/bodyZones';
-import { ChirpyRoom, ChirpyAside } from './chirpy/ChirpyRoom';
+import { ChirpyAside } from './chirpy/ChirpyAside';
 import { SELECTABLE_CHIRPYS, getChirpyState } from './chirpy/states';
 import { FEELINGS, SIZES, GOODBITS, THOUGHTS, SITUATIONS, MAYBES } from './kit/checkinContent';
 import * as sound from './kit/sound';
 import { isSpeechSupported, startListening } from './kit/speech';
-import { mostFrequentFeeling, type CheckInEntry, type Progress } from './progress';
+import { type CheckInEntry } from './progress';
 
 /**
  * The check-in — P-01 through P-08. The front door, and the router.
@@ -43,7 +43,7 @@ import { mostFrequentFeeling, type CheckInEntry, type Progress } from './progres
  * THE FEELING SCREEN IS A ROOM WITH CHIRPYS IN IT. Not an emotion picker of
  * any kind — no balloons, no pills, no labels. Several Chirpys inhabit the
  * space in different states, spread through it at different depths, and the
- * child looks round and notices which ones are familiar (chirpy/ChirpyRoom).
+ * child reads down a short list and says which one sounds like them.
  * Any number can be noticed, including none; "not sure" is one of the
  * Chirpys sitting quietly rather than a get-out button underneath. What a
  * child notices is a routing hint for the rest of the walk and nothing more
@@ -106,15 +106,12 @@ function suggestedBodyZone(feelingId: string | undefined): BodyZoneId | null {
 }
 
 export function CheckIn({
-  progress,
   onFeelingPicked,
   onCheckInSaved,
   onFinish,
   onGrownUp,
   onQuiet,
 }: {
-  /** This device's tallies — read for the pyramid's "you often feel this" marker. */
-  progress: Progress;
   /** Called once per real feeling picked (never for "I don't know"), so the app shell can tally it. */
   onFeelingPicked: (feelingId: string) => void;
   /** Called once, when the check-in reaches its close screen, with the whole
@@ -285,26 +282,14 @@ export function CheckIn({
           <GrownUpExit onClick={onGrownUp} />
         </div>
 
-        {/* THE ROOM'S INHABITANTS — mounted once, across the whole opening
-            stretch of the journey, and deliberately OUTSIDE the AnimatePresence
-            below. That is what makes this one continuous place rather than a
-            sequence of screens: when the child moves from noticing a Chirpy to
-            noticing where the feeling sits, the Chirpys they recognised don't
-            vanish and reappear, they drift to the edges of the same room and
-            stay with them. Absolutely positioned so each beat's own words and
-            controls flow underneath. Not in the quiet state, which gets the
-            plain still version instead. */}
-        {!quiet && (screen === 'feeling' || screen === 'size' || screen === 'body') && (
-          <div className="pointer-events-none absolute inset-x-5 z-10 sm:inset-x-7" style={{ top: '24%', height: 380 }}>
-            <ChirpyRoom
-              mode={screen === 'feeling' ? 'pick' : 'witness'}
-              selected={chirpySelection}
-              familiarFeeling={mostFrequentFeeling(progress)}
-              accent={room.palette.accent}
-              onToggle={toggleChirpy}
-            />
-          </div>
-        )}
+        {/* THE DRIFTING CHIRPYS ARE GONE.
+            There used to be a persistent layer here holding several Chirpys
+            adrift over the room for the feeling, size and body beats. A
+            room with half a dozen small characters bobbing about in it is
+            busy rather than calm, and the child has to hunt a moving target
+            to answer a question about how they feel. The still list below
+            (which already existed, as the quiet-state version) is now what
+            everyone gets. */}
 
         <div className="flex flex-1 flex-col justify-center py-6">
           <AnimatePresence mode="wait">
@@ -316,34 +301,31 @@ export function CheckIn({
               transition={m.transition}
               className="flex flex-col gap-5"
             >
-              {/* ── P-01 · the room, and the Chirpys in it ───────────────
-                  Not an emotion picker. A room the child looks around,
-                  with several Chirpys living in it, any number of which
-                  may feel familiar — see chirpy/ChirpyRoom.tsx. */}
+              {/* ── P-01 · which one sounds like you ─────────────────
+                  Still not an emotion picker. The options are descriptions
+                  of what a feeling is like, not names for it, so a child
+                  recognises something rather than diagnosing themselves.
+                  They are listed rather than scattered about the room —
+                  see chirpy/ChirpyAside.tsx for what became of that. */}
               {screen === 'feeling' && (
                 <>
                   <Chirpy pose="curious" line="Have a look round. See anyone you know?" align="left" />
                   <Question room={room}>Which one feels a little like you?</Question>
-                  {quiet ? (
-                    // The quiet state gets the plain, still version: fewer,
-                    // larger, no drifting targets (§2.6/§7).
-                    <div className="flex flex-col" style={{ gap: m.gap }}>
-                      {SELECTABLE_CHIRPYS.map((s) => (
-                        <Pill
-                          key={s.id}
-                          label={s.description}
-                          selected={chirpySelection.has(s.id)}
-                          onClick={() => toggleChirpy(s.id)}
-                          accent={room.palette.accent}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    // The Chirpys themselves live in the persistent layer
-                    // above; this just holds the space they occupy so the
-                    // aside and the way forward sit below them.
-                    <div aria-hidden style={{ height: 348 }} />
-                  )}
+                  {/* Descriptions, not emotion words — the child is still
+                      recognising something rather than naming it. This was
+                      the quiet state's version and is now simply the
+                      screen; nothing moves, nothing has to be caught. */}
+                  <div className="flex flex-col" style={{ gap: m.gap }}>
+                    {SELECTABLE_CHIRPYS.map((s) => (
+                      <Pill
+                        key={s.id}
+                        label={s.description}
+                        selected={chirpySelection.has(s.id)}
+                        onClick={() => toggleChirpy(s.id)}
+                        accent={room.palette.accent}
+                      />
+                    ))}
+                  </div>
                   <ChirpyAside stateId={lastChirpy} accent={room.palette.accent} />
                   {/* Always available, whether or not anything is chosen —
                       a child who doesn't recognise any of them has still
