@@ -13,6 +13,7 @@ import { SCENE_MOODS, roomPoster, storageFallback } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
 import { DoorHandle } from '../ui/DoorHandle';
+import { FloatingJar } from './FloatingJar';
 import { HelpChirpy } from './HelpChirpy';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
@@ -212,6 +213,10 @@ function RoomMap({
         onStuck={onDeepDive}
         onChirpy={onHelpChirpy}
       />
+
+      {/* Tonight's lights, standing at the foot of the door that fills it.
+          Movable, and it remembers where it was put. */}
+      <FloatingJar caught={caughtToday} />
 
       <div className="relative mx-auto w-full max-w-6xl px-[74px] pb-32 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">

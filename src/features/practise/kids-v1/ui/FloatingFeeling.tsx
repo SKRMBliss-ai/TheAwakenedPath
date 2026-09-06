@@ -289,30 +289,44 @@ const SPARK = Array.from({ length: 12 }, (_, i) => ({
   hue: i % 3 === 0 ? '#FFD98A' : i % 3 === 1 ? '#C48BE8' : '#FFFFFF',
 }));
 
-function Sparkle() {
+export function Sparkle({
+  /** Width of the bloom behind it. Scale this to the thing being touched. */
+  bloom = 150,
+  /** Multiplier on how far the motes are thrown. */
+  spread = 1,
+  /** Three colours, cycled. Defaults to the companion's warm/violet/white. */
+  hues,
+}: {
+  bloom?: number;
+  spread?: number;
+  hues?: [string, string, string];
+} = {}) {
   return (
     <span aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
       <motion.span
         className="absolute rounded-full"
         style={{
-          width: 150,
-          height: 150,
+          width: bloom,
+          height: bloom,
           background: 'radial-gradient(circle, rgba(255,236,190,0.85) 0%, rgba(196,139,232,0.35) 44%, transparent 72%)',
         }}
         initial={{ opacity: 0, scale: 0.4 }}
         animate={{ opacity: [0, 0.9, 0], scale: [0.4, 1.35, 1.6] }}
         transition={{ duration: 0.9, ease: 'easeOut' }}
       />
-      {SPARK.map((p, i) => (
+      {SPARK.map((p, i) => {
+        const hue = hues ? hues[i % 3] : p.hue;
+        return (
         <motion.span
           key={i}
           className="absolute block rounded-full"
-          style={{ width: p.s, height: p.s, background: p.hue, boxShadow: `0 0 10px ${p.hue}` }}
+          style={{ width: p.s, height: p.s, background: hue, boxShadow: `0 0 10px ${hue}` }}
           initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
-          animate={{ x: Math.cos(p.a) * p.d, y: Math.sin(p.a) * p.d, opacity: 0, scale: 0.3 }}
+          animate={{ x: Math.cos(p.a) * p.d * spread, y: Math.sin(p.a) * p.d * spread, opacity: 0, scale: 0.3 }}
           transition={{ duration: 1, ease: 'easeOut', delay: (i % 4) * 0.04 }}
         />
-      ))}
+        );
+      })}
     </span>
   );
 }
