@@ -18,6 +18,7 @@ import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
 import { saveCase } from '../kit/cases';
+import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
 import { markVisit } from '../kit/sky';
 import * as sound from '../kit/sound';
 
@@ -348,6 +349,25 @@ function WelcomeBanner({
     }, WELCOME_MS);
     return () => clearTimeout(t);
   }, [quiet, dismissed]);
+
+  /*
+    AND IT SAYS THE NAME OUT LOUD, ONCE.
+
+    "Hello, Shaarav" was only ever text, which a child who can't read yet
+    doesn't get at all — and being greeted by name is most of the reason
+    this banner exists. So it's spoken on the way in, the same as every
+    other line in the app (ui/scene's Chirpy).
+
+    Once per visit, not once per hub. This component mounts again every
+    single time a child comes back out of a room, and being told hello
+    fourteen times in an evening is how a greeting turns into a nag —
+    greetByName holds the "already said it" flag in the module, outside
+    React, so the remounts can't reset it.
+  */
+  useEffect(() => {
+    greetByName(name, quiet);
+    return () => stopSpeaking();
+  }, [name, quiet]);
 
   /**
    * No level, no points, no streak. The greeting used to read "Kindness
@@ -746,9 +766,14 @@ function StarSky({ count }: { count: number }) {
  * is a menu, and a menu is the thing this navigation exists not to be.
  */
 
-/** Module-level so the wording doesn't re-roll on every render. */
+/**
+ * Module-level so the wording doesn't re-roll on every render. The first
+ * line of each pool is that door's own label, so the first thing a nudge
+ * ever does is repeat the name before it starts finding other words for it.
+ */
 const FIREFLY_TIPS = [
-  'Catch the Fireflies',
+  'My Firefly Jar',
+  'How did today go?',
   'Been good at something today?',
   'Come and light one up',
 ];
@@ -813,7 +838,16 @@ function DoorWall({
       <DoorHandle
         side="right"
         bottomVh={20}
-        label="Catch the Fireflies"
+        /*
+          "Catch the Fireflies" was an instruction, and it described the
+          animation rather than the thing. What's actually behind this door
+          is a child saying how their day went, virtue by virtue, and the jar
+          is where those answers end up — so the door is named for the jar,
+          and the jar is theirs. Possessive on purpose: the two doors above
+          are questions for the days something is wrong, and this one is a
+          place that belongs to them and is open every night regardless.
+        */
+        label="My Firefly Jar"
         nudge={active?.door === 0 ? active.line : null}
         onClick={onFireflies}
         accent="#FFC65C"

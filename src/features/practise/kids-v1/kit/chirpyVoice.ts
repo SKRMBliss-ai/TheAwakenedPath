@@ -53,3 +53,22 @@ export function speak(text: string, quiet: boolean) {
 export function stopSpeaking() {
   try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
 }
+
+/**
+ * Says the child's name out loud once — when they arrive, and then not again
+ * until the tab itself is reloaded.
+ *
+ * A plain module variable, deliberately, and not localStorage or kit/sky's
+ * markVisit(): the hub unmounts every time a child steps into a room and
+ * mounts again when they come back, which on a normal evening is a dozen
+ * times. Component state would greet on every one of those returns, and a
+ * stored day-stamp would greet once each morning forever. Neither is what
+ * "someone just walked in" means. This resets when the page does, which is.
+ */
+let greeted = false;
+
+export function greetByName(name: string, quiet: boolean) {
+  if (greeted || !name) return;
+  greeted = true;
+  speak(`Hello, ${name}`, quiet);
+}
