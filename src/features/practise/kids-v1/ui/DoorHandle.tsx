@@ -55,12 +55,28 @@ export function DoorHandle({
   onClick,
   /** The room's own accent, so the light belongs to the room it's in. */
   accent = '#FFD98A',
+  bottomVh = 26,
+  nudge = null,
 }: {
   side: 'left' | 'right';
   /** Both the accessible name and the words on the tooltip. */
   label: string;
   onClick: () => void;
   accent?: string;
+  /**
+   * How far up the wall this fitting hangs, in vh. A wall can carry more
+   * than one door: the hub stacks three, and they need to not sit on top of
+   * each other.
+   */
+  bottomVh?: number;
+  /**
+   * A different way of saying what's behind this door, shown during the
+   * attention beat instead of `label`. Picked by the caller (see
+   * best/BestApp's DoorWall) rather than in here — this component has no
+   * state of its own to decide when to speak, only how to show it, so the
+   * words come in already chosen.
+   */
+  nudge?: string | null;
 }) {
   const m = useMotion();
   const [awake, setAwake] = useState(false);
@@ -81,12 +97,22 @@ export function DoorHandle({
     return () => clearTimeout(t);
   }, []);
 
+  // THE ATTENTION BEAT.
+  //
+  // The handles rest at the very edge of the screen on purpose, and the
+  // cost of that is real: they are easy to miss entirely. So every so often
+  // one of them says what it is, unprompted — the same tooltip the handle
+  // shows on arrival, just in different words, and it's the caller (see
+  // best/BestApp's DoorWall) that decides which door and which words, one
+  // at a time. This component only has to show whatever it's handed.
+
   // The plate is drawn for the LEFT wall: its rose is at the left and the
   // lever sweeps inward, into the room. The right-hand fitting is the same
   // file mirrored, so both levers point into the room the child is in.
   const forward = side === 'right';
   const live = awake || pressed;
-  const tip = introTip || awake || pressed;
+  const tip = introTip || awake || pressed || nudge !== null;
+  const tipText = awake || pressed ? label : (nudge ?? label);
 
   function press() {
     if (pressed) return;
@@ -108,7 +134,7 @@ export function DoorHandle({
         the document, so it is reachable at every scroll position.
       */
       className="pointer-events-none fixed inset-y-0 z-20 flex items-end"
-      style={{ [side]: 0, paddingBottom: '26vh' } as React.CSSProperties}
+      style={{ [side]: 0, paddingBottom: `${bottomVh}vh` } as React.CSSProperties}
     >
       {/* The seam. Always there, and at rest doing the whole job on its own —
           light leaking around a door that is definitely a door. */}
@@ -117,7 +143,7 @@ export function DoorHandle({
         alt=""
         aria-hidden
         draggable={false}
-        className="absolute inset-y-0 h-full select-none"
+        className="absolute select-none"
         style={{
           // Pulled mostly off the edge and blurred, so what shows is the
           // outer falloff rather than the bright core. Straight, sharp and
@@ -125,6 +151,13 @@ export function DoorHandle({
           // the opposite of light escaping around a door.
           [side]: -46,
           width: 92,
+          // Was inset-y-0/h-full, which is right for one door on a wall and
+          // wrong for three: the seams stacked into one continuous strip of
+          // light down the whole edge, so no door had an edge of its own.
+          // Now each is a panel of light around its own fitting.
+          top: '50%',
+          height: 260,
+          transform: 'translateY(-50%)',
           opacity: m.quiet ? 0.3 : live ? 0.62 : 0.28,
           filter: `blur(3px) drop-shadow(0 0 26px ${accent}55)`,
           transition: 'opacity 620ms ease-out',
@@ -249,7 +282,7 @@ export function DoorHandle({
                 fontFamily: FONT,
               } as React.CSSProperties}
             >
-              {label}
+              {tipText}
             </motion.span>
           )}
         </AnimatePresence>

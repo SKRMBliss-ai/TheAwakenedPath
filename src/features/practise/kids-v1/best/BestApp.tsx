@@ -106,7 +106,6 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onDeepDive={() => setView({ at: 'deep' })}
                 onHelpChirpy={() => setView({ at: 'helpchirpy' })}
                 onPause={() => setView({ at: 'pause' })}
-                onReflection={() => setView({ at: 'reflection' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
               />
@@ -172,7 +171,6 @@ function RoomMap({
   onDeepDive,
   onHelpChirpy,
   onPause,
-  onReflection,
   onExitGym,
   onGrownUp,
 }: {
@@ -181,7 +179,6 @@ function RoomMap({
   onDeepDive: () => void;
   onHelpChirpy: () => void;
   onPause: () => void;
-  onReflection: () => void;
   onExitGym: () => void;
   onGrownUp: () => void;
 }) {
@@ -208,27 +205,11 @@ function RoomMap({
         style={{ background: `radial-gradient(52% 38% at 76% 12%, ${night.glow} 0%, transparent 72%)` }}
       />
 
-      {/*
-        THE HUB IS A ROOM, AND THESE ARE ITS TWO DOORS.
-        Fixed to the walls rather than sitting in the scroll, so the two
-        journeys cost the rooms no vertical space whatsoever — and so the
-        gesture a child learns here is the same one that gets them out of
-        every room afterwards. Amber on the left for their lights, violet on
-        the right for whatever is stuck; each says its own name on arrival.
-
-        WHY THAT DOOR ASKS A QUESTION. It used to say "Untangle a Knot",
-        which is a grown-up's picture of a problem and two words a
-        six-year-old has to decode before they can decide anything. "Stuck"
-        is a word children already own — stuck on a level, stuck in a
-        jumper, stuck on a sum — and it describes the feeling without
-        naming it as a worry or a problem. Asking rather than instructing
-        also leaves the child free to walk past: a door that says "come in
-        if something's stuck" is easy to ignore on a day when nothing is,
-        and a door that tells you to untangle something implies you have a
-        knot whether you turned up with one or not.
-      */}
-      <DoorHandle side="left" label="Catch the Fireflies" onClick={onStartJourney} accent="#FFC65C" />
-      <DoorHandle side="right" label="Something Stuck?" onClick={onDeepDive} accent="#C48BE8" />
+      <DoorWall
+        onFireflies={onStartJourney}
+        onStuck={onDeepDive}
+        onChirpy={onHelpChirpy}
+      />
 
       <div className="relative mx-auto w-full max-w-6xl px-[74px] pb-32 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
@@ -284,18 +265,10 @@ function RoomMap({
           110px of cards here is 0px.
         */}
 
-        {/* Chirpy asking for himself. Not a third door on the walls — he is
-            a friend with a problem, and a friend asks rather than being
-            filed as a menu option. */}
-        <ChirpyAsks onClick={onHelpChirpy} />
-
-        <button
-          onClick={onReflection}
-          className="mx-auto mt-3 block text-[12.5px] font-bold"
-          style={{ color: CHROME.textSoft }}
-        >
-          Just show me the whole map
-        </button>
+        {/* Chirpy's ask used to be a card here, and the map a small grey
+            link under it. Both are doors on the right wall now — see
+            DoorWall. The map is still reachable from the bottom bar's
+            "Look back", which is where a child goes looking for it. */}
 
         <h2 className="mt-5 text-[15.5px] font-extrabold" style={{ color: CHROME.text, fontFamily: FONT }}>
           Or pick a room
@@ -746,45 +719,121 @@ function StarSky({ count }: { count: number }) {
   );
 }
 
+/* ── The right-hand wall ──────────────────────────────────────────────── */
+
 /**
- * CHIRPY, ASKING FOR HIMSELF.
+ * THREE DOORS, ONE WALL, ONE VOICE AT A TIME.
  *
- * Deliberately not a third handle on the walls. The two doors are places
- * the child chooses to go; this is a friend tapping them on the shoulder,
- * and filing it as a menu item would make him furniture. He sits under the
- * rooms, small, and says what he wants in his own words.
+ * They used to be spread about: fireflies on the left wall, the stuck door
+ * on the right, and Chirpy's ask as a card down in the scroll with the map
+ * as a small grey link beneath it. Four different shapes for four things a
+ * child can do, and the two that looked like buttons were the two that
+ * mattered least.
  *
- * It is also the only place in the app where somebody needs the child
- * rather than the other way round, which is why it gets to interrupt the
- * layout slightly rather than lining up with everything else.
+ * All three are fittings on the same wall now. A child learns one gesture —
+ * reach right, take the handle — and it works for every way out of this
+ * screen. Stacking them also makes them read as a set rather than as one
+ * control that happens to be there, which is most of why they were missed
+ * when there was only ever one per wall.
+ *
+ * Lowest is easiest to reach, so the everyday journey sits at the bottom
+ * and the two a child only wants on some days sit above it.
+ *
+ * WHY ONE SPEAKS EVERY SO OFTEN. At rest these are deliberately almost
+ * invisible, and the honest cost of that is a child can look straight past
+ * all three. So on a slow cycle one door says what it is, in its own
+ * words, and then goes quiet again. One at a time: three tooltips at once
+ * is a menu, and a menu is the thing this navigation exists not to be.
  */
-function ChirpyAsks({ onClick }: { onClick: () => void }) {
+
+/** Module-level so the wording doesn't re-roll on every render. */
+const FIREFLY_TIPS = [
+  'Catch the Fireflies',
+  'Been good at something today?',
+  'Come and light one up',
+];
+
+const STUCK_TIPS = [
+  'Something Stuck?',
+  'Something on your mind?',
+  'Had a rubbish bit today?',
+];
+
+const CHIRPY_TIPS = [
+  'Something Bugging You?',
+  'Got a funny feeling? Come and check',
+  'Chirpy’s got a funny feeling',
+  'Something bugging Chirpy — find out what?',
+];
+
+/** How long between nudges, and how long a nudge hangs about. */
+const NUDGE_EVERY_MS = 15000;
+const NUDGE_HOLD_MS = 3600;
+
+function DoorWall({
+  onFireflies,
+  onStuck,
+  onChirpy,
+}: {
+  onFireflies: () => void;
+  onStuck: () => void;
+  onChirpy: () => void;
+}) {
   const m = useMotion();
+  // Which door speaks, and what it says — picked together, in the timer, so
+  // no child render-cycle has to reach for Math.random() to decide.
+  const [speaking, setSpeaking] = useState<{ door: 0 | 1 | 2; line: string } | null>(null);
+
+  useEffect(() => {
+    // Never in the quiet state. A child who is upset does not need three
+    // doors taking it in turns to call out to them — the effect simply
+    // doesn't start the cycle, rather than starting it and then clearing
+    // state back out, so there is nothing to reset on the way in.
+    if (m.quiet) return;
+    const pools = [FIREFLY_TIPS, STUCK_TIPS, CHIRPY_TIPS] as const;
+    let hold: number | undefined;
+    const cycle = window.setInterval(() => {
+      const door = Math.floor(Math.random() * 3) as 0 | 1 | 2;
+      const pool = pools[door];
+      setSpeaking({ door, line: pool[Math.floor(Math.random() * pool.length)] });
+      hold = window.setTimeout(() => setSpeaking(null), NUDGE_HOLD_MS);
+    }, NUDGE_EVERY_MS);
+    return () => {
+      clearInterval(cycle);
+      if (hold) clearTimeout(hold);
+    };
+  }, [m.quiet]);
+
+  // If the quiet state turns on mid-nudge, stop showing it — computed at
+  // render time rather than via a second effect writing state.
+  const active = m.quiet ? null : speaking;
+
   return (
-    <motion.button
-      onClick={onClick}
-      whileTap={{ scale: 0.98 }}
-      whileHover={m.quiet ? undefined : { y: -2 }}
-      className="mx-auto mt-4 flex w-full max-w-md items-center gap-3 rounded-[20px] px-3 py-2.5 text-left backdrop-blur-md"
-      style={{ background: 'rgba(196,139,232,0.16)', border: '1px solid rgba(196,139,232,0.42)' }}
-    >
-      <motion.img
-        src={chirpySprite('worried')}
-        alt=""
-        aria-hidden
-        draggable={false}
-        style={{ height: 46, width: 'auto', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.5))' }}
-        animate={m.loop ? { y: [0, -3, 0] } : undefined}
-        transition={m.loop ? { repeat: Infinity, duration: 3.4, ease: 'easeInOut' } : undefined}
+    <>
+      <DoorHandle
+        side="right"
+        bottomVh={20}
+        label="Catch the Fireflies"
+        nudge={active?.door === 0 ? active.line : null}
+        onClick={onFireflies}
+        accent="#FFC65C"
       />
-      <span className="flex flex-col">
-        <span className="text-[13.5px] font-extrabold leading-tight" style={{ color: CHROME.text, fontFamily: FONT }}>
-          Chirpy’s got a funny feeling
-        </span>
-        <span className="text-[11.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
-          He can’t work out what it is. Can you help?
-        </span>
-      </span>
-    </motion.button>
+      <DoorHandle
+        side="right"
+        bottomVh={42}
+        label="Something Stuck?"
+        nudge={active?.door === 1 ? active.line : null}
+        onClick={onStuck}
+        accent="#C48BE8"
+      />
+      <DoorHandle
+        side="right"
+        bottomVh={64}
+        label="Something Bugging You?"
+        nudge={active?.door === 2 ? active.line : null}
+        onClick={onChirpy}
+        accent="#8FD9C4"
+      />
+    </>
   );
 }
