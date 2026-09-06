@@ -125,3 +125,38 @@ export function companionFor(feeling: string | undefined | null): FeelingCompani
   if (!feeling) return null;
   return FEELING_COMPANIONS[feeling.trim().toLowerCase()] ?? null;
 }
+
+/**
+ * WHO TURNS UP WHEN NOTHING HAS BEEN NAMED — the calm plate, and no claim
+ * about how the child feels.
+ *
+ * Most visits never go through the Feelings Room at all: a child comes in,
+ * ticks two rooms and leaves. Every one of those visits had an empty room,
+ * because the companion only ever existed to carry a named feeling. That is
+ * a lot of nobody-there for the sake of a rule that was really about
+ * something narrower.
+ *
+ * The rule it was about still holds: never put the WRONG face on a real
+ * answer. A child who said "excited" or "angry" and got this serene one
+ * back would have been contradicted by the app, so a named feeling with no
+ * art still shows nobody (see the note at the top of this file). Nothing
+ * named is a different case entirely — there is no answer here to
+ * misrepresent, and a boy sitting quietly in the corner with Chirpy asleep
+ * on his shoulder claims nothing about anybody's day.
+ *
+ * WHICH IS WHY HE SAYS NOTHING ABOUT FEELINGS. The other ten are
+ * observations about the feeling they're wearing. This one isn't wearing
+ * one, so his lines are just company — and never a question, because "how
+ * are you feeling?" from a character the child didn't ask for is the
+ * Feelings Room ambushing them in a corridor.
+ */
+export const COMPANY: FeelingCompanion = {
+  src: '/feelings/happy.webp',
+  guidance: [
+    'I’m not here for anything. Just here.',
+    'Chirpy fell asleep on my shoulder ages ago.',
+    'You can put me wherever you like. I don’t mind.',
+    'Some rooms are better with somebody in them.',
+    'No questions from me today.',
+  ],
+};

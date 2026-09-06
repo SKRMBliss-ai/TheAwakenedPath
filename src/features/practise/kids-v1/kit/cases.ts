@@ -93,6 +93,25 @@ export function deleteDrawingAt(index: number): Case[] {
   return all;
 }
 
+/**
+ * Removes one whole case — the words as well as the picture.
+ *
+ * A child is allowed to throw their own thinking away. This shelf is the
+ * most private thing the app keeps, and a private record you cannot delete
+ * is not really yours; the alternative (keep everything forever, hide the
+ * old ones) is the app deciding what a child is allowed to have finished
+ * with. The two-tap arming on the button is what stops it happening by
+ * accident, since unlike every other action here this one cannot be undone
+ * by tapping again.
+ */
+export function deleteCaseAt(index: number): Case[] {
+  const all = loadCases();
+  if (index < 0 || index >= all.length) return all;
+  all.splice(index, 1);
+  writeCases(all);
+  return all;
+}
+
 export function loadCases(): Case[] {
   try {
     const raw = localStorage.getItem(KEY);

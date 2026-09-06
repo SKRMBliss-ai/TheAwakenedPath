@@ -8,7 +8,7 @@ import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { BoyAndChirpy, RoomScene } from '../ui/scene';
-import { BOY_SRC, BOY_SRCSET, chirpySprite } from '../ui/sprites';
+import { chirpySprite } from '../ui/sprites';
 import { SCENE_MOODS, roomPoster, storageFallback } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
@@ -19,6 +19,7 @@ import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
 import { saveCase } from '../kit/cases';
 import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
+import { COMPANY } from '../kit/feelingCompanions';
 import { markVisit } from '../kit/sky';
 import * as sound from '../kit/sound';
 
@@ -613,16 +614,23 @@ function PauseRoom({ onExit }: { onExit: () => void }) {
       <RoomScene room={art} dim={0.2} />
       <div className="relative grid min-h-[100svh] place-items-center px-6">
         <div className="flex max-w-sm flex-col items-center gap-5 text-center">
-          {/* The boy, not Chirpy — same swap as everywhere else the app
-              narrates a room (ui/scene.tsx's Chirpy()), and the copy below
-              follows him rather than naming a character who isn't on
-              screen. */}
+          {/*
+            THE PACER IS THE CALM PLATE — the boy sitting with his eyes shut
+            and Chirpy asleep on his shoulder, rather than the standing
+            sprite that carries lines everywhere else.
+
+            This is the one room where he is not company but an instrument:
+            the child breathes to his rise and fall, so he does NOT get the
+            draggable companion treatment the other rooms give him
+            (ui/FloatingFeeling). Dragging the thing you are breathing to
+            stops it being a thing you can breathe to, and a second boy on
+            screen beside this one would be two of him.
+          */}
           <motion.img
-            src={BOY_SRC}
-            srcSet={BOY_SRCSET}
+            src={COMPANY.src}
             alt=""
             aria-hidden
-            className="h-28 w-auto"
+            className="h-36 w-auto"
             draggable={false}
             style={{ filter: 'drop-shadow(0 12px 26px rgba(0,0,0,0.55))' }}
             animate={{ y: [0, -10, 0] }}

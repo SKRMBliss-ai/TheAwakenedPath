@@ -7,9 +7,10 @@ import { getRoom } from '../rooms';
 import { CHROME, Cta, FONT, GrownUpExit, Question } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
+import { MicButton } from '../ui/MicButton';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { starCount } from '../kit/sky';
-import { agoLabel, deleteDrawingAt, loadCases, type Case } from '../kit/cases';
+import { agoLabel, deleteCaseAt, deleteDrawingAt, loadCases, type Case } from '../kit/cases';
 
 /**
  * THE REFLECTION OBSERVATORY — where the day's journey ends.
@@ -50,6 +51,7 @@ export function ReflectionRoom({
    */
   const [cases, setCases] = useState(() => loadCases());
   const deleteDrawing = (index: number) => setCases(deleteDrawingAt(index));
+  const deleteCase = (index: number) => setCases(deleteCaseAt(index));
 
   const now = new Date();
   const [month, setMonth] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1));
@@ -210,14 +212,27 @@ export function ReflectionRoom({
               <label className="mb-2 block text-[13px] font-extrabold" style={{ color: CHROME.text }}>
                 <span className="mr-1.5">{q.emoji}</span>{q.q}
               </label>
-              <textarea
-                value={review[q.key] ?? ''}
-                onChange={(e) => s.setMonthReview(monthKey, q.key, e.target.value)}
-                rows={3}
-                placeholder="Whatever comes to mind…"
-                className="w-full resize-none rounded-[14px] bg-transparent px-3 py-2 text-[13.5px] font-semibold outline-none placeholder:opacity-45"
-                style={{ color: CHROME.text, border: `1px solid ${CHROME.pillBorder}` }}
-              />
+              <div className="flex items-end gap-2">
+                <textarea
+                  value={review[q.key] ?? ''}
+                  onChange={(e) => s.setMonthReview(monthKey, q.key, e.target.value)}
+                  rows={3}
+                  placeholder="Whatever comes to mind…"
+                  className="min-w-0 flex-1 resize-none rounded-[14px] bg-transparent px-3 py-2 text-[13.5px] font-semibold outline-none placeholder:opacity-45"
+                  style={{ color: CHROME.text, border: `1px solid ${CHROME.pillBorder}` }}
+                />
+                {/* These four are the longest answers the app ever asks a
+                    child for, and they're asked at the end of a month —
+                    exactly where typing them out is most likely to shorten
+                    the answer to nothing. */}
+                <MicButton
+                  accent={accent}
+                  onText={(t) => {
+                    const prev = review[q.key] ?? '';
+                    s.setMonthReview(monthKey, q.key, prev ? `${prev} ${t}` : t);
+                  }}
+                />
+              </div>
             </motion.div>
           ))}
         </div>
@@ -232,7 +247,7 @@ export function ReflectionRoom({
             first thing this particular room needs to show. This section is
             also expected to move house entirely once there's a better room
             for it; it stays lightweight here on purpose. */}
-        <CaseShelf accent={accent} cases={cases} />
+        <CaseShelf accent={accent} cases={cases} onDelete={deleteCase} />
 
         {/* ── The doodle wall, LAST ───────────────────────────────────
             Everything the child has drawn while working something out,
@@ -266,13 +281,35 @@ function Stat({ big, label, accent }: { big: string; label: string; accent: stri
 }
 
 /**
- * THE SHELF — every case this child has worked, newest first, folded away
- * behind a header until tapped open.
+ * How far back the shelf reaches before it stops on its own.
+ *
+ * Not a limit on what is KEPT — kit/cases holds forty of them regardless.
+ * A child who opens this after two months of most-evenings is looking at a
+ * wall of their own text, and the ones that teach them something are the
+ * recent ones they can still remember the day of. Everything older is one
+ * tap away rather than gone, because it is theirs and because they cannot
+ * throw away what the app won't show them.
+ */
+const SHELF_DAYS = 20;
+
+/** The oldest day the shelf shows unasked. Same UTC day-key as saveCase. */
+function shelfCutoff(): string {
+  return new Date(Date.now() - SHELF_DAYS * 86400000).toISOString().slice(0, 10);
+}
+
+/**
+ * THE SHELF — the cases this child has worked, newest first, in days, folded
+ * away behind a header until tapped open.
  *
  * Two lines each: what their mind said, and what else they found could be
- * true. Nothing else fits on a card and nothing else is the point. The
- * distance is given in weeks rather than dates, because "3 weeks ago" means
- * something to a seven-year-old and "2026-08-15" means nothing at all.
+ * true. Nothing else fits on a card and nothing else is the point.
+ *
+ * GROUPED BY DAY, because two cases worked on the same evening belong to
+ * that evening — read as a flat list they look like two unrelated events
+ * that happen to sit next to each other. The heading carries the distance
+ * ("3 weeks ago") and the cards under it carry the words, so the date is
+ * said once per day rather than once per card. Distance rather than dates
+ * throughout: "2026-08-15" means nothing to a seven-year-old.
  *
  * No case is ever marked good or better. They are things that happened and
  * things the child worked out, sitting next to each other, which is the only
@@ -290,9 +327,36 @@ function Stat({ big, label, accent }: { big: string; label: string; accent: stri
  * when there are no cases yet: a header for an empty thing you can't even
  * open is a dead end, not an invitation.
  */
-function CaseShelf({ accent, cases }: { accent: string; cases: Case[] }) {
+function CaseShelf({
+  accent,
+  cases,
+  onDelete,
+}: {
+  accent: string;
+  cases: Case[];
+  onDelete: (index: number) => void;
+}) {
   const [open, setOpen] = useState(false);
+  const [showOlder, setShowOlder] = useState(false);
+  const [arming, setArming] = useState<number | null>(null);
   if (!cases.length) return null;
+
+  const cutoff = shelfCutoff();
+  // The index is the case's position in the stored list, and deleting needs
+  // it — so it is carried along rather than recovered from the day, which
+  // several cases can share.
+  const all = cases.map((c, index) => ({ c, index }));
+  const olderCount = all.filter((x) => x.c.day < cutoff).length;
+  const shown = showOlder ? all : all.filter((x) => x.c.day >= cutoff);
+
+  // Newest first already (saveCase prepends), so same-day cases are always
+  // adjacent and a single pass is enough to gather them.
+  const days: { day: string; items: typeof all }[] = [];
+  for (const item of shown) {
+    const last = days[days.length - 1];
+    if (last && last.day === item.c.day) last.items.push(item);
+    else days.push({ day: item.c.day, items: [item] });
+  }
 
   return (
     <div className="mt-5">
@@ -320,31 +384,95 @@ function CaseShelf({ accent, cases }: { accent: string; cases: Case[] }) {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             style={{ overflow: 'hidden' }}
           >
-            <div className="flex flex-col gap-2.5 pt-2.5">
-              {cases.slice(0, 8).map((c: Case, i: number) => (
-                <motion.div
-                  key={`${c.day}-${i}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: Math.min(i, 6) * 0.04 }}
-                  className="rounded-[20px] px-4 py-3 backdrop-blur-md"
-                  style={{ background: 'rgba(12,10,26,0.52)', border: `1px solid ${CHROME.pillBorder}` }}
-                >
-                  <p className="text-[10.5px] font-extrabold uppercase tracking-[0.12em]" style={{ color: accent }}>
-                    {agoLabel(c.day)}{c.feeling ? ` · ${c.feeling.toLowerCase()}` : ''}
+            <div className="flex flex-col gap-4 pt-3">
+              {days.map(({ day, items }) => (
+                <div key={day}>
+                  <p className="mb-1.5 px-1 text-[10.5px] font-extrabold uppercase tracking-[0.14em]" style={{ color: accent }}>
+                    {agoLabel(day)}
                   </p>
-                  {c.story && (
-                    <p className="mt-1.5 text-[14px] font-bold leading-snug" style={{ color: CHROME.text }}>
-                      Your mind said: “{c.story}”
-                    </p>
-                  )}
-                  {c.other && (
-                    <p className="mt-1 text-[13.5px] font-semibold leading-snug" style={{ color: '#FFD98A' }}>
-                      You found: “{c.other}”
-                    </p>
-                  )}
-                </motion.div>
+                  <div className="flex flex-col gap-2.5">
+                    {items.map(({ c, index }) => {
+                      const armed = arming === index;
+                      return (
+                        <motion.div
+                          key={index}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.96 }}
+                          transition={{ duration: 0.3 }}
+                          className="relative rounded-[20px] py-3 pl-4 pr-12 backdrop-blur-md"
+                          style={{
+                            background: 'rgba(12,10,26,0.52)',
+                            border: `1px solid ${armed ? '#E8735F' : CHROME.pillBorder}`,
+                          }}
+                        >
+                          {c.feeling && (
+                            <p className="text-[10.5px] font-extrabold uppercase tracking-[0.12em]" style={{ color: CHROME.textSoft }}>
+                              {c.feeling.toLowerCase()}
+                            </p>
+                          )}
+                          {c.story && (
+                            <p className="mt-1.5 text-[14px] font-bold leading-snug" style={{ color: CHROME.text }}>
+                              Your mind said: “{c.story}”
+                            </p>
+                          )}
+                          {c.other && (
+                            <p className="mt-1 text-[13.5px] font-semibold leading-snug" style={{ color: '#FFD98A' }}>
+                              You found: “{c.other}”
+                            </p>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              if (armed) { onDelete(index); setArming(null); return; }
+                              setArming(index);
+                              window.setTimeout(() => setArming((cur) => (cur === index ? null : cur)), 2400);
+                            }}
+                            aria-label={armed ? 'Tap again to delete this one' : 'Delete this one'}
+                            className="absolute right-2.5 top-2.5 grid h-8 w-8 place-items-center rounded-full transition-colors"
+                            style={{
+                              background: armed ? '#E8735F' : 'rgba(255,255,255,0.06)',
+                              border: `1px solid ${armed ? '#E8735F' : CHROME.pillBorder}`,
+                            }}
+                          >
+                            <X size={14} strokeWidth={3} color={armed ? '#FFFFFF' : CHROME.textSoft} />
+                          </button>
+
+                          <AnimatePresence>
+                            {armed && (
+                              <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="mt-2 text-[11.5px] font-extrabold"
+                                style={{ color: '#E8735F' }}
+                              >
+                                Tap again to throw this one away.
+                              </motion.p>
+                            )}
+                          </AnimatePresence>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
               ))}
+
+              {/* Older than the window. One tap, and only offered when there
+                  is something behind it — a button that reveals nothing is
+                  a small lie. */}
+              {olderCount > 0 && (
+                <button
+                  onClick={() => setShowOlder((v) => !v)}
+                  className="py-1 text-[12px] font-bold"
+                  style={{ color: CHROME.textSoft }}
+                >
+                  {showOlder
+                    ? 'Just the last few weeks'
+                    : `${olderCount} older ${olderCount === 1 ? 'one' : 'ones'} — show ${olderCount === 1 ? 'it' : 'them'}`}
+                </button>
+              )}
             </div>
           </motion.div>
         )}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
 import { CHROME, FONT } from './chrome';
 import { useMotion } from './quiet';
-import { companionFor } from '../kit/feelingCompanions';
+import { COMPANY, companionFor } from '../kit/feelingCompanions';
 import { loadPerch, savePerch, todaysFeeling } from '../kit/todaysFeeling';
 import * as sound from '../kit/sound';
 
@@ -96,8 +96,18 @@ export function FloatingFeeling({
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  const id = feeling ?? todaysFeeling();
-  const companion = companionFor(id);
+  /*
+    WHOSE ROOM THIS IS.
+
+    Omitting the prop means "whatever today is" — every room in the app —
+    and if nothing has been named today the calm pair turn up instead of
+    nobody (kit/feelingCompanions' COMPANY). Passing null explicitly is a
+    different statement: DeepDive does it while the child is still on their
+    way to naming a feeling, and that screen wants nobody in it until they
+    have. A named feeling with no art still shows nobody either way.
+  */
+  const id = feeling === undefined ? todaysFeeling() : feeling;
+  const companion = id ? companionFor(id) : feeling === undefined ? COMPANY : null;
 
   useEffect(() => {
     const measure = () => setRoom({ w: window.innerWidth, h: window.innerHeight });
@@ -161,7 +171,9 @@ export function FloatingFeeling({
       >
         <motion.button
           onClick={speak}
-          aria-label={`${id}. Tap to hear about this feeling. Drag to move.`}
+          aria-label={id
+            ? `${id}. Tap to hear about this feeling. Drag to move.`
+            : 'Chirpy and the boy. Tap to hear from them. Drag to move.'}
           className="relative block border-0 bg-transparent p-0"
           whileTap={{ scale: 0.94 }}
           /**

@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Mic, Send, Square } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { getRoom, type RoomConfig, type RoomId } from './rooms';
 import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from './ui/chrome';
 import { DoorHandle } from './ui/DoorHandle';
+import { MicButton } from './ui/MicButton';
 import { useMotion, useQuiet } from './ui/quiet';
 import { Chirpy, RoomScene } from './ui/scene';
 import { BodyMap } from './ui/bodyMap';
@@ -12,7 +13,6 @@ import { ChirpyAside } from './chirpy/ChirpyAside';
 import { SELECTABLE_CHIRPYS, getChirpyState } from './chirpy/states';
 import { FEELINGS, SIZES, GOODBITS, THOUGHTS, SITUATIONS, MAYBES } from './kit/checkinContent';
 import * as sound from './kit/sound';
-import { isSpeechSupported, startListening } from './kit/speech';
 import { type CheckInEntry } from './progress';
 
 /**
@@ -134,17 +134,14 @@ export function CheckIn({
   const [situationText, setSituationText] = useState('');
   const [thought, setThought] = useState<string>('');
   const [maybeChosen, setMaybeChosen] = useState('');
-  const [listening, setListening] = useState(false);
   const [history, setHistory] = useState<Screen[]>([]);
   const m = useMotion();
   const quiet = useQuiet();
   const timers = useRef<number[]>([]);
-  const recognizer = useRef<ReturnType<typeof startListening>>(null);
   const saved = useRef(false);
 
   useEffect(() => () => {
     timers.current.forEach(clearTimeout);
-    recognizer.current?.stop();
     sound.stopMusic();
   }, []);
 
@@ -249,23 +246,6 @@ export function CheckIn({
       if (next.has(zone)) next.delete(zone); else next.add(zone);
       return next;
     });
-  };
-
-  const toggleMic = () => {
-    if (listening) {
-      recognizer.current?.stop();
-      recognizer.current = null;
-      setListening(false);
-      return;
-    }
-    const rec = startListening(
-      (text) => setSituationText((prev) => (prev ? `${prev} ${text}` : text)),
-      () => setListening(false),
-    );
-    if (rec) {
-      recognizer.current = rec;
-      setListening(true);
-    }
   };
 
   return (
@@ -471,8 +451,6 @@ export function CheckIn({
                   <SituationTextBox
                     value={situationText}
                     onChange={setSituationText}
-                    listening={listening}
-                    onToggleMic={toggleMic}
                     accent={room.palette.accent}
                   />
                   {situationText.trim() && (
@@ -774,18 +752,12 @@ function FloatingThoughts({
 function SituationTextBox({
   value,
   onChange,
-  listening,
-  onToggleMic,
   accent,
 }: {
   value: string;
   onChange: (text: string) => void;
-  listening: boolean;
-  onToggleMic: () => void;
   accent: string;
 }) {
-  const micAvailable = isSpeechSupported();
-
   return (
     <div className="relative mt-1">
       {/* The speech-bubble tail. */}
@@ -806,25 +778,10 @@ function SituationTextBox({
           className="max-h-28 min-h-[44px] flex-1 resize-none bg-transparent text-[14.5px] font-semibold leading-snug outline-none placeholder:opacity-60"
           style={{ color: CHROME.text }}
         />
-        {micAvailable && (
-          <motion.button
-            type="button"
-            onClick={onToggleMic}
-            whileTap={{ scale: 0.92 }}
-            aria-label={listening ? 'Stop listening' : 'Say it instead of typing'}
-            aria-pressed={listening}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full"
-            animate={listening ? { boxShadow: [`0 0 0 0 ${accent}66`, `0 0 0 10px ${accent}00`] } : undefined}
-            transition={listening ? { repeat: Infinity, duration: 1.4 } : undefined}
-            style={{
-              color: CHROME.text,
-              background: listening ? accent : CHROME.pillSelected,
-              border: `1px solid ${CHROME.pillBorder}`,
-            }}
-          >
-            {listening ? <Square size={15} fill="currentColor" /> : <Mic size={18} />}
-          </motion.button>
-        )}
+        <MicButton
+          accent={accent}
+          onText={(t) => onChange(value ? `${value} ${t}` : t)}
+        />
       </div>
       {value.trim() && (
         <p className="mt-1.5 flex items-center gap-1 text-[11px] font-bold" style={{ color: accent }}>

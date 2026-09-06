@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type { RoomConfig } from '../rooms';
 import type { StoryGame, StoryPanel } from '../games/types';
 import { CHROME, Cta, FONT, Pill, Question } from '../ui/chrome';
+import { MicButton } from '../ui/MicButton';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { Chirpy } from '../ui/scene';
 import * as sound from '../kit/sound';
@@ -187,20 +188,26 @@ function WritePanel({ panel, room, onNext }: { panel: Extract<StoryPanel, { kind
   return (
     <div className="flex flex-col gap-4">
       <Question room={room}>{panel.prompt}</Question>
-      <textarea
-        ref={ref}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={panel.placeholder}
-        rows={3}
-        className="w-full resize-none rounded-[20px] px-4 py-3.5 text-[16px] font-semibold leading-snug outline-none"
-        style={{
-          background: 'rgba(255,255,255,0.94)',
-          color: '#1B1630',
-          fontFamily: FONT,
-          border: '1px solid rgba(255,255,255,0.5)',
-        }}
-      />
+      <div className="flex items-end gap-2">
+        <textarea
+          ref={ref}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={panel.placeholder}
+          rows={3}
+          className="min-w-0 flex-1 resize-none rounded-[20px] px-4 py-3.5 text-[16px] font-semibold leading-snug outline-none"
+          style={{
+            background: 'rgba(255,255,255,0.94)',
+            color: '#1B1630',
+            fontFamily: FONT,
+            border: '1px solid rgba(255,255,255,0.5)',
+          }}
+        />
+        <MicButton
+          onText={(t) => setText((prev) => (prev ? `${prev} ${t}` : t))}
+          accent={room.palette.accent}
+        />
+      </div>
       <p className="text-[12.5px] font-semibold" style={{ color: CHROME.textSoft }}>
         This stays on this device. Nobody else sees it unless you show them.
       </p>
