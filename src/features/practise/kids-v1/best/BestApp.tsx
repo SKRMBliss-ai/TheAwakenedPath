@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
-import { todayKey } from '../../../kids/data';
+import { BEHAVIOURS, todayKey } from '../../../kids/data';
 import { Onboarding } from '../../../kids/Onboarding';
 import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
@@ -24,6 +24,7 @@ import { ReleasedSky } from './LetThemGo';
 import { TheVisitor } from './TheVisitor';
 import { NoteFound } from './NoteFound';
 import { LeaveANote } from './LeaveANote';
+import { OneMinute } from './OneMinute';
 import { recollectionForToday, type ChirpyRecollection } from '../kit/chirpyMemory';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
 import { visitorForToday, type Visitor } from '../kit/visitor';
@@ -72,7 +73,9 @@ type View =
   | { at: 'grownup' }
   /** The parent's note composer. Nothing to do with 'grownup', which is the
    *  safety screen — see LeaveANote's note on why they must not be conflated. */
-  | { at: 'leavenote' };
+  | { at: 'leavenote' }
+  /** The short way in, for an evening with nothing in the tank. */
+  | { at: 'oneminute' };
 
 /**
  * WALKING THROUGH, NOT FADING THROUGH.
@@ -118,6 +121,14 @@ function archWipe(plain: boolean) {
 
 export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
   const onboarded = useKidStore((s) => s.onboarded);
+  const completions = useKidStore((s) => s.completions);
+
+  /** Same arithmetic as the Observatory's jar — one per virtue per day it was
+   *  ticked. The one-minute door shows it back as a plain fact. */
+  const lifetimeFireflies = BEHAVIOURS.reduce(
+    (n, b) => n + Object.values(completions).filter((day) => day[b.id]).length,
+    0,
+  );
   const [view, setView] = useState<View>({ at: 'map' });
   const [quiet, setQuiet] = useState(false);
   const reduced = useReducedMotion();
@@ -184,6 +195,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onDeepDive={() => setView({ at: 'deep' })}
                 onHelpChirpy={() => setView({ at: 'helpchirpy' })}
                 onPause={() => setView({ at: 'pause' })}
+                onOneMinute={() => setView({ at: 'oneminute' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
               />
@@ -225,6 +237,9 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               />
             )}
             {view.at === 'leavenote' && <LeaveANote onBack={back} />}
+            {view.at === 'oneminute' && (
+              <OneMinute lifetimeFireflies={lifetimeFireflies} onExit={back} />
+            )}
             {view.at === 'friends' && <Panel onClose={back}><Friends /></Panel>}
             {view.at === 'rewards' && <Panel onClose={back}><RewardsScreen /></Panel>}
             {view.at === 'grownup' && <GrownUp onBack={back} />}
@@ -256,6 +271,7 @@ function RoomMap({
   onDeepDive,
   onHelpChirpy,
   onPause,
+  onOneMinute,
   onExitGym,
   onGrownUp,
 }: {
@@ -266,6 +282,7 @@ function RoomMap({
   onDeepDive: () => void;
   onHelpChirpy: () => void;
   onPause: () => void;
+  onOneMinute: () => void;
   onExitGym: () => void;
   onGrownUp: () => void;
 }) {
@@ -386,6 +403,25 @@ function RoomMap({
             total={VIRTUE_ROOMS.length}
           />
         </div>
+
+        {/*
+          THE SHORT WAY IN, and deliberately not a fourth door.
+
+          The three fittings on the right wall are the things there are to
+          DO here; a fourth brass handle beside them would read as a fourth
+          activity, which is the opposite of what this is. It's one quiet
+          line saying the app will take a minute if a minute is all there
+          is — phrased as capacity rather than as feeling, because a
+          six-year-old on a bad evening can tell you he doesn't want to do
+          much long before he can tell you he's sad.
+        */}
+        <button
+          onClick={onOneMinute}
+          className="mt-3 block text-[12.5px] font-bold"
+          style={{ color: CHROME.textSoft, minHeight: 40 }}
+        >
+          Only got a minute? Come and sit down →
+        </button>
 
         {/* A note somebody at home left them, folded, waiting to be opened.
             Above Chirpy's recollection because it came from a person. */}

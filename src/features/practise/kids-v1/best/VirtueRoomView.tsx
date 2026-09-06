@@ -220,7 +220,9 @@ export function VirtueRoomView({
               </span>
               <span className="min-w-0">
                 <span className="block text-[15px] font-extrabold leading-snug" style={{ color: CHROME.text }}>
-                  {room.prompt}
+                  {/* Two of the seven assume a classroom; on a Saturday they
+                      ask the version that works at home. See rooms.ts. */}
+                  {(reporting.isWeekend && room.weekendPrompt) || room.prompt}
                 </span>
                 <span className="mt-1 block text-[12.5px] font-semibold" style={{ color: CHROME.textSoft }}>
                   {doneToday

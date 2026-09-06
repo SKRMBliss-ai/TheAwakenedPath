@@ -36,6 +36,23 @@ export interface ReportingDay {
   key: string;
   /** True when the app is catching up on yesterday rather than asking about today. */
   isYesterday: boolean;
+  /**
+   * Whether the day being reported on was a Saturday or Sunday.
+   *
+   * Not a detail — several of the seven questions quietly assume a
+   * classroom, and a child at home all weekend has no honest answer to
+   * "did you make a new friend?". See VIRTUE_ROOMS' weekendPrompt.
+   *
+   * It follows the REPORTED day, not the day the child is holding the
+   * phone: catching up on Sunday over Monday breakfast has to ask Sunday's
+   * version of the question, or the fix trades one wrong day for another.
+   */
+  isWeekend: boolean;
+}
+
+function weekend(d: Date): boolean {
+  const n = d.getDay();
+  return n === 0 || n === 6;
 }
 
 function isoDay(d: Date): string {
@@ -52,7 +69,9 @@ export function reportingDay(
   now: Date = new Date(),
 ): ReportingDay {
   const todayKey = isoDay(now);
-  if (now.getHours() >= MORNING_UNTIL) return { key: todayKey, isYesterday: false };
+  if (now.getHours() >= MORNING_UNTIL) {
+    return { key: todayKey, isYesterday: false, isWeekend: weekend(now) };
+  }
 
   const y = new Date(now);
   y.setDate(y.getDate() - 1);
@@ -60,6 +79,6 @@ export function reportingDay(
 
   const yesterdayDone = Object.values(completions[yesterdayKey] ?? {}).some(Boolean);
   return yesterdayDone
-    ? { key: todayKey, isYesterday: false }
-    : { key: yesterdayKey, isYesterday: true };
+    ? { key: todayKey, isYesterday: false, isWeekend: weekend(now) }
+    : { key: yesterdayKey, isYesterday: true, isWeekend: weekend(y) };
 }

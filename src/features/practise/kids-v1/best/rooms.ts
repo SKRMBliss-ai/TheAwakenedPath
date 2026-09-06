@@ -34,6 +34,21 @@ export interface VirtueRoom {
   tagline: string;
   /** What ticking this room's virtue actually asks. From BEHAVIOURS. */
   prompt: string;
+  /**
+   * The same question, for a day the child wasn't at school.
+   *
+   * Only two of the seven need one. The rest ("were you honest today?",
+   * "did you eat well, move, or rest?") are answerable on any day of the
+   * week and are left alone — a weekend variant written for the sake of
+   * symmetry would be seven strings to maintain and six of them noise.
+   *
+   * The two that need it assume a classroom hard enough to be unanswerable
+   * at home: a child who has spent Sunday with his family has not made a
+   * new friend, and being asked whether he did teaches him the question is
+   * decoration rather than something the app expects a real answer to.
+   * Absent here means the weekday wording is already fine.
+   */
+  weekendPrompt?: string;
   points: number;
   emoji: string;
   /**
@@ -112,6 +127,9 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
     name: 'Friendship Park',
     tagline: 'Nobody plays alone here unless they want to.',
     prompt: BEH('include').prompt,
+    // "make a new friend" is a playground verb. At home the same virtue is
+    // about who gets left out of the game in the front room.
+    weekendPrompt: 'Did you make sure nobody got left out today?',
     points: BEH('include').points,
     emoji: '🌈',
     art: 'friendship',
@@ -142,6 +160,7 @@ export const VIRTUE_ROOMS: VirtueRoom[] = [
     name: 'Helping Hands Village',
     tagline: 'Small helps count. Most helps are small.',
     prompt: BEH('help').prompt,
+    weekendPrompt: 'Did you help out at home, or help a friend?',
     points: BEH('help').points,
     emoji: '🤝',
     art: 'story',
