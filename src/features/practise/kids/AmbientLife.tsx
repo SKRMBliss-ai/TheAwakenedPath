@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { chirpySprite, type ChirpyPose } from './checkin/content';
 
 /**
  * The "immersive" room treatment — opt-in via a room's `immersive: true`
@@ -10,9 +9,11 @@ import { chirpySprite, type ChirpyPose } from './checkin/content';
  *                  backdrop — distinct from the hub's four-pointed hover
  *                  sparkles (KidsWorld.tsx's CardSparklesOverlay), which are
  *                  a UI affordance, not world atmosphere.
- *   ChirpyInWorld   Chirpy as a small character living IN the scene, not
- *                   pinned to a UI bar — reuses his existing real sprite
- *                   frames, no new art.
+ * There was a second piece — ChirpyInWorld, a small Chirpy bobbing in the
+ * bottom-left corner of the scene. It has been removed: a character adrift
+ * in the room is one more moving thing to track in a place meant to feel
+ * still, and he was decorative (pointer-events-none, aria-hidden) rather
+ * than part of anything the child does.
  *
  * This is a visual-language trial for the Tier-1 immersion work, staged on
  * duplicate rooms (pause-lab, worry-lab) precisely so it can be judged
@@ -63,26 +64,5 @@ export function AmbientLife({ accent }: { accent: string }) {
         />
       ))}
     </div>
-  );
-}
-
-export function ChirpyInWorld({ visible, pose = 'curious' }: { visible: boolean; pose?: ChirpyPose }) {
-  if (!visible) return null;
-  return (
-    <motion.img
-      src={chirpySprite(pose)}
-      alt=""
-      aria-hidden
-      className="pointer-events-none absolute"
-      style={{ left: '9%', bottom: '14%', width: 58, filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.45))' }}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: [0, -6, 2, -3, 0], rotate: [0, -3, 2, -1, 0] }}
-      transition={{
-        opacity: { duration: 0.6 },
-        y: { repeat: Infinity, duration: 4, ease: 'easeInOut', delay: 0.6 },
-        rotate: { repeat: Infinity, duration: 4, ease: 'easeInOut', delay: 0.6 },
-      }}
-      draggable={false}
-    />
   );
 }

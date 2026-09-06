@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { RoomExercise } from './exercises';
 import { roomArt, type KidsRoomConfig } from './rooms';
-import { AmbientLife, ChirpyInWorld } from './AmbientLife';
+import { AmbientLife } from './AmbientLife';
 import { RoomIntroVideo } from './RoomIntroVideo';
 import { introVideoSeen, markIntroVideoSeen } from './introVideoStorage';
 import { isMuted } from '../../../lib/sfx';
@@ -131,7 +131,6 @@ export function CinematicRoom({
       {room.immersive && !cinematic && (
         <>
           <AmbientLife accent={room.palette.accent} />
-          <ChirpyInWorld visible={!inExercise} pose={room.chirpyPose} />
         </>
       )}
 
