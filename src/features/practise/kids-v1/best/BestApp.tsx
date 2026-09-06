@@ -792,16 +792,16 @@ const FIREFLY_TIPS = [
 ];
 
 const STUCK_TIPS = [
-  'Something Stuck?',
+  'How Are You Feeling Today?',
   'Something on your mind?',
   'Had a rubbish bit today?',
 ];
 
 const CHIRPY_TIPS = [
-  'Something Bugging You?',
+  'Something’s Bugging Chirpy — Find Out What',
   'Got a funny feeling? Come and check',
   'Chirpy’s got a funny feeling',
-  'Something bugging Chirpy — find out what?',
+  'He won’t say what it is. Come and see?',
 ];
 
 /** How long between nudges, and how long a nudge hangs about. */
@@ -868,7 +868,7 @@ function DoorWall({
       <DoorHandle
         side="right"
         bottomVh={42}
-        label="Something Stuck?"
+        label="How Are You Feeling Today?"
         nudge={active?.door === 1 ? active.line : null}
         onClick={onStuck}
         accent="#C48BE8"
@@ -876,7 +876,7 @@ function DoorWall({
       <DoorHandle
         side="right"
         bottomVh={64}
-        label="Something Bugging You?"
+        label="Something’s Bugging Chirpy — Find Out What"
         nudge={active?.door === 2 ? active.line : null}
         onClick={onChirpy}
         accent="#8FD9C4"
