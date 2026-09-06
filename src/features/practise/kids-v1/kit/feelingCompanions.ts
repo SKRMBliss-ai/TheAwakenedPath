@@ -19,9 +19,16 @@
  *
  * SIX OF THESE MATCH THE BALLS a child can pop in the Feelings Room; the
  * rest are here because they turn up all over the game library (jealous in
- * Friendship Park, ashamed in Truth Lab) and the art existed. `excited` has
- * no companion yet — there is no artwork for it, and falling back to the
- * calm-happy plate would put the wrong face on a real answer.
+ * Friendship Park, ashamed in Truth Lab) and the art existed.
+ *
+ * TWO OF THE SIX BALLS HAVE NO COMPANION. `excited` never had art. `angry`
+ * did, and it's been pulled — see public/feelings/angry.webp, still on
+ * disk, unreferenced. Popping ANGRY is unaffected either way: it's still
+ * one of the six balls, it still gets recorded as today's feeling, it is
+ * never treated as less valid than the others (§2.4's whole point). All
+ * that changes is that nothing floats around the room wearing it
+ * afterward. Falling back to a different plate — happy's, say — would put
+ * the wrong face on a real answer, which is worse than showing nothing.
  */
 
 export interface FeelingCompanion {
@@ -46,14 +53,6 @@ export const FEELING_COMPANIONS: Record<string, FeelingCompanion> = {
       'Sad is slow. It doesn’t like being hurried along.',
       'It gets lighter by being noticed, not by being argued with.',
       'Sad usually means something mattered to you.',
-    ],
-  },
-  angry: {
-    src: '/feelings/angry.webp',
-    guidance: [
-      'Angry turns up fast and leaves slowly.',
-      'It’s often standing in front of something else. Sometimes hurt.',
-      'Being angry and being unkind are two different things.',
     ],
   },
   scared: {
