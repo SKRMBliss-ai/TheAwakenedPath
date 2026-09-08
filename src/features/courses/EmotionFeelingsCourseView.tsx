@@ -178,7 +178,16 @@ export const LESSONS: Lesson[] = [
     kicker: 'Episode 5 · Part 3 — See Your Masks',
     title: 'Dissolving the Need to Prove Yourself (Part 3)',
     desc: 'Somatic release of the urge to prove worth, stepping into natural presence and inner completeness.',
-    videoId: 'F1Bcb9gmXPo',
+    videoId: 'a2SxdLkKrR0',
+    week: 0,
+  },
+  {
+    id: 'ep5-meditation',
+    badge: '5·M',
+    kicker: 'Episode 5 · Guided Meditation',
+    title: 'Turning Towards What We Feel (Guided Meditation)',
+    desc: 'A 24-minute deep guided meditation to settle into presence, observe bodily sensations, soften around resistance, and rest in witness consciousness.',
+    videoId: 'LclDuXTB-Lw',
     week: 0,
   },
   {
