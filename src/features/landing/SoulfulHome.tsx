@@ -998,9 +998,18 @@ export default function SoulfulHome() {
                         color: 'inherit',
                       }}
                     >
-                      {/* Cover image / video */}
+                      {/* Cover image / video. Taller than before, and
+                          contain rather than cover for the still image — a
+                          phone screenshot cropped to a 230px band under
+                          'cover' loses everything above and below the
+                          middle third, which was most of the app's own UI.
+                          Height goes up to fit a whole screenshot; the video
+                          and the card's own background sit behind it,
+                          so a narrower screenshot letterboxes into the
+                          card's own colour rather than into visible gaps. */}
                       <div style={{
-                        position: 'relative', width: '100%', height: 230, overflow: 'hidden', flexShrink: 0,
+                        position: 'relative', width: '100%', height: 340, overflow: 'hidden', flexShrink: 0,
+                        background: isDark ? 'rgba(14,10,7,0.6)' : 'rgba(238,230,218,0.5)',
                         borderBottom: `1px solid ${isDark ? 'rgba(196,145,58,0.18)' : 'rgba(0,0,0,0.06)'}`
                       }}>
                         {(app as any).youtubeId && playingVideo === app.title ? (
@@ -1055,7 +1064,7 @@ export default function SoulfulHome() {
                               onError={(e) => {
                                 (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1000&auto=format&fit=crop';
                               }}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transition: 'transform 0.5s ease' }}
+                              style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center center', transition: 'transform 0.5s ease' }}
                             />
                             {(app as any).youtubeId && (
                               <button
