@@ -11,14 +11,7 @@
 </head>
 <body>
 <style>
-/* Way back to the Kids Learning Adventure hub. Fixed bottom-left, below the
-   app's own toast (z 60) and modals (z 40+) so it never covers them. */
-.ka-back{position:fixed;left:12px;bottom:14px;z-index:30;display:inline-flex;align-items:center;gap:6px;
-  background:#fff;color:#2A3A5C;text-decoration:none;border-radius:30px;padding:7px 15px;
-  font-family:'Baloo 2','Arial Rounded MT Bold','Trebuchet MS',sans-serif;font-weight:700;font-size:15px;
-  box-shadow:0 3px 0 #e6d6b8,0 6px 18px #2a3a5c22}
 </style>
-<a class="ka-back" href="/kids-adventure">← All adventures</a>
 <script>
 /* The app persists through `window.storage`, an async key/value API it was
    authored against and which does not exist on plain web hosting: without it
@@ -55,168 +48,35 @@
   };
 })();
 </script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Patrick+Hand&display=swap');
-:root{
-  --paper:#FFF9EF; --ink:#2A3A5C; --sky:#2F7FD1; --leaf:#43A857; --sun:#FFC23D; --berry:#E9528F;
-  --hand:'Patrick Hand','Comic Sans MS','Chalkboard SE',cursive;
-  --round:'Baloo 2','Arial Rounded MT Bold','Trebuchet MS',sans-serif;
-  --kid:#43A857;
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--hand)}
-.app{max-width:760px;margin:0 auto;padding:14px 14px 90px;position:relative;overflow:hidden;min-height:100vh;
-  background:
-   radial-gradient(circle at 8% 6%,#bfe3ff88 0,transparent 120px),
-   radial-gradient(circle at 95% 12%,#ffe08a88 0,transparent 140px),
-   radial-gradient(circle at 90% 55%,#ffc6de66 0,transparent 160px),
-   radial-gradient(circle at 5% 70%,#c9f0c066 0,transparent 170px),
-   radial-gradient(circle at 60% 98%,#d9c8ff66 0,transparent 180px)}
-button{font-family:var(--round);cursor:pointer;color:var(--ink)}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px dashed var(--sky);outline-offset:3px}
-
-/* kid switcher */
-.kids{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
-.kid{flex:none;display:flex;align-items:center;gap:6px;border:none;background:#fff;border-radius:40px;padding:4px 14px 4px 4px;font-weight:700;font-size:16px;box-shadow:0 3px 0 #e6d6b8}
-.kid[aria-pressed=true]{box-shadow:0 0 0 3px var(--c),0 3px 0 #e6d6b8}
-.kid .av{width:32px;height:32px;border-radius:50%;background:var(--c);display:grid;place-items:center}
-.kid .av svg{width:24px}
-.kid.addk{padding:6px 14px;background:transparent;border:2px dashed #d4c4a6;box-shadow:none;color:#8a7a5c}
-
-/* header */
-header{text-align:center;position:relative;padding-top:4px}
-.artist{font-family:var(--round);font-weight:700;font-size:21px;margin:0}
-h1{margin:0;font-family:var(--round);font-weight:800;font-size:clamp(38px,11vw,64px);line-height:.95;letter-spacing:-1px}
-h1 span{display:inline-block;transform:rotate(var(--r));text-shadow:2px 3px 0 #0000000f}
-.count{font-family:var(--round);font-weight:800;font-size:27px;margin:10px 0 0}
-.togo{font-size:19px;margin:0;opacity:.85}
-.settings{border:none;background:#fff;border-radius:30px;padding:5px 14px;font-size:15px;font-weight:700;margin-top:8px;box-shadow:0 2px 0 #e6d6b8}
-.hdino{position:absolute;width:84px;left:-6px;top:0}
-.hptero{position:absolute;width:70px;right:-4px;top:-4px;animation:fly 5s ease-in-out infinite}
-@keyframes fly{50%{transform:translateY(-8px) rotate(-4deg)}}
-
-.map{margin:12px 0 4px}
-.map svg{width:100%;height:auto;display:block}
-.maplbl{display:flex;justify-content:space-between;font-size:15px;padding:0 4px}
-
-.tabs{display:flex;gap:8px;justify-content:center;margin:12px 0 22px;flex-wrap:wrap}
-.tab{border:none;border-radius:40px 34px 44px 30px;padding:8px 18px;font-size:17px;font-weight:700;background:#fff;box-shadow:0 3px 0 #e6d6b8}
-.tab[aria-selected=true]{background:var(--sun);box-shadow:0 3px 0 #d69c12}
-.tab.fav[aria-selected=true]{background:#ffb9d4;box-shadow:0 3px 0 #d5638f}
-
-/* trail */
-.row{display:flex}.row.r{justify-content:flex-end}
-.conn{height:54px;margin:-14px 0}
-.conn svg{width:100%;height:100%;display:block}
-.card{position:relative;z-index:1;width:min(64%,330px);background:#fff;padding:12px 12px 10px;border-radius:6px;box-shadow:0 8px 18px #7a5a2a1f,0 1px 0 #e9dcc3;transform:rotate(var(--tilt))}
-.tape{position:absolute;top:-16px;left:14px;padding:3px 14px 2px;font-family:var(--round);font-weight:800;color:#fff;font-size:18px;border-radius:3px;transform:rotate(-4deg);clip-path:polygon(3% 0,100% 6%,97% 100%,0 94%)}
-.frame{margin-top:10px;aspect-ratio:4/3;background:#F3EEE4;border-radius:4px;overflow:hidden;position:relative}
-.frame>button{width:100%;height:100%;border:none;padding:0;background:none;display:block}
-.frame img{width:100%;height:100%;object-fit:cover;display:block}
-.stack{display:grid;grid-template-columns:1fr 1fr;gap:3px;height:100%}
-.stack img:first-child{grid-row:span 2}
-.more{position:absolute;right:6px;bottom:6px;background:#fff;border-radius:20px;padding:1px 9px;font-family:var(--round);font-weight:700;font-size:14px}
-.frame .add{border:3px dashed #d4c4a6;color:#8a7a5c;font-family:var(--hand);font-size:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-.add svg{width:44px}
-.cardfoot{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
-.cls{font-family:var(--round);font-weight:800;font-size:20px}
-.cls s{text-decoration:none;color:var(--sun)}
-.ttl{font-size:17px;margin:6px 2px 0;min-height:1.2em}
-.ttl.none{color:#b3a589}
-.tools{display:flex;align-items:center;gap:4px}
-.heart{border:none;background:none;font-size:24px;line-height:1;padding:2px 4px;color:#d6c8ae}
-.heart.on{color:var(--berry)}
-.edit{border:none;background:#F3EEE4;border-radius:20px;padding:3px 11px;font-size:14px;font-weight:700}
-.card.now{outline:4px solid var(--kid);outline-offset:4px}
-.card.now .add{border-color:var(--kid);color:var(--kid);font-weight:700}
-.here{position:absolute;right:-8px;top:-30px;background:var(--sun);font-family:var(--round);font-weight:800;padding:3px 12px;border-radius:4px;transform:rotate(6deg);font-size:15px;z-index:2;box-shadow:0 2px 0 #d69c12}
-
-.big{border:none;background:var(--leaf);color:#fff;font-size:18px;font-weight:800;padding:12px 22px;border-radius:40px 30px 44px 34px;box-shadow:0 4px 0 #2e7c3e}
-.center{display:flex;justify-content:center;margin:26px 0 10px}
-h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;text-align:center}
-.sub{text-align:center;margin:0 0 14px;font-size:17px;opacity:.8}
-.upcoming{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:10px}
-.pebble{background:#fff;border:2px dashed #e0cfae;border-radius:48% 52% 45% 55%/55% 45% 55% 45%;text-align:center;padding:10px 4px;font-size:15px;line-height:1.15}
-.pebble b{display:block;font-family:var(--round);font-size:17px}
-.pebble.mile{border:2.5px solid var(--sun);background:#FFF4D6}
-.pebble i{display:block;font-style:normal;font-size:20px}
-.empty{text-align:center;font-size:19px;padding:30px 10px;opacity:.85}
-
-.gallery{columns:2 160px;column-gap:12px}
-.gitem{break-inside:avoid;margin:0 0 12px;background:#fff;padding:8px 8px 6px;border-radius:5px;box-shadow:0 6px 14px #7a5a2a1a;transform:rotate(var(--tilt));border:none;width:100%;text-align:left;font-family:var(--hand)}
-.gitem img{width:100%;display:block;border-radius:3px}
-.gitem span{display:block;font-size:15px;padding-top:4px}
-
-/* ideas gallery */
-.ichips{display:flex;gap:7px;overflow-x:auto;padding:0 2px 12px;scrollbar-width:none;justify-content:center;flex-wrap:wrap}
-.ichip{flex:none;border:none;background:#fff;border-radius:30px;padding:6px 14px;font-size:15px;font-weight:700;box-shadow:0 2px 0 #e6d6b8}
-.ichip[aria-pressed=true]{background:var(--kid);color:#fff;box-shadow:0 2px 0 #00000026}
-.today{background:#fff;border-radius:18px;padding:14px 14px 16px;box-shadow:0 8px 18px #7a5a2a1f;border:3px solid var(--sun);position:relative;margin:0 0 8px}
-.today .lbl{position:absolute;top:-14px;left:14px;background:var(--sun);font-family:var(--round);font-weight:800;font-size:15px;padding:2px 12px;border-radius:4px;transform:rotate(-3deg);box-shadow:0 2px 0 #d69c12}
-.today .big{margin-top:10px}
-.today h3{font-family:var(--round);font-weight:800;font-size:25px;margin:8px 0 2px}
-.today p{margin:0;font-size:17px;opacity:.85}
-.today .em{font-size:40px;line-height:1}
-.irow{display:flex;gap:10px;justify-content:center;margin:12px 0 18px;flex-wrap:wrap}
-.ideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-.idea{background:#fff;border:none;border-radius:16px;padding:12px 12px 14px;text-align:left;font-family:var(--hand);font-size:16px;
-  box-shadow:0 6px 14px #7a5a2a1a;position:relative;display:flex;flex-direction:column;gap:2px}
-.idea:hover{transform:translateY(-3px)}
-.idea .em{font-size:30px;line-height:1.1}
-.idea b{font-family:var(--round);font-size:18px;line-height:1.15}
-.idea small{opacity:.7;font-size:14px}
-.idea .tick{position:absolute;top:8px;right:8px;font-size:18px;color:var(--leaf)}
-.idea.done{background:#F1F9EF;box-shadow:0 0 0 2.5px var(--leaf),0 6px 14px #7a5a2a1a}
-.isteps{list-style:none;counter-reset:s;padding:0;margin:6px 0 14px}
-.isteps li{counter-increment:s;display:flex;gap:10px;align-items:flex-start;font-size:17px;margin:0 0 9px}
-.isteps li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;background:var(--kid);color:#fff;
-  font-family:var(--round);font-weight:800;font-size:15px;display:grid;place-items:center}
-.ineed{background:#F3EEE4;border-radius:12px;padding:8px 12px;font-size:16px;margin:0 0 12px}
-
-/* sheets */
-.md{position:fixed;inset:0;background:#2a3a5cb3;display:flex;align-items:flex-end;justify-content:center;z-index:40}
-.sheet{background:var(--paper);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:20px 18px 26px}
-@media(min-width:600px){.md{align-items:center}.sheet{border-radius:22px}}
-.sheet h3{font-family:var(--round);font-weight:800;font-size:25px;margin:0 0 12px}
-.fld{display:block;margin:0 0 14px;font-size:17px}
-.fld small{display:block;opacity:.7;font-size:14px}
-.fld input,.fld select{display:block;width:100%;margin-top:4px;font-family:var(--round);font-size:18px;padding:9px 12px;border:2px solid #e2d3b6;border-radius:12px;background:#fff;color:var(--ink)}
-.chk{display:flex;gap:10px;align-items:flex-start;font-size:17px;margin:0 0 14px}
-.chk input{width:22px;height:22px;margin-top:2px}
-.sw{display:flex;gap:10px;margin-top:6px}
-.sw button{width:36px;height:36px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px #e2d3b6}
-.sw button[aria-pressed=true]{box-shadow:0 0 0 3px var(--ink)}
-.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin:6px 0 14px}
-.th{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#eee}
-.th img{width:100%;height:100%;object-fit:cover}
-.th button{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:none;background:#fff;font-weight:800;line-height:1}
-.addph{aspect-ratio:1;border:3px dashed #d4c4a6;border-radius:8px;background:transparent;color:#8a7a5c;font-family:var(--hand);font-size:15px}
-.acts{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:6px}
-.acts .grow{display:flex;gap:10px;margin-left:auto}
-.ghost{border:none;background:#fff;border-radius:30px;padding:10px 18px;font-size:16px;font-weight:700;box-shadow:0 2px 0 #e6d6b8}
-.danger{border:none;background:none;color:#b3262b;font-size:15px;font-weight:700;text-decoration:underline;padding:10px 0}
-.err{color:#b3262b;font-size:15px;min-height:1em;margin:-6px 0 8px}
-
-.lb{position:fixed;inset:0;background:#2a3a5ce6;display:none;z-index:50;flex-direction:column;align-items:center;justify-content:center;padding:18px}
-.lb.open{display:flex}
-.lb img{max-width:100%;max-height:68vh;border:10px solid #fff;border-bottom-width:40px;border-radius:4px}
-.lbcap{color:#fff;font-size:20px;margin-top:10px;text-align:center}
-.lbbar{display:flex;gap:10px;margin-top:12px}
-.lbbar button{border:none;border-radius:30px;padding:8px 16px;font-size:16px;font-weight:700;background:#fff}
-
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:30px;font-size:18px;transition:transform .35s;z-index:60;white-space:nowrap}
-.toast.show{transform:translateX(-50%) translateY(0)}
-.confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:70;pointer-events:none;animation:fall 1.6s ease-in forwards}
-@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.6}}
-footer{text-align:center;margin-top:34px;font-size:18px}
-@media (max-width:480px){.card{width:80%}.hdino{width:58px}.hptero{width:50px}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
+<link rel="stylesheet" href="/kids-adventure/kit/adventure.css">
 
 <div class="app">
+  <!-- Watercolour furniture, cut from the studio artwork. Decorative only:
+       aria-hidden, pointer-events none, and the small ones step aside on
+       phones so they never crowd the cards. -->
+  <div class="deco" aria-hidden="true">
+    <i class="sm" style="left:-6px;top:34px;width:140px;height:184px;background-image:url('/kids-adventure/kit/dino-green.webp')"></i>
+    <i class="sm" style="right:-4px;top:44px;width:117px;height:115px;background-image:url('/kids-adventure/kit/ptero.webp')"></i>
+    <i style="left:-14px;top:2px;width:66px;height:126px;background-image:url('/kids-adventure/kit/splat-c.webp');opacity:.85"></i>
+    <i style="right:34px;top:-6px;width:124px;height:76px;background-image:url('/kids-adventure/kit/splat-b.webp');opacity:.85"></i>
+    <i class="sm" style="left:-18px;top:38%;width:53px;height:72px;background-image:url('/kids-adventure/kit/leaf-b.webp')"></i>
+    <i class="sm" style="right:-10px;top:32%;width:38px;height:60px;background-image:url('/kids-adventure/kit/tube.webp')"></i>
+    <i class="sm" style="right:-6px;top:52%;width:44px;height:84px;background-image:url('/kids-adventure/kit/pencil.webp')"></i>
+    <i class="sm" style="left:-16px;top:60%;width:90px;height:108px;background-image:url('/kids-adventure/kit/splat-a.webp');opacity:.8"></i>
+    <i class="sm" style="right:-16px;bottom:250px;width:106px;height:63px;background-image:url('/kids-adventure/kit/splat-d.webp');opacity:.8"></i>
+    <i style="left:-10px;bottom:118px;width:59px;height:138px;background-image:url('/kids-adventure/kit/pencils.webp')"></i>
+    <i style="right:-12px;bottom:96px;width:124px;height:179px;background-image:url('/kids-adventure/kit/brushpot.webp')"></i>
+    <i class="sm" style="left:-24px;bottom:-8px;width:138px;height:116px;background-image:url('/kids-adventure/kit/mountains.webp')"></i>
+    <i class="sm" style="left:96px;bottom:-16px;width:266px;height:108px;background-image:url('/kids-adventure/kit/greenery.webp')"></i>
+    <i class="sm" style="right:112px;bottom:40px;width:136px;height:84px;background-image:url('/kids-adventure/kit/tubes.webp')"></i>
+    <i class="sm" style="right:60px;bottom:190px;width:118px;height:148px;background-image:url('/kids-adventure/kit/dino-blue.webp')"></i>
+  </div>
+
+  <a class="back" href="/kids-adventure" aria-label="Back to My Creative Journey">‹</a>
   <div class="kids" id="kids"></div>
   <div id="main"><p class="empty">Opening the sketchbook…</p></div>
-  <footer>Every class is a new page in the art story ✦</footer>
+  <p class="chapter">Every class is a new chapter<br>in your amazing art story</p>
+  <div class="mutebar"><button class="mute" id="mute" type="button" aria-pressed="false">🔊 Sounds on</button></div>
 </div>
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Artwork">
   <img id="lbimg" alt=""><div class="lbcap" id="lbcap"></div>
@@ -227,7 +87,8 @@ footer{text-align:center;margin-top:34px;font-size:18px}
 
 <script>
 const PALETTE=['#43A857','#2F7FD1','#E9528F','#FF8A3D','#8A5CD6','#1FA9A0'];
-const TAPES=['#2F7FD1','#E9528F','#43A857','#FF8A3D','#8A5CD6','#1FA9A0','#F0A500'];
+/* the seven painted tape colours, sampled from the studio design */
+const TAPES=['#3880C0','#E06098','#509858','#F89030','#A070C0','#50A8B0','#F0B828'];
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 /* ---------- ideas gallery ----------
    A child who opens the app between classes has nothing to make. IDEAS is that
@@ -380,6 +241,7 @@ let kids=[], cur=null, classes=[], photos={}, view='journey', lbList=[], lbIdx=0
    has ticked off. `ideasDone` is per child and persisted; `ideaCat` is not. */
 let ideaCat='all', ideasDone=[];
 const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
 const uid=()=>Math.random().toString(36).slice(2,9);
 const today=()=>new Date().toISOString().slice(0,10);
 const D=iso=>new Date(iso+'T12:00:00');
@@ -420,64 +282,172 @@ async function loadKid(id){
 const dinoSVG=c=>`<svg viewBox="0 0 120 120" aria-hidden="true"><path d="M22 96c0-24 16-38 40-38 6-20 10-38 24-44 10-4 20 2 20 10s-8 10-14 8c-6 8-6 20-4 30 10 8 14 20 12 34z" fill="${c}"/><path d="M22 96c-8 2-16-2-18-8 8 2 14 0 18-6z" fill="${c}"/><circle cx="96" cy="21" r="3.5" fill="#2A3A5C"/><path d="M90 30q6 3 12 0" stroke="#2A3A5C" stroke-width="2.5" fill="none"/><path d="M44 70q14-6 26 2" stroke="#FFC23D" stroke-width="5" fill="none" stroke-linecap="round"/><rect x="36" y="94" width="10" height="16" rx="4" fill="${c}"/><rect x="66" y="94" width="10" height="16" rx="4" fill="${c}"/></svg>`;
 const avSVG=`<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="12" fill="#fff" opacity=".9"/><circle cx="16" cy="18" r="2" fill="#2A3A5C"/><circle cx="24" cy="18" r="2" fill="#2A3A5C"/><path d="M15 24q5 4 10 0" stroke="#2A3A5C" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
 
+/* ── sound: the same synthesised kit the journey map uses, so the two
+      screens answer a tap the same way. No audio files. ─────────────────── */
+let ac=null, muted=false;
+try{ muted = localStorage.getItem('kja:muted')==='1'; }catch(e){}
+function actx(){ try{ if(!ac){const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; ac=new C();}
+  if(ac.state==='suspended'&&ac.resume) ac.resume(); return ac; }catch(e){ return null; } }
+function tone(f,d,dur,peak,type){ const a=actx(); if(!a||muted) return;
+  const t=a.currentTime+(d||0), o=a.createOscillator(), g=a.createGain();
+  o.type=type||'triangle'; o.frequency.value=f;
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(peak||.2,t+.015);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||.5));
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+(dur||.5)+.06); }
+function hiss(dur,from,to,peak,q){ const a=actx(); if(!a||muted) return;
+  const t=a.currentTime, len=Math.floor(a.sampleRate*dur), buf=a.createBuffer(1,len,a.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+  const src=a.createBufferSource(); src.buffer=buf;
+  const f=a.createBiquadFilter(); f.type='bandpass'; f.Q.value=q||1.1;
+  f.frequency.setValueAtTime(from,t); f.frequency.exponentialRampToValueAtTime(to,t+dur);
+  const g=a.createGain(); g.gain.setValueAtTime(peak||.16,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  src.connect(f); f.connect(g); g.connect(a.destination); src.start(t); }
+const SFX={
+  splat:p=>{ const a=actx(); if(!a||muted) return; const t=a.currentTime,o=a.createOscillator(),g=a.createGain();
+    o.type='sine'; o.frequency.setValueAtTime((p||380)*1.25,t); o.frequency.exponentialRampToValueAtTime((p||380)*.32,t+.2);
+    g.gain.setValueAtTime(.22,t); g.gain.exponentialRampToValueAtTime(0.0001,t+.3);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+.34); hiss(.15,1800,500,.09); },
+  page:()=>hiss(.22,3600,900,.11,.9),
+  pop:()=>{ tone(660,0,.12,.16,'sine'); tone(990,.05,.16,.1,'sine'); },
+  ding:()=>[523.25,659.25,783.99].forEach((f,i)=>tone(f,i*.07,.7,.14,'sine')),
+  shine:()=>[784,1046.5,1318.5].forEach((f,i)=>tone(f,i*.055,.5,.09,'sine')),
+};
+
+/* ── the bead trail: cream beads for the classes still ahead, a coloured
+      star disc for every one already made, and the summit at the end. ───── */
+function trailSVG(done,total){
+  const beads=18, lit=total?Math.min(beads,Math.round(done/total*beads)):0, W=600, y=23;
+  const x0=18, x1=W-18, gap=(x1-x0)/(beads-1);
+  let s=`<svg viewBox="0 0 ${W} 46" preserveAspectRatio="none" role="img" aria-label="${done} of ${total} classes done">
+    <path d="M${x0} ${y}H${x1}" stroke="#E7D2AC" stroke-width="9" stroke-linecap="round"/>`;
+  for(let i=0;i<beads;i++){
+    const cx=x0+gap*i, on=i<lit, c=TAPES[i%TAPES.length];
+    s+=on
+      ? `<circle cx="${cx}" cy="${y}" r="15" fill="${c}" stroke="#fff" stroke-width="3"/>
+         <path transform="translate(${cx} ${y}) scale(.62)" d="M0-11 3.4-3.5 11.6-3.3 5 2 7.1 10 0 5.3-7.1 10-5 2-11.6-3.3-3.4-3.5Z" fill="#FFE9A8"/>`
+      : `<circle cx="${cx}" cy="${y}" r="11" fill="#FFFCF2" stroke="#E0CFAB" stroke-width="2.5"/>`;
+  }
+  return s+'</svg>';
+}
+
 function renderKids(){
   $('#kids').innerHTML=kids.map(k=>`<button class="kid" style="--c:${k.color}" aria-pressed="${k.id===cur}" data-kid="${k.id}"><span class="av">${avSVG}</span>${esc(k.name)}</button>`).join('')
    +`<button class="kid addk" data-act="newkid">＋ Add child</button>`;
 }
 function render(){
   const k=kid(); document.documentElement.style.setProperty('--kid',k.color); renderKids();
-  const done=classes.length; let t='',i=0;
-  for(const ch of 'Art Adventure'){ if(ch===' '){t+='<br>';continue;} t+=`<span style="color:${TAPES[i%TAPES.length]};--r:${(i*53)%7-3}deg">${ch}</span>`; i++; }
-  $('#main').innerHTML=`<header>${dinoSVG(k.color).replace('<svg','<svg class="hdino"')}
-    <svg class="hptero" viewBox="0 0 100 70" aria-hidden="true"><path d="M50 34 8 14q14 22 30 26zM50 34 92 14q-14 22-30 26z" fill="#FF8A3D"/><ellipse cx="50" cy="38" rx="10" ry="7" fill="#FFB067"/><path d="M58 32l14-6-10 10z" fill="#FFB067"/><circle cx="56" cy="34" r="1.8" fill="#2A3A5C"/></svg>
-    <p class="artist">${esc(k.name)}’s</p><h1 aria-label="Art Adventure">${t}</h1>
-    <p class="count">${done} / ${k.total} classes</p>
-    <p class="togo">${done>=k.total?'Summit reached! Top up lessons to keep climbing 🏔️':`${k.total-done} creative adventures to go`}${k.day>=0?` · ${DAYS[k.day]}s`:''}</p>
-    <button class="settings" data-act="editkid">⚙︎ Lessons & details</button></header>
-    <div class="map">${mapSVG(k,done)}<div class="maplbl"><span>Class 1</span><span>Class ${k.total} summit</span></div></div>
-    <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" data-v="journey" aria-selected="${view==='journey'}">Journey</button>
-      <button class="tab" role="tab" data-v="gallery" aria-selected="${view==='gallery'}">Gallery</button>
-      <button class="tab" role="tab" data-v="ideas" aria-selected="${view==='ideas'}">💡 Ideas</button>
-      <button class="tab fav" role="tab" data-v="fav" aria-selected="${view==='fav'}">♥ Favourites</button></nav>
+  const done=classes.length;
+  $('#main').innerHTML=`<header>
+      <img class="title" src="/kids-adventure/kit/title-art.webp" alt="My Art Adventure" width="620" height="148">
+      <p class="artist">${esc(k.name)}’s sketchbook</p>
+      <p class="count">${done} <b>/</b> ${k.total} classes</p>
+      <p class="togo">${done>=k.total?'Summit reached! Top up lessons to keep climbing 🏔️':`${k.total-done} creative adventures to go`}${k.day>=0?` · ${DAYS[k.day]}s`:''}</p>
+      <button class="settings" data-act="editkid">⚙︎ Lessons &amp; details</button>
+      <div class="trail"><span class="sign">Class 1</span>${trailSVG(done,k.total)}<span class="sign r">Class ${k.total}</span><span class="peak"></span></div>
+    </header>
+    <nav class="pills" role="tablist">
+      <button class="pill" style="--c:var(--t7)" role="tab" data-v="journey" aria-selected="${view==='journey'}">My journey</button>
+      <button class="pill" style="--c:var(--t6)" role="tab" data-v="gallery" aria-selected="${view==='gallery'}">Gallery ›</button>
+      <button class="pill" style="--c:var(--t3)" role="tab" data-v="ideas" aria-selected="${view==='ideas'}">💡 Ideas</button>
+      <button class="pill" style="--c:var(--t2)" role="tab" data-v="fav" aria-selected="${view==='fav'}">♥ My favourite creations</button>
+    </nav>
     <div id="view"></div>`;
   if(view==='journey') renderJourney();
   else if(view==='ideas') renderIdeas();
   else renderGallery(view==='fav');
 }
-function mapSVG(k,done){
-  const T=Math.max(k.total,1),M=miles(T),pts=[];
-  for(let i=0;i<T;i++){const f=T===1?1:i/(T-1);pts.push([30+f*600,110-f*40+Math.sin(f*Math.PI*5)*22]);}
-  const d='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L'), base=Math.max(3.5,Math.min(9,300/T));
-  let s=`<svg viewBox="0 0 700 150" role="img" aria-label="${done} of ${T} classes done"><path d="${d}" stroke="#E7CFA4" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-   <path d="M600 110 L650 30 L700 110Z" fill="#9CC3E8"/><path d="M632 58 L650 30 L668 58 L658 52 L650 60 L642 52Z" fill="#fff"/><path d="M650 30 V8" stroke="#2A3A5C" stroke-width="2"/><path d="M650 8 L668 13 L650 18Z" fill="${k.color}"/>`;
-  pts.forEach((p,i)=>{const n=i+1,ok=n<=done,m=M[n],r=m?Math.max(base+3,10):base;
-    s+=`<circle cx="${p[0]}" cy="${p[1]}" r="${r}" fill="${ok?TAPES[i%TAPES.length]:'#fff'}" stroke="${ok?'#fff':'#D9C6A2'}" stroke-width="2"/>`;
-    if(ok&&r>=6) s+=`<path transform="translate(${p[0]} ${p[1]}) scale(${r/11})" d="M0-6 1.8-1.9 6.2-1.8 2.7 1 3.8 5.3 0 2.8-3.8 5.3-2.7 1-6.2-1.8-1.8-1.9Z" fill="#FFE27A"/>`;
-    else if(!ok&&m) s+=`<text x="${p[0]}" y="${p[1]+4.5}" font-size="12" text-anchor="middle">${m[0]}</text>`;});
-  if(done>0){const c=pts[Math.min(done,T)-1];s+=`<g transform="translate(${c[0]} ${c[1]-22})"><path d="M-10-13h20v13h-7l-3 6-3-6h-7z" fill="#FFC23D"/><text y="-2.5" font-size="10" text-anchor="middle" font-weight="800" fill="#2A3A5C" font-family="sans-serif">${done}</text></g>`;}
-  return s+'</svg>';
-}
 function frameHTML(c,now){
   const ph=photos[c.id]||[];
-  if(!ph.length) return `<button class="add" data-up="${c.id}"><svg viewBox="0 0 48 40"><rect x="3" y="7" width="42" height="30" rx="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="22" r="8" fill="none" stroke="currentColor" stroke-width="3"/><rect x="16" y="2" width="16" height="7" rx="2" fill="currentColor"/></svg>${now?'Add this week’s masterpiece':'Add artwork'}</button>`;
+  if(!ph.length) return `<button class="add" data-up="${c.id}"><svg viewBox="0 0 48 40" fill="none" stroke="currentColor" stroke-width="3"><rect x="4" y="8" width="40" height="28" rx="5"/><circle cx="24" cy="22" r="7"/><path d="M17 8l3-4h8l3 4"/></svg>${now?'Add this week’s masterpiece':'Add artwork'}</button>`;
   const inner=ph.length>=3?`<div class="stack">${ph.slice(0,3).map(p=>`<img src="${p}" alt="">`).join('')}</div>`:`<img src="${ph[0]}" alt="">`;
   return `<button data-open="${c.id}" aria-label="View ${ph.length} photo${ph.length>1?'s':''}">${inner}${ph.length>(ph.length>=3?3:1)?`<span class="more">+${ph.length-(ph.length>=3?3:1)}</span>`:''}</button>`;
 }
-function conn(l){const d=l?'M 25 0 C 25 40, 75 14, 75 54':'M 75 0 C 75 40, 25 14, 25 54';
-  return `<div class="conn" aria-hidden="true"><svg viewBox="0 0 100 54" preserveAspectRatio="none"><path d="${d}" stroke="#E7CFA4" stroke-width="9" fill="none" vector-effect="non-scaling-stroke" stroke-linecap="round"/><path d="${d}" stroke="#fff" stroke-width="2" stroke-dasharray="3 6" fill="none" vector-effect="non-scaling-stroke"/></svg></div>`;}
-function nextDate(){const k=kid(),s=sorted();return s.length?nextOn(s[s.length-1].date,k.day):(k.start||today());}
+/* How many cards fit a row — the sand path is drawn per row, so the rows are
+   real elements and get rebuilt when the window changes width. */
+function perRow(){ const w=innerWidth; return w>=1000?4:w>=720?3:2; }
+function cardHTML(c,n,now){
+  return `<article class="card ${now?'now':''}" style="--tilt:${tilt(n)}">
+    ${now?'<span class="crown">👑</span><span class="here">You are here!</span>':''}
+    <span class="tape" style="--c:${TAPES[(n-1)%TAPES.length]}">${fmt(c.date)}</span>
+    <div class="frame">${frameHTML(c,now)}</div>
+    <p class="ttl ${c.caption?'':'none'}">${c.caption?esc(c.caption):'Untitled masterpiece'}</p>
+    <div class="cardfoot"><span class="cls"><s>★</s> Class ${n}</span>
+      <span class="tools"><button class="edit" data-edit="${c.id}">Edit</button><button class="heart ${c.fav?'on':''}" data-fav="${c.id}" aria-pressed="${c.fav}" aria-label="Favourite Class ${n}">♥</button></span></div>
+  </article>`;
+}
+/* Measures the rendered rows and paints one snaking sand path through them. */
+function drawPath(){
+  const wrap=$('.journey'); if(!wrap) return;
+  const rows=[...wrap.querySelectorAll('.row')]; if(!rows.length) return;
+  const W=wrap.clientWidth, H=wrap.clientHeight, pad=26, turn=46;
+  const ys=rows.map(r=>r.offsetTop+r.offsetHeight/2);
+  let d='';
+  const wob=(y,i)=>y+Math.sin(i*1.7)*7;
+  ys.forEach((y,i)=>{
+    const ltr=i%2===0, x0=ltr?pad:W-pad, x1=ltr?W-pad:pad;
+    const seg=(from,to)=>{                    /* four gentle waves per row */
+      let out='';
+      for(let k=1;k<=4;k++){
+        const px=from+(to-from)*k/4, cx=from+(to-from)*(k-.5)/4;
+        out+=` Q${cx.toFixed(0)} ${wob(y,i*4+k).toFixed(0)} ${px.toFixed(0)} ${y.toFixed(0)}`;
+      }
+      return out;
+    };
+    if(!i) d+=`M${x0.toFixed(0)} ${y.toFixed(0)}`;
+    d+=seg(x0,x1);                            /* every row waves, not just the first */
+    if(i<ys.length-1){                        /* U-turn into the next row */
+      const ny=ys[i+1], edge=ltr?W-pad+turn:pad-turn;
+      d+=` C${edge} ${y} ${edge} ${ny} ${x1.toFixed(0)} ${ny.toFixed(0)}`;
+    }
+  });
+  wrap.querySelector('.sandpath').innerHTML=
+    `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none" aria-hidden="true">
+       <path d="${d}" stroke="#DFC091" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>
+       <path d="${d}" stroke="#EDD9B0" stroke-width="88" stroke-linecap="round" stroke-linejoin="round"/>
+       <path d="${d}" stroke="#F6E9CE" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+       <path d="${d}" stroke="#DCC49A" stroke-width="6" stroke-dasharray="5 30" stroke-linecap="round" opacity=".85"/>
+       <path d="${d}" stroke="#FDF6E6" stroke-width="26" stroke-dasharray="34 52" stroke-linecap="round" opacity=".5"/>
+     </svg>`;
+}
+/* The gaps between cards are the only place a prop can stand without
+   covering a child's artwork, so they are measured, not guessed. */
+function placeProps(){
+  $$('.row').forEach(row=>{
+    const cards=[...row.querySelectorAll('.card')], props=[...row.querySelectorAll('.rowdeco')];
+    if(cards.length<2){ props.forEach(p=>p.style.opacity='0'); return; }
+    const rb=row.getBoundingClientRect();
+    props.forEach((prop,i)=>{
+      const gap=1+((+prop.dataset.gap)*(cards.length>2?2:1));
+      const left=cards[Math.min(gap,cards.length)-1], right=cards[Math.min(gap,cards.length-1)];
+      if(!left||!right||left===right){ prop.style.opacity='0'; return; }
+      const a=left.getBoundingClientRect(), b=right.getBoundingClientRect();
+      const mid=(a.right+b.left)/2-rb.left, sit=+(prop.style.getPropertyValue('--sit')||-12);
+      prop.style.left=(mid-prop.offsetWidth/2)+'px';
+      prop.style.top=(a.bottom-rb.top+sit-prop.offsetHeight)+'px';
+      prop.style.opacity='.97';
+    });
+  });
+}
 function renderJourney(){
-  const k=kid(),s=sorted(); let h='';
+  const k=kid(),s=sorted(),per=perRow(); let h='<div class="journey"><div class="sandpath"></div>';
   if(!s.length) h+=`<p class="empty">The trail starts here. Add the first class and a photo of what ${esc(k.name)} made.</p>`;
-  s.forEach((c,i)=>{ if(i) h+=conn(i%2===1); const n=i+1,now=i===s.length-1;
-    h+=`<div class="row ${i%2?'r':''}"><article class="card ${now?'now':''}" style="--tilt:${tilt(n)}">${now?'<span class="here">You are here!</span>':''}
-      <span class="tape" style="background:${TAPES[i%TAPES.length]}">${fmt(c.date)}</span>
-      <div class="frame">${frameHTML(c,now)}</div>
-      <p class="ttl ${c.caption?'':'none'}">${c.caption?esc(c.caption):'Untitled masterpiece'}</p>
-      <div class="cardfoot"><span class="cls"><s>★</s> Class ${n}</span>
-        <span class="tools"><button class="edit" data-edit="${c.id}">Edit</button><button class="heart ${c.fav?'on':''}" data-fav="${c.id}" aria-pressed="${c.fav}" aria-label="Favourite Class ${n}">♥</button></span></div>
-    </article></div>`; });
+  /* name, w, h, (unused), how far the prop's feet sit below the card's bottom */
+  const PROPS=[['brush',58,108,0,-58],['palette',78,86,0,-26],['dino-purple',74,124,0,-4],
+               ['leaf-a',60,74,0,-10],['egg',78,72,0,-6],['brush2',72,128,0,-52],
+               ['pencil',50,96,0,-44],['leaf-b',60,82,0,-12],['tube',44,70,0,-6]];
+  for(let i=0,row=0;i<s.length;i+=per,row++){
+    const chunk=s.slice(i,i+per);
+    let props='';
+    for(let d=0;d<2;d++){
+      const [name,w,ht,,sit]=PROPS[(row*2+d)%PROPS.length];
+      props+=`<i class="rowdeco" data-gap="${d}" style="width:${w}px;height:${ht}px;--sit:${sit}` +
+             `;background-image:url('/kids-adventure/kit/${name}.webp')"></i>`;
+    }
+    for(let t=0;t<3;t++) props+=`<span class="rowstar" style="left:${(9+t*34+(row%2?7:0))}%;top:${t%2?4:92}%">★</span>`;
+    h+=`<div class="row">${props}<div class="cards" style="--per:${per}">`+
+       chunk.map((c,j)=>cardHTML(c,i+j+1,i+j===s.length-1)).join('')+`</div></div>`;
+  }
+  h+='</div>';
   if(s.length<k.total){
     h+=`<div class="center"><button class="big" data-act="addclass">＋ Add Class ${s.length+1}</button></div>`;
     const M=miles(k.total); let d=s.length?s[s.length-1].date:null, peb='';
@@ -486,6 +456,10 @@ function renderJourney(){
     h+=`<h2>The trail ahead</h2><p class="sub">${k.day>=0?'Every '+DAYS[k.day]:'Weekly'} until the summit</p><div class="upcoming">${peb}</div>`;
   } else h+=`<div class="center"><button class="big" data-act="editkid">＋ Top up lessons</button></div>`;
   $('#view').innerHTML=h;
+  drawPath(); placeProps();
+  /* fonts and photos change row heights, so re-measure once they land */
+  requestAnimationFrame(()=>{ drawPath(); placeProps(); });
+  setTimeout(()=>{ drawPath(); placeProps(); },400);
 }
 function renderGallery(favOnly){
   const s=sorted(),items=[]; s.forEach((c,i)=>{ if(favOnly&&!c.fav) return; (photos[c.id]||[]).forEach(p=>items.push({c,n:i+1,p})); });
@@ -628,25 +602,48 @@ function openLb(i){ if(!lbList.length) return; lbIdx=(i+lbList.length)%lbList.le
 
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button'); if(!b||b.closest('.md')) return;
-  if(b.dataset.kid){ if(b.dataset.kid!==cur){view='journey';await loadKid(b.dataset.kid);} }
+  if(b.dataset.kid){ if(b.dataset.kid!==cur){SFX.pop();view='journey';await loadKid(b.dataset.kid);} }
   else if(b.dataset.act==='newkid') kidSheet();
   else if(b.dataset.act==='editkid') kidSheet(kid());
   else if(b.dataset.act==='addclass') classSheet();
-  else if(b.dataset.up) classSheet(classes.find(c=>c.id===b.dataset.up),true);
+  else if(b.dataset.up){ SFX.splat(360); classSheet(classes.find(c=>c.id===b.dataset.up),true); }
   else if(b.dataset.edit) classSheet(classes.find(c=>c.id===b.dataset.edit));
-  else if(b.dataset.fav){ const c=classes.find(x=>x.id===b.dataset.fav); c.fav=!c.fav; await saveClasses(); render(); }
-  else if(b.dataset.open){ const s=sorted(),n=s.findIndex(x=>x.id===b.dataset.open)+1,c=s[n-1]; lbList=photos[c.id].map(p=>({c,n,p})); openLb(0); }
+  else if(b.dataset.fav){ const c=classes.find(x=>x.id===b.dataset.fav); c.fav=!c.fav;
+    if(c.fav) SFX.ding(); else SFX.pop();
+    await saveClasses(); render(); }
+  else if(b.dataset.open){ SFX.splat(300+ (sorted().findIndex(x=>x.id===b.dataset.open)+1)*24);
+    const s=sorted(),n=s.findIndex(x=>x.id===b.dataset.open)+1,c=s[n-1]; lbList=photos[c.id].map(p=>({c,n,p})); openLb(0); }
   else if(b.dataset.g!==undefined) openLb(+b.dataset.g);
-  else if(b.dataset.idea) ideaSheet(ideaById(b.dataset.idea));
+  else if(b.dataset.idea){ SFX.splat(420); ideaSheet(ideaById(b.dataset.idea)); }
   else if(b.dataset.ic){ ideaCat=b.dataset.ic; render(); }
   else if(b.dataset.act==='surprise') ideaSheet(IDEAS[Math.floor(Math.random()*IDEAS.length)]);
   else if(b.dataset.act==='ideas'){ view='ideas'; render(); }
-  else if(b.classList.contains('tab')){ view=b.dataset.v; render(); }
+  else if(b.classList.contains('pill')){ SFX.page(); view=b.dataset.v; render(); }
+  else if(b.dataset.act==='mute'){
+    muted=!muted;
+    try{ localStorage.setItem('kja:muted',muted?'1':'0'); }catch(err){}
+    paintMute(); if(!muted) SFX.pop();
+  }
 });
 $('#lbprev').onclick=()=>openLb(lbIdx-1); $('#lbnext').onclick=()=>openLb(lbIdx+1); $('#lbclose').onclick=()=>$('#lb').classList.remove('open');
 $('#lb').addEventListener('click',e=>{if(e.target.id==='lb')$('#lb').classList.remove('open');});
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ $('#lb').classList.remove('open'); document.querySelector('.md')?.remove(); }
   if($('#lb').classList.contains('open')){ if(e.key==='ArrowRight')openLb(lbIdx+1); if(e.key==='ArrowLeft')openLb(lbIdx-1);} });
+function paintMute(){
+  const mb=$('#mute'); if(!mb) return;
+  mb.textContent = muted ? '🔇 Sounds off' : '🔊 Sounds on';
+  mb.setAttribute('aria-pressed', muted?'true':'false');
+}
+$('#mute').dataset.act='mute';
+paintMute();
+
+/* The sand path is drawn per row, so a width change means new rows. */
+let rz, lastPer=perRow();
+addEventListener('resize',()=>{ clearTimeout(rz); rz=setTimeout(()=>{
+  if(view!=='journey') return;
+  if(perRow()!==lastPer){ lastPer=perRow(); render(); } else { drawPath(); placeProps(); }
+},180); });
+
 boot();
 </script>
 

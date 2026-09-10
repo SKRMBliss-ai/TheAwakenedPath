@@ -121,7 +121,7 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
   <a class="door" style="--a:#F2A03D;--b:#E2622F" href="/kids-adventure/art">
     <span class="ic">🎨</span><span><b>Art World</b><span>Sketch · Paint · Create · Imagine</span></span>
   </a>
-  <a class="door" style="--a:#4E7BD4;--b:#2B3F86" href="/simplypiano">
+  <a class="door" style="--a:#4E7BD4;--b:#2B3F86" href="/kids-adventure/piano">
     <span class="ic">🎹</span><span><b>Piano World</b><span>Play · Practise · Improve · Shine</span></span>
   </a>
 </div>
@@ -134,7 +134,7 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
   var stage = document.getElementById('stage');
   var label = document.getElementById('label');
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var ART = '/kids-adventure/art', PIANO = '/simplypiano';
+  var ART = '/kids-adventure/art', PIANO = '/kids-adventure/piano';
 
   /* ── HOTSPOTS ───────────────────────────────────────────────────────────
      x, y, w, h are pixels in the 1312 × 1199 artwork, measured from it.
@@ -163,7 +163,7 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
     { id: 'says',  x: 796,  y: 40,  w: 140, h: 96,  kind: 'shine', t: 'You create, you explore, you grow' },
     { id: 'score', x: 1111, y: 22,  w: 182, h: 92,  kind: 'ding',  t: 'Total classes', s: 'tap to count them up' },
     { id: 'artsign',  x: 238, y: 160, w: 116, h: 92, kind: 'wood',  go: ART,   gate: 1, t: 'Art World →', s: 'drawing & painting classes' },
-    { id: 'pianosign',x: 986, y: 158, w: 140, h: 94, kind: 'wood',  go: PIANO, gate: 1, t: 'Piano World →', s: 'songs, notes & practice' },
+    { id: 'pianosign',x: 986, y: 158, w: 140, h: 94, kind: 'wood',  go: PIANO, gate: 1, t: 'Piano World →', s: 'five levels, then the song' },
     { id: 'arttools', x: 40,  y: 424, w: 116, h: 104, kind: 'wood', go: ART,   t: 'Sketch · Paint · Create · Imagine' },
     { id: 'pianotools', x: 1196, y: 496, w: 106, h: 116, kind: 'wood', go: PIANO, t: 'Play · Practise · Improve · Shine' },
     { id: 'motto', x: 536, y: 806, w: 268, h: 128, kind: 'shine', t: 'Different tools… same magic', s: 'your creativity!' },
