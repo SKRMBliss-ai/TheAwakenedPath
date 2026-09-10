@@ -909,10 +909,10 @@ export default function SoulfulHome() {
                     type: 'apps',
                     tag: 'Kids Learning',
                     title: 'Kids Learning Adventure',
-                    desc: 'Music and art quests for children — Song Adventure teaches a first piano song in five levels, Art Adventure turns drawing into a daily journey with its own gallery.',
+                    desc: 'A child\'s whole creative journey on one map — Art World for drawing and painting classes, Piano World for notes and songs, every class tappable and every tap a sound.',
                     href: '/kids-adventure',
                     action: 'Open app →',
-                    img: '/kids-adventure/cover.svg',
+                    img: '/kids-adventure/journey-map.webp',
                   },
                   {
                     type: 'apps',
