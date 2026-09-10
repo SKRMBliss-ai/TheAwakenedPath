@@ -845,8 +845,8 @@ export default function SoulfulHome() {
               {/* Sub-Filter Tabs */}
               <div style={{ display: 'inline-flex', padding: 4, borderRadius: 999, background: isDark ? 'rgba(38,30,22,0.8)' : 'rgba(238,230,218,0.7)', border: `1px solid ${isDark ? 'rgba(196,145,58,0.3)' : 'rgba(196,181,160,0.5)'}`, marginBottom: 44 }}>
                 {[
-                  { key: 'all', label: 'ALL (9)' },
-                  { key: 'apps', label: 'APPS (6)' },
+                  { key: 'all', label: 'ALL (10)' },
+                  { key: 'apps', label: 'APPS (7)' },
                   { key: 'websites', label: 'WEBSITES (3)' }
                 ].map(tab => (
                   <button
@@ -898,6 +898,21 @@ export default function SoulfulHome() {
                     img: isDark
                       ? 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039444/HabitDark_eck1jo.jpg'
                       : 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039266/HabitLight_owsbeo.jpg',
+                  },
+                  {
+                    // Kids Learning Adventure — the umbrella for the children's
+                    // apps. One card, one URL: /kids-adventure is a static hub
+                    // (public/kids-adventure/) that opens either Song Adventure
+                    // (the piano app, via the /simplypiano redirect) or Art
+                    // Adventure (public/kids-adventure/art/). Listing them
+                    // separately would put two half-cards where one product is.
+                    type: 'apps',
+                    tag: 'Kids Learning',
+                    title: 'Kids Learning Adventure',
+                    desc: 'Music and art quests for children — Song Adventure teaches a first piano song in five levels, Art Adventure turns drawing into a daily journey with its own gallery.',
+                    href: '/kids-adventure',
+                    action: 'Open app →',
+                    img: '/kids-adventure/cover.svg',
                   },
                   {
                     type: 'apps',
