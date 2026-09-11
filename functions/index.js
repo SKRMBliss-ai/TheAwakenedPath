@@ -161,6 +161,7 @@ const ttsClient = new textToSpeech.TextToSpeechClient();
 // Pricing Configuration (Keep in sync with frontend)
 const COURSE_PRICES = {
     "emotion_feelings_course": 4.99,
+    "simply_piano": 2.99,
     "wisdom_untethered": 9,
     "all_access": 199.99,
     "track_1": 14.99,
@@ -183,11 +184,12 @@ const COURSE_PRICES = {
 // `purchasedCourses`. List the courses explicitly rather than excluding them
 // one by one, so a new course added above cannot silently leak into the
 // track library (which is how emotion_feelings_course ended up there).
-const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access']);
+const COURSE_IDS = new Set(['emotion_feelings_course', 'simply_piano', 'wisdom_untethered', 'all_access']);
 const isSoundscapeTrack = (id) => !!COURSE_PRICES[id] && !COURSE_IDS.has(id);
 
 const COURSE_PRICES_INR = {
     "emotion_feelings_course": 415,
+    "simply_piano": 199,
     "wisdom_untethered": 799,
     "all_access": 14999,
     "track_1": 899,
@@ -212,12 +214,12 @@ const COURSE_PRICES_INR = {
 const COURSE_PRICES_BY_CURRENCY = {
     INR: COURSE_PRICES_INR,
     USD: COURSE_PRICES,
-    EUR: { "emotion_feelings_course": 4.99 },
-    GBP: { "emotion_feelings_course": 3.99 },
-    CAD: { "emotion_feelings_course": 6.99 },
-    AUD: { "emotion_feelings_course": 7.99 },
-    AED: { "emotion_feelings_course": 18 },
-    SGD: { "emotion_feelings_course": 6.99 },
+    EUR: { "emotion_feelings_course": 4.99, "simply_piano": 2.99 },
+    GBP: { "emotion_feelings_course": 3.99, "simply_piano": 2.49 },
+    CAD: { "emotion_feelings_course": 6.99, "simply_piano": 3.99 },
+    AUD: { "emotion_feelings_course": 7.99, "simply_piano": 4.49 },
+    AED: { "emotion_feelings_course": 18, "simply_piano": 11 },
+    SGD: { "emotion_feelings_course": 6.99, "simply_piano": 3.99 },
 };
 
 // Resolve the charge currency + amount for a course. Falls back to USD when the
@@ -1157,6 +1159,32 @@ exports.verifyRazorpayPayment = onRequest({ secrets: [razorpayKeyId, razorpayKey
     } catch (error) {
         console.error("Verification Error:", error);
         res.status(500).send("Verification failed");
+    }
+});
+
+/**
+ * "Restore purchase" for guest buyers of a single product.
+ *
+ * The piano app is a static site with no Firebase Auth, so its only record of a
+ * purchase is localStorage — which a cleared browser or a second device wipes.
+ * This lets it re-check entitlement by email.
+ *
+ * Answers ONLY a yes/no for the one requested courseId and never returns the
+ * stored profile, so it cannot be used to mine which emails exist or what else
+ * they own.
+ */
+exports.checkGuestAccess = onRequest({ cors: true }, async (req, res) => {
+    try {
+        const email = String(req.query.email || (req.body && req.body.email) || "").toLowerCase().trim();
+        const courseId = String(req.query.courseId || (req.body && req.body.courseId) || "").trim();
+        if (!email || !courseId) return res.status(400).json({ error: "Missing email or courseId" });
+
+        const snap = await db.collection("guestPurchases").doc(email).get();
+        const owned = snap.exists ? (snap.data().purchasedCourses || []) : [];
+        res.json({ hasAccess: owned.includes(courseId) || owned.includes("all_access") });
+    } catch (error) {
+        console.error("checkGuestAccess Error:", error);
+        res.status(500).json({ error: "Lookup failed" });
     }
 });
 
