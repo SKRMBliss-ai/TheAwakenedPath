@@ -52,7 +52,7 @@
   var $ = function (s) { return document.querySelector(s); };
   var $$ = function (s) { return [].slice.call(document.querySelectorAll(s)); };
   var TAPES = ['#3880C0','#E06098','#509858','#F89030','#A070C0','#50A8B0','#F0B828'];
-  var SONG = 'https://simplypiano.web.app';
+  var GAME = '/kids-adventure/piano/play/';
 
   /* Five levels, the same five the journey map shows on the piano island. */
   var LEVELS = [
@@ -93,10 +93,22 @@
   function pop() { tone(660, 0, 0.12, 0.16, 'sine'); tone(990, 0.05, 0.16, 0.1, 'sine'); }
 
   /* ── which levels are finished, kept per device ───────────────────────── */
-  var done = [];
-  try { done = JSON.parse(localStorage.getItem('kja:piano') || '[]') || []; } catch (e) { done = []; }
-  function save() { try { localStorage.setItem('kja:piano', JSON.stringify(done)); } catch (e) {} }
+  var prog = { done: [], stars: {}, tunes: [] };
+  try {
+    var raw = JSON.parse(localStorage.getItem('kja:piano') || 'null');
+    if (Array.isArray(raw)) prog.done = raw;                     /* the older format */
+    else if (raw && typeof raw === 'object') {
+      prog = { done: raw.done || [], stars: raw.stars || {}, tunes: raw.tunes || [] };
+    }
+  } catch (e) {}
+  var done = prog.done;
+  function save() { prog.done = done; try { localStorage.setItem('kja:piano', JSON.stringify(prog)); } catch (e) {} }
   function isDone(n) { return done.indexOf(n) >= 0; }
+  function starsOf(n) {
+    var got = prog.stars[n] || 0, out = '';
+    for (var i = 1; i <= 3; i++) out += i <= got ? '★' : '☆';
+    return out;
+  }
 
   function toast(t) {
     var el = $('#toast'); el.textContent = t; el.classList.add('show');
@@ -169,8 +181,8 @@
       '<div class="frame kb">' + keysHTML(l) + '</div>' +
       '<p class="lvlname">' + l.name + '</p>' +
       '<p class="lvlnote">' + l.note + '</p>' +
-      '<div class="lvlfoot"><span class="cls"><s>★</s> ' + (d ? 'Done' : 'Level ' + l.n) + '</span>' +
-      '<span><a class="play" href="' + SONG + '" target="_blank" rel="noopener" data-melody="' + l.n + '">Play →</a>' +
+      '<div class="lvlfoot"><span class="cls"><s>' + starsOf(l.n) + '</s> ' + (d ? 'Done' : 'Level ' + l.n) + '</span>' +
+      '<span><a class="play" href="' + GAME + '?level=' + l.n + '" data-melody="' + l.n + '">Play →</a>' +
       '<button class="tick ' + (d ? 'on' : '') + '" data-done="' + l.n + '" aria-pressed="' + d + '">' +
       (d ? '✓ Learned' : 'Mark learned') + '</button></span></div></article>';
   }
@@ -185,7 +197,7 @@
         : (LEVELS.length - done.length) + ' to go before you write your own song') + '</p>' +
       '<div class="trail"><span class="sign">Level 1</span>' + trailSVG() +
       '<span class="sign r">Level 5</span><span class="peak"></span></div></header>' +
-      '<nav class="pills"><a class="pill" style="--c:var(--t7)" href="' + SONG + '" target="_blank" rel="noopener">🎹 Open Song Adventure ›</a>' +
+      '<nav class="pills"><a class="pill" style="--c:var(--t7)" href="' + GAME + '">🎹 Play the songs ›</a>' +
       '<a class="pill" style="--c:var(--t6)" href="/kids-adventure/art">🎨 Art World ›</a></nav>' +
       '<div class="journey"><div class="sandpath"></div>' + rowsHTML() + '</div>';
     drawPath();
