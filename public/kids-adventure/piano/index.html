@@ -55,6 +55,13 @@
   var GAME = '/kids-adventure/piano/play/';
 
   /* Five levels, the same five the journey map shows on the piano island. */
+  /* The studio's own three pieces. The game holds the notes; the journey only
+     needs enough to show the shelf and how far each one has got. */
+  var SONGS = [
+    { id:'dyno',   icon:'🦖',  title:'Dyno My Pet Dinosaur', sub:'Two hands · four measures',        parts:4, word:'measures' },
+    { id:'clock',  icon:'🕰️', title:'The Clock Song',        sub:'Right hand · C, E and G · lyrics', parts:7, word:'parts' },
+    { id:'yankee', icon:'🎩',  title:'Yankee Doodle',         sub:'Right hand · C, D, E and F',       parts:4, word:'rows' }
+  ];
   var LEVELS = [
     { n:1, name:'Basics & Notes',   note:'Find middle C, then say hello to every white key.',
       keys:['C','D','E','F','G'], lit:[0],       f:[261.63] },
@@ -93,16 +100,17 @@
   function pop() { tone(660, 0, 0.12, 0.16, 'sine'); tone(990, 0.05, 0.16, 0.1, 'sine'); }
 
   /* ── which levels are finished, kept per device ───────────────────────── */
-  var prog = { done: [], stars: {}, tunes: [] };
+  var prog = { done: [], stars: {}, tunes: [], songs: {} };
   try {
     var raw = JSON.parse(localStorage.getItem('kja:piano') || 'null');
     if (Array.isArray(raw)) prog.done = raw;                     /* the older format */
     else if (raw && typeof raw === 'object') {
-      prog = { done: raw.done || [], stars: raw.stars || {}, tunes: raw.tunes || [] };
+      prog = { done: raw.done || [], stars: raw.stars || {}, tunes: raw.tunes || [], songs: raw.songs || {} };
     }
   } catch (e) {}
   var done = prog.done;
   function save() { prog.done = done; try { localStorage.setItem('kja:piano', JSON.stringify(prog)); } catch (e) {} }
+  function songsDone() { return Object.keys(prog.songs).filter(function (k) { return prog.songs[k].done; }).length; }
   function isDone(n) { return done.indexOf(n) >= 0; }
   function starsOf(n) {
     var got = prog.stars[n] || 0, out = '';
@@ -187,6 +195,23 @@
       (d ? '✓ Learned' : 'Mark learned') + '</button></span></div></article>';
   }
 
+  function songCard(s, i) {
+    var sp = prog.songs[s.id] || { parts: [], done: false };
+    var learned = (sp.parts || []).length, pct = Math.round(learned / s.parts * 100);
+    return '<article class="card" style="--tilt:' + ((i - 1) * 0.7) + 'deg">' +
+      (sp.done ? '<span class="crown">👑</span>' : '') +
+      '<span class="tape" style="--c:' + TAPES[(i + 3) % TAPES.length] + '">' + s.icon + ' Song</span>' +
+      '<div class="frame songface">' + s.icon + '</div>' +
+      '<p class="lvlname">' + s.title + '</p>' +
+      '<p class="lvlnote">' + s.sub + '<br>' +
+        (sp.done ? 'Whole piece learned ★★★'
+                 : learned ? learned + ' of ' + s.parts + ' ' + s.word + ' learned'
+                           : 'Not started yet') + '</p>' +
+      '<div class="pbar" aria-hidden="true"><span style="width:' + pct + '%"></span></div>' +
+      '<div class="lvlfoot"><span class="cls"><s>' + (sp.done ? '★★★' : '☆☆☆') + '</s></span>' +
+        '<span><a class="play" href="' + GAME + '?song=' + s.id + '">' + (learned ? 'Carry on →' : 'Open →') + '</a></span></div>' +
+    '</article>';
+  }
   function render() {
     document.documentElement.style.setProperty('--kid', TAPES[0]);
     $('#main').innerHTML =
@@ -199,7 +224,10 @@
       '<span class="sign r">Level 5</span><span class="peak"></span></div></header>' +
       '<nav class="pills"><a class="pill" style="--c:var(--t7)" href="' + GAME + '">🎹 Play the songs ›</a>' +
       '<a class="pill" style="--c:var(--t6)" href="/kids-adventure/art">🎨 Art World ›</a></nav>' +
-      '<div class="journey"><div class="sandpath"></div>' + rowsHTML() + '</div>';
+      '<div class="journey"><div class="sandpath"></div>' + rowsHTML() + '</div>' +
+      '<h2>The songbook</h2><p class="sub">Three whole pieces — hear them, then learn them a part at a time</p>' +
+      '<div class="cards songshelf" style="--per:' + (innerWidth >= 860 ? 3 : 1) + '">' +
+        SONGS.map(songCard).join('') + '</div>';
     drawPath();
     requestAnimationFrame(drawPath);
     setTimeout(drawPath, 400);
@@ -255,7 +283,12 @@
       return;
     }
     var play = e.target.closest('.play');
-    if (play) { melody(LEVELS[+play.dataset.melody - 1].f); return; }
+    if (play) {
+      /* Level cards carry a melody to hum on the way out; song cards do not. */
+      var lv = LEVELS[+play.dataset.melody - 1];
+      if (lv && lv.f) melody(lv.f); else pop();
+      return;
+    }
     var t = e.target.closest('[data-done]');
     if (t) {
       var n = +t.dataset.done;

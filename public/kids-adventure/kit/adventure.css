@@ -252,3 +252,9 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
   font-size:15px;color:var(--ink2);margin-left:6px}
 .tick.on{background:var(--t3);color:#fff;box-shadow:0 3px 0 #38703f}
 .lvlfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+/* ── the songbook shelf on Piano World ─────────────────────────────────── */
+.songshelf{margin-top:6px}
+.songface{aspect-ratio:12/6;background:#FFFDF6;border-color:#E7D2AC;display:grid;place-items:center;font-size:54px;line-height:1}
+.pbar{height:9px;border-radius:6px;background:#EFE6D2;overflow:hidden;margin:8px 2px 0}
+.pbar span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--t7),var(--t3))}
