@@ -188,18 +188,25 @@
       if (!host) return;
       var S = K.sound;
       host.className = 'toolbar';
+      /* On a phone the four labels wrap into their own paragraph, so there the
+         icons carry it and the words live in aria-label instead. */
       function paint() {
         var have = got.length, all = STICKERS.length;
+        var tight = matchMedia('(max-width:700px)').matches;
+        var m = S && S.isMuted(), mu = S && S.isMusic(), sp = S && S.isSpeech();
         host.innerHTML =
-          '<button data-t="mute" aria-pressed="' + (S && !S.isMuted()) + '">' +
-            (S && S.isMuted() ? '🔇 Sounds off' : '🔊 Sounds on') + '</button>' +
-          '<button data-t="music" aria-pressed="' + (S && S.isMusic()) + '">' +
-            (S && S.isMusic() ? '🎵 Music on' : '🎵 Music off') + '</button>' +
-          '<button data-t="speak" aria-pressed="' + (S && S.isSpeech()) + '">' +
-            (S && S.isSpeech() ? '🔈 Reading to you' : '🔈 Read to me') + '</button>' +
-          '<a href="/kids-adventure/stickers/">⭐ Stickers ' + have + '/' + all + '</a>';
+          '<button data-t="mute" aria-pressed="' + !m + '" aria-label="' + (m ? 'Sounds are off' : 'Sounds are on') + '">' +
+            (m ? '🔇' : '🔊') + (tight ? '' : (m ? ' Sounds off' : ' Sounds on')) + '</button>' +
+          '<button data-t="music" aria-pressed="' + !!mu + '" aria-label="' + (mu ? 'Music is on' : 'Music is off') + '">' +
+            '🎵' + (tight ? '' : (mu ? ' Music on' : ' Music off')) + '</button>' +
+          '<button data-t="speak" aria-pressed="' + !!sp + '" aria-label="' + (sp ? 'Reading to you' : 'Read to me') + '">' +
+            '🔈' + (tight ? '' : (sp ? ' Reading to you' : ' Read to me')) + '</button>' +
+          '<a href="/kids-adventure/stickers/" aria-label="' + have + ' of ' + all + ' stickers found">⭐ ' +
+            have + '/' + all + '</a>';
       }
       paint();
+      var rz;
+      addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(paint, 160); });
       host.addEventListener('click', function (e) {
         var b = e.target.closest('[data-t]'); if (!b || !S) return;
         if (b.dataset.t === 'mute')  { S.setMuted(!S.isMuted()); if (!S.isMuted()) S.sfx.pop(); }

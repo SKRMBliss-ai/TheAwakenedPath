@@ -227,6 +227,11 @@
     {
       id:'y2', name:'Year 2', sub:'Ages 6–7', icon:'📚', colour:'#3880C0',
       blurb:'Times tables, two-digit sums, fractions, telling the time, money and tricky spellings.',
+      /* Year 2 also has the studio's full Quest: every concept taught properly,
+         ten games each, and SATs-style practice. The quick rounds below are for
+         five spare minutes; the Quest is for a whole afternoon. */
+      quest:{ href:'/kids-adventure/study/year2/', title:'Year 2 Learning Quest',
+              blurb:'Every concept with a lesson, a build-up ladder, ten games and SATs practice' },
       topics:[
         { id:'tables', icon:'✖️', title:'2, 5 and 10 times tables', tag:'Number',
           make:function () {
@@ -360,6 +365,13 @@
             '<span class="play">Go in →</span></div>' +
         '</a>';
       }).join('') + '</div>' +
+      (YEARS.filter(function (y) { return y.quest; }).map(function (y) {
+        return '<a class="questcard" href="' + y.quest.href + '">' +
+          '<span class="tape" style="--c:' + y.colour + '">' + y.name + ' · the big one</span>' +
+          '<span class="qicon">🗺️</span>' +
+          '<span class="qtext"><b>' + y.quest.title + '</b><span>' + y.quest.blurb + '</span></span>' +
+          '<span class="play">Start the Quest →</span></a>';
+      }).join('')) +
       '<h2>What is inside</h2><p class="sub">Every topic is a round of eight questions, and it never asks the same eight twice</p>' +
       '<div class="topicgrid">' + YEARS.map(function (y) {
         return y.topics.map(function (t) {
@@ -387,6 +399,12 @@
         return '<a class="pill" style="--c:' + y.colour + '" href="?y=' + y.id + '" ' +
           'aria-selected="' + (y.id === Y.id) + '">' + y.icon + ' ' + y.name + '</a>';
       }).join('') + '</nav>' +
+      (Y.quest ? '<a class="questcard" href="' + Y.quest.href + '">' +
+          '<span class="tape" style="--c:' + Y.colour + '">The big one</span>' +
+          '<span class="qicon">🗺️</span>' +
+          '<span class="qtext"><b>' + Y.quest.title + '</b><span>' + Y.quest.blurb + '</span></span>' +
+          '<span class="play">Start the Quest →</span></a>' : '') +
+      '<h2>Quick practice</h2><p class="sub">Five spare minutes? Take a round of eight.</p>' +
       '<div class="cards topicshelf" style="--per:' + (innerWidth >= 980 ? 3 : innerWidth >= 640 ? 2 : 1) + '">' +
       Y.topics.map(function (t, i) {
         var st = starsOf(Y.id, t.id);
