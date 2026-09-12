@@ -258,3 +258,48 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
 .songface{aspect-ratio:12/6;background:#FFFDF6;border-color:#E7D2AC;display:grid;place-items:center;font-size:54px;line-height:1}
 .pbar{height:9px;border-radius:6px;background:#EFE6D2;overflow:hidden;margin:8px 2px 0}
 .pbar span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--t7),var(--t3))}
+
+/* ── the coach, the bubble and the painted buttons ──────────────────────────
+   Dyno stands beside a speech bubble on every screen that teaches — the
+   piano game and Study Island both — so these live in the shared kit rather
+   than in either page. */
+/* Dyno and what he says */
+.coach{display:flex;align-items:flex-end;gap:12px;margin:0 0 14px;min-height:132px}
+.coach .dyno{flex:none;width:112px;height:146px;background:url('/kids-adventure/kit/dino-green.webp') bottom center/contain no-repeat;
+  transition:transform .25s ease}
+.coach.yes .dyno{animation:nod .5s ease}
+.coach.no .dyno{animation:shake .4s ease}
+@keyframes nod{40%{transform:translateY(-12px) rotate(-3deg)}}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.says{position:relative;flex:1;background:#FFFDF6;border:3px solid var(--edge);border-radius:22px 22px 22px 6px;
+  padding:14px 18px;box-shadow:0 6px 14px #8a6a321f;min-height:76px}
+.says > b{display:block;font-family:var(--round);font-size:21px;color:var(--deep);line-height:1.15}
+.says > b b{font-family:inherit;color:inherit}          /* a sum's own bold stays inline */
+.says > span{display:block;font-size:17px;color:var(--ink2);margin-top:3px}
+
+/* buttons under the keys */
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0 0}
+.gbtn{position:relative;border:none;background:transparent;padding:12px 22px;font-family:var(--round);font-weight:800;
+  font-size:17px;color:var(--deep);isolation:isolate;text-decoration:none;display:inline-block}
+.gbtn::before{content:'';position:absolute;inset:0;z-index:-1;background:var(--c,var(--t7));opacity:.85;
+  -webkit-mask:var(--stroke) center/100% 100% no-repeat;mask:var(--stroke) center/100% 100% no-repeat}
+.gbtn:hover::before{opacity:1}
+.gbtn[disabled]{opacity:.45}
+.stars{font-family:var(--round);font-weight:800;font-size:19px;color:var(--gold);letter-spacing:2px}
+.stars i{font-style:normal;color:#DFD3BC}
+
+.win{text-align:center;margin:18px 0 0}
+.win b{display:block;font-family:var(--round);font-weight:800;font-size:27px;color:var(--deep)}
+.spark2{position:fixed;pointer-events:none;z-index:70;font-size:26px;animation:up 1s ease-out forwards}
+@keyframes up{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}25%{opacity:1}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),-140px) scale(1.3)}}
+
+@media (max-width:560px){
+  .coach .dyno{width:78px;height:104px}
+  .says > b{font-size:18px}
+  .says > span{font-size:16px}
+}
+@media (prefers-reduced-motion: reduce){
+  .coach.yes .dyno,.coach.no .dyno{animation:none}
+  .spark2{display:none}
+}

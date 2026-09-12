@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
 <meta name="theme-color" content="#8FD3FF" />
 <title>My Creative Journey | Kids Learning Adventure</title>
-<meta name="description" content="My Creative Journey — one world with two islands. Art World for drawing and painting classes, Piano World for songs and notes. Tap a class to open it." />
+<meta name="description" content="My Creative Journey — Art World for drawing and painting classes, Piano World for songs and notes, and Study Island for Reception &amp; KG, Year 1 and Year 2 school work. Tap a class to open it." />
 <link rel="icon" href="/favicon.ico" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <meta property="og:title" content="My Creative Journey" />
@@ -84,6 +84,7 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
 /* ── the two ways in, spelled out under the map ─────────────────────────── */
 .doors{max-width:1000px;margin:0 auto;padding:20px 14px 34px;display:grid;gap:14px;grid-template-columns:1fr}
 @media (min-width:640px){.doors{grid-template-columns:1fr 1fr}}
+@media (min-width:980px){.doors{grid-template-columns:repeat(3,1fr)}}
 .door{display:flex;align-items:center;gap:14px;text-decoration:none;color:#fff;border-radius:22px;padding:15px 18px;
   background:linear-gradient(140deg,var(--a),var(--b));box-shadow:0 6px 0 #00000038,0 14px 30px #0006}
 .door .ic{flex:none;width:52px;height:52px;border-radius:50%;background:#ffffff2e;display:grid;place-items:center;font-size:27px}
@@ -124,6 +125,9 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
   <a class="door" style="--a:#4E7BD4;--b:#2B3F86" href="/kids-adventure/piano">
     <span class="ic">🎹</span><span><b>Piano World</b><span>Play · Practise · Improve · Shine</span></span>
   </a>
+  <a class="door" style="--a:#5FA463;--b:#2F6B45" href="/kids-adventure/study/">
+    <span class="ic">📚</span><span><b>Study Island</b><span>Reception &amp; KG · Year 1 · Year 2</span></span>
+  </a>
 </div>
 <p class="grown">Both worlds run in the browser — nothing to install, no account, and a child's classes and artwork stay on their own device.<br>Built by <a href="/">Soulful Intelligence Studios</a></p>
 
@@ -134,7 +138,7 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
   var stage = document.getElementById('stage');
   var label = document.getElementById('label');
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var ART = '/kids-adventure/art', PIANO = '/kids-adventure/piano';
+  var ART = '/kids-adventure/art', PIANO = '/kids-adventure/piano', STUDY = '/kids-adventure/study/';
 
   /* ── HOTSPOTS ───────────────────────────────────────────────────────────
      x, y, w, h are pixels in the 1312 × 1199 artwork, measured from it.
@@ -160,6 +164,8 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
     { id: 'me',    x: 600,  y: 16,  w: 112, h: 112, round: 1, kind: 'shine', t: 'That’s you!', s: 'the artist of this journey' },
     { id: 'dream', x: 106,  y: 40,  w: 168, h: 78,  kind: 'shine', t: 'Small steps… big dreams', s: 'one class at a time' },
     { id: 'title', x: 432,  y: 126, w: 402, h: 92,  kind: 'shine', t: 'My Creative Journey', s: 'Art · Piano · Imagination · You!' },
+    { id: 'peak',  x: 404,  y: 168, w: 194, h: 262, kind: 'ding', go: STUDY, gate: 1,
+      t: 'Study Island →', s: 'Reception & KG · Year 1 · Year 2' },
     { id: 'says',  x: 796,  y: 40,  w: 140, h: 96,  kind: 'shine', t: 'You create, you explore, you grow' },
     { id: 'score', x: 1111, y: 22,  w: 182, h: 92,  kind: 'ding',  t: 'Total classes', s: 'tap to count them up' },
     { id: 'artsign',  x: 238, y: 160, w: 116, h: 92, kind: 'wood',  go: ART,   gate: 1, t: 'Art World →', s: 'drawing & painting classes' },
