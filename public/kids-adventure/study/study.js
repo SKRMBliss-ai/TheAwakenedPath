@@ -287,46 +287,20 @@
     }
   ];
 
-  /* ── sound, the same kit as the rest of the adventure ──────────────────── */
-  var ac = null, muted = false;
-  try { muted = localStorage.getItem('kja:muted') === '1'; } catch (e) {}
-  function actx() {
-    try {
-      if (!ac) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ac = new C(); }
-      if (ac.state === 'suspended' && ac.resume) ac.resume();
-      return ac;
-    } catch (e) { return null; }
-  }
-  function tone(f, d, dur, peak, type) {
-    var a = actx(); if (!a || muted) return;
-    var t = a.currentTime + (d || 0), o = a.createOscillator(), g = a.createGain();
-    o.type = type || 'triangle'; o.frequency.value = f;
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(peak || 0.18, t + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.5));
-    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + (dur || 0.5) + 0.05);
-  }
-  function yes()   { [523.25, 659.25, 783.99].forEach(function (f, i) { tone(f, i * 0.07, 0.55, 0.15, 'sine'); }); }
-  function nope()  { tone(196, 0, 0.22, 0.12, 'triangle'); tone(155, 0.09, 0.26, 0.09, 'triangle'); }
-  function pop()   { tone(660, 0, 0.12, 0.14, 'sine'); tone(990, 0.05, 0.16, 0.1, 'sine'); }
-  function fanfare() { [[523.25,0],[659.25,.12],[783.99,.24],[1046.5,.36]].forEach(function (p) { tone(p[0], p[1], 1.1, 0.17); }); }
+  /* ── sound and juice come from the shared kit now ────────────────────── */
+  var SND = (window.KJA && window.KJA.sound) || null;
+  var JUICE = (window.KJA && window.KJA.juice) || null;
+  function yes()   { if (SND) SND.sfx.good(); }
+  function nope()  { if (SND) SND.sfx.wrong(); }
+  function pop()   { if (SND) { SND.sfx.tap(); SND.haptic(10); } }
+  function fanfare() { if (SND) SND.sfx.win(); }
 
   function toast(t) {
     var el = $('#toast'); if (!el) return;
     el.textContent = t; el.classList.add('show');
     clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('show'); }, 2300);
   }
-  function confetti() {
-    if (reduce) return;
-    for (var i = 0; i < 44; i++) {
-      var c = document.createElement('div');
-      c.className = 'confetti'; c.style.left = (Math.random() * 100) + 'vw';
-      c.style.background = TAPES[i % TAPES.length];
-      c.style.animationDelay = (Math.random() * 0.5) + 's';
-      c.style.borderRadius = i % 2 ? '50%' : '2px';
-      document.body.appendChild(c);
-      setTimeout(function (n) { return function () { if (n.parentNode) n.parentNode.removeChild(n); }; }(c), 2400);
-    }
-  }
+  function confetti(n) { if (JUICE) JUICE.confetti(n); }
 
   /* ── progress ──────────────────────────────────────────────────────────── */
   var prog = {};
@@ -364,19 +338,7 @@
     }
     return out;
   }
-  function mute() {
-    var mb = $('#mute'); if (!mb) return;
-    function paint() {
-      mb.textContent = muted ? '🔇 Sounds off' : '🔊 Sounds on';
-      mb.setAttribute('aria-pressed', muted ? 'true' : 'false');
-    }
-    paint();
-    mb.addEventListener('click', function () {
-      muted = !muted;
-      try { localStorage.setItem('kja:muted', muted ? '1' : '0'); } catch (e) {}
-      paint(); if (!muted) pop();
-    });
-  }
+  function mute() { if (window.KJA && window.KJA.ui) window.KJA.ui.toolbar('#mutebar'); }
 
   /* ══ THE ISLAND: three year groups to choose from ══════════════════════ */
   function island() {
@@ -476,6 +438,9 @@
         return '<button class="ans" data-ans="' + String(o).replace(/"/g, '&quot;') + '">' + o + '</button>';
       }).join('') + '</div>' +
       '<div class="controls"><button class="gbtn" style="--c:var(--t6)" data-a="quit">‹ All topics</button></div>';
+    if (SND) SND.speak(Q.q + (Q.opts.length <= 4 ? '. Is it ' + Q.opts.join(', or ') + '?' : ''));
+    var s = JUICE && JUICE.streak();
+    if (s >= 2) JUICE.banner(s + ' in a row! ' + (s >= 5 ? '🔥' : '⭐'));
   }
   function answer(val, el) {
     if (answered) return;
@@ -486,8 +451,13 @@
       else if (b === el) b.classList.add('bad');
       b.disabled = true;
     });
-    if (ok) { right++; yes(); }
-    else nope();
+    if (ok) {
+      right++;
+      if (JUICE) { JUICE.hit(el); JUICE.pop(el, '+1 ★', '#2E7A38'); JUICE.burstAt(el, 8); }
+      else yes();
+    } else {
+      if (JUICE) JUICE.miss(); else nope();
+    }
     var c = $('#coach');
     if (c) { c.classList.remove('yes','no'); void c.offsetWidth; c.classList.add(ok ? 'yes' : 'no'); }
     var s = $('#says');
@@ -501,7 +471,10 @@
   function finishRound() {
     var st = right === ROUND ? 3 : right >= ROUND - 2 ? 2 : right >= ROUND / 2 ? 1 : 0;
     if (st) setStars(Y.id, T.id, st);
-    if (st === 3) { fanfare(); confetti(); } else if (st) { yes(); confetti(); } else pop();
+    if (st === 3) { if (SND) SND.sfx.win(); confetti(70); }
+    else if (st) { if (SND) SND.sfx.levelUp(); confetti(30); }
+    else pop();
+    if (JUICE) JUICE.resetStreak();
     $('#study').innerHTML =
       '<header><p class="qtag" style="--c:' + Y.colour + '">' + Y.name + ' · ' + T.icon + ' ' + T.title + '</p></header>' +
       '<div class="coach"><span class="dyno" aria-hidden="true"></span>' +
@@ -515,6 +488,12 @@
         '<button class="gbtn" style="--c:var(--t1)" data-a="quit">‹ All topics</button>' +
         '<a class="gbtn" style="--c:var(--t6)" href="/kids-adventure/study/">Study Island</a>' +
       '</div>';
+    if (JUICE) {
+      JUICE.stamp(document.querySelector('.coach'), st);
+      if (st === 3) JUICE.stickers.earn('study-' + Y.id + '-' + T.id, 'Three stars on ' + T.title);
+      var y = yearStars(Y.id), of = Y.topics.length * 3;
+      if (y >= of) JUICE.stickers.earn('year-' + Y.id, 'Every star in ' + Y.name);
+    }
     toast(st ? T.title + ' ' + starRow(st) : 'Have another go 🙂');
   }
 

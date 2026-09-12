@@ -13,6 +13,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://www.skrmblissai.in/kids-adventure" />
 <meta property="og:image" content="https://www.skrmblissai.in/kids-adventure/journey-map.webp" />
+<link rel="stylesheet" href="/kids-adventure/kit/adventure.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Patrick+Hand&display=swap');
 :root{
@@ -96,6 +97,16 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
   .hs.gate::after{animation:none;opacity:.16}
   .spark{animation-duration:.01s}
 }
+
+/* the sticker shelf, on the dark water below the map */
+.shelf{max-width:1000px;margin:0 auto;padding:6px 14px 26px}
+.shelf h3{font-family:var(--round);font-weight:800;font-size:19px;color:#EAF3FB;text-align:center;margin:0 0 10px}
+.shelf .stickerbook{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.shelf .sticker{background:#ffffff14;border-color:#ffffff33}
+.shelf .sticker.have{background:#FFFDF6;border-color:#F0D9A8}
+.shelf .sticker img{width:58px;height:58px}
+.shelf .sticker b{font-size:12px;color:#CFE0EE}
+.shelf .sticker.have b{color:#4A5680}
 </style>
 </head>
 <body>
@@ -116,7 +127,7 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
 </div>
 <p class="hint" id="hint">Drag the map to explore →</p>
 
-<div class="bar"><button class="mute" id="mute" type="button" aria-pressed="false">🔊 Sounds on</button></div>
+<div class="bar" id="mutebar"></div>
 
 <div class="doors">
   <a class="door" style="--a:#F2A03D;--b:#E2622F" href="/kids-adventure/art">
@@ -126,15 +137,23 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
     <span class="ic">🎹</span><span><b>Piano World</b><span>Play · Practise · Improve · Shine</span></span>
   </a>
   <a class="door" style="--a:#5FA463;--b:#2F6B45" href="/kids-adventure/study/">
-    <span class="ic">📚</span><span><b>Study Island</b><span>Reception &amp; KG · Year 1 · Year 2</span></span>
+    <span class="ic">📚</span><span><b>Study Island</b><span>Reception · Year 1 · Year 2</span></span>
   </a>
 </div>
-<p class="grown">Both worlds run in the browser — nothing to install, no account, and a child's classes and artwork stay on their own device.<br>Built by <a href="/">Soulful Intelligence Studios</a></p>
+<section class="shelf">
+  <h3>My sticker book</h3>
+  <div id="shelf"></div>
+</section>
+<p class="grown">All three worlds run in the browser — nothing to install, no account, and a child's classes, artwork, stars and stickers stay on their own device.<br>Built by <a href="/">Soulful Intelligence Studios</a></p>
 
+<script src="/kids-adventure/kit/sound.js"></script>
+<script src="/kids-adventure/kit/juice.js"></script>
 <script>
 (function () {
   'use strict';
   var MAPW = 1312, MAPH = 1199;
+  var SND = (window.KJA && window.KJA.sound) || null;
+  var JUICE = (window.KJA && window.KJA.juice) || null;
   var stage = document.getElementById('stage');
   var label = document.getElementById('label');
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -193,67 +212,21 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
       t: 'Class ' + (i + 1) + ' · ' + CLASSES[i][5], s: 'open it in Art World', pitch: 320 + i * 24 });
   });
 
-  /* ── sound: every note and splash is synthesised here, no audio files ─── */
-  var ac = null, muted = false;
-  function actx() {
-    try {
-      if (!ac) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ac = new C(); }
-      if (ac.state === 'suspended' && ac.resume) ac.resume();
-      return ac;
-    } catch (e) { return null; }
-  }
-  function env(a, node, t, peak, dur) {
-    var g = a.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(peak, t + 0.015);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    node.connect(g); g.connect(a.destination);
-    return g;
-  }
-  function tone(freq, delay, dur, peak, type) {
-    var a = actx(); if (!a || muted) return;
-    var t = a.currentTime + (delay || 0), o = a.createOscillator();
-    o.type = type || 'triangle'; o.frequency.value = freq;
-    env(a, o, t, peak || 0.2, dur || 0.5);
-    o.start(t); o.stop(t + (dur || 0.5) + 0.06);
-  }
-  function noise(dur, from, to, peak, q) {
-    var a = actx(); if (!a || muted) return;
-    var t = a.currentTime, len = Math.floor(a.sampleRate * dur);
-    var buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
-    for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-    var src = a.createBufferSource(); src.buffer = buf;
-    var f = a.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = q || 1.1;
-    f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur);
-    src.connect(f); env(a, f, t, peak || 0.18, dur);
-    src.start(t);
-  }
+  /* ── sound: the shared engine in kit/sound.js does the synthesis now, so a
+        tap on the map and a note in the piano game are the same instrument ── */
   var SFX = {
-    note:  function (p) { tone(p || 330, 0, 0.85, 0.24, 'triangle'); tone((p || 330) * 2, 0.01, 0.35, 0.07, 'sine'); },
-    splat: function (p) {
-      var a = actx(); if (!a || muted) return;
-      var t = a.currentTime, o = a.createOscillator();
-      o.type = 'sine'; o.frequency.setValueAtTime((p || 380) * 1.25, t);
-      o.frequency.exponentialRampToValueAtTime((p || 380) * 0.32, t + 0.2);
-      env(a, o, t, 0.24, 0.3); o.start(t); o.stop(t + 0.34);
-      noise(0.16, 1800, 500, 0.1);
-    },
-    wood:  function () { tone(196, 0, 0.14, 0.22, 'square'); noise(0.13, 900, 240, 0.14, 2.2); },
-    page:  function () { noise(0.22, 3600, 900, 0.12, 0.9); },
-    pop:   function () { tone(660, 0, 0.12, 0.18, 'sine'); tone(990, 0.05, 0.16, 0.12, 'sine'); },
-    ding:  function () { [523.25, 659.25, 783.99].forEach(function (f, i) { tone(f, i * 0.07, 0.7, 0.16, 'sine'); }); },
-    shine: function () { [784, 1046.5, 1318.5].forEach(function (f, i) { tone(f, i * 0.055, 0.5, 0.1, 'sine'); }); },
-    water: function () { noise(0.5, 700, 180, 0.1, 0.7); tone(150, 0, 0.4, 0.08, 'sine'); },
-    roar:  function () {
-      var a = actx(); if (!a || muted) return;
-      var t = a.currentTime, o = a.createOscillator();
-      o.type = 'sawtooth'; o.frequency.setValueAtTime(150, t);
-      o.frequency.exponentialRampToValueAtTime(72, t + 0.42);
-      var f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900;
-      o.connect(f); env(a, f, t, 0.2, 0.5); o.start(t); o.stop(t + 0.55);
-    },
-    chord: function () { [261.63, 329.63, 392, 523.25].forEach(function (f, i) { tone(f, i * 0.09, 1.1, 0.15, 'triangle'); }); }
+    note:  function (p) { if (SND) SND.piano(p || 330, 0, 1.1, 0.24); },
+    splat: function (p) { if (SND) SND.sfx.splat(p); },
+    wood:  function () { if (SND) SND.sfx.wood(); },
+    page:  function () { if (SND) SND.sfx.page(); },
+    pop:   function () { if (SND) SND.sfx.pop(); },
+    ding:  function () { if (SND) SND.sfx.star(); },
+    shine: function () { if (SND) SND.sfx.magic(); },
+    water: function () { if (SND) SND.sfx.water(); },
+    roar:  function () { if (SND) SND.sfx.roar(); },
+    chord: function () { if (SND) SND.chord([261.63, 329.63, 392, 523.25], 0, 1.6, 0.2); }
   };
+  function tone(f, d, dur, vol, type) { if (SND) SND.osc({ f: f, when: d, dur: dur, vol: vol, type: type }); }
 
   /* ── particles ─────────────────────────────────────────────────────────── */
   var GLYPH = { note: ['♪', '♫', '♩'], splat: ['✦', '✿', '❀'],
@@ -262,6 +235,7 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
   var HUE = { note: '#2B3F86', splat: '#E2622F', shine: '#F2B33D', ding: '#F2B33D', page: '#7a5a2a',
     wood: '#8A6440', pop: '#2F7FD1', water: '#2FA8D1', roar: '#43A857' };
   function burst(px, py, kind) {
+    if (SND) SND.haptic(12);
     if (reduce) return;
     var glyphs = GLYPH[kind] || GLYPH.shine, n = kind === 'note' || kind === 'splat' ? 5 : 4;
     for (var i = 0; i < n; i++) {
@@ -374,20 +348,12 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
     lc.classList.add('on');
   }
 
-  /* ── sound on/off, remembered ──────────────────────────────────────────── */
-  var mb = document.getElementById('mute');
-  try { muted = localStorage.getItem('kja:muted') === '1'; } catch (e) {}
-  function paintMute() {
-    mb.textContent = muted ? '🔇 Sounds off' : '🔊 Sounds on';
-    mb.setAttribute('aria-pressed', muted ? 'true' : 'false');
+  /* ── the shared toolbar, and the sticker shelf under the map ───────────── */
+  if (window.KJA && window.KJA.ui) window.KJA.ui.toolbar('#mutebar');
+  if (JUICE) {
+    var shelf = document.getElementById('shelf');
+    if (shelf) shelf.innerHTML = JUICE.stickers.bookHTML();
   }
-  paintMute();
-  mb.addEventListener('click', function () {
-    muted = !muted;
-    try { localStorage.setItem('kja:muted', muted ? '1' : '0'); } catch (e) {}
-    paintMute();
-    if (!muted) SFX.pop();
-  });
 
   /* ── phones start in the middle of the map, where the bridge is ───────── */
   var vp = document.getElementById('viewport');

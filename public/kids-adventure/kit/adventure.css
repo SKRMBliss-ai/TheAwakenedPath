@@ -303,3 +303,72 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
   .coach.yes .dyno,.coach.no .dyno{animation:none}
   .spark2{display:none}
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   GAME FEEL — bursts, floating numbers, streak banners, the star stamp and
+   the sticker book. Shared by every screen through kit/juice.js.
+   ══════════════════════════════════════════════════════════════════════════ */
+.jbit{position:fixed;width:10px;height:12px;pointer-events:none;z-index:80;
+  animation:jbit .85s cubic-bezier(.2,.7,.35,1) forwards}
+@keyframes jbit{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+  18%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1) rotate(200deg)}}
+.jspark{position:fixed;pointer-events:none;z-index:80;font-size:26px;line-height:1;
+  animation:jspark 1s ease-out forwards}
+@keyframes jspark{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}25%{opacity:1}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),-140px) scale(1.3)}}
+.jpop{position:fixed;pointer-events:none;z-index:80;font-family:var(--round);font-weight:800;font-size:26px;
+  text-shadow:0 2px 0 #fff,0 4px 10px #0002;animation:jpop 1s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes jpop{0%{opacity:0;transform:translate(-50%,0) scale(.6)}
+  22%{opacity:1;transform:translate(-50%,-18px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-74px) scale(1)}}
+.jbanner{position:fixed;left:50%;bottom:96px;transform:translate(-50%,160%);z-index:85;
+  font-family:var(--round);font-weight:800;font-size:19px;color:#fff;background:linear-gradient(135deg,#F2913D,#E0623B);
+  padding:10px 22px;border-radius:40px;box-shadow:0 6px 0 #00000026,0 12px 26px #0003;
+  transition:transform .35s cubic-bezier(.2,1.5,.4,1),opacity .3s ease;opacity:0;pointer-events:none}
+.jbanner.on{transform:translate(-50%,0);opacity:1}
+/* the stamp lands on the coach, so the coach has to be its frame */
+.coach{position:relative}
+.jstamp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;pointer-events:none}
+.jstamp span{display:block;font-family:var(--round);font-weight:800;font-size:56px;color:var(--gold);
+  text-shadow:0 3px 0 #fff,0 6px 0 #E0A93C55;animation:jstamp .5s cubic-bezier(.2,1.8,.4,1) forwards}
+.jstamp.still span{animation:none}
+@keyframes jstamp{0%{opacity:0;transform:scale(2.6) rotate(-16deg)}60%{opacity:1;transform:scale(.92) rotate(3deg)}
+  100%{opacity:1;transform:scale(1) rotate(-3deg)}}
+
+/* every tappable thing squashes a little, which is most of "feels nice" */
+.card,.ans,.gbtn,.pill,.part,.lp,.mute,.ghost,.big,.topiccard,.wk,.key{-webkit-tap-highlight-color:transparent}
+.ans:active,.gbtn:active,.pill:active,.part:active,.lp:active,.mute:active,.ghost:active,.big:active{transform:scale(.96)}
+.topiccard:active,.yearcard:active{transform:scale(.985) rotate(var(--tilt,0deg))}
+/* Dyno breathes while he waits */
+.coach .dyno{animation:bob 3.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-5px)}}
+.coach.yes .dyno{animation:nod .5s ease}
+.coach.no .dyno{animation:shake .4s ease}
+/* a bead that has just been won lands rather than appears */
+.trail svg circle{transition:r .25s ease}
+
+/* ── the sticker book ──────────────────────────────────────────────────────*/
+.stickerbook{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:14px;
+  position:relative;z-index:2;margin:10px 0 0}
+.sticker{background:#FFFDF6;border:3px dashed #E0CFAB;border-radius:18px;padding:10px 8px 8px;text-align:center;
+  min-height:128px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.sticker.have{border-style:solid;border-color:var(--edge);box-shadow:0 6px 14px #8a6a321f;transform:rotate(-1.2deg)}
+.sticker.have:nth-child(even){transform:rotate(1.4deg)}
+.sticker img{width:72px;height:72px;object-fit:contain;display:block;filter:drop-shadow(0 3px 4px #8a6a3233)}
+.sticker span{font-family:var(--round);font-weight:800;font-size:30px;color:#DCCFB4}
+.sticker b{font-family:var(--round);font-weight:700;font-size:13px;color:var(--ink2);line-height:1.15}
+.sticker:not(.have) b{color:#C9BCA2}
+.stickerwin .sheet{text-align:center}
+.stickerbig{margin:6px auto 2px;width:150px;height:150px;display:grid;place-items:center;
+  background:radial-gradient(closest-side,#FFF4D6,#fff0);border-radius:50%}
+.stickerbig img{width:132px;height:132px;object-fit:contain;animation:jstamp .55s cubic-bezier(.2,1.8,.4,1) forwards}
+.stickername{font-family:var(--round);font-weight:800;font-size:23px;color:var(--deep);margin:4px 0 0}
+.stickerwhy{font-size:17px;color:var(--ink2);margin:2px 0 14px}
+.toolbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;position:relative;z-index:3;margin:20px 0 0}
+.toolbar button,.toolbar a{border:none;background:#FFFDF6;border-radius:40px;padding:8px 16px;font-family:var(--round);
+  font-weight:700;font-size:14px;color:var(--ink2);box-shadow:0 3px 0 #E3D3B0;text-decoration:none}
+.toolbar button[aria-pressed=true]{background:var(--t3);color:#fff;box-shadow:0 3px 0 #38703f}
+@media (prefers-reduced-motion: reduce){
+  .jbit,.jspark,.jpop{display:none}
+  .coach .dyno{animation:none}
+  .jstamp span{animation:none}
+}

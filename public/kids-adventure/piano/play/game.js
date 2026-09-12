@@ -135,46 +135,17 @@
       brief:'Eight keys, no rules. Play something nobody has played before.' }
   ];
 
-  /* ── sound ─────────────────────────────────────────────────────────────── */
-  var ac = null, muted = false;
-  try { muted = localStorage.getItem('kja:muted') === '1'; } catch (e) {}
-  function actx() {
-    try {
-      if (!ac) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ac = new C(); }
-      if (ac.state === 'suspended' && ac.resume) ac.resume();
-      return ac;
-    } catch (e) { return null; }
-  }
-  function piano(freq, when, dur, vol) {
-    var a = actx(); if (!a || muted) return;
-    var t = a.currentTime + (when || 0), D = dur || 0.95, V = vol || 0.22;
-    var g = a.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(V, t + 0.008);
-    g.gain.exponentialRampToValueAtTime(V * 0.32, t + 0.14);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + D);
-    g.connect(a.destination);
-    [[1, 1, 'triangle'], [2, 0.3, 'sine'], [3, 0.07, 'sine']].forEach(function (p) {
-      var o = a.createOscillator(), gg = a.createGain();
-      o.type = p[2]; o.frequency.value = freq * p[0]; gg.gain.value = p[1];
-      o.connect(gg); gg.connect(g); o.start(t); o.stop(t + D + 0.05);
-    });
-  }
-  function blip(f, when, dur, vol, type) {
-    var a = actx(); if (!a || muted) return;
-    var t = a.currentTime + (when || 0), o = a.createOscillator(), g = a.createGain();
-    o.type = type || 'sine'; o.frequency.value = f;
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol || 0.15, t + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.2));
-    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + (dur || 0.2) + 0.04);
-  }
-  function oops()  { blip(196, 0, 0.22, 0.12, 'triangle'); blip(155, 0.09, 0.26, 0.09, 'triangle'); }
-  function tick(strong) { blip(strong ? 1560 : 1150, 0, 0.05, strong ? 0.11 : 0.06, 'square'); }
-  function chime() { [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) { piano(f, i * 0.1, 1.05, 0.18); }); }
-  function fanfare() {
-    [[523.25,0],[659.25,.12],[783.99,.24],[1046.5,.36],[783.99,.54],[1046.5,.64]]
-      .forEach(function (p) { piano(p[0], p[1], 1.25, 0.2); });
-  }
+  /* ── sound: the shared engine (kit/sound.js) does the synthesis now, so a
+        note here sounds exactly like a note anywhere else in the adventure ── */
+  var SND = (window.KJA && window.KJA.sound) || null;
+  var JUICE = (window.KJA && window.KJA.juice) || null;
+  function muted() { return SND ? SND.isMuted() : true; }
+  function piano(freq, when, dur, vol) { if (SND) SND.piano(freq, when, dur, vol); }
+  function oops()  { if (SND) { SND.sfx.wrong(); SND.haptic(26); } }
+  function tick(strong) { if (SND) SND.sfx.tick(strong); }
+  function chime() { if (SND) SND.sfx.good(); }
+  function fanfare() { if (SND) SND.sfx.win(); }
+  function blip(f, when, dur, vol, type) { if (SND) SND.osc({ f: f, when: when, dur: dur, vol: vol, type: type }); }
 
   /* ── progress, shared with Piano World's trail ─────────────────────────── */
   var prog = { done: [], stars: {}, tunes: [], songs: {} };
@@ -197,31 +168,11 @@
     var el = $('#toast'); el.textContent = t; el.classList.add('show');
     clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('show'); }, 2400);
   }
-  function confetti() {
-    if (reduce) return;
-    for (var i = 0; i < 46; i++) {
-      var c = document.createElement('div');
-      c.className = 'confetti'; c.style.left = (Math.random() * 100) + 'vw';
-      c.style.background = TAPES[i % TAPES.length];
-      c.style.animationDelay = (Math.random() * 0.5) + 's';
-      c.style.borderRadius = i % 2 ? '50%' : '2px';
-      document.body.appendChild(c);
-      setTimeout(function (n) { return function () { if (n.parentNode) n.parentNode.removeChild(n); }; }(c), 2400);
-    }
-  }
-  function sparkAt(el, glyph, colour) {
-    if (reduce || !el) return;
-    var b = el.getBoundingClientRect();
-    for (var i = 0; i < 3; i++) {
-      var s = document.createElement('span');
-      s.className = 'spark2'; s.textContent = glyph; s.style.color = colour;
-      s.style.left = (b.left + b.width / 2) + 'px';
-      s.style.top = (b.top + 12) + 'px';
-      s.style.setProperty('--dx', (Math.random() * 70 - 35).toFixed(0) + 'px');
-      s.style.animationDelay = (i * 0.06) + 's';
-      document.body.appendChild(s);
-      setTimeout(function (n) { return function () { if (n.parentNode) n.parentNode.removeChild(n); }; }(s), 1200);
-    }
+  function confetti(n) { if (JUICE) JUICE.confetti(n); }
+  function sparkAt(el, glyph, colour) { if (JUICE) JUICE.sparkle(el, glyph, colour); }
+  /* A run of right notes climbs a scale — the sound of getting better. */
+  function goodNote(el) {
+    if (JUICE) { JUICE.hit(el); JUICE.burstAt(el, 8); }
   }
 
   /* ── where we are ──────────────────────────────────────────────────────── */
@@ -279,7 +230,7 @@
   function playNotes(list, bpm, opts) {
     opts = opts || {};
     clearTimers(); playing = true;
-    var beat = 60 / (bpm || 92), a = actx(), t0 = (a ? a.currentTime : 0) + 0.12, at = 0, sched = [];
+    var beat = 60 / (bpm || 92), a = SND && SND.ctx(), t0 = (a ? a.currentTime : 0) + 0.12, at = 0, sched = [];
     list.forEach(function (n) {
       at += (n.rest || 0) * beat;
       var dur = Math.max(0.28, (n.b || 1) * beat * 0.96);
@@ -432,13 +383,14 @@
     if (k === want.k) {
       idx++;
       if (el) { el.classList.add('good'); setTimeout(function () { el.classList.remove('good'); }, 200); }
-      sparkAt(el, '♪', '#509858');
+      goodNote(el);
       if (idx >= ns.length) { finishPart(); return; }
       renderScoreOnly();
       var s = songSays(); say('Yes! ' + s.t, s.s, 'yes');
       hint();
     } else {
-      wrong++; oops();
+      wrong++;
+      if (JUICE) JUICE.miss(); else oops();
       if (el) { el.classList.add('bad'); setTimeout(function () { el.classList.remove('bad'); }, 260); }
       say('Not that one', (S.labelStyle === 'number' ? 'Key ' + want.k : letterOf(want.k)) +
           ' is the glowing one — try again.', 'no');
@@ -456,13 +408,19 @@
     if (sp.parts.indexOf(u.m) < 0) sp.parts.push(u.m);
     var all = S.units.every(function (x) { return sp.parts.indexOf(x.m) >= 0; });
     if (all && !sp.done) {
-      sp.done = true; saveProg(); fanfare(); confetti();
+      sp.done = true; saveProg();
+      if (SND) SND.sfx.win();
+      confetti(70);
+      if (JUICE) JUICE.stickers.earn('song-' + S.id, 'You can play ' + S.title);
       toast('You can play ' + S.title + '! ★★★');
       V.part = 1; idx = 0; renderSong();
       say('You played the whole thing 🎉', 'Press ▶▶ to hear it as one piece.', 'yes');
       return;
     }
-    saveProg(); chime(); confetti();
+    saveProg();
+    if (SND) SND.sfx.levelUp();
+    confetti(34);
+    if (JUICE) JUICE.resetStreak();
     var next = V.part < S.units.length ? V.part + 1 : V.part;
     toast(S.unitWord + ' ' + u.m + ' learned!');
     V.part = next; idx = 0; renderSong();
@@ -566,21 +524,22 @@
     if (k === want.k) {
       if (L.mode === 'along') {
         if (window.__alongHit) window.__alongHit();
-        sparkAt(el, '♪', '#3880C0');
+        goodNote(el);
         say('In time!', 'Keep the beat going.', 'yes');
         if (el) { el.classList.add('good'); setTimeout(function () { el.classList.remove('good'); }, 220); }
         return;
       }
       idx++;
       if (el) { el.classList.add('good'); setTimeout(function () { el.classList.remove('good'); }, 200); }
-      sparkAt(el, '♪', '#509858');
+      goodNote(el);
       paintStrip();
       if (idx >= notes().length) { finishLevel(); return; }
       say(L.mode === 'find' ? 'That is ' + letterOf(k) + '! 🎉' : 'Yes!',
           L.mode === 'find' ? 'One more friend to meet.' : 'Next note…', 'yes');
       hint();
     } else {
-      wrong++; oops();
+      wrong++;
+      if (JUICE) JUICE.miss(); else oops();
       if (el) { el.classList.add('bad'); setTimeout(function () { el.classList.remove('bad'); }, 260); }
       say('Not that one', 'The glowing key is ' + letterOf(want.k) + ' — try again. Wrong notes are allowed!', 'no');
       hint();
@@ -593,8 +552,13 @@
     if (prog.done.indexOf(L.n) < 0) prog.done.push(L.n);
     saveProg();
     idx = notes().length;
-    fanfare(); confetti();
+    if (SND) SND.sfx.levelUp();
+    confetti();
     renderLevel();
+    if (JUICE) {
+      JUICE.stamp($('.win'), st);
+      if (st === 3) JUICE.stickers.earn('level-' + L.n, 'Three stars on ' + L.name);
+    }
     say(st === 3 ? 'Perfect — not one wrong note!' : 'You played the whole thing!',
         st === 3 ? 'Three stars. Dyno is speechless.' : 'Play it again for more stars.', 'yes');
     toast('Level ' + L.n + ' complete ' + '★'.repeat(st));
@@ -622,6 +586,7 @@
   function say(title, line, mood) {
     var s = $('#says'); if (!s) return;
     s.innerHTML = '<b>' + title + '</b><span>' + (line || '') + '</span>';
+    if (SND) SND.speak(title + '. ' + (line || ''));
     var c = $('#coach'); if (!c || !mood) return;
     c.classList.remove('yes', 'no'); void c.offsetWidth; c.classList.add(mood);
   }
@@ -635,6 +600,7 @@
   }
   function press(k, el) {
     piano(freqOf(k));
+    if (SND) SND.haptic(10);
     if (el) { el.classList.add('down'); setTimeout(function () { el.classList.remove('down'); }, 130); }
     if (playing) return;
     if (V.kind === 'song') songPress(k, el); else levelPress(k, el);
@@ -670,6 +636,7 @@
     var name = prompt('Name your tune', 'My tune ' + (prog.tunes.length + 1));
     if (name === null) return;
     prog.tunes.push({ name: (name || '').slice(0, 24) || ('Tune ' + (prog.tunes.length + 1)), notes: mine.slice() });
+    if (JUICE) JUICE.stickers.earn('composer', 'You wrote your own tune');
     if (!prog.stars[5] || prog.stars[5] < 3) prog.stars[5] = 3;
     if (prog.done.indexOf(5) < 0) prog.done.push(5);
     saveProg(); chime(); confetti(); toast('Kept! Dyno will hum it all day.');
@@ -774,17 +741,7 @@
     press(k, keyEl(k));
   });
 
-  var mb = $('#mute');
-  function paintMute() {
-    mb.textContent = muted ? '🔇 Sounds off' : '🔊 Sounds on';
-    mb.setAttribute('aria-pressed', muted ? 'true' : 'false');
-  }
-  mb.addEventListener('click', function () {
-    muted = !muted;
-    try { localStorage.setItem('kja:muted', muted ? '1' : '0'); } catch (e) {}
-    paintMute(); if (!muted) piano(523.25, 0, 0.5, 0.18);
-  });
-  paintMute();
+  if (window.KJA && window.KJA.ui) window.KJA.ui.toolbar('#mutebar');
 
   var rz;
   addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(placeBlacks, 140); });
