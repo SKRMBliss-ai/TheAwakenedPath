@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
 import { CHROME, FONT } from './chrome';
 import { useMotion } from './quiet';
 import { COMPANY, companionFor, type FeelingIdle } from '../kit/feelingCompanions';
+import { GAITS, gaitForRoom } from './scenery';
 import { loadPerch, savePerch, todaysFeeling } from '../kit/todaysFeeling';
 import * as sound from '../kit/sound';
 
@@ -59,19 +60,45 @@ import * as sound from '../kit/sound';
 /**
  * How far his feet sit above the very bottom of the screen.
  *
- * Small on purpose. Standing him clear of the bottom bar put him straight
- * on top of the room's main button — and since he has to be above the page
- * to be touchable at all, that meant he ate taps meant for it. Dropped to
- * the floor he clears the button entirely and overlaps only the bottom
- * nav, which is chrome a child is not reaching for mid-answer, and which
- * he is translucent over anyway.
+ * This was 8, i.e. on the floor, on the reasoning that overlapping the bottom
+ * nav is harmless and overlapping the room's main button is not. Both halves
+ * of that are true and the conclusion was still wrong, because it assumed he
+ * would be drawn OVER the nav. He isn't: the room arrives through a clip-path
+ * wipe (see best/BestApp's archWipe), a clip-path opens a stacking context,
+ * and so his z-50 is resolved inside the room rather than against the fixed
+ * z-40 bar. The bar wins, and half a boy disappears behind it.
+ *
+ * Standing him on top of the bar instead of behind it costs nothing now that
+ * he parks in the right-hand corner rather than on the centre line, which is
+ * what made him collide with the main button before — see defaultPerch.
  */
-const FLOOR = 8;
+const FLOOR = 84;
 
-/** Bottom centre of whatever screen he actually finds himself on. */
+/**
+ * Where he stands before anybody moves him: down in the right-hand corner.
+ *
+ * IT WAS BOTTOM CENTRE, AND CENTRE IS WHERE THE BUTTONS ARE. Every room lays
+ * its content out in a single centred column that runs to the foot of the
+ * screen, so parking him on the centre line put him — and, worse, his "Tap
+ * me!" badge, which floats above his head — directly across the last button in
+ * that column. In the Healthy Body Zone the badge sat on top of the words
+ * "Something's still on my mind".
+ *
+ * The right-hand corner is the one part of a room nobody else is using: the
+ * column is centred and capped, the back button is top-left, the grown-up exit
+ * is top-right, the nav runs along the bottom-left. He still overlaps the foot
+ * of the screen, which is chrome rather than an answer, and he is translucent
+ * over it.
+ *
+ * Still only a DEFAULT. The moment a child drags him anywhere, that is where
+ * he lives — see the note at the top of this file on why that has to outlast
+ * the session.
+ */
 function defaultPerch(room: { w: number; h: number }, size: number) {
+  /** Clear of the right edge, and never off a narrow screen. */
+  const x = Math.max(0, Math.min(room.w - size - 10, room.w * 0.72));
   return {
-    x: Math.max(0, (room.w - size) / 2) / room.w,
+    x: x / room.w,
     y: Math.max(0, room.h - FLOOR - size * 1.2) / room.h,
   };
 }
@@ -129,6 +156,14 @@ const IDLES: Record<FeelingIdle, Idle> = {
   flush:   { y: [0, -2, 0, -1, 0], scaleX: [1, 1.015, 1, 1.008, 1], scaleY: [1, 1.015, 1, 1.008, 1], seconds: 2.2 },
   /* One very long breath, and that is all. */
   breathe: { y: [0, -3, 0], scaleY: [1, 1.012, 1], seconds: 7.5 },
+  /* Anger, held in. Quick and tight, and it goes nowhere — arms are folded
+     in this plate, and a companion that stamped around the room would be
+     performing the feeling at a child who is already having it. */
+  simmer:  { y: [0, -2, 0, -2, 0], scaleX: [1, 1.012, 1, 1.012, 1], scaleY: [1, 1.012, 1, 1.012, 1], seconds: 1.7 },
+  /* The loud one. Two big hops and a fast little one — the only idle here
+     allowed to be bigger than the old shared bounce, because excited is the
+     single feeling on this list a child wants matched rather than met. */
+  fizz:    { y: [0, -21, 0, -11, 0], x: [0, 3, 0, -3, 0], rotate: [0, -6, 0, 6, 0], scaleY: [1, 1.05, 0.93, 1.02, 1], seconds: 1.9, times: [0, 0.26, 0.52, 0.74, 1] },
 };
 
 const STILL = { y: 0, x: 0, rotate: 0, scaleX: 1, scaleY: 1 };
@@ -137,9 +172,16 @@ export function FloatingFeeling({
   /** Omit to use whatever the child named today. */
   feeling,
   size = 112,
+  roomId = null,
 }: {
   feeling?: string | null;
   size?: number;
+  /**
+   * Which room he is standing in, so that on the days nothing has been named
+   * he passes the time the way this room's boy does. See the note on `tracks`
+   * below for why a named feeling ignores it.
+   */
+  roomId?: string | null;
 }) {
   const m = useMotion();
   const [line, setLine] = useState<number | null>(null);
@@ -175,10 +217,32 @@ export function FloatingFeeling({
 
   if (!companion || !room) return null;
 
-  /* How this particular feeling sits in the room. `seconds` and `times` drive
-     the transition and must not leak into `animate` — framer would treat them
-     as properties to animate towards undefined. */
-  const { seconds, times, ...tracks } = IDLES[companion.idle] ?? IDLES.hop;
+  /*
+    HOW HE PASSES THE TIME HERE — and the two cases are genuinely different.
+
+    A NAMED FEELING WINS, ALWAYS. If the child has said they are sad, he moves
+    the way sad moves, in the Kindness Garden and the Courage Castle alike. A
+    room does not get to overrule what a child told the app about themselves,
+    and a grieving boy marching because he happens to be standing in the castle
+    would be exactly that.
+
+    NOTHING NAMED IS THE ROOM'S TO FILL. On every visit that skips the Feelings
+    Room — which is most of them — he is carrying no feeling at all, and that
+    is the case the per-room gaits in ui/scene were written for: he walks in
+    Truth Lab, marches in Courage Castle, barely moves in the Observatory. They
+    had been wired only to the small bird-sized figure beside a speech bubble,
+    where a 16px stride is invisible, so effectively they had never been seen.
+    Here he is 112px and standing on the floor of the room.
+
+    `seconds` and `times` drive the transition and must not leak into
+    `animate` — framer would treat them as properties to animate towards
+    undefined.
+  */
+  const roomGait = GAITS[gaitForRoom(roomId)];
+  const idle = companion === COMPANY && roomId
+    ? { ...roomGait, times: undefined }
+    : (IDLES[companion.idle] ?? IDLES.hop);
+  const { seconds, times, ...tracks } = idle;
 
   const spot = perch ?? defaultPerch(room, size);
   const left = spot.x * room.w;

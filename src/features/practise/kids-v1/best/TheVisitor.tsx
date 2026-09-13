@@ -83,10 +83,34 @@ export function TheVisitor({ visitor, onGone }: { visitor: Visitor; onGone: () =
   );
 }
 
-/** Five silhouettes in one 44×40 box, so they all stand the same height. */
+/**
+ * Whoever turned up, at the height they all stand at.
+ *
+ * Five of them are silhouettes built in SVG; two are real drawings (see
+ * kit/visitor's `art`). Both paths render into the same 44x40 footprint and
+ * take the same coloured glow, so a visitor is a visitor whichever kind of
+ * picture they happen to have — the thing that must not read differently is
+ * how much of the screen they take.
+ */
 function VisitorArt({ visitor }: { visitor: Visitor }) {
   const c = visitor.hue;
   const glow = { filter: `drop-shadow(0 0 8px ${c}88)` };
+
+  if (visitor.art) {
+    return (
+      <img
+        src={`${visitor.art}@160.webp`}
+        srcSet={`${visitor.art}@160.webp 160w, ${visitor.art}@320.webp 320w`}
+        sizes="40px"
+        alt=""
+        aria-hidden
+        draggable={false}
+        /* Height only — these plates are taller than they are wide, and the
+           44x40 box the silhouettes fill would squash them. */
+        style={{ height: 40, width: 'auto', ...glow }}
+      />
+    );
+  }
 
   return (
     <svg viewBox="0 0 44 40" width="44" height="40" aria-hidden style={glow}>

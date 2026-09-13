@@ -23,9 +23,18 @@ other nine are portrait (1067x1280). Check the dimensions before re-cutting
 — reading a portrait buffer as landscape silently produces garbage rather
 than an error.
 
-## Gap
+## The two late additions
 
-There is no `excited` plate. It is one of the six balls a child can pop, so
-that answer currently gets no companion. Falling back to the calm-happy
-plate would put a serene face on an answer that wasn't serene, which is
-worse than showing nothing.
+`excited.webp` is not from the same batch. There was no excited plate in the
+uploads at all, and it is one of the six balls a child can pop — so it is cut
+from the hub artwork (`assets/home/boy@640.webp`), framed chest-up at 420x504
+to match the rest of the row. Same boy, same cap, same Chirpy; keen rather
+than serene, which is the whole reason the calm-happy plate could not stand
+in for it.
+
+`angry.webp` came with the batch but shipped unused: the flood-fill had left
+a wedge of un-keyed checkerboard between Chirpy's shoulder and the boy's jaw,
+where the background is fully enclosed by the silhouette and so was never
+reachable from the border. That region is cleared by colour inside a fixed
+box (opaque, near-neutral, light) plus two erosion passes for the halo. If
+this plate is ever re-cut from source, check that wedge before shipping.

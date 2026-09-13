@@ -57,11 +57,16 @@ export default defineConfig({
         // Gym hub (1024–1536px, 1–2MB each). What the app actually loads is the
         // resized .webp beside them; precaching the sources as well would put
         // ~15MB of pictures nobody requests onto a child's phone.
+        // assets/gym/**/*.png is the same story and worse: the Chirpy character
+        // sheet alone is 21 PNGs and 30MB. The app loads the cut sprites in
+        // public/chirpy (~30KB each) — see kids-v1/ui/sprites. Keep the sources
+        // in the repo, keep them out of the service worker.
         globIgnores: [
           'twinsouls/**',
           'habitquest2026/**',
           'kids-adventure/**',
           'assets/home/*.png',
+          'assets/gym/**/*.png',
         ],
         cleanupOutdatedCaches: true,
         clientsClaim: true,

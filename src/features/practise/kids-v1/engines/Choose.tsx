@@ -41,7 +41,12 @@ export function ChooseEngine({
   const quiet = useQuiet();
   const timers = useRef<number[]>([]);
 
-  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
+  /** The pending close of a multi round; reset by every tap. See `tap`. */
+  const graceRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => {
+    timers.current.forEach(clearTimeout);
+    window.clearTimeout(graceRef.current);
+  }, []);
 
   const round = game.rounds[i];
   // The quiet state shows fewer options. It trims from the end rather than
@@ -70,6 +75,22 @@ export function ChooseEngine({
     sound.play('tap');
     if (round.multi) {
       setPicked((p) => (p.includes(opt) ? p.filter((x) => x !== opt) : [...p, opt]));
+      /*
+        A MULTI ROUND ALSO ANSWERS ON A TAP — it just allows more of them.
+
+        It used to end with "That's my lot", which is a completion rather than
+        a confirmation and so had a better case than most buttons in here. It
+        is still a button between a child and the next thing, and this game is
+        played by six-year-olds who have already said what they think.
+
+        So the round closes itself once they stop adding to it. Every tap
+        cancels the pending close and starts it again, which means picking
+        four things works exactly as well as picking one, and nothing is ever
+        taken away mid-thought. Generous on purpose — the window is long
+        enough to read another option and decide against it.
+      */
+      window.clearTimeout(graceRef.current);
+      graceRef.current = window.setTimeout(commit, quiet ? 3600 : 2400);
       return;
     }
     setPicked([opt]);
@@ -105,12 +126,10 @@ export function ChooseEngine({
         ))}
       </div>
 
-      {round.multi && !affirming && (
-        <Cta
-          label={picked.length ? 'That’s my lot' : 'None of these'}
-          onClick={commit}
-          accent={room.palette.accent}
-        />
+      {/* The way out of a multi round for a child who agrees with none of it.
+          Not a confirmation — there is nothing picked to confirm. */}
+      {round.multi && !picked.length && !affirming && (
+        <Cta label="None of these" onClick={commit} accent={room.palette.accent} />
       )}
 
       <AnimatePresence>

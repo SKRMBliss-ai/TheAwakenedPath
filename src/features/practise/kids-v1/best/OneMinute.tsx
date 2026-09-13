@@ -4,6 +4,7 @@ import { CHROME, FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
 import { chirpySprite } from '../ui/sprites';
 import { RoomScene } from '../ui/scene';
+import { DIM } from '../ui/scenery';
 import { artRoomFor, PAUSE_ROOM } from './rooms';
 import { agoLabel, loadCases } from '../kit/cases';
 import { starCount } from '../kit/sky';
@@ -132,7 +133,7 @@ export function OneMinute({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
-      <RoomScene room={art} dim={0.3} />
+      <RoomScene room={art} dim={DIM.content} />
 
       <div className="relative grid min-h-[100svh] place-items-center px-6">
         <div className="flex w-full max-w-sm flex-col items-center gap-5 text-center">

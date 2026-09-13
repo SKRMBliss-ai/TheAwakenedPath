@@ -33,7 +33,14 @@ export interface Visitor {
   line: string;
   /** Their colour, for the small drawing. */
   hue: string;
-  shape: 'moth' | 'tortoise' | 'fox' | 'firefly' | 'beetle';
+  shape: 'moth' | 'tortoise' | 'fox' | 'firefly' | 'beetle' | 'bird';
+  /**
+   * A real drawing, for the two who have one. The other five are silhouettes
+   * built in SVG (see best/TheVisitor) — a painted bird beside a drawn fox
+   * would make the fox look like a placeholder, which is why art here is
+   * per-visitor rather than a style the whole set is expected to reach.
+   */
+  art?: string;
 }
 
 export const VISITORS: Visitor[] = [
@@ -71,6 +78,33 @@ export const VISITORS: Visitor[] = [
     line: 'Chirpy owes me a button. He knows the one.',
     hue: '#7FC7D9',
     shape: 'beetle',
+  },
+  /*
+    THE TWO BIRDS WHO ARE NOT CHIRPY.
+
+    They came off the same sheet he did — the same drawing in a different
+    colour — and that is exactly why they belong in this list rather than
+    anywhere else. The rule at the top of this file is that the rare thing is
+    somebody who is NOT Chirpy, just passing through, with nothing to teach;
+    a bird who looks like him but isn't him is the sharpest possible version
+    of that. Neither of them is named, neither is collectable, and nothing
+    anywhere says there are two.
+  */
+  {
+    id: 'bluebird',
+    name: 'A blue bird',
+    line: 'You get a lot of that round here. Purple ones, mostly.',
+    hue: '#7FB3E8',
+    shape: 'bird',
+    art: '/chirpy/bird-blue',
+  },
+  {
+    id: 'greenbird',
+    name: 'A green bird',
+    line: 'I’m looking for the window. Don’t let me hold you up.',
+    hue: '#9FD9C4',
+    shape: 'bird',
+    art: '/chirpy/bird-teal',
   },
 ];
 

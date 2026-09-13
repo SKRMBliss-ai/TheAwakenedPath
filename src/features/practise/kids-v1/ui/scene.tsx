@@ -5,7 +5,8 @@ import { FONT, Scrim } from './chrome';
 import { useMotion, useQuiet } from './quiet';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import { startAmbience, stopAmbience } from '../kit/ambience';
-import { boyPlateForRoom, type BoyEmotion, type ChirpyPose } from './sprites';
+import { boyPlateForRoom, chirpySprite, chirpySrcSet, type BoyEmotion, type ChirpyPose } from './sprites';
+import { DIM, GAITS, ROOM_PROPS, type BoyGait, type RoomProp } from './scenery';
 
 /**
  * The place: a full-bleed scene, and the two characters who live in it.
@@ -29,7 +30,7 @@ import { boyPlateForRoom, type BoyEmotion, type ChirpyPose } from './sprites';
 
 /* ── The scene ──────────────────────────────────────────────────────── */
 
-export function RoomScene({ room, dim = 0.14 }: { room: RoomConfig; dim?: number }) {
+export function RoomScene({ room, dim = DIM.content }: { room: RoomConfig; dim?: number }) {
   const mood = SCENE_MOODS[room.scene];
   const quiet = useQuiet();
 
@@ -84,12 +85,71 @@ export function RoomScene({ room, dim = 0.14 }: { room: RoomConfig; dim?: number
 
       {!quiet && <Motes />}
 
+      {/* The room's own furniture, where somebody drew it any. Above the
+          painting so it reads as objects IN the room, below the dim and the
+          scrim so it recedes with everything else. See ROOM_PROPS. */}
+      <Props roomId={room.id} />
+
       {dim > 0 && (
         <div className="absolute inset-0" style={{ background: `rgba(4,6,14,${dim})` }} />
       )}
 
       <Scrim room={room} />
     </div>
+  );
+}
+
+/**
+ * The objects lying about in a room, drifting.
+ *
+ * One <img> each, absolutely placed against the room, on a slow vertical
+ * float — no two share a duration or a delay, because four things rising and
+ * falling in step reads as one thing on a lift rather than as a room with
+ * stuff in it.
+ *
+ * Renders nothing at all for the rooms nobody drew props for, which is most of
+ * them, and nothing in the quiet state.
+ */
+function Props({ roomId }: { roomId: string }) {
+  const quiet = useQuiet();
+  const props = ROOM_PROPS[roomId];
+  if (quiet || !props) return null;
+  // NOT ON A PHONE. These hug the walls, and a 430px screen has no walls: the
+  // content column already runs from 74px to 356px of it, so a compass pinned
+  // 3% from the edge lands under the question rather than beside it. There is
+  // no size that fixes that — the room is simply too narrow to have anything
+  // standing in the corners of it.
+  return (
+    <div className="absolute inset-0 hidden sm:block">
+      {props.map((p) => <Prop key={p.src} prop={p} />)}
+    </div>
+  );
+}
+
+function Prop({ prop }: { prop: RoomProp }) {
+  return (
+    <motion.img
+      src={prop.src}
+      alt=""
+      aria-hidden
+      loading="lazy"
+      draggable={false}
+      className="absolute"
+      style={{
+        left: prop.left,
+        right: prop.right,
+        top: prop.top,
+        height: prop.size,
+        width: 'auto',
+        opacity: prop.opacity,
+        filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))',
+      }}
+      animate={{ y: [0, -prop.rise, 0] }}
+      transition={{ repeat: Infinity, duration: prop.seconds, delay: prop.delay, ease: 'easeInOut' }}
+      /* A prop that 404s must leave no gap and no broken-image icon — it is
+         decoration, and the room is complete without it. */
+      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+    />
   );
 }
 
@@ -144,20 +204,15 @@ function Motes() {
  * is enforced in one place instead of at nine call sites.
  */
 export function Chirpy({
-  // Accepted, not read: every call site still passes a pose, and there is
-  // only one boy sprite to show it on. Left in the type so none of them
-  // need editing.
+  pose = 'curious',
   line,
-  size = 54,
+  size = 74,
   align = 'right',
-  roomId = null,
 }: {
   pose?: ChirpyPose;
   line?: string | null;
   size?: number;
   align?: 'left' | 'right';
-  /** Which room this line is being said in — see TheBoy's `roomId`. */
-  roomId?: string | null;
 }) {
   const quiet = useQuiet();
   const m = useMotion();
@@ -181,34 +236,58 @@ export function Chirpy({
 
   if (quiet || !line) return null;
 
-  // THE BOY STANDS BESIDE HIS OWN LINE NOW, NOT CHIRPY.
-  //
-  // This is the one figure every room already has: the same character who
-  // drifts and bounces through the room once a feeling's been named
-  // (ui/FloatingFeeling) is now who's standing here too, next to whatever
-  // the room is saying. One character carrying every line, everywhere,
-  // rather than two competing for the same job — Chirpy as a small sprite
-  // beside the text, and the boy as a second, separate floating figure a
-  // few pixels away. A child was never going to read those as one
-  // conversation.
-  //
-  // `pose` stays in the signature even though it does nothing here — every
-  // call site still passes it, and there is only one boy sprite to show.
-  // Chirpy keeps his own face precisely where he is still HIMSELF as a
-  // character with something at stake (HelpChirpy.tsx, where the child is
-  // asked to help HIM specifically) — this component was never his only
-  // appearance, just his most common one.
+  /*
+    CHIRPY IS CHIRPY AGAIN.
+
+    For a while this component drew the BOY beside the line instead, on the
+    reasoning that one character carrying every line beats two competing for
+    the job. The reasoning was sound; the reason it was needed was not. There
+    was one flat, squashed, low-resolution bird sprite, so putting him next to
+    every sentence in the app looked cheap — and the fix chosen was to stop
+    drawing him rather than to draw him better.
+
+    There are ten proper plates of him now, one per expression, and every one
+    of these call sites has been passing the right expression the whole time:
+    `curious` in the game shell, `worried` when the check-in asks how big it
+    is, `said2` when he bets he knows what the thought said. All of it was
+    being thrown away — `pose` was in the signature with a comment explaining
+    that nothing read it.
+
+    So he is back, he is the one who talks, and the division is clean: the boy
+    is the child's own figure (the hub, and ui/FloatingFeeling's companion),
+    and Chirpy is the voice. Two characters, two jobs, neither doing the
+    other's.
+  */
   return (
     <div className={`flex items-end gap-2 ${align === 'left' ? 'flex-row' : 'flex-row-reverse'}`}>
-      {/* One boy, one source of truth about how he looks and moves. This used
-          to be its own <img> with its own bob, which is how the room plates
-          and the gaits would have missed half the app the moment they landed. */}
-      <TheBoy
-        size={size}
-        gaze="child"
-        className="shrink-0"
-        gait={gaitForRoom(roomId)}
-        roomId={roomId}
+      <motion.img
+        /* Keyed on the pose so a change of expression mounts a fresh <img>
+           and re-runs the entrance rather than cross-fading in place, which
+           at this size reads as the drawing glitching. */
+        key={pose}
+        src={chirpySprite(pose)}
+        srcSet={chirpySrcSet(pose)}
+        sizes={`${size}px`}
+        alt=""
+        aria-hidden
+        draggable={false}
+        className="shrink-0 select-none"
+        /* Height only, width auto — these plates are taller than they are
+           wide, and an h-N w-N pair squashes him flat. That squashing is most
+           of what made the old sprite look cheap. */
+        style={{ height: size, width: 'auto', filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.5))' }}
+        initial={{ opacity: 0, scale: 0.82, y: 6 }}
+        animate={m.loop
+          ? { opacity: 1, scale: 1, y: [0, -5, 0], rotate: [0, -2.5, 0] }
+          : { opacity: 1, scale: 1, y: 0, rotate: 0 }}
+        transition={m.loop
+          ? {
+              opacity: { duration: 0.3 },
+              scale: { type: 'spring', stiffness: 300, damping: 18 },
+              y: { ...m.loop, duration: 3.4 },
+              rotate: { ...m.loop, duration: 3.4 },
+            }
+          : { duration: 0.3 }}
       />
       <motion.div
         key={line}
@@ -222,70 +301,6 @@ export function Chirpy({
       </motion.div>
     </div>
   );
-}
-
-/**
- * HOW HE MOVES.
- *
- * He used to do one thing everywhere: rise six pixels and sink back, every
- * five and a half seconds, in all seven rooms and on the hub. That is not a
- * character being alive, it is a sprite on a sine wave, and a child reads the
- * difference immediately — the boy was furniture that happened to bob.
- *
- * So each room gets a gait. The shapes are deliberately not interchangeable:
- * the Castle marches, the Park bounces, the Observatory barely moves at all,
- * and the hub dances, because the hub is the one place he is not waiting for
- * anybody. It is the cheapest possible characterisation and it is most of
- * what "alive" means on screen.
- *
- * EVERY LOOP CLOSES. The first and last frame of each track are identical, so
- * the cycle joins itself instead of snapping back to the start — a jump at
- * the seam is the thing that makes a loop look like a loop.
- *
- * AND NONE OF IT RUNS IN THE QUIET STATE. `m.loop` is undefined when the app
- * has quietened itself or the device asked for less motion, and that is the
- * switch: he stands still. A distressed child does not get a dancing cartoon.
- */
-export type BoyGait = 'still' | 'sway' | 'walk' | 'march' | 'bounce' | 'drift' | 'dance';
-
-interface Gait {
-  y: number[];
-  x: number[];
-  rotate: number[];
-  seconds: number;
-}
-
-const GAITS: Record<BoyGait, Gait> = {
-  /** The old behaviour, kept for anywhere that genuinely wants stillness. */
-  still:  { y: [0, -6, 0],          x: [0, 0, 0],             rotate: [0, 0, 0],            seconds: 5.5 },
-  /** Weight shifting foot to foot. Somebody standing in a garden. */
-  sway:   { y: [0, -5, 0, -5, 0],   x: [0, 7, 0, -7, 0],      rotate: [0, 1.6, 0, -1.6, 0], seconds: 6.4 },
-  /** Actually crossing the floor and coming back. */
-  walk:   { y: [0, -9, 0, -9, 0],   x: [-16, -5, 7, -5, -16], rotate: [0, -2, 0, 2, 0],     seconds: 5.2 },
-  /** Knees up. Faster, squarer, pleased with itself. */
-  march:  { y: [0, -14, 0, -14, 0], x: [0, 4, 0, -4, 0],      rotate: [0, -3, 0, 3, 0],     seconds: 3.4 },
-  /** Two hops and a little one, the way children actually bounce. */
-  bounce: { y: [0, -19, 0, -8, 0],  x: [0, 2, 0, -2, 0],      rotate: [0, 4, 0, -4, 0],     seconds: 2.7 },
-  /** Barely there. For the room where the whole point is sitting still. */
-  drift:  { y: [0, -10, 0],         x: [0, 9, 0],             rotate: [0, 1, 0],            seconds: 9 },
-  /** The hub. Shoulders, hips, a shuffle each way. */
-  dance:  { y: [0, -15, 0, -15, 0], x: [-11, 0, 11, 0, -11],  rotate: [-5, 0, 5, 0, -5],    seconds: 3.2 },
-};
-
-/** Which gait belongs to which virtue room. Keyed by the room ids in
- *  best/rooms.ts — the same ids as the behaviours, which never renumber. */
-const ROOM_GAIT: Record<string, BoyGait> = {
-  kind: 'sway',
-  truth: 'walk',
-  choices: 'march',
-  include: 'bounce',
-  body: 'march',
-  help: 'walk',
-  mindheart: 'drift',
-};
-
-export function gaitForRoom(roomId: string | null | undefined): BoyGait {
-  return (roomId && ROOM_GAIT[roomId]) || 'still';
 }
 
 export function TheBoy({

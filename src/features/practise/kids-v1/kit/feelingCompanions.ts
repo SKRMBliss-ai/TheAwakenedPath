@@ -21,14 +21,19 @@
  * rest are here because they turn up all over the game library (jealous in
  * Friendship Park, ashamed in Truth Lab) and the art existed.
  *
- * TWO OF THE SIX BALLS HAVE NO COMPANION. `excited` never had art. `angry`
- * did, and it's been pulled — see public/feelings/angry.webp, still on
- * disk, unreferenced. Popping ANGRY is unaffected either way: it's still
- * one of the six balls, it still gets recorded as today's feeling, it is
- * never treated as less valid than the others (§2.4's whole point). All
- * that changes is that nothing floats around the room wearing it
- * afterward. Falling back to a different plate — happy's, say — would put
- * the wrong face on a real answer, which is worse than showing nothing.
+ * ALL SIX BALLS NOW HAVE ONE, and the two that didn't were the two a child
+ * is most likely to pick. `angry` had art all along — it was pulled because
+ * the cut had left a square of un-keyed checkerboard between Chirpy and the
+ * boy's jaw, which is a bug in a PNG rather than a reason to have no anger
+ * in a feelings app. The alpha is patched and he is back. `excited` genuinely
+ * had no plate, so one was cut from the hub artwork: the same boy, same cap,
+ * same Chirpy, keen and bright-eyed, framed chest-up to sit in a row with the
+ * other ten.
+ *
+ * THE RULE THAT KEPT THEM OUT STILL HOLDS — never put the wrong face on a
+ * real answer. That is an argument for cutting the right plate, which is what
+ * happened, and never was an argument for a child who said "angry" being met
+ * by an empty room.
  */
 
 /**
@@ -53,7 +58,8 @@
  */
 export type FeelingIdle =
   | 'hop' | 'float' | 'heavy' | 'tremble' | 'sway'
-  | 'jitter' | 'slump' | 'lean' | 'shrink' | 'flush' | 'breathe';
+  | 'jitter' | 'slump' | 'lean' | 'shrink' | 'flush' | 'breathe'
+  | 'simmer' | 'fizz';
 
 export interface FeelingCompanion {
   /** Served from public/feelings — see that folder for how they were cut. */
@@ -155,6 +161,30 @@ export const FEELING_COMPANIONS: Record<string, FeelingCompanion> = {
     /** A quick warm pulse that passes. It burns hot and goes out fast — so does this. */
     idle: 'flush',
   },
+  angry: {
+    src: '/feelings/angry.webp',
+    guidance: [
+      'Angry turns up fast and leaves slowly.',
+      'It usually means something felt unfair.',
+      'Angry is allowed. What you do next is the choosy bit.',
+    ],
+    /** Held in rather than thrown about: a tight, quick pulse that doesn't
+     *  travel. A companion stamping around the room would be the app doing
+     *  the anger AT a child who is already doing it themselves. */
+    idle: 'simmer',
+  },
+  excited: {
+    src: '/feelings/excited.webp',
+    guidance: [
+      'Excited is hard to sit still inside.',
+      'It makes everything feel closer than it is.',
+      'This one burns bright and gets tired. That part is normal.',
+    ],
+    /** The biggest amplitude of the eleven, and the only one that is meant
+     *  to be. Everything else here is a feeling being sat with; this is the
+     *  one a child wants matched. */
+    idle: 'fizz',
+  },
   grief: {
     src: '/feelings/grief.webp',
     guidance: [
@@ -183,12 +213,12 @@ export function companionFor(feeling: string | undefined | null): FeelingCompani
  * something narrower.
  *
  * The rule it was about still holds: never put the WRONG face on a real
- * answer. A child who said "excited" or "angry" and got this serene one
- * back would have been contradicted by the app, so a named feeling with no
- * art still shows nobody (see the note at the top of this file). Nothing
- * named is a different case entirely — there is no answer here to
- * misrepresent, and a boy sitting quietly in the corner with Chirpy asleep
- * on his shoulder claims nothing about anybody's day.
+ * answer. Every feeling a child can name now has its own plate, so nothing
+ * reaches this fallback by being unrepresented — and if a new one is ever
+ * added without art, it must show nobody rather than borrow this serene
+ * face. Nothing named is a different case entirely: there is no answer here
+ * to misrepresent, and a boy sitting quietly in the corner with Chirpy
+ * asleep on his shoulder claims nothing about anybody's day.
  *
  * WHICH IS WHY HE SAYS NOTHING ABOUT FEELINGS. The other ten are
  * observations about the feeling they're wearing. This one isn't wearing

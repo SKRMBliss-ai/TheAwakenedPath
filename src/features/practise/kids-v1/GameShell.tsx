@@ -8,6 +8,7 @@ import { DoorHandle } from './ui/DoorHandle';
 import { FloatingFeeling } from './ui/FloatingFeeling';
 import { useMotion } from './ui/quiet';
 import { Chirpy, RoomScene } from './ui/scene';
+import { DIM } from './ui/scenery';
 import { ChooseEngine } from './engines/Choose';
 import { BodyTapEngine } from './engines/BodyTap';
 import { SortEngine } from './engines/Sort';
@@ -91,7 +92,7 @@ export function GameShell({
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
       {/* Whatever the child named today comes with them into this room —
           bouncing, draggable, and parked wherever they last put him. */}
-      <FloatingFeeling />
+      <FloatingFeeling roomId={room.id} />
 
       {/* The way out is a fitting on the left wall, the same one on every
           screen in the app. No chevron in the corner any more: a child who
@@ -103,7 +104,7 @@ export function GameShell({
           over the brightest part of a painting. The title beat keeps the art
           cinematic; every beat that has to be READ gets a full-frame veil on
           top of the scrim. Art is the room, not the page. */}
-      <RoomScene room={room} dim={phase === 'name' ? 0.34 : 0.5} />
+      <RoomScene room={room} dim={phase === 'name' ? DIM.content : DIM.play} />
 
       <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-[74px] pb-8 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">

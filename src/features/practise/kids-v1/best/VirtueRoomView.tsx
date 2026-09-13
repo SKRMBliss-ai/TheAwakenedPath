@@ -7,6 +7,7 @@ import { CHROME, Cta, FONT, GrownUpExit, Question, SceneLine } from '../ui/chrom
 import { DoorHandle } from '../ui/DoorHandle';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { Chirpy, RoomScene } from '../ui/scene';
+import { DIM } from '../ui/scenery';
 import { gamesInRoom } from '../games/library';
 import { roomGamesFor, type RoomGame } from './roomGames';
 import { RoomGamePlayer } from './RoomGamePlayer';
@@ -108,14 +109,14 @@ export function VirtueRoomView({
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
       {/* Whatever the child named today comes with them into this room —
           bouncing, draggable, and parked wherever they last put him. */}
-      <FloatingFeeling />
+      <FloatingFeeling roomId={room.id} />
 
       {/* The way out is a fitting on the left wall, the same one on every
           screen in the app. No chevron in the corner any more: a child who
           learns one door learns them all. */}
       <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
 
-      <RoomScene room={art} dim={playing ? 0.35 : 0.12} />
+      <RoomScene room={art} dim={playing ? DIM.play : DIM.content} />
 
       {/* Whatever the child chose to hang in THIS room. Scenery, behind the
           content, and nothing to tap — see HungDrawing. */}
@@ -177,7 +178,7 @@ export function VirtueRoomView({
           </div>
         ) : (
           <div className="flex flex-1 flex-col justify-end gap-4 pb-4 pt-8">
-            <Chirpy pose={doneToday ? 'excited' : 'curious'} line={room.tagline} align="left" roomId={room.id} />
+            <Chirpy pose={doneToday ? 'excited' : 'curious'} line={room.tagline} align="left" />
             <Question room={art}>{room.name}</Question>
 
             {/* ── The tick — the actual point of the app ───────────────── */}

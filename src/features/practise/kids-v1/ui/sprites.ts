@@ -1,21 +1,73 @@
 /**
  * Chirpy's sprite frames — the founder's real character art, cut from the
- * character sheet and already living in /public/chirpy.
+ * uploads in /public/assets/gym/chirpy and served from /public/chirpy.
  *
- * A plain data module rather than part of scene.tsx, so the path helper can
- * be imported anywhere (including by non-component code) without dragging in
- * framer-motion or tripping react-refresh's one-kind-of-export rule.
+ * THESE ARE NOT THE OLD NINE. The originals were deleted from /public/chirpy
+ * in "update images" while every call site still pointed at them, so for a
+ * while Chirpy was a broken-image icon in all seven places he appears. The
+ * replacements are the newer, larger drawings — one emotion per file, cut
+ * from their alpha and shipped at two heights instead of one.
  *
- * Nine frames. There is no tenth: if a screen wants an expression that isn't
- * here, it uses the nearest one rather than inventing art, because every
- * other picture in this app is generated and these are not.
+ * TWO SIZES, AND THAT IS THE POINT OF THE HELPERS BELOW. The sources are
+ * 1254x1254 PNGs of a megabyte and a half each; a phone drawing a 76px bird
+ * must never download one. `chirpySprite` gives the src and
+ * `chirpySrcSet` the candidates, so a caller that sets `sizes` gets the
+ * 160 on a phone and the 320 on a desktop.
  */
 
 export type ChirpyPose =
-  | 'idle' | 'curious' | 'worried' | 'excited' | 'jumping' | 'hopeful'
-  | 'said1' | 'said2' | 'said3';
+  /** Settled. The default, and what he does when nothing is happening. */
+  | 'idle' | 'calm'
+  /** Head tilted, asking. */
+  | 'curious' | 'wondering' | 'hopeful'
+  /** Working something out — the one with the thought bubble. */
+  | 'thinking'
+  /** Doesn't follow, and says so. */
+  | 'confused'
+  /** Delighted, beak open, arms up. */
+  | 'excited' | 'jumping'
+  /** Frightened. Braced, eyes wide. */
+  | 'worried' | 'scared'
+  /** Downcast, hands together. */
+  | 'sad'
+  /** Mid-sentence, in three intensities — a gasp, a shout, an alarm. */
+  | 'said1' | 'said2' | 'said3'
+  | 'gasp' | 'shouting' | 'alarmed';
 
-export const chirpySprite = (pose: ChirpyPose) => `/chirpy/chirpy-${pose}.webp`;
+/**
+ * Which drawing each pose actually resolves to.
+ *
+ * Ten files, more than ten poses: the aliases exist so no call site has to
+ * change when a new drawing lands, and so a pose that has no art of its own
+ * lands on the nearest real expression rather than on a 404. `jumping` is
+ * `excited` because the excited plate already has him off the ground.
+ */
+const CHIRPY_PLATE: Record<ChirpyPose, string> = {
+  idle: 'calm',
+  calm: 'calm',
+  curious: 'wondering',
+  wondering: 'wondering',
+  hopeful: 'wondering',
+  thinking: 'thinking',
+  confused: 'confused',
+  excited: 'excited',
+  jumping: 'excited',
+  worried: 'scared',
+  scared: 'scared',
+  sad: 'sad',
+  said1: 'gasp',
+  said2: 'shouting',
+  said3: 'alarmed',
+  gasp: 'gasp',
+  shouting: 'shouting',
+  alarmed: 'alarmed',
+};
+
+export const chirpySprite = (pose: ChirpyPose) => `/chirpy/chirpy-${CHIRPY_PLATE[pose]}@320.webp`;
+
+/** The candidates, for any caller that also sets `sizes`. */
+export const chirpySrcSet = (pose: ChirpyPose) =>
+  `/chirpy/chirpy-${CHIRPY_PLATE[pose]}@160.webp 160w, /chirpy/chirpy-${CHIRPY_PLATE[pose]}@320.webp 320w`;
 
 /** The boy from the character sheet — Chirpy's person. Two sizes shipped.
  *  Resized from assets/home/boy.png, which is a 1024x1536 design source and
@@ -57,7 +109,7 @@ const BOY_PLATE: Record<BoyEmotion, { src: string; srcset: string }> = {
   // No srcset: one size shipped for each of these, and pointing a `160w`
   // candidate at a 420px file would hand the browser a lie to pick from.
   happy:      { src: '/feelings/happy.webp', srcset: '' },
-  excited:    { src: '/feelings/happy.webp', srcset: '' }, // excited maps to happy plate
+  excited:    { src: '/feelings/excited.webp', srcset: '' },
   worried:    { src: '/feelings/worried.webp', srcset: '' },
   angry:      { src: '/feelings/angry.webp', srcset: '' },
   scared:     { src: '/feelings/scared.webp', srcset: '' },

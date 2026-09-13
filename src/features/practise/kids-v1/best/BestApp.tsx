@@ -1,23 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Check, Volume2, VolumeX } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
 import { isMuted, setMuted } from '../../../../lib/sfx';
 import { BEHAVIOURS } from '../../../kids/data';
 import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
 import { useMotion, useQuiet } from '../ui/quiet';
-import { BoyAndChirpy, RoomScene } from '../ui/scene';
-import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
-import { skyNow, timeOfDayForHour } from '../rooms';
+import { RoomScene } from '../ui/scene';
+import { timeOfDayForHour } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
-import { DoorHandle } from '../ui/DoorHandle';
-import { GreetingBubble, MindGymMark, NeonDoorPill, RoomDome } from './HomeStage';
+import { HubGreeting, HubHotspot, HubStage, HUB_BOXES, PhoneHub, type Hotspot, type HotspotKey } from './PaintedHub';
 import { FloatingJar } from './FloatingJar';
 import { HelpChirpy } from './HelpChirpy';
 import { ReflectionRoom } from './ReflectionRoom';
-import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
+import { VIRTUE_ROOMS, PAUSE_ROOM, accentFor, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
 import { ChirpyRemembers } from './ChirpyRemembers';
 import { ChirpyArc } from './ChirpyArc';
@@ -229,6 +227,9 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onDeepDive={() => setView({ at: 'deep' })}
                 onHelpChirpy={() => setView({ at: 'helpchirpy' })}
                 onPause={() => setView({ at: 'pause' })}
+                onReflection={() => setView({ at: 'reflection' })}
+                onRewards={() => setView({ at: 'rewards' })}
+                onFriends={() => setView({ at: 'friends' })}
                 onOneMinute={() => setView({ at: 'oneminute' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
@@ -283,17 +284,20 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
           </motion.div>
         </AnimatePresence>
 
-        {/* The bottom bar. Friendship and rewards live here rather than as
-            rooms on the map, because they aren't things you practise — they're
-            things you go and look at. */}
-        {(view.at === 'map' || view.at === 'room') && (
-          <BottomBar
-            onFriends={() => setView({ at: 'friends' })}
-            onRewards={() => setView({ at: 'rewards' })}
-            onReflection={() => setView({ at: 'reflection' })}
-            onPause={() => setView({ at: 'pause' })}
-          />
-        )}
+        {/*
+          NO BOTTOM BAR. It used to run across every hub and every room with
+          Friends, Rewards, Look Back and Pause on it, and three of those four
+          were a second way into somewhere the painting already goes: Pause is
+          a lit dome on the middle shelf, Look Back is the knob on the journey
+          door, and the rooms are the whole left-hand wall. A strip of emoji
+          re-listing the picture behind it was the last piece of the old menu
+          hub still standing, and it sat across the bottom of the art.
+
+          What genuinely had nowhere else to live is what a child has earned,
+          so that is all that is left, and it perches rather than docks — see
+          RewardPerch. Friends moved behind the blue door with the rooms; it is
+          somewhere you go and look, not something you practise.
+        */}
       </div>
     </QuietProvider>
   );
@@ -308,6 +312,9 @@ function RoomMap({
   onDeepDive,
   onHelpChirpy,
   onPause,
+  onReflection,
+  onRewards,
+  onFriends,
   onOneMinute,
   onExitGym,
   onGrownUp,
@@ -319,6 +326,10 @@ function RoomMap({
   onDeepDive: () => void;
   onHelpChirpy: () => void;
   onPause: () => void;
+  /** The Observatory — looking back over the walk, not the Reflection Room dome. */
+  onReflection: () => void;
+  onRewards: () => void;
+  onFriends: () => void;
   onOneMinute: () => void;
   onExitGym: () => void;
   onGrownUp: () => void;
@@ -340,13 +351,11 @@ function RoomMap({
   // The sky the child actually walks in under — dawn, midday, dusk or night,
   // on their own clock. Never announced; it's just what the place looks like
   // at that hour.
-  const night = skyNow();
 
   const quiet = useQuiet();
 
   /** Where the "Explore Rooms" door lands — the shelf itself, which on a
    *  phone is below the fold and was otherwise only findable by scrolling. */
-  const roomsRef = useRef<HTMLHeadingElement>(null);
 
   /**
    * THE HUB HAD NO SOUND AT ALL.
@@ -390,6 +399,9 @@ function RoomMap({
    * Chosen once on arrival rather than per render, so it can't change under
    * a child mid-read.
    */
+  /** The blue door's room sheet — every room, including the unshelved one. */
+  const [sheet, setSheet] = useState(false);
+
   const [moment, setMoment] = useState<HubMoment | null>(null);
   useEffect(() => {
     setMoment(hubMoment(quiet, pointsByBehaviour));
@@ -424,19 +436,114 @@ function RoomMap({
     return () => { dead = true; };
   }, []);
 
+  /**
+   * THE EIGHT ALCOVES, AS ONE LIST.
+   *
+   * Assembled here rather than inline because the same eight are drawn twice
+   * on this page in two different arrangements — up the two walls beside the
+   * boy on a wide screen, and in a grid under him on a phone — and two
+   * hand-rolled copies of "seven virtue rooms and then Pause" is exactly how
+   * the Pause Room ends up scoring points on one of them.
+   */
+  /**
+   * THE EIGHT ALCOVES THE PAINTING DREW, wired to where each one goes.
+   *
+   * The painting names its own rooms, and those names are the scene rooms in
+   * rooms.ts rather than the virtue rooms this hub used to list — so the map
+   * below is where the two halves of the app are joined. Five of them land on
+   * a virtue room whose art IS that painting (Body Detective on the Healthy
+   * Body Zone, Thought Room on the Truth Lab, and so on); Feelings Room opens
+   * the walk that asks how today went; Pause is Pause.
+   *
+   * KINDNESS GARDEN HAS NO DOME, because the painting has no ninth alcove. It
+   * is not lost: the blue door lists every room, and the journey behind the
+   * gold door still walks all seven virtues in order. A room missing from the
+   * shelf is a room you reach another way, not a room that is gone.
+   */
+  const virtue = (id: string) => VIRTUE_ROOMS.find((r) => r.id === id);
+  const dome = (
+    key: HotspotKey,
+    label: string,
+    accent: string,
+    onClick: () => void,
+    done = false,
+  ): Hotspot => ({ id: key, label, accent, onClick, done, ...HUB_BOXES[key] });
+
+  /**
+   * A KNOB IS NOT ITS DOOR.
+   *
+   * Both doors were painted with a big brass handle on them, and until now
+   * those handles were just pixels inside a door-shaped hit box. They are the
+   * one part of a door a child reaches for on purpose, so each one is its own
+   * way through — and because the painting never lettered them, each carries a
+   * `hint` that says what it is on hover. The door boxes in PaintedHub were
+   * shortened to stop above the brass so that no press is ever ambiguous.
+   */
+  const knob = (key: HotspotKey, label: string, accent: string, onClick: () => void): Hotspot =>
+    ({ id: key, label, accent, onClick, hint: label, ...HUB_BOXES[key] });
+
+  const open = (id: string) => () => { const r = virtue(id); if (r) onOpen(r); };
+  const ticked = (id: string) => !!today[id];
+
+  const spots: Hotspot[] = [
+    dome('feelings', 'Feelings Room', '#E8A2D0', onDeepDive),
+    dome('body', 'Body Detective', '#6FD3E8', open('body'), ticked('body')),
+    dome('together', 'Together Games', '#E8944C', open('include'), ticked('include')),
+    dome('thought', 'Thought Room', '#C48BE8', open('truth'), ticked('truth')),
+    dome('bigfeelings', 'Big Feelings', '#E86FB4', open('choices'), ticked('choices')),
+    dome('pause', 'Pause Room', '#8FD9C4', onPause),
+    dome('story', 'Different Story', '#7FC7F0', open('help'), ticked('help')),
+    dome('reflection', 'Reflection Room', '#9FB4F5', open('mindheart'), ticked('mindheart')),
+    dome('explore', 'Explore every room', '#6FA8F0', () => setSheet(true)),
+    dome('journey', 'My Journey', '#FFC65C', () => { sound.play('arcadeBlip'); onStartJourney(); }),
+
+    /*
+      THE KNOBS, AND WHY THESE TWO THINGS.
+
+      Each knob belongs to the door it is screwed to, which is the whole
+      reason a knob is a sensible place to put anything at all.
+
+      THE GOLD DOOR is My Journey — the walk through all seven rooms, which
+      ENDS at the Observatory. So its handle is the way back to what the walk
+      has come to: the same Observatory, reached without having to do the walk
+      again first. It has no other entrance now that the bottom bar is gone,
+      and "Look back" was the only thing on that bar worth keeping.
+
+      THE BLUE DOOR is Explore Rooms, and its handle gives Chirpy his door
+      back. He had one on the right-hand wall until the painting replaced the
+      walls, and since then the only way to the thing he has been working up
+      to asking has been a row most children never scroll to inside the room
+      sheet. The character standing on the boy's shoulder in this very picture
+      should not be the hardest thing on the screen to reach.
+
+    */
+    knob('knobJourney', 'Look back', '#FFC65C', () => { sound.play('roomCard'); onReflection(); }),
+    knob('knobExplore', 'Chirpy needs a hand', '#8FD9C4', () => { sound.play('roomCard'); onHelpChirpy(); }),
+  ];
+
   return (
     <div
       className="relative min-h-[100svh] w-full overflow-hidden"
-      style={{
-        fontFamily: FONT,
-        background: `linear-gradient(168deg, ${night.ground[0]} 0%, ${night.ground[1]} 100%)`,
-      }}
+      style={{ fontFamily: FONT, background: '#1A0F2E' }}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{ background: `radial-gradient(52% 38% at 76% 12%, ${night.glow} 0%, transparent 72%)` }}
-      />
+      {/*
+        THE PAINTING, AT FULL BRIGHTNESS AND UNCROPPED BY ANY VEIL.
+
+        It used to be blurred to 9px and dimmed to a third, with a CSS gym
+        drawn on top of it. See best/PaintedHub for why that was always going
+        to look like a copy of the reference rather than the reference.
+      */}
+      <div className="hidden md:block">
+        <HubStage>
+          <HubGreeting name={name} onClick={onDeepDive} />
+          {spots.map((sp) => <HubHotspot key={sp.id} spot={sp} />)}
+        </HubStage>
+      </div>
+
+      {/* A portrait screen cannot hold a landscape room — see PhoneHub. */}
+      <div className="md:hidden">
+        <PhoneHub name={name} spots={spots} onGreeting={onDeepDive} />
+      </div>
 
       {/* Every firefly the child has taken to the Observatory and let go of,
           drifting in the gym's own sky. Never counted anywhere on screen —
@@ -449,192 +556,103 @@ function RoomMap({
         {visitor && <TheVisitor visitor={visitor} onGone={() => setVisitor(null)} />}
       </AnimatePresence>
 
-      <DoorWall onStuck={onDeepDive} onChirpy={onHelpChirpy} />
-
       {/* Tonight's lights, standing at the foot of the door that fills it.
           Movable, and it remembers where it was put. */}
       <FloatingJar caught={caughtToday} />
 
-      <div className="relative mx-auto w-full max-w-6xl px-[74px] pb-32 pt-4 sm:px-20">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <BackButton onClick={onExitGym} label="Leave the gym" />
-            {/* The sign over the door. Beside the way out rather than above
-                the greeting: the top-left corner is where a building puts its
-                name, and the greeting's job is to say hello, not to brand. */}
-            <MindGymMark />
-          </div>
-          <div className="flex items-center gap-2">
-            {/* THE WAY OUT OF THE SOUND. It is on by default now — voice,
-                room tone and the lullaby — and turning something on by
-                default without shipping the switch is how you get a parent
-                uninstalling an app on a train. This is the whole app's
-                silence, not a music toggle: it is the same flag Chirpy's
-                voice and every cue read. */}
-            <SoundToggle />
-            <GrownUpExit onClick={onGrownUp} />
-          </div>
+      {/* What the bottom bar was actually for. Bottom LEFT because the whole
+          right-hand gutter is spoken for — the jar hangs there and HubAside
+          sits under it. */}
+      <RewardPerch onRewards={onRewards} />
+
+      {/*
+        THE CHROME, AND AS LITTLE OF IT AS THE APP CAN HONESTLY GET AWAY WITH.
+
+        The painting has no room for a toolbar — it has a sign in the top-left
+        corner already, which is why MindGymMark is gone from here. What stays
+        is the way out of the gym, the way out of the sound, and the way to a
+        grown-up, which is on every screen at the same position and is never
+        negotiable (§2.10).
+      */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-3 p-3 sm:p-4">
+        <div className="pointer-events-auto">
+          <BackButton onClick={onExitGym} label="Leave the gym" />
         </div>
-
-        {/*
-          THE WELCOME GETS OUT OF THE WAY.
-
-          It used to be a fixed 300-odd pixels of hello — the pair at full
-          size, the big name, the level line, the progress line — which meant
-          the rooms themselves started below the fold on a phone and a child
-          had to scroll to find the thing they came for. It now says hello
-          properly for five seconds and then folds itself into a single line,
-          with a chime and a scatter of sparks so the fold reads as a small
-          piece of magic rather than as the layout twitching.
-
-          Five seconds because that's about how long the greeting is worth
-          looking at, and because nothing here is a countdown a child has to
-          beat — the rooms are already tappable underneath while it plays.
-        */}
-        {/* Reclaims the width the door handles reserve. The greeting lives
-            at the top of the page and the fittings hang at three-quarters
-            height, so these two never share a line — and "Hello, Shaarav"
-            deserves to be one. */}
-        {/*
-          THE STAGE: two lit ways on, with the child standing between them.
-
-          Straight off the reference art, and the arrangement is the point —
-          the pills are not a toolbar above the content, they are the two doors
-          of the room the boy is standing in, one to each side of him. A child
-          reads "I am in here, and there are two ways on" without a word of it
-          being written down.
-
-          They stack under the greeting on a phone, where there is no room to
-          stand beside anything.
-        */}
-        <div className="-mx-[58px] sm:mx-0">
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:gap-5">
-            <div className="order-2 sm:order-1 sm:shrink-0">
-              <NeonDoorPill
-                tone="blue"
-                onClick={() => {
-                  sound.play('arcadeBlip');
-                  roomsRef.current?.scrollIntoView({ behavior: quiet ? 'auto' : 'smooth', block: 'start' });
-                }}
-              />
-            </div>
-
-            <div className="order-1 min-w-0 flex-1 sm:order-2">
-              <WelcomeBanner
-                name={name}
-                doneCount={doneCount}
-                total={VIRTUE_ROOMS.length}
-                others={others}
-                onOneMinute={onOneMinute}
-                onFeeling={onDeepDive}
-              />
-            </div>
-
-            <div className="order-3 sm:shrink-0">
-              <NeonDoorPill
-                tone="gold"
-                onClick={() => { sound.play('arcadeBlip'); onStartJourney(); }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/*
-          ONE CARD. Whatever tonight's single thing is — a note from home, or
-          Chirpy, or nothing at all. See kit/hubMoment for the order, and for
-          what four of these stacked together actually did to this page.
-        */}
-        <AnimatePresence mode="wait">
-          {moment?.kind === 'note' && (
-            <NoteFound key="note" note={moment.note} onDone={() => setMoment(null)} />
-          )}
-          {moment?.kind === 'welcome' && (
-            <WelcomeBackCard key="welcome" line={moment.line} onDone={() => setMoment(null)} />
-          )}
-          {moment?.kind === 'arc' && (
-            <ChirpyArc key="arc" beat={moment.beat} onDone={() => setMoment(null)} />
-          )}
-          {moment?.kind === 'memory' && (
-            <ChirpyRemembers
-              key="memory"
-              recollection={moment.recollection}
-              onDone={() => setMoment(null)}
-            />
-          )}
-          {moment?.kind === 'game' && (
-            <GuessWhat key="game" game={moment.game} onDone={() => setMoment(null)} />
-          )}
-        </AnimatePresence>
-
-        {/*
-          TWO DOORS, SIDE BY SIDE.
-
-          They were stacked, with the jar leading and the knot underneath, to
-          avoid implying a child should do both every day. Side by side says
-          the same thing better: two doors in a wall, you pick one, you don't
-          walk through both. What keeps them from reading as a daily
-          checklist is that neither is marked, counted or ticked — they're
-          places, not tasks.
-
-          Drawn as lit archways rather than rows, because a door you can see
-          light spilling out from under is a more inviting thing to a
-          six-year-old than a rectangle with a title in it.
-        */}
-        {/*
-          The two journeys have left the scroll flow entirely — they are the
-          hub's own left and right doors now (see the DoorHandles above this
-          container), so they cost the rooms nothing at all. What used to be
-          110px of cards here is 0px.
-        */}
-
-        {/* Chirpy's ask used to be a card here, and the map a small grey
-            link under it. Both are doors on the right wall now — see
-            DoorWall. The map is still reachable from the bottom bar's
-            "Look back", which is where a child goes looking for it. */}
-
-        <h2 ref={roomsRef} className="mt-5 scroll-mt-4 text-[15.5px] font-extrabold" style={{ color: CHROME.text, fontFamily: FONT }}>
-          Or pick a room
-        </h2>
-
-        {/* THE STREET IS GONE, AND THE CARDS WON.
-            Two ways of showing the same seven rooms ran side by side here so
-            one could be picked. The painted cards are it: a child recognises
-            a room by its picture, and a row of small dark buildings above
-            them was a second, weaker index of the same thing — costing a
-            screenful of height to say what the posters already said better.
-            VillageRow.tsx is still in the tree if it's ever wanted back. */}
-
-        <div className="mt-3 grid grid-cols-2 gap-x-3.5 gap-y-5 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4">
-          {VIRTUE_ROOMS.map((r, i) => {
-            const art = artRoomFor(r);
-            const earned = pointsByBehaviour[r.id] ?? 0;
-            return (
-              <RoomDome
-                key={r.id}
-                name={r.name}
-                roomId={art.id}
-                accent={art.palette.accent}
-                index={i}
-                doneToday={!!today[r.id]}
-                note={earned > 0 ? `${earned} pts` : 'not yet'}
-                onClick={() => onOpen(r)}
-              />
-            );
-          })}
-
-          {/* Pause sits with them but is visibly not one of them — no tick,
-              no points, no counter. Somewhere that asks nothing. */}
-          <RoomDome
-            name={PAUSE_ROOM.name}
-            roomId={artRoomFor(PAUSE_ROOM).id}
-            accent={artRoomFor(PAUSE_ROOM).palette.accent}
-            index={VIRTUE_ROOMS.length}
-            note="any time"
-            dashed
-            onClick={onPause}
-          />
+        <div className="pointer-events-auto flex items-center gap-2">
+          <SoundToggle />
+          <GrownUpExit onClick={onGrownUp} />
         </div>
       </div>
+
+      {/*
+        ONE CARD, over the floor — the one piece of the painting with nothing
+        on it. Whatever tonight's single thing is: a note from home, or Chirpy,
+        or nothing at all. See kit/hubMoment for the order, and for what four
+        of these stacked together did to this page.
+      */}
+      {/* On a phone the foot of the screen is a stack: nav bar, then the
+          nights strip, then this. On a wide screen the strip is off to the
+          right and only the bar is underneath. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-[9.5rem] z-20 flex justify-center px-4 md:bottom-20">
+        {/* Its own dark ground. Every card that lands in here is translucent
+            by design — they were written for a dim room — and the painting
+            underneath is a lit floor at full brightness, which turns all of
+            them into unreadable grey. */}
+        <div
+          className="pointer-events-auto w-full max-w-[25rem] rounded-[26px] backdrop-blur-md"
+          style={{ background: 'rgba(10,6,22,0.72)' }}
+        >
+          <AnimatePresence mode="wait">
+            {moment?.kind === 'note' && (
+              <NoteFound key="note" note={moment.note} onDone={() => setMoment(null)} />
+            )}
+            {moment?.kind === 'welcome' && (
+              <WelcomeBackCard key="welcome" line={moment.line} onDone={() => setMoment(null)} />
+            )}
+            {moment?.kind === 'arc' && (
+              <ChirpyArc key="arc" beat={moment.beat} onDone={() => setMoment(null)} />
+            )}
+            {moment?.kind === 'memory' && (
+              <ChirpyRemembers
+                key="memory"
+                recollection={moment.recollection}
+                onDone={() => setMoment(null)}
+              />
+            )}
+            {moment?.kind === 'game' && (
+              <GuessWhat key="game" game={moment.game} onDone={() => setMoment(null)} />
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Says hello by name out loud, once per visit, and offers the short way
+          in. It has no drawing of its own any more — the painting has the boy
+          and the bubble — so it is a strip rather than a stage. */}
+      <HubAside
+        name={name}
+        doneCount={doneCount}
+        total={VIRTUE_ROOMS.length}
+        others={others}
+        onOneMinute={onOneMinute}
+      />
+
+      {/* The blue door opens this: every room the gym has, including the one
+          the painting had no shelf for. */}
+      <AnimatePresence>
+        {sheet && (
+          <RoomSheet
+            key="sheet"
+            today={today}
+            pointsByBehaviour={pointsByBehaviour}
+            onOpen={(r) => { setSheet(false); onOpen(r); }}
+            onPause={() => { setSheet(false); onPause(); }}
+            onChirpy={() => { setSheet(false); onHelpChirpy(); }}
+            onFriends={() => { setSheet(false); onFriends(); }}
+            onClose={() => setSheet(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -645,170 +663,252 @@ function RoomMap({
  * What's added is the only new information a virtue room has — whether it was
  * ticked today, and what has been earned in it.
  */
-/* ── The welcome, and how it leaves ──────────────────────────────────── */
-
-/** How long the full greeting stays before folding itself away. */
-const WELCOME_MS = 2000;
+/* ── What the blue door opens ────────────────────────────────────────── */
 
 /**
- * Says hello, then gets out of the way.
+ * EVERY ROOM, AS A LIST OF NAMES.
  *
- * Expanded it's the pair from the character sheet at full size, the child's
- * name, and where they're up to. Folded it's one line: a small Chirpy, the
- * name, and the same numbers. Everything below — the two doors, and the
- * rooms — rises by about 260px when it goes, which is the difference between
- * a child seeing the rooms on landing and having to scroll for them.
+ * The painting has eight alcoves and the gym has nine rooms, so one of them —
+ * the Kindness Garden — has no shelf to stand on. This is where it lives, and
+ * it is also the answer to "what if a child wants a room they can't see from
+ * here": the blue door in the left wall is labelled Explore Rooms, and this is
+ * what exploring them looks like.
  *
- * `layout` on the shared container is what makes the rest of the page glide
- * up rather than jump. The sparks and the chime fire once, at the moment of
- * the fold, so it reads as the greeting doing something rather than the page
- * reflowing.
+ * NAMES, NOT PICTURES. The old hub drew every room as a photo card, and the
+ * photo cards are exactly what made it look like a menu rather than a place —
+ * the painting does the pictures now, and far better. A list can say the one
+ * thing a painting can't: which of them have been ticked today.
  */
-function WelcomeBanner({
-  name, doneCount, total, others, onOneMinute, onFeeling,
+function RoomSheet({
+  today,
+  pointsByBehaviour,
+  onOpen,
+  onPause,
+  onChirpy,
+  onFriends,
+  onClose,
+}: {
+  today: Record<string, boolean>;
+  pointsByBehaviour: Record<string, number>;
+  onOpen: (room: VirtueRoom) => void;
+  onPause: () => void;
+  /** Chirpy's own ask. His door went with the wall the painting replaced. */
+  onChirpy: () => void;
+  /** Not a room, and printed as one would be a lie — see below. */
+  onFriends: () => void;
+  onClose: () => void;
+}) {
+  const m = useMotion();
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.24 }}
+      style={{ background: 'rgba(8,5,20,0.72)', backdropFilter: 'blur(6px)', fontFamily: FONT }}
+    >
+      {/* Tapping the dark closes it. A child who opened the wrong door should
+          not have to find a cross to get back out of it. */}
+      <button aria-label="Close" className="absolute inset-0" onClick={onClose} />
+
+      <motion.div
+        initial={m.quiet ? false : { y: 28, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 20, opacity: 0 }}
+        transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
+        className="relative m-3 w-full max-w-md rounded-[26px] p-4"
+        style={{
+          background: 'linear-gradient(168deg, rgba(30,20,58,0.98) 0%, rgba(14,9,30,0.99) 100%)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          boxShadow: '0 30px 70px -20px rgba(0,0,0,0.9)',
+        }}
+      >
+        <p className="text-[17px] font-extrabold" style={{ color: CHROME.text }}>
+          Every room
+        </p>
+        <p className="mt-0.5 text-[12.5px] font-semibold" style={{ color: CHROME.textSoft }}>
+          Go in and say how today actually went.
+        </p>
+
+        <div className="mt-3 flex flex-col gap-1.5">
+          {VIRTUE_ROOMS.map((r) => {
+            const accent = accentFor(r);
+            const earned = pointsByBehaviour[r.id] ?? 0;
+            const done = !!today[r.id];
+            return (
+              <button
+                key={r.id}
+                onClick={() => onOpen(r)}
+                className="flex items-center gap-3 rounded-[16px] px-3 py-3 text-left"
+                style={{
+                  minHeight: m.target,
+                  background: done ? `${accent}22` : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${done ? accent : 'rgba(255,255,255,0.12)'}`,
+                }}
+              >
+                <span
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
+                  style={{ background: done ? accent : 'transparent', border: `2px solid ${done ? accent : 'rgba(255,255,255,0.24)'}` }}
+                >
+                  {done && <Check size={15} strokeWidth={3.5} color="#0E1A1C" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-extrabold leading-tight" style={{ color: CHROME.text }}>
+                    {r.name}
+                  </span>
+                  <span className="block text-[11.5px] font-bold" style={{ color: accent }}>
+                    {earned > 0 ? `${earned} pts` : 'not yet'}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Pause sits with them and is visibly not one of them — no tick, no
+              points, no counter. Somewhere that asks nothing. */}
+          <button
+            onClick={onPause}
+            className="flex items-center gap-3 rounded-[16px] px-3 py-3 text-left"
+            style={{ minHeight: m.target, background: 'transparent', border: '1px dashed rgba(255,255,255,0.34)' }}
+          >
+            <span className="h-7 w-7 shrink-0" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[14px] font-extrabold leading-tight" style={{ color: CHROME.text }}>
+                {PAUSE_ROOM.name}
+              </span>
+              <span className="block text-[11.5px] font-bold" style={{ color: CHROME.textSoft }}>
+                any time
+              </span>
+            </span>
+          </button>
+
+          {/* Chirpy asking for a hand. He had a door on the right wall until
+              the painting replaced the walls, and a feature whose only way in
+              was a fitting that no longer exists is a feature that is gone. */}
+          <button
+            onClick={onChirpy}
+            className="flex items-center gap-3 rounded-[16px] px-3 py-3 text-left"
+            style={{ minHeight: m.target, background: 'rgba(143,217,196,0.10)', border: '1px solid rgba(143,217,196,0.42)' }}
+          >
+            <span className="h-7 w-7 shrink-0" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[14px] font-extrabold leading-tight" style={{ color: CHROME.text }}>
+                Chirpy needs a hand
+              </span>
+              <span className="block text-[11.5px] font-bold" style={{ color: '#8FD9C4' }}>
+                he’s been working up to asking
+              </span>
+            </span>
+          </button>
+        </div>
+
+        {/*
+          FRIENDS, UNDER A RULE RATHER THAN IN THE LIST.
+
+          It was on the bottom bar, beside Pause and Look Back, which put "go
+          and look at your friends" at exactly the same weight as "go and say
+          how today went" — and it is not that, it is somewhere you visit. It
+          is also not a room, so it cannot go in the list above without the
+          list starting to lie about what it contains.
+
+          A rule and a quieter row is the honest shape: still one tap from the
+          blue door, visibly not part of the round.
+        */}
+        <button
+          onClick={onFriends}
+          className="mt-3 w-full rounded-[14px] border-t px-3 pb-1 pt-3 text-left text-[12.5px] font-bold"
+          style={{ minHeight: m.target, borderColor: 'rgba(255,255,255,0.12)', color: CHROME.textSoft }}
+        >
+          Friends →
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ── The hello, and the short way in ─────────────────────────────────── */
+
+/**
+ * WHAT IS LEFT OF THE WELCOME once the painting does the welcoming.
+ *
+ * This used to be a stage: the pair from the character sheet at 168px, the
+ * name, a star sky, a line about how many rooms were done, and a fold-away
+ * animation to get all of it off the screen again five seconds later. The
+ * painting has a boy and a speech bubble in it now, so none of that is needed
+ * — and the one thing it did that the painting cannot is say the child's name
+ * OUT LOUD, which is most of why it existed.
+ *
+ * So: a strip along the foot of the screen. It speaks the greeting once per
+ * visit, records the night, and carries the short way in for a child who
+ * arrived with nothing in the tank.
+ */
+function HubAside({
+  name, doneCount, total, others, onOneMinute,
 }: {
   name: string;
   doneCount: number;
   total: number;
-  /** Other children tonight, or null when there's no server to ask. */
   others: number | null;
   onOneMinute: () => void;
-  /** Where the bubble's question goes — the child's own weather. */
-  onFeeling: () => void;
 }) {
-  const [dismissed, setDismissed] = useState(false);
+  const quiet = useQuiet();
   /** Recorded once per mount; the star for today arrives on the way in. */
   const [stars] = useState(() => markVisit());
-  const [sparks, setSparks] = useState(false);
-  const quiet = useQuiet();
-
-  /* Derived rather than stored, so turning Calm mode on folds the greeting
-     immediately without a second source of truth to keep in step. */
-  const open = !dismissed && !quiet;
-
-  useEffect(() => {
-    // The quiet state gets the folded version from the start and no chime —
-    // an upset child does not need a five-second flourish (§7).
-    if (quiet || dismissed) return;
-    const t = window.setTimeout(() => {
-      setDismissed(true);
-      setSparks(true);
-      sound.play('discovery');
-      window.setTimeout(() => setSparks(false), 1200);
-    }, WELCOME_MS);
-    return () => clearTimeout(t);
-  }, [quiet, dismissed]);
 
   /*
     AND IT SAYS THE NAME OUT LOUD, ONCE.
 
-    "Hello, Shaarav" was only ever text, which a child who can't read yet
-    doesn't get at all — and being greeted by name is most of the reason
-    this banner exists. So it's spoken on the way in, the same as every
-    other line in the app (ui/scene's Chirpy).
-
-    Once per visit, not once per hub. This component mounts again every
-    single time a child comes back out of a room, and being told hello
-    fourteen times in an evening is how a greeting turns into a nag —
-    greetByName holds the "already said it" flag in the module, outside
-    React, so the remounts can't reset it.
+    "Hello, Shaarav" is only text, which a child who can't read yet doesn't get
+    at all — and being greeted by name is most of the reason this exists. Once
+    per visit, not once per hub: this mounts again every time a child comes
+    back out of a room, and being told hello fourteen times in an evening is
+    how a greeting turns into a nag. greetByName holds the "already said it"
+    flag in the module, outside React, so the remounts can't reset it.
   */
   useEffect(() => {
     greetByName(name, quiet);
     return () => stopSpeaking();
   }, [name, quiet]);
 
-  /**
-   * No level, no points, no streak. The greeting used to read "Kindness
-   * Explorer · 45 points · 2-day streak", which is a scoreboard bolted onto
-   * an app whose own rules say nothing is scored — and the streak in
-   * particular took something away on the days a child was too sad to come,
-   * which are the days this is for. The sky only ever grows.
-   */
-
-
   return (
-    <motion.div layout className="relative flex flex-col items-center gap-1.5 pt-3 text-center">
-      {/*
-        THE BUBBLE DOESN'T FOLD, AND THE BOY DOES.
+    <div className="pointer-events-none absolute inset-x-0 bottom-[5.5rem] z-30 flex justify-end px-3 md:bottom-2">
+      <div
+        className="pointer-events-auto flex max-w-[62vw] flex-wrap items-center justify-end gap-2 rounded-full px-3 py-2 backdrop-blur-md"
+        style={{ background: 'rgba(12,8,26,0.62)', border: '1px solid rgba(255,255,255,0.14)', fontFamily: FONT }}
+      >
+        {/* The counts are for a screen with room for them. On a phone this
+            strip has the nav bar under it and Chirpy's card over it, and three
+            wrapped lines of arithmetic between the two is how the card ends up
+            unreadable — so the phone keeps only the door built for a child
+            with nothing in the tank. */}
+        <span className="hidden px-1 text-[11.5px] font-bold md:inline" style={{ color: CHROME.textSoft }}>
+          {stars === 1 ? '1 night in the gym' : `${stars} nights in the gym`}
+        </span>
+        <span className="hidden px-1 text-[11.5px] font-bold md:inline" style={{ color: CHROME.textSoft }}>
+          {doneCount === 0 ? 'no rooms yet today' : `${doneCount} of ${total} rooms today`}
+        </span>
+        <MinutePill onClick={onOneMinute} />
 
-        What used to collapse after five seconds was the whole hello, down to a
-        small grey pill with the child's name in it. That threw away the one
-        thing on this screen that asks them anything: the greeting is a speech
-        bubble now, it says how are you feeling today, and it is a way into
-        their own weather — so folding it away two seconds after they arrive
-        would be the app asking a question and then leaving the room.
-
-        The 168px dancing boy is what costs the rooms their place on the fold,
-        so he is what goes. The nights chip underneath brings him back; nothing
-        here is a one-way door.
-      */}
-      <GreetingBubble
-        name={name}
-        avatar={BOY_SRC}
-        avatarSrcSet={BOY_SRCSET}
-        onClick={onFeeling}
-      />
-
-      <AnimatePresence mode="wait">
-        {open ? (
-          <motion.div
-            key="full"
-            layout
-            exit={{ opacity: 0, scale: 0.86, y: -18 }}
-            transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
-            className="flex flex-col items-center gap-2"
-          >
-            {/* HE DANCES ON THE HUB, and only here. Every room has him
-                doing something quieter and room-specific (see ui/scene's
-                GAITS); the hub is the one screen where he isn't waiting on
-                the child to answer anything, so it's the one place he gets
-                to just enjoy himself. Facing out, too — this is the hello,
-                which is the one moment §2.2's shared-gaze rule exempts. */}
-            <BoyAndChirpy size={168} pose="excited" gaze="child" gait="dance" />
-            <StarSky count={stars} />
-            <p className="max-w-sm text-[13.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
-              {doneCount === 0
-                ? 'Seven rooms. Go in and say how today actually went.'
-                : doneCount === total
-                  ? 'All seven, today. That’s the full rainbow.'
-                  : `${doneCount} of ${total} rooms so far today.`}
-            </p>
-            <MinutePill onClick={onOneMinute} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="folded"
-            layout
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.15 }}
-            className="flex flex-wrap items-center justify-center gap-2"
-          >
-            <button
-              onClick={() => setDismissed(false)}
-              className="rounded-full px-3.5 py-2 text-[11.5px] font-bold"
-              style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}`, color: CHROME.text }}
-              aria-label="Show the welcome again"
-            >
-              {stars === 1 ? '1 night in the gym' : `${stars} nights in the gym`}
-            </button>
-
-            <MinutePill onClick={onOneMinute} />
-          </motion.div>
+        {/* Other children, out there somewhere — and nothing at all when
+            there's no server to ask. See kit/others. */}
+        {others !== null && (
+          <span className="hidden items-center gap-1.5 px-1 md:flex">
+            <img
+              src="/assets/home/other-child@160.webp"
+              alt=""
+              aria-hidden
+              draggable={false}
+              className="h-6 w-6 shrink-0 rounded-full"
+              style={{ objectFit: 'cover', objectPosition: '50% 22%', border: '1.5px solid rgba(255,255,255,0.34)' }}
+            />
+            <span className="text-[11.5px] font-semibold" style={{ color: CHROME.textSoft }}>
+              {others} other children tonight
+            </span>
+          </span>
         )}
-      </AnimatePresence>
-
-      {/* Other children, out there somewhere — and nothing at all when
-          there's no server to ask. See kit/others. */}
-      {others !== null && (
-        <p className="text-[11.5px] font-semibold" style={{ color: CHROME.textSoft }}>
-          {others} other children caught one tonight, too.
-        </p>
-      )}
-
-      {sparks && <FoldSparks />}
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -907,31 +1007,6 @@ function WelcomeBackCard({ line, onDone }: { line: string; onDone: () => void })
 }
 
 /** The scatter the greeting leaves behind. Fires once, decorative only. */
-function FoldSparks() {
-  return (
-    <span aria-hidden className="pointer-events-none absolute inset-x-0 top-8 grid place-items-center">
-      {Array.from({ length: 16 }).map((_, i) => {
-        const a = (i / 16) * Math.PI * 2 + (i % 3) * 0.2;
-        const d = 70 + ((i * 29) % 60);
-        return (
-          <motion.span
-            key={i}
-            className="absolute block rounded-full"
-            style={{
-              width: 5 + ((i * 13) % 5),
-              height: 5 + ((i * 13) % 5),
-              background: i % 3 === 0 ? '#FFD98A' : i % 3 === 1 ? '#C48BE8' : '#FFFFFF',
-              boxShadow: '0 0 12px rgba(255,214,150,0.9)',
-            }}
-            initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
-            animate={{ x: Math.cos(a) * d, y: Math.sin(a) * d * 0.7, opacity: 0, scale: 0.3 }}
-            transition={{ duration: 1, ease: 'easeOut', delay: (i % 5) * 0.04 }}
-          />
-        );
-      })}
-    </span>
-  );
-}
 
 /* ── Pause ───────────────────────────────────────────────────────────── */
 
@@ -992,43 +1067,79 @@ function Panel({ children, onClose }: { children: React.ReactNode; onClose: () =
   );
 }
 
-/* ── Bottom bar ──────────────────────────────────────────────────────── */
+/* ── What a child has earned ─────────────────────────────────────────── */
 
-function BottomBar({
-  onFriends, onRewards, onReflection, onPause,
-}: {
-  onFriends: () => void; onRewards: () => void; onReflection: () => void; onPause: () => void;
-}) {
+/**
+ * THE ONE THING THE PAINTING CANNOT SAY.
+ *
+ * Everything else that lived on the old bottom bar is somewhere in the picture
+ * already — Pause is a lit dome, Look Back is the knob on the gold door, the
+ * rooms are the whole left wall — so the bar had become a caption listing the
+ * art behind it. Points and unopened rewards are the exception: nothing in a
+ * painted room can show a number that changes.
+ *
+ * SO IT PERCHES INSTEAD OF DOCKING. A bar is a piece of furniture bolted
+ * across the foot of the screen and it cut the floor of the gym in half; this
+ * is Chirpy sitting on a small ledge in the corner with the count beside him,
+ * taking up about a sixth of the width and none of the middle. Bottom LEFT,
+ * because the right-hand gutter already has the firefly jar hanging in it with
+ * HubAside underneath.
+ *
+ * AND ONLY ON THE HUB. The bar also rode along into every room, which meant a
+ * child halfway through saying how their day went had a running points total
+ * and a way out to the rewards screen sitting under the question. A room asks
+ * one thing at a time; the score can wait in the hall.
+ */
+function RewardPerch({ onRewards }: { onRewards: () => void }) {
+  const m = useMotion();
   const points = useKidStore((s) => s.points);
   const rewards = useKidStore((s) => s.rewards);
 
-  const items = [
-    { key: 'friends', emoji: '🤝', label: 'Friends', onClick: onFriends, badge: null as string | null },
-    { key: 'rewards', emoji: '🎁', label: 'Rewards', onClick: onRewards, badge: rewards.length ? String(rewards.length) : null },
-    { key: 'look', emoji: '🔭', label: 'Look back', onClick: onReflection, badge: null },
-    { key: 'pause', emoji: '🌙', label: 'Pause', onClick: onPause, badge: null },
-  ];
-
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40">
-      <div className="mx-auto mb-3 flex max-w-md items-center justify-around rounded-full px-2 py-2 shadow-2xl sm:max-w-lg"
-        style={{ background: 'rgba(28,18,46,0.94)', border: '1px solid rgba(255,255,255,0.16)', marginInline: 12 }}>
-        {items.map((it) => (
-          <button key={it.key} onClick={it.onClick}
-            className="relative flex flex-col items-center gap-0.5 rounded-2xl px-3 py-1.5">
-            <span className="text-[19px]">{it.emoji}</span>
-            <span className="text-[9px] font-extrabold text-white/70">{it.label}</span>
-            {it.badge && (
-              <span className="absolute right-1 top-0 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-extrabold"
-                style={{ background: '#FFB703', color: '#2B1A05' }}>{it.badge}</span>
-            )}
-          </button>
-        ))}
-        <div className="ml-1 rounded-full px-3 py-1.5 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-          <span className="block text-[13px] font-extrabold leading-none text-white">{points}</span>
-          <span className="block text-[8px] font-bold text-white/55">points</span>
-        </div>
-      </div>
+    <div className="pointer-events-none fixed bottom-4 left-3 z-40 sm:bottom-5 sm:left-5">
+      <motion.button
+        onClick={onRewards}
+        aria-label={
+          `Rewards. ${points} points` +
+          (rewards.length ? `, ${rewards.length} waiting to be opened` : '')
+        }
+        whileTap={{ scale: 0.94 }}
+        /* He bobs, and he stops bobbing in the quiet state like everything
+           else the boy and Chirpy do — see ui/quiet. */
+        animate={m.loop ? { y: [0, -5, 0] } : undefined}
+        transition={m.loop}
+        className="pointer-events-auto relative flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-4 backdrop-blur-md"
+        style={{
+          minHeight: m.target,
+          background: 'rgba(12,8,26,0.72)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          boxShadow: '0 16px 32px -16px rgba(0,0,0,0.92)',
+          fontFamily: FONT,
+        }}
+      >
+        <img
+          src="/chirpy/chirpy-excited@160.webp"
+          srcSet="/chirpy/chirpy-excited@160.webp 160w, /chirpy/chirpy-excited@320.webp 320w"
+          sizes="44px"
+          alt=""
+          aria-hidden
+          draggable={false}
+          className="h-12 w-10 shrink-0 select-none object-contain"
+          style={{ filter: 'drop-shadow(0 2px 10px rgba(255,183,3,0.45))' }}
+        />
+        <span className="flex flex-col items-start leading-none">
+          <span className="text-[15px] font-extrabold text-white">{points}</span>
+          <span className="mt-0.5 text-[8.5px] font-bold text-white/55">points</span>
+        </span>
+        {rewards.length > 0 && (
+          <span
+            className="absolute -top-0.5 right-1 grid h-[18px] min-w-[18px] place-items-center rounded-full px-1 text-[10px] font-extrabold"
+            style={{ background: '#FFB703', color: '#2B1A05' }}
+          >
+            {rewards.length}
+          </span>
+        )}
+      </motion.button>
     </div>
   );
 }
@@ -1045,35 +1156,6 @@ function BottomBar({
  * a hundred dots is noise, and the sky should stay a picture rather than
  * becoming the scoreboard it replaced.
  */
-function StarSky({ count }: { count: number }) {
-  const m = useMotion();
-  const shown = Math.min(count, 12);
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div className="flex items-center justify-center gap-1.5">
-        {Array.from({ length: shown }).map((_, i) => (
-          <motion.span
-            key={i}
-            className="block rounded-full"
-            style={{
-              width: 7,
-              height: 7,
-              background: '#FFE7B4',
-              boxShadow: '0 0 10px rgba(255,214,150,0.95)',
-            }}
-            animate={m.loop ? { opacity: [0.55, 1, 0.55] } : undefined}
-            transition={m.loop
-              ? { repeat: Infinity, duration: 2.6 + (i % 4) * 0.7, ease: 'easeInOut', delay: (i % 5) * 0.3 }
-              : undefined}
-          />
-        ))}
-      </div>
-      <p className="text-[13px] font-semibold" style={{ color: CHROME.textSoft }}>
-        {count === 1 ? 'One night in the gym' : `${count} nights in the gym`}
-      </p>
-    </div>
-  );
-}
 
 /* ── The right-hand wall ──────────────────────────────────────────────── */
 
@@ -1107,113 +1189,4 @@ function StarSky({ count }: { count: number }) {
  * line of each pool is that door's own label, so the first thing a nudge
  * ever does is repeat the name before it starts finding other words for it.
  */
-const STUCK_TIPS = [
-  'Your Weather Today',
-  'How are you feeling today?',
-  'Sunny in there? Or a bit grey?',
-  'Had a rubbish bit today?',
-];
 
-const CHIRPY_TIPS = [
-  'Chirpy’s Weather Today',
-  'How’s Chirpy doing, do you think?',
-  'He’s gone a bit quiet. Go and ask him?',
-  'Somebody should check on him',
-];
-
-/** How long between nudges, and how long a nudge hangs about. */
-const NUDGE_EVERY_MS = 15000;
-const NUDGE_HOLD_MS = 3600;
-
-function DoorWall({
-  onStuck,
-  onChirpy,
-}: {
-  onStuck: () => void;
-  onChirpy: () => void;
-}) {
-  const m = useMotion();
-  // Which door speaks, and what it says — picked together, in the timer, so
-  // no child render-cycle has to reach for Math.random() to decide.
-  const [speaking, setSpeaking] = useState<{ door: 0 | 1; line: string } | null>(null);
-
-  useEffect(() => {
-    // Never in the quiet state. A child who is upset does not need the
-    // doors taking it in turns to call out to them — the effect simply
-    // doesn't start the cycle, rather than starting it and then clearing
-    // state back out, so there is nothing to reset on the way in.
-    if (m.quiet) return;
-    const pools = [STUCK_TIPS, CHIRPY_TIPS] as const;
-    let hold: number | undefined;
-    const cycle = window.setInterval(() => {
-      const door = Math.floor(Math.random() * 2) as 0 | 1;
-      const pool = pools[door];
-      setSpeaking({ door, line: pool[Math.floor(Math.random() * pool.length)] });
-      hold = window.setTimeout(() => setSpeaking(null), NUDGE_HOLD_MS);
-    }, NUDGE_EVERY_MS);
-    return () => {
-      clearInterval(cycle);
-      if (hold) clearTimeout(hold);
-    };
-  }, [m.quiet]);
-
-  // If the quiet state turns on mid-nudge, stop showing it — computed at
-  // render time rather than via a second effect writing state.
-  const active = m.quiet ? null : speaking;
-
-  return (
-    <>
-      {/*
-        TWO WALLS, AND THE TWO WEATHERS.
-
-        All three fittings used to hang down the right-hand edge, stacked, so
-        the hub had one wall with a column of handles on it and an entirely
-        blank one opposite. That is not a room, it is a menu that has been
-        pushed to one side — and it made the most important door in the app
-        the middle item in a list of three.
-
-        Now the main flow has a wall to itself. The child's own door is on the
-        left, Chirpy's is on the right, and they face each other across the
-        room, which is the whole relationship this app is built on said in
-        furniture: you go in one side and ask how you are, you go in the other
-        and ask how he is, and neither is the more important question.
-
-        WHY "WEATHER". "How Are You Feeling Today?" is a form title. Weather
-        is what a six-year-old already has words for — sunny, a bit grey,
-        absolutely chucking it down — and it is the standard device in primary
-        classrooms for exactly that reason. It also does something the old
-        name couldn't: it makes the pair legible at a glance. Your weather,
-        his weather. A child does not need either explained.
-      */}
-      {/*
-        THE FIREFLY DOOR HAS GONE, and the wall is better for it.
-
-        It used to hang above the child's own weather, leading to the nightly
-        run through the rooms. That run is now the "My Journey" pill on the
-        stage — lit, named, and impossible to walk past — so the handle was a
-        second, quieter way into the same place under a different name. Two
-        names for one destination is the sort of thing a six-year-old takes as
-        two destinations.
-
-        What's left is exactly the pair the wall was described for: your
-        weather on one side, Chirpy's on the other, facing each other.
-      */}
-      <DoorHandle
-        side="left"
-        bottomVh={30}
-        label="Your Weather Today"
-        nudge={active?.door === 0 ? active.line : null}
-        onClick={onStuck}
-        accent="#C48BE8"
-      />
-      <DoorHandle
-        side="right"
-        bottomVh={30}
-        label="Chirpy’s Weather Today"
-        nudge={active?.door === 1 ? active.line : null}
-        onClick={onChirpy}
-        accent="#8FD9C4"
-      />
-    </>
-  );
-}

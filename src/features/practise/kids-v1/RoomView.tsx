@@ -9,6 +9,7 @@ import { DoorHandle } from './ui/DoorHandle';
 import { FloatingFeeling } from './ui/FloatingFeeling';
 import { useMotion, useQuiet } from './ui/quiet';
 import { Chirpy, RoomScene } from './ui/scene';
+import { DIM } from './ui/scenery';
 import * as sound from './kit/sound';
 
 /**
@@ -76,7 +77,7 @@ export function RoomView({
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
       {/* Whatever the child named today comes with them into this room —
           bouncing, draggable, and parked wherever they last put him. */}
-      <FloatingFeeling />
+      <FloatingFeeling roomId={room.id} />
 
       {/* The way out is a fitting on the left wall, the same one on every
           screen in the app. No chevron in the corner any more: a child who
@@ -86,7 +87,7 @@ export function RoomView({
       {/* Arriving is cinematic — the painting is the point. The shelf is a
           list to read, so it sits behind a much heavier veil. Same reasoning
           as GameShell's. */}
-      <RoomScene room={room} dim={phase === 'arrive' ? 0.26 : 0.55} />
+      <RoomScene room={room} dim={phase === 'arrive' ? DIM.arrive : DIM.play} />
 
       <div className="relative mx-auto flex min-h-[100svh] w-full max-w-3xl flex-col px-[74px] pb-12 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
