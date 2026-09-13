@@ -53,8 +53,7 @@ h2{font-family:var(--round);font-weight:800;font-size:25px;color:var(--deep);
 .dcard.food .dpic{font-size:46px}
 .dcard.food b{font-size:20px}
 .dgrid.herd .dcard{min-height:132px}
-.buddyline{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px}
-.buddyline img{vertical-align:middle}
+/* .buddyline now lives in kit/adventure.css — every island shows it, not just this one */
 
 /* Dino Says: the card lights when its roar plays */
 .dcard.voice.lit{border-color:var(--gold);background:#FFF7E2;

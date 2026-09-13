@@ -651,7 +651,14 @@ function announce(msg){
 }
 var PRAISE = ["Fantastic!","Great thinking!","You spotted it!","Brilliant!","Superstar!","Nice work!","You've got this!","Excellent!"];
 var NUDGE  = ["Not quite.","Have another look.","Close — try again.","Nearly there.","Let's think again."];
-function praise(){ return PRAISE[Math.floor(Math.random()*PRAISE.length)]; }
+/* Whoever the child picked as their buddy on the map speaks here too, in
+   their own words, rather than the Quest's stock praise — the same swap
+   Study Island's quick-practice rounds make. */
+function praise(){
+  var jy = window.KJA && window.KJA.journey;
+  if(jy && jy.buddy.chosen()) return jy.buddy.cheer();
+  return PRAISE[Math.floor(Math.random()*PRAISE.length)];
+}
 function nudge(){ return NUDGE[Math.floor(Math.random()*NUDGE.length)]; }
 
 /* ---------- badges ---------- */
@@ -5160,9 +5167,12 @@ function showHome(){
   var hero=el("section","hero");
   var nm = firstName();
   var hi = nm ? "Welcome back, "+esc(nm)+"!" : "Welcome to your Year 2 Quest!";
+  /* the same companion every other island shows, picked once on the map */
+  var heroJY = window.KJA && window.KJA.journey, heroBuddy = heroJY && heroJY.buddy.chosen();
   hero.innerHTML='<div class="hero-card"><div class="eyebrow">Year 2 · Key Stage 1 · England</div>'+
     '<h1>'+hi+'</h1>'+
     '<p class="lede">Seven worlds. '+CONCEPTS.length+' concepts. '+(CONCEPTS.length*10)+' games. Learn it, see it, try it, play it — then master it.</p>'+
+    (heroBuddy?'<p class="sub buddyline" style="justify-content:flex-start">'+heroJY.buddy.face(heroBuddy,28)+' <b>'+esc(heroBuddy.name)+'</b> is questing with you</p>':'')+
     '<div class="row" style="margin-top:12px">'+
     '<button class="btn btn-lg btn-grass" id="continueBtn">▶ Continue learning</button>'+
     '<button class="btn btn-lg btn-plum" data-go="den">🦕 My Collection</button>'+

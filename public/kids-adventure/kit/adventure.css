@@ -405,6 +405,17 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
 /* the jar is fixed over the page, so every page keeps a lane clear for it
    rather than letting it sit on top of the last thing a child reads */
 body{padding-bottom:96px}
+/* ── the buddy, along for the ride ──────────────────────────────────────
+   A child picks one favourite character on the map, once, and every island —
+   Dino World, Study Island, Piano World, Art World — shows the same face and
+   name doing that island's own verb ("is exploring", "is practising",
+   "is painting"), so it reads as one companion following the child around
+   the whole adventure rather than a decoration that only Dino World has. */
+.buddyline{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;
+  font-family:var(--hand);font-size:17px;color:var(--ink2)}
+.buddyline img{vertical-align:middle}
+.buddyline b{color:var(--deep)}
+
 /* a star travelling from the answer to the jar */
 .flystar{position:fixed;z-index:39;pointer-events:none;font-size:22px;
   animation:flystar .8s cubic-bezier(.4,.1,.7,1) forwards}

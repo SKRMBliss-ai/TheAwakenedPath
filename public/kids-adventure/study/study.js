@@ -582,7 +582,8 @@
         return y.topics.map(function (t) {
           return '<span class="topicchip" style="--c:' + y.colour + '">' + t.icon + ' ' + t.title + '</span>';
         }).join('');
-      }).join('') + '</div>';
+      }).join('') + '</div>' +
+      buddyLine('is studying with you');
     /* Where they were last time, offered back as a sign rather than a jump —
        painted BEFORE this screen records itself, or the only place it could
        ever offer would be the one they are already looking at. */
@@ -590,6 +591,14 @@
       JOURNEY.visit.bar('#resume', { notHere: true });
       JOURNEY.visit.mark('study', 'Study Island');
     }
+  }
+  /* the same companion Dino World shows, so picking a buddy once on the map
+     means seeing them again here rather than only in one corner of the
+     adventure */
+  function buddyLine(verb) {
+    if (!JOURNEY) return '';
+    var b = JOURNEY.buddy.chosen(); if (!b) return '';
+    return '<p class="sub buddyline">' + JOURNEY.buddy.face(b, 30) + ' <b>' + b.name + '</b> ' + verb + '</p>';
   }
 
   /* ══ A YEAR: its topics, and a round of eight when one is opened ═══════ */
@@ -684,7 +693,8 @@
           '<div class="lvlfoot"><span class="cls"><s>' + starRow(st) + '</s></span>' +
             '<span class="play">' + (st ? 'Again →' : 'Start →') + '</span></div>' +
         '</button>';
-      }).join('') + '</div>';
+      }).join('') + '</div>' +
+      buddyLine('is practising with you');
   }
   function trail(got, of) {
     var beads = 12, lit = Math.round(got / of * beads), W = 600, y = 23, x0 = 30, x1 = W - 30;
@@ -836,7 +846,8 @@
     if (s) {
       var o3 = s.querySelector('.why'); if (o3) o3.remove();
       s.insertAdjacentHTML('beforeend', '<span class="why ok">' +
-        (firstTry ? WELL[rnd(WELL.length)] + ' ' : 'Got there! ') + (Q.why || '') + '</span>');
+        (firstTry ? (JOURNEY && JOURNEY.buddy.chosen() ? JOURNEY.buddy.cheer() : WELL[rnd(WELL.length)]) + ' '
+                  : 'Got there! ') + (Q.why || '') + '</span>');
     }
     /* keep it, so the next screen can offer a look back at it */
     lastQ = { q: Q.q, art: Q.art || '', a: Q.a, why: Q.why || '', n: qn, first: firstTry };
@@ -903,7 +914,7 @@
       '<header><p class="qtag" style="--c:' + Y.colour + '">' + Y.name + ' · ' + T.icon + ' ' + T.title + '</p></header>' +
       '<div class="coach"><span class="dyno" aria-hidden="true"></span>' +
         '<div class="says"><b>' + right + ' out of ' + ROUND + ' ' + starRow(st) + '</b>' +
-        '<span>' + (st === 3 ? 'Every single one. Dyno is amazed.'
+        '<span>' + (st === 3 ? 'Every single one. ' + (JOURNEY && JOURNEY.buddy.chosen() ? JOURNEY.buddy.chosen().name : 'Dyno') + ' is amazed.'
                   : st === 2 ? 'So close to all of them — go again for three stars.'
                   : st === 1 ? 'Good going. One more round and those stars will come.'
                   : 'Tricky round. Try it again — nothing is lost.') + '</span></div></div>' +

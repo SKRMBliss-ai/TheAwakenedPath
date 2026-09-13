@@ -336,7 +336,8 @@ function render(){
       <button class="pill" style="--c:var(--t3)" role="tab" data-v="ideas" aria-selected="${view==='ideas'}">💡 Ideas</button>
       <button class="pill" style="--c:var(--t2)" role="tab" data-v="fav" aria-selected="${view==='fav'}">♥ My favourite creations</button>
     </nav>
-    <div id="view"></div>`;
+    <div id="view"></div>
+    ${buddyLine('is painting with you')}`;
   if(view==='journey') renderJourney();
   else if(view==='ideas') renderIdeas();
   else renderGallery(view==='fav');
@@ -578,7 +579,14 @@ function classSheet(c,autoPick){
       const had=(photos[c.id]||[]).length;
       c.date=date; c.caption=$('#cc').value.trim(); if(isNew) classes.push(c);
       photos[c.id]=ph; await saveClasses(); await savePh(c.id); m.remove(); render();
-      if(ph.length>had){confetti(); toast(`Class ${sorted().findIndex(x=>x.id===c.id)+1} artwork added! 🎨`);} else toast(isNew?'Class added':'Saved');
+      if(ph.length>had){
+        confetti(); toast(`Class ${sorted().findIndex(x=>x.id===c.id)+1} artwork added! 🎨`);
+        /* Every other island pays real artwork into the same jar every other
+           island pays into, and the buddy shows up for it the same way it
+           shows up for a finished quiz round or a hatched egg — its own
+           face, its own confetti, its own words. */
+        if(JY){ JY.stars.add(3, $('.frame')); JY.surprise('New artwork in the sketchbook'); }
+      } else toast(isNew?'Class added':'Saved');
     }
   });
 }
@@ -622,6 +630,13 @@ if(window.KJA && window.KJA.ui) window.KJA.ui.toolbar('#mutebar');
    tomorrow offers this sketchbook straight back. */
 const JY = (window.KJA && window.KJA.journey) || null;
 if (JY) JY.visit.mark('art', 'Art World · my sketchbook');
+/* the same companion every other island shows, so picking one once on the
+   map means meeting them again here too, not only in Dino World */
+function buddyLine(verb){
+  if(!JY) return '';
+  const b=JY.buddy.chosen(); if(!b) return '';
+  return `<p class="sub buddyline">${JY.buddy.face(b,30)} <b>${b.name}</b> ${verb}</p>`;
+}
 
 /* The sand path is drawn per row, so a width change means new rows. */
 let rz, lastPer=perRow();
