@@ -129,6 +129,10 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
 
 <div class="bar" id="mutebar"></div>
 
+<!-- Where they were last time. Hidden until there is somewhere to go back to,
+     and always a sign the child taps rather than a redirect. -->
+<div id="resume" hidden></div>
+
 <div class="doors">
   <a class="door" style="--a:#F2A03D;--b:#E2622F" href="/kids-adventure/art">
     <span class="ic">🎨</span><span><b>Art World</b><span>Sketch · Paint · Create · Imagine</span></span>
@@ -148,6 +152,7 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
 
 <script src="/kids-adventure/kit/sound.js"></script>
 <script src="/kids-adventure/kit/juice.js"></script>
+<script src="/kids-adventure/kit/journey.js"></script>
 <script>
 (function () {
   'use strict';
@@ -346,6 +351,20 @@ body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hid
     lc.style.width = pct(128, MAPW); lc.style.height = pct(38, MAPH);
     lc.style.fontSize = 'clamp(13px,2.1vw,27px)';
     lc.classList.add('on');
+  }
+
+  /* ── the star jar, the buddy and the way back in ───────────────────────
+     The map is the only screen that asks "who is coming with you?", and it is
+     the screen that offers yesterday's place back. Everything else just
+     carries the jar. */
+  var JOURNEY = (window.KJA && window.KJA.journey) || null;
+  if (JOURNEY) {
+    JOURNEY.stars.jar();
+    JOURNEY.visit.bar('#resume', { notHere: true });
+    /* asked once, after a beat — a picker in a child's face before the map has
+       even finished painting is a wall, not a welcome */
+    setTimeout(function () { JOURNEY.buddy.ask(); }, 1400);
+    JOURNEY.visit.mark('map', 'The journey map');
   }
 
   /* ── the shared toolbar, and the sticker shelf under the map ───────────── */

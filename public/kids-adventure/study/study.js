@@ -347,6 +347,7 @@
 
   /* ══ THE ISLAND: three year groups to choose from ══════════════════════ */
   function island() {
+    if (JOURNEY) JOURNEY.visit.mark('study', 'Study Island');
     $('#study').innerHTML =
       '<header><p class="ptitle"><span class="my">MY</span><span class="pbig">' +
         titleHTML('STUDY ISLAND') + '</span></p>' +
@@ -383,11 +384,56 @@
   /* ══ A YEAR: its topics, and a round of eight when one is opened ═══════ */
   var Y = null, T = null, Q = null, qn = 0, right = 0, answered = false;
   var ROUND = 8;
+  /* A round now insists on a right answer before it moves on, and moves on by
+     itself the moment it gets one:
+       tries     wrong attempts on THIS question, which is what decides how
+                 much help to offer next
+       firstTry  whether this question was right first time — the stars are
+                 for that, not for eventually finding it by elimination
+       lastQ     the question just finished, kept so a child can go back and
+                 look at it after the round has already moved on
+       autoT     the pending auto-advance, cancelled if they tap "let me look"
+       nudgeT    the "you seem stuck" nudge that draws the eye back to the
+                 question if nothing has been tapped for a while */
+  var tries = 0, firstTry = true, lastQ = null, autoT = null, nudgeT = null;
+  /* the round clears T when it finishes, so "play again" needs the id kept */
+  var lastTopicId = '';
+  var JOURNEY = (window.KJA && window.KJA.journey) || null;
+  /* Getting it wrong should sound like a person, not a machine. */
+  var NUDGE = ['Nearly — have another look.', 'Not that one. Try again!',
+               'Good try. One of the others!', 'Hmm, not quite — go on, again.',
+               'Keep going, you can find it.'];
+  var WELL  = ['Yes!', 'That\u2019s it!', 'Spot on!', 'Exactly right!', 'Brilliant!'];
 
   function yearHome() {
     T = null;
     history.replaceState({}, '', '?y=' + Y.id);
+    if (JOURNEY) JOURNEY.visit.mark('study', Y.name + ' · Quick practice', { y: Y.id });
     var got = yearStars(Y.id), of = Y.topics.length * 3;
+    /* ── today's three ──────────────────────────────────────────────────
+       The same topics, but a different three on the front of the shelf every
+       morning, so there is a reason to come back tomorrow that isn't "do more
+       of the thing you did yesterday". Ticked once played, and still playable
+       again straight away — a child who wants to repeat one should never be
+       told no. */
+    var done = playedToday(Y.id);
+    var pickToday = JOURNEY ? JOURNEY.daily.rotate(Y.topics, 3, Y.id.charCodeAt(0)) : Y.topics.slice(0, 3);
+    var allDone = pickToday.every(function (t) { return done.indexOf(t.id) >= 0; });
+    var todayHTML =
+      '<section class="todaybox">' +
+        '<span class="tape" style="--c:' + Y.colour + '">Today\u2019s games</span>' +
+        '<p class="todaysub">' + (allDone
+          ? 'All three done today \u2014 play any of them again, or pick from the whole shelf below.'
+          : 'Three new ones, picked for today. Come back tomorrow for three more.') + '</p>' +
+        '<div class="todayrow">' + pickToday.map(function (t, i) {
+          var did = done.indexOf(t.id) >= 0;
+          return '<button class="todaycard' + (did ? ' did' : '') + '" data-topic="' + t.id + '" ' +
+            'style="--c:' + TAPES[i % TAPES.length] + '">' +
+            '<span class="tdicon">' + t.icon + '</span>' +
+            '<b>' + t.title + '</b>' +
+            '<i>' + (did ? '\u2713 played today' : starRow(starsOf(Y.id, t.id))) + '</i></button>';
+        }).join('') + '</div>' +
+      '</section>';
     $('#study').innerHTML =
       '<header><p class="ptitle"><span class="my">' + Y.sub.toUpperCase() + '</span>' +
         '<span class="pbig">' + titleHTML(Y.name.toUpperCase()) + '</span></p>' +
@@ -404,6 +450,7 @@
           '<span class="qicon">🗺️</span>' +
           '<span class="qtext"><b>' + Y.quest.title + '</b><span>' + Y.quest.blurb + '</span></span>' +
           '<span class="play">Start the Quest →</span></a>' : '') +
+      todayHTML +
       '<h2>Quick practice</h2><p class="sub">Five spare minutes? Take a round of eight.</p>' +
       '<div class="cards topicshelf" style="--per:' + (innerWidth >= 980 ? 3 : innerWidth >= 640 ? 2 : 1) + '">' +
       Y.topics.map(function (t, i) {
@@ -436,12 +483,29 @@
     T = null;
     Y.topics.forEach(function (t) { if (t.id === id) T = t; });
     if (!T) return;
-    qn = 0; right = 0;
+    qn = 0; right = 0; lastQ = null; lastTopicId = id;
     history.replaceState({}, '', '?y=' + Y.id + '&t=' + id);
+    /* Nothing celebratory may take the screen from here until the round is
+       over — an egg that starts hatching over question four is the surprise
+       ruining the thing it was meant to reward. */
+    if (JOURNEY) {
+      JOURNEY.hold.open();
+      JOURNEY.visit.mark('study', Y.name + ' · ' + T.title, { y: Y.id, t: id });
+    }
     nextQuestion();
   }
+  /* leaving a round early still has to let the held surprises out, or they sit
+     in the queue until the page is reloaded */
+  function leaveRound() {
+    clearTimers();
+    if (T && JOURNEY) JOURNEY.hold.release();
+    T = null;
+  }
+  function clearTimers() { clearTimeout(autoT); clearTimeout(nudgeT); autoT = null; nudgeT = null; }
+
   function nextQuestion() {
-    answered = false;
+    clearTimers();
+    answered = false; tries = 0; firstTry = true;
     Q = T.make();
     qn++;
     var pct = Math.round((qn - 1) / ROUND * 100);
@@ -450,49 +514,169 @@
       '<div class="qbar" aria-hidden="true"><span style="width:' + pct + '%"></span></div>' +
       '<p class="qcount">Question ' + qn + ' of ' + ROUND + ' · ' + starRow(Math.min(3, right ? Math.ceil(right / 3) : 0)) + '</p></header>' +
       '<div class="coach" id="coach"><span class="dyno" aria-hidden="true"></span>' +
-        '<div class="says" id="says" role="status" aria-live="polite"><b>' + Q.q + '</b>' +
+        '<div class="says ask" id="says" role="status" aria-live="polite"><b class="qq">' + Q.q + '</b>' +
         (Q.art ? '<span class="qart">' + Q.art + '</span>' : '') + '</div></div>' +
       '<div class="answers" id="answers">' + Q.opts.map(function (o) {
         return '<button class="ans" data-ans="' + String(o).replace(/"/g, '&quot;') + '">' + o + '</button>';
       }).join('') + '</div>' +
-      '<div class="controls"><button class="gbtn" style="--c:var(--t6)" data-a="quit">‹ All topics</button></div>';
+      '<div class="controls">' +
+        (lastQ ? '<button class="gbtn ghostbtn" data-a="look">◂ My last answer</button>' : '') +
+        '<button class="gbtn" style="--c:var(--t6)" data-a="quit">‹ All topics</button></div>';
     if (SND) SND.speak(Q.q + (Q.opts.length <= 4 ? '. Is it ' + Q.opts.join(', or ') + '?' : ''));
     var s = JUICE && JUICE.streak();
     if (s >= 2) JUICE.banner(s + ' in a row! ' + (s >= 5 ? '🔥' : '⭐'));
+    armNudge();
   }
+  /* A child who has stopped tapping has usually lost the question rather than
+     the answer — so the question itself comes back to find them: it wobbles,
+     grows, and (if read-aloud is on) asks again. */
+  function armNudge(delay) {
+    clearTimeout(nudgeT);
+    nudgeT = setTimeout(function () {
+      if (answered) return;
+      var q = $('#says');
+      if (q) { q.classList.remove('hunt'); void q.offsetWidth; q.classList.add('hunt'); }
+      if (SND) { SND.sfx.tick(); SND.speak(Q.q); }
+      armNudge(14000);
+    }, delay || 8000);
+  }
+  /* A wrong answer is no longer the end of the question.
+
+     The round will not move past a question until the child has tapped the
+     right answer — a child who is carried past the thing they did not
+     understand has learnt nothing, and knows it. So a wrong tap takes that
+     option off the table, says something kind, and leaves the question up.
+     Help escalates rather than arriving all at once: the second wrong tap
+     quietly removes another wrong option, and the third points straight at
+     the answer, so nobody can be stuck in front of a question forever.
+
+     The stars are for getting it right FIRST time (`firstTry`), which is what
+     keeps "keep trying until it's right" from also meaning "three stars for
+     tapping everything". */
   function answer(val, el) {
     if (answered) return;
-    answered = true;
     var ok = String(val) === String(Q.a);
+    var c = $('#coach'), s = $('#says');
+
+    if (!ok) {
+      tries++; firstTry = false;
+      clearTimeout(nudgeT);
+      if (el) { el.classList.add('bad'); el.disabled = true; }
+      if (JUICE) JUICE.miss(); else nope();
+      if (c) { c.classList.remove('yes','no'); void c.offsetWidth; c.classList.add('no'); }
+      if (s) {
+        var old = s.querySelector('.why'); if (old) old.remove();
+        s.insertAdjacentHTML('beforeend', '<span class="why">' + NUDGE[Math.min(tries - 1, NUDGE.length - 1)] + '</span>');
+      }
+      /* From the second miss on, the choice narrows: one of the remaining
+         wrong answers is taken off the board each time. When only the answer
+         and one wrong one are left there is nothing honest left to narrow, so
+         that is the moment it simply shows them — a four-option question
+         therefore reveals after two misses and a six-option one after three,
+         which is the same amount of help either way. */
+      if (tries >= 2) {
+        var spare = $$('.ans').filter(function (b) {
+          return !b.disabled && b.dataset.ans !== String(Q.a);
+        });
+        if (spare.length > 1) {
+          var drop = spare[rnd(spare.length)];
+          drop.classList.add('faded'); drop.disabled = true;
+          if (SND) SND.sfx.swish();
+        } else {
+          /* show them. Nobody is left sitting in front of a wall. */
+          $$('.ans').forEach(function (b) { if (b.dataset.ans === String(Q.a)) b.classList.add('nudge'); });
+          if (s) {
+            var o2 = s.querySelector('.why'); if (o2) o2.remove();
+            s.insertAdjacentHTML('beforeend', '<span class="why">Here it is — tap the glowing one. ' + (Q.why || '') + '</span>');
+          }
+          if (SND) SND.speak('Tap the one that is glowing. The answer is ' + Q.a);
+        }
+      }
+      armNudge(12000);
+      return;                                        /* the question stays up */
+    }
+
+    /* ── right ──────────────────────────────────────────────────────────── */
+    answered = true;
+    clearTimers();
+    if (firstTry) right++;
     $$('.ans').forEach(function (b) {
+      b.classList.remove('nudge');
       if (b.dataset.ans === String(Q.a)) b.classList.add('good');
-      else if (b === el) b.classList.add('bad');
       b.disabled = true;
     });
-    if (ok) {
-      right++;
-      if (JUICE) { JUICE.hit(el); JUICE.pop(el, '+1 ★', '#2E7A38'); JUICE.burstAt(el, 8); }
-      else yes();
-    } else {
-      if (JUICE) JUICE.miss(); else nope();
+    if (JUICE) { JUICE.hit(el); JUICE.pop(el, firstTry ? '+1 ★' : 'Got it!', '#2E7A38'); JUICE.burstAt(el, 8); }
+    else yes();
+    /* the star travels to the jar in the corner, which is the only score a
+       child actually watches */
+    if (JOURNEY && firstTry) JOURNEY.stars.add(1, el);
+    if (c) { c.classList.remove('yes','no'); void c.offsetWidth; c.classList.add('yes'); }
+    if (s) {
+      var o3 = s.querySelector('.why'); if (o3) o3.remove();
+      s.insertAdjacentHTML('beforeend', '<span class="why ok">' +
+        (firstTry ? WELL[rnd(WELL.length)] + ' ' : 'Got there! ') + (Q.why || '') + '</span>');
     }
-    var c = $('#coach');
-    if (c) { c.classList.remove('yes','no'); void c.offsetWidth; c.classList.add(ok ? 'yes' : 'no'); }
-    var s = $('#says');
-    if (s) s.insertAdjacentHTML('beforeend',
-      '<span class="why' + (ok ? ' ok' : '') + '">' + (ok ? 'Yes! ' : 'Not quite. ') + (Q.why || '') + '</span>');
+    /* keep it, so the next screen can offer a look back at it */
+    lastQ = { q: Q.q, art: Q.art || '', a: Q.a, why: Q.why || '', n: qn, first: firstTry };
+
+    /* ── and move on, by itself ─────────────────────────────────────────
+       A child who has just got it right does not want to hunt for a Next
+       button; they want the next question. It arrives on its own after a beat
+       long enough to see the tick and read the why — and the beat is longer
+       when there was something to explain. "Let me look" stops the clock for
+       anyone who wants to sit with it. */
+    var wait = (Q.why ? 2100 : 1350) + (qn >= ROUND ? 600 : 0);
     var box = $('.controls');
-    if (box) box.innerHTML = '<button class="gbtn" style="--c:var(--t3)" data-a="next">' +
-      (qn >= ROUND ? 'See how you did →' : 'Next question →') + '</button>' +
+    if (box) box.innerHTML =
+      '<button class="gbtn wait" style="--c:var(--t3)" data-a="next">' +
+        (qn >= ROUND ? 'See how you did →' : 'Next question →') +
+        '<i class="tick" style="--d:' + wait + 'ms"></i></button>' +
+      '<button class="gbtn ghostbtn" data-a="stay">⏸ Let me look</button>';
+    autoT = setTimeout(function () { autoT = null; advance(); }, wait);
+  }
+  function advance() { if (qn >= ROUND) finishRound(); else nextQuestion(); }
+  /* stop the auto-advance — the child wants to stay with this one */
+  function stay() {
+    clearTimeout(autoT); autoT = null;
+    if (SND) SND.sfx.tap();
+    var box = $('.controls');
+    if (box) box.innerHTML =
+      '<button class="gbtn" style="--c:var(--t3)" data-a="next">' +
+        (qn >= ROUND ? 'See how you did →' : 'Next question →') + '</button>' +
       '<button class="gbtn" style="--c:var(--t6)" data-a="quit">‹ All topics</button>';
   }
+  /* the look back at the question the round has already left behind */
+  function lookBack() {
+    if (!lastQ) return;
+    if (SND) SND.sfx.page();
+    var m = document.createElement('div');
+    m.className = 'md lookback';
+    m.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-label="My last answer">' +
+      '<h3>Question ' + lastQ.n + '</h3>' +
+      '<div class="lookq"><b>' + lastQ.q + '</b>' + (lastQ.art ? '<span class="qart">' + lastQ.art + '</span>' : '') + '</div>' +
+      '<p class="looka"><span class="tick2">✓</span> ' + lastQ.a + '</p>' +
+      (lastQ.why ? '<p class="lookwhy">' + lastQ.why + '</p>' : '') +
+      '<p class="lookhow">' + (lastQ.first ? 'You got that one first time. ⭐' : 'You found it — that counts.') + '</p>' +
+      '<div class="acts"><div class="grow"><button class="big" data-a="x">Back to the round</button></div></div></div>';
+    m.addEventListener('click', function (e) {
+      if (e.target === m || (e.target.dataset && e.target.dataset.a === 'x')) m.remove();
+    });
+    document.body.appendChild(m);
+  }
   function finishRound() {
+    clearTimers();
     var st = right === ROUND ? 3 : right >= ROUND - 2 ? 2 : right >= ROUND / 2 ? 1 : 0;
     if (st) setStars(Y.id, T.id, st);
     if (st === 3) { if (SND) SND.sfx.win(); confetti(70); }
     else if (st) { if (SND) SND.sfx.levelUp(); confetti(30); }
     else pop();
     if (JUICE) JUICE.resetStreak();
+    /* a bonus handful of stars for the round itself, on top of the one per
+       question, so finishing is worth more than the sum of its answers */
+    if (JOURNEY && st) {
+      setTimeout(function () { JOURNEY.stars.add(st * 2, document.querySelector('.coach')); }, 400);
+      markPlayedToday(Y.id, T.id);
+    }
     $('#study').innerHTML =
       '<header><p class="qtag" style="--c:' + Y.colour + '">' + Y.name + ' · ' + T.icon + ' ' + T.title + '</p></header>' +
       '<div class="coach"><span class="dyno" aria-hidden="true"></span>' +
@@ -506,13 +690,50 @@
         '<button class="gbtn" style="--c:var(--t1)" data-a="quit">‹ All topics</button>' +
         '<a class="gbtn" style="--c:var(--t6)" href="/kids-adventure/study/">Study Island</a>' +
       '</div>';
-    if (JUICE) {
-      JUICE.stamp(document.querySelector('.coach'), st);
-      if (st === 3) JUICE.stickers.earn('study-' + Y.id + '-' + T.id, 'Three stars on ' + T.title);
-      var y = yearStars(Y.id), of = Y.topics.length * 3;
-      if (y >= of) JUICE.stickers.earn('year-' + Y.id, 'Every star in ' + Y.name);
-    }
+    if (JUICE) JUICE.stamp(document.querySelector('.coach'), st);
     toast(st ? T.title + ' ' + starRow(st) : 'Have another go 🙂');
+    /* The round is over — now the surprises are allowed. Everything that was
+       queued up mid-round comes out here, one at a time, plus this round's own
+       reward. */
+    var tid = T.id, tname = T.title;
+    if (JOURNEY) {
+      if (st === 3) JOURNEY.surprise('Three stars on ' + tname);
+      else if (st) JOURNEY.surprise(right + ' out of ' + ROUND + ' on ' + tname);
+      JOURNEY.hold.push(function () {
+        if (!JUICE) return;
+        if (st === 3) JUICE.stickers.earn('study-' + Y.id + '-' + tid, 'Three stars on ' + tname);
+        var y2 = yearStars(Y.id), of2 = Y.topics.length * 3;
+        if (y2 >= of2) JUICE.stickers.earn('year-' + Y.id, 'Every star in ' + Y.name);
+      });
+      JOURNEY.hold.release(2600);
+    } else if (JUICE) {
+      if (st === 3) JUICE.stickers.earn('study-' + Y.id + '-' + tid, 'Three stars on ' + tname);
+      var y3 = yearStars(Y.id), of3 = Y.topics.length * 3;
+      if (y3 >= of3) JUICE.stickers.earn('year-' + Y.id, 'Every star in ' + Y.name);
+    }
+    T = null;                                       /* the round is closed */
+  }
+
+  /* ── what today's games are ─────────────────────────────────────────────
+     A child asked for something new every day. The topics are the same
+     topics — what changes is which ones today's shelf puts in front of them,
+     and it changes on its own at midnight with no server and nothing to
+     download. Anything already played today is marked, so "new" means new. */
+  function playedToday(yid) {
+    var d = null;
+    try { d = JSON.parse(localStorage.getItem('kja:playedday') || 'null'); } catch (e) {}
+    if (!d || d.d !== (JOURNEY ? JOURNEY.daily.day() : '')) return [];
+    return (d.k || []).filter(function (k) { return k.indexOf(yid + ':') === 0; })
+                      .map(function (k) { return k.split(':')[1]; });
+  }
+  function markPlayedToday(yid, tid) {
+    if (!JOURNEY) return;
+    var day = JOURNEY.daily.day(), d = null;
+    try { d = JSON.parse(localStorage.getItem('kja:playedday') || 'null'); } catch (e) {}
+    if (!d || d.d !== day) d = { d: day, k: [] };
+    var k = yid + ':' + tid;
+    if (d.k.indexOf(k) < 0) d.k.push(k);
+    try { localStorage.setItem('kja:playedday', JSON.stringify(d)); } catch (e) {}
   }
 
   /* ── input ─────────────────────────────────────────────────────────────── */
@@ -523,9 +744,11 @@
     if (an) { answer(an.dataset.ans, an); return; }
     var a = (e.target.closest('[data-a]') || {}).dataset;
     if (!a) return;
-    if (a.a === 'next')  { if (qn >= ROUND) finishRound(); else nextQuestion(); }
-    if (a.a === 'retry') { qn = 0; right = 0; nextQuestion(); }
-    if (a.a === 'quit')  { pop(); yearHome(); }
+    if (a.a === 'next')  { clearTimeout(autoT); autoT = null; advance(); }
+    if (a.a === 'stay')  { stay(); }
+    if (a.a === 'look')  { lookBack(); }
+    if (a.a === 'retry') { pop(); leaveRound(); startTopic(lastTopicId); }
+    if (a.a === 'quit')  { pop(); leaveRound(); yearHome(); }
   });
 
   /* ── boot: the island page or a year page ──────────────────────────────── */
@@ -542,7 +765,9 @@
   }
   window.__study = {
     prog: function () { return prog; },
-    where: function () { return { year: Y && Y.id, topic: T && T.id, qn: qn, right: right }; },
+    where: function () { return { year: Y && Y.id, topic: T && T.id, qn: qn, right: right, tries: tries, firstTry: firstTry }; },
+    /* the question on screen right now, so the round can be driven from a test */
+    current: function () { return Q ? { q: Q.q, a: Q.a, opts: Q.opts.slice() } : null; },
     years: YEARS.map(function (y) { return { id: y.id, topics: y.topics.map(function (t) { return t.id; }) }; }),
     /* used by the question audit: generate one question from any topic */
     make: function (yid, tid) {
