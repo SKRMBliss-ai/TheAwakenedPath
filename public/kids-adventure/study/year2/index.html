@@ -486,6 +486,26 @@ a{color:var(--sea-d)}
   .opt.showme{animation:none}
   .btn.waitbtn .tick{animation:none;width:100%}
 }
+/* ── today's three games, on a concept's Play it step ──────────────────────
+   The ten games were always there; these three are the ones picked for today,
+   so coming back tomorrow is a different session rather than the same list in
+   the same order. */
+.todaygames{background:#FFF7E2;border:3px solid var(--gold,#F8C858);border-radius:20px;
+  padding:14px 14px 12px;margin:6px 0 18px}
+.todaygames h3{margin:0 0 4px}
+.todaygames .notice{margin:0 0 12px}
+.gamerow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:700px){.gamerow{grid-template-columns:1fr}}
+.gpick{border:3px solid var(--line);background:#FFFDF6;border-radius:16px;padding:12px 10px;
+  display:flex;flex-direction:column;gap:3px;text-align:left;box-shadow:0 4px 0 #E3D3B0;cursor:pointer}
+.gpick .gt{font-family:var(--display);font-weight:800;font-size:17px;color:#002058}
+.gpick .gd{font-size:15px;color:#4A5680;line-height:1.25}
+.gpick .lvl{font-family:var(--display);font-weight:700;font-size:13px;color:#8A7A55}
+.gpick.done{background:#F4F8F2;border-style:dashed}
+.gpick:active{transform:scale(.97)}
+/* the same game in the full list, marked so the two agree */
+.gtile.istoday{box-shadow:0 0 0 3px #F8C85877, 0 4px 0 #E3D3B0}
+
 /* the shared star jar sits above the Quest's own draggable one, and the page
    keeps a lane clear so it never covers the last thing a child reads */
 .starjar{bottom:16px;right:16px}
@@ -5583,14 +5603,47 @@ function stepTry(b,c){
     });
   }
 }
+/* Ten games per concept, and a different three suggested every morning.
+
+   A child asked for "a new set of games to play for each concept" and for a
+   recap if they want to repeat one. The ten games were always here; what was
+   missing was a reason to come back tomorrow rather than work down the same
+   list in the same order. KJA.journey's day number picks today's three, which
+   is the same all day, different tomorrow, and walks the whole set before it
+   repeats — no server, nothing random to remember. All ten stay open
+   underneath, and one already played says so and plays again gladly. */
 function stepGames(b,c){
   var done=gamesDone(c.id);
+  var JY = window.KJA && window.KJA.journey;
+  var idx = c.games.map(function(g,i){ return i; });
+  var today = JY ? JY.daily.rotate(idx, 3, c.id.length + c.id.charCodeAt(0)) : idx.slice(0,3);
   b.innerHTML='<h2>🎮 Play it — ten different games</h2>'+
    '<p>Each game tests this concept in a different way, and they get harder as you go. You have played <b>'+done+' of 10</b>.</p>';
+
+  if(today.length){
+    var box=el("section","todaygames");
+    box.innerHTML='<h3>⭐ Today\u2019s three</h3>'+
+      '<p class="notice">Picked for today. Come back tomorrow for three more \u2014 or play any of the ten below, as often as you like.</p>';
+    var row=el("div","gamerow");
+    today.forEach(function(i){
+      var meta=GAME_META[i], sc=cstate(c.id).games[i];
+      var t=el("button","gpick"+(sc!=null?" done":""));
+      t.innerHTML='<span class="gt">'+meta.n+'</span>'+
+        '<span class="gd">'+esc(c.games[i].i||meta.d)+'</span>'+
+        '<span class="lvl">'+(sc!=null?"Played \u2014 best "+sc+"% \u00b7 play again":meta.lvl)+'</span>';
+      t.onclick=function(){ openGame(c,i); };
+      row.appendChild(t);
+    });
+    box.appendChild(row);
+    b.appendChild(box);
+  }
+
+  var all=el("h3",null,"All ten games");
+  b.appendChild(all);
   var grid=el("div","gamegrid");
   c.games.forEach(function(g,i){
     var meta=GAME_META[i], sc=cstate(c.id).games[i];
-    var t=el("button","gtile"+(sc!=null?" done":""));
+    var t=el("button","gtile"+(sc!=null?" done":"")+(today.indexOf(i)>=0?" istoday":""));
     t.innerHTML='<span class="gn">GAME '+(i+1)+'</span><span class="gt">'+meta.n+'</span>'+
       '<span class="gd">'+esc(g.i||meta.d)+'</span><span class="lvl">'+meta.lvl+'</span>'+
       (sc!=null?'<span class="tick">'+(sc>=90?"🏆":sc>=70?"⭐":"✅")+'</span><span class="gd">Best: '+sc+'%</span>':'');

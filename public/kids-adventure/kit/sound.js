@@ -482,8 +482,23 @@
     } catch (e) {}
   }
 
+  /* A buzz before the child has touched anything is refused by the browser
+     and logs a warning every time — which happens for real whenever a screen
+     plays a sound on arrival, such as Dino World's opening roar. So the first
+     gesture arms it, and until then a buzz is simply skipped. */
+  var touched = false;
+  (function () {
+    var arm = function () {
+      touched = true;
+      document.removeEventListener('pointerdown', arm, true);
+      document.removeEventListener('keydown', arm, true);
+    };
+    document.addEventListener('pointerdown', arm, true);
+    document.addEventListener('keydown', arm, true);
+  })();
   function haptic(ms) {
-    try { if (navigator.vibrate && !muted) navigator.vibrate(ms || 12); } catch (e) {}
+    if (!touched || muted) return;
+    try { if (navigator.vibrate) navigator.vibrate(ms || 12); } catch (e) {}
   }
 
   K.sound = {

@@ -551,11 +551,11 @@
 
   /* ══ THE ISLAND: three year groups to choose from ══════════════════════ */
   function island() {
-    if (JOURNEY) JOURNEY.visit.mark('study', 'Study Island');
     $('#study').innerHTML =
       '<header><p class="ptitle"><span class="my">MY</span>' +
         bigTitle('STUDY ISLAND') + '</p>' +
       '<p class="togo">School things, the adventure way — pick your year</p></header>' +
+      '<div id="resume" hidden></div>' +
       '<div class="cards yearshelf" style="--per:' + (innerWidth >= 900 ? 3 : 1) + '">' +
       YEARS.map(function (y, i) {
         var got = yearStars(y.id), of = y.topics.length * 3;
@@ -583,6 +583,13 @@
           return '<span class="topicchip" style="--c:' + y.colour + '">' + t.icon + ' ' + t.title + '</span>';
         }).join('');
       }).join('') + '</div>';
+    /* Where they were last time, offered back as a sign rather than a jump —
+       painted BEFORE this screen records itself, or the only place it could
+       ever offer would be the one they are already looking at. */
+    if (JOURNEY) {
+      JOURNEY.visit.bar('#resume', { notHere: true });
+      JOURNEY.visit.mark('study', 'Study Island');
+    }
   }
 
   /* ══ A YEAR: its topics, and a round of eight when one is opened ═══════ */
