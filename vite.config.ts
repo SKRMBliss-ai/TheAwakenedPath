@@ -53,7 +53,16 @@ export default defineConfig({
         // /kids-adventure is the same kind of thing: a static hub plus the Art
         // Adventure app, one ~300KB single-file page that has no business in
         // the Mind Gym precache.
-        globIgnores: ['twinsouls/**', 'habitquest2026/**', 'kids-adventure/**'],
+        // assets/home/*.png are the full-resolution design sources for the Mind
+        // Gym hub (1024–1536px, 1–2MB each). What the app actually loads is the
+        // resized .webp beside them; precaching the sources as well would put
+        // ~15MB of pictures nobody requests onto a child's phone.
+        globIgnores: [
+          'twinsouls/**',
+          'habitquest2026/**',
+          'kids-adventure/**',
+          'assets/home/*.png',
+        ],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

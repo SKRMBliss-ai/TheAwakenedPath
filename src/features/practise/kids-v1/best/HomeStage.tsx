@@ -67,6 +67,32 @@ export function MindGymMark() {
 
 /* ── The hello ───────────────────────────────────────────────────────── */
 
+/** The face circle in the greeting bubble, in px. */
+const AVATAR = 62;
+
+/**
+ * Where the boy's head is in his own plate, measured off the art rather than
+ * guessed: the shipped plate is 320x480, and the head runs y 20-110, x 94-215.
+ * Everything below is derived from these six numbers, so re-drawing the boy
+ * means re-measuring him here and nothing else moves.
+ */
+const PLATE = { w: 320, h: 480, headTop: 20, headBottom: 110, headLeft: 94, headRight: 215 };
+
+/** How much of the circle the head should fill. Below ~0.6 he reads as a
+ *  figure standing in a hole; above ~0.8 the crop cuts his cap off. */
+const HEAD_FILL = 0.7;
+
+const AVATAR_FACE = (() => {
+  const headH = PLATE.headBottom - PLATE.headTop;
+  /** Scale the whole plate so the head alone fills HEAD_FILL of the circle. */
+  const height = (AVATAR * HEAD_FILL) / (headH / PLATE.h);
+  const width = height * (PLATE.w / PLATE.h);
+  const faceX = ((PLATE.headLeft + PLATE.headRight) / 2 / PLATE.w) * width;
+  const faceY = ((PLATE.headTop + PLATE.headBottom) / 2 / PLATE.h) * height;
+  /** Offset the oversized plate so the face lands on the circle's middle. */
+  return { height, width, left: AVATAR / 2 - faceX, top: AVATAR / 2 - faceY };
+})();
+
 /**
  * The greeting, said rather than printed.
  *
@@ -117,25 +143,35 @@ export function GreetingBubble({
       />
 
       <span
-        className="relative grid shrink-0 place-items-center overflow-hidden rounded-full"
+        className="relative block shrink-0 overflow-hidden rounded-full"
         style={{
-          width: 62,
-          height: 62,
+          width: AVATAR,
+          height: AVATAR,
           background: 'radial-gradient(circle at 50% 34%, #8FC4FF 0%, #4E8EE8 100%)',
           border: '2px solid rgba(255,255,255,0.92)',
         }}
       >
+        {/* CROPPED TO THE FACE, BY MEASUREMENT.
+            The plate is a full-length standing boy, so a circle that just
+            centres him is a picture of a t-shirt. He is therefore drawn
+            oversized and positioned by hand until his head sits in the middle.
+
+            Absolutely positioned rather than centred-and-nudged: an oversized
+            child in a centring container overflows in both directions at once,
+            which makes "move it down by N" mean two different things depending
+            on how the container resolves the overflow, and tuning it by eye
+            lands on a number that only works at one size. Left/top against a
+            known box has one meaning. See AVATAR_FACE for where the numbers
+            come from. */}
         <img
           src={avatar}
           srcSet={avatarSrcSet}
-          sizes="62px"
+          sizes={`${Math.round(AVATAR_FACE.height)}px`}
           alt=""
           aria-hidden
           draggable={false}
-          /* Scaled up and pushed down so the circle crops to the face. The
-             plate is a full-length standing boy; centred and unscaled it
-             crops to his chest, which is a picture of a t-shirt. */
-          style={{ height: 150, width: 'auto', transform: 'translateY(22px)' }}
+          className="absolute max-w-none"
+          style={AVATAR_FACE}
         />
       </span>
 
@@ -157,12 +193,29 @@ export function GreetingBubble({
 
 export type PillTone = 'gold' | 'blue';
 
+const PILL = {
+  gold: { src: '/assets/home/my-journey.webp', label: 'My Journey' },
+  blue: { src: '/assets/home/explore-rooms.webp', label: 'Explore Rooms' },
+} as const;
+
 /**
- * One of the two lit ways on from the hub — rendered as full artwork.
+ * One of the two lit ways on from the hub.
  *
- * The pill buttons are now drawn as complete images rather than CSS gradients.
- * Each tone corresponds to a specific button artwork that conveys its purpose
- * visually without needing text.
+ * The pill is a single piece of painted artwork — glass body, neon rim, face
+ * and lettering all in the one image — rather than a stack of CSS gradients
+ * approximating it. Both tones came off the same brush, so they sit together
+ * the way the CSS versions never quite did.
+ *
+ * Sized by HEIGHT, with width following the art. The two pills trim to
+ * slightly different aspect ratios (their glows bleed different amounts), and
+ * matching them on width would stand them side by side at visibly different
+ * heights — which reads as one button being more important than the other.
+ * Fixing the height instead costs a few pixels of width and keeps them equal,
+ * which is the whole point of having two.
+ *
+ * The label lives in `alt` rather than in a `<span>`: it is already painted
+ * into the image, and a second copy underneath would be read out twice by a
+ * screen reader and drawn twice on a device that fails to load the art.
  */
 export function NeonDoorPill({
   tone,
@@ -172,7 +225,7 @@ export function NeonDoorPill({
   onClick: () => void;
 }) {
   const m = useMotion();
-  const src = tone === 'gold' ? '/assets/home/my journey.png' : '/assets/home/explore rooms.png';
+  const pill = PILL[tone];
 
   return (
     <motion.button
@@ -181,17 +234,14 @@ export function NeonDoorPill({
       whileHover={m.quiet ? undefined : { scale: 1.03 }}
       animate={m.quiet ? undefined : { opacity: [1, 0.92, 1] }}
       transition={m.quiet ? undefined : { repeat: Infinity, duration: 3.6, ease: 'easeInOut' }}
-      className="relative overflow-hidden rounded-full"
-      style={{
-        minHeight: m.target + 14,
-        minWidth: 186,
-      }}
+      className="relative shrink-0"
+      style={{ height: m.target + 14 }}
     >
       <img
-        src={src}
-        alt={tone === 'gold' ? 'My Journey' : 'Explore Rooms'}
+        src={pill.src}
+        alt={pill.label}
         draggable={false}
-        className="h-full w-full object-contain"
+        className="block h-full w-auto"
       />
     </motion.button>
   );
