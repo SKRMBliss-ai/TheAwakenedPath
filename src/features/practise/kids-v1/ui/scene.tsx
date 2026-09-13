@@ -29,7 +29,7 @@ import { boyPlateForRoom, type BoyEmotion, type ChirpyPose } from './sprites';
 
 /* ── The scene ──────────────────────────────────────────────────────── */
 
-export function RoomScene({ room, dim = 0 }: { room: RoomConfig; dim?: number }) {
+export function RoomScene({ room, dim = 0.14 }: { room: RoomConfig; dim?: number }) {
   const mood = SCENE_MOODS[room.scene];
   const quiet = useQuiet();
 

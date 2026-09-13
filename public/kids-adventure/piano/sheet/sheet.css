@@ -1,0 +1,138 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   The practice sheet — designed for paper first, then made to work on a
+   phone. Two rules drive everything here:
+
+   1. On paper it must fit ONE portrait page, and no row may break across a
+      page boundary — half a row of music is worse than none.
+   2. On a phone the rows must stay readable without pinching, so a row's
+      notes wrap onto more lines rather than shrinking, and the bar line
+      stops pretending to be a bar line once the two halves are stacked.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.wrap{max-width:900px;margin:0 auto;padding:18px 16px 40px}
+
+.topline{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:0 0 18px}
+
+.shead{text-align:center;margin:0 0 16px}
+.kicker{margin:0;font-family:var(--round);font-weight:800;font-size:13px;letter-spacing:3px;
+  text-transform:uppercase;color:var(--ink2)}
+.shead h1{margin:2px 0 0;font-family:var(--round);font-weight:800;line-height:1;
+  font-size:clamp(28px,7vw,46px);color:var(--deep)}
+.shead .tag{margin:6px 0 0;font-family:var(--hand);font-size:19px;color:var(--ink2)}
+
+/* the two boxes above the music: the keys, and how to practise */
+.topgrid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;align-items:start;margin:0 0 14px}
+@media (max-width:640px){.topgrid{grid-template-columns:1fr}}
+.find,.signpost{background:#FFFDF6;border:3px solid var(--line);border-radius:20px;padding:12px 14px 14px}
+.find h2,.signpost h2{margin:0 0 10px;font-family:var(--round);font-weight:800;font-size:17px;color:var(--deep)}
+.findsub{margin:10px 0 0;font-family:var(--hand);font-size:16px;color:var(--ink2)}
+.signpost{background:#FFF7E2;border-color:var(--gold,#F8C858)}
+.signpost ul{margin:0;padding-left:20px}
+.signpost li{font-family:var(--hand);font-size:17px;color:var(--ink);line-height:1.5}
+
+/* the keyboard strip: white keys with the letter on, black keys straddling */
+.skb{display:flex;gap:3px}
+.sk{position:relative;flex:1 1 0;min-width:0;height:88px;border:2.5px solid #2A3A5C;border-radius:4px 4px 8px 8px;
+  background:#fff;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px}
+.sk b{display:block;width:80%;max-width:30px;border-radius:6px;background:var(--c);
+  font-family:var(--round);font-weight:800;font-size:16px;color:#22324E;text-align:center;line-height:1.5}
+.sbk{position:absolute;top:-2px;right:-8px;width:15px;height:52px;background:#22324E;
+  border-radius:0 0 4px 4px;z-index:2}
+
+.setup{margin:0 0 16px;background:#EEF6FF;border:2.5px dashed #9FC4E8;border-radius:16px;
+  padding:10px 14px;font-family:var(--hand);font-size:17px;color:var(--ink);line-height:1.45}
+.setup b{font-family:var(--round);font-weight:800;color:var(--deep)}
+
+/* ── one row of the tune ───────────────────────────────────────────────── */
+.row{border:3px solid var(--c);border-radius:20px;padding:10px 12px 12px;margin:0 0 12px;
+  background:color-mix(in srgb, var(--c) 6%, #FFFDF6);
+  display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;
+  break-inside:avoid;page-break-inside:avoid}
+@media (max-width:700px){.row{grid-template-columns:1fr;gap:6px}}
+.rhead h2{margin:0;font-family:var(--round);font-weight:800;font-size:22px;color:var(--c)}
+.rl{margin:2px 0 0;font-family:var(--round);font-weight:800;font-size:15px;letter-spacing:2px;color:var(--ink2)}
+.rn{margin:3px 0 0;font-family:var(--hand);font-size:16px;color:var(--ink2)}
+.rshift{margin:5px 0 0;font-family:var(--round);font-weight:700;font-size:13px;color:#8A5A10;
+  background:#FFF0C8;border-radius:10px;padding:3px 8px;display:inline-block}
+
+.rnotes{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px}
+.bar{width:3px;align-self:stretch;min-height:64px;background:#22324E;border-radius:2px;margin:0 4px}
+@media (max-width:700px){
+  /* stacked halves: a vertical bar line between wrapped lines means nothing,
+     so it becomes a full-width rule instead */
+  .bar{width:100%;height:3px;min-height:0;margin:4px 0}
+}
+
+/* one note */
+.nc{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:52px;
+  border-radius:12px;padding:4px 3px;transition:background .15s,transform .15s}
+.nc.lit{background:#FFF2B8;transform:translateY(-3px)}
+.nl{font-family:var(--round);font-weight:800;font-size:24px;line-height:1.15;color:#22324E;
+  background:var(--c);border-radius:9px;min-width:34px;text-align:center;padding:1px 6px}
+.hold{font-family:var(--round);font-weight:700;font-size:11px;color:#8A5A10;
+  background:#FFF0C8;border-radius:8px;padding:1px 6px}
+.nw{font-family:var(--hand);font-size:14px;color:var(--ink2);text-align:center;max-width:66px;line-height:1.2}
+.count{font-family:var(--round);font-weight:700;font-size:11px;color:var(--ink2);letter-spacing:1px}
+
+/* the little five-key window, with the finger number on the key to press */
+.nk{position:relative;display:inline-block;padding-bottom:11px}
+.mkb{display:flex;gap:1.5px}
+.mk{position:relative;width:10px;height:30px;border:1.5px solid #2A3A5C;border-radius:2px 2px 3px 3px;background:#fff}
+.mk.on{background:var(--nc,#FFD25A)}
+.mk i{position:absolute;top:-1.5px;right:-3.5px;width:5px;height:17px;background:#22324E;border-radius:0 0 2px 2px;z-index:2}
+.fg{position:absolute;left:50%;bottom:0;transform:translateX(-50%);z-index:3;
+  width:19px;height:19px;border-radius:50%;background:#fff;border:2px solid #22324E;
+  font-family:var(--round);font-weight:800;font-size:12px;font-style:normal;color:#22324E;
+  display:flex;align-items:center;justify-content:center}
+
+.words{margin:14px 0 0;text-align:center;font-family:var(--hand);font-size:18px;color:var(--ink2);line-height:1.5}
+
+.sfoot{margin:16px 0 0;text-align:center}
+.yay{margin:0;font-family:var(--round);font-weight:800;font-size:26px;color:#E8A33A}
+.sfoot .tiny{margin:4px 0 0;font-family:var(--hand);font-size:16px;color:var(--ink2)}
+.fingerkey{margin:18px 0 0;text-align:center;font-family:var(--hand);font-size:15px;color:var(--ink2)}
+.fingerkey b{font-family:var(--round);font-weight:800;color:var(--deep)}
+
+/* ── on paper ───────────────────────────────────────────────────────────── */
+@media print{
+  @page{size:portrait;margin:11mm}
+  /* the adventure's painted background is ink a family pays for and a
+     scanner reads as grey — paper gets white */
+  html,body{background:#fff!important;padding:0!important;margin:0!important}
+  body::before,body::after{display:none!important}
+  .noprint,.mutebar,.toolbar,#mutebar,.starjar,.skip,.resume,.jsay,.toast,
+  .flystar,.jgift,.spark2{display:none!important}
+  .wrap{max-width:none;padding:0}
+  .shead h1{font-size:28pt}
+  .shead{margin-bottom:8px}
+  .topgrid{grid-template-columns:1.7fr 1fr;gap:8px;margin-bottom:8px}
+  .find,.signpost,.setup,.row{box-shadow:none}
+  .setup{margin-bottom:8px;padding:6px 10px;font-size:11pt}
+  .row{margin-bottom:7px;padding:7px 9px;grid-template-columns:132px 1fr;
+        background:#fff;break-inside:avoid;page-break-inside:avoid}
+  .sk{height:58px}
+  /* Everything in a note shrinks together on paper so that a row of eight
+     stays on ONE line. A row that wraps is nearly twice as tall, and two
+     wrapped rows are the difference between one sheet and two — which for a
+     sheet that lives taped to a piano is the whole point. */
+  .rnotes{gap:5px}
+  .nc{min-width:38px;padding:2px 1px;gap:2px}
+  .nl{font-size:15pt;min-width:26px;padding:0 4px;border-radius:7px}
+  .mk{width:8px;height:21px;border-width:1.2px}
+  .mk i{width:4px;height:12px;right:-3px}
+  .nk{padding-bottom:9px}
+  .fg{width:15px;height:15px;font-size:9pt;border-width:1.5px}
+  .nw{font-size:9pt;max-width:54px}
+  .hold{font-size:8pt;padding:0 4px}
+  .count{font-size:8pt;letter-spacing:0}
+  .bar{min-height:52px;margin:0 2px}
+  .rhead h2{font-size:15pt}
+  .rl{font-size:10pt;letter-spacing:1px}
+  .signpost li,.findsub,.rn{font-size:10pt}
+  .words{font-size:10.5pt;margin-top:7px}
+  .yay{font-size:16pt}
+  .sfoot{margin-top:9px}
+  /* keep colour where colour is the point, even in a "background graphics
+     off" print: the letter tiles are how a child matches note to key */
+  .nl,.sk b,.mk.on,.hold,.rshift{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}

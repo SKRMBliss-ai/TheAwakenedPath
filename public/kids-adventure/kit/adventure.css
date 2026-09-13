@@ -41,7 +41,7 @@ header{position:relative;z-index:2;text-align:center;padding:6px 0 0}
 .count b{color:var(--t4)}
 .togo{font-size:19px;margin:2px 0 0;color:var(--ink2)}
 .settings{border:none;background:#FFFDF6;border-radius:30px;padding:6px 16px;font-size:15px;font-weight:700;
-  margin-top:10px;box-shadow:0 3px 0 #E3D3B0}
+  margin-top:10px;box-shadow:0 3px 0 #E3D3B0;min-height:40px}
 
 /* ── the bead trail ──────────────────────────────────────────────────────── */
 .trail{position:relative;z-index:2;display:flex;align-items:center;gap:8px;margin:14px 0 6px}
@@ -112,10 +112,19 @@ header{position:relative;z-index:2;text-align:center;padding:6px 0 0}
 .cardfoot{display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding:0 2px}
 .cls{font-family:var(--round);font-weight:800;font-size:21px;color:var(--deep);display:flex;align-items:center;gap:7px}
 .cls s{text-decoration:none;color:var(--gold);font-size:21px}
-.tools{display:flex;align-items:center;gap:2px}
-.heart{border:none;background:none;font-size:23px;line-height:1;padding:2px 4px;color:#DFD3BC}
+.tools{display:flex;align-items:center;gap:6px}
+/* Edit and the heart were 41×21 and 16×24 — well under the ~44px a finger
+   needs, and the phone rules below used to shrink them FURTHER to make the
+   footer fit. A child taps the heart on their own drawing; it has to be
+   hittable, so both get a real 44px box rather than an invisible pad around a
+   small one. (A pad was the first attempt and it backfired: two pads side by
+   side overlap, and whichever paints last swallows the other one's taps —
+   the heart stopped responding at all.) */
+.heart,.edit{min-height:44px;touch-action:manipulation;display:inline-flex;
+  align-items:center;justify-content:center}
+.heart{border:none;background:none;font-size:23px;line-height:1;min-width:44px;padding:0;color:#DFD3BC}
 .heart.on{color:var(--t2)}
-.edit{border:none;background:#F6EEDD;border-radius:20px;padding:3px 11px;font-size:14px;font-weight:700;color:var(--ink2)}
+.edit{border:none;background:#F6EEDD;border-radius:22px;padding:0 14px;font-size:14px;font-weight:700;color:var(--ink2)}
 .card.now{border-color:var(--t1);box-shadow:0 0 0 5px #3880c022,0 8px 18px #3880c02e}
 .card.now .frame{border-color:#9CC3E8;background:#F2F7FD}
 .card.now .add{color:var(--t1)}
@@ -126,10 +135,14 @@ header{position:relative;z-index:2;text-align:center;padding:6px 0 0}
 .crown{position:absolute;left:-6px;top:-22px;font-size:20px;transform:rotate(-14deg);z-index:3}
 
 /* On a narrow phone the card footer has to hold a star, a class number, Edit
-   and a heart in about 150px — so the type steps down rather than wrapping. */
+   and a heart in about 150px. The type steps down — but the two buttons drop
+   onto their own row instead of being squeezed, because there is no width at
+   which "★ Class 1" plus two finger-sized targets fits on one line, and the
+   targets are the part that has to win. */
 @media (max-width:480px){
   .cls{font-size:17px;gap:5px}.cls s{font-size:17px}
-  .edit{padding:3px 8px;font-size:13px}.heart{font-size:20px;padding:2px}
+  .cardfoot{flex-wrap:wrap;row-gap:2px;justify-content:center}
+  .tools{gap:10px}
   .tape{font-size:15px;min-width:72px;padding:7px 11px 8px}
   .card{padding:14px 9px 8px}
   .ttl{font-size:15px;margin-top:6px}
@@ -405,6 +418,17 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
 /* the jar is fixed over the page, so every page keeps a lane clear for it
    rather than letting it sit on top of the last thing a child reads */
 body{padding-bottom:96px}
+/* ── skip to the content ────────────────────────────────────────────────
+   A skip link is for someone tabbing through with a keyboard, and it is
+   supposed to be invisible until they reach it. These had no styling at all,
+   so "Skip to the main content" sat in plain sight above the Year 2 Quest's
+   title — the first thing anyone read on the page. It is off the top of the
+   screen now, and drops into view the moment it is focused. */
+.skip{position:absolute;left:8px;top:-56px;z-index:200;padding:10px 16px;border-radius:0 0 14px 14px;
+  background:var(--deep,#14265E);color:#fff;font-family:var(--round);font-weight:800;font-size:16px;
+  text-decoration:none;transition:top .14s}
+.skip:focus{top:0;outline:3px solid var(--gold,#F8C858)}
+
 /* ── the buddy, along for the ride ──────────────────────────────────────
    A child picks one favourite character on the map, once, and every island —
    Dino World, Study Island, Piano World, Art World — shows the same face and

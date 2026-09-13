@@ -48,6 +48,7 @@
 
 <script src="/kids-adventure/kit/sound.js"></script>
 <script src="/kids-adventure/kit/juice.js"></script>
+<script src="/kids-adventure/piano/songbook.js"></script>
 <script src="/kids-adventure/kit/journey.js"></script>
 <script>
 (function () {
@@ -58,13 +59,22 @@
   var GAME = '/kids-adventure/piano/play/';
 
   /* Five levels, the same five the journey map shows on the piano island. */
-  /* The studio's own three pieces. The game holds the notes; the journey only
-     needs enough to show the shelf and how far each one has got. */
+  /* The studio's own three pieces. The shelf needs the icon and the word a
+     song counts its pieces in; everything that could contradict the notes —
+     how many parts there are, which keys it uses — is read from the shared
+     songbook instead of written out again here, because written out again
+     here is exactly how this shelf came to advertise Yankee Doodle as
+     "C, D, E and F" while the song itself reached down to G. */
+  var BOOK = (window.KJA && window.KJA.songbook) || null;
   var SONGS = [
     { id:'dyno',   icon:'🦖',  title:'Dyno My Pet Dinosaur', sub:'Two hands · four measures',        parts:4, word:'measures' },
     { id:'clock',  icon:'🕰️', title:'The Clock Song',        sub:'Right hand · C, E and G · lyrics', parts:7, word:'parts' },
-    { id:'yankee', icon:'🎩',  title:'Yankee Doodle',         sub:'Right hand · C, D, E and F',       parts:4, word:'rows' }
-  ];
+    { id:'yankee', icon:'🎩',  title:'Yankee Doodle',         sub:'Right hand · four rows',           parts:4, word:'rows' }
+  ].map(function (s) {
+    var real = BOOK && BOOK.get(s.id);
+    if (real) { s.sub = real.sub; s.parts = real.units.length; s.title = real.title; }
+    return s;
+  });
   var LEVELS = [
     { n:1, name:'Basics & Notes',   note:'Find middle C, then say hello to every white key.',
       keys:['C','D','E','F','G'], lit:[0],       f:[261.63] },
