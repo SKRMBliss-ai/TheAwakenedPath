@@ -17,12 +17,18 @@ export type ChirpyPose =
 
 export const chirpySprite = (pose: ChirpyPose) => `/chirpy/chirpy-${pose}.webp`;
 
-/** The boy from the character sheet — Chirpy's person. Two sizes shipped. */
-export const BOY_SRC = '/assets/gym/kids-character@320.webp';
+/** The boy from the character sheet — Chirpy's person. Two sizes shipped.
+ *  Resized from assets/home/boy.png, which is a 1024x1536 design source and
+ *  must never be the thing a phone downloads to draw a 240px sprite. */
+export const BOY_SRC = '/assets/home/boy@640.webp';
 export const BOY_SRCSET =
-  '/assets/gym/kids-character@160.webp 160w, /assets/gym/kids-character@320.webp 320w';
+  '/assets/home/boy@320.webp 320w, /assets/home/boy@640.webp 640w';
 
-export type BoyEmotion = 'calm' | 'worry' | 'scared' | 'sad';
+export type BoyEmotion =
+  | 'calm'
+  | 'happy' | 'excited'
+  | 'worried' | 'angry' | 'scared' | 'sad'
+  | 'anxious' | 'ashamed' | 'bored' | 'embarrassed' | 'grief' | 'jealous';
 
 /**
  * WHICH PLATE OF THE BOY TO DRAW.
@@ -44,15 +50,24 @@ export type BoyEmotion = 'calm' | 'worry' | 'scared' | 'sad';
  *
  * A missing plate must never 404: a broken image where a child expects to see
  * themselves is worse than the wrong expression, so an emotion is only
- * repointed here once its file is actually in /public. All four now are.
+ * repointed here once its file is actually in /public.
  */
 const BOY_PLATE: Record<BoyEmotion, { src: string; srcset: string }> = {
   calm:   { src: BOY_SRC, srcset: BOY_SRCSET },
   // No srcset: one size shipped for each of these, and pointing a `160w`
   // candidate at a 420px file would hand the browser a lie to pick from.
-  worry:  { src: '/feelings/worried.webp', srcset: '' },
-  scared: { src: '/feelings/scared.webp', srcset: '' },
-  sad:    { src: '/feelings/sad.webp', srcset: '' },
+  happy:      { src: '/feelings/happy.webp', srcset: '' },
+  excited:    { src: '/feelings/happy.webp', srcset: '' }, // excited maps to happy plate
+  worried:    { src: '/feelings/worried.webp', srcset: '' },
+  angry:      { src: '/feelings/angry.webp', srcset: '' },
+  scared:     { src: '/feelings/scared.webp', srcset: '' },
+  sad:        { src: '/feelings/sad.webp', srcset: '' },
+  anxious:    { src: '/feelings/anxious.webp', srcset: '' },
+  ashamed:    { src: '/feelings/ashamed.webp', srcset: '' },
+  bored:      { src: '/feelings/bored.webp', srcset: '' },
+  embarrassed: { src: '/feelings/embarrassed.webp', srcset: '' },
+  grief:      { src: '/feelings/grief.webp', srcset: '' },
+  jealous:    { src: '/feelings/jealous.webp', srcset: '' },
 };
 
 export const boySpriteForEmotion = (emotion: BoyEmotion = 'calm') => BOY_PLATE[emotion].src;
