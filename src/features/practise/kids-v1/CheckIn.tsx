@@ -53,12 +53,11 @@ import { type CheckInEntry } from './progress';
  *
  * THE BODY SCREEN IS A MAP, not a list — a warm, rounded, non-anatomical
  * figure (ui/bodyMap.tsx) the child taps directly, and the only screen here
- * that is deliberately multi-select: a feeling doesn't always live in one
- * place, so tapping doesn't auto-advance the way every other screen does —
- * there's a "That's it" CTA once at least one zone (or "all over"/"I can't
- * tell") is picked. A dashed ring may suggest a zone based on the feeling
- * picked, always as a possibility ("some people notice this in their..."),
- * never as a right answer to confirm.
+ * that uses a map: a feeling doesn't always live in one place, so a child can
+ * tap any zone they notice and is taken straight on to the next screen. A
+ * dashed ring may suggest a zone based on the feeling picked, always as a
+ * possibility ("some people notice this in their..."), never as a right
+ * answer to confirm.
  *
  * THE EYES TEST HAS BEEN REMOVED. The story screen used to lead into a
  * "camera sort" step before the maybes screen; it tested more like a puzzle
@@ -238,14 +237,8 @@ export function CheckIn({
     advance('goodbit');
   };
 
-  const toggleBodyZone = (zone: BodyZoneId) => {
-    setBodyZones((prev) => {
-      // "All over" and "I can't tell" are exclusive with real zones and with
-      // each other — tapping a real zone after either of those starts fresh.
-      const next = new Set(prev.has('all') || prev.has('unsure') ? [] : prev);
-      if (next.has(zone)) next.delete(zone); else next.add(zone);
-      return next;
-    });
+  const selectBodyZone = (zone: BodyZoneId) => {
+    setBodyZones(new Set([zone]));
   };
 
   return (
@@ -389,31 +382,31 @@ export function CheckIn({
                       accent={room.palette.accent}
                       suggested={suggested}
                       selected={new Set(Array.from(bodyZones).filter((z): z is BodyZoneId => z !== 'all' && z !== 'unsure'))}
-                      onToggle={toggleBodyZone}
+                      onToggle={(zone) => {
+                        selectBodyZone(zone);
+                        advance('thought');
+                      }}
                     />
                     <div className="flex flex-wrap gap-2.5">
                       <Pill
                         label="All over"
                         selected={bodyZones.has('all')}
-                        onClick={() => setBodyZones(new Set(['all']))}
+                        onClick={() => {
+                          setBodyZones(new Set(['all']));
+                          advance('thought');
+                        }}
                         accent={room.palette.accent}
                       />
                       <Pill
                         label="I don’t know"
                         selected={bodyZones.has('unsure')}
-                        onClick={() => setBodyZones(new Set(['unsure']))}
+                        onClick={() => {
+                          setBodyZones(new Set(['unsure']));
+                          advance('thought');
+                        }}
                         accent={room.palette.accent}
                       />
                     </div>
-                    {/* Always available, whether or not anywhere was tapped —
-                        a child who doesn't notice it anywhere has still
-                        answered, and shouldn't have to invent a place to get
-                        past this. */}
-                    <Cta
-                      label={bodyZones.size > 0 ? 'That’s it' : 'Not anywhere really'}
-                      onClick={() => advance('thought')}
-                      accent={room.palette.accent}
-                    />
                   </>
                 );
               })()}
