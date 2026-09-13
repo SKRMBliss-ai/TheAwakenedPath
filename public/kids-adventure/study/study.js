@@ -421,7 +421,7 @@
     var allDone = pickToday.every(function (t) { return done.indexOf(t.id) >= 0; });
     var todayHTML =
       '<section class="todaybox">' +
-        '<span class="tape" style="--c:' + Y.colour + '">Today\u2019s games</span>' +
+        '<span class="tape" style="--c:' + Y.colour + '">Today\u2019s three</span>' +
         '<p class="todaysub">' + (allDone
           ? 'All three done today \u2014 play any of them again, or pick from the whole shelf below.'
           : 'Three new ones, picked for today. Come back tomorrow for three more.') + '</p>' +
@@ -444,7 +444,7 @@
       '<nav class="pills">' + YEARS.map(function (y) {
         return '<a class="pill" style="--c:' + y.colour + '" href="?y=' + y.id + '" ' +
           'aria-selected="' + (y.id === Y.id) + '">' + y.icon + ' ' + y.name + '</a>';
-      }).join('') + '</nav>' +
+      }).join('') + '<a class="pill" style="--c:#2F7A3A" href="/kids-adventure/dino/">🦖 Dino World</a></nav>' +
       (Y.quest ? '<a class="questcard" href="' + Y.quest.href + '">' +
           '<span class="tape" style="--c:' + Y.colour + '">The big one</span>' +
           '<span class="qicon">🗺️</span>' +

@@ -486,8 +486,10 @@ a{color:var(--sea-d)}
   .opt.showme{animation:none}
   .btn.waitbtn .tick{animation:none;width:100%}
 }
-/* the shared star jar sits above the Quest's own draggable one */
+/* the shared star jar sits above the Quest's own draggable one, and the page
+   keeps a lane clear so it never covers the last thing a child reads */
 .starjar{bottom:16px;right:16px}
+body{padding-bottom:96px}
 
 /* their screens scroll themselves into place, so every landing point needs to
    clear the sticky bar rather than hide behind it */

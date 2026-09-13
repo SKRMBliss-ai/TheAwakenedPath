@@ -9,7 +9,6 @@
 .topicchip{font-family:var(--round);font-weight:700;font-size:14px;color:var(--deep);background:#FFFDF6;
   border:2px solid var(--c);border-radius:30px;padding:5px 12px;opacity:.9}
 .topiccard{text-align:left;font-family:var(--hand);cursor:pointer}
-.topiccard .ticon{display:block;font-size:44px;line-height:1.1;margin:10px 0 0}
 .topiccard .play{display:inline-block;background:var(--t1);color:#fff;border-radius:30px;padding:6px 14px;
   font-family:var(--round);font-weight:800;font-size:15px;box-shadow:0 3px 0 #2a5f92}
 .yearcard .play{display:inline-block;background:var(--t3);color:#fff;border-radius:30px;padding:7px 16px;
@@ -32,18 +31,7 @@
   border:2px solid #A97F36;display:grid;place-items:center;font-family:var(--round);font-weight:800;font-size:15px;
   color:#4A3208;box-shadow:0 3px 0 #8d6524}
 .coin.pound{background:radial-gradient(circle at 35% 30%,#F0D48A,#CBA24F);width:58px;height:58px;font-size:17px}
-.why{display:block;margin:9px 0 0;font-size:17px;color:#B3262B}
-.why.ok{color:#2E7A38}
 
-.answers{position:relative;z-index:2;display:grid;gap:12px;grid-template-columns:1fr 1fr;margin:16px 0 0}
-@media (min-width:700px){.answers{grid-template-columns:repeat(4,1fr)}}
-.ans{border:3px solid var(--edge);background:var(--card);border-radius:18px;padding:18px 12px;
-  font-family:var(--round);font-weight:800;font-size:clamp(19px,4.4vw,24px);color:var(--deep);
-  box-shadow:0 6px 14px #8a6a321f;transition:transform .12s ease,background .2s ease}
-.ans:hover:not([disabled]){transform:translateY(-3px);background:#FFFDF2}
-.ans[disabled]{cursor:default}
-.ans.good{background:#EAF7EA;border-color:var(--t3);color:#1F5B28}
-.ans.bad{background:#FBE9E9;border-color:#C0554F;color:#8E2B26}
 
 /* ── the Quest card: the way into the full Year 2 adventure ──────────────── */
 .questcard{position:relative;z-index:2;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
@@ -78,16 +66,6 @@
   55%{transform:rotate(1.2deg) scale(1.035)}
 }
 /* an answer taken off the table by the second miss */
-.ans.faded{opacity:.32;filter:grayscale(1)}
-/* and, once narrowing runs out, the one to tap.
-   The pulse is a glow, never a transform: a tap target that is still growing
-   and shrinking is one a small finger has to chase, and the child this is
-   helping is the one least able to chase it. */
-.ans.nudge{border-color:var(--t3);background:#F2FBF1;animation:nudge 1.2s ease-in-out infinite}
-@keyframes nudge{
-  0%,100%{box-shadow:0 0 0 3px #50985833}
-  50%{box-shadow:0 0 0 9px #5098584d}
-}
 
 /* the auto-advance: a button that fills up, so a child can SEE the next
    question coming and knows the pause was on purpose */
@@ -107,23 +85,6 @@
 .lookwhy{font-size:17px;color:var(--ink2);margin:0 0 6px}
 .lookhow{font-size:16px;color:var(--ink2);margin:0 0 14px}
 
-/* ── today's three ────────────────────────────────────────────────────────
-   Something new on the shelf every morning, without a single new question
-   having to be written: the topics rotate by the calendar day. */
-.todaybox{position:relative;z-index:2;background:var(--card);border:3px solid var(--edge);
-  border-radius:22px;padding:26px 16px 16px;margin:22px 0 8px;box-shadow:0 8px 18px #8a6a3222}
-.todaybox .tape{position:absolute;top:-14px;left:50%;transform:translateX(-50%) rotate(-1.4deg)}
-.todaysub{text-align:center;font-size:17px;color:var(--ink2);margin:2px 0 14px}
-.todayrow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-@media(max-width:620px){.todayrow{grid-template-columns:1fr}}
-.todaycard{border:3px solid var(--c);background:#FFFDF6;border-radius:18px;padding:14px 8px 10px;
-  display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 4px 0 #E3D3B0;--c:#F0B828}
-.todaycard .tdicon{font-size:34px;line-height:1}
-.todaycard b{font-family:var(--round);font-weight:800;font-size:17px;color:var(--deep);text-align:center;line-height:1.15}
-.todaycard i{font-style:normal;font-size:15px;color:var(--gold);letter-spacing:2px}
-.todaycard.did{background:#F4F8F2;border-style:dashed}
-.todaycard.did i{color:var(--t3);letter-spacing:0;font-family:var(--round);font-weight:700}
-.todaycard:active{transform:scale(.97)}
 
 @media (prefers-reduced-motion: reduce){
   .says.hunt{animation:none}

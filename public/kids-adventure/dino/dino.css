@@ -1,0 +1,128 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   DINO WORLD — the same sketchbook as the rest of the adventure, with the
+   pieces the six games need: a herd of tappable cards, an egg that knocks, a
+   trail of footprints that arrive one at a time, and a patch of sand to dig.
+   Everything shared (paper, cards, tapes, coach, buttons, answers, the star
+   jar) comes from kit/adventure.css; only what is specific to dinosaurs is
+   here.
+   ════════════════════════════════════════════════════════════════════════════ */
+.wrap{max-width:980px;margin:0 auto;padding:16px 16px 0;position:relative;z-index:2}
+header{text-align:center;margin:6px 0 4px;position:relative;z-index:2}
+.qtag{display:inline-block;font-family:var(--round);font-weight:800;font-size:15px;color:#fff;
+  background:var(--c);border-radius:30px;padding:5px 15px;margin:0}
+.qcount{font-family:var(--round);font-weight:700;font-size:15px;color:var(--ink2);margin:7px 0 0}
+.count{font-family:var(--round);font-weight:800;font-size:23px;color:var(--deep);margin:6px 0 0}
+.count b{color:var(--ink2);font-weight:700}
+h2{font-family:var(--round);font-weight:800;font-size:25px;color:var(--deep);
+  text-align:center;margin:30px 0 2px;position:relative;z-index:2}
+.grown{max-width:760px;margin:34px auto 24px;text-align:center;font-size:16px;color:var(--ink2);
+  line-height:1.5;position:relative;z-index:2}
+.grown a{color:var(--t1)}
+.bar{display:flex;justify-content:center}
+
+/* the question, as loud as it is in Study Island */
+.says .qq{display:block;font-family:var(--round);font-weight:800;
+  font-size:clamp(22px,5vw,31px);line-height:1.22;color:var(--deep);text-wrap:balance}
+.says.ask{background:#FFFEF9;padding-top:18px}
+.says.ask::before{content:'';position:absolute;left:16px;right:16px;top:-3px;height:5px;
+  background:var(--gold);border-radius:4px}
+
+/* ── the herd ──────────────────────────────────────────────────────────────
+   One card shape for every game that asks a child to choose a dinosaur, a
+   food or a memory step, so the thing you tap always looks the same. */
+.dgrid{display:grid;gap:12px;position:relative;z-index:2;margin:14px 0 0}
+.dgrid.three{grid-template-columns:repeat(3,1fr)}
+.dgrid.two{grid-template-columns:repeat(2,1fr)}
+@media(max-width:620px){
+  .dgrid.three{grid-template-columns:repeat(2,1fr)}
+  .dgrid.three.says6{grid-template-columns:repeat(3,1fr)}
+}
+.dcard{border:3px solid var(--c,#E7C98A);background:var(--card);border-radius:20px;
+  padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  box-shadow:0 5px 0 #E3D3B0;min-height:120px;justify-content:center;--c:#E7C98A}
+.dcard .dpic{display:grid;place-items:center;position:relative}
+.dcard .dpic::before{content:'';position:absolute;inset:-6px;border-radius:50%;background:var(--c);opacity:.14}
+.dcard .dpic > *{position:relative;z-index:1}
+.dcard b{font-family:var(--round);font-weight:800;font-size:16px;color:var(--deep);
+  text-align:center;line-height:1.15}
+.dcard i{font-style:normal;font-size:14px;color:var(--ink2)}
+.dcard:active{transform:scale(.96)}
+.dcard[disabled]{cursor:default}
+.dcard.gotit{border-color:var(--t3);background:#EAF7EA;box-shadow:0 0 0 4px #50985844,0 5px 0 #E3D3B0}
+.dcard.nope{opacity:.42;filter:grayscale(.7)}
+.dcard.food .dpic{font-size:46px}
+.dcard.food b{font-size:20px}
+.dgrid.herd .dcard{min-height:132px}
+.buddyline{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px}
+.buddyline img{vertical-align:middle}
+
+/* Dino Says: the card lights when its roar plays */
+.dcard.voice.lit{border-color:var(--gold);background:#FFF7E2;
+  box-shadow:0 0 0 6px #F8C85866,0 5px 0 #E3D3B0;transform:scale(1.04)}
+.dcard.voice{transition:transform .14s ease,box-shadow .14s ease,background .14s ease}
+
+/* the big "hear it again" speaker */
+.playrow{display:flex;justify-content:center;margin:16px 0 4px;position:relative;z-index:2}
+.bigplay{border:3px solid var(--t1);background:#FFFDF6;border-radius:40px;padding:13px 26px;
+  font-family:var(--round);font-weight:800;font-size:19px;color:var(--deep);box-shadow:0 5px 0 #E3D3B0}
+.bigplay:active{transform:scale(.96)}
+
+/* ── the egg ───────────────────────────────────────────────────────────────
+   Three right answers, three knocks, then it hatches. The knock is a real
+   movement on the egg rather than a message about one. */
+.eggstage{display:grid;place-items:center;gap:8px;margin:16px 0 6px;position:relative;z-index:2}
+.egg{font-size:96px;line-height:1;filter:drop-shadow(0 8px 10px #8a6a3233);transition:transform .2s ease}
+.egg.big{font-size:130px}
+.egg.crack1{transform:rotate(-3deg)}
+.egg.crack2{transform:rotate(4deg)}
+.egg.knock{animation:eggknock .55s cubic-bezier(.3,1.6,.4,1)}
+@keyframes eggknock{
+  0%,100%{transform:none}
+  25%{transform:rotate(-9deg) scale(1.06)}
+  60%{transform:rotate(8deg) scale(1.04)}
+}
+.cracks{display:flex;gap:10px}
+.cracks .ck{font-size:22px;color:#DCCFB4;width:30px;height:30px;display:grid;place-items:center;
+  border-radius:50%;background:#FFFDF6;border:2px dashed #E0CFAB}
+.cracks .ck.on{border-style:solid;border-color:var(--gold);background:#FFF7E2}
+.born{display:grid;place-items:center;animation:born .7s cubic-bezier(.2,1.8,.4,1)}
+@keyframes born{0%{transform:scale(.3) rotate(-14deg);opacity:0}100%{transform:none;opacity:1}}
+.feedstage{display:grid;place-items:center;margin:14px 0 4px;position:relative;z-index:2;
+  filter:drop-shadow(0 8px 10px #8a6a3233)}
+.dface{line-height:1}
+
+/* ── the footprint trail ───────────────────────────────────────────────────
+   Counting in 2s, 5s and 10s, walking away across the page. Each print lands
+   with its own footfall. */
+.trailrow{display:flex;align-items:flex-end;justify-content:center;gap:6px;flex-wrap:wrap;
+  margin:18px 0 6px;position:relative;z-index:2}
+.print{display:flex;flex-direction:column;align-items:center;font-size:30px;line-height:1;
+  opacity:0;transform:translateY(10px) rotate(calc(var(--k,0) * 3deg - 4deg));
+  transition:opacity .3s ease,transform .3s cubic-bezier(.3,1.5,.5,1)}
+.print.in{opacity:1;transform:translateY(0) rotate(calc(var(--k,0) * 3deg - 4deg))}
+.print b{font-family:var(--round);font-weight:800;font-size:19px;color:var(--deep);margin-top:2px}
+.print.ghost{opacity:.45;filter:grayscale(1)}
+.print.ghost.in{opacity:.55}
+.print.ghost.filled{opacity:1;filter:none}
+.print.ghost.filled b{color:var(--t3)}
+
+/* ── the digging patch ─────────────────────────────────────────────────────
+   Hot and cold, played entirely with the ears: every dig sounds a heartbeat
+   whose speed says how close the nearest buried bone is. */
+.digyard{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-width:400px;
+  margin:18px auto 6px;position:relative;z-index:2}
+.sandsq{aspect-ratio:1;border:3px solid var(--sand2);border-radius:14px;
+  background:linear-gradient(160deg,#F6E7C7,#EAD6AE);box-shadow:inset 0 -4px 8px #c9a86e40,0 3px 0 #DCC59A;
+  display:grid;place-items:center;font-size:28px;padding:0}
+.sandsq:active{transform:scale(.94)}
+.sandsq[disabled]{cursor:default;box-shadow:none}
+.sandsq.empty{background:#E2CFA6;border-color:#D3BC8E}
+.sandsq.empty .hole{width:46%;height:46%;border-radius:50%;background:#C6A877;
+  box-shadow:inset 0 3px 5px #00000030;display:block}
+.sandsq.bone{background:#FFF7E2;border-color:var(--gold);box-shadow:0 0 0 4px #F8C85855}
+
+@media (prefers-reduced-motion: reduce){
+  .egg.knock,.born{animation:none}
+  .print{opacity:1;transform:none;transition:none}
+  .dcard.voice{transition:none}
+}

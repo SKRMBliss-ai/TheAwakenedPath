@@ -375,7 +375,7 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
    levels, so there is something to watch even before you can read the number,
    and the buddy's face sits inside looking out. Stars from an answer fly
    across the screen into it. */
-.starjar{position:fixed;right:12px;bottom:12px;z-index:38;border:none;background:transparent;padding:0;
+.starjar{position:fixed;right:12px;bottom:14px;z-index:38;border:none;background:transparent;padding:0;
   display:flex;flex-direction:column;align-items:center;gap:2px;filter:drop-shadow(0 6px 12px #8a6a3240);
   -webkit-tap-highlight-color:transparent;--jar:#F0B828;--fill:0%}
 .starjar.left{right:auto;left:12px}
@@ -397,6 +397,9 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
 .starjar.pulse .jarglass{animation:jarpulse .36s cubic-bezier(.3,1.6,.4,1)}
 @keyframes jarpulse{0%{transform:scale(1)}45%{transform:scale(1.16) rotate(-3deg)}100%{transform:scale(1)}}
 .starjar:active{transform:scale(.94)}
+/* the jar is fixed over the page, so every page keeps a lane clear for it
+   rather than letting it sit on top of the last thing a child reads */
+body{padding-bottom:96px}
 /* a star travelling from the answer to the jar */
 .flystar{position:fixed;z-index:39;pointer-events:none;font-size:22px;
   animation:flystar .8s cubic-bezier(.4,.1,.7,1) forwards}
@@ -465,10 +468,60 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
 .resume .rgo{font-family:var(--round);font-weight:800;font-size:26px;color:var(--gold);flex:none}
 .resume:active{transform:scale(.985)}
 
+
+.topiccard .ticon{display:block;font-size:44px;line-height:1.1;margin:10px 0 0}
+
+/* ── a question and its answers ────────────────────────────────────────────
+   Study Island, Dino World and the year pages all ask a child a question and
+   give them buttons to choose from, so the question furniture lives here
+   rather than three times over. States carry meaning: `good` and `bad` after
+   a tap, `faded` for an option narrowing has taken off the board, and `nudge`
+   for the one to tap once narrowing has run out. */
+.why{display:block;margin:9px 0 0;font-size:17px;color:#B3262B}
+.why.ok{color:#2E7A38}
+.answers{position:relative;z-index:2;display:grid;gap:12px;grid-template-columns:1fr 1fr;margin:16px 0 0}
+@media (min-width:700px){.answers{grid-template-columns:repeat(4,1fr)}}
+.ans{border:3px solid var(--edge);background:var(--card);border-radius:18px;padding:18px 12px;
+  font-family:var(--round);font-weight:800;font-size:clamp(19px,4.4vw,24px);color:var(--deep);
+  box-shadow:0 6px 14px #8a6a321f;transition:transform .12s ease,background .2s ease}
+.ans:hover:not([disabled]){transform:translateY(-3px);background:#FFFDF2}
+.ans[disabled]{cursor:default}
+.ans.good{background:#EAF7EA;border-color:var(--t3);color:#1F5B28}
+.ans.bad{background:#FBE9E9;border-color:#C0554F;color:#8E2B26}
+.ans.faded{opacity:.32;filter:grayscale(1)}
+/* and, once narrowing runs out, the one to tap.
+   The pulse is a glow, never a transform: a tap target that is still growing
+   and shrinking is one a small finger has to chase, and the child this is
+   helping is the one least able to chase it. */
+.ans.nudge{border-color:var(--t3);background:#F2FBF1;animation:nudge 1.2s ease-in-out infinite}
+@keyframes nudge{
+  0%,100%{box-shadow:0 0 0 3px #50985833}
+  50%{box-shadow:0 0 0 9px #5098584d}
+}
+
+/* ── today's three ────────────────────────────────────────────────────────
+   Something new on the shelf every morning, without a single new question
+   having to be written: the topics rotate by the calendar day. */
+.todaybox{position:relative;z-index:2;background:var(--card);border:3px solid var(--edge);
+  border-radius:22px;padding:26px 16px 16px;margin:22px 0 8px;box-shadow:0 8px 18px #8a6a3222}
+.todaybox .tape{position:absolute;top:-14px;left:50%;transform:translateX(-50%) rotate(-1.4deg)}
+.todaysub{text-align:center;font-size:17px;color:var(--ink2);margin:2px 0 14px}
+.todayrow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:620px){.todayrow{grid-template-columns:1fr}}
+.todaycard{border:3px solid var(--c);background:#FFFDF6;border-radius:18px;padding:14px 8px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 4px 0 #E3D3B0;--c:#F0B828}
+.todaycard .tdicon{font-size:34px;line-height:1}
+.todaycard b{font-family:var(--round);font-weight:800;font-size:17px;color:var(--deep);text-align:center;line-height:1.15}
+.todaycard i{font-style:normal;font-size:15px;color:var(--gold);letter-spacing:2px}
+.todaycard.did{background:#F4F8F2;border-style:dashed}
+.todaycard.did i{color:var(--t3);letter-spacing:0;font-family:var(--round);font-weight:700}
+.todaycard:active{transform:scale(.97)}
+
 @media (prefers-reduced-motion: reduce){
   .jbit,.jspark,.jpop,.jgift,.flystar{display:none}
   .coach .dyno{animation:none}
   .jstamp span{animation:none}
   .starjar.pulse .jarglass{animation:none}
   .jarfill{transition:none}
+  .ans.nudge{animation:none}
 }
