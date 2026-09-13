@@ -387,7 +387,7 @@ export function BoyAndChirpy({
    */
   pose?: ChirpyPose;
   gaze?: 'scene' | 'child';
-  emotion?: 'calm' | 'worry' | 'scared' | 'sad';
+  emotion?: BoyEmotion;
 }) {
   const boyW = size * BOY_ASPECT;
 
