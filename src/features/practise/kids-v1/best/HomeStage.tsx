@@ -75,16 +75,24 @@ export function HubRoom() {
             face filled the middle of the screen behind the live boy. Two
             greetings and two boys is not a backdrop, it is a double exposure.
 
-            Nine is where the painted boy stops having a silhouette. His white
+            Seven is where the painted boy stops having a silhouette. His white
             t-shirt survives a lot of blurring as a pale blob in the middle of
             the screen, directly behind the live boy, and the blob is the tell
             — under it the room reads as depth, over it as a smudge.
+
+            The brightness came back UP from 0.32 after that. At 0.32 nothing
+            was mistakable for a control, and the gym had also stopped being a
+            warm lit room and become a black screen with a live layer on it —
+            which loses the whole reason for using the painting. Every control
+            here sits on its own filled surface, so the veil below is doing
+            most of the separating and the art does not need to be this dark
+            to stay behind it.
 
             At these numbers the room keeps its warmth, its shelves and its lit
             arches, and none of its painted furniture resolves into something a
             child could mistake for a control.
           */
-          filter: 'blur(9px) saturate(0.85) brightness(0.32)',
+          filter: 'blur(7px) saturate(0.95) brightness(0.5)',
           /* The blur samples transparent black past the edges and leaves a
              dark rim. Scaling up a little pushes that rim off-screen. */
           transform: 'scale(1.12)',
@@ -94,7 +102,7 @@ export function HubRoom() {
           reads as lit from within rather than as a photograph behind glass. */}
       <div
         className="absolute inset-0"
-        style={{ background: 'radial-gradient(64% 54% at 50% 44%, rgba(20,11,42,0.46) 0%, rgba(8,5,18,0.9) 100%)' }}
+        style={{ background: 'radial-gradient(66% 56% at 50% 44%, rgba(22,12,46,0.30) 0%, rgba(9,5,20,0.84) 100%)' }}
       />
       {/* §2.3's warm source, kept. Over the veil rather than under it, or the
           veil simply cancels it. */}

@@ -390,7 +390,7 @@ function RoomMap({
    * Chosen once on arrival rather than per render, so it can't change under
    * a child mid-read.
    */
-  const vw = useViewportWidth();
+  const { w: vw, h: vh } = useViewport();
 
   const [moment, setMoment] = useState<HubMoment | null>(null);
   useEffect(() => {
@@ -441,7 +441,8 @@ function RoomMap({
    * phone leaves no width for anything beside him, and he is not the only
    * thing a child came for.
    */
-  const boySize = vw >= 1280 ? 288 : vw >= 640 ? 236 : 196;
+  const boySize = vw >= 1280 ? 288 : vw >= 1024 ? 252 : vw >= 768 ? 214 : 196;
+  const shelfW = alcoveWidth(vh);
 
   const alcoves = [
     ...VIRTUE_ROOMS.map((r, i) => {
@@ -558,9 +559,35 @@ function RoomMap({
           They stack under the greeting on a phone, where there is no room to
           stand beside anything.
         */}
+        {/*
+          ONE ROW, FIVE THINGS: door, wall, the child, wall, door.
+
+          The greeting used to sit in a row of its own ABOVE this one, and that
+          cost the shelves 120px of the screen before they had drawn a single
+          alcove — on a 750px-tall laptop it squeezed them to 48px, at which
+          width a room's name no longer fits on its plaque. The reference art
+          does not stack them: its shelves run the full height of the wall,
+          starting level with the speech bubble, and the doors are further out
+          still. So the greeting moves INTO the middle column, where it belongs
+          anyway — it is the boy talking.
+
+          The pills are the two doors of the room the boy is standing in, one
+          to each side, which is why they sit outside the shelves rather than
+          inside them. A child reads "I am in here, and there are two ways on"
+          without a word of it being written down.
+
+          Everything collapses to a column on a phone, where there is no room
+          to stand beside anything: the greeting first, then the two doors,
+          then the boy — and the shelves are not drawn at all (see Shelf).
+        */}
         <div className="-mx-[58px] sm:mx-0">
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:gap-5">
-            <div className="order-2 sm:order-1 sm:shrink-0">
+          {/* The inner padding is what keeps the shelves clear of the two
+              pills, which are fixed to the viewport edges from md up (see
+              PILL_ON_WALL) and so are not in this row's flow to be laid out
+              around. A pill reaches about 205px in from the edge at its
+              widest; this clears it at every width the row is horizontal. */}
+          <div className="flex flex-col items-center gap-3 md:flex-row md:items-start md:justify-center md:gap-3 md:px-[140px] lg:gap-5">
+            <div className={PILL_ON_WALL + ' order-2 md:left-3 lg:left-5'}>
               <NeonDoorPill
                 tone="blue"
                 onClick={() => {
@@ -570,7 +597,11 @@ function RoomMap({
               />
             </div>
 
-            <div className="order-1 min-w-0 flex-1 sm:order-2">
+            <div className="order-4 md:order-2">
+              <Shelf alcoves={alcoves.slice(0, 4)} width={shelfW} />
+            </div>
+
+            <div className="order-1 flex min-w-0 flex-col items-center md:order-3">
               <WelcomeBanner
                 name={name}
                 doneCount={doneCount}
@@ -579,88 +610,70 @@ function RoomMap({
                 onOneMinute={onOneMinute}
                 onFeeling={onDeepDive}
               />
+
+              {/* HE DANCES ON THE HUB, and only here. Every room has him doing
+                  something quieter and room-specific (ui/scene's GAITS); the
+                  hub is the one screen where he isn't waiting on the child to
+                  answer anything, so it's the one place he gets to just enjoy
+                  himself. Facing out, too — this is the hello, which is the one
+                  moment §2.2's shared-gaze rule exempts. */}
+              <BoyAndChirpy size={boySize} pose="excited" gaze="child" gait="dance" />
+
+              {/* The star he is standing on, echoing the one inlaid in the
+                  painted floor behind him. It is what stops a cut-out figure
+                  floating: something on the ground under his feet. */}
+              <StageStar />
+
+              {/*
+                THE ONE THING THIS HUB HAS TO SAY TONIGHT, said where he is
+                standing. It used to sit in the page flow under the room grid,
+                which put it below the fold the moment the shelves took the
+                full height of the screen — and the whole point of this card is
+                that it is the single thing the hub wanted to tell the child.
+
+                Under the boy rather than beside him because he is who says it:
+                Chirpy's memory, Chirpy's arc, Chirpy's guessing game and the
+                note from home all read as coming out of the figure on the star.
+
+                See kit/hubMoment for the order, and for what four of these
+                stacked together did to this page.
+              */}
+              <div className="w-full max-w-[420px]">
+                <AnimatePresence mode="wait">
+                {moment?.kind === 'note' && (
+                <NoteFound key="note" note={moment.note} onDone={() => setMoment(null)} />
+                )}
+                {moment?.kind === 'welcome' && (
+                <WelcomeBackCard key="welcome" line={moment.line} onDone={() => setMoment(null)} />
+                )}
+                {moment?.kind === 'arc' && (
+                <ChirpyArc key="arc" beat={moment.beat} onDone={() => setMoment(null)} />
+                )}
+                {moment?.kind === 'memory' && (
+                <ChirpyRemembers
+                key="memory"
+                recollection={moment.recollection}
+                onDone={() => setMoment(null)}
+                />
+                )}
+                {moment?.kind === 'game' && (
+                <GuessWhat key="game" game={moment.game} onDone={() => setMoment(null)} />
+                )}
+                </AnimatePresence>
+              </div>
             </div>
 
-            <div className="order-3 sm:shrink-0">
+            <div className="order-5 md:order-4">
+              <Shelf alcoves={alcoves.slice(4)} width={shelfW} />
+            </div>
+
+            <div className={PILL_ON_WALL + ' order-3 md:right-3 lg:right-5'}>
               <NeonDoorPill
                 tone="gold"
                 onClick={() => { sound.play('arcadeBlip'); onStartJourney(); }}
               />
             </div>
           </div>
-        </div>
-
-        {/*
-          THE FLOOR OF THE GYM — the boy on the star, with a wall of alcoves
-          either side of him. This is the reference painting's own composition,
-          and it is here because the old one had a bug worth naming: the boy
-          lived INSIDE the greeting banner, which folds itself away after two
-          seconds. He was on screen for two seconds per visit and then gone for
-          the rest of it. Every per-room gait, every bit of characterisation in
-          ui/scene's GAITS, was being drawn for nobody.
-
-          So he is his own thing now, he does not fold, and he is the largest
-          object on the page. The shelves flank him from xl up, where there is
-          real width to put them; below that they would squeeze him to nothing,
-          so the grid under the fold carries them instead.
-        */}
-        <div className="mt-1 flex items-start justify-center gap-5 xl:gap-8">
-          <Shelf alcoves={alcoves.slice(0, 4)} />
-
-          <div className="flex shrink-0 flex-col items-center">
-            {/* HE DANCES ON THE HUB, and only here. Every room has him doing
-                something quieter and room-specific (ui/scene's GAITS); the hub
-                is the one screen where he isn't waiting on the child to answer
-                anything, so it's the one place he gets to just enjoy himself.
-                Facing out, too — this is the hello, which is the one moment
-                §2.2's shared-gaze rule exempts. */}
-            <BoyAndChirpy size={boySize} pose="excited" gaze="child" gait="dance" />
-
-            {/* The star he is standing on, echoing the one inlaid in the
-                painted floor behind him. It is what stops a cut-out figure
-                floating: something on the ground under his feet. */}
-            <StageStar />
-
-            {/*
-              THE ONE THING THIS HUB HAS TO SAY TONIGHT, said where he is
-              standing. It used to sit in the page flow under the room grid,
-              which put it below the fold the moment the shelves took the full
-              height of the screen — and the whole point of this card is that
-              it is the single thing the hub wanted to tell the child.
-
-              Under the boy rather than beside him because he is who says it:
-              Chirpy's memory, Chirpy's arc, Chirpy's guessing game and the
-              note from home all read as coming out of the figure on the star.
-
-              See kit/hubMoment for the order, and for what four of these
-              stacked together did to this page.
-            */}
-            <div className="w-full max-w-[420px]">
-      <AnimatePresence mode="wait">
-      {moment?.kind === 'note' && (
-      <NoteFound key="note" note={moment.note} onDone={() => setMoment(null)} />
-      )}
-      {moment?.kind === 'welcome' && (
-      <WelcomeBackCard key="welcome" line={moment.line} onDone={() => setMoment(null)} />
-      )}
-      {moment?.kind === 'arc' && (
-      <ChirpyArc key="arc" beat={moment.beat} onDone={() => setMoment(null)} />
-      )}
-      {moment?.kind === 'memory' && (
-      <ChirpyRemembers
-      key="memory"
-      recollection={moment.recollection}
-      onDone={() => setMoment(null)}
-      />
-      )}
-      {moment?.kind === 'game' && (
-      <GuessWhat key="game" game={moment.game} onDone={() => setMoment(null)} />
-      )}
-      </AnimatePresence>
-            </div>
-          </div>
-
-          <Shelf alcoves={alcoves.slice(4)} />
         </div>
 
         {/*
@@ -696,21 +709,21 @@ function RoomMap({
             DoorWall. The map is still reachable from the bottom bar's
             "Look back", which is where a child goes looking for it. */}
 
-        {/* Below xl the walls are too narrow to stand a shelf against, so the
+        {/* Below md the walls are too narrow to stand a shelf against, so the
             same eight alcoves lie down here as a grid instead. Hidden, not
             removed, once the shelves take over: "Explore Rooms" scrolls to
-            this heading, and a heading that vanishes at 1280px would send that
-            button nowhere on exactly the screens where the rooms are already
-            visible — so the ref moves up to the stage at that width. */}
+            this heading, and a heading that vanishes would send that button
+            nowhere on exactly the screens where the rooms are already in
+            view. */}
         <h2
           ref={roomsRef}
-          className="mt-5 scroll-mt-4 text-[15.5px] font-extrabold xl:hidden"
+          className="mt-5 scroll-mt-4 text-[15.5px] font-extrabold md:hidden"
           style={{ color: CHROME.text, fontFamily: FONT }}
         >
           Or pick a room
         </h2>
 
-        <div className="mt-3 grid grid-cols-2 gap-x-3.5 gap-y-5 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4 xl:hidden">
+        <div className="mt-3 grid grid-cols-2 gap-x-3.5 gap-y-5 sm:grid-cols-3 sm:gap-x-4 md:hidden">
           {alcoves.map((a) => (
             <RoomDome
               key={a.key}
@@ -737,25 +750,94 @@ function RoomMap({
  * ticked today, and what has been earned in it.
  */
 /**
- * How wide the window is, in px, and again whenever it changes.
+ * How big the window is, in px, and again whenever it changes.
  *
- * The boy is sized in JS rather than CSS because his size is a number handed
- * to a component that draws an <img> at that height — there is no class to put
- * on him. Everything else on this page does its responsiveness in Tailwind,
- * and should keep doing so; this exists for the one case that can't.
+ * Two things on this page are sized in JS rather than in Tailwind, and both
+ * have to be: the boy's size is a number handed to a component that draws an
+ * <img> at that height, and the alcove width is derived from how much VERTICAL
+ * room the shelf has — which no breakpoint can express, because breakpoints
+ * are about width. Everything else here does its responsiveness in CSS and
+ * should keep doing so.
  *
- * Seeded to a desktop width rather than 0 so the first paint on a wide screen
+ * Seeded to a desktop size rather than 0 so the first paint on a big screen
  * isn't a phone-sized boy who jumps.
  */
-function useViewportWidth() {
-  const [w, setW] = useState(() => (typeof window === 'undefined' ? 1280 : window.innerWidth));
+function useViewport() {
+  const [v, setV] = useState(() => ({
+    w: typeof window === 'undefined' ? 1280 : window.innerWidth,
+    h: typeof window === 'undefined' ? 800 : window.innerHeight,
+  }));
   useEffect(() => {
-    const on = () => setW(window.innerWidth);
+    const on = () => setV({ w: window.innerWidth, h: window.innerHeight });
     window.addEventListener('resize', on);
     return () => window.removeEventListener('resize', on);
   }, []);
-  return w;
+  return v;
 }
+
+/**
+ * HOW WIDE ONE ALCOVE CAN BE, given how tall the window is.
+ *
+ * Four of them stack up each wall, and they have to land between the bottom of
+ * the greeting and the top of the nav bar. That gap is a height, so picking the
+ * width with a `lg:` breakpoint was answering the wrong question: a 1440x720
+ * laptop is wide and short, and the fourth alcove went behind the nav on it
+ * however wide the screen got.
+ *
+ * An alcove is `w * 4/3` of arch plus a plaque that overlaps it by 16 — so
+ * PLAQUE is what the plaque adds once that overlap is paid for. Invert it and
+ * the width falls out of the space available.
+ *
+ * Clamped at both ends: below ~50px the room's own painting is unreadable in
+ * the arch, and above ~96px two shelves plus the boy stop fitting side by side.
+ */
+/**
+ * Where the shelves start: just under the header row.
+ *
+ * It was 208 — under the greeting — back when the greeting had a row of its
+ * own above the stage. It doesn't any more; the shelves run alongside it, the
+ * way they do in the reference art, which is worth about 120px of alcove.
+ */
+const STAGE_TOP = 88;
+/** The nav bar, plus the margin it floats on, plus a little air. */
+const BAR = 106;
+const GAP = 8;
+/**
+ * What the plaque adds to an alcove once its 16px overlap is paid for.
+ *
+ * Measured, not derived. The plaque is min-h-[40px] but room names wrap —
+ * "Kindness Garden" and "Helping Hands Village" both run to two lines, and
+ * the note sits under them — so the real cost is closer to 40 than to the 24
+ * the arithmetic suggested. Modelling it as 24 is what left the fourth alcove
+ * of the left-hand shelf tucked behind the nav.
+ */
+const PLAQUE = 40;
+
+function alcoveWidth(vh: number) {
+  const perAlcove = (vh - STAGE_TOP - BAR - GAP * 3) / 4;
+  return Math.max(48, Math.min(96, Math.round((perAlcove - PLAQUE) * 0.75)));
+}
+
+/**
+ * WHERE THE TWO WAYS ON HANG: on the doors, not in the row.
+ *
+ * They started inside the stage's flex row, which reads fine at 1440 and is
+ * wrong everywhere else: each pill is ~170px of shrink-0, so at 900px the two
+ * of them plus the two shelves left the middle column about 210px — the
+ * greeting broke to "Hello, / Shaarav!" and Chirpy's card went off the bottom.
+ * The boy, who is the subject of the screen, was the thing being squeezed.
+ *
+ * The reference art does not put them in the row either. They are painted onto
+ * the two doors at the far edges of the room, level with the child's shoulder,
+ * with the shelves inboard of them — so `fixed` against the viewport edge is
+ * not a hack here, it is the position they were drawn in. Taking them out of
+ * the flow gives the whole of the container's width back to the shelves and
+ * the boy.
+ *
+ * Still in the flow on a phone, where there are no walls to hang anything on
+ * and everything is a column.
+ */
+const PILL_ON_WALL = 'shrink-0 md:fixed md:top-1/2 md:z-30 md:-translate-y-1/2';
 
 /* ── The two walls ───────────────────────────────────────────────────── */
 
@@ -781,16 +863,19 @@ interface Alcove {
  * screen and these are the room he is standing in, so a shelf wide enough to
  * compete with him would be the menu winning again.
  *
- * Hidden below xl. There is no honest way to stand a four-storey shelf beside
- * a 288px boy on a 390px phone, and the grid under the fold already says the
- * same thing with room to breathe.
+ * Hidden below md. There is no honest way to stand a four-storey shelf beside
+ * the boy on a 390px phone, and the grid under the fold already says the same
+ * thing with room to breathe.
  */
-function Shelf({ alcoves }: { alcoves: Alcove[] }) {
-  // 84px is not a taste: four alcoves, each w*4/3 tall plus its plaque, have
-  // to clear the bottom bar between the greeting and the floor. At 92px the
-  // fourth one was behind the nav.
+function Shelf({ alcoves, width }: { alcoves: Alcove[]; width: number }) {
+  // IT STARTS AT md, NOT xl. It was xl (1280px), which is wider than the window
+  // most laptops actually open at — so the flanking walls, which are the whole
+  // shape of this screen, were invisible to anybody not on a big monitor. Two
+  // shelves and the boy need about 500px between them; the container has 620 to
+  // give at 768. The width itself comes from the viewport HEIGHT — see
+  // alcoveWidth, and why a breakpoint could never have answered that.
   return (
-    <div className="hidden w-[84px] shrink-0 flex-col gap-2 xl:flex 2xl:w-[96px]">
+    <div className="hidden shrink-0 flex-col gap-2 md:flex" style={{ width }}>
       {alcoves.map((a) => (
         <RoomDome
           key={a.key}
@@ -988,12 +1073,42 @@ function WelcomeBanner({
         )}
       </AnimatePresence>
 
-      {/* Other children, out there somewhere — and nothing at all when
-          there's no server to ask. See kit/others. */}
+      {/*
+        OTHER CHILDREN, OUT THERE SOMEWHERE — and nothing at all when there's
+        no server to ask. See kit/others.
+
+        It has a face now, and deliberately NOT this child's face: a different
+        boy, different hair, different jumper, with his own Chirpy on his
+        shoulder. That is the whole content of the line. "Four other children
+        caught one tonight" as bare text is a statistic; the same sentence next
+        to somebody who is plainly not you is the one thing this feature is for
+        — other people are doing this too, and they are other people.
+
+        Small, and never tappable. There is nobody to visit at the other end of
+        it, and a face that looks like a button would promise one.
+      */}
       {others !== null && (
-        <p className="text-[11.5px] font-semibold" style={{ color: CHROME.textSoft }}>
-          {others} other children caught one tonight, too.
-        </p>
+        <div className="mt-1 flex items-center gap-2">
+          <img
+            src="/assets/home/other-child@160.webp"
+            srcSet="/assets/home/other-child@160.webp 160w, /assets/home/other-child@320.webp 320w"
+            sizes="34px"
+            alt=""
+            aria-hidden
+            draggable={false}
+            className="shrink-0 rounded-full"
+            style={{
+              height: 34,
+              width: 34,
+              objectFit: 'cover',
+              objectPosition: '50% 22%',
+              border: '1.5px solid rgba(255,255,255,0.34)',
+            }}
+          />
+          <p className="text-[11.5px] font-semibold" style={{ color: CHROME.textSoft }}>
+            {others} other children caught one tonight, too.
+          </p>
+        </div>
       )}
 
       {sparks && <FoldSparks />}

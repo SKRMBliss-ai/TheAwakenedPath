@@ -127,3 +127,74 @@ const ROOM_GAIT: Record<string, BoyGait> = {
 export function gaitForRoom(roomId: string | null | undefined): BoyGait {
   return (roomId && ROOM_GAIT[roomId]) || 'still';
 }
+
+/* ── The things that are lying about in a room ───────────────────────── */
+
+/**
+ * PROPS — the objects the founder drew for two specific rooms.
+ *
+ * They arrived as one sheet: a Different Story dome and a Reflection Room
+ * dome, and underneath them the individual pieces each dome is built from —
+ * a ship, an island, a compass, an open book; a moon, some crystals, a
+ * waterfall, lotuses. The domes are signs (see the `signs` folder); these are
+ * the furniture, and they belong to the room they were drawn for.
+ *
+ * THEY ARE SCENERY AND THEY HAVE TO STAY SCENERY. Every one of them is a
+ * bright, high-contrast, fully-rendered object, and a child will try to tap
+ * anything that looks like that. So they are small, they are held well below
+ * full opacity, they sit under the room's veil rather than over it, and they
+ * are pinned to the EDGES — the content column runs down the middle of every
+ * room, and a compass behind a question is a compass competing with it.
+ *
+ * `top` is a percentage of the room's height and one of `left`/`right` is set,
+ * never both, so each prop hugs its own wall as the viewport changes shape.
+ *
+ * None of it moves in the quiet state, like everything else here.
+ */
+export interface RoomProp {
+  src: string;
+  /** Exactly one of these. Percent strings, so they follow the wall. */
+  left?: string;
+  right?: string;
+  top: string;
+  /** Drawn height in px. */
+  size: number;
+  /** How far it drifts, and how long one round trip takes. */
+  rise: number;
+  seconds: number;
+  delay: number;
+  opacity: number;
+}
+
+const P = '/rooms/props';
+
+export const ROOM_PROPS: Record<string, RoomProp[]> = {
+  /** Different Story: a voyage, and the book it is being read out of. */
+  story: [
+    { src: `${P}/pirate.webp`,    left: '2%',  top: '16%', size: 96,  rise: 9,  seconds: 13, delay: 0,   opacity: 0.5 },
+    { src: `${P}/island.webp`,    right: '1%', top: '10%', size: 104, rise: 7,  seconds: 16, delay: 2.2, opacity: 0.44 },
+    { src: `${P}/dial.webp`,      right: '5%', top: '42%', size: 62,  rise: 5,  seconds: 11, delay: 1.1, opacity: 0.42 },
+    { src: `${P}/book.webp`,      left: '3%',  top: '62%', size: 92,  rise: 6,  seconds: 15, delay: 3.4, opacity: 0.46 },
+  ],
+  /** Reflection: a still night by water. */
+  reflection: [
+    { src: `${P}/moon.webp`,      right: '6%', top: '8%',  size: 84,  rise: 4,  seconds: 18, delay: 0,   opacity: 0.5 },
+    { src: `${P}/crystals.webp`,  left: '3%',  top: '24%', size: 70,  rise: 6,  seconds: 12, delay: 1.6, opacity: 0.44 },
+    { src: `${P}/waterfall.webp`, right: '2%', top: '56%', size: 104, rise: 5,  seconds: 17, delay: 2.8, opacity: 0.42 },
+    { src: `${P}/lotus.webp`,     left: '2%',  top: '70%', size: 88,  rise: 7,  seconds: 14, delay: 4.1, opacity: 0.48 },
+  ],
+};
+
+/**
+ * The painted sign over a room's door, where one was drawn.
+ *
+ * Only two rooms have one, and both signs carry their room's name in the art —
+ * "Different Story" and "Reflection Room", which are exactly the names those
+ * rooms have in rooms.ts. That match is the whole licence for using them: a
+ * painted sign that disagreed with the room it hangs on would be worse than no
+ * sign at all, so this map must never be extended by eye.
+ */
+export const ROOM_SIGN: Record<string, string> = {
+  story: '/rooms/signs/story.webp',
+  reflection: '/rooms/signs/reflection.webp',
+};

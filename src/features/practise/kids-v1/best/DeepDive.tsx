@@ -4,7 +4,7 @@ import { getRoom, type RoomId } from '../rooms';
 import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
-import { DIM } from '../ui/scenery';
+import { DIM, ROOM_SIGN } from '../ui/scenery';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { Eye, MessageCircle, Paintbrush, RotateCcw } from 'lucide-react';
 import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
@@ -253,6 +253,41 @@ export function DeepDive({
           <StepDots total={STEPS.length} at={stepIndex} accent={accent} />
           <GrownUpExit onClick={onGrownUp} />
         </div>
+
+        {/*
+          THE SIGN OF THE ROOM THEY ARE STANDING IN, on the two steps where
+          there is one.
+
+          The walk changes rooms as it goes (see `art` above): the "what else
+          could be true" step happens in the Different Story Room, and the end
+          of it happens in the Reflection Room. Both of those rooms have a
+          painted sign with their own name in the art, and this is the only
+          screen in the app where showing it says something true — every other
+          screen that stands in these rooms is titled something else (the
+          Helping Hands Village, say, which borrows the Different Story
+          painting), and a sign there would simply contradict the heading above
+          it. Here there is no heading to contradict: the walk is question
+          cards, and the sign tells a child the room has changed under them,
+          which is the one thing the room change was for.
+        */}
+        <AnimatePresence mode="wait">
+          {ROOM_SIGN[art.id] && (
+            <motion.img
+              key={art.id}
+              src={ROOM_SIGN[art.id]}
+              alt={art.name}
+              draggable={false}
+              className="mx-auto mt-2 w-full max-w-[240px]"
+              style={{ filter: 'drop-shadow(0 12px 26px rgba(0,0,0,0.6))' }}
+              initial={{ opacity: 0, y: -10, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.5 }}
+              /* Decoration. A hole where it should be costs the walk nothing. */
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          )}
+        </AnimatePresence>
 
         <div className="flex flex-1 flex-col gap-3 pt-5">
           {/* ── The chain so far, as four cards in two rows. ─────────────

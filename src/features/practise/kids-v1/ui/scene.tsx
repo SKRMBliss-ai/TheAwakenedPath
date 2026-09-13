@@ -6,7 +6,7 @@ import { useMotion, useQuiet } from './quiet';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import { startAmbience, stopAmbience } from '../kit/ambience';
 import { boyPlateForRoom, chirpySprite, chirpySrcSet, type BoyEmotion, type ChirpyPose } from './sprites';
-import { DIM, GAITS, type BoyGait } from './scenery';
+import { DIM, GAITS, ROOM_PROPS, type BoyGait, type RoomProp } from './scenery';
 
 /**
  * The place: a full-bleed scene, and the two characters who live in it.
@@ -85,12 +85,71 @@ export function RoomScene({ room, dim = DIM.content }: { room: RoomConfig; dim?:
 
       {!quiet && <Motes />}
 
+      {/* The room's own furniture, where somebody drew it any. Above the
+          painting so it reads as objects IN the room, below the dim and the
+          scrim so it recedes with everything else. See ROOM_PROPS. */}
+      <Props roomId={room.id} />
+
       {dim > 0 && (
         <div className="absolute inset-0" style={{ background: `rgba(4,6,14,${dim})` }} />
       )}
 
       <Scrim room={room} />
     </div>
+  );
+}
+
+/**
+ * The objects lying about in a room, drifting.
+ *
+ * One <img> each, absolutely placed against the room, on a slow vertical
+ * float — no two share a duration or a delay, because four things rising and
+ * falling in step reads as one thing on a lift rather than as a room with
+ * stuff in it.
+ *
+ * Renders nothing at all for the rooms nobody drew props for, which is most of
+ * them, and nothing in the quiet state.
+ */
+function Props({ roomId }: { roomId: string }) {
+  const quiet = useQuiet();
+  const props = ROOM_PROPS[roomId];
+  if (quiet || !props) return null;
+  // NOT ON A PHONE. These hug the walls, and a 430px screen has no walls: the
+  // content column already runs from 74px to 356px of it, so a compass pinned
+  // 3% from the edge lands under the question rather than beside it. There is
+  // no size that fixes that — the room is simply too narrow to have anything
+  // standing in the corners of it.
+  return (
+    <div className="absolute inset-0 hidden sm:block">
+      {props.map((p) => <Prop key={p.src} prop={p} />)}
+    </div>
+  );
+}
+
+function Prop({ prop }: { prop: RoomProp }) {
+  return (
+    <motion.img
+      src={prop.src}
+      alt=""
+      aria-hidden
+      loading="lazy"
+      draggable={false}
+      className="absolute"
+      style={{
+        left: prop.left,
+        right: prop.right,
+        top: prop.top,
+        height: prop.size,
+        width: 'auto',
+        opacity: prop.opacity,
+        filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))',
+      }}
+      animate={{ y: [0, -prop.rise, 0] }}
+      transition={{ repeat: Infinity, duration: prop.seconds, delay: prop.delay, ease: 'easeInOut' }}
+      /* A prop that 404s must leave no gap and no broken-image icon — it is
+         decoration, and the room is complete without it. */
+      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+    />
   );
 }
 
