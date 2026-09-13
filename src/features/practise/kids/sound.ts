@@ -132,6 +132,54 @@ export function playMusic(cue: Cue) {
   } catch { /* ignore */ }
 }
 
+/**
+ * THE SAME BED, BUT IT SURVIVES THE AUTOPLAY POLICY.
+ *
+ * `playMusic` gives up silently when the browser refuses to start audio
+ * before the page has been touched, which is every single time on a phone —
+ * so a welcome bed asked for on mount was never once heard by anybody. This
+ * tries immediately anyway (desktop, and any tab the child has already
+ * interacted with, will just play), and when it's refused it waits for the
+ * first touch, click or key and tries once more.
+ *
+ * ONE RETRY, AND THE LISTENERS REMOVE THEMSELVES. A listener that re-arms is
+ * how you get the lullaby restarting from the top on every tap of a screen
+ * whose whole instruction is "tap anywhere". Returns its own teardown so an
+ * unmount mid-wait doesn't leave a gesture handler behind that starts music
+ * on a screen that has gone.
+ */
+export function playMusicWhenAllowed(cue: Cue): () => void {
+  if (isMuted() || typeof window === 'undefined') return () => {};
+  const def = TABLE[cue];
+  if (!def) return () => {};
+
+  let armed = true;
+  const events = ['pointerdown', 'touchstart', 'keydown'] as const;
+  const disarm = () => {
+    if (!armed) return;
+    armed = false;
+    events.forEach((e) => window.removeEventListener(e, retry));
+  };
+  function retry() {
+    disarm();
+    if (!isMuted()) playMusic(cue);
+  }
+
+  try {
+    const a = new Audio(def.src);
+    a.volume = def.volume;
+    a.loop = true;
+    void a.play().then(
+      () => { disarm(); stopMusic(); music = a; },
+      () => { try { a.pause(); } catch { /* ignore */ } events.forEach((e) => window.addEventListener(e, retry, { once: true })); },
+    );
+  } catch {
+    events.forEach((e) => window.addEventListener(e, retry, { once: true }));
+  }
+
+  return disarm;
+}
+
 /** Stop just the background bed, leaving any one-shot cue alone. */
 export function stopMusic() {
   try { music?.pause(); } catch { /* ignore */ }

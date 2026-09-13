@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CHROME, Cta, FONT } from '../ui/chrome';
+import { useMotion } from '../ui/quiet';
 import { Chirpy } from '../ui/scene';
 import { FireflyJar } from './FireflyJar';
 import { accentFor, type VirtueRoom } from './rooms';
@@ -18,6 +20,20 @@ import { accentFor, type VirtueRoom } from './rooms';
  * Two ways on, both real: straight to the next room, or stay and play
  * something here. Staying is not a detour from the journey; it IS the
  * journey, and the wording says so.
+ *
+ * AND IT CARRIES ON BY ITSELF. A child taps the tick, which is the answer —
+ * and then had to find and press "Next one" to be allowed to continue, which
+ * is the app asking them to confirm something they had already said. One
+ * answer, one tap, everywhere; the rest of the app already works this way
+ * (see the engines, which all auto-advance a single-answer round), and this
+ * screen was the one place on the journey that didn't.
+ *
+ * THE BUTTONS STAY, and they are not decoration: "Next one" skips the wait for
+ * a child who is quicker than the timer, and "Play something in the …" is the
+ * only way to take the other road, so the timer must never steal it from
+ * underneath them. Which is why the wait is sized to Chirpy's line rather than
+ * fixed — he is still talking, and cutting a friend off mid-word to shove the
+ * next room at a child is worse than the button ever was.
  */
 export function CaughtFirefly({
   room,
@@ -33,6 +49,23 @@ export function CaughtFirefly({
   onStay: () => void;
   isLast: boolean;
 }) {
+  const m = useMotion();
+
+  /*
+    Long enough for the jar to land, for the line to be read, and for Chirpy
+    to finish saying it out loud — his voice starts at delay 0.7 above. The
+    quiet state gets longer still: nothing is hurried at a child who is
+    already struggling (§7).
+  */
+  useEffect(() => {
+    const ms = Math.min(
+      m.quiet ? 9000 : 7000,
+      (m.quiet ? 3000 : 2200) + room.caughtLine.length * (m.quiet ? 80 : 62),
+    );
+    const t = window.setTimeout(onNext, ms);
+    return () => window.clearTimeout(t);
+  }, [onNext, room.caughtLine, m.quiet]);
+
   return (
     <motion.div
       className="fixed inset-0 z-50 grid place-items-center px-6"

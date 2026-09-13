@@ -9,11 +9,11 @@ import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui
 import { useMotion, useQuiet } from '../ui/quiet';
 import { BoyAndChirpy, RoomScene } from '../ui/scene';
 import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
-import { skyNow, timeOfDayForHour } from '../rooms';
+import { skyNow, timeOfDayForHour, type RoomId } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
 import { DoorHandle } from '../ui/DoorHandle';
-import { GreetingBubble, MindGymMark, NeonDoorPill, RoomDome } from './HomeStage';
+import { GreetingBubble, HubRoom, MindGymMark, NeonDoorPill, RoomDome } from './HomeStage';
 import { FloatingJar } from './FloatingJar';
 import { HelpChirpy } from './HelpChirpy';
 import { ReflectionRoom } from './ReflectionRoom';
@@ -390,6 +390,8 @@ function RoomMap({
    * Chosen once on arrival rather than per render, so it can't change under
    * a child mid-read.
    */
+  const vw = useViewportWidth();
+
   const [moment, setMoment] = useState<HubMoment | null>(null);
   useEffect(() => {
     setMoment(hubMoment(quiet, pointsByBehaviour));
@@ -424,14 +426,63 @@ function RoomMap({
     return () => { dead = true; };
   }, []);
 
+  /**
+   * THE EIGHT ALCOVES, AS ONE LIST.
+   *
+   * Assembled here rather than inline because the same eight are drawn twice
+   * on this page in two different arrangements — up the two walls beside the
+   * boy on a wide screen, and in a grid under him on a phone — and two
+   * hand-rolled copies of "seven virtue rooms and then Pause" is exactly how
+   * the Pause Room ends up scoring points on one of them.
+   */
+  /**
+   * How big the boy is allowed to be. He is the subject of this screen, so he
+   * takes whatever the viewport can spare — but a 288px figure on a 390px
+   * phone leaves no width for anything beside him, and he is not the only
+   * thing a child came for.
+   */
+  const boySize = vw >= 1280 ? 288 : vw >= 640 ? 236 : 196;
+
+  const alcoves = [
+    ...VIRTUE_ROOMS.map((r, i) => {
+      const art = artRoomFor(r);
+      const earned = pointsByBehaviour[r.id] ?? 0;
+      return {
+        key: r.id,
+        name: r.name,
+        roomId: art.id,
+        accent: art.palette.accent,
+        index: i,
+        doneToday: !!today[r.id],
+        note: earned > 0 ? `${earned} pts` : 'not yet',
+        dashed: false,
+        onClick: () => onOpen(r),
+      };
+    }),
+    /* Pause sits with them and is visibly not one of them — no tick, no
+       points, no counter. Somewhere that asks nothing. */
+    {
+      key: PAUSE_ROOM.id,
+      name: PAUSE_ROOM.name,
+      roomId: artRoomFor(PAUSE_ROOM).id,
+      accent: artRoomFor(PAUSE_ROOM).palette.accent,
+      index: VIRTUE_ROOMS.length,
+      doneToday: false,
+      note: 'any time',
+      dashed: true,
+      onClick: onPause,
+    },
+  ];
+
   return (
-    <div
-      className="relative min-h-[100svh] w-full overflow-hidden"
-      style={{
-        fontFamily: FONT,
-        background: `linear-gradient(168deg, ${night.ground[0]} 0%, ${night.ground[1]} 100%)`,
-      }}
-    >
+    <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
+      {/* The gym, painted — see HomeStage's HubRoom. What used to be here was
+          a navy gradient and a radial glow standing in for a place. */}
+      <HubRoom />
+
+      {/* The hour of the day, laid over the painting rather than replacing it:
+          the room is the same room at seven in the morning and at bedtime, and
+          only the light through it changes. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -540,31 +591,84 @@ function RoomMap({
         </div>
 
         {/*
+          THE FLOOR OF THE GYM — the boy on the star, with a wall of alcoves
+          either side of him. This is the reference painting's own composition,
+          and it is here because the old one had a bug worth naming: the boy
+          lived INSIDE the greeting banner, which folds itself away after two
+          seconds. He was on screen for two seconds per visit and then gone for
+          the rest of it. Every per-room gait, every bit of characterisation in
+          ui/scene's GAITS, was being drawn for nobody.
+
+          So he is his own thing now, he does not fold, and he is the largest
+          object on the page. The shelves flank him from xl up, where there is
+          real width to put them; below that they would squeeze him to nothing,
+          so the grid under the fold carries them instead.
+        */}
+        <div className="mt-1 flex items-start justify-center gap-5 xl:gap-8">
+          <Shelf alcoves={alcoves.slice(0, 4)} />
+
+          <div className="flex shrink-0 flex-col items-center">
+            {/* HE DANCES ON THE HUB, and only here. Every room has him doing
+                something quieter and room-specific (ui/scene's GAITS); the hub
+                is the one screen where he isn't waiting on the child to answer
+                anything, so it's the one place he gets to just enjoy himself.
+                Facing out, too — this is the hello, which is the one moment
+                §2.2's shared-gaze rule exempts. */}
+            <BoyAndChirpy size={boySize} pose="excited" gaze="child" gait="dance" />
+
+            {/* The star he is standing on, echoing the one inlaid in the
+                painted floor behind him. It is what stops a cut-out figure
+                floating: something on the ground under his feet. */}
+            <StageStar />
+
+            {/*
+              THE ONE THING THIS HUB HAS TO SAY TONIGHT, said where he is
+              standing. It used to sit in the page flow under the room grid,
+              which put it below the fold the moment the shelves took the full
+              height of the screen — and the whole point of this card is that
+              it is the single thing the hub wanted to tell the child.
+
+              Under the boy rather than beside him because he is who says it:
+              Chirpy's memory, Chirpy's arc, Chirpy's guessing game and the
+              note from home all read as coming out of the figure on the star.
+
+              See kit/hubMoment for the order, and for what four of these
+              stacked together did to this page.
+            */}
+            <div className="w-full max-w-[420px]">
+      <AnimatePresence mode="wait">
+      {moment?.kind === 'note' && (
+      <NoteFound key="note" note={moment.note} onDone={() => setMoment(null)} />
+      )}
+      {moment?.kind === 'welcome' && (
+      <WelcomeBackCard key="welcome" line={moment.line} onDone={() => setMoment(null)} />
+      )}
+      {moment?.kind === 'arc' && (
+      <ChirpyArc key="arc" beat={moment.beat} onDone={() => setMoment(null)} />
+      )}
+      {moment?.kind === 'memory' && (
+      <ChirpyRemembers
+      key="memory"
+      recollection={moment.recollection}
+      onDone={() => setMoment(null)}
+      />
+      )}
+      {moment?.kind === 'game' && (
+      <GuessWhat key="game" game={moment.game} onDone={() => setMoment(null)} />
+      )}
+      </AnimatePresence>
+            </div>
+          </div>
+
+          <Shelf alcoves={alcoves.slice(4)} />
+        </div>
+
+        {/*
           ONE CARD. Whatever tonight's single thing is — a note from home, or
           Chirpy, or nothing at all. See kit/hubMoment for the order, and for
           what four of these stacked together actually did to this page.
         */}
-        <AnimatePresence mode="wait">
-          {moment?.kind === 'note' && (
-            <NoteFound key="note" note={moment.note} onDone={() => setMoment(null)} />
-          )}
-          {moment?.kind === 'welcome' && (
-            <WelcomeBackCard key="welcome" line={moment.line} onDone={() => setMoment(null)} />
-          )}
-          {moment?.kind === 'arc' && (
-            <ChirpyArc key="arc" beat={moment.beat} onDone={() => setMoment(null)} />
-          )}
-          {moment?.kind === 'memory' && (
-            <ChirpyRemembers
-              key="memory"
-              recollection={moment.recollection}
-              onDone={() => setMoment(null)}
-            />
-          )}
-          {moment?.kind === 'game' && (
-            <GuessWhat key="game" game={moment.game} onDone={() => setMoment(null)} />
-          )}
-        </AnimatePresence>
+
 
         {/*
           TWO DOORS, SIDE BY SIDE.
@@ -592,47 +696,34 @@ function RoomMap({
             DoorWall. The map is still reachable from the bottom bar's
             "Look back", which is where a child goes looking for it. */}
 
-        <h2 ref={roomsRef} className="mt-5 scroll-mt-4 text-[15.5px] font-extrabold" style={{ color: CHROME.text, fontFamily: FONT }}>
+        {/* Below xl the walls are too narrow to stand a shelf against, so the
+            same eight alcoves lie down here as a grid instead. Hidden, not
+            removed, once the shelves take over: "Explore Rooms" scrolls to
+            this heading, and a heading that vanishes at 1280px would send that
+            button nowhere on exactly the screens where the rooms are already
+            visible — so the ref moves up to the stage at that width. */}
+        <h2
+          ref={roomsRef}
+          className="mt-5 scroll-mt-4 text-[15.5px] font-extrabold xl:hidden"
+          style={{ color: CHROME.text, fontFamily: FONT }}
+        >
           Or pick a room
         </h2>
 
-        {/* THE STREET IS GONE, AND THE CARDS WON.
-            Two ways of showing the same seven rooms ran side by side here so
-            one could be picked. The painted cards are it: a child recognises
-            a room by its picture, and a row of small dark buildings above
-            them was a second, weaker index of the same thing — costing a
-            screenful of height to say what the posters already said better.
-            VillageRow.tsx is still in the tree if it's ever wanted back. */}
-
-        <div className="mt-3 grid grid-cols-2 gap-x-3.5 gap-y-5 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4">
-          {VIRTUE_ROOMS.map((r, i) => {
-            const art = artRoomFor(r);
-            const earned = pointsByBehaviour[r.id] ?? 0;
-            return (
-              <RoomDome
-                key={r.id}
-                name={r.name}
-                roomId={art.id}
-                accent={art.palette.accent}
-                index={i}
-                doneToday={!!today[r.id]}
-                note={earned > 0 ? `${earned} pts` : 'not yet'}
-                onClick={() => onOpen(r)}
-              />
-            );
-          })}
-
-          {/* Pause sits with them but is visibly not one of them — no tick,
-              no points, no counter. Somewhere that asks nothing. */}
-          <RoomDome
-            name={PAUSE_ROOM.name}
-            roomId={artRoomFor(PAUSE_ROOM).id}
-            accent={artRoomFor(PAUSE_ROOM).palette.accent}
-            index={VIRTUE_ROOMS.length}
-            note="any time"
-            dashed
-            onClick={onPause}
-          />
+        <div className="mt-3 grid grid-cols-2 gap-x-3.5 gap-y-5 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4 xl:hidden">
+          {alcoves.map((a) => (
+            <RoomDome
+              key={a.key}
+              name={a.name}
+              roomId={a.roomId}
+              accent={a.accent}
+              index={a.index}
+              doneToday={a.doneToday}
+              note={a.note}
+              dashed={a.dashed}
+              onClick={a.onClick}
+            />
+          ))}
         </div>
       </div>
     </div>
@@ -645,6 +736,107 @@ function RoomMap({
  * What's added is the only new information a virtue room has — whether it was
  * ticked today, and what has been earned in it.
  */
+/**
+ * How wide the window is, in px, and again whenever it changes.
+ *
+ * The boy is sized in JS rather than CSS because his size is a number handed
+ * to a component that draws an <img> at that height — there is no class to put
+ * on him. Everything else on this page does its responsiveness in Tailwind,
+ * and should keep doing so; this exists for the one case that can't.
+ *
+ * Seeded to a desktop width rather than 0 so the first paint on a wide screen
+ * isn't a phone-sized boy who jumps.
+ */
+function useViewportWidth() {
+  const [w, setW] = useState(() => (typeof window === 'undefined' ? 1280 : window.innerWidth));
+  useEffect(() => {
+    const on = () => setW(window.innerWidth);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  return w;
+}
+
+/* ── The two walls ───────────────────────────────────────────────────── */
+
+/** What one alcove needs to draw itself. Assembled once in the hub — see the
+ *  `alcoves` list there for why this is a list and not two lots of JSX. */
+interface Alcove {
+  key: string;
+  name: string;
+  roomId: RoomId;
+  accent: string;
+  index: number;
+  doneToday: boolean;
+  note: string;
+  dashed: boolean;
+  onClick: () => void;
+}
+
+/**
+ * A wall of the gym, with its rooms lit in it.
+ *
+ * Four small alcoves in a column, which is what the reference painting has on
+ * each side of the boy. Narrow on purpose: the boy is the subject of this
+ * screen and these are the room he is standing in, so a shelf wide enough to
+ * compete with him would be the menu winning again.
+ *
+ * Hidden below xl. There is no honest way to stand a four-storey shelf beside
+ * a 288px boy on a 390px phone, and the grid under the fold already says the
+ * same thing with room to breathe.
+ */
+function Shelf({ alcoves }: { alcoves: Alcove[] }) {
+  // 84px is not a taste: four alcoves, each w*4/3 tall plus its plaque, have
+  // to clear the bottom bar between the greeting and the floor. At 92px the
+  // fourth one was behind the nav.
+  return (
+    <div className="hidden w-[84px] shrink-0 flex-col gap-2 xl:flex 2xl:w-[96px]">
+      {alcoves.map((a) => (
+        <RoomDome
+          key={a.key}
+          name={a.name}
+          roomId={a.roomId}
+          accent={a.accent}
+          index={a.index}
+          doneToday={a.doneToday}
+          note={a.note}
+          dashed={a.dashed}
+          compact
+          onClick={a.onClick}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The star under his feet.
+ *
+ * A cut-out figure with nothing beneath them reads as pasted on, however good
+ * the drawing is — the eye wants contact with a floor. The painted room has a
+ * star inlaid in its own floor at exactly this spot, so this is a live copy of
+ * it, lining up with the one behind and giving him something to stand on at
+ * every viewport shape.
+ *
+ * It breathes rather than spins. A rotating star under a dancing boy is two
+ * things moving at cross purposes, and the floor should be the still one.
+ */
+function StageStar() {
+  const m = useMotion();
+  return (
+    <motion.div
+      aria-hidden
+      className="pointer-events-none -mt-[42px] h-[54px] w-[186px] shrink-0"
+      style={{
+        background: 'radial-gradient(50% 50% at 50% 50%, rgba(255,214,150,0.5) 0%, rgba(255,190,110,0.16) 42%, transparent 72%)',
+        borderRadius: '50%',
+      }}
+      animate={m.loop ? { opacity: [0.68, 1, 0.68], scaleX: [1, 1.05, 1] } : { opacity: 0.85 }}
+      transition={m.loop ? { ...m.loop, duration: 4.4 } : { duration: 0.3 }}
+    />
+  );
+}
+
 /* ── The welcome, and how it leaves ──────────────────────────────────── */
 
 /** How long the full greeting stays before folding itself away. */
@@ -759,13 +951,10 @@ function WelcomeBanner({
             transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
             className="flex flex-col items-center gap-2"
           >
-            {/* HE DANCES ON THE HUB, and only here. Every room has him
-                doing something quieter and room-specific (see ui/scene's
-                GAITS); the hub is the one screen where he isn't waiting on
-                the child to answer anything, so it's the one place he gets
-                to just enjoy himself. Facing out, too — this is the hello,
-                which is the one moment §2.2's shared-gaze rule exempts. */}
-            <BoyAndChirpy size={168} pose="excited" gaze="child" gait="dance" />
+            {/* The boy used to be here, and being here is what made him
+                invisible: this whole branch folds away two seconds after the
+                child arrives. He is on the stage under the greeting now and
+                he stays. */}
             <StarSky count={stars} />
             <p className="max-w-sm text-[13.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
               {doneCount === 0

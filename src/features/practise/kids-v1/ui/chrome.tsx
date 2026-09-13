@@ -47,7 +47,25 @@ export function Scrim({ room }: { room: RoomConfig }) {
       aria-hidden
       className="pointer-events-none absolute inset-0"
       style={{
-        background: `linear-gradient(to bottom, transparent 40%, ${room.palette.scrim}9E 72%, ${room.palette.scrim}E8 100%)`,
+        /*
+          IT COVERS THE WHOLE SCREEN NOW. This used to be `transparent 40%`,
+          which meant the entire upper half of every room — the room's name,
+          its question, its "read it to me", its points line — sat on undimmed
+          painting. The bottom of the screen was beautifully legible and the
+          part with the words on it was not.
+
+          AND IT IS NOT LIGHTEST IN THE MIDDLE, which was the first attempt at
+          fixing it: "veil the ends, let the art breathe through the middle"
+          is a good instinct for a poster and exactly wrong here, because the
+          middle band is where every control in the app actually sits. It put
+          the thinnest part of the veil behind the one thing that had to read.
+
+          So: near-even through the top three-quarters, deepening at the foot
+          where the bottom bar and the companion overlap. The art is still
+          plainly there — it is a painting seen in a dim room, which is what
+          every one of these scenes is meant to be anyway (§1).
+        */
+        background: `linear-gradient(to bottom, ${room.palette.scrim}94 0%, ${room.palette.scrim}82 34%, ${room.palette.scrim}8F 62%, ${room.palette.scrim}CC 84%, ${room.palette.scrim}F2 100%)`,
       }}
     />
   );

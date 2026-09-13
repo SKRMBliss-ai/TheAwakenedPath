@@ -13,6 +13,7 @@ import { HearYourself } from '../ui/HearYourself';
 import { SpeakButton } from '../ui/SpeakButton';
 import { allLinks, linkClip } from '../kit/voiceStore';
 import { Chirpy, RoomScene } from '../ui/scene';
+import { DIM } from '../ui/scenery';
 import { LifetimeJar } from './LifetimeJar';
 import { LetThemGo } from './LetThemGo';
 import { starCount } from '../kit/sky';
@@ -135,7 +136,7 @@ export function ReflectionRoom({
           learns one door learns them all. */}
       <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
 
-      <RoomScene room={art} dim={0.42} />
+      <RoomScene room={art} dim={DIM.content} />
 
       <div className="relative mx-auto w-full max-w-4xl px-[74px] pb-28 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">

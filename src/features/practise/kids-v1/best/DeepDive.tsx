@@ -4,6 +4,7 @@ import { getRoom, type RoomId } from '../rooms';
 import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
+import { DIM } from '../ui/scenery';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { Eye, MessageCircle, Paintbrush, RotateCcw } from 'lucide-react';
 import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
@@ -214,7 +215,7 @@ export function DeepDive({
               other step keeps its painted still. */}
           {onFeelingStep
             ? <FeelingsIntro onDone={finishFeelingIntro} flash={orbFlash} />
-            : <RoomScene room={art} dim={phase === 'ask' ? 0.25 : turned ? 0.08 : 0.55} />}
+            : <RoomScene room={art} dim={phase === 'ask' ? DIM.content : turned ? DIM.arrive : DIM.play} />}
         </motion.div>
       </AnimatePresence>
 

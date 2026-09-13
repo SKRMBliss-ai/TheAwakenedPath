@@ -22,6 +22,90 @@ import { roomPoster, storageFallback, type RoomId } from '../rooms';
  * not negotiable.
  */
 
+/* ── The room itself ─────────────────────────────────────────────────── */
+
+/**
+ * THE HUB, PAINTED.
+ *
+ * The hub used to be a navy gradient with a radial glow on it, which is a
+ * competent dark screen and is not a place. The founder's own painting of the
+ * gym interior — warm wood, lit shelves, two doors, a star inlaid in the floor
+ * — was sitting in the repository being used for nothing.
+ *
+ * IT IS A BACKDROP, NOT THE INTERFACE. The painting contains its own drawn
+ * copies of everything: room domes on the shelves, pills on the doors, a boy
+ * on the star. Those are reference, not controls — a child cannot tap a
+ * painting. So the live layer sits on top in the same arrangement, and this is
+ * pushed back far enough that its painted furniture reads as the room rather
+ * than as a second set of buttons: a small blur, a drop in saturation and
+ * brightness, and a veil over the top.
+ *
+ * THE VEIL IS THE POINT, and it is why the numbers here are as strong as they
+ * are. Every control on this screen is a light shape on a busy, bright,
+ * high-contrast painting, and the painting wins that fight every time unless
+ * it is held down. Faded, the boy standing on the star and the lit domes are
+ * the only sharp things on screen, which is exactly the reading order a child
+ * needs.
+ *
+ * The star on the floor is the anchor: `object-position` keeps it centred and
+ * low as the viewport changes shape, so the live boy is standing on it rather
+ * than beside it at every width.
+ */
+export function HubRoom() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* Under the painting, and not decoration: it covers the edges the art
+          can't reach on a very wide screen, and stops the page flashing pale
+          before a 226KB image has decoded. */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(168deg,#2A1B4A 0%,#140C28 100%)' }} />
+      <img
+        src="/assets/home/hub-room@1600.webp"
+        srcSet="/assets/home/hub-room@960.webp 960w, /assets/home/hub-room@1600.webp 1600w"
+        sizes="100vw"
+        alt=""
+        draggable={false}
+        className="absolute inset-0 h-full w-full object-cover"
+        style={{
+          objectPosition: '50% 52%',
+          /*
+            HOW FAR BACK IS FAR ENOUGH — settled by looking, not by taste.
+
+            At blur(2.5) and brightness(0.52) the painting's own drawn speech
+            bubble was still legible behind the real one, and its painted boy's
+            face filled the middle of the screen behind the live boy. Two
+            greetings and two boys is not a backdrop, it is a double exposure.
+
+            Nine is where the painted boy stops having a silhouette. His white
+            t-shirt survives a lot of blurring as a pale blob in the middle of
+            the screen, directly behind the live boy, and the blob is the tell
+            — under it the room reads as depth, over it as a smudge.
+
+            At these numbers the room keeps its warmth, its shelves and its lit
+            arches, and none of its painted furniture resolves into something a
+            child could mistake for a control.
+          */
+          filter: 'blur(9px) saturate(0.85) brightness(0.32)',
+          /* The blur samples transparent black past the edges and leaves a
+             dark rim. Scaling up a little pushes that rim off-screen. */
+          transform: 'scale(1.12)',
+        }}
+      />
+      {/* The veil. Warmer in the middle than at the corners, so the room still
+          reads as lit from within rather than as a photograph behind glass. */}
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(64% 54% at 50% 44%, rgba(20,11,42,0.46) 0%, rgba(8,5,18,0.9) 100%)' }}
+      />
+      {/* §2.3's warm source, kept. Over the veil rather than under it, or the
+          veil simply cancels it. */}
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(46% 34% at 50% 30%, rgba(255,196,120,0.16) 0%, transparent 70%)' }}
+      />
+    </div>
+  );
+}
+
 /* ── The sign ────────────────────────────────────────────────────────── */
 
 /**
@@ -272,6 +356,7 @@ export function RoomDome({
   note,
   doneToday = false,
   dashed = false,
+  compact = false,
   onClick,
 }: {
   name: string;
@@ -284,6 +369,13 @@ export function RoomDome({
   doneToday?: boolean;
   /** The Pause Room sits with the others and is visibly not one of them. */
   dashed?: boolean;
+  /**
+   * The shelf version: the same alcove, drawn small enough that four of them
+   * stack up one wall beside the boy without pushing him off the screen. Only
+   * the type shrinks — the arch, the rim light and the plaque are the same
+   * shapes, because a child recognises the room by its silhouette.
+   */
+  compact?: boolean;
   onClick: () => void;
 }) {
   const m = useMotion();
@@ -353,17 +445,23 @@ export function RoomDome({
           name puts the signs in a row at three different heights — which reads
           as a wonky shelf rather than as a set of rooms. */}
       <span
-        className="relative z-10 -mt-4 mx-1 flex min-h-[54px] flex-col justify-center rounded-[14px] px-2 py-1.5 text-center"
+        className={`relative z-10 -mt-4 mx-1 flex flex-col justify-center rounded-[14px] px-2 py-1.5 text-center ${compact ? 'min-h-[40px]' : 'min-h-[54px]'}`}
         style={{
           background: 'linear-gradient(180deg, rgba(18,14,42,0.96) 0%, rgba(10,8,26,0.98) 100%)',
           border: `1.5px solid ${accent}`,
           boxShadow: `0 0 18px -6px ${accent}, 0 8px 18px -8px rgba(0,0,0,0.9)`,
         }}
       >
-        <span className="block text-[12.5px] font-extrabold leading-tight sm:text-[13.5px]" style={{ color: CHROME.text }}>
+        <span
+          className={`block font-extrabold leading-tight ${compact ? 'text-[10px]' : 'text-[12.5px] sm:text-[13.5px]'}`}
+          style={{ color: CHROME.text }}
+        >
           {name}
         </span>
-        <span className="mt-0.5 block text-[10.5px] font-bold leading-tight" style={{ color: accent }}>
+        <span
+          className={`mt-0.5 block font-bold leading-tight ${compact ? 'text-[8.5px]' : 'text-[10.5px]'}`}
+          style={{ color: accent }}
+        >
           {note}
         </span>
       </span>

@@ -4,6 +4,7 @@ import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from '../ui
 import { DoorHandle } from '../ui/DoorHandle';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { RoomScene } from '../ui/scene';
+import { DIM } from '../ui/scenery';
 import type { RoomConfig } from '../rooms';
 import { chirpySprite, type ChirpyPose } from '../ui/sprites';
 import { getRoom } from '../rooms';
@@ -70,7 +71,7 @@ export function HelpChirpy({ onExit, onGrownUp }: { onExit: () => void; onGrownU
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
-      <RoomScene room={art} dim={beat === 'thanks' ? 0.16 : 0.42} />
+      <RoomScene room={art} dim={beat === 'thanks' ? DIM.arrive : DIM.content} />
 
       {/* When the child hands him another story, his room lifts too — the
           same language the deep dive uses, so the child recognises what just

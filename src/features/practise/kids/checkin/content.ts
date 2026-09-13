@@ -38,7 +38,13 @@ export type ChirpyPose =
   | 'idle' | 'curious' | 'worried' | 'excited' | 'jumping' | 'hopeful'
   | 'said1' | 'said2' | 'said3';
 
-export const chirpySprite = (pose: ChirpyPose) => `/chirpy/chirpy-${pose}.webp`;
+/**
+ * The nine old one-size frames these names were written against are gone —
+ * see kids-v1/ui/sprites for the replacements and for which drawing each
+ * pose lands on. Re-exported rather than re-tabled so the two halves of the
+ * app cannot drift into disagreeing about what "hopeful" looks like.
+ */
+export { chirpySprite, chirpySrcSet } from '../../kids-v1/ui/sprites';
 
 export const GOODBITS = [
   'Someone was kind to me',
