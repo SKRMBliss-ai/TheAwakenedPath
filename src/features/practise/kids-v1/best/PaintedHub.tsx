@@ -36,6 +36,17 @@ import { useMotion } from '../ui/quiet';
 /** The painting's own aspect ratio. Everything below is a % of this box. */
 export const HUB_ASPECT = 1600 / 893;
 
+/**
+ * The painting itself, named once.
+ *
+ * Two things load it: the <img> in the stage, and the hover lift, which cuts
+ * its own slice of the same file out of the same URL so the browser serves it
+ * from cache rather than fetching a second copy. If these two ever disagree
+ * the lifted dome is a dome from a different render of the room, which is the
+ * sort of thing nobody notices until it looks subtly wrong everywhere.
+ */
+const HUB_ART = '/assets/home/hub-room@1600.webp';
+
 export interface Hotspot {
   id: string;
   /** What a screen reader and a tooltip call it. */
@@ -52,6 +63,15 @@ export interface Hotspot {
   done?: boolean;
   /** The dome's own light, for the ring. */
   accent: string;
+  /**
+   * What to say on hover, for the pieces the painting does NOT name itself.
+   *
+   * Every dome has its title painted on it and every door has a painted sign,
+   * so those say nothing extra — a label floating over a label is noise. The
+   * door knobs have no lettering anywhere in the art, so they are the only
+   * things here that have to introduce themselves.
+   */
+  hint?: string;
 }
 
 /**
@@ -71,11 +91,49 @@ export const HUB_BOXES = {
   pause:      { left: 67.3, top: 13.2, width: 12.4, height: 17.0, radius: '46% 46% 14% 14% / 34% 34% 14% 14%' },
   story:      { left: 68.8, top: 31.2, width: 12.4, height: 15.4, radius: '46% 46% 14% 14% / 34% 34% 14% 14%' },
   reflection: { left: 68.8, top: 46.4, width: 13.2, height: 18.4, radius: '46% 46% 14% 14% / 34% 34% 14% 14%' },
-  explore:    { left: 1.4,  top: 23.6, width: 12.4, height: 56.4, radius: '10% 10% 6% 6% / 4% 4% 3% 3%' },
-  journey:    { left: 86.4, top: 23.6, width: 12.6, height: 56.4, radius: '10% 10% 6% 6% / 4% 4% 3% 3%' },
+  /**
+   * THE DOORS — the painted sign and the panel above the handle, and NOT the
+   * whole leaf of the door.
+   *
+   * These used to run the full height of the doorway, 23.6% to 80%, which put
+   * the middle of the box at 51.8% — and the brass handle, which is now its
+   * own hotspot, is at 50.2% to 61.2%. The most natural place on earth to
+   * press a door is the middle of it, and the middle of it was the knob. A
+   * child aiming at Explore Rooms would have got Chirpy instead, and would
+   * have had no way of telling why.
+   *
+   * So the door ends where the handle begins. What is left is the piece a
+   * child actually reads and aims at anyway — the lit sign with its chevron,
+   * and the glowing panel under it — still around 200x230px of target at full
+   * size. The foot of each door is scenery now, like the rest of the wall.
+   */
+  explore:    { left: 1.4,  top: 23.6, width: 12.4, height: 25.6, radius: '10% 10% 6% 6% / 8% 8% 6% 6%' },
+  journey:    { left: 86.4, top: 23.6, width: 12.6, height: 25.6, radius: '10% 10% 6% 6% / 8% 8% 6% 6%' },
+  /**
+   * THE TWO BRASS KNOBS, which are their own fittings and not their doors.
+   *
+   * Measured off the art the same way as everything else: both doors were
+   * drawn with the handle at the same height, so these differ only in `left`.
+   *
+   * They sit just under the door boxes above with about a percent of clear
+   * wall between, so no press is ever ambiguous. A knob is the part of a door
+   * a person takes hold of, which is why it is worth being its own way
+   * through rather than another few pixels of the same button.
+   */
+  knobExplore: { left: 4.4,  top: 50.2, width: 7.2, height: 11.0, radius: '44% 44% 44% 44% / 50% 50% 50% 50%' },
+  knobJourney: { left: 86.2, top: 50.2, width: 7.2, height: 11.0, radius: '44% 44% 44% 44% / 50% 50% 50% 50%' },
   /** The painted bubble is wiped out of the art; the live one sits here. */
   bubble:     { left: 26.4, top: 5.2,  width: 26.6, height: 14.4 },
 } as const;
+
+/**
+ * The two doors, and the two knobs on them — PhoneHub sorts one flat list of
+ * hotspots into three rows with these. Module-private deliberately: exporting
+ * them would cost this file its fast refresh (react-refresh/only-export-components)
+ * and nothing outside it needs them.
+ */
+const DOOR_IDS: string[] = ['explore', 'journey'];
+const KNOB_IDS: string[] = ['knobExplore', 'knobJourney'];
 
 /**
  * Every box in HUB_BOXES that is a pressable piece of the painting — i.e. all
@@ -101,8 +159,8 @@ export function HubStage({ children }: { children: React.ReactNode }) {
       }}
     >
       <img
-        src="/assets/home/hub-room@1600.webp"
-        srcSet="/assets/home/hub-room@960.webp 960w, /assets/home/hub-room@1600.webp 1600w"
+        src={HUB_ART}
+        srcSet={`/assets/home/hub-room@960.webp 960w, ${HUB_ART} 1600w`}
         sizes="100vw"
         alt=""
         aria-hidden
@@ -115,22 +173,65 @@ export function HubStage({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * One pressable piece of the painting.
+ * One pressable piece of the painting — and, on hover, the piece LIFTING OUT
+ * of it.
  *
- * Invisible at rest. The ring appears on hover and on keyboard focus, and a
- * tap flashes it — so a child who touches the screen gets the same "yes, that
- * one" they would from a button, without a button being drawn over art that
- * already reads as a door.
+ * WHAT IS ACTUALLY MOVING. There is no separate sprite for any of these: the
+ * domes and the doors exist only as pixels inside one 1600px painting, and
+ * nobody drew them a second time on transparent backgrounds. So the lift is
+ * the painting itself, quoted. The span below loads the same file as a
+ * background, blown up and offset so that the only part of it landing inside
+ * the hotspot is that hotspot's own dome, then scales the whole thing up and
+ * raises it a few percent. What a child sees is their dome swelling off the
+ * shelf with the rest of the room holding still behind it, because the thing
+ * on top and the thing underneath are made of exactly the same paint.
+ *
+ * THE TWO NUMBERS. `backgroundSize` is the stage expressed as a multiple of
+ * this box (a dome 11.8% wide needs the art at 1/0.118 of its own width), and
+ * `backgroundPosition` is the CSS percentage that slides that oversized image
+ * until the dome sits in the frame. The position formula is not `left` — CSS
+ * measures background percentages against the difference between the box and
+ * the image, which is what `left / (100 - width)` is. Get that wrong and every
+ * dome lifts a slightly different bit of the room, which reads as the art
+ * glitching rather than as a mistake in arithmetic.
+ *
+ * `background-origin` and `background-clip` are pinned to the border box on
+ * purpose: the ring is a 2px border on this same element, and with the default
+ * padding-box origin those 2px shift the slice and the lifted dome no longer
+ * lines up with the painted one underneath it.
+ *
+ * NONE OF IT MOVES IN THE QUIET STATE. The ring still fades in, because that
+ * is the only thing telling a child which one they are on; the swelling does
+ * not happen at all.
  */
 export function HubHotspot({ spot }: { spot: Hotspot }) {
   const m = useMotion();
+
+  /* The slice of the painting that is this hotspot. See the note above. */
+  const cutout = {
+    backgroundImage: `url(${HUB_ART})`,
+    backgroundSize: `${(100 / spot.width) * 100}% ${(100 / spot.height) * 100}%`,
+    backgroundPosition:
+      `${(spot.left / (100 - spot.width)) * 100}% ` +
+      `${(spot.top / (100 - spot.height)) * 100}%`,
+    backgroundRepeat: 'no-repeat',
+    backgroundOrigin: 'border-box' as const,
+    backgroundClip: 'border-box' as const,
+  };
+
+  /* Written out in full rather than built from a template, because Tailwind
+     reads this file as text and never sees a class name it has to concatenate. */
+  const lift = m.quiet
+    ? ''
+    : 'group-hover:-translate-y-[6%] group-hover:scale-[1.12] ' +
+      'group-focus-visible:-translate-y-[6%] group-focus-visible:scale-[1.12]';
+
   return (
     <motion.button
       onClick={spot.onClick}
       aria-label={`${spot.label}${spot.done ? ', ticked today' : ''}`}
       whileTap={{ scale: 0.97 }}
-      whileHover={m.quiet ? undefined : { opacity: 1 }}
-      className="group absolute focus:outline-none"
+      className="group absolute focus:outline-none hover:z-20 focus-within:z-20"
       style={{
         left: `${spot.left}%`,
         top: `${spot.top}%`,
@@ -140,34 +241,66 @@ export function HubHotspot({ spot }: { spot: Hotspot }) {
         fontFamily: FONT,
       }}
     >
-      {/* The ring. Opacity only — the shape is always there, so there is no
-          layout or paint work happening on hover, just a fade. */}
+      {/* Everything that belongs to the dome rises together — the quoted
+          paint, the ring around it and today's tick. A tick that stayed put
+          while the dome it belongs to lifted would read as a separate object
+          sitting in front of the shelf. */}
       <span
-        aria-hidden
-        className="absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
-        style={{
-          borderRadius: spot.radius,
-          border: `2px solid ${spot.accent}`,
-          boxShadow: `0 0 26px -4px ${spot.accent}, inset 0 0 22px -8px ${spot.accent}`,
-        }}
-      />
-
-      {/* Ticked today. The one thing allowed to cover any part of the art,
-          because it is the only thing on this screen the painting cannot
-          possibly say for itself. */}
-      {spot.done && (
+        className={`absolute inset-0 transition-transform duration-300 ease-out ${lift}`}
+        style={{ transformOrigin: 'center 72%' }}
+      >
+        {/* The lifted dome and its ring, as one element so the two can never
+            disagree about where the edge of the alcove is. Opacity only at
+            rest, so nothing here paints until a child is actually on it. */}
         <span
-          className="absolute grid place-items-center rounded-full"
+          aria-hidden
+          className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
           style={{
-            right: '-6%',
-            top: '2%',
-            height: '22%',
-            aspectRatio: '1',
-            background: spot.accent,
-            boxShadow: `0 0 16px -2px ${spot.accent}`,
+            ...cutout,
+            borderRadius: spot.radius,
+            border: `2px solid ${spot.accent}`,
+            boxShadow:
+              `0 22px 40px -14px rgba(4,2,14,0.92), ` +
+              `0 0 34px -6px ${spot.accent}, ` +
+              `inset 0 0 22px -8px ${spot.accent}`,
+          }}
+        />
+
+        {/* Ticked today. The one thing allowed to cover any part of the art,
+            because it is the only thing on this screen the painting cannot
+            possibly say for itself. */}
+        {spot.done && (
+          <span
+            className="absolute grid place-items-center rounded-full"
+            style={{
+              right: '-6%',
+              top: '2%',
+              height: '22%',
+              aspectRatio: '1',
+              background: spot.accent,
+              boxShadow: `0 0 16px -2px ${spot.accent}`,
+            }}
+          >
+            <Check size={14} strokeWidth={3.5} color="#0E1A1C" />
+          </span>
+        )}
+      </span>
+
+      {/* The name, for the fittings the painting never lettered — the knobs.
+          It sits ABOVE the hotspot rather than on it, because a knob is small
+          and a label printed over the top of one hides the thing it names. */}
+      {spot.hint && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-extrabold opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
+          style={{
+            background: 'rgba(10,6,22,0.92)',
+            border: `1px solid ${spot.accent}`,
+            color: CHROME.text,
+            boxShadow: `0 0 20px -8px ${spot.accent}`,
           }}
         >
-          <Check size={14} strokeWidth={3.5} color="#0E1A1C" />
+          {spot.hint}
         </span>
       )}
     </motion.button>
@@ -291,8 +424,9 @@ export function PhoneHub({
   onGreeting: () => void;
 }) {
   const m = useMotion();
-  const doors = spots.filter((s) => s.id === 'explore' || s.id === 'journey');
-  const rooms = spots.filter((s) => s.id !== 'explore' && s.id !== 'journey');
+  const doors = spots.filter((s) => DOOR_IDS.includes(s.id));
+  const knobs = spots.filter((s) => KNOB_IDS.includes(s.id));
+  const rooms = spots.filter((s) => !DOOR_IDS.includes(s.id) && !KNOB_IDS.includes(s.id));
 
   return (
     <div className="relative flex flex-col" style={{ fontFamily: FONT }}>
@@ -317,7 +451,7 @@ export function PhoneHub({
         />
       </div>
 
-      <div className="relative -mt-2 flex flex-col gap-2.5 px-4 pb-40">
+      <div className="relative -mt-2 flex flex-col gap-2.5 px-4 pb-32">
         {/* The same question the painted bubble asks, at a size a phone can
             print it — and it goes where the question goes. */}
         <button
@@ -398,6 +532,29 @@ export function PhoneHub({
             {d.label}
           </button>
         ))}
+
+        {/* The knobs, which on a wide screen are brass fittings on the doors
+            and here are simply two more places to go. No overlap to worry
+            about on a phone — the doors above are rows of their own — so
+            these can be plain, quieter buttons sitting under the door each
+            one belongs to. */}
+        <div className="grid grid-cols-2 gap-2.5">
+          {knobs.map((k) => (
+            <button
+              key={k.id}
+              onClick={k.onClick}
+              className="rounded-full px-2.5 py-2.5 text-[12px] font-extrabold leading-tight"
+              style={{
+                minHeight: m.target,
+                background: 'rgba(255,255,255,0.05)',
+                border: `1px solid ${k.accent}77`,
+                color: CHROME.textSoft,
+              }}
+            >
+              {k.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

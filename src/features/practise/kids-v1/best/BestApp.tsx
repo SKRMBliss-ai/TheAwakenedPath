@@ -227,6 +227,9 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onDeepDive={() => setView({ at: 'deep' })}
                 onHelpChirpy={() => setView({ at: 'helpchirpy' })}
                 onPause={() => setView({ at: 'pause' })}
+                onReflection={() => setView({ at: 'reflection' })}
+                onRewards={() => setView({ at: 'rewards' })}
+                onFriends={() => setView({ at: 'friends' })}
                 onOneMinute={() => setView({ at: 'oneminute' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
@@ -281,17 +284,20 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
           </motion.div>
         </AnimatePresence>
 
-        {/* The bottom bar. Friendship and rewards live here rather than as
-            rooms on the map, because they aren't things you practise — they're
-            things you go and look at. */}
-        {(view.at === 'map' || view.at === 'room') && (
-          <BottomBar
-            onFriends={() => setView({ at: 'friends' })}
-            onRewards={() => setView({ at: 'rewards' })}
-            onReflection={() => setView({ at: 'reflection' })}
-            onPause={() => setView({ at: 'pause' })}
-          />
-        )}
+        {/*
+          NO BOTTOM BAR. It used to run across every hub and every room with
+          Friends, Rewards, Look Back and Pause on it, and three of those four
+          were a second way into somewhere the painting already goes: Pause is
+          a lit dome on the middle shelf, Look Back is the knob on the journey
+          door, and the rooms are the whole left-hand wall. A strip of emoji
+          re-listing the picture behind it was the last piece of the old menu
+          hub still standing, and it sat across the bottom of the art.
+
+          What genuinely had nowhere else to live is what a child has earned,
+          so that is all that is left, and it perches rather than docks — see
+          RewardPerch. Friends moved behind the blue door with the rooms; it is
+          somewhere you go and look, not something you practise.
+        */}
       </div>
     </QuietProvider>
   );
@@ -306,6 +312,9 @@ function RoomMap({
   onDeepDive,
   onHelpChirpy,
   onPause,
+  onReflection,
+  onRewards,
+  onFriends,
   onOneMinute,
   onExitGym,
   onGrownUp,
@@ -317,6 +326,10 @@ function RoomMap({
   onDeepDive: () => void;
   onHelpChirpy: () => void;
   onPause: () => void;
+  /** The Observatory — looking back over the walk, not the Reflection Room dome. */
+  onReflection: () => void;
+  onRewards: () => void;
+  onFriends: () => void;
   onOneMinute: () => void;
   onExitGym: () => void;
   onGrownUp: () => void;
@@ -456,6 +469,19 @@ function RoomMap({
     done = false,
   ): Hotspot => ({ id: key, label, accent, onClick, done, ...HUB_BOXES[key] });
 
+  /**
+   * A KNOB IS NOT ITS DOOR.
+   *
+   * Both doors were painted with a big brass handle on them, and until now
+   * those handles were just pixels inside a door-shaped hit box. They are the
+   * one part of a door a child reaches for on purpose, so each one is its own
+   * way through — and because the painting never lettered them, each carries a
+   * `hint` that says what it is on hover. The door boxes in PaintedHub were
+   * shortened to stop above the brass so that no press is ever ambiguous.
+   */
+  const knob = (key: HotspotKey, label: string, accent: string, onClick: () => void): Hotspot =>
+    ({ id: key, label, accent, onClick, hint: label, ...HUB_BOXES[key] });
+
   const open = (id: string) => () => { const r = virtue(id); if (r) onOpen(r); };
   const ticked = (id: string) => !!today[id];
 
@@ -470,6 +496,29 @@ function RoomMap({
     dome('reflection', 'Reflection Room', '#9FB4F5', open('mindheart'), ticked('mindheart')),
     dome('explore', 'Explore every room', '#6FA8F0', () => setSheet(true)),
     dome('journey', 'My Journey', '#FFC65C', () => { sound.play('arcadeBlip'); onStartJourney(); }),
+
+    /*
+      THE KNOBS, AND WHY THESE TWO THINGS.
+
+      Each knob belongs to the door it is screwed to, which is the whole
+      reason a knob is a sensible place to put anything at all.
+
+      THE GOLD DOOR is My Journey — the walk through all seven rooms, which
+      ENDS at the Observatory. So its handle is the way back to what the walk
+      has come to: the same Observatory, reached without having to do the walk
+      again first. It has no other entrance now that the bottom bar is gone,
+      and "Look back" was the only thing on that bar worth keeping.
+
+      THE BLUE DOOR is Explore Rooms, and its handle gives Chirpy his door
+      back. He had one on the right-hand wall until the painting replaced the
+      walls, and since then the only way to the thing he has been working up
+      to asking has been a row most children never scroll to inside the room
+      sheet. The character standing on the boy's shoulder in this very picture
+      should not be the hardest thing on the screen to reach.
+
+    */
+    knob('knobJourney', 'Look back', '#FFC65C', () => { sound.play('roomCard'); onReflection(); }),
+    knob('knobExplore', 'Chirpy needs a hand', '#8FD9C4', () => { sound.play('roomCard'); onHelpChirpy(); }),
   ];
 
   return (
@@ -510,6 +559,11 @@ function RoomMap({
       {/* Tonight's lights, standing at the foot of the door that fills it.
           Movable, and it remembers where it was put. */}
       <FloatingJar caught={caughtToday} />
+
+      {/* What the bottom bar was actually for. Bottom LEFT because the whole
+          right-hand gutter is spoken for — the jar hangs there and HubAside
+          sits under it. */}
+      <RewardPerch onRewards={onRewards} />
 
       {/*
         THE CHROME, AND AS LITTLE OF IT AS THE APP CAN HONESTLY GET AWAY WITH.
@@ -594,6 +648,7 @@ function RoomMap({
             onOpen={(r) => { setSheet(false); onOpen(r); }}
             onPause={() => { setSheet(false); onPause(); }}
             onChirpy={() => { setSheet(false); onHelpChirpy(); }}
+            onFriends={() => { setSheet(false); onFriends(); }}
             onClose={() => setSheet(false)}
           />
         )}
@@ -630,6 +685,7 @@ function RoomSheet({
   onOpen,
   onPause,
   onChirpy,
+  onFriends,
   onClose,
 }: {
   today: Record<string, boolean>;
@@ -638,6 +694,8 @@ function RoomSheet({
   onPause: () => void;
   /** Chirpy's own ask. His door went with the wall the painting replaced. */
   onChirpy: () => void;
+  /** Not a room, and printed as one would be a lie — see below. */
+  onFriends: () => void;
   onClose: () => void;
 }) {
   const m = useMotion();
@@ -744,6 +802,26 @@ function RoomSheet({
             </span>
           </button>
         </div>
+
+        {/*
+          FRIENDS, UNDER A RULE RATHER THAN IN THE LIST.
+
+          It was on the bottom bar, beside Pause and Look Back, which put "go
+          and look at your friends" at exactly the same weight as "go and say
+          how today went" — and it is not that, it is somewhere you visit. It
+          is also not a room, so it cannot go in the list above without the
+          list starting to lie about what it contains.
+
+          A rule and a quieter row is the honest shape: still one tap from the
+          blue door, visibly not part of the round.
+        */}
+        <button
+          onClick={onFriends}
+          className="mt-3 w-full rounded-[14px] border-t px-3 pb-1 pt-3 text-left text-[12.5px] font-bold"
+          style={{ minHeight: m.target, borderColor: 'rgba(255,255,255,0.12)', color: CHROME.textSoft }}
+        >
+          Friends →
+        </button>
       </motion.div>
     </motion.div>
   );
@@ -989,43 +1067,79 @@ function Panel({ children, onClose }: { children: React.ReactNode; onClose: () =
   );
 }
 
-/* ── Bottom bar ──────────────────────────────────────────────────────── */
+/* ── What a child has earned ─────────────────────────────────────────── */
 
-function BottomBar({
-  onFriends, onRewards, onReflection, onPause,
-}: {
-  onFriends: () => void; onRewards: () => void; onReflection: () => void; onPause: () => void;
-}) {
+/**
+ * THE ONE THING THE PAINTING CANNOT SAY.
+ *
+ * Everything else that lived on the old bottom bar is somewhere in the picture
+ * already — Pause is a lit dome, Look Back is the knob on the gold door, the
+ * rooms are the whole left wall — so the bar had become a caption listing the
+ * art behind it. Points and unopened rewards are the exception: nothing in a
+ * painted room can show a number that changes.
+ *
+ * SO IT PERCHES INSTEAD OF DOCKING. A bar is a piece of furniture bolted
+ * across the foot of the screen and it cut the floor of the gym in half; this
+ * is Chirpy sitting on a small ledge in the corner with the count beside him,
+ * taking up about a sixth of the width and none of the middle. Bottom LEFT,
+ * because the right-hand gutter already has the firefly jar hanging in it with
+ * HubAside underneath.
+ *
+ * AND ONLY ON THE HUB. The bar also rode along into every room, which meant a
+ * child halfway through saying how their day went had a running points total
+ * and a way out to the rewards screen sitting under the question. A room asks
+ * one thing at a time; the score can wait in the hall.
+ */
+function RewardPerch({ onRewards }: { onRewards: () => void }) {
+  const m = useMotion();
   const points = useKidStore((s) => s.points);
   const rewards = useKidStore((s) => s.rewards);
 
-  const items = [
-    { key: 'friends', emoji: '🤝', label: 'Friends', onClick: onFriends, badge: null as string | null },
-    { key: 'rewards', emoji: '🎁', label: 'Rewards', onClick: onRewards, badge: rewards.length ? String(rewards.length) : null },
-    { key: 'look', emoji: '🔭', label: 'Look back', onClick: onReflection, badge: null },
-    { key: 'pause', emoji: '🌙', label: 'Pause', onClick: onPause, badge: null },
-  ];
-
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40">
-      <div className="mx-auto mb-3 flex max-w-md items-center justify-around rounded-full px-2 py-2 shadow-2xl sm:max-w-lg"
-        style={{ background: 'rgba(28,18,46,0.94)', border: '1px solid rgba(255,255,255,0.16)', marginInline: 12 }}>
-        {items.map((it) => (
-          <button key={it.key} onClick={it.onClick}
-            className="relative flex flex-col items-center gap-0.5 rounded-2xl px-3 py-1.5">
-            <span className="text-[19px]">{it.emoji}</span>
-            <span className="text-[9px] font-extrabold text-white/70">{it.label}</span>
-            {it.badge && (
-              <span className="absolute right-1 top-0 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-extrabold"
-                style={{ background: '#FFB703', color: '#2B1A05' }}>{it.badge}</span>
-            )}
-          </button>
-        ))}
-        <div className="ml-1 rounded-full px-3 py-1.5 text-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-          <span className="block text-[13px] font-extrabold leading-none text-white">{points}</span>
-          <span className="block text-[8px] font-bold text-white/55">points</span>
-        </div>
-      </div>
+    <div className="pointer-events-none fixed bottom-4 left-3 z-40 sm:bottom-5 sm:left-5">
+      <motion.button
+        onClick={onRewards}
+        aria-label={
+          `Rewards. ${points} points` +
+          (rewards.length ? `, ${rewards.length} waiting to be opened` : '')
+        }
+        whileTap={{ scale: 0.94 }}
+        /* He bobs, and he stops bobbing in the quiet state like everything
+           else the boy and Chirpy do — see ui/quiet. */
+        animate={m.loop ? { y: [0, -5, 0] } : undefined}
+        transition={m.loop}
+        className="pointer-events-auto relative flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-4 backdrop-blur-md"
+        style={{
+          minHeight: m.target,
+          background: 'rgba(12,8,26,0.72)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          boxShadow: '0 16px 32px -16px rgba(0,0,0,0.92)',
+          fontFamily: FONT,
+        }}
+      >
+        <img
+          src="/chirpy/chirpy-excited@160.webp"
+          srcSet="/chirpy/chirpy-excited@160.webp 160w, /chirpy/chirpy-excited@320.webp 320w"
+          sizes="44px"
+          alt=""
+          aria-hidden
+          draggable={false}
+          className="h-12 w-10 shrink-0 select-none object-contain"
+          style={{ filter: 'drop-shadow(0 2px 10px rgba(255,183,3,0.45))' }}
+        />
+        <span className="flex flex-col items-start leading-none">
+          <span className="text-[15px] font-extrabold text-white">{points}</span>
+          <span className="mt-0.5 text-[8.5px] font-bold text-white/55">points</span>
+        </span>
+        {rewards.length > 0 && (
+          <span
+            className="absolute -top-0.5 right-1 grid h-[18px] min-w-[18px] place-items-center rounded-full px-1 text-[10px] font-extrabold"
+            style={{ background: '#FFB703', color: '#2B1A05' }}
+          >
+            {rewards.length}
+          </span>
+        )}
+      </motion.button>
     </div>
   );
 }
