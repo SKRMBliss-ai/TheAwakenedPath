@@ -8,7 +8,7 @@ import { useSpoken } from '../ui/useSpoken';
 
 /**
  * Chirpy running one of the teaching moves. See kit/teachings for the
- * sixteen of them and for the founder's rule they all follow.
+ * eighteen of them and for the founder's rule they all follow.
  *
  * THE HOLD IS THE WHOLE THING. Most of these are instructions that cannot be
  * followed — try not to laugh, don't think about a purple elephant, go quiet
@@ -45,7 +45,7 @@ export function TeachingMoment({ teaching, onDone }: { teaching: Teaching; onDon
   const m = useMotion();
   const accent = ACCENT[teaching.kind];
 
-  const [phase, setPhase] = useState<'open' | 'hold' | 'land'>('open');
+  const [phase, setPhase] = useState<'open' | 'hold' | 'pick' | 'land'>('open');
   const [left, setLeft] = useState(teaching.hold ?? 0);
   /** How many payoff lines have arrived. */
   const [said, setSaid] = useState(0);
@@ -56,6 +56,7 @@ export function TeachingMoment({ teaching, onDone }: { teaching: Teaching; onDon
   useSpoken(
     phase === 'open' ? teaching.open.join(' ')
     : phase === 'hold' ? (teaching.dare ?? '')
+    : phase === 'pick' ? (teaching.pick?.ask ?? '')
     : teaching.land.slice(0, said).join(' '),
   );
 
@@ -91,8 +92,11 @@ export function TeachingMoment({ teaching, onDone }: { teaching: Teaching; onDon
   const begin = () => {
     sound.play('tap');
     if (teaching.hold) { setPhase('hold'); return; }
+    if (teaching.pick) { setPhase('pick'); return; }
     setPhase('land');
   };
+
+  const answer = () => { sound.play('tap'); setPhase('land'); };
 
   const done = () => { sound.play('resolve'); onDone(); };
 
@@ -154,6 +158,41 @@ export function TeachingMoment({ teaching, onDone }: { teaching: Teaching; onDon
             >
               {teaching.dare}
             </p>
+          </motion.div>
+        )}
+
+        {/* THE ONE MOVE THAT NEEDS AN ANSWER FIRST. The child says what they'd
+            say to a friend, and only then finds out whose thought it was. Any
+            of these is the right answer; picking is what matters, not which. */}
+        {phase === 'pick' && teaching.pick && (
+          <motion.div
+            key="pick"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="mt-1.5"
+          >
+            <p className="text-[14.5px] font-bold leading-snug" style={{ color: CHROME.text }}>
+              {teaching.pick.ask}
+            </p>
+            <div className="mt-2.5 flex flex-col items-start gap-2">
+              {teaching.pick.replies.map((r) => (
+                <button
+                  key={r}
+                  onClick={answer}
+                  className="rounded-full px-3.5 text-left text-[13px] font-extrabold"
+                  style={{
+                    minHeight: m.target,
+                    background: CHROME.pillSelected,
+                    border: `1px solid ${CHROME.pillBorder}`,
+                    color: CHROME.text,
+                  }}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
           </motion.div>
         )}
 

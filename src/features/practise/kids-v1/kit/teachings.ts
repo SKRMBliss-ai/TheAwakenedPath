@@ -1,9 +1,11 @@
 /**
  * THE TEACHING MOVES.
  *
- * Sixteen of them, lifted from docs/source-material/…/MIND_GYM_TEACHING_MOVES.md,
- * which is the founder's own document and the reason this file reads the way
- * it does. Its rule: never explain an inner experience to a child, build a
+ * Eighteen of them, lifted from the founder's own teaching-moves document —
+ * it is in the repo twice, as docs/source-material/kidstech.md and as
+ * …/kit/reference/MIND_GYM_TEACHING_MOVES.md, and the two are the same
+ * eighteen sections. That document is the reason this file reads the way it
+ * does. Its rule: never explain an inner experience to a child, build a
  * moment where they catch it happening. So almost nothing in here is a
  * statement. Most of it is an instruction that fails on purpose.
  *
@@ -54,6 +56,19 @@ export interface Teaching {
   go?: string;
   /** Seconds of quiet while it happens. */
   hold?: number;
+  /**
+   * A trapdoor that needs the child's own answer before it opens.
+   *
+   * Only one move works this way and it is the one the document rates
+   * highest: a child is asked what they'd say to a friend who called
+   * themselves stupid, gives their kindest answer, and is then told the
+   * thought was theirs. It only lands because the answer was given BEFORE
+   * they knew who it was about — which is also why the replies here are all
+   * warm. There is no unkind option to pick, because the point is not what
+   * the child chooses, it is that they are already kind and have never once
+   * aimed it at themselves.
+   */
+  pick?: { ask: string; replies: string[] };
   /** The payoff, a line at a time. */
   land: string[];
 }
@@ -170,6 +185,27 @@ export const TEACHINGS: Teaching[] = [
       'Struggling?',
       'Everyone is. Everyone remembers their own and almost none of anyone else’s.',
       'Which means the thing you’re still cringing about — they’ve forgotten it. They were busy cringing about theirs.',
+    ],
+  },
+  {
+    id: 'bestfriend',
+    kind: 'trapdoor',
+    open: [
+      'Your best mate comes to you and says: “I’m so stupid. I ruined everything. Everyone thinks I’m pathetic.”',
+    ],
+    pick: {
+      ask: 'What do you say to them?',
+      replies: [
+        'You’re not stupid. You had a bad day.',
+        'That’s not true, and I’d know.',
+        'Everyone messes things up. It’s not the end.',
+        'I’m still here. That hasn’t changed.',
+      ],
+    },
+    land: [
+      'Nice. Really nice, actually.',
+      'Now — that thought was yours. You said it about yourself, earlier.',
+      'So why is what you just said good enough for them and not for you?',
     ],
   },
   {
@@ -315,8 +351,8 @@ function hash(s: string): number {
  * wearing better clothes. Come back four times tonight and Chirpy has nothing
  * new, which is correct — he already said his thing.
  *
- * WHEN THE LIBRARY RUNS DRY it starts again rather than going silent. Sixteen
- * evenings is a long way from the last time a child met the purple elephant,
+ * WHEN THE LIBRARY RUNS DRY it starts again rather than going silent. A couple
+ * of weeks of evenings is a long way from the last time a child met the purple elephant,
  * and every one of these is an experiment rather than a fact — running it
  * again is the point of it, not a repeat of it.
  */
