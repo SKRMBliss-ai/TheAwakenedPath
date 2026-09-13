@@ -365,7 +365,7 @@ export function TheBoy({
  * width, `left`/`right` resolve against a zero-width box and he lands over
  * the boy's face.
  */
-const BOY_ASPECT = 320 / 558;
+const BOY_ASPECT = 320 / 480;
 
 /** The pair, as they appear on the character sheet — Chirpy on the shoulder. */
 export function BoyAndChirpy({

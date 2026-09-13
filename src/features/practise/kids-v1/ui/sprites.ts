@@ -17,9 +17,12 @@ export type ChirpyPose =
 
 export const chirpySprite = (pose: ChirpyPose) => `/chirpy/chirpy-${pose}.webp`;
 
-/** The boy from the character sheet — Chirpy's person. Two sizes shipped. */
-export const BOY_SRC = '/assets/home/boy.png';
-export const BOY_SRCSET = '';
+/** The boy from the character sheet — Chirpy's person. Two sizes shipped.
+ *  Resized from assets/home/boy.png, which is a 1024x1536 design source and
+ *  must never be the thing a phone downloads to draw a 240px sprite. */
+export const BOY_SRC = '/assets/home/boy@640.webp';
+export const BOY_SRCSET =
+  '/assets/home/boy@320.webp 320w, /assets/home/boy@640.webp 640w';
 
 export type BoyEmotion =
   | 'calm'
