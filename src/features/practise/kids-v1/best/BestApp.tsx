@@ -8,7 +8,7 @@ import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { BoyAndChirpy, RoomScene } from '../ui/scene';
-import { chirpySprite } from '../ui/sprites';
+import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
 import { skyNow, timeOfDayForHour, roomPoster, storageFallback } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
@@ -681,7 +681,13 @@ function WelcomeBanner({
             transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
             className="flex flex-col items-center gap-2"
           >
-            <BoyAndChirpy size={168} pose="excited" gaze="scene" />
+            {/* HE DANCES ON THE HUB, and only here. Every room has him
+                doing something quieter and room-specific (see ui/scene's
+                GAITS); the hub is the one screen where he isn't waiting on
+                the child to answer anything, so it's the one place he gets
+                to just enjoy himself. Facing out, too — this is the hello,
+                which is the one moment §2.2's shared-gaze rule exempts. */}
+            <BoyAndChirpy size={168} pose="excited" gaze="child" gait="dance" />
             <h1
               className="text-[30px] font-extrabold leading-tight sm:text-[38px]"
               style={{ color: CHROME.text, letterSpacing: '-0.02em', fontFamily: FONT }}
@@ -715,8 +721,16 @@ function WelcomeBanner({
             style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}` }}
             aria-label="Show the welcome again"
           >
+            {/* THE BOY, not Chirpy. This pill says "Hello, Shaarav" — it is
+                the child's own greeting folded down, so the face on it should
+                be the child's. Chirpy at 34px was also the worst-looking
+                thing on the hub; see ChirpyRemembers for why the small ones
+                went. The boy's plate is 320x558 and keeps its aspect here, so
+                it stays crisp at this size. */}
             <img
-              src={chirpySprite('excited')}
+              src={BOY_SRC}
+              srcSet={BOY_SRCSET}
+              sizes="34px"
               alt=""
               aria-hidden
               draggable={false}
@@ -825,15 +839,18 @@ function WelcomeBackCard({ line, onDone }: { line: string; onDone: () => void })
       className="mt-3 flex w-full items-center gap-2.5 rounded-[20px] px-3.5 py-3 text-left backdrop-blur-md"
       style={{ background: CHROME.pill, border: '1px solid rgba(143,217,196,0.45)' }}
     >
-      <img
-        src={chirpySprite('excited')}
-        alt=""
-        aria-hidden
-        draggable={false}
-        className="h-9 w-9 shrink-0 select-none"
-      />
-      <span className="text-[13.5px] font-bold leading-snug" style={{ color: CHROME.text }}>
-        {line}
+      <span className="min-w-0 flex-1">
+        {/* 36px was the smallest and squarest of the lot. See
+            ChirpyRemembers for why every one of them came off the hub. */}
+        <span
+          className="block text-[11px] font-extrabold uppercase tracking-[0.12em]"
+          style={{ color: '#8FD9C4' }}
+        >
+          Chirpy
+        </span>
+        <span className="mt-1 block text-[13.5px] font-bold leading-snug" style={{ color: CHROME.text }}>
+          {line}
+        </span>
       </span>
     </motion.button>
   );
@@ -1184,16 +1201,17 @@ const FIREFLY_TIPS = [
 ];
 
 const STUCK_TIPS = [
-  'How Are You Feeling Today?',
-  'Something on your mind?',
+  'Your Weather Today',
+  'How are you feeling today?',
+  'Sunny in there? Or a bit grey?',
   'Had a rubbish bit today?',
 ];
 
 const CHIRPY_TIPS = [
-  'Something’s Bugging Chirpy — Find Out What',
-  'Got a funny feeling? Come and check',
-  'Chirpy’s got a funny feeling',
-  'He won’t say what it is. Come and see?',
+  'Chirpy’s Weather Today',
+  'How’s Chirpy doing, do you think?',
+  'He’s gone a bit quiet. Go and ask him?',
+  'Somebody should check on him',
 ];
 
 /** How long between nudges, and how long a nudge hangs about. */
@@ -1240,17 +1258,50 @@ function DoorWall({
 
   return (
     <>
+      {/*
+        TWO WALLS, AND THE TWO WEATHERS.
+
+        All three fittings used to hang down the right-hand edge, stacked, so
+        the hub had one wall with a column of handles on it and an entirely
+        blank one opposite. That is not a room, it is a menu that has been
+        pushed to one side — and it made the most important door in the app
+        the middle item in a list of three.
+
+        Now the main flow has a wall to itself. The child's own door is on the
+        left, Chirpy's is on the right, and they face each other across the
+        room, which is the whole relationship this app is built on said in
+        furniture: you go in one side and ask how you are, you go in the other
+        and ask how he is, and neither is the more important question.
+
+        WHY "WEATHER". "How Are You Feeling Today?" is a form title. Weather
+        is what a six-year-old already has words for — sunny, a bit grey,
+        absolutely chucking it down — and it is the standard device in primary
+        classrooms for exactly that reason. It also does something the old
+        name couldn't: it makes the pair legible at a glance. Your weather,
+        his weather. A child does not need either explained.
+      */}
       <DoorHandle
-        side="right"
-        bottomVh={20}
+        side="left"
+        bottomVh={30}
+        label="Your Weather Today"
+        nudge={active?.door === 1 ? active.line : null}
+        onClick={onStuck}
+        accent="#C48BE8"
+      />
+      <DoorHandle
+        side="left"
+        bottomVh={58}
         /*
           "Catch the Fireflies" was an instruction, and it described the
           animation rather than the thing. What's actually behind this door
           is a child saying how their day went, virtue by virtue, and the jar
           is where those answers end up — so the door is named for the jar,
-          and the jar is theirs. Possessive on purpose: the two doors above
-          are questions for the days something is wrong, and this one is a
-          place that belongs to them and is open every night regardless.
+          and the jar is theirs. Possessive on purpose: the weather doors are
+          questions for the days something is wrong, and this one is a place
+          that belongs to them and is open every night regardless.
+
+          It stays on the CHILD'S wall, under their own weather. Both doors on
+          this side are about them; the one opposite is about somebody else.
         */
         label="My Firefly Jar"
         nudge={active?.door === 0 ? active.line : null}
@@ -1259,16 +1310,8 @@ function DoorWall({
       />
       <DoorHandle
         side="right"
-        bottomVh={42}
-        label="How Are You Feeling Today?"
-        nudge={active?.door === 1 ? active.line : null}
-        onClick={onStuck}
-        accent="#C48BE8"
-      />
-      <DoorHandle
-        side="right"
-        bottomVh={64}
-        label="Something’s Bugging Chirpy — Find Out What"
+        bottomVh={30}
+        label="Chirpy’s Weather Today"
         nudge={active?.door === 2 ? active.line : null}
         onClick={onChirpy}
         accent="#8FD9C4"

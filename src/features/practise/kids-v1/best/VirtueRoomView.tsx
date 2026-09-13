@@ -177,7 +177,7 @@ export function VirtueRoomView({
           </div>
         ) : (
           <div className="flex flex-1 flex-col justify-end gap-4 pb-4 pt-8">
-            <Chirpy pose={doneToday ? 'excited' : 'curious'} line={room.tagline} align="left" />
+            <Chirpy pose={doneToday ? 'excited' : 'curious'} line={room.tagline} align="left" roomId={room.id} />
             <Question room={art}>{room.name}</Question>
 
             {/* ── The tick — the actual point of the app ───────────────── */}

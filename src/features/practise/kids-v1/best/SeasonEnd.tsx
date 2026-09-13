@@ -66,8 +66,8 @@ export function SeasonEnd({ keepsake, onDone }: { keepsake: Keepsake; onDone: ()
             alt=""
             aria-hidden
             draggable={false}
-            className="h-20 w-20 select-none"
-            style={{ filter: 'drop-shadow(0 10px 22px rgba(80,40,30,0.4))' }}
+            className="select-none"
+            style={{ height: 94, width: 'auto', filter: 'drop-shadow(0 10px 22px rgba(80,40,30,0.4))' }}
           />
 
           <p

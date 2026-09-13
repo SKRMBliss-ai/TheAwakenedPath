@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CHROME, FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
-import { chirpySprite, type ChirpyPose } from '../ui/sprites';
 import {
   SELF_REPLIES,
   gamePlayed,
@@ -46,7 +45,6 @@ import { useSpoken } from '../ui/useSpoken';
 /** What Chirpy is currently saying back, and what happens when he's finished. */
 interface Said {
   line: string;
-  pose: ChirpyPose;
   /** 'next' moves the conversation on; 'end' folds the whole thing away. */
   then: 'next' | 'end';
 }
@@ -97,40 +95,23 @@ export function GuessWhat({ game, onDone }: { game: GuessingGame; onDone: () => 
   const visible = said ? said.line : asking;
   useSpoken(visible);
 
-  const pose: ChirpyPose = said
-    ? said.pose
-    : phase === 'his' || g.self
-      ? 'hopeful'
-      : 'curious';
-
   const answerYesNo = (yes: boolean) => {
     if (said) return;
     sound.play('tap');
-    setSaid({ line: yes ? g.onYes : g.onNo, pose: yes ? 'excited' : 'worried', then: 'next' });
+    setSaid({ line: yes ? g.onYes : g.onNo, then: 'next' });
   };
 
   const answerSelf = (reply: string) => {
     if (said) return;
     sound.play('tap');
-    setSaid({
-      line: takeOnSelfReply(reply),
-      // He is pleased to have got one and unbothered to have missed. Neither
-      // reaction is bigger than the other, so the buttons don't develop a
-      // right answer by way of the face next to them.
-      pose: reply === 'Not really' ? 'idle' : 'excited',
-      then: 'next',
-    });
+    setSaid({ line: takeOnSelfReply(reply), then: 'next' });
   };
 
   const answerHis = (option: string) => {
     if (said) return;
     const right = option === game.his.truth;
     sound.play(right ? 'discovery' : 'tap');
-    setSaid({
-      line: `${right ? game.his.onRight : game.his.onWrong} ${game.his.story}`,
-      pose: right ? 'jumping' : 'said2',
-      then: 'end',
-    });
+    setSaid({ line: `${right ? game.his.onRight : game.his.onWrong} ${game.his.story}`, then: 'end' });
   };
 
   const dismiss = () => {
@@ -159,16 +140,7 @@ export function GuessWhat({ game, onDone }: { game: GuessingGame; onDone: () => 
         fontFamily: FONT,
       }}
     >
-      <div className="flex items-start gap-3">
-        <img
-          src={chirpySprite(pose)}
-          alt=""
-          aria-hidden
-          draggable={false}
-          className="mt-0.5 h-11 w-11 shrink-0 select-none"
-          style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}
-        />
-
+      <div>
         <div className="min-w-0 flex-1">
           {/* WHOSE TURN IT IS, said in two words.
               Not decoration: a child who joins this halfway through the

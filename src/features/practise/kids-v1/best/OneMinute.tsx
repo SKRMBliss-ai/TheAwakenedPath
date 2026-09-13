@@ -141,8 +141,8 @@ export function OneMinute({
             alt=""
             aria-hidden
             draggable={false}
-            className="h-16 w-16 select-none"
-            style={{ filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.5))' }}
+            className="select-none"
+            style={{ height: 76, width: 'auto', filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.5))' }}
           />
 
           <AnimatePresence mode="wait">

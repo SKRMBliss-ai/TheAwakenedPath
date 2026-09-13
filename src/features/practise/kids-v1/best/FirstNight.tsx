@@ -127,10 +127,11 @@ export function FirstNight() {
                   alt=""
                   aria-hidden
                   draggable={false}
-                  className="h-16 w-16 select-none"
+                  className="select-none"
                   animate={{ opacity: [0.13, 0.26, 0.13], y: [0, -5, 0] }}
                   transition={{ repeat: Infinity, duration: 3.4, ease: 'easeInOut' }}
-                  style={{ filter: 'brightness(0.35)' }}
+                  /* Height only, width auto. It was h-N w-N, i.e. a ~240x290 drawing forced into a square — squashed flat, which is most of what made him look cheap. */
+                  style={{ height: 76, width: 'auto', filter: 'brightness(0.35)' }}
                 />
                 <p
                   className="text-[19px] font-extrabold leading-snug"
@@ -179,8 +180,8 @@ export function FirstNight() {
                   alt=""
                   aria-hidden
                   draggable={false}
-                  className="h-24 w-24 select-none"
-                  style={{ filter: 'drop-shadow(0 10px 22px rgba(0,0,0,0.55))' }}
+                  className="select-none"
+                  style={{ height: 112, width: 'auto', filter: 'drop-shadow(0 10px 22px rgba(0,0,0,0.55))' }}
                 />
                 <p className="text-[22px] font-extrabold leading-snug" style={{ color: CHROME.text }}>
                   Oh! Oh, that’s much better.
@@ -206,7 +207,8 @@ export function FirstNight() {
                   alt=""
                   aria-hidden
                   draggable={false}
-                  className="h-16 w-16 select-none"
+                  className="select-none"
+                  style={{ height: 76, width: 'auto' }}
                 />
                 <p className="text-[21px] font-extrabold leading-snug" style={{ color: CHROME.text }}>
                   What do I call you?
