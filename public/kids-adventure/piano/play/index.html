@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-nojar>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
@@ -16,7 +16,15 @@
    tapes, wooden signs and ink all come from kit/adventure.css.
    ══════════════════════════════════════════════════════════════════════════ */
 .game{position:relative;z-index:2;max-width:920px;margin:0 auto}
-.topbar{display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;margin:2px 0 12px}
+/* The back arrow is pinned to the page's top-left corner, outside this row's
+   flow, so on a narrow phone the centred row slid underneath it and the arrow
+   swallowed every tap on the first pill — the "1–5" link back to the levels
+   was completely unreachable at 320px. The row keeps clear of both corners,
+   symmetrically so the pills stay centred, and wraps sooner rather than
+   hiding under the furniture. */
+.topbar{display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;
+  margin:2px 0 12px;padding-inline:68px}
+@media (min-width:900px){.topbar{padding-inline:0}}
 .lvlpick{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
 .lp{position:relative;border:none;background:transparent;width:42px;height:38px;font-family:var(--round);
   font-weight:800;font-size:17px;color:var(--deep);isolation:isolate}
@@ -129,6 +137,7 @@
 <script src="/kids-adventure/kit/sound.js"></script>
 <script src="/kids-adventure/kit/juice.js"></script>
 <script src="/kids-adventure/kit/journey.js"></script>
+<script src="/kids-adventure/piano/songbook.js"></script>
 <script src="/kids-adventure/piano/play/game.js"></script>
 </body>
 </html>

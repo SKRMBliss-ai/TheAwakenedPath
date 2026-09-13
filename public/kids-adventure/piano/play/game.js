@@ -28,83 +28,18 @@
      said two ways: 11=F3 … 15=C4 … 19=G4 … 22=C5. Every song and every
      level below is written in key numbers, and the keyboard labels them
      either way depending on the song's own labelStyle. */
+  /* the songbook and its theory now live in one place, so the printable
+     practice sheet reads exactly the notes this plays */
+  var BOOK = (window.KJA && window.KJA.songbook) || null;
   var LETTERS = 'CDEFGAB';
-  var SEMI = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 };
-  var BLACKAFTER = ['C','D','F','G','A'];
-  function letterOf(k) { return LETTERS[(k - 1) % 7]; }
-  function semiOf(k) { return 12 * Math.floor((k - 1) / 7) + SEMI[letterOf(k)]; }
-  function freqOf(k) { return 261.6256 * Math.pow(2, (semiOf(k) - semiOf(15)) / 12); }
-  function blackAfter(k) { return BLACKAFTER.indexOf(letterOf(k)) >= 0; }
+  var letterOf   = BOOK ? BOOK.letterOf   : function (k) { return LETTERS[(k - 1) % 7]; };
+  var freqOf     = BOOK ? BOOK.freqOf     : function () { return 440; };
+  var blackAfter = BOOK ? BOOK.blackAfter : function () { return false; };
 
   var HANDWORD = { L:'Left hand', R:'Right hand' };
   var FINGERWORD = { 1:'Thumb', 2:'Pointer', 3:'Middle', 4:'Ring', 5:'Little' };
 
-  /* ── the songbook, carried over note for note from the studio's app ───── */
-  var SONGS = {
-    dyno: {
-      id:'dyno', icon:'🦖', title:'Dyno My Pet Dinosaur', sub:'Two hands · four measures',
-      unitWord:'Measure', labelStyle:'number', keys:[11,12,13,14,15,16,17,18,19], bpm:92,
-      setup:'Left hand: little finger on 11, thumb on 15. Right hand: thumb on 15, little finger on 19.',
-      units:[
-        { m:1, hand:'L', name:'First four notes', notes:[
-          {k:15,f:1,b:1},{k:14,f:2,b:1},{k:13,f:3,b:1},{k:14,f:2,b:1}] },
-        { m:2, hand:'R', name:'Up and slide', notes:[
-          {k:15,f:1,b:1},{k:16,f:2,b:1},{k:17,f:3,b:1,slide:1}] },
-        { m:3, hand:'L', name:'The same as measure 1', notes:[
-          {k:15,f:1,b:1},{k:14,f:2,b:1},{k:13,f:3,b:1},{k:14,f:2,b:1}] },
-        { m:4, hand:'R', name:'One note, three slides', notes:[
-          {k:13,f:3,b:2,slide:3}] }
-      ]
-    },
-    clock: {
-      id:'clock', icon:'🕰️', title:'The Clock Song', sub:'Right hand · all seven parts · C, E and G',
-      unitWord:'Part', labelStyle:'note', keys:[15,16,17,18,19], bpm:80,
-      setup:'Right hand: thumb on C, then D E F G — one finger on each. The song only uses C, E and G.',
-      units:[
-        { m:1, hand:'R', name:'Grandfather’s clock', pace:'Slow', line:'Grand-fa-ther’s clock goes', notes:[
-          {k:15,f:1,b:1,l:'Grand'},{k:15,f:1,b:.5,l:'fa'},{k:15,f:1,b:.5,l:'ther’s'},
-          {k:15,f:1,b:1,l:'clock'},{k:15,f:1,b:1,l:'goes'}] },
-        { m:2, hand:'R', name:'Tick tock, tick tock', pace:'Slow · two beats each', line:'Tick tock, tick tock, tick tock', notes:[
-          {k:17,f:3,b:2,l:'Tick'},{k:15,f:1,b:2,l:'tock'},{k:17,f:3,b:2,l:'tick'},
-          {k:15,f:1,b:2,l:'tock'},{k:17,f:3,b:2,l:'tick'},{k:15,f:1,b:2,l:'tock'}] },
-        { m:3, hand:'R', name:'Mummy’s kitchen clock', pace:'Medium', line:'Mu-mmy’s ki-tchen clock goes', notes:[
-          {k:17,f:3,b:.5,l:'Mu'},{k:17,f:3,b:.5,l:'mmy’s'},{k:17,f:3,b:.5,l:'ki'},
-          {k:17,f:3,b:.5,l:'tchen'},{k:17,f:3,b:1,l:'clock'},{k:17,f:3,b:1,l:'goes'}] },
-        { m:4, hand:'R', name:'Tick tock tick tock', pace:'Medium · one beat each', line:'Tick tock tick tock, tick tock tick tock', notes:[
-          {k:19,f:5,b:1,l:'Tick'},{k:17,f:3,b:1,l:'tock'},{k:19,f:5,b:1,l:'tick'},{k:17,f:3,b:1,l:'tock'},
-          {k:19,f:5,b:1,l:'tick'},{k:17,f:3,b:1,l:'tock'},{k:19,f:5,b:1,l:'tick'},{k:17,f:3,b:1,l:'tock'}] },
-        { m:5, hand:'R', name:'My little watch', pace:'Fast', line:'My lit-tle watch goes', notes:[
-          {k:15,f:1,b:1,l:'My'},{k:15,f:1,b:.5,l:'lit'},{k:15,f:1,b:.5,l:'tle'},
-          {k:15,f:1,b:1,l:'watch'},{k:15,f:1,b:1,l:'goes'}] },
-        { m:6, hand:'R', name:'Tick tick tick tick', pace:'Fast · half a beat each', line:'Tick tick tick tick, tick tick tick tick', notes:[
-          {k:17,f:3,b:.5,l:'Tick'},{k:15,f:1,b:.5,l:'tick'},{k:17,f:3,b:.5,l:'tick'},{k:15,f:1,b:.5,l:'tick'},
-          {k:17,f:3,b:.5,l:'tick'},{k:15,f:1,b:.5,l:'tick'},{k:17,f:3,b:.5,l:'tick'},{k:15,f:1,b:.5,l:'tick'}] },
-        { m:7, hand:'R', name:'…and STOP!', pace:'Fast, then hold', line:'tick tick tick tick, tick tick tick tick — STOP!', notes:[
-          {k:17,f:3,b:.5,l:'tick'},{k:15,f:1,b:.5,l:'tick'},{k:17,f:3,b:.5,l:'tick'},{k:15,f:1,b:.5,l:'tick'},
-          {k:17,f:3,b:.5,l:'tick'},{k:15,f:1,b:.5,l:'tick'},{k:17,f:3,b:.5,l:'tick'},{k:15,f:1,b:.5,l:'tick'},
-          {k:15,f:1,b:4,l:'STOP!'}] }
-      ]
-    },
-    yankee: {
-      id:'yankee', icon:'🎩', title:'Yankee Doodle', sub:'Right hand · four rows · C, D, E and F',
-      unitWord:'Row', labelStyle:'note', keys:[15,16,17,18,19], bpm:104,
-      setup:'Right hand: thumb on C, then D, E and F — no little finger needed for this tune.',
-      units:[
-        { m:1, hand:'R', name:'Row 1', pace:'Cheerfully', notes:[
-          {k:15,f:1,b:1},{k:15,f:1,b:1},{k:16,f:2,b:1},{k:17,f:3,b:1},
-          {k:15,f:1,b:1},{k:17,f:3,b:1},{k:16,f:2,b:2}] },
-        { m:2, hand:'R', name:'Row 2', pace:'Cheerfully', notes:[
-          {k:15,f:1,b:1},{k:15,f:1,b:1},{k:16,f:2,b:1},{k:17,f:3,b:1},
-          {k:15,f:1,b:2},{k:15,f:2,b:1},{k:15,f:4,b:1}] },
-        { m:3, hand:'R', name:'Row 3', pace:'Cheerfully', notes:[
-          {k:15,f:1,b:1},{k:15,f:1,b:1},{k:16,f:2,b:1},{k:17,f:3,b:1},
-          {k:18,f:4,b:1},{k:17,f:3,b:1},{k:16,f:2,b:1},{k:15,f:1,b:1}] },
-        { m:4, hand:'R', name:'Row 4', pace:'A whole bar of rest, then hold', notes:[
-          {k:15,f:1,b:2,rest:4},{k:15,f:1,b:2}] }
-      ]
-    }
-  };
-
+  var SONGS = BOOK ? BOOK.SONGS : {};
   /* ── the five levels, written in the same key numbers ─────────────────── */
   var LEVELS = [
     { n:1, name:'Meet the Keys', keys:[15,16,17,18,19], mode:'find',
@@ -231,7 +166,9 @@
      sideways so the note sounding stays in view. */
   function playNotes(list, bpm, opts) {
     opts = opts || {};
-    clearTimers(); playing = true;
+    clearTimers();
+    if (SND && SND.hush) SND.hush();       /* never two tunes at once */
+    playing = true;
     var beat = 60 / (bpm || 92), a = SND && SND.ctx(), t0 = (a ? a.currentTime : 0) + 0.12, at = 0, sched = [];
     list.forEach(function (n) {
       at += (n.rest || 0) * beat;
@@ -285,6 +222,9 @@
   }
   function stopPlay() {
     clearTimers();
+    /* the notes are scheduled on the audio clock, so clearing timers alone
+       leaves the tune playing on without its highlight */
+    if (SND && SND.hush) SND.hush();
     render_controls(false);
     say('Stopped', 'Press play whenever you are ready.');
   }
@@ -336,6 +276,9 @@
     return '<button class="gbtn" style="--c:var(--t7)" data-a="hearpart">▶ Hear this ' + S.unitWord.toLowerCase() + '</button>' +
       '<button class="gbtn" style="--c:var(--t1)" data-a="hearall">▶▶ Hear the whole piece</button>' +
       '<button class="gbtn" style="--c:var(--t6)" data-a="restart">↺ Start again</button>' +
+      /* the same notes on paper, for next to a real piano where there is no
+         screen to look at */
+      '<a class="gbtn" style="--c:var(--t3)" href="/kids-adventure/piano/sheet/?song=' + S.id + '">🖨 Practice sheet</a>' +
       '<button class="gbtn" style="--c:var(--t5)" data-a="grownups">For grown-ups</button>';
   }
   function songSays() {

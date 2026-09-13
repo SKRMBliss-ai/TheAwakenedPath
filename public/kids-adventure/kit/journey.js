@@ -428,7 +428,10 @@
      Every screen that loads this kit gets the jar, without each one having to
      remember to ask for it — that is the whole point of a total that follows
      a child around. A page that genuinely should not have one (the sticker
-     book, which already IS the reward screen) sets data-nojar on <html>. */
+     book, which already IS the reward screen, and the song game, whose
+     bottom-right corner is a playable keyboard and whose own toolbar already
+     shows the count) sets data-nojar on <html>. Left floating, the jar sat on
+     top of the F key — the one Yankee Doodle's third row needs. */
   function mount() {
     if (document.documentElement.hasAttribute('data-nojar')) return;
     jar();

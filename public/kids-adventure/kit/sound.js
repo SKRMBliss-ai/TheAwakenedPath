@@ -9,10 +9,13 @@
      master chain   notes → per-note filter → master gain → soft compressor
                     → speakers, with a parallel convolution reverb send, so
                     chords glue instead of clipping and every note has a room.
-     piano          six partials, slightly inharmonic, each decaying at its own
-                    rate, a lowpass that closes as the note dies, and an 8ms
-                    hammer transient. Small random detune and level per press
-                    so a repeated note never machine-guns.
+     piano          a struck stiff string: overtones stretched sharp by the
+                    string's own stiffness (more in the bass), two detuned
+                    strings per note so a held tone shimmers, a fast decay
+                    handing over to a long aftersound, a partial count and
+                    brightness that follow the pitch, and a felt-hammer
+                    transient. Notes ring past their written length, so a
+                    tune joins up instead of clicking along.
      sfx            taps, pops, page turns, splats, ticks, roars, sparkles,
                     a gentle wrong-answer (never a buzzer) and three sizes of
                     celebration.
@@ -202,37 +205,128 @@
     (names || []).forEach(function (n) { sample(n); });
   }
 
-  /* ── the piano ─────────────────────────────────────────────────────────── */
-  var PARTIAL = [
-    { m: 1,     a: 1.00, d: 1.00 }, { m: 2.001, a: 0.44, d: 0.72 },
-    { m: 3.003, a: 0.21, d: 0.54 }, { m: 4.007, a: 0.11, d: 0.40 },
-    { m: 5.011, a: 0.06, d: 0.30 }, { m: 6.02,  a: 0.035, d: 0.24 }
-  ];
+  /* ── the piano ───────────────────────────────────────────────────────────
+     A child asked for it to sound "just like a real piano", and the six fixed
+     partials this used to have could not get there, because they left out the
+     four things that actually make a piano recognisable as one:
+
+     1. STIFF STRINGS. A piano string is thick enough to resist bending, so
+        its overtones sit progressively SHARP of the pure harmonic series:
+        partial n lands at n·f·√(1+B·n²) rather than n·f. That B is what your
+        ear reads as "piano" instead of "organ", and it is bigger in the bass
+        (fat strings) than the middle. Tuners can hear it; everyone can hear
+        its absence.
+
+     2. TWO OR THREE STRINGS PER NOTE. Every note above the bass has more
+        than one string, never in perfect unison. The pair beats against
+        itself, which is the slow shimmer under a held note. One oscillator
+        per partial cannot shimmer, so the low partials here get a second,
+        cents-detuned twin.
+
+     3. A DOUBLE DECAY. A piano note does not fade evenly. It drops fast for
+        the first moment, then hands over to a much slower "aftersound" that
+        rings on — so each partial gets a quick decay to a sustain shelf and a
+        long tail off that shelf, rather than one exponential to silence.
+
+     4. A BRIGHTNESS THAT DEPENDS ON PITCH. Bass notes are dense with strong
+        high partials; the top octave is nearly a pure sine. So the partial
+        count and their strengths are computed per note instead of fixed, and
+        high partials decay faster than low ones (they always do — energy
+        leaves them first). */
+
+  /* every note currently sounding, so that stopping means silence */
+  var ringing = [];
+  /* Lift the pedal: a short fade rather than a cut, because an instant stop
+     on a ringing string is a click, and a click is the one sound a child's
+     ear reads as "broken". */
+  function hush(fade) {
+    var a = ac; if (!a) { ringing = []; return; }
+    var t = a.currentTime, f = fade == null ? 0.09 : fade;
+    ringing.forEach(function (v) {
+      if (v.until < t) return;
+      try {
+        v.g.gain.cancelScheduledValues(t);
+        v.g.gain.setValueAtTime(v.g.gain.value, t);
+        v.g.gain.exponentialRampToValueAtTime(0.0001, t + f);
+      } catch (e) {}
+    });
+    ringing = [];
+  }
+
+  /* how far the overtones stretch: fatter strings, more stretch */
+  function inharmonicity(freq) {
+    if (freq < 110) return 0.00042;                       /* low bass */
+    if (freq < 262) return 0.00019;                       /* below middle C */
+    if (freq < 700) return 0.00011;                       /* the middle */
+    if (freq < 1400) return 0.00024;                      /* upper middle */
+    return 0.00055;                                       /* short top strings */
+  }
   function piano(freq, when, dur, vol) {
     var a = ctx(); if (!a || muted) return;
     var t = a.currentTime + (when || 0), D = dur || 1.05, V = (vol == null ? 0.24 : vol);
     V *= 0.94 + Math.random() * 0.12;                     /* touch varies */
-    var body = a.createGain(); body.gain.value = 1;
-    var lp = a.createBiquadFilter();
-    lp.type = 'lowpass'; lp.Q.value = 0.8;
-    lp.frequency.setValueAtTime(Math.min(5200, freq * 9 + 900), t);
-    lp.frequency.exponentialRampToValueAtTime(Math.max(500, freq * 2.2), t + D * 0.9);
-    body.connect(lp); out(lp);
 
-    PARTIAL.forEach(function (p) {
-      var o = a.createOscillator(), g = a.createGain();
-      o.type = p.m === 1 ? 'triangle' : 'sine';
-      o.frequency.value = freq * p.m;
-      o.detune.value = (Math.random() * 8 - 4);
-      var pd = Math.max(0.16, D * p.d);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(V * p.a, t + 0.006);
-      g.gain.exponentialRampToValueAtTime(V * p.a * 0.3, t + Math.min(0.16, pd * 0.2));
-      g.gain.exponentialRampToValueAtTime(0.0001, t + pd);
-      o.connect(g); g.connect(body);
-      o.start(t); o.stop(t + pd + 0.05);
-    });
-    noise({ when: when || 0, dur: 0.03, from: freq * 6, to: freq * 2, q: 0.9, vol: V * 0.3, send: 0.08 });
+    /* A real note rings far longer than the beat it is written for: holding
+       the key down is what sustains it, and letting go is a separate event.
+       So the tail runs well past D, which is what stops a tune sounding like
+       a row of disconnected blips. */
+    var ring = Math.min(D * 2.6 + 1.1, freq < 200 ? 9 : freq < 500 ? 7 : freq < 1200 ? 4.5 : 2.6);
+    var B = inharmonicity(freq);
+    /* how many overtones are worth hearing before they leave the top of the
+       register — no point synthesising above ~11kHz */
+    var N = Math.max(3, Math.min(16, Math.floor(11000 / freq)));
+
+    var body = a.createGain(); body.gain.value = 1;
+    /* Now that a note rings for seconds after the beat it was written for,
+       "Stop" has to be able to take it away — a scheduled oscillator carries
+       on regardless of any timer being cleared. Every ringing note is held
+       here and let go when it finishes. */
+    ringing.push({ g: body, until: t + ring + 0.2 });
+    if (ringing.length > 64) ringing.splice(0, ringing.length - 64);
+    var lp = a.createBiquadFilter();
+    lp.type = 'lowpass'; lp.Q.value = 0.6;
+    /* the hammer strike is bright and the brightness leaves first */
+    lp.frequency.setValueAtTime(Math.min(11000, freq * 13 + 1400), t);
+    lp.frequency.exponentialRampToValueAtTime(Math.min(7000, freq * 6 + 700), t + 0.09);
+    lp.frequency.exponentialRampToValueAtTime(Math.max(420, freq * 2.4), t + ring * 0.7);
+    body.connect(lp); out(lp, 0.1);
+
+    for (var n = 1; n <= N; n++) {
+      /* stiff-string stretch: the nth partial sits sharp of n·f */
+      var pf = freq * n * Math.sqrt(1 + B * n * n);
+      if (pf > 12000) break;
+      /* the strike spectrum: partials fall away, and the very low ones in a
+         real string are not a clean 1/n — the second is nearly as strong as
+         the first on a middle note, which is most of its warmth */
+      var amp = Math.pow(n, -1.32) * (n === 2 ? 1.22 : n === 3 ? 1.05 : 1);
+      if (freq > 900) amp *= Math.pow(0.62, n - 1);       /* treble is purer */
+      if (amp < 0.006) break;
+      /* high partials always die first */
+      var pd = ring * Math.pow(n, -0.42);
+      /* the sustain shelf the fast decay hands over to */
+      var shelf = 0.14 + 0.1 / n;
+      /* two strings for the low partials — the beating under a held note */
+      var twins = n <= 4 ? 2 : 1;
+      for (var s2 = 0; s2 < twins; s2++) {
+        var o = a.createOscillator(), g = a.createGain();
+        o.type = 'sine';
+        o.frequency.value = pf;
+        /* a few cents apart, never in unison — this is the shimmer */
+        o.detune.value = twins === 2 ? (s2 ? 3.2 + Math.random() * 2.4 : -(1.6 + Math.random() * 1.8))
+                                     : (Math.random() * 3 - 1.5);
+        var pv = V * amp / twins;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(pv, t + 0.004);                      /* strike */
+        g.gain.exponentialRampToValueAtTime(pv * shelf, t + Math.min(0.5, pd * 0.13));
+        g.gain.exponentialRampToValueAtTime(0.0001, t + pd);                /* aftersound */
+        o.connect(g); g.connect(body);
+        o.start(t); o.stop(t + pd + 0.05);
+      }
+    }
+    /* the hammer felt hitting the string, and the key bottoming out */
+    noise({ when: when || 0, dur: 0.035, from: Math.min(9000, freq * 7), to: freq * 1.6,
+            q: 0.7, vol: V * 0.26, send: 0.06 });
+    noise({ when: when || 0, dur: 0.05, from: 220, to: 90, q: 1.4, vol: V * 0.1, send: 0 });
     duck();
   }
   function chord(freqs, when, dur, vol) {
@@ -504,6 +598,7 @@
   K.sound = {
     ctx: ctx,
     piano: piano,
+    hush: hush,
     chord: chord,
     sfx: sfx,
     noise: noise,
