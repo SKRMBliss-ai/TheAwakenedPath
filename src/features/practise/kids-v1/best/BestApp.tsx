@@ -20,6 +20,7 @@ import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
 import { ChirpyRemembers } from './ChirpyRemembers';
 import { ChirpyArc } from './ChirpyArc';
+import { GuessWhat } from './GuessWhat';
 import { ReleasedSky } from './LetThemGo';
 import { TheVisitor } from './TheVisitor';
 import { NoteFound } from './NoteFound';
@@ -385,7 +386,15 @@ function RoomMap({
    * a child mid-read.
    */
   const [moment, setMoment] = useState<HubMoment | null>(null);
-  useEffect(() => { setMoment(hubMoment(quiet)); }, [quiet]);
+  useEffect(() => {
+    setMoment(hubMoment(quiet, pointsByBehaviour));
+    // pointsByBehaviour is deliberately NOT a dependency. It changes the
+    // instant the child ticks anything, and re-running this would swap the
+    // card out from under them mid-conversation — and, worse, would re-peek
+    // the whole chain. What Chirpy has to say tonight is decided when they
+    // arrive and then left alone.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quiet]);
 
   /**
    * And whether anybody else is in tonight — almost never; see kit/visitor
@@ -510,6 +519,9 @@ function RoomMap({
               recollection={moment.recollection}
               onDone={() => setMoment(null)}
             />
+          )}
+          {moment?.kind === 'game' && (
+            <GuessWhat key="game" game={moment.game} onDone={() => setMoment(null)} />
           )}
         </AnimatePresence>
 
