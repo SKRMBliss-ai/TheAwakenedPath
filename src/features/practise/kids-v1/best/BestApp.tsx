@@ -14,12 +14,14 @@ import { DeepDive } from './DeepDive';
 import { HubGreeting, HubHotspot, HubStage, HUB_BOXES, PhoneHub, type Hotspot, type HotspotKey } from './PaintedHub';
 import { FloatingJar } from './FloatingJar';
 import { HelpChirpy } from './HelpChirpy';
+import { DifferentStoryRoom } from './DifferentStoryRoom';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, accentFor, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
 import { ChirpyRemembers } from './ChirpyRemembers';
 import { ChirpyArc } from './ChirpyArc';
 import { GuessWhat } from './GuessWhat';
+import { TeachingMoment } from './TeachingMoment';
 import { ReleasedSky } from './LetThemGo';
 import { TheVisitor } from './TheVisitor';
 import { NoteFound } from './NoteFound';
@@ -72,6 +74,8 @@ type View =
   | { at: 'pause' }
   | { at: 'deep' }
   | { at: 'helpchirpy' }
+  /** The room the painting's Different Story dome has always pointed at. */
+  | { at: 'story' }
   | { at: 'reflection' }
   | { at: 'friends' }
   | { at: 'rewards' }
@@ -228,6 +232,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onHelpChirpy={() => setView({ at: 'helpchirpy' })}
                 onPause={() => setView({ at: 'pause' })}
                 onReflection={() => setView({ at: 'reflection' })}
+                onStory={() => setView({ at: 'story' })}
                 onRewards={() => setView({ at: 'rewards' })}
                 onFriends={() => setView({ at: 'friends' })}
                 onOneMinute={() => setView({ at: 'oneminute' })}
@@ -264,6 +269,9 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
             )}
 
             {view.at === 'pause' && <PauseRoom onExit={back} />}
+            {view.at === 'story' && (
+              <DifferentStoryRoom onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
+            )}
             {view.at === 'reflection' && (
               <ReflectionRoom
                 onExit={back}
@@ -313,6 +321,7 @@ function RoomMap({
   onHelpChirpy,
   onPause,
   onReflection,
+  onStory,
   onRewards,
   onFriends,
   onOneMinute,
@@ -328,6 +337,7 @@ function RoomMap({
   onPause: () => void;
   /** The Observatory — looking back over the walk, not the Reflection Room dome. */
   onReflection: () => void;
+  onStory: () => void;
   onRewards: () => void;
   onFriends: () => void;
   onOneMinute: () => void;
@@ -492,7 +502,21 @@ function RoomMap({
     dome('thought', 'Thought Room', '#C48BE8', open('truth'), ticked('truth')),
     dome('bigfeelings', 'Big Feelings', '#E86FB4', open('choices'), ticked('choices')),
     dome('pause', 'Pause Room', '#8FD9C4', onPause),
-    dome('story', 'Different Story', '#7FC7F0', open('help'), ticked('help')),
+    /*
+      THE SIGN AND THE ROOM AGREE NOW.
+
+      This dome has said Different Story since the painting arrived and it
+      opened Helping Hands Village, because the hub matched domes to rooms by
+      shared ARTWORK — the Helping Hands room is painted with the Different
+      Story scene, so the wiring followed the picture rather than the words.
+      Press the ship in the bottle, get asked whether you tidied up.
+
+      Helping Hands has not gone anywhere: it is in the room sheet behind the
+      blue door and it is still the sixth stop on the journey, which is
+      exactly where the Kindness Garden lives too. A room with no shelf is a
+      room you reach another way.
+    */
+    dome('story', 'Different Story', '#7FC7F0', onStory),
     dome('reflection', 'Reflection Room', '#9FB4F5', open('mindheart'), ticked('mindheart')),
     dome('explore', 'Explore every room', '#6FA8F0', () => setSheet(true)),
     dome('journey', 'My Journey', '#FFC65C', () => { sound.play('arcadeBlip'); onStartJourney(); }),
@@ -616,6 +640,13 @@ function RoomMap({
               <ChirpyRemembers
                 key="memory"
                 recollection={moment.recollection}
+                onDone={() => setMoment(null)}
+              />
+            )}
+            {moment?.kind === 'teaching' && (
+              <TeachingMoment
+                key={`teaching-${moment.teaching.id}`}
+                teaching={moment.teaching}
                 onDone={() => setMoment(null)}
               />
             )}

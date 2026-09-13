@@ -370,29 +370,42 @@ export function DeepDive({
                 />
               )}
 
+              {/*
+                POINTING IS THE ANSWER. There is no confirm button under the
+                body any more.
+
+                There used to be one, labelled "That's where" once a zone was
+                lit and "Not anywhere really" before that — so a child had to
+                touch the place it hurt and then agree, in writing, that they
+                had meant it. Nothing else in this walk works that way: the
+                feeling balls one step earlier answer on the tap, and so does
+                every list further down. Pointing at your own chest is about
+                as unambiguous as an answer gets, and asking a child to
+                confirm it reads as the app doubting them.
+
+                The way out for a child who finds nothing is a line rather
+                than a button, because "I can't find it" is a true answer and
+                should not look like failing the step.
+              */}
               {step.id === 'body' && (
                 <>
                   <BodyMap
                     accent={accent}
                     suggested={null}
                     selected={bodyZones}
-                    onToggle={(z) =>
-                      setBodyZones((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(z)) next.delete(z); else next.add(z);
-                        return next;
-                      })
-                    }
+                    onToggle={(z) => {
+                      setBodyZones(new Set([z]));
+                      sound.play('tap');
+                      answer('body', [BODY_ZONE_LABEL[z]]);
+                    }}
                   />
-                  <Cta
-                    label={bodyZones.size ? 'That’s where' : 'Not anywhere really'}
-                    onClick={() =>
-                      answer('body', bodyZones.size
-                        ? Array.from(bodyZones).map((z) => BODY_ZONE_LABEL[z])
-                        : ['nowhere in particular'])
-                    }
-                    accent={accent}
-                  />
+                  <button
+                    onClick={() => answer('body', ['nowhere in particular'])}
+                    className="self-start text-[12.5px] font-bold underline decoration-dotted underline-offset-4"
+                    style={{ color: CHROME.textSoft, minHeight: 36 }}
+                  >
+                    I can’t find it
+                  </button>
                 </>
               )}
 

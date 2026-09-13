@@ -3,6 +3,7 @@ import { peekWelcomeBack } from './awayFor';
 import { arcBeatForToday, type ArcBeat } from './chirpyArc';
 import { recollectionForToday, type ChirpyRecollection } from './chirpyMemory';
 import { guessingGameForToday, type GuessingGame } from './guessingGame';
+import { teachingForToday, type Teaching } from './teachings';
 
 /**
  * ONE THING. THE HUB SHOWS ONE THING.
@@ -28,10 +29,11 @@ import { guessingGameForToday, type GuessingGame } from './guessingGame';
  *   1. A NOTE FROM HOME. It came from a person, it is the rarest thing here,
  *      and somebody is waiting to find out whether it landed. Nothing Chirpy
  *      has to say beats a parent.
- *   2. CHIRPY, whichever of his four is due — and only one, because he is
+ *   2. CHIRPY, whichever of his five is due — and only one, because he is
  *      one character. Within him: the welcome back first (it is only true
  *      today), then the arc (it moves, and it's timed), then the memory
- *      (which keeps indefinitely), and last the guessing game.
+ *      (which keeps indefinitely), then a teaching move, and last the
+ *      guessing game.
  *
  *      THE GAME IS LAST ON PURPOSE, and that is not the same as it being
  *      least. Everything above it is rare, timed or finite, so in practice
@@ -51,6 +53,7 @@ export type HubMoment =
   | { kind: 'welcome'; line: string }
   | { kind: 'arc'; beat: ArcBeat }
   | { kind: 'memory'; recollection: ChirpyRecollection }
+  | { kind: 'teaching'; teaching: Teaching }
   | { kind: 'game'; game: GuessingGame };
 
 /**
@@ -77,6 +80,27 @@ export function hubMoment(
 
   const recollection = recollectionForToday();
   if (recollection) return { kind: 'memory', recollection };
+
+  /*
+    A TEACHING MOVE — and it sits here, above the game, because it is the
+    thing this list was missing.
+
+    Everything over it is rare, timed or finite, so in practice the bottom of
+    this list is what Chirpy does on an ordinary evening, and an ordinary
+    evening is most of them. Until now the only thing down here was the
+    guessing game, which records nothing and leads nowhere by design. That
+    was a friend who turns up and plays a round of guess-what, every single
+    night, forever.
+
+    The teaching moves are the other thing a friend does: shows you something.
+    One a day at most, sixteen of them, and they take turns — see
+    kit/teachings, which also explains why this cannot be Math.random.
+
+    ABOVE THE GAME rather than below it because the library is finite and the
+    game is not. Put the game first and these would surface roughly never.
+  */
+  const teaching = teachingForToday();
+  if (teaching) return { kind: 'teaching', teaching };
 
   /* The points are passed in rather than read here because they live in the
      zustand store, not in localStorage under our own key — and because a kit

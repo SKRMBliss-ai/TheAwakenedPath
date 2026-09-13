@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CHROME, FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
@@ -30,8 +30,41 @@ export function ChirpyArc({ beat, onDone }: { beat: ArcBeat; onDone: () => void 
      answered, what he says back. */
   useSpoken(took ?? beat.line);
 
-  const dismiss = () => {
+  /**
+   * RECORDED ONCE, AND RECORDED FOR BEING READ RATHER THAN FOR BEING TAPPED.
+   *
+   * This used to happen only when the child pressed Okay, which is a thing
+   * children mostly do not do — they read the line and walk into a room. The
+   * hub remounts on the way back out, the beat had never been recorded, and
+   * so the same clue was waiting. Every single landing, all evening: "Do you
+   * ever wonder if you're any good at your job?", over and over, until a line
+   * written to be quietly unsettling became the app's catchphrase.
+   *
+   * A clue is delivered by being on screen. Four seconds is longer than it
+   * takes to read one and short enough that nobody who saw it misses it,
+   * while a hub that mounts and unmounts as a child navigates still can't
+   * burn a clue it never showed.
+   *
+   * THE REVEAL IS EXEMPT. It is the one beat that asks a question, and it
+   * counts as delivered only when the child answers — see answerReveal. The
+   * timer below never touches it.
+   */
+  const recorded = useRef(false);
+  const record = () => {
+    if (recorded.current || isReveal) return;
+    recorded.current = true;
     beatShown(beat.kind);
+  };
+
+  useEffect(() => {
+    if (isReveal) return;
+    const t = window.setTimeout(record, 4000);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [beat.kind, isReveal]);
+
+  const dismiss = () => {
+    record();
     onDone();
   };
 
