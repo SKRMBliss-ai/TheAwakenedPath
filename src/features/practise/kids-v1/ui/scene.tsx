@@ -320,8 +320,11 @@ export function TheBoy({
          room that falls back would pin the fallback everywhere after it. */
       key={plate.src}
       src={plate.src}
-      srcSet={plate.srcset}
-      sizes={`${size}px`}
+      /* Omitted rather than empty when a plate ships in one size only — an
+         `srcset=""` is a candidate list with nothing in it, which browsers
+         handle but no spec obliges them to handle the same way. */
+      srcSet={plate.srcset || undefined}
+      sizes={plate.srcset ? `${size}px` : undefined}
       alt=""
       aria-hidden
       draggable={false}
@@ -334,7 +337,7 @@ export function TheBoy({
         const img = e.currentTarget;
         if (img.dataset.fellBack) return;
         img.dataset.fellBack = 'true';
-        img.srcset = plate.fallbackSrcset;
+        img.srcset = plate.fallbackSrcset ?? '';
         img.src = plate.fallbackSrc;
       }}
       style={{

@@ -27,21 +27,32 @@ export type BoyEmotion = 'calm' | 'worry' | 'scared' | 'sad';
 /**
  * WHICH PLATE OF THE BOY TO DRAW.
  *
- * Only the calm one has actually been drawn, so every emotion currently
- * resolves to it. This is a real map rather than a function that ignores its
- * argument, so that adding `worry.webp` is a one-line change here and not a
- * hunt through the call sites — and so the map itself is the honest record of
- * what art exists, rather than a comment claiming art that doesn't.
+ * This map used to point all four emotions at the calm plate, with a note
+ * saying the others had never been drawn. That note was wrong, and had been
+ * for as long as it existed: the worried, frightened and sad plates were
+ * sitting in /public/feelings the whole time — the same boy, same pink cap,
+ * same Chirpy on the shoulder, cut for the feeling companion (see
+ * kit/feelingCompanions) and never connected to this map. Nobody had looked
+ * in both folders at once.
+ *
+ * THE FRAMING DIFFERS AND THAT IS THE ONE THING TO WATCH. The calm plate is a
+ * full-length standing boy at 320x558; the feeling plates are chest-up at
+ * 420x504. Every caller sizes by height with width:auto, so they don't break
+ * — but a screen that flips between calm and sad shows a figure that changes
+ * crop as well as expression. Calm stays the standing plate deliberately: the
+ * hub greeting dances, and you need legs to dance.
  *
  * A missing plate must never 404: a broken image where a child expects to see
  * themselves is worse than the wrong expression, so an emotion is only
- * repointed here once its file is actually in /public.
+ * repointed here once its file is actually in /public. All four now are.
  */
 const BOY_PLATE: Record<BoyEmotion, { src: string; srcset: string }> = {
   calm:   { src: BOY_SRC, srcset: BOY_SRCSET },
-  worry:  { src: BOY_SRC, srcset: BOY_SRCSET },
-  scared: { src: BOY_SRC, srcset: BOY_SRCSET },
-  sad:    { src: BOY_SRC, srcset: BOY_SRCSET },
+  // No srcset: one size shipped for each of these, and pointing a `160w`
+  // candidate at a 420px file would hand the browser a lie to pick from.
+  worry:  { src: '/feelings/worried.webp', srcset: '' },
+  scared: { src: '/feelings/scared.webp', srcset: '' },
+  sad:    { src: '/feelings/sad.webp', srcset: '' },
 };
 
 export const boySpriteForEmotion = (emotion: BoyEmotion = 'calm') => BOY_PLATE[emotion].src;
