@@ -512,8 +512,6 @@ function RoomMap({
             <div className="order-2 sm:order-1 sm:shrink-0">
               <NeonDoorPill
                 tone="blue"
-                icon="cloud"
-                label="Explore Rooms"
                 onClick={() => {
                   sound.play('arcadeBlip');
                   roomsRef.current?.scrollIntoView({ behavior: quiet ? 'auto' : 'smooth', block: 'start' });
@@ -535,8 +533,6 @@ function RoomMap({
             <div className="order-3 sm:shrink-0">
               <NeonDoorPill
                 tone="gold"
-                icon="sun"
-                label="My Journey"
                 onClick={() => { sound.play('arcadeBlip'); onStartJourney(); }}
               />
             </div>
