@@ -552,7 +552,7 @@
     var todays = JY ? JY.daily.rotate(GAMES, 3, 7) : GAMES.slice(0, 3);
     var b = JY ? JY.buddy.get() : null;
     host.innerHTML =
-      '<header><p class="ptitle"><span class="my">DINO</span><span class="pbig">' +
+      '<header><p class="ptitle"><span class="my">DINO</span><span class="pbig" style="--chars:5">' +
         'WORLD'.split('').map(function (ch, i) {
           return '<span style="color:' + TAPES[i % TAPES.length] + ';--r:' + ((i * 53) % 7 - 3) + 'deg">' + ch + '</span>';
         }).join('') + '</span></p>' +

@@ -91,3 +91,20 @@
   .ans.nudge{animation:none}
   .gbtn.wait .tick{animation:none;width:100%}
 }
+
+/* ── how hard? ─────────────────────────────────────────────────────────────
+   A seven-year-old who still needs number bonds should not be handed a screen
+   built for a four-year-old, and a four-year-old must not be handed harder
+   sums because an older sibling pressed something. So the choice is explicit,
+   per year, remembered — and it changes the questions, never the wording. */
+.stepup{position:relative;z-index:3;display:flex;align-items:stretch;justify-content:center;
+  gap:8px;flex-wrap:wrap;margin:18px 0 4px}
+.stepwhy{display:flex;align-items:center;font-family:var(--round);font-weight:700;font-size:16px;
+  color:var(--ink2);padding:0 4px}
+.stepbtn{border:3px solid #E0CFAB;background:#FFFDF6;border-radius:20px;padding:8px 16px;
+  font-family:var(--round);font-weight:800;font-size:16px;color:var(--deep);
+  box-shadow:0 3px 0 #E3D3B0;display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.stepbtn i{font-style:normal;font-family:var(--hand);font-weight:400;font-size:14px;color:var(--ink2)}
+.stepbtn[aria-pressed=true]{border-color:var(--t3);background:#F2FBF1;box-shadow:0 0 0 3px #50985833,0 3px 0 #E3D3B0}
+.stepbtn[aria-pressed=true] i{color:#2E7A38}
+.stepbtn:active{transform:scale(.97)}

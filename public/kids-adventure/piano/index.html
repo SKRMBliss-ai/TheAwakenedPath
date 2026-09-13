@@ -136,7 +136,8 @@
       out += '<span style="color:' + TAPES[j % TAPES.length] + ';--r:' + ((j * 53) % 7 - 3) + 'deg">' + ch + '</span>';
       j++;
     }
-    return '<p class="ptitle"><span class="my">MY</span><span class="pbig">' + out + '</span></p>';
+    return '<p class="ptitle"><span class="my">MY</span><span class="pbig" style="--chars:' +
+      word.replace(/ /g, '').length + '">' + out + '</span></p>';
   }
 
   function keysHTML(l) {
@@ -287,6 +288,8 @@
 
   });
   function paintMute() { if (window.KJA && window.KJA.ui) window.KJA.ui.toolbar('#mutebar'); }
+  var JY = (window.KJA && window.KJA.journey) || null;
+  if (JY) JY.visit.mark('piano', 'Piano World');
 
   var rz, lastPer = perRow();
   addEventListener('resize', function () {

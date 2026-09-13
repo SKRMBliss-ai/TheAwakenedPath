@@ -88,6 +88,54 @@
     return nh + ' ' + m;
   }
 
+  /* ── one year, two sizes of child ───────────────────────────────────────
+     A seven-year-old who still needs number bonds should not be handed a
+     screen built for a four-year-old — and a four-year-old must not be handed
+     harder sums because an older sibling turned a switch on.
+
+     So each of Reception and Year 1 carries a second, harder set of questions
+     over exactly the same objectives: the same letters and sounds, the same
+     counting, the same shapes, the same bonds, but with bigger numbers, harder
+     spellings and questions that ask for reasoning rather than recognition.
+     The choice is per year and remembered, so one child can be stepped up in
+     Reception and left alone in Year 1.
+
+     Nothing about the wording changes with it. The copy was written to be
+     age-neutral in the first place — "Count the tracks", not "Count the
+     tracks, little one" — because the surest way to lose an older child is to
+     talk down to them. */
+  var TIER = {};
+  try { TIER = JSON.parse(localStorage.getItem('kja:tier') || '{}') || {}; } catch (e) { TIER = {}; }
+  function steppedUp(yid) { return TIER[yid] === 'big'; }
+  function stepUp(yid, v) {
+    TIER[yid] = v ? 'big' : 'small';
+    try { localStorage.setItem('kja:tier', JSON.stringify(TIER)); } catch (e) {}
+  }
+  /* the generator a topic should use right now */
+  function makerFor(yid, t) {
+    return (steppedUp(yid) && t.hard) ? t.hard : t.make;
+  }
+  /* wrong spellings a child could plausibly write, for the harder reading and
+     phonics questions */
+  function misspell(w) {
+    var out = [], V = 'aeiou', i;
+    /* swap the vowel */
+    for (i = 0; i < w.length && out.length < 1; i++)
+      if (V.indexOf(w[i]) >= 0) {
+        var other = V.replace(w[i], '');
+        out.push(w.slice(0, i) + other[rnd(other.length)] + w.slice(i + 1));
+      }
+    /* swap two letters over */
+    if (w.length > 2) out.push(w.slice(0, w.length - 2) + w[w.length - 1] + w[w.length - 2]);
+    /* double a consonant */
+    for (i = w.length - 1; i >= 1 && out.length < 3; i--)
+      if (V.indexOf(w[i]) < 0) { out.push(w.slice(0, i) + w[i] + w.slice(i)); break; }
+    var uniq = [];
+    out.forEach(function (x) { if (x !== w && uniq.indexOf(x) < 0) uniq.push(x); });
+    while (uniq.length < 3) uniq.push(w + 'e'.repeat(uniq.length + 1));
+    return uniq.slice(0, 3);
+  }
+
   /* ── the three year groups ─────────────────────────────────────────────── */
   var PHONICS = [
     { s:'s', words:['sun','sock','sit'], not:['mat','pen','dog'] },
@@ -131,6 +179,13 @@
             return { q:'Which word starts with the sound <b>' + p.s + '</b>?',
               opts: shuffle([w].concat(shuffle(p.not).slice(0, 3))), a:w,
               why:'<b>' + w + '</b> starts with ' + p.s + '.' };
+          },
+          /* same skill, one step on: two letters making one sound */
+          hard:function () {
+            var d = pick(DIGRAPHS), w = pick(d.yes);
+            return { q:'Which word has the sound <b>' + d.d + '</b> in it?',
+              opts: shuffle([w].concat(shuffle(d.no).slice(0, 3))), a:w,
+              why:'<b>' + w + '</b> has ' + d.d + ' — two letters, one sound.' };
           } },
         { id:'count10', icon:'🍎', title:'Counting to 10', tag:'Number',
           make:function () {
@@ -138,6 +193,20 @@
             return { q:'How many can you count?', art: things(e, n),
               opts: shuffle([n].concat(near(n, 1, 12))).map(String), a:String(n),
               why:'There are <b>' + n + '</b>.' };
+          },
+          /* counting past ten, and counting two kinds at once, which is where
+             a child has to group rather than point */
+          hard:function () {
+            if (rnd(2)) {
+              var n = 11 + rnd(10), e = pick(['🍎','⭐','🐟','🎈','🐝','🍓']);
+              return { q:'How many can you count?', art: things(e, n),
+                opts: shuffle([n].concat(near(n, 6, 26))).map(String), a:String(n),
+                why:'There are <b>' + n + '</b> — count in twos to check.' };
+            }
+            var a = 3 + rnd(7), b = 3 + rnd(7);
+            return { q:'How many altogether?', art: things('🐟', a) + things('🐝', b),
+              opts: shuffle([a + b].concat(near(a + b, 4, 26))).map(String), a:String(a + b),
+              why:a + ' and ' + b + ' makes <b>' + (a + b) + '</b>.' };
           } },
         { id:'shapes', icon:'🔺', title:'Shapes', tag:'Shape',
           make:function () {
@@ -145,6 +214,18 @@
             return { q:'What shape is this?', art: shapeSVG(k, pick(TAPES)),
               opts: shuffle([k].concat(shuffle(names.filter(function (n) { return n !== k; })).slice(0, 3))), a:k,
               why:'That is a <b>' + k + '</b>.' };
+          },
+          /* naming a shape is recognition; counting its sides and corners is
+             the property, which is what the next year actually needs */
+          hard:function () {
+            var SIDES = { circle:[1,0], square:[4,4], triangle:[3,3], rectangle:[4,4], star:[10,10], oval:[1,0] };
+            var names = ['square','triangle','rectangle','star'], k = pick(names);
+            var corners = rnd(2) === 0;
+            var a = SIDES[k][corners ? 1 : 0];
+            return { q:'How many <b>' + (corners ? 'corners' : 'sides') + '</b> does this shape have?',
+              art: shapeSVG(k, pick(TAPES)),
+              opts: shuffle([a].concat(near(a, 2, 12))).map(String), a:String(a),
+              why:'A ' + k + ' has <b>' + a + '</b> ' + (corners ? 'corners' : 'sides') + '.' };
           } },
         { id:'words', icon:'🐱', title:'First words', tag:'Reading',
           make:function () {
@@ -152,6 +233,14 @@
             return { q:'Which word says this?', art:'<span class="qbig">' + c.e + '</span>',
               opts: shuffle([c.w].concat(shuffle(CVC.filter(function (x) { return x.w !== c.w; })).slice(0, 3).map(function (x) { return x.w; }))),
               a:c.w, why:'<b>' + c.w + '</b> — ' + c.e };
+          },
+          /* choosing between four different words is reading; choosing between
+             four spellings of the SAME word is writing */
+          hard:function () {
+            var c = pick(CVC);
+            return { q:'Which one is spelled correctly?', art:'<span class="qbig">' + c.e + '</span>',
+              opts: shuffle([c.w].concat(misspell(c.w))), a:c.w,
+              why:'It is spelled <b>' + c.w + '</b>.' };
           } },
         { id:'more', icon:'⚖️', title:'More or fewer', tag:'Number',
           make:function () {
@@ -160,12 +249,33 @@
             var big = Math.max(a, b);
             return { q:'Which number is <b>bigger</b>?', opts: shuffle([String(a), String(b)]), a:String(big),
               why:'<b>' + big + '</b> is bigger than ' + Math.min(a, b) + '.' };
+          },
+          /* two-digit numbers, and sometimes the smaller one — which catches
+             anyone who has learnt "tap the big-looking one" */
+          hard:function () {
+            var a = 10 + rnd(90), b = 10 + rnd(90);
+            while (b === a) b = 10 + rnd(90);
+            var wantBig = rnd(2) === 0, ans = wantBig ? Math.max(a, b) : Math.min(a, b);
+            return { q:'Which number is <b>' + (wantBig ? 'bigger' : 'smaller') + '</b>?',
+              opts: shuffle([String(a), String(b)]), a:String(ans),
+              why:'<b>' + ans + '</b> is ' + (wantBig ? 'bigger' : 'smaller') + ' — look at the tens first.' };
           } },
         { id:'order', icon:'🔢', title:'What comes next?', tag:'Number',
           make:function () {
             var s = 1 + rnd(7);
             return num('What comes after <b>' + s + ', ' + (s + 1) + ', ' + (s + 2) + '</b>?', s + 3, 1, 12,
               'Counting on: ' + (s + 2) + ' then <b>' + (s + 3) + '</b>.');
+          },
+          /* counting BACK is the harder half of counting, and gets skipped */
+          hard:function () {
+            if (rnd(2)) {
+              var s = 12 + rnd(30);
+              return num('What comes after <b>' + s + ', ' + (s + 1) + ', ' + (s + 2) + '</b>?', s + 3, 5, 60,
+                'Counting on: ' + (s + 2) + ' then <b>' + (s + 3) + '</b>.');
+            }
+            var b = 8 + rnd(30);
+            return num('Counting back: <b>' + b + ', ' + (b - 1) + ', ' + (b - 2) + '</b>, then?', b - 3, 0, 60,
+              'One less each time → <b>' + (b - 3) + '</b>.');
           } }
       ]
     },
@@ -177,22 +287,61 @@
           make:function () {
             var a = rnd(11);
             return num('<b>' + a + '</b> + ? = 10', 10 - a, 0, 10, a + ' + <b>' + (10 - a) + '</b> = 10.');
+          },
+          /* bonds to 20 and to 100, which is the same fact one place value up */
+          hard:function () {
+            if (rnd(2)) {
+              var a = rnd(21);
+              return num('<b>' + a + '</b> + ? = 20', 20 - a, 0, 20, a + ' + <b>' + (20 - a) + '</b> = 20.');
+            }
+            var t = 10 * (1 + rnd(9));
+            return num('<b>' + t + '</b> + ? = 100', 100 - t, 0, 100,
+              t + ' + <b>' + (100 - t) + '</b> = 100 — the same bond, ten times bigger.');
           } },
         { id:'add20', icon:'➕', title:'Adding to 20', tag:'Number',
           make:function () {
             var a = 2 + rnd(12), b = 1 + rnd(20 - a);
             return num(a + ' + ' + b + ' = ?', a + b, 1, 20, a + ' + ' + b + ' = <b>' + (a + b) + '</b>.');
+          },
+          /* adding past twenty, and the missing-number version, which needs
+             the child to work backwards */
+          hard:function () {
+            var a = 8 + rnd(35), b = 4 + rnd(30);
+            if (rnd(2)) return num(a + ' + ' + b + ' = ?', a + b, 5, 90, a + ' + ' + b + ' = <b>' + (a + b) + '</b>.');
+            return num(a + ' + ? = ' + (a + b), b, 1, 40,
+              a + ' + <b>' + b + '</b> = ' + (a + b) + ' — count on from ' + a + '.');
           } },
         { id:'sub20', icon:'➖', title:'Taking away', tag:'Number',
           make:function () {
             var a = 5 + rnd(16), b = 1 + rnd(a - 1);
             return num(a + ' − ' + b + ' = ?', a - b, 0, 20, a + ' − ' + b + ' = <b>' + (a - b) + '</b>.');
+          },
+          /* taking away across a ten, which is the part that trips everyone */
+          hard:function () {
+            var a = 21 + rnd(60), b = 3 + rnd(Math.min(19, a - 1));
+            if (rnd(2)) return num(a + ' − ' + b + ' = ?', a - b, 0, 90, a + ' − ' + b + ' = <b>' + (a - b) + '</b>.');
+            return num(a + ' − ? = ' + (a - b), b, 1, 30,
+              a + ' − <b>' + b + '</b> = ' + (a - b) + ' — how far is it back down?');
           } },
         { id:'steps', icon:'👣', title:'Counting in 2s, 5s and 10s', tag:'Number',
           make:function () {
             var step = pick([2, 5, 10]), start = step * (1 + rnd(5));
             return num('Count in ' + step + 's: <b>' + start + ', ' + (start + step) + ', ' + (start + step * 2) + '</b>, then?',
               start + step * 3, 0, 100, 'Add ' + step + ' each time → <b>' + (start + step * 3) + '</b>.');
+          },
+          /* threes and fours, and counting back down the same steps */
+          hard:function () {
+            var step = pick([3, 4, 5, 10]);
+            if (rnd(2)) {
+              var up = step * (2 + rnd(8));
+              return num('Count in ' + step + 's: <b>' + up + ', ' + (up + step) + ', ' + (up + step * 2) + '</b>, then?',
+                up + step * 3, 0, 140, 'Add ' + step + ' each time → <b>' + (up + step * 3) + '</b>.');
+            }
+            /* start high enough that counting back three steps still lands on
+               a number a six-year-old has met — never below zero */
+            var down = step * (4 + rnd(9));
+            return num('Count back in ' + step + 's: <b>' + down + ', ' + (down - step) + ', ' + (down - step * 2) + '</b>, then?',
+              down - step * 3, 0, 140, 'Take ' + step + ' away each time → <b>' + (down - step * 3) + '</b>.');
           } },
         { id:'digraph', icon:'🔡', title:'Two letters, one sound', tag:'Phonics',
           make:function () {
@@ -200,6 +349,14 @@
             return { q:'Which word has <b>' + d.d + '</b> in it?',
               opts: shuffle([w].concat(shuffle(d.no).slice(0, 3))), a:w,
               why:'<b>' + w + '</b> has ' + d.d + '.' };
+          },
+          /* spelling the digraph word rather than spotting it, which is the
+             step from reading a sound to writing it */
+          hard:function () {
+            var d = pick(DIGRAPHS), w = pick(d.yes);
+            return { q:'Which spelling of the <b>' + d.d + '</b> word is right?',
+              opts: shuffle([w].concat(misspell(w))), a:w,
+              why:'<b>' + w + '</b> — the ' + d.d + ' stays together.' };
           } },
         { id:'days', icon:'📅', title:'Days and months', tag:'Time',
           make:function () {
@@ -213,6 +370,27 @@
             return { q:'Which month comes after <b>' + m + '</b>?',
               opts: shuffle([mn].concat(shuffle(MONTHS.filter(function (x) { return x !== mn && x !== m; })).slice(0, 3))),
               a:mn, why:'After ' + m + ' comes <b>' + mn + '</b>.' };
+          },
+          /* going backwards, and counting positions — which needs the order
+             held in mind rather than recited */
+          hard:function () {
+            var k = rnd(3);
+            if (k === 0) {
+              var i = rnd(7), d = DAYS[i], pv = DAYS[(i + 6) % 7];
+              return { q:'If today is <b>' + d + '</b>, what day was <b>yesterday</b>?',
+                opts: shuffle([pv].concat(shuffle(DAYS.filter(function (x) { return x !== pv && x !== d; })).slice(0, 3))),
+                a:pv, why:'The day before ' + d + ' is <b>' + pv + '</b>.' };
+            }
+            if (k === 1) {
+              var n = 1 + rnd(12), m2 = MONTHS[n - 1];
+              return { q:'Which is the <b>' + n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th') + '</b> month of the year?',
+                opts: shuffle([m2].concat(shuffle(MONTHS.filter(function (x) { return x !== m2; })).slice(0, 3))),
+                a:m2, why:'Month ' + n + ' is <b>' + m2 + '</b>.' };
+            }
+            var j2 = rnd(12), m3 = MONTHS[j2], two = MONTHS[(j2 + 2) % 12];
+            return { q:'Which month is <b>two months after</b> ' + m3 + '?',
+              opts: shuffle([two].concat(shuffle(MONTHS.filter(function (x) { return x !== two && x !== m3; })).slice(0, 3))),
+              a:two, why:'Two on from ' + m3 + ' is <b>' + two + '</b>.' };
           } },
         { id:'coins1', icon:'🪙', title:'Coins', tag:'Money',
           make:function () {
@@ -221,6 +399,20 @@
             return { q:'How much is this altogether?', art: coins(set),
               opts: shuffle([total].concat(near(total, 1, 60))).map(function (v) { return v + 'p'; }), a: total + 'p',
               why:'That makes <b>' + total + 'p</b>.' };
+          },
+          /* bigger handfuls, and the change — which is money's real question */
+          hard:function () {
+            var set = pick([[50,20,10],[20,20,10,5],[50,50],[100,20],[50,20,20,5,2],[20,10,10,5,2,1]]);
+            var total = set.reduce(function (a, b) { return a + b; }, 0);
+            if (rnd(2))
+              return { q:'How much is this altogether?', art: coins(set),
+                opts: shuffle([total].concat(near(total, 10, 200))).map(function (v) { return v + 'p'; }), a: total + 'p',
+                why:'That makes <b>' + total + 'p</b> — add the big coins first.' };
+            var cost = 10 + rnd(Math.max(10, total - 10));
+            return { q:'You have ' + total + 'p and spend <b>' + cost + 'p</b>. How much is left?', art: coins(set),
+              opts: shuffle([total - cost].concat(near(total - cost, 0, 200))).map(function (v) { return v + 'p'; }),
+              a: (total - cost) + 'p',
+              why:total + 'p − ' + cost + 'p = <b>' + (total - cost) + 'p</b>.' };
           } }
       ]
     },
@@ -242,7 +434,13 @@
           make:function () {
             var a = 11 + rnd(78), b = 1 + rnd(Math.min(40, 99 - a));
             if (rnd(2)) return num(a + ' + ' + b + ' = ?', a + b, 1, 99, a + ' + ' + b + ' = <b>' + (a + b) + '</b>.');
-            return num(a + ' − ' + b + ' = ?', a - b, 0, 99, a + ' − ' + b + ' = <b>' + (a - b) + '</b>.');
+            /* Take the smaller from the larger. The two numbers are drawn for
+               the addition, where b may well be the bigger of them, so sharing
+               them with the subtraction unchanged was asking a seven-year-old
+               things like "12 − 36 = ?" — a question with no answer they have
+               been taught, and no right option to tap. */
+            var hi = Math.max(a, b), lo = Math.min(a, b);
+            return num(hi + ' − ' + lo + ' = ?', hi - lo, 0, 99, hi + ' − ' + lo + ' = <b>' + (hi - lo) + '</b>.');
           } },
         { id:'fractions', icon:'🍕', title:'Halves and quarters', tag:'Fractions',
           make:function () {
@@ -333,6 +531,12 @@
     return null;
   }
 
+  /* the painted title, with its own length attached so the shared stylesheet
+     can shrink a long name rather than running it off both edges of a phone */
+  function bigTitle(word) {
+    return '<span class="pbig" style="--chars:' + word.replace(/ /g, '').length + '">' +
+      titleHTML(word) + '</span>';
+  }
   function titleHTML(word) {
     var out = '', j = 0;
     for (var i = 0; i < word.length; i++) {
@@ -349,8 +553,8 @@
   function island() {
     if (JOURNEY) JOURNEY.visit.mark('study', 'Study Island');
     $('#study').innerHTML =
-      '<header><p class="ptitle"><span class="my">MY</span><span class="pbig">' +
-        titleHTML('STUDY ISLAND') + '</span></p>' +
+      '<header><p class="ptitle"><span class="my">MY</span>' +
+        bigTitle('STUDY ISLAND') + '</p>' +
       '<p class="togo">School things, the adventure way — pick your year</p></header>' +
       '<div class="cards yearshelf" style="--per:' + (innerWidth >= 900 ? 3 : 1) + '">' +
       YEARS.map(function (y, i) {
@@ -436,11 +640,22 @@
       '</section>';
     $('#study').innerHTML =
       '<header><p class="ptitle"><span class="my">' + Y.sub.toUpperCase() + '</span>' +
-        '<span class="pbig">' + titleHTML(Y.name.toUpperCase()) + '</span></p>' +
+        bigTitle(Y.name.toUpperCase()) + '</p>' +
       '<p class="count">' + got + ' <b>/</b> ' + of + ' stars</p>' +
       '<p class="togo">' + Y.blurb + '</p>' +
       '<div class="trail"><span class="sign">Start</span>' + trail(got, of) + '<span class="sign r">All done</span>' +
         '<span class="peak"></span></div></header>' +
+      /* the step-up switch, shown only for the years that have a harder set:
+         Year 2 already IS the harder set, and its own Quest goes further */
+      (Y.topics.some(function (t) { return !!t.hard; })
+        ? '<div class="stepup" role="group" aria-label="How hard should the questions be?">' +
+            '<span class="stepwhy">How hard?</span>' +
+            '<button class="stepbtn" data-step="0" aria-pressed="' + (!steppedUp(Y.id)) + '">' +
+              Y.sub + '<i>the usual questions</i></button>' +
+            '<button class="stepbtn" data-step="1" aria-pressed="' + steppedUp(Y.id) + '">' +
+              'A bit older<i>same topics, harder questions</i></button>' +
+          '</div>'
+        : '') +
       '<nav class="pills">' + YEARS.map(function (y) {
         return '<a class="pill" style="--c:' + y.colour + '" href="?y=' + y.id + '" ' +
           'aria-selected="' + (y.id === Y.id) + '">' + y.icon + ' ' + y.name + '</a>';
@@ -506,7 +721,7 @@
   function nextQuestion() {
     clearTimers();
     answered = false; tries = 0; firstTry = true;
-    Q = T.make();
+    Q = makerFor(Y.id, T)();
     qn++;
     var pct = Math.round((qn - 1) / ROUND * 100);
     $('#study').innerHTML =
@@ -738,6 +953,17 @@
 
   /* ── input ─────────────────────────────────────────────────────────────── */
   document.addEventListener('click', function (e) {
+    var sb = e.target.closest('[data-step]');
+    if (sb) {
+      var want = sb.dataset.step === '1';
+      if (want !== steppedUp(Y.id)) {
+        stepUp(Y.id, want);
+        if (SND) { SND.sfx.pop(); SND.speak(want ? 'Harder questions, same topics.' : 'Back to the usual questions.'); }
+        toast(want ? 'Harder questions from now on' : 'Back to the usual questions');
+        yearHome();
+      } else pop();
+      return;
+    }
     var tc = e.target.closest('[data-topic]');
     if (tc) { pop(); startTopic(tc.dataset.topic); return; }
     var an = e.target.closest('.ans');
@@ -765,6 +991,7 @@
   }
   window.__study = {
     prog: function () { return prog; },
+    tier: function (yid, v) { if (v !== undefined) stepUp(yid, v); return steppedUp(yid); },
     where: function () { return { year: Y && Y.id, topic: T && T.id, qn: qn, right: right, tries: tries, firstTry: firstTry }; },
     /* the question on screen right now, so the round can be driven from a test */
     current: function () { return Q ? { q: Q.q, a: Q.a, opts: Q.opts.slice() } : null; },
@@ -772,7 +999,7 @@
     /* used by the question audit: generate one question from any topic */
     make: function (yid, tid) {
       var y = yearById(yid); if (!y) return null;
-      for (var i = 0; i < y.topics.length; i++) if (y.topics[i].id === tid) return y.topics[i].make();
+      for (var i = 0; i < y.topics.length; i++) if (y.topics[i].id === tid) return makerFor(yid, y.topics[i])();
       return null;
     }
   };

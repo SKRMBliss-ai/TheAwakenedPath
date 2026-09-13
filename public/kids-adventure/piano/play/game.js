@@ -139,6 +139,8 @@
         note here sounds exactly like a note anywhere else in the adventure ── */
   var SND = (window.KJA && window.KJA.sound) || null;
   var JUICE = (window.KJA && window.KJA.juice) || null;
+  /* the star jar and the place-keeper the whole adventure shares */
+  var JY = (window.KJA && window.KJA.journey) || null;
   function muted() { return SND ? SND.isMuted() : true; }
   function piano(freq, when, dur, vol) { if (SND) SND.piano(freq, when, dur, vol); }
   function oops()  { if (SND) { SND.sfx.wrong(); SND.haptic(26); } }
@@ -345,7 +347,15 @@
       s: (n.l ? '“' + n.l + '” — ' : '') + 'press the glowing key' + (n.slide ? ' and slide ' + n.slide + ' along' : '')
     };
   }
+  /* remember where they were, so the map can offer this exact screen back
+     rather than the top of Piano World */
+  function markHere() {
+    if (!JY) return;
+    if (S) JY.visit.mark('piano', 'Piano · ' + S.title, { s: S.id });
+    else if (L) JY.visit.mark('piano', 'Piano · ' + L.name, { l: L.n });
+  }
   function renderSong() {
+    markHere();
     var sp = songProg(S.id), u = unit();
     $('#game').innerHTML =
       '<div class="topbar"><div class="lvlpick">' +
@@ -411,6 +421,7 @@
       sp.done = true; saveProg();
       if (SND) SND.sfx.win();
       confetti(70);
+      if (JY) { JY.stars.add(8, $('#score')); JY.surprise('You can play ' + S.title); }
       if (JUICE) JUICE.stickers.earn('song-' + S.id, 'You can play ' + S.title);
       toast('You can play ' + S.title + '! ★★★');
       V.part = 1; idx = 0; renderSong();
@@ -420,6 +431,7 @@
     saveProg();
     if (SND) SND.sfx.levelUp();
     confetti(34);
+    if (JY) JY.stars.add(3, $('#score'));
     if (JUICE) JUICE.resetStreak();
     var next = V.part < S.units.length ? V.part + 1 : V.part;
     toast(S.unitWord + ' ' + u.m + ' learned!');
@@ -471,6 +483,7 @@
     }).join('') + '</div>';
   }
   function renderLevel() {
+    markHere();
     var pct = L.mode === 'compose' ? 0 : Math.round(idx / Math.max(notes().length, 1) * 100);
     $('#game').innerHTML =
       '<div class="topbar"><div class="lvlpick">' +
@@ -555,6 +568,12 @@
     if (SND) SND.sfx.levelUp();
     confetti();
     renderLevel();
+    /* a played level is worth stars in the jar that follows a child across the
+       whole adventure, not only on this page's own star row */
+    if (JY) {
+      JY.stars.add(st * 2, $('.win'));
+      JY.surprise('Level ' + L.n + ' — ' + L.name);
+    }
     if (JUICE) {
       JUICE.stamp($('.win'), st);
       if (st === 3) JUICE.stickers.earn('level-' + L.n, 'Three stars on ' + L.name);

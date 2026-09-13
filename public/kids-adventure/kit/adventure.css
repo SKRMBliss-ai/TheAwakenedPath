@@ -235,7 +235,12 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
    playable keys inside each card belong to this world alone. */
 .ptitle{font-family:var(--round);font-weight:800;line-height:.9;margin:0;letter-spacing:-1px}
 .ptitle .my{display:block;font-size:clamp(20px,4vw,28px);color:var(--deep);letter-spacing:2px}
-.ptitle .pbig{display:block;font-size:clamp(38px,10.5vw,74px)}
+/* 10.5vw fits "MY JOURNEY" and runs "RECEPTION & KG" and "PIANO ADVENTURE"
+   into both edges of a phone: the painted title is one line of rotated
+   letters, so a long name cannot wrap out of trouble. Each screen sets
+   --chars to its own title length and the size divides down to fit, with
+   10.5vw kept as the ceiling so the short titles are unchanged. */
+.ptitle .pbig{display:block;font-size:clamp(22px,min(10.5vw, 112vw / var(--chars,10)),74px)}
 .ptitle .pbig span{display:inline-block;transform:rotate(var(--r));text-shadow:1px 2px 0 #00000012}
 .frame.kb{aspect-ratio:12/7;background:#FFFDF6;border-color:#E7D2AC;display:grid;place-items:center;padding:10px}
 .frame.kb svg{width:100%;height:100%;display:block}

@@ -617,6 +617,11 @@ $('#lb').addEventListener('click',e=>{if(e.target.id==='lb')$('#lb').classList.r
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ $('#lb').classList.remove('open'); document.querySelector('.md')?.remove(); }
   if($('#lb').classList.contains('open')){ if(e.key==='ArrowRight')openLb(lbIdx+1); if(e.key==='ArrowLeft')openLb(lbIdx-1);} });
 if(window.KJA && window.KJA.ui) window.KJA.ui.toolbar('#mutebar');
+/* Art World joins the shared jar and the shared place-keeper: a saved
+   drawing is worth stars anywhere else in the adventure, and coming back
+   tomorrow offers this sketchbook straight back. */
+const JY = (window.KJA && window.KJA.journey) || null;
+if (JY) JY.visit.mark('art', 'Art World · my sketchbook');
 
 /* The sand path is drawn per row, so a width change means new rows. */
 let rz, lastPer=perRow();
