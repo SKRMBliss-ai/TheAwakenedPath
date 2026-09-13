@@ -5,6 +5,7 @@ import { useMotion } from '../ui/quiet';
 import { chirpySprite } from '../ui/sprites';
 import { answerReveal, beatShown, REPLIES, type ArcBeat } from '../kit/chirpyArc';
 import * as sound from '../kit/sound';
+import { useSpoken } from '../ui/useSpoken';
 
 /**
  * Chirpy, mentioning something. See kit/chirpyArc for what he's circling and
@@ -25,6 +26,10 @@ export function ChirpyArc({ beat, onDone }: { beat: ArcBeat; onDone: () => void 
 
   const accent = '#8FD9C4';
   const isReveal = beat.kind === 'reveal';
+
+  /* He is speaking, so he is heard. His line first; once the child has
+     answered, what he says back. */
+  useSpoken(took ?? beat.line);
 
   const dismiss = () => {
     beatShown(beat.kind);

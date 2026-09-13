@@ -5,6 +5,7 @@ import { COMPANIONS } from '../../../kids/data';
 import { CHROME, FONT } from '../ui/chrome';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
+import { useSpoken } from '../ui/useSpoken';
 
 /**
  * THE FIRST NIGHT — what a child meets before anything else.
@@ -46,6 +47,19 @@ export function FirstNight() {
   const [avatar, setAvatar] = useState<string | null>(null);
 
   const lit = beat !== 'dark';
+
+  /*
+    THE FIRST THING A CHILD MEETS, SAID OUT LOUD. Every word here lands
+    before a six-year-old has been asked to read anything, and this is the
+    one screen where failing to read it means failing to understand what has
+    happened at all — that somebody is in the dark and wants the light on.
+  */
+  useSpoken(
+    beat === 'dark' ? 'Is somebody there? I can\u2019t find the light. I\u2019m not scared. I\u2019d just rather it was on.'
+    : beat === 'lit' ? 'Oh! Oh, that\u2019s much better. You did that. I\u2019ve been sitting here for ages.'
+    : beat === 'name' ? 'What do I call you?'
+    : name.trim() ? `Right. ${name.trim()}. Who else is coming?` : 'Fair enough. Who else is coming?',
+  );
 
   const turnOnTheLight = () => {
     if (lit) return;

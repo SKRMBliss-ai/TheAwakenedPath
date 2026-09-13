@@ -5,6 +5,7 @@ import { useMotion } from '../ui/quiet';
 import { agoLabel } from '../kit/cases';
 import { tuckAway, type Note } from '../kit/notes';
 import * as sound from '../kit/sound';
+import { useSpoken } from '../ui/useSpoken';
 
 /**
  * A NOTE, FOUND.
@@ -29,6 +30,10 @@ export function NoteFound({ note, onDone }: { note: Note; onDone: () => void }) 
   const [open, setOpen] = useState(false);
 
   const accent = '#FFC65C';
+
+  /* Only once it's OPENED. Reading a folded note aloud would give away the
+     thing the child is about to open it to find out. */
+  useSpoken(open ? `${note.text} From ${note.from}.` : null);
 
   const unfold = () => {
     if (open) return;

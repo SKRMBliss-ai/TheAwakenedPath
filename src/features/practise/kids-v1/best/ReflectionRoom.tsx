@@ -10,6 +10,7 @@ import { DoorHandle } from '../ui/DoorHandle';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { MicButton } from '../ui/MicButton';
 import { HearYourself } from '../ui/HearYourself';
+import { SpeakButton } from '../ui/SpeakButton';
 import { allLinks, linkClip } from '../kit/voiceStore';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { LifetimeJar } from './LifetimeJar';
@@ -155,12 +156,16 @@ export function ReflectionRoom({
             kit/oneTrueLine for the rules it keeps (never a target, never the
             virtue they do least, and no favourite unless there really is
             one). */}
-        <p
-          className="mx-auto mt-4 max-w-md text-center text-[18px] font-extrabold leading-snug sm:text-[20px]"
-          style={{ color: CHROME.text, textWrap: 'balance' }}
-        >
-          {oneTrueLine(s.completions)}
-        </p>
+        <div className="mx-auto mt-4 flex max-w-md items-center justify-center gap-2.5">
+          <p
+            className="text-center text-[18px] font-extrabold leading-snug sm:text-[20px]"
+            style={{ color: CHROME.text, textWrap: 'balance' }}
+          >
+            {oneTrueLine(s.completions)}
+          </p>
+          {/* The room's one spoken-out-loud fact, on demand. */}
+          <SpeakButton text={oneTrueLine(s.completions)} accent={accent} />
+        </div>
 
         {/* The other thing you can do with a jar. Sits under the sentence
             rather than on the jar itself — see LetThemGo on why this is not

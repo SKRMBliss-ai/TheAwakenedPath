@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { Check, Volume2, VolumeX } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
+import { isMuted, setMuted } from '../../../../lib/sfx';
 import { BEHAVIOURS } from '../../../kids/data';
 import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { BoyAndChirpy, RoomScene } from '../ui/scene';
 import { chirpySprite } from '../ui/sprites';
-import { skyNow, roomPoster, storageFallback } from '../rooms';
+import { skyNow, timeOfDayForHour, roomPoster, storageFallback } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
 import { DoorHandle } from '../ui/DoorHandle';
@@ -17,7 +18,6 @@ import { HelpChirpy } from './HelpChirpy';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
-import { VillageRow } from './VillageRow';
 import { ChirpyRemembers } from './ChirpyRemembers';
 import { ChirpyArc } from './ChirpyArc';
 import { ReleasedSky } from './LetThemGo';
@@ -37,6 +37,7 @@ import { saveCase } from '../kit/cases';
 import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
 import { COMPANY } from '../kit/feelingCompanions';
 import { markVisit, releasedCount } from '../kit/sky';
+import { startSkyAmbience, stopAmbience } from '../kit/ambience';
 import * as sound from '../kit/sound';
 
 /**
@@ -339,13 +340,41 @@ function RoomMap({
   // at that hour.
   const night = skyNow();
 
-  /**
-   * Whether Chirpy has something of theirs to bring back tonight — usually
-   * not; see kit/chirpyMemory for the rest interval. Read once on arrival
-   * rather than every render, so it can't appear mid-session or vanish under
-   * the child's finger, and skipped entirely in the quiet state.
-   */
   const quiet = useQuiet();
+
+  /**
+   * THE HUB HAD NO SOUND AT ALL.
+   *
+   * Room tone is hung off RoomScene (see ui/scene), and the hub is the one
+   * screen that doesn't use it — it paints its own sky from skyNow(). So the
+   * place a child spends most of their time was the only silent room in the
+   * building. It gets the bed matching whatever sky it's showing, so dawn
+   * and midnight don't sound the same.
+   */
+  useEffect(() => {
+    if (quiet) { stopAmbience(); return; }
+    startSkyAmbience(timeOfDayForHour(new Date().getHours()));
+    return () => stopAmbience();
+  }, [quiet]);
+
+  /**
+   * AND THE MUSIC, ONCE, ON ARRIVAL.
+   *
+   * The lullaby was written for this app and played in exactly one place —
+   * the two-stories reveal inside the deep dive — so almost no child would
+   * ever have heard it. It plays on the way in now, under the room tone,
+   * quiet enough to sit beneath Chirpy's voice rather than argue with it.
+   *
+   * Keyed off the mount rather than looped forever: a bed that never stops
+   * becomes something to switch off, and the tone underneath is what carries
+   * the place. `playMusic` is a no-op while muted, so this needs no guard of
+   * its own beyond the quiet state.
+   */
+  useEffect(() => {
+    if (quiet) { sound.stopMusic(); return; }
+    sound.playMusic('twoStories');
+    return () => sound.stopMusic();
+  }, [quiet]);
 
   /**
    * THE ONE THING THIS HUB HAS TO SAY TONIGHT — a note from home, or Chirpy,
@@ -419,7 +448,16 @@ function RoomMap({
       <div className="relative mx-auto w-full max-w-6xl px-[74px] pb-32 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
           <BackButton onClick={onExitGym} label="Leave the gym" />
-          <GrownUpExit onClick={onGrownUp} />
+          <div className="flex items-center gap-2">
+            {/* THE WAY OUT OF THE SOUND. It is on by default now — voice,
+                room tone and the lullaby — and turning something on by
+                default without shipping the switch is how you get a parent
+                uninstalling an app on a train. This is the whole app's
+                silence, not a music toggle: it is the same flag Chirpy's
+                voice and every cue read. */}
+            <SoundToggle />
+            <GrownUpExit onClick={onGrownUp} />
+          </div>
         </div>
 
         {/*
@@ -505,19 +543,13 @@ function RoomMap({
           Or pick a room
         </h2>
 
-        {/* THE STREET, above the posters. The same seven rooms drawn as
-            buildings you walk past — lit by what's been done in each — with
-            the painted cards still underneath for now, so the two ways of
-            showing a room can be watched side by side before either wins. */}
-        <div className="mt-3">
-          <VillageRow
-            rooms={VIRTUE_ROOMS}
-            today={today}
-            pointsByBehaviour={pointsByBehaviour}
-            onOpen={onOpen}
-            onPause={onPause}
-          />
-        </div>
+        {/* THE STREET IS GONE, AND THE CARDS WON.
+            Two ways of showing the same seven rooms ran side by side here so
+            one could be picked. The painted cards are it: a child recognises
+            a room by its picture, and a row of small dark buildings above
+            them was a second, weaker index of the same thing — costing a
+            screenful of height to say what the posters already said better.
+            VillageRow.tsx is still in the tree if it's ever wanted back. */}
 
         <div className="mt-3 grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           {VIRTUE_ROOMS.map((r, i) => (
@@ -580,6 +612,7 @@ function WelcomeBanner({
   const [stars] = useState(() => markVisit());
   const [sparks, setSparks] = useState(false);
   const quiet = useQuiet();
+
   /* Derived rather than stored, so turning Calm mode on folds the greeting
      immediately without a second source of truth to keep in step. */
   const open = !dismissed && !quiet;
@@ -700,6 +733,38 @@ function WelcomeBanner({
 
       {sparks && <FoldSparks />}
     </motion.div>
+  );
+}
+
+/**
+ * ON OR OFF, for everything that makes a noise.
+ *
+ * Reads and writes lib/sfx's single mute flag, which Chirpy's voice, the
+ * room tone, the lullaby and every cue all consult. One switch, not four —
+ * a child who wants quiet wants quiet, not a mixing desk.
+ *
+ * Stopping is immediate rather than at the next natural break: a child
+ * reaching for this is being talked at right now, and "it'll stop when the
+ * sentence finishes" is not an answer.
+ */
+function SoundToggle() {
+  const [muted, setMutedState] = useState(() => isMuted());
+  return (
+    <button
+      onClick={() => {
+        const next = !muted;
+        setMuted(next);
+        setMutedState(next);
+        if (next) { stopSpeaking(); sound.stopMusic(); sound.stopAll(); stopAmbience(); }
+        else sound.play('tap');
+      }}
+      aria-label={muted ? 'Turn the sound on' : 'Turn the sound off'}
+      aria-pressed={!muted}
+      className="grid h-11 w-11 place-items-center rounded-full"
+      style={{ background: CHROME.adultExit, color: CHROME.text, border: `1px solid ${CHROME.backBorder}` }}
+    >
+      {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+    </button>
   );
 }
 
@@ -1179,7 +1244,6 @@ function DoorWall({
         nudge={active?.door === 0 ? active.line : null}
         onClick={onFireflies}
         accent="#FFC65C"
-        peephole="fireflies"
       />
       <DoorHandle
         side="right"
@@ -1188,7 +1252,6 @@ function DoorWall({
         nudge={active?.door === 1 ? active.line : null}
         onClick={onStuck}
         accent="#C48BE8"
-        peephole="thread"
       />
       <DoorHandle
         side="right"
@@ -1197,7 +1260,6 @@ function DoorWall({
         nudge={active?.door === 2 ? active.line : null}
         onClick={onChirpy}
         accent="#8FD9C4"
-        peephole="pacer"
       />
     </>
   );

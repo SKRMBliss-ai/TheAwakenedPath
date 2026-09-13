@@ -1,5 +1,5 @@
 import { isMuted } from '../../../../lib/sfx';
-import type { SceneMood } from '../rooms';
+import type { SceneMood, TimeOfDay } from '../rooms';
 
 /**
  * ROOM TONE — the sound a place makes when nothing is happening.
@@ -69,12 +69,33 @@ const BEDS: Record<SceneMood, Bed> = {
   storm:         { cutoff: 560, drift: 0.55, period: 16, gain: 0.030 },
 };
 
+/**
+ * THE HUB'S FOUR SKIES GET THEIR OWN FOUR BEDS.
+ *
+ * The hub doesn't use a room mood — it paints one of four time-of-day skies
+ * (see rooms.ts, and its note on why those are their own palettes rather than
+ * borrowed room moods). The same argument holds for the sound: pressing the
+ * 'investigation' bed into service as "midday" would give a child a
+ * laboratory hum at lunchtime.
+ *
+ * Daylight is brighter and airier; night is the wide, far-away one the rest
+ * of the app rests in.
+ */
+const SKY_BEDS: Record<TimeOfDay, Bed> = {
+  dawn:   { cutoff: 900,  drift: 0.42, period: 24, gain: 0.021 },
+  midday: { cutoff: 1300, drift: 0.30, period: 19, gain: 0.024 },
+  dusk:   { cutoff: 620,  drift: 0.38, period: 28, gain: 0.023 },
+  night:  { cutoff: 420,  drift: 0.35, period: 34, gain: 0.020 },
+};
+
 /** How long a room's tone takes to arrive or leave. Slow enough to be a
  *  crossfade rather than a cut, short enough not to lag the room change. */
 const FADE = 1.6;
 
 interface Playing {
-  mood: SceneMood;
+  /** Mood name or time-of-day name — whichever started it. Two namespaces
+   *  share this slot because only ONE bed may ever be running. */
+  key: string;
   ctx: AudioContext;
   out: GainNode;
   nodes: AudioScheduledSourceNode[];
@@ -113,15 +134,23 @@ function noiseBuffer(c: AudioContext): AudioBuffer {
  * top of the first — which is the classic way ambient audio turns into a roar.
  */
 export function startAmbience(mood: SceneMood): void {
+  start(mood, BEDS[mood]);
+}
+
+/** The hub's version, keyed off the sky it is currently showing. */
+export function startSkyAmbience(tod: TimeOfDay): void {
+  start(`sky:${tod}`, SKY_BEDS[tod]);
+}
+
+function start(key: string, bed: Bed): void {
   if (isMuted()) { stopAmbience(); return; }
-  if (playing?.mood === mood) return;
+  if (playing?.key === key) return;
 
   const c = audioCtx();
   if (!c) return;
 
   stopAmbience();
 
-  const bed = BEDS[mood];
   const now = c.currentTime;
 
   const out = c.createGain();
@@ -165,7 +194,7 @@ export function startAmbience(mood: SceneMood): void {
     nodes.push(osc);
   }
 
-  playing = { mood, ctx: c, out, nodes };
+  playing = { key, ctx: c, out, nodes };
 }
 
 /** Fades the current tone out and tears it down. Safe to call at any time,

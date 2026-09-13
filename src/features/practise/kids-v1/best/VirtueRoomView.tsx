@@ -15,6 +15,7 @@ import { CaughtFirefly } from './CaughtFirefly';
 import { GardenTree } from './GardenTree';
 import { HungDrawing } from './HungDrawing';
 import { type ReportingDay } from '../kit/reportingDay';
+import { SpeakButton } from '../ui/SpeakButton';
 import * as sound from '../kit/sound';
 
 /**
@@ -195,6 +196,21 @@ export function VirtueRoomView({
                 About yesterday
               </span>
             )}
+
+            {/* READ ME THE QUESTION. The single most important sentence in
+                the app, and the one a pre-reader is most likely to answer by
+                guessing. Beside the tick rather than inside it: a button
+                nested in a button is invalid and eats the tap. */}
+            <div className="-mb-2 flex items-center gap-2">
+              <SpeakButton
+                text={(reporting.isWeekend && room.weekendPrompt) || room.prompt}
+                accent={accent}
+                label="Read the question to me"
+              />
+              <span className="text-[11.5px] font-bold" style={{ color: CHROME.textSoft }}>
+                Read it to me
+              </span>
+            </div>
 
             <motion.button
               whileTap={{ scale: 0.99 }}

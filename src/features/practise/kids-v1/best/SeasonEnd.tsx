@@ -4,6 +4,7 @@ import { useMotion } from '../ui/quiet';
 import { chirpySprite } from '../ui/sprites';
 import { closeSeason, type Keepsake } from '../kit/seasons';
 import * as sound from '../kit/sound';
+import { useSpoken } from '../ui/useSpoken';
 
 /**
  * THE CURTAIN. Roughly every three months — see kit/seasons.
@@ -34,6 +35,15 @@ export function SeasonEnd({ keepsake, onDone }: { keepsake: Keepsake; onDone: ()
   };
 
   const ordinal = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'][keepsake.n - 1] ?? `${keepsake.n}th`;
+
+  /* Said out loud, because a curtain nobody can read is just a coloured
+     screen. The facts are spoken too — they are the whole content. */
+  useSpoken(
+    `That\u2019s a whole season. ${keepsake.fireflies} fireflies caught. ` +
+    `${keepsake.days} days you came.` +
+    (keepsake.mostDone ? ` Mostly ${keepsake.mostDone.toLowerCase()}.` : '') +
+    ' Nothing goes away. It\u2019s all still there.',
+  );
 
   return (
     <div

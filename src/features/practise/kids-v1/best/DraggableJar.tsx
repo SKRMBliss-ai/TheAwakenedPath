@@ -84,6 +84,20 @@ export function DraggableJar({
     setBurst((n) => n + 1);
   }
 
+  /**
+   * HOW MUCH LIGHT THE JAR THROWS — from what is actually in it.
+   *
+   * A fixed halo made an EMPTY jar glow, which is both a small lie and the
+   * wrong emphasis: the thing worth seeing is the jar filling up. The glass
+   * itself was brightened instead (see FireflyJar's JAR_COLOR) so an empty
+   * one is still findable on the night sky, and this is the reward on top.
+   *
+   * Climbs fast at the start and then flattens: the difference between none
+   * and three should be obvious, and between forty and fifty should not,
+   * because by then the jar is a hoard rather than a tally.
+   */
+  const halo = Math.min(0.40, 0.13 + Math.sqrt(caught.length) * 0.075);
+
   return (
     <motion.div
       className="fixed z-50"
@@ -116,8 +130,47 @@ export function DraggableJar({
         transition={m.quiet || held
           ? { duration: 0.3 }
           : { repeat: Infinity, duration: 4.6, ease: 'easeInOut' }}
-        style={{ filter: held ? 'brightness(1.12)' : undefined }}
+        style={{
+          /*
+            IT HAS TO BE FINDABLE FIRST.
+
+            The jar is a thin glass outline on a dark night sky, which was
+            beautiful and very nearly invisible — a child who cannot see the
+            thing holding their whole evening does not tap it. So the glass
+            now carries its own light: a warm drop-shadow at all times, which
+            is what a jar full of fireflies would actually do to the air
+            around it, and which costs the design nothing because the colour
+            is the fireflies' own.
+
+            It brightens rather than changes when picked up, so being held
+            still reads as a separate state.
+          */
+          filter: held
+            ? 'brightness(1.2) drop-shadow(0 0 14px rgba(255,198,92,0.85)) drop-shadow(0 0 30px rgba(255,198,92,0.4))'
+            : 'drop-shadow(0 0 10px rgba(255,198,92,0.6)) drop-shadow(0 0 24px rgba(255,198,92,0.28))',
+        }}
       >
+        {/*
+          AND A HALO BEHIND IT, so the jar sits in a pool of its own light
+          rather than floating on top of the room. Breathes very slowly —
+          slower than the jar's own drift, so the two motions don't beat
+          against each other and produce a flicker.
+        */}
+        {!m.quiet && caught.length > 0 && (
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 block rounded-full"
+            style={{
+              width: size * 2.1,
+              height: size * 2.1,
+              marginLeft: -size * 1.05,
+              marginTop: -size * 1.05,
+              background: `radial-gradient(circle, rgba(255,198,92,${halo}) 0%, rgba(255,198,92,${halo * 0.34}) 42%, transparent 70%)`,
+            }}
+            animate={{ opacity: [0.62, 1, 0.62], scale: [0.94, 1.07, 0.94] }}
+            transition={{ repeat: Infinity, duration: 5.8, ease: 'easeInOut' }}
+          />
+        )}
         {/* The glitter, in firefly colours. Never when quiet, where a burst
             of light at an upset child is the opposite of help. */}
         {!m.quiet && burst > 0 && (

@@ -6,6 +6,7 @@ import { chirpySprite } from '../ui/sprites';
 import { agoLabel } from '../kit/cases';
 import { markAsked, type ChirpyRecollection } from '../kit/chirpyMemory';
 import * as sound from '../kit/sound';
+import { useSpoken } from '../ui/useSpoken';
 
 /**
  * "YOU TOLD ME ABOUT THIS. IT WAS AGES AGO."
@@ -37,6 +38,16 @@ export function ChirpyRemembers({
   const [answered, setAnswered] = useState<string | null>(null);
 
   const accent = '#8FD9C4';
+
+  /* THEIR OWN WORDS, READ BACK. The whole moment rests on recognising a
+     sentence they said weeks ago, which is precisely what a child who reads
+     slowly would miss on a card. */
+  useSpoken(answered
+    ? (answered === recollection.guess
+        ? `${answered}. I did remember, then. I don\u2019t always.`
+        : `${answered}. Not ${recollection.guess.toLowerCase()} \u2014 ${answered.toLowerCase()}. I\u2019ll keep it right this time.`)
+    : `You told me about this, ${agoLabel(recollection.day)}. ${recollection.quote}. ` +
+      `You were ${recollection.guess.toLowerCase()} about it, weren\u2019t you? I think that was it.`);
 
   const answer = (feeling: string) => {
     if (answered) return;

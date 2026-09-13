@@ -57,7 +57,6 @@ export function DoorHandle({
   accent = '#FFD98A',
   bottomVh = 26,
   nudge = null,
-  peephole = null,
 }: {
   side: 'left' | 'right';
   /** Both the accessible name and the words on the tooltip. */
@@ -78,11 +77,6 @@ export function DoorHandle({
    * words come in already chosen.
    */
   nudge?: string | null;
-  /**
-   * Optional small circular window showing a glimpse of what's behind the door.
-   * 'fireflies' shows drifting lights, 'thread' shows a loose thread, 'pacer' shows a moving figure.
-   */
-  peephole?: 'fireflies' | 'thread' | 'pacer' | null;
 }) {
   const m = useMotion();
   const [awake, setAwake] = useState(false);
@@ -297,140 +291,29 @@ export function DoorHandle({
             Never when quiet — a child who is upset is not charmed by these. */}
         {!m.quiet && live && <Motes out={pressed} accent={accent} forward={forward} />}
 
-        {/* Peephole: small circular window showing what's behind the door. */}
-        {peephole && <Peephole type={peephole} accent={accent} />}
       </motion.button>
     </div>
   );
 }
 
-/**
- * PEEPHOLE: a small circular window showing a glimpse of what's behind the door.
- * Positioned at the top-right of the door handle plate, showing animated content
- * based on which room is behind the door.
- */
-function Peephole({ type, accent }: { type: 'fireflies' | 'thread' | 'pacer'; accent: string }) {
-  const size = 52;
-  const borderColor = accent;
+/*
+  THE PEEPHOLES ARE GONE.
 
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute rounded-full"
-      style={{
-        width: size,
-        height: size,
-        top: -8,
-        right: -8,
-        border: `3px solid ${borderColor}`,
-        background: 'radial-gradient(circle at 50% 40%, #241735, #0c0818 78%)',
-        boxShadow: `0 0 16px -2px ${borderColor}99`,
-        overflow: 'hidden',
-      }}
-    >
-      {type === 'fireflies' && (
-        <FirefliesInPeephole />
-      )}
-      {type === 'thread' && (
-        <ThreadInPeephole />
-      )}
-      {type === 'pacer' && (
-        <PacerInPeephole />
-      )}
-    </div>
-  );
-}
+  Each door carried a small circular window with a looping glimpse of what
+  was behind it — fireflies drifting, a loose thread, a figure pacing. The
+  idea was that a child reads a door by what they can see through it.
 
-function FirefliesInPeephole() {
-  const flies = Array.from({ length: 4 }, (_, i) => ({
-    id: i,
-    x: 20 + (i % 2) * 25,
-    y: 15 + Math.floor(i / 2) * 20,
-    delay: i * 0.3,
-  }));
+  On the actual screen they read as three black discs with coloured rims
+  stuck to the wall. The problem is the room behind a door in this app is
+  DARK, so an honest window onto it is a dark hole — and at 52px a hole is
+  what the eye gets, with the two or three moving dots inside far too small
+  to register as life. A brighter window would have been a lie about the
+  room, and a bigger one would have swallowed the brass fitting that is the
+  actual control.
 
-  return (
-    <>
-      {flies.map((fly) => (
-        <motion.span
-          key={fly.id}
-          aria-hidden
-          className="absolute rounded-full"
-          style={{
-            width: 3,
-            height: 3,
-            background: '#FFE7B4',
-            boxShadow: `0 0 6px #FFC65C`,
-            left: `${fly.x}%`,
-            top: `${fly.y}%`,
-          }}
-          animate={{
-            x: [0, 8, -6, 0],
-            y: [0, -6, 8, 0],
-            opacity: [0.8, 1, 0.9, 0.8],
-          }}
-          transition={{
-            duration: 3 + fly.id * 0.4,
-            repeat: Infinity,
-            ease: 'easeInOut',
-            delay: fly.delay,
-          }}
-        />
-      ))}
-    </>
-  );
-}
-
-function ThreadInPeephole() {
-  return (
-    <motion.svg
-      viewBox="0 0 40 40"
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-      }}
-      animate={{ rotate: [0, 1, -1, 0] }}
-      transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-    >
-      <path
-        d="M6 10 Q 20 4 30 14 T 20 30 Q 10 36 14 26"
-        stroke="#eadcf5"
-        strokeWidth="1.6"
-        fill="none"
-        strokeLinecap="round"
-      />
-    </motion.svg>
-  );
-}
-
-function PacerInPeephole() {
-  return (
-    <motion.div
-      aria-hidden
-      className="absolute rounded-full"
-      style={{
-        width: 6,
-        height: 6,
-        background: '#8FD9C4',
-        boxShadow: `0 0 8px #8FD9C4`,
-        left: '50%',
-        top: '50%',
-        transform: 'translate(-50%, -50%)',
-      }}
-      animate={{
-        x: [-12, 12, -12],
-        opacity: [0.7, 1, 0.7],
-      }}
-      transition={{
-        duration: 2.4,
-        repeat: Infinity,
-        ease: 'easeInOut',
-      }}
-    />
-  );
-}
+  Kept in git rather than reworked: the seam of warm light around each door
+  was already doing this job, and doing it better.
+*/
 
 /**
  * Eight motes, deterministic. Random numbers during render are a purity

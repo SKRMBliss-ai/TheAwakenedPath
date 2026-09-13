@@ -29,8 +29,28 @@ function ac(): AudioContext | null {
 }
 
 const KEY = 'sfx-muted';
+
+/**
+ * SOUND IS ON UNTIL A CHILD TURNS IT OFF.
+ *
+ * This used to read `=== '1'`, which is the same default but for the wrong
+ * reason: it silently treated "no preference recorded yet" and "muted" as
+ * distinguishable only by luck of string comparison. Written explicitly,
+ * ABSENT means on — a first-run child gets Chirpy's voice, the room tone and
+ * every cue, because an app about feelings that arrives silent has thrown
+ * away half of what it uses to be warm, and a six-year-old will not go
+ * hunting a speaker icon to find out there was a voice all along.
+ *
+ * Only an explicit '1' mutes, so the toggle still wins the moment it is used
+ * and keeps winning across sessions.
+ */
 export function isMuted(): boolean {
   try { return localStorage.getItem(KEY) === '1'; } catch { return false; }
+}
+
+/** True when the child has never expressed a preference either way. */
+export function soundUnset(): boolean {
+  try { return localStorage.getItem(KEY) === null; } catch { return true; }
 }
 export function setMuted(m: boolean) {
   try { localStorage.setItem(KEY, m ? '1' : '0'); } catch { /* ignore */ }
