@@ -14,6 +14,11 @@ import notify09 from '../../../assets/universfield-new-notification-09-352705.mp
 import breatheIn from '../../../assets/kids-pause-breathe-in.mp3';
 import breatheOut from '../../../assets/kids-pause-breathe-out.mp3';
 import forestLullaby from '../../../assets/StockTune-Magical Forest Lullaby_1788600288.mp3';
+import levelPassed from '../../../assets/universfield-level-passed-143039.mp3';
+import arcadeUi from '../../../assets/floraphonic-arcade-ui-6229503.mp3';
+import bonusPointsClip from '../../../assets/cartoon-music-video-game-bonus-points-512990.mp3';
+import cuteLevelUp from '../../../assets/floraphonic-cute-level-up-3189853.mp3';
+import eightBitPoints from '../../../assets/make-more-sound-8bit-video-game-points-1145826.mp3';
 
 /**
  * The Kids Gym sound design table, as code.
@@ -31,7 +36,8 @@ import forestLullaby from '../../../assets/StockTune-Magical Forest Lullaby_1788
 export type Cue =
   | 'tap' | 'roomCard' | 'enterRoom' | 'exitRoom' | 'discovery' | 'resolve'
   | 'breathComplete' | 'tapHit' | 'breatheIn' | 'breatheOut' | 'storyTheme'
-  | 'balloonPop' | 'twoStories';
+  | 'balloonPop' | 'twoStories'
+  | 'levelUp' | 'bonusPoints' | 'arcadeBlip' | 'miniWin' | 'pointTick';
 
 interface CueDef { src: string; volume: number; interruptible?: boolean }
 
@@ -70,6 +76,20 @@ const TABLE: Record<Cue, CueDef> = {
   // by side and decides which to carry. A real bed rather than a looped
   // sting, so the room can be sat in for as long as that takes.
   twoStories:     { src: forestLullaby, volume: 0.3 },
+
+  // ── Game feedback ─────────────────────────────────────────────────────
+  // A whole game finished — GameShell's win moment, every one of the 67.
+  levelUp:      { src: levelPassed,     volume: 0.5 },
+  // A room's points are actually awarded (VirtueRoomView.finishGame).
+  bonusPoints:  { src: bonusPointsClip, volume: 0.5 },
+  // A light choice tapped mid-game (Timed engine's ask/move beats) — a
+  // quick arcade blip under the child's own pace, not a fanfare.
+  arcadeBlip:   { src: arcadeUi,        volume: 0.35 },
+  // A smaller win: catching today's light in the jar.
+  miniWin:      { src: cuteLevelUp,     volume: 0.45 },
+  // One tap in a counted round (Red Light Green Light, the rep counter) —
+  // satisfying on its own, repeatable without getting old.
+  pointTick:    { src: eightBitPoints,  volume: 0.32 },
 };
 
 let current: HTMLAudioElement | null = null;

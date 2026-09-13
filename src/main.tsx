@@ -215,7 +215,8 @@ const isHomeRoute = (() => {
 
 // The Mind Gym app itself. This is the ONLY path that should fall through to the
 // app render below — every other real path is either matched explicitly above or
-// shipped as a static file (/twinsouls, /emotions, /habitquest2026, /og,
+// shipped as a static file (/twinsouls, /emotions, /habitquest2026,
+// /kids-adventure, /og,
 // /assets), which Hosting serves directly without ever reaching this bundle.
 // Anything else is a bad URL and must render NotFoundView rather than silently
 // showing the app on top of the home page's prerendered HTML.

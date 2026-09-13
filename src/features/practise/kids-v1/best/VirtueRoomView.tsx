@@ -93,7 +93,7 @@ export function VirtueRoomView({
 
   const finishGame = (pts: number) => {
     awardPoints(pts, room.id);
-    sound.play('resolve');
+    sound.play(pts > 0 ? 'bonusPoints' : 'resolve');
     setPlaying(null);
   };
 
@@ -216,7 +216,7 @@ export function VirtueRoomView({
               whileTap={{ scale: 0.99 }}
               onClick={() => {
                 const catching = !doneToday;
-                sound.play(catching ? 'discovery' : 'tap');
+                sound.play(catching ? 'miniWin' : 'tap');
                 setBehaviourOn(reporting.key, room.id, catching);
                 // The jar only appears when a light goes IN, and only on the
                 // journey. Unticking is silent and costs nothing, which is

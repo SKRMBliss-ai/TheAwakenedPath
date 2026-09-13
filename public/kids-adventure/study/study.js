@@ -1,0 +1,554 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   STUDY ISLAND — school things, on the same paper as Art and Piano World.
+
+   Three year groups (Reception & KG, Year 1, Year 2), each a shelf of topics,
+   each topic a round of eight questions. Questions are generated rather than
+   listed wherever generating them is honest — number bonds, tables, time,
+   money — so practice never runs out and never repeats the same eight; the
+   reading and phonics topics come from small fixed banks because the words
+   matter more than the variety.
+
+   Shared with the rest of the adventure: the paper, the cards, the painted
+   tapes, the sound kit, the mute switch. Progress lives in localStorage under
+   kja:study and never leaves the device.
+   ════════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var $  = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return [].slice.call(document.querySelectorAll(s)); };
+  var TAPES = ['#3880C0','#E06098','#509858','#F89030','#A070C0','#50A8B0','#F0B828'];
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── helpers ───────────────────────────────────────────────────────────── */
+  function rnd(n) { return Math.floor(Math.random() * n); }
+  function pick(a) { return a[rnd(a.length)]; }
+  function shuffle(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = rnd(i + 1), t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  /* Wrong answers a child could plausibly believe, not random noise. */
+  function near(correct, lo, hi, n) {
+    var out = [], tries = 0;
+    while (out.length < (n || 3) && tries++ < 60) {
+      var d = pick([-3,-2,-1,1,2,3,5,10]), v = correct + d;
+      if (v >= lo && v <= hi && v !== correct && out.indexOf(v) < 0) out.push(v);
+    }
+    while (out.length < (n || 3)) { var v2 = lo + rnd(hi - lo + 1); if (v2 !== correct && out.indexOf(v2) < 0) out.push(v2); }
+    return out;
+  }
+  function num(q, a, lo, hi, why) {
+    return { q: q, opts: shuffle([a].concat(near(a, lo, hi))).map(String), a: String(a), why: why };
+  }
+  function shapeSVG(kind, colour) {
+    var c = colour || '#3880C0';
+    var body = {
+      circle:   '<circle cx="50" cy="50" r="34" fill="' + c + '"/>',
+      square:   '<rect x="18" y="18" width="64" height="64" rx="6" fill="' + c + '"/>',
+      triangle: '<path d="M50 14 86 84H14Z" fill="' + c + '"/>',
+      rectangle:'<rect x="10" y="28" width="80" height="44" rx="6" fill="' + c + '"/>',
+      star:     '<path d="M50 12 61 40l30 2-23 19 8 29-26-16-26 16 8-29-23-19 30-2z" fill="' + c + '"/>',
+      oval:     '<ellipse cx="50" cy="50" rx="38" ry="26" fill="' + c + '"/>'
+    }[kind];
+    return '<svg viewBox="0 0 100 100" class="qshape" role="img" aria-label="a shape">' + body + '</svg>';
+  }
+  function clockSVG(h, m) {
+    var ha = (h % 12) * 30 + m * 0.5, ma = m * 6;
+    var hx = 50 + 22 * Math.sin(ha * Math.PI / 180), hy = 50 - 22 * Math.cos(ha * Math.PI / 180);
+    var mx = 50 + 32 * Math.sin(ma * Math.PI / 180), my = 50 - 32 * Math.cos(ma * Math.PI / 180);
+    var ticks = '';
+    for (var i = 0; i < 12; i++) {
+      var a = i * 30 * Math.PI / 180;
+      ticks += '<circle cx="' + (50 + 38 * Math.sin(a)).toFixed(1) + '" cy="' + (50 - 38 * Math.cos(a)).toFixed(1) +
+               '" r="' + (i % 3 === 0 ? 2.6 : 1.5) + '" fill="#14265E"/>';
+    }
+    return '<svg viewBox="0 0 100 100" class="qclock" role="img" aria-label="a clock face">' +
+      '<circle cx="50" cy="50" r="46" fill="#FFFDF6" stroke="#E7C98A" stroke-width="4"/>' + ticks +
+      '<line x1="50" y1="50" x2="' + hx.toFixed(1) + '" y2="' + hy.toFixed(1) + '" stroke="#14265E" stroke-width="6" stroke-linecap="round"/>' +
+      '<line x1="50" y1="50" x2="' + mx.toFixed(1) + '" y2="' + my.toFixed(1) + '" stroke="#E06098" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="50" cy="50" r="4" fill="#14265E"/></svg>';
+  }
+  function coins(list) {
+    return '<span class="qcoins">' + list.map(function (c) {
+      return '<span class="coin' + (c >= 100 ? ' pound' : '') + '">' + (c >= 100 ? '£' + (c / 100) : c + 'p') + '</span>';
+    }).join('') + '</span>';
+  }
+  function things(emoji, n) {
+    var out = '';
+    for (var i = 0; i < n; i++) out += emoji;
+    return '<span class="qthings">' + out + '</span>';
+  }
+  function timeWords(h, m) {
+    var H = ['twelve','one','two','three','four','five','six','seven','eight','nine','ten','eleven'];
+    var nh = H[h % 12], next = H[(h + 1) % 12];
+    if (m === 0)  return nh + " o'clock";
+    if (m === 15) return 'quarter past ' + nh;
+    if (m === 30) return 'half past ' + nh;
+    if (m === 45) return 'quarter to ' + next;
+    return nh + ' ' + m;
+  }
+
+  /* ── the three year groups ─────────────────────────────────────────────── */
+  var PHONICS = [
+    { s:'s', words:['sun','sock','sit'], not:['mat','pen','dog'] },
+    { s:'m', words:['mat','moon','mum'], not:['sit','top','red'] },
+    { s:'t', words:['top','tap','ten'],  not:['sun','bed','log'] },
+    { s:'p', words:['pen','pig','pot'],  not:['mat','sun','dig'] },
+    { s:'c', words:['cat','cup','cot'],  not:['sit','pen','mud'] },
+    { s:'d', words:['dog','dig','dad'],  not:['sun','top','mat'] }
+  ];
+  var CVC = [
+    { w:'cat', e:'🐱' }, { w:'dog', e:'🐶' }, { w:'sun', e:'☀️' }, { w:'bus', e:'🚌' },
+    { w:'pig', e:'🐷' }, { w:'hat', e:'🎩' }, { w:'bed', e:'🛏️' }, { w:'fish', e:'🐟' },
+    { w:'frog', e:'🐸' }, { w:'star', e:'⭐' }, { w:'moon', e:'🌙' }, { w:'cake', e:'🎂' }
+  ];
+  var DIGRAPHS = [
+    { d:'sh', yes:['ship','shop','fish','brush'], no:['cat','pen','dog','milk'] },
+    { d:'ch', yes:['chip','chin','lunch','chair'], no:['sun','frog','bed','tree'] },
+    { d:'th', yes:['this','thin','bath','three'], no:['pig','sock','duck','lamp'] },
+    { d:'ai', yes:['rain','tail','snail','train'], no:['bell','hand','sock','frog'] },
+    { d:'ee', yes:['tree','feet','sheep','green'], no:['sock','hand','pig','duck'] },
+    { d:'oo', yes:['moon','boot','spoon','zoo'], no:['bat','leg','sand','desk'] }
+  ];
+  var EXCEPTION = [
+    ['because','becuase','becase'], ['beautiful','beutiful','beautifull'],
+    ['friend','freind','frend'], ['people','peaple','pepole'],
+    ['because','becoz','becuz'], ['school','skool','scool'],
+    ['every','evry','everey'], ['climb','clime','climbe'],
+    ['half','haf','halve'], ['Christmas','Cristmas','Christmass']
+  ];
+  var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  var YEARS = [
+    {
+      id:'r', name:'Reception & KG', sub:'Ages 4–5', icon:'🧸', colour:'#F89030',
+      blurb:'Letters and their sounds, counting what you can see, shapes and first words.',
+      topics:[
+        { id:'sounds', icon:'🔤', title:'Letters & sounds', tag:'Phonics',
+          make:function () {
+            var p = pick(PHONICS), w = pick(p.words);
+            return { q:'Which word starts with the sound <b>' + p.s + '</b>?',
+              opts: shuffle([w].concat(shuffle(p.not).slice(0, 3))), a:w,
+              why:'<b>' + w + '</b> starts with ' + p.s + '.' };
+          } },
+        { id:'count10', icon:'🍎', title:'Counting to 10', tag:'Number',
+          make:function () {
+            var n = 1 + rnd(10), e = pick(['🍎','⭐','🐟','🎈','🐝','🍓']);
+            return { q:'How many can you count?', art: things(e, n),
+              opts: shuffle([n].concat(near(n, 1, 12))).map(String), a:String(n),
+              why:'There are <b>' + n + '</b>.' };
+          } },
+        { id:'shapes', icon:'🔺', title:'Shapes', tag:'Shape',
+          make:function () {
+            var names = ['circle','square','triangle','rectangle','star','oval'], k = pick(names);
+            return { q:'What shape is this?', art: shapeSVG(k, pick(TAPES)),
+              opts: shuffle([k].concat(shuffle(names.filter(function (n) { return n !== k; })).slice(0, 3))), a:k,
+              why:'That is a <b>' + k + '</b>.' };
+          } },
+        { id:'words', icon:'🐱', title:'First words', tag:'Reading',
+          make:function () {
+            var c = pick(CVC);
+            return { q:'Which word says this?', art:'<span class="qbig">' + c.e + '</span>',
+              opts: shuffle([c.w].concat(shuffle(CVC.filter(function (x) { return x.w !== c.w; })).slice(0, 3).map(function (x) { return x.w; }))),
+              a:c.w, why:'<b>' + c.w + '</b> — ' + c.e };
+          } },
+        { id:'more', icon:'⚖️', title:'More or fewer', tag:'Number',
+          make:function () {
+            var a = 1 + rnd(9), b = 1 + rnd(9);
+            while (b === a) b = 1 + rnd(9);
+            var big = Math.max(a, b);
+            return { q:'Which number is <b>bigger</b>?', opts: shuffle([String(a), String(b)]), a:String(big),
+              why:'<b>' + big + '</b> is bigger than ' + Math.min(a, b) + '.' };
+          } },
+        { id:'order', icon:'🔢', title:'What comes next?', tag:'Number',
+          make:function () {
+            var s = 1 + rnd(7);
+            return num('What comes after <b>' + s + ', ' + (s + 1) + ', ' + (s + 2) + '</b>?', s + 3, 1, 12,
+              'Counting on: ' + (s + 2) + ' then <b>' + (s + 3) + '</b>.');
+          } }
+      ]
+    },
+    {
+      id:'y1', name:'Year 1', sub:'Ages 5–6', icon:'🎒', colour:'#509858',
+      blurb:'Number bonds, adding and taking away to 20, counting in steps, digraphs, days and coins.',
+      topics:[
+        { id:'bonds', icon:'🤝', title:'Number bonds to 10', tag:'Number',
+          make:function () {
+            var a = rnd(11);
+            return num('<b>' + a + '</b> + ? = 10', 10 - a, 0, 10, a + ' + <b>' + (10 - a) + '</b> = 10.');
+          } },
+        { id:'add20', icon:'➕', title:'Adding to 20', tag:'Number',
+          make:function () {
+            var a = 2 + rnd(12), b = 1 + rnd(20 - a);
+            return num(a + ' + ' + b + ' = ?', a + b, 1, 20, a + ' + ' + b + ' = <b>' + (a + b) + '</b>.');
+          } },
+        { id:'sub20', icon:'➖', title:'Taking away', tag:'Number',
+          make:function () {
+            var a = 5 + rnd(16), b = 1 + rnd(a - 1);
+            return num(a + ' − ' + b + ' = ?', a - b, 0, 20, a + ' − ' + b + ' = <b>' + (a - b) + '</b>.');
+          } },
+        { id:'steps', icon:'👣', title:'Counting in 2s, 5s and 10s', tag:'Number',
+          make:function () {
+            var step = pick([2, 5, 10]), start = step * (1 + rnd(5));
+            return num('Count in ' + step + 's: <b>' + start + ', ' + (start + step) + ', ' + (start + step * 2) + '</b>, then?',
+              start + step * 3, 0, 100, 'Add ' + step + ' each time → <b>' + (start + step * 3) + '</b>.');
+          } },
+        { id:'digraph', icon:'🔡', title:'Two letters, one sound', tag:'Phonics',
+          make:function () {
+            var d = pick(DIGRAPHS), w = pick(d.yes);
+            return { q:'Which word has <b>' + d.d + '</b> in it?',
+              opts: shuffle([w].concat(shuffle(d.no).slice(0, 3))), a:w,
+              why:'<b>' + w + '</b> has ' + d.d + '.' };
+          } },
+        { id:'days', icon:'📅', title:'Days and months', tag:'Time',
+          make:function () {
+            if (rnd(2)) {
+              var i = rnd(7), d = DAYS[i], nx = DAYS[(i + 1) % 7];
+              return { q:'What day comes after <b>' + d + '</b>?',
+                opts: shuffle([nx].concat(shuffle(DAYS.filter(function (x) { return x !== nx && x !== d; })).slice(0, 3))),
+                a:nx, why:'After ' + d + ' comes <b>' + nx + '</b>.' };
+            }
+            var j = rnd(12), m = MONTHS[j], mn = MONTHS[(j + 1) % 12];
+            return { q:'Which month comes after <b>' + m + '</b>?',
+              opts: shuffle([mn].concat(shuffle(MONTHS.filter(function (x) { return x !== mn && x !== m; })).slice(0, 3))),
+              a:mn, why:'After ' + m + ' comes <b>' + mn + '</b>.' };
+          } },
+        { id:'coins1', icon:'🪙', title:'Coins', tag:'Money',
+          make:function () {
+            var set = pick([[1,1,1],[2,2,1],[5,5],[10,5,1],[20,10],[2,2,2,1],[5,2,2]]);
+            var total = set.reduce(function (a, b) { return a + b; }, 0);
+            return { q:'How much is this altogether?', art: coins(set),
+              opts: shuffle([total].concat(near(total, 1, 60))).map(function (v) { return v + 'p'; }), a: total + 'p',
+              why:'That makes <b>' + total + 'p</b>.' };
+          } }
+      ]
+    },
+    {
+      id:'y2', name:'Year 2', sub:'Ages 6–7', icon:'📚', colour:'#3880C0',
+      blurb:'Times tables, two-digit sums, fractions, telling the time, money and tricky spellings.',
+      /* Year 2 also has the studio's full Quest: every concept taught properly,
+         ten games each, and SATs-style practice. The quick rounds below are for
+         five spare minutes; the Quest is for a whole afternoon. */
+      quest:{ href:'/kids-adventure/study/year2/', title:'Year 2 Learning Quest',
+              blurb:'Every concept with a lesson, a build-up ladder, ten games and SATs practice' },
+      topics:[
+        { id:'tables', icon:'✖️', title:'2, 5 and 10 times tables', tag:'Number',
+          make:function () {
+            var t = pick([2, 5, 10]), n = 1 + rnd(12);
+            return num(t + ' × ' + n + ' = ?', t * n, 0, 130, t + ' × ' + n + ' = <b>' + (t * n) + '</b>.');
+          } },
+        { id:'twodigit', icon:'🧮', title:'Two-digit sums', tag:'Number',
+          make:function () {
+            var a = 11 + rnd(78), b = 1 + rnd(Math.min(40, 99 - a));
+            if (rnd(2)) return num(a + ' + ' + b + ' = ?', a + b, 1, 99, a + ' + ' + b + ' = <b>' + (a + b) + '</b>.');
+            return num(a + ' − ' + b + ' = ?', a - b, 0, 99, a + ' − ' + b + ' = <b>' + (a - b) + '</b>.');
+          } },
+        { id:'fractions', icon:'🍕', title:'Halves and quarters', tag:'Fractions',
+          make:function () {
+            var f = pick([2, 4]), base = f * (1 + rnd(6));
+            return num('What is <b>' + (f === 2 ? 'half' : 'a quarter') + '</b> of ' + base + '?', base / f, 0, 60,
+              base + ' shared into ' + f + ' is <b>' + (base / f) + '</b>.');
+          } },
+        { id:'time', icon:'🕐', title:'Telling the time', tag:'Time',
+          make:function () {
+            var h = 1 + rnd(12), m = pick([0, 15, 30, 45]);
+            var right = timeWords(h, m);
+            var wrongs = [timeWords(h, pick([0,15,30,45].filter(function (x) { return x !== m; }))),
+                          timeWords((h % 12) + 1, m), timeWords((h + 10) % 12 || 12, m)];
+            var opts = [right];
+            wrongs.forEach(function (w) { if (opts.indexOf(w) < 0) opts.push(w); });
+            return { q:'What time does the clock say?', art: clockSVG(h, m),
+              opts: shuffle(opts).slice(0, 4), a:right, why:'It is <b>' + right + '</b>.' };
+          } },
+        { id:'money2', icon:'💰', title:'Money and change', tag:'Money',
+          make:function () {
+            var price = 5 * (1 + rnd(11)), paid = pick([50, 100]);
+            while (paid <= price) paid = 100;
+            var change = paid - price;
+            return { q:'A sticker costs <b>' + price + 'p</b> and you pay with ' +
+                (paid === 100 ? '<b>£1</b>' : '<b>50p</b>') + '. How much change?',
+              opts: shuffle([change].concat(near(change, 0, 95))).map(function (v) { return v + 'p'; }),
+              a: change + 'p', why: paid + 'p − ' + price + 'p = <b>' + change + 'p</b>.' };
+          } },
+        { id:'oddeven', icon:'🎲', title:'Odd, even and place value', tag:'Number',
+          make:function () {
+            var n = 10 + rnd(90);
+            if (rnd(2)) {
+              return { q:'Is <b>' + n + '</b> odd or even?', opts:['odd','even'], a: n % 2 ? 'odd' : 'even',
+                why:'It ends in ' + (n % 10) + ', so it is <b>' + (n % 2 ? 'odd' : 'even') + '</b>.' };
+            }
+            var tens = Math.floor(n / 10);
+            return num('How many <b>tens</b> are in ' + n + '?', tens, 0, 9,
+              n + ' is ' + tens + ' tens and ' + (n % 10) + ' ones.');
+          } },
+        { id:'spelling', icon:'✏️', title:'Tricky spellings', tag:'Writing',
+          make:function () {
+            var e = pick(EXCEPTION);
+            return { q:'Which one is spelled correctly?', opts: shuffle(e), a:e[0],
+              why:'<b>' + e[0] + '</b> is the right spelling.' };
+          } }
+      ]
+    }
+  ];
+
+  /* ── sound and juice come from the shared kit now ────────────────────── */
+  var SND = (window.KJA && window.KJA.sound) || null;
+  var JUICE = (window.KJA && window.KJA.juice) || null;
+  function yes()   { if (SND) SND.sfx.good(); }
+  function nope()  { if (SND) SND.sfx.wrong(); }
+  function pop()   { if (SND) { SND.sfx.tap(); SND.haptic(10); } }
+  function fanfare() { if (SND) SND.sfx.win(); }
+
+  function toast(t) {
+    var el = $('#toast'); if (!el) return;
+    el.textContent = t; el.classList.add('show');
+    clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('show'); }, 2300);
+  }
+  function confetti(n) { if (JUICE) JUICE.confetti(n); }
+
+  /* ── progress ──────────────────────────────────────────────────────────── */
+  var prog = {};
+  try { prog = JSON.parse(localStorage.getItem('kja:study') || '{}') || {}; } catch (e) { prog = {}; }
+  function save() { try { localStorage.setItem('kja:study', JSON.stringify(prog)); } catch (e) {} }
+  function starsOf(yid, tid) { return (prog[yid] && prog[yid][tid]) || 0; }
+  function setStars(yid, tid, n) {
+    if (!prog[yid]) prog[yid] = {};
+    if ((prog[yid][tid] || 0) < n) prog[yid][tid] = n;
+    save();
+  }
+  /* Takes a year id, since that is what every caller has to hand. */
+  function yearStars(id) {
+    var y = yearById(id);
+    if (!y) return 0;
+    return y.topics.reduce(function (a, t) { return a + starsOf(id, t.id); }, 0);
+  }
+  function starRow(n, of) {
+    var out = '';
+    for (var i = 1; i <= (of || 3); i++) out += i <= n ? '★' : '☆';
+    return out;
+  }
+  function yearById(id) {
+    for (var i = 0; i < YEARS.length; i++) if (YEARS[i].id === id) return YEARS[i];
+    return null;
+  }
+
+  function titleHTML(word) {
+    var out = '', j = 0;
+    for (var i = 0; i < word.length; i++) {
+      var ch = word[i];
+      if (ch === ' ') { out += '<span style="width:.34em"></span>'; continue; }
+      out += '<span style="color:' + TAPES[j % TAPES.length] + ';--r:' + ((j * 53) % 7 - 3) + 'deg">' + ch + '</span>';
+      j++;
+    }
+    return out;
+  }
+  function mute() { if (window.KJA && window.KJA.ui) window.KJA.ui.toolbar('#mutebar'); }
+
+  /* ══ THE ISLAND: three year groups to choose from ══════════════════════ */
+  function island() {
+    $('#study').innerHTML =
+      '<header><p class="ptitle"><span class="my">MY</span><span class="pbig">' +
+        titleHTML('STUDY ISLAND') + '</span></p>' +
+      '<p class="togo">School things, the adventure way — pick your year</p></header>' +
+      '<div class="cards yearshelf" style="--per:' + (innerWidth >= 900 ? 3 : 1) + '">' +
+      YEARS.map(function (y, i) {
+        var got = yearStars(y.id), of = y.topics.length * 3;
+        return '<a class="card yearcard" href="/kids-adventure/study/year/?y=' + y.id + '" style="--tilt:' + ((i - 1) * 0.8) + 'deg">' +
+          (got >= of ? '<span class="crown">👑</span>' : '') +
+          '<span class="tape" style="--c:' + y.colour + '">' + y.name + '</span>' +
+          '<div class="frame songface" style="border-color:' + y.colour + '33">' + y.icon + '</div>' +
+          '<p class="lvlname">' + y.name + '</p>' +
+          '<p class="lvlnote">' + y.sub + ' · ' + y.topics.length + ' topics<br>' + y.blurb + '</p>' +
+          '<div class="pbar" aria-hidden="true"><span style="width:' + Math.round(got / of * 100) + '%"></span></div>' +
+          '<div class="lvlfoot"><span class="cls"><s>★</s> ' + got + ' / ' + of + ' stars</span>' +
+            '<span class="play">Go in →</span></div>' +
+        '</a>';
+      }).join('') + '</div>' +
+      (YEARS.filter(function (y) { return y.quest; }).map(function (y) {
+        return '<a class="questcard" href="' + y.quest.href + '">' +
+          '<span class="tape" style="--c:' + y.colour + '">' + y.name + ' · the big one</span>' +
+          '<span class="qicon">🗺️</span>' +
+          '<span class="qtext"><b>' + y.quest.title + '</b><span>' + y.quest.blurb + '</span></span>' +
+          '<span class="play">Start the Quest →</span></a>';
+      }).join('')) +
+      '<h2>What is inside</h2><p class="sub">Every topic is a round of eight questions, and it never asks the same eight twice</p>' +
+      '<div class="topicgrid">' + YEARS.map(function (y) {
+        return y.topics.map(function (t) {
+          return '<span class="topicchip" style="--c:' + y.colour + '">' + t.icon + ' ' + t.title + '</span>';
+        }).join('');
+      }).join('') + '</div>';
+  }
+
+  /* ══ A YEAR: its topics, and a round of eight when one is opened ═══════ */
+  var Y = null, T = null, Q = null, qn = 0, right = 0, answered = false;
+  var ROUND = 8;
+
+  function yearHome() {
+    T = null;
+    history.replaceState({}, '', '?y=' + Y.id);
+    var got = yearStars(Y.id), of = Y.topics.length * 3;
+    $('#study').innerHTML =
+      '<header><p class="ptitle"><span class="my">' + Y.sub.toUpperCase() + '</span>' +
+        '<span class="pbig">' + titleHTML(Y.name.toUpperCase()) + '</span></p>' +
+      '<p class="count">' + got + ' <b>/</b> ' + of + ' stars</p>' +
+      '<p class="togo">' + Y.blurb + '</p>' +
+      '<div class="trail"><span class="sign">Start</span>' + trail(got, of) + '<span class="sign r">All done</span>' +
+        '<span class="peak"></span></div></header>' +
+      '<nav class="pills">' + YEARS.map(function (y) {
+        return '<a class="pill" style="--c:' + y.colour + '" href="?y=' + y.id + '" ' +
+          'aria-selected="' + (y.id === Y.id) + '">' + y.icon + ' ' + y.name + '</a>';
+      }).join('') + '</nav>' +
+      (Y.quest ? '<a class="questcard" href="' + Y.quest.href + '">' +
+          '<span class="tape" style="--c:' + Y.colour + '">The big one</span>' +
+          '<span class="qicon">🗺️</span>' +
+          '<span class="qtext"><b>' + Y.quest.title + '</b><span>' + Y.quest.blurb + '</span></span>' +
+          '<span class="play">Start the Quest →</span></a>' : '') +
+      '<h2>Quick practice</h2><p class="sub">Five spare minutes? Take a round of eight.</p>' +
+      '<div class="cards topicshelf" style="--per:' + (innerWidth >= 980 ? 3 : innerWidth >= 640 ? 2 : 1) + '">' +
+      Y.topics.map(function (t, i) {
+        var st = starsOf(Y.id, t.id);
+        return '<button class="card topiccard" data-topic="' + t.id + '" style="--tilt:' + (((i % 3) - 1) * 0.7) + 'deg">' +
+          '<span class="tape" style="--c:' + TAPES[i % TAPES.length] + '">' + t.tag + '</span>' +
+          '<span class="ticon">' + t.icon + '</span>' +
+          '<p class="lvlname">' + t.title + '</p>' +
+          '<div class="lvlfoot"><span class="cls"><s>' + starRow(st) + '</s></span>' +
+            '<span class="play">' + (st ? 'Again →' : 'Start →') + '</span></div>' +
+        '</button>';
+      }).join('') + '</div>';
+  }
+  function trail(got, of) {
+    var beads = 12, lit = Math.round(got / of * beads), W = 600, y = 23, x0 = 30, x1 = W - 30;
+    var gap = (x1 - x0) / (beads - 1);
+    var s = '<svg viewBox="0 0 ' + W + ' 46" preserveAspectRatio="none" role="img" aria-label="' +
+      got + ' of ' + of + ' stars"><path d="M' + x0 + ' ' + y + 'H' + x1 + '" stroke="#E7D2AC" stroke-width="9" stroke-linecap="round"/>';
+    for (var i = 0; i < beads; i++) {
+      var cx = x0 + gap * i;
+      s += i < lit
+        ? '<circle cx="' + cx + '" cy="' + y + '" r="15" fill="' + TAPES[i % TAPES.length] + '" stroke="#fff" stroke-width="3"/>' +
+          '<path transform="translate(' + cx + ' ' + y + ') scale(.62)" d="M0-11 3.4-3.5 11.6-3.3 5 2 7.1 10 0 5.3-7.1 10-5 2-11.6-3.3-3.4-3.5Z" fill="#FFE9A8"/>'
+        : '<circle cx="' + cx + '" cy="' + y + '" r="11" fill="#FFFCF2" stroke="#E0CFAB" stroke-width="2.5"/>';
+    }
+    return s + '</svg>';
+  }
+
+  function startTopic(id) {
+    T = null;
+    Y.topics.forEach(function (t) { if (t.id === id) T = t; });
+    if (!T) return;
+    qn = 0; right = 0;
+    history.replaceState({}, '', '?y=' + Y.id + '&t=' + id);
+    nextQuestion();
+  }
+  function nextQuestion() {
+    answered = false;
+    Q = T.make();
+    qn++;
+    var pct = Math.round((qn - 1) / ROUND * 100);
+    $('#study').innerHTML =
+      '<header><p class="qtag" style="--c:' + Y.colour + '">' + Y.name + ' · ' + T.icon + ' ' + T.title + '</p>' +
+      '<div class="qbar" aria-hidden="true"><span style="width:' + pct + '%"></span></div>' +
+      '<p class="qcount">Question ' + qn + ' of ' + ROUND + ' · ' + starRow(Math.min(3, right ? Math.ceil(right / 3) : 0)) + '</p></header>' +
+      '<div class="coach" id="coach"><span class="dyno" aria-hidden="true"></span>' +
+        '<div class="says" id="says" role="status" aria-live="polite"><b>' + Q.q + '</b>' +
+        (Q.art ? '<span class="qart">' + Q.art + '</span>' : '') + '</div></div>' +
+      '<div class="answers" id="answers">' + Q.opts.map(function (o) {
+        return '<button class="ans" data-ans="' + String(o).replace(/"/g, '&quot;') + '">' + o + '</button>';
+      }).join('') + '</div>' +
+      '<div class="controls"><button class="gbtn" style="--c:var(--t6)" data-a="quit">‹ All topics</button></div>';
+    if (SND) SND.speak(Q.q + (Q.opts.length <= 4 ? '. Is it ' + Q.opts.join(', or ') + '?' : ''));
+    var s = JUICE && JUICE.streak();
+    if (s >= 2) JUICE.banner(s + ' in a row! ' + (s >= 5 ? '🔥' : '⭐'));
+  }
+  function answer(val, el) {
+    if (answered) return;
+    answered = true;
+    var ok = String(val) === String(Q.a);
+    $$('.ans').forEach(function (b) {
+      if (b.dataset.ans === String(Q.a)) b.classList.add('good');
+      else if (b === el) b.classList.add('bad');
+      b.disabled = true;
+    });
+    if (ok) {
+      right++;
+      if (JUICE) { JUICE.hit(el); JUICE.pop(el, '+1 ★', '#2E7A38'); JUICE.burstAt(el, 8); }
+      else yes();
+    } else {
+      if (JUICE) JUICE.miss(); else nope();
+    }
+    var c = $('#coach');
+    if (c) { c.classList.remove('yes','no'); void c.offsetWidth; c.classList.add(ok ? 'yes' : 'no'); }
+    var s = $('#says');
+    if (s) s.insertAdjacentHTML('beforeend',
+      '<span class="why' + (ok ? ' ok' : '') + '">' + (ok ? 'Yes! ' : 'Not quite. ') + (Q.why || '') + '</span>');
+    var box = $('.controls');
+    if (box) box.innerHTML = '<button class="gbtn" style="--c:var(--t3)" data-a="next">' +
+      (qn >= ROUND ? 'See how you did →' : 'Next question →') + '</button>' +
+      '<button class="gbtn" style="--c:var(--t6)" data-a="quit">‹ All topics</button>';
+  }
+  function finishRound() {
+    var st = right === ROUND ? 3 : right >= ROUND - 2 ? 2 : right >= ROUND / 2 ? 1 : 0;
+    if (st) setStars(Y.id, T.id, st);
+    if (st === 3) { if (SND) SND.sfx.win(); confetti(70); }
+    else if (st) { if (SND) SND.sfx.levelUp(); confetti(30); }
+    else pop();
+    if (JUICE) JUICE.resetStreak();
+    $('#study').innerHTML =
+      '<header><p class="qtag" style="--c:' + Y.colour + '">' + Y.name + ' · ' + T.icon + ' ' + T.title + '</p></header>' +
+      '<div class="coach"><span class="dyno" aria-hidden="true"></span>' +
+        '<div class="says"><b>' + right + ' out of ' + ROUND + ' ' + starRow(st) + '</b>' +
+        '<span>' + (st === 3 ? 'Every single one. Dyno is amazed.'
+                  : st === 2 ? 'So close to all of them — go again for three stars.'
+                  : st === 1 ? 'Good going. One more round and those stars will come.'
+                  : 'Tricky round. Try it again — nothing is lost.') + '</span></div></div>' +
+      '<div class="controls">' +
+        '<button class="gbtn" style="--c:var(--t3)" data-a="retry">↺ Play this topic again</button>' +
+        '<button class="gbtn" style="--c:var(--t1)" data-a="quit">‹ All topics</button>' +
+        '<a class="gbtn" style="--c:var(--t6)" href="/kids-adventure/study/">Study Island</a>' +
+      '</div>';
+    if (JUICE) {
+      JUICE.stamp(document.querySelector('.coach'), st);
+      if (st === 3) JUICE.stickers.earn('study-' + Y.id + '-' + T.id, 'Three stars on ' + T.title);
+      var y = yearStars(Y.id), of = Y.topics.length * 3;
+      if (y >= of) JUICE.stickers.earn('year-' + Y.id, 'Every star in ' + Y.name);
+    }
+    toast(st ? T.title + ' ' + starRow(st) : 'Have another go 🙂');
+  }
+
+  /* ── input ─────────────────────────────────────────────────────────────── */
+  document.addEventListener('click', function (e) {
+    var tc = e.target.closest('[data-topic]');
+    if (tc) { pop(); startTopic(tc.dataset.topic); return; }
+    var an = e.target.closest('.ans');
+    if (an) { answer(an.dataset.ans, an); return; }
+    var a = (e.target.closest('[data-a]') || {}).dataset;
+    if (!a) return;
+    if (a.a === 'next')  { if (qn >= ROUND) finishRound(); else nextQuestion(); }
+    if (a.a === 'retry') { qn = 0; right = 0; nextQuestion(); }
+    if (a.a === 'quit')  { pop(); yearHome(); }
+  });
+
+  /* ── boot: the island page or a year page ──────────────────────────────── */
+  var host = $('#study');
+  if (host) {
+    mute();
+    if (host.dataset.page === 'island') island();
+    else {
+      var ym = /[?&]y=([a-z0-9]+)/.exec(location.search);
+      Y = yearById(ym ? ym[1] : 'r') || YEARS[0];
+      var tm = /[?&]t=([a-z0-9]+)/.exec(location.search);
+      if (tm) startTopic(tm[1]); else yearHome();
+    }
+  }
+  window.__study = {
+    prog: function () { return prog; },
+    where: function () { return { year: Y && Y.id, topic: T && T.id, qn: qn, right: right }; },
+    years: YEARS.map(function (y) { return { id: y.id, topics: y.topics.map(function (t) { return t.id; }) }; }),
+    /* used by the question audit: generate one question from any topic */
+    make: function (yid, tid) {
+      var y = yearById(yid); if (!y) return null;
+      for (var i = 0; i < y.topics.length; i++) if (y.topics[i].id === tid) return y.topics[i].make();
+      return null;
+    }
+  };
+})();

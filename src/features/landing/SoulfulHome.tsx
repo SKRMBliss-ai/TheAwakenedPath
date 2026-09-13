@@ -85,6 +85,9 @@ export default function SoulfulHome() {
     return 'you';
   });
 
+  const [productFilter, setProductFilter] = useState<'all' | 'apps' | 'websites'>('all');
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+
   const chooseAudience = (next: 'you' | 'brands' | 'products') => {
     setAudience(next);
     track(next === 'brands' ? 'HOME_TAB_BRANDS' : next === 'products' ? 'HOME_TAB_PRODUCTS' : 'HOME_TAB_YOU');
@@ -823,85 +826,325 @@ export default function SoulfulHome() {
       </>)}
 
       {/* ════════════════════════════════════════════════════════════════════
-          OUR PRODUCTS — apps built by Soulful Intelligence Studios
+          OUR PRODUCTS — apps & websites built by Soulful Intelligence Studios
          ════════════════════════════════════════════════════════════════════ */}
       {audience === 'products' && (
         <main style={{ position: 'relative', zIndex: 2 }}>
           <section style={{ padding: '64px 24px 80px', textAlign: 'center' }}>
-            <div style={{ maxWidth: 1060, margin: '0 auto' }}>
+            <div style={{ maxWidth: 1100, margin: '0 auto' }}>
               <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44' }}>
-                STUDIO PRODUCTS
+                STUDIO PRODUCTS &amp; ECOSYSTEM
               </span>
-              <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 4vw, 46px)', fontWeight: 400, margin: '10px 0 24px', color: INK }}>
-                Apps you can use today
+              <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 4vw, 46px)', fontWeight: 400, margin: '10px 0 16px', color: INK }}>
+                Apps &amp; Digital Experiences You Can Use Today
               </h2>
-              <p style={{ fontSize: 14.5, color: INK2, maxWidth: 580, margin: '0 auto 48px', lineHeight: 1.7, fontFamily: SANS }}>
-                From habit tracking to piano lessons — these are real products we built. Try them.
+              <p style={{ fontSize: 14.5, color: INK2, maxWidth: 640, margin: '0 auto 36px', lineHeight: 1.7, fontFamily: SANS }}>
+                From habit tracking and AI mindfulness to luxury digital ateliers and sattvic dining — these are real apps and websites built by Soulful Intelligence Studios.
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+              {/* Sub-Filter Tabs */}
+              <div style={{ display: 'inline-flex', padding: 4, borderRadius: 999, background: isDark ? 'rgba(38,30,22,0.8)' : 'rgba(238,230,218,0.7)', border: `1px solid ${isDark ? 'rgba(196,145,58,0.3)' : 'rgba(196,181,160,0.5)'}`, marginBottom: 44 }}>
                 {[
-                  {
-                    emoji: '🎹',
-                    title: 'Dyno\'s Song Adventure',
-                    desc: 'Teach your child their first piano song — guided parent walkthrough plus a five-level game.',
-                    href: 'https://simplypiano.web.app',
-                    tag: 'Music Education'
-                  },
-                  {
-                    emoji: '✅',
-                    title: 'Bliss Habit Tracker',
-                    desc: 'Build habits that stick with daily tracking, streaks, and meaningful progress visualization.',
-                    href: 'https://habitquest-2026.web.app',
-                    tag: 'Productivity'
-                  },
-                  {
-                    emoji: '📚',
-                    title: 'Exam Buddy',
-                    desc: 'CBSE Grade 10 study companion with AI-powered explanations and practice tests.',
-                    href: 'https://cbse-x-prep-buddy.web.app',
-                    tag: 'Learning'
-                  },
-                ].map((app, idx) => (
-                  <motion.a
-                    key={app.title}
-                    href={app.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: idx * 0.1 }}
-                    whileHover={{ y: -8 }}
+                  { key: 'all', label: 'ALL (10)' },
+                  { key: 'apps', label: 'APPS (7)' },
+                  { key: 'websites', label: 'WEBSITES (3)' }
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setProductFilter(tab.key as any)}
                     style={{
-                      display: 'flex', flexDirection: 'column',
-                      background: isDark
-                        ? 'linear-gradient(145deg, rgba(38,30,22,0.85) 0%, rgba(24,18,14,0.9) 100%)'
-                        : 'linear-gradient(145deg, rgba(255,252,247,0.95) 0%, rgba(248,242,233,0.9) 100%)',
-                      border: `1.5px solid ${isDark ? 'rgba(196,145,58,0.25)' : 'rgba(196,181,160,0.5)'}`,
-                      borderRadius: 24,
-                      padding: '32px 24px',
-                      backdropFilter: 'blur(16px)',
-                      boxShadow: '0 8px 28px rgba(0,0,0,0.04)',
-                      transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
-                      textDecoration: 'none',
-                      color: 'inherit',
+                      padding: '8px 20px',
+                      borderRadius: 999,
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: 11.5,
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      fontFamily: SANS,
+                      transition: 'all 0.25s ease',
+                      background: productFilter === tab.key
+                        ? (isDark ? '#C4913A' : '#4A3260')
+                        : 'transparent',
+                      color: productFilter === tab.key ? '#ffffff' : INK2,
                     }}
                   >
-                    <span style={{ fontSize: 48, lineHeight: 1, marginBottom: 16 }}>{app.emoji}</span>
-                    <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: isDark ? '#FFDF9E' : '#7A5F44', marginBottom: 10 }}>
-                      {app.tag}
-                    </span>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 10px', color: INK, fontFamily: SANS }}>
-                      {app.title}
-                    </h3>
-                    <p style={{ fontSize: 13.5, color: INK2, margin: 0, lineHeight: 1.6, fontFamily: SANS, flex: 1 }}>
-                      {app.desc}
-                    </p>
-                    <span style={{ marginTop: 16, fontSize: 14, fontWeight: 700, color: isDark ? '#C4913A' : '#7A5F44', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      Open app →
-                    </span>
-                  </motion.a>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: 28 }}>
+                {[
+                  {
+                    type: 'apps',
+                    tag: 'Mindfulness Platform',
+                    title: 'Mind Gym',
+                    desc: 'Daily practices for a quieter mind — breathing exercises, presence training, emotional check-ins, and guided mindfulness sessions rooted in The Power of Now.',
+                    href: 'https://www.skrmblissai.in/mindgym',
+                    action: 'Enter Mind Gym →',
+                    video: '/scenes/feelings-orbs.mp4',
+                    youtubeId: 'rLXnxzq_Dlk',
+                    img: isDark
+                      ? 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2Fdaily-journey-dark.webp?alt=media'
+                      : 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2Fdaily-journey-light.webp?alt=media',
+                  },
+                  {
+                    type: 'apps',
+                    tag: 'Productivity',
+                    title: 'Bliss Habit Tracker',
+                    desc: 'Build habits that stick — daily tracking, streak analytics, heatmap visualizers, and velocity metrics that reveal your true momentum.',
+                    href: 'https://habitquest-2026.web.app',
+                    action: 'Open app →',
+                    img: isDark
+                      ? 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039444/HabitDark_eck1jo.jpg'
+                      : 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039266/HabitLight_owsbeo.jpg',
+                  },
+                  {
+                    // Kids Learning Adventure — the umbrella for the children's
+                    // apps. One card, one URL: /kids-adventure is a static hub
+                    // (public/kids-adventure/) that opens either Song Adventure
+                    // (the piano app, via the /simplypiano redirect) or Art
+                    // Adventure (public/kids-adventure/art/). Listing them
+                    // separately would put two half-cards where one product is.
+                    type: 'apps',
+                    tag: 'Kids Learning',
+                    title: 'Kids Learning Adventure',
+                    desc: 'A child\'s whole creative journey on one map — Art World for drawing and painting classes, Piano World for notes and songs, every class tappable and every tap a sound.',
+                    href: '/kids-adventure',
+                    action: 'Open app →',
+                    img: '/kids-adventure/journey-map.webp',
+                  },
+                  {
+                    type: 'apps',
+                    tag: 'AI Learning',
+                    title: 'Exam Buddy',
+                    desc: 'CBSE Grade 10 AI study companion with concept explanations, PYQ mastery modules, progress forecasting, and spaced-repetition practice tests.',
+                    href: 'https://cbse-x-prep-buddy.web.app',
+                    action: 'Open app →',
+                    img: isDark
+                      ? 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039599/cbseDark_krlgpq.jpg'
+                      : 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039596/cbseLight_hshczr.jpg',
+                  },
+                  {
+                    type: 'apps',
+                    tag: 'Mindfulness & Mobile',
+                    title: 'Mindful Breathing',
+                    desc: 'Native iOS & Android sanctuary for breathwork — immersive audio-visual guidance, offline mode, session history analytics, and biometric feedback.',
+                    href: 'https://apps.apple.com/us/app/the-school-of-breath/id6736984340',
+                    action: 'View Native App →',
+                    img: 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1768216927/sob_u3bifn.jpg',
+                  },
+                  {
+                    type: 'apps',
+                    tag: 'AI Mental Wellness',
+                    title: 'Laughter Wellness',
+                    desc: 'Cutting-edge PWA with AI laughter detection algorithms — gamified daily quests, XP progression, mood tracking, and social wellness challenges.',
+                    href: 'https://sumansuneja.com/app',
+                    action: 'Open app →',
+                    img: 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1764859253/LaughterAppWhiteLabel_zpf5wc.png',
+                  },
+                  {
+                    type: 'apps',
+                    tag: 'Community & Meditation',
+                    title: 'Global Meditation',
+                    desc: 'Real-time global meditation platform with synchronized sessions, intuitive Zen UI, ambient soundscape engine, and a live global presence map.',
+                    href: 'https://inner-balance-1032671267314.us-west1.run.app',
+                    action: 'Open app →',
+                    img: isDark
+                      ? 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039171/InnerBalDark_xmitox.jpg'
+                      : 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039160/InnerBalLight_nggvn4.jpg',
+                  },
+
+                  // ── WEBSITES (3) ─────────────────────────────────────────────
+                  {
+                    type: 'websites',
+                    tag: 'Culinary & Mindful Living',
+                    title: 'Vegan Culinary',
+                    desc: 'Premium vegan culinary platform — authentic recipes, online reservations, bespoke Zen design system, mindful cooking timers, and conscious dining philosophy.',
+                    href: 'https://dharmakitchen.web.app/',
+                    action: 'Visit Kitchen →',
+                    img: isDark
+                      ? 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039872/dark_ksgqar.jpg'
+                      : 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039871/light_yjasv5.jpg',
+                  },
+                  {
+                    type: 'websites',
+                    tag: 'Spiritual Culinary Hub',
+                    title: 'Food & Culinary',
+                    desc: 'A spiritual sanctuary for Sattvic nutrition — Ayurvedic principles, seasonal ritual menus, and a mindful meal-prep companion rooted in tradition.',
+                    href: 'https://ramakrishnakitchen-9dbb1.web.app/',
+                    action: 'Visit Sanctuary →',
+                    video: 'https://res.cloudinary.com/dfopoyt9v/video/upload/v1769618895/South_Indian_Food_Reel_Generation_h0g2qw.mp4',
+                  },
+                  {
+                    type: 'websites',
+                    tag: 'Luxury Digital Atelier',
+                    title: 'Luxury Atelier',
+                    desc: 'Cinematic digital boutique for a high-end Milanese tailoring house — immersive video backgrounds, bespoke typography, and a refined digital concierge.',
+                    href: 'https://sartoriapura-milano-26.web.app',
+                    action: 'Visit Atelier →',
+                    img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1000&auto=format&fit=crop',
+                  },
+                ]
+                  .filter(app => productFilter === 'all' || app.type === productFilter)
+                  .map((app, idx) => (
+                    <motion.a
+                      key={app.title}
+                      href={app.href}
+                      target={app.href.startsWith('http') ? '_blank' : undefined}
+                      rel={app.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      initial={{ opacity: 0, y: 24 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: idx * 0.05 }}
+                      whileHover={{ y: -6, boxShadow: isDark ? '0 24px 60px rgba(0,0,0,0.5)' : '0 20px 50px rgba(74,50,96,0.15)' }}
+                      style={{
+                        display: 'flex', flexDirection: 'column',
+                        textAlign: 'left',
+                        background: isDark
+                          ? 'linear-gradient(170deg, rgba(32,24,16,0.92) 0%, rgba(18,14,10,0.96) 100%)'
+                          : 'linear-gradient(170deg, rgba(255,253,248,0.98) 0%, rgba(248,242,233,0.95) 100%)',
+                        border: `1.5px solid ${isDark ? 'rgba(196,145,58,0.2)' : 'rgba(196,181,160,0.45)'}`,
+                        borderRadius: 28,
+                        overflow: 'hidden',
+                        backdropFilter: 'blur(20px)',
+                        boxShadow: isDark ? '0 10px 36px rgba(0,0,0,0.3)' : '0 8px 28px rgba(0,0,0,0.06)',
+                        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                      }}
+                    >
+                      {/* Cover image / video. Taller than before, and
+                          contain rather than cover for the still image — a
+                          phone screenshot cropped to a 230px band under
+                          'cover' loses everything above and below the
+                          middle third, which was most of the app's own UI.
+                          Height goes up to fit a whole screenshot; the video
+                          and the card's own background sit behind it,
+                          so a narrower screenshot letterboxes into the
+                          card's own colour rather than into visible gaps. */}
+                      <div style={{
+                        position: 'relative', width: '100%', height: 340, overflow: 'hidden', flexShrink: 0,
+                        background: isDark ? 'rgba(14,10,7,0.6)' : 'rgba(238,230,218,0.5)',
+                        borderBottom: `1px solid ${isDark ? 'rgba(196,145,58,0.18)' : 'rgba(0,0,0,0.06)'}`
+                      }}>
+                        {(app as any).youtubeId && playingVideo === app.title ? (
+                          <iframe
+                            src={`https://www.youtube.com/embed/${(app as any).youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                            title={app.title}
+                            style={{ width: '100%', height: '100%', border: 0 }}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        ) : (app as any).video ? (
+                          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                            <video
+                              src={(app as any).video}
+                              autoPlay muted loop playsInline
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                            />
+                            {(app as any).youtubeId && (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setPlayingVideo(app.title);
+                                }}
+                                aria-label={`Play ${app.title} video`}
+                                style={{
+                                  position: 'absolute', inset: 0,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  background: 'rgba(0,0,0,0.25)', border: 'none', cursor: 'pointer',
+                                }}
+                              >
+                                <div style={{
+                                  width: 50, height: 50, borderRadius: '50%',
+                                  background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+                                  border: '1.5px solid rgba(255,255,255,0.6)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  color: '#fff', boxShadow: '0 0 28px rgba(196,145,58,0.75)',
+                                }}>
+                                  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 22, height: 22, transform: 'translateX(1.5px)' }}>
+                                    <path d="M8 5v14l11-7z" />
+                                  </svg>
+                                </div>
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                            <img
+                              src={(app as any).img}
+                              alt={app.title}
+                              loading="lazy"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1000&auto=format&fit=crop';
+                              }}
+                              style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center center', transition: 'transform 0.5s ease' }}
+                            />
+                            {(app as any).youtubeId && (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setPlayingVideo(app.title);
+                                }}
+                                aria-label={`Play ${app.title} video`}
+                                style={{
+                                  position: 'absolute', inset: 0,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  background: 'rgba(0,0,0,0.3)', border: 'none', cursor: 'pointer',
+                                }}
+                              >
+                                <div style={{
+                                  width: 50, height: 50, borderRadius: '50%',
+                                  background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)',
+                                  border: '1.5px solid rgba(255,255,255,0.5)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  color: '#fff', boxShadow: '0 0 24px rgba(196,145,58,0.6)',
+                                }}>
+                                  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 22, height: 22, transform: 'translateX(1.5px)' }}>
+                                    <path d="M8 5v14l11-7z" />
+                                  </svg>
+                                </div>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        {/* gradient scrim */}
+                        {isDark && (
+                          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 55%)', pointerEvents: 'none' }} />
+                        )}
+                        {/* Type badge */}
+                        <span style={{
+                          position: 'absolute', top: 14, right: 14,
+                          fontSize: 9, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase',
+                          padding: '5px 12px', borderRadius: 999,
+                          background: isDark ? 'rgba(196,145,58,0.9)' : '#ffffff',
+                          color: isDark ? '#ffffff' : '#4A3260',
+                          boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.4)' : '0 2px 10px rgba(0,0,0,0.12)',
+                          border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(74,50,96,0.12)',
+                          backdropFilter: 'blur(8px)',
+                        }}>
+                          {app.type === 'apps' ? 'APP' : 'WEBSITE'}
+                        </span>
+                      </div>
+
+                      {/* Card body */}
+                      <div style={{ padding: '22px 22px 24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 8 }}>
+                          {app.tag}
+                        </span>
+                        <h3 style={{ fontSize: 19, fontWeight: 700, margin: '0 0 10px', color: INK, fontFamily: SANS, lineHeight: 1.25 }}>
+                          {app.title}
+                        </h3>
+                        <p style={{ fontSize: 13.5, color: INK2, margin: 0, lineHeight: 1.65, fontFamily: SANS, flex: 1 }}>
+                          {app.desc}
+                        </p>
+                        <span style={{ marginTop: 20, fontSize: 13.5, fontWeight: 700, color: isDark ? '#FFDF9E' : '#4A3260', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          {app.action}
+                        </span>
+                      </div>
+                    </motion.a>
                 ))}
               </div>
             </div>

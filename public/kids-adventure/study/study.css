@@ -1,0 +1,60 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   STUDY ISLAND — only what school work needs on top of the shared theme:
+   year cards, topic cards, a question with its answers, and the little
+   shapes, clocks and coins a question sometimes has to draw.
+   ══════════════════════════════════════════════════════════════════════════ */
+.yearshelf,.topicshelf{margin-top:14px}
+.yearcard{text-decoration:none;color:inherit;display:block}
+.topicgrid{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0 0;position:relative;z-index:2}
+.topicchip{font-family:var(--round);font-weight:700;font-size:14px;color:var(--deep);background:#FFFDF6;
+  border:2px solid var(--c);border-radius:30px;padding:5px 12px;opacity:.9}
+.topiccard{text-align:left;font-family:var(--hand);cursor:pointer}
+.topiccard .ticon{display:block;font-size:44px;line-height:1.1;margin:10px 0 0}
+.topiccard .play{display:inline-block;background:var(--t1);color:#fff;border-radius:30px;padding:6px 14px;
+  font-family:var(--round);font-weight:800;font-size:15px;box-shadow:0 3px 0 #2a5f92}
+.yearcard .play{display:inline-block;background:var(--t3);color:#fff;border-radius:30px;padding:7px 16px;
+  font-family:var(--round);font-weight:800;font-size:16px;box-shadow:0 3px 0 #38703f}
+
+/* a question */
+.qtag{font-family:var(--round);font-weight:800;font-size:15px;color:#fff;background:var(--c);border-radius:30px;
+  padding:6px 15px;display:inline-block;margin:2px 0 0}
+.qbar{max-width:420px;height:10px;border-radius:6px;background:#EFE6D2;overflow:hidden;margin:12px auto 0}
+.qbar span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--t7),var(--t3));
+  transition:width .3s ease}
+.qcount{font-family:var(--round);font-weight:700;font-size:15px;color:var(--ink2);margin:7px 0 0}
+.says > b{font-size:clamp(20px,4.6vw,27px);line-height:1.25}
+.qart{display:block;margin:10px 0 2px}
+.qshape,.qclock{width:min(130px,34vw);height:auto}
+.qbig{font-size:64px;line-height:1.1}
+.qthings{font-size:30px;line-height:1.5;letter-spacing:4px;word-break:break-all}
+.qcoins{display:inline-flex;gap:8px;flex-wrap:wrap}
+.coin{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#E8C27A,#C89A4B);
+  border:2px solid #A97F36;display:grid;place-items:center;font-family:var(--round);font-weight:800;font-size:15px;
+  color:#4A3208;box-shadow:0 3px 0 #8d6524}
+.coin.pound{background:radial-gradient(circle at 35% 30%,#F0D48A,#CBA24F);width:58px;height:58px;font-size:17px}
+.why{display:block;margin:9px 0 0;font-size:17px;color:#B3262B}
+.why.ok{color:#2E7A38}
+
+.answers{position:relative;z-index:2;display:grid;gap:12px;grid-template-columns:1fr 1fr;margin:16px 0 0}
+@media (min-width:700px){.answers{grid-template-columns:repeat(4,1fr)}}
+.ans{border:3px solid var(--edge);background:var(--card);border-radius:18px;padding:18px 12px;
+  font-family:var(--round);font-weight:800;font-size:clamp(19px,4.4vw,24px);color:var(--deep);
+  box-shadow:0 6px 14px #8a6a321f;transition:transform .12s ease,background .2s ease}
+.ans:hover:not([disabled]){transform:translateY(-3px);background:#FFFDF2}
+.ans[disabled]{cursor:default}
+.ans.good{background:#EAF7EA;border-color:var(--t3);color:#1F5B28}
+.ans.bad{background:#FBE9E9;border-color:#C0554F;color:#8E2B26}
+
+/* ── the Quest card: the way into the full Year 2 adventure ──────────────── */
+.questcard{position:relative;z-index:2;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  margin:22px 0 6px;padding:20px 20px 18px;text-decoration:none;color:inherit;
+  background:linear-gradient(135deg,#FFFDF6,#FDF3DD);border:3px solid var(--gold);border-radius:24px;
+  box-shadow:0 8px 20px rgba(138,106,50,.2);transition:transform .16s ease}
+.questcard:hover{transform:translateY(-3px)}
+.questcard:active{transform:scale(.99)}
+.questcard .qicon{font-size:52px;line-height:1;flex:none}
+.questcard .qtext{flex:1;min-width:200px}
+.questcard .qtext b{display:block;font-family:var(--round);font-weight:800;font-size:clamp(21px,3.4vw,27px);color:var(--deep)}
+.questcard .qtext span{display:block;font-size:17px;color:var(--ink2);margin-top:2px}
+.questcard .play{flex:none;background:var(--t3);color:#fff;border-radius:30px;padding:11px 20px;
+  font-family:var(--round);font-weight:800;font-size:17px;box-shadow:0 4px 0 #38703f}

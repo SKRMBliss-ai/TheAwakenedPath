@@ -35,6 +35,12 @@
     </image:image>
   </url>
   <url>
+    <loc>https://www.skrmblissai.in/kids-adventure</loc>
+    <lastmod>2026-09-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
     <loc>https://www.skrmblissai.in/mindgym</loc>
     <lastmod>2026-07-28</lastmod>
     <changefreq>daily</changefreq>

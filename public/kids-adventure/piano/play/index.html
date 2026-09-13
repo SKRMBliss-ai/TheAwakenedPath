@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+<meta name="theme-color" content="#FCF4E5" />
+<title>Dyno's Song Adventure | My Piano Adventure</title>
+<meta name="description" content="Dyno's Song Adventure — learn your first piano songs in five levels. Find the keys, play Hot Cross Buns and Mary Had a Little Lamb in time, then make up a melody of your own." />
+<link rel="icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="stylesheet" href="/kids-adventure/kit/adventure.css">
+<style>
+/* ══════════════════════════════════════════════════════════════════════════
+   DYNO'S SONG ADVENTURE — the game itself, on the sketchbook paper.
+   Everything below is only what a playable keyboard needs; the paper, cards,
+   tapes, wooden signs and ink all come from kit/adventure.css.
+   ══════════════════════════════════════════════════════════════════════════ */
+.game{position:relative;z-index:2;max-width:920px;margin:0 auto}
+.topbar{display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;margin:2px 0 12px}
+.lvlpick{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.lp{position:relative;border:none;background:transparent;width:42px;height:38px;font-family:var(--round);
+  font-weight:800;font-size:17px;color:var(--deep);isolation:isolate}
+.lp::before{content:'';position:absolute;inset:0;z-index:-1;background:var(--c);opacity:.34;
+  -webkit-mask:var(--stroke) center/100% 100% no-repeat;mask:var(--stroke) center/100% 100% no-repeat}
+.lp[aria-current=true]::before{opacity:1}
+.lp small{position:absolute;left:0;right:0;bottom:-3px;font-size:9px;letter-spacing:1px;color:var(--gold)}
+.lp.locked{opacity:.45}
+
+/* the song, one bubble per note */
+.strip{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;background:#FFFDF6;border:3px solid var(--edge);
+  border-radius:18px;padding:13px;box-shadow:0 6px 14px #8a6a321a;min-height:64px;align-items:center}
+.nb{min-width:34px;height:auto;min-height:34px;border-radius:19px;border:2.5px solid var(--greyline);background:#fff;
+  display:grid;place-items:center;padding:5px 7px;font-family:var(--round);font-weight:800;font-size:15px;
+  color:#B9B0A0;flex:none;transition:background .2s ease,color .2s ease,transform .2s ease,border-color .2s ease}
+.nb.long{width:44px;border-radius:22px}
+.nb.done{background:var(--gold);border-color:#E0A93C;color:#5A3C00}
+.nb.next{border-color:var(--t1);color:var(--t1);transform:scale(1.18);box-shadow:0 0 0 4px #3880c024}
+.nb.bar{width:6px;height:26px;border:none;border-radius:3px;background:#E3CFA6;box-shadow:none}
+
+/* the keyboard */
+.kbwrap{margin:16px 0 0;background:#FFFDF6;border:3px solid var(--edge);border-radius:22px;padding:14px 12px 16px;
+  box-shadow:0 8px 18px #8a6a3222}
+.kb{position:relative;display:flex;gap:6px;justify-content:center;align-items:stretch;height:min(42vh,250px)}
+.wk{position:relative;flex:1;height:100%;max-width:88px;border:3px solid var(--deep);border-radius:8px 8px 13px 13px;background:#fff;
+  box-shadow:0 5px 0 #D9CBAE;cursor:pointer;padding:0 0 12px;display:flex;align-items:flex-end;justify-content:center;
+  font-family:var(--round);font-weight:800;font-size:19px;color:#9A968E;transition:transform .07s ease,background .12s ease}
+.wk:active,.wk.down{transform:translateY(4px);box-shadow:0 1px 0 #D9CBAE;background:#FFF7E0}
+.wk.hint{background:#EAF3FC;color:var(--t1);box-shadow:0 5px 0 #B7D3EE,0 0 0 4px #3880c02e;animation:pulse 1.2s ease-in-out infinite}
+.wk.good{background:var(--t3);color:#fff;border-color:#2E7A38}
+.wk.bad{background:#FBE3E3;border-color:#C0554F}
+@keyframes pulse{50%{box-shadow:0 5px 0 #B7D3EE,0 0 0 11px #3880c014}}
+.bks{position:absolute;inset:0;pointer-events:none}
+.bk{position:absolute;top:0;width:38px;height:58%;background:var(--deep);border-radius:4px 4px 8px 8px;
+  box-shadow:0 4px 0 #000c22;pointer-events:auto;cursor:pointer;border:none;transition:transform .07s ease}
+.bk:active,.bk.down{transform:translateY(4px)}
+@media (max-width:560px){
+  .kb{height:min(38vh,200px);gap:4px}.wk{font-size:16px;border-width:2.5px}.bk{width:26px}
+}
+
+/* ── the songbook ───────────────────────────────────────────────────────────
+   A whole piece is longer than a screen, so the score is one horizontal
+   scroller: bars side by side, lyrics under the notes, and the note being
+   played lit and scrolled to the middle by the player itself. */
+.songhead{text-align:center;margin:0 0 12px}
+.songhead b{display:block;font-family:var(--round);font-weight:800;font-size:clamp(24px,5.5vw,34px);color:var(--deep)}
+.songhead span{display:block;font-size:17px;color:var(--ink2)}
+.songhead .setup{max-width:44em;margin:6px auto 0;background:#FFFDF6;border:2px dashed var(--edge);
+  border-radius:16px;padding:8px 14px;font-size:16px}
+.parts{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:thin}
+.part{flex:none;position:relative;border:none;background:transparent;padding:9px 16px 11px;font-family:var(--round);
+  font-weight:800;font-size:16px;color:var(--deep);isolation:isolate;text-align:left}
+.part::before{content:'';position:absolute;inset:0;z-index:-1;background:var(--c);opacity:.3;
+  -webkit-mask:var(--stroke) center/100% 100% no-repeat;mask:var(--stroke) center/100% 100% no-repeat}
+.part.on::before{opacity:1}
+.part.on{color:#fff;text-shadow:0 1px 1px #0003}
+.part small{display:block;font-family:var(--hand);font-weight:400;font-size:14px;opacity:.9}
+.part.done::after{content:'✓';position:absolute;right:5px;top:2px;font-size:12px;color:var(--t3)}
+.score{display:flex;align-items:flex-start;gap:10px;overflow-x:auto;scroll-behavior:smooth;
+  background:#FFFDF6;border:3px solid var(--edge);border-radius:18px;padding:12px 14px 14px;
+  box-shadow:0 6px 14px #8a6a321a}
+.bars{flex:none;border-radius:14px;padding:6px 10px 8px;border:2px dashed transparent}
+.bars.current{border-color:var(--t1);background:#F4F9FE}
+.barlbl{display:inline-block;font-family:var(--round);font-weight:800;font-size:12px;letter-spacing:.6px;
+  color:#fff;background:var(--c);border-radius:20px;padding:3px 10px;margin:0 0 7px}
+.barnotes{display:flex;gap:7px;align-items:flex-start}
+.barsep{flex:none;width:5px;align-self:stretch;border-radius:3px;background:#EBDCBC;margin:22px 0 8px}
+.lyricline{display:block;font-size:15px;color:var(--ink2);margin:7px 0 0;max-width:22em}
+.nb small{display:block;font-family:var(--hand);font-weight:400;font-size:12px;color:var(--ink2);margin-top:1px;
+  white-space:nowrap}
+.nb.playing{background:var(--t1);border-color:#2A5F92;color:#fff;transform:scale(1.24);
+  box-shadow:0 0 0 5px #3880c033}
+.nb.playing small{color:#EAF3FC}
+.lp.wide{width:auto;padding:0 13px}
+.lp{text-decoration:none;display:inline-grid;place-items:center}
+
+.mine{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px 0 0}
+.mine button{border:none;background:#F6EEDD;border-radius:24px;padding:8px 14px;font-family:var(--round);
+  font-weight:700;font-size:15px;color:var(--ink2)}
+
+@media (prefers-reduced-motion: reduce){.wk.hint,.coach.yes .dyno,.coach.no .dyno{animation:none}.spark2{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     DYNO'S SONG ADVENTURE
+     Five levels that actually teach a first song: find the keys, learn two
+     real tunes, play one of them in time, then compose. The keyboard is real
+     (Web Audio, no samples), the songs are public-domain nursery tunes, and
+     the stars a child earns here are the same stars Piano World's journey
+     shows on its trail.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="app">
+  <div class="deco" aria-hidden="true">
+    <i style="left:-14px;top:2px;width:54px;height:106px;background-image:url('/kids-adventure/kit/splat-c.webp');opacity:.8"></i>
+    <i style="right:20px;top:-4px;width:96px;height:62px;background-image:url('/kids-adventure/kit/splat-b.webp');opacity:.8"></i>
+    <i class="sm" style="right:-4px;top:70px;width:117px;height:115px;background-image:url('/kids-adventure/kit/ptero.webp')"></i>
+    <i class="sm" style="left:-16px;bottom:-8px;width:138px;height:116px;background-image:url('/kids-adventure/kit/mountains.webp')"></i>
+    <i class="sm" style="right:-10px;bottom:-6px;width:90px;height:121px;background-image:url('/kids-adventure/kit/dino-blue.webp')"></i>
+  </div>
+
+  <a class="back" href="/kids-adventure/piano" aria-label="Back to Piano World">‹</a>
+  <div id="game" class="game"></div>
+  <p class="chapter">Play it slowly, play it wrongly,<br>play it again — that is how songs are learned</p>
+  <div class="mutebar" id="mutebar"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="/kids-adventure/kit/sound.js"></script>
+<script src="/kids-adventure/kit/juice.js"></script>
+<script src="/kids-adventure/piano/play/game.js"></script>
+</body>
+</html>

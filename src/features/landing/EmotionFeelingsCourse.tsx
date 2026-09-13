@@ -352,6 +352,7 @@ interface Chapter {
   imgUrl: string;
   teaserVideoId?: string;
   teaserStartTime?: number;
+  teasers?: { label: string; videoId: string; startTime?: number }[];
 }
 
 const CHAPTERS: Chapter[] = [
@@ -401,14 +402,20 @@ const CHAPTERS: Chapter[] = [
   {
     num: 4,
     epLabel: 'EP 4',
-    badgeKicker: 'SEE YOUR ESCAPES',
+    badgeKicker: 'SEE YOUR ESCAPES · 3-PART LESSON & GUIDED MEDITATION',
     title: 'Why We Keep Avoiding Our Feelings',
     artworkTitle: 'See the Escape',
-    desc: 'The ways we escape and avoid — phone scrolling, busyness, over-eating, shopping, alcohol — and why avoidance never truly sets us free.',
-    duration: 'Available Immediately',
-    keyPractice: 'The Avoidance Audit',
+    desc: 'Explore the 3 daily covers (phone scrolling, busyness, over-eating, shopping) and why avoidance never sets us free. Includes 3 full video lessons + 24-minute guided meditation.',
+    duration: '3 Parts + 24-Min Guided Meditation',
+    keyPractice: 'The Avoidance Audit & Somatic Presence',
     bgGradient: 'linear-gradient(135deg, #3A2B1D 0%, #1A120A 100%)',
     imgUrl: FS_ROOT('Episode4.webp'),
+    teasers: [
+      { label: 'Part 1 Teaser', videoId: '0nxN9fQfVKU' },
+      { label: 'Part 2 Teaser', videoId: 'SajZXFmmDmQ' },
+      { label: 'Part 3 Teaser', videoId: 'a2SxdLkKrR0' },
+      { label: 'Meditation Teaser', videoId: 'LclDuXTB-Lw' },
+    ],
   },
   {
     num: 5,
@@ -1950,7 +1957,33 @@ export default function EmotionFeelingsCourse() {
                 </p>
 
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                  {ch.teaserVideoId && (
+                  {ch.teasers ? (
+                    ch.teasers.map((t, tIdx) => (
+                      <motion.button
+                        key={tIdx}
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => startTeaser(t.videoId, `${ch.title} — ${t.label}`, ch.num, t.startTime)}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: 999,
+                          background: 'linear-gradient(135deg, #4A3260 0%, #362248 100%)',
+                          color: '#fff',
+                          border: '1px solid #C4913A',
+                          fontFamily: SANS,
+                          fontSize: 11.5,
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          boxShadow: '0 6px 20px rgba(74,50,96,0.3)',
+                        }}
+                      >
+                        <Play size={12} fill="#fff" /> {t.label}
+                      </motion.button>
+                    ))
+                  ) : ch.teaserVideoId ? (
                     <motion.button
                       whileHover={{ scale: 1.04 }}
                       whileTap={{ scale: 0.98 }}
@@ -1973,7 +2006,7 @@ export default function EmotionFeelingsCourse() {
                     >
                       <Play size={14} fill="#fff" /> Watch 60s Free Teaser
                     </motion.button>
-                  )}
+                  ) : null}
 
                   <button
                     onClick={() => setSelectedChapter(isOpen ? null : ch.num)}

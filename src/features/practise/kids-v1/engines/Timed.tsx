@@ -197,7 +197,7 @@ function AskBeat({ beat, room, onNext }: { beat: Extract<TimedBeat, { kind: 'ask
 
   const tap = (o: string) => {
     if (picked) return;
-    sound.play('tap');
+    sound.play('arcadeBlip');
     setPicked(o);
     window.setTimeout(onNext, m.advanceMs);
   };
@@ -312,7 +312,7 @@ function LightRound({ base, frozen, onHit }: { base: number; frozen: boolean; on
 
   const tap = () => {
     if (frozen) return;
-    if (green) { sound.play('tapHit'); onHit(); return; }
+    if (green) { sound.play('pointTick'); onHit(); return; }
     // Early. Not a failure — just a thing that happened. The light comes
     // anyway; there is nothing to lose and nothing to restart.
     setEarly(true);
@@ -497,7 +497,7 @@ function MoveBeat({ beat, room, onNext }: { beat: Extract<TimedBeat, { kind: 'mo
       {!done ? (
         <>
           <motion.button
-            onClick={() => { sound.play('tapHit'); setN((v) => v + 1); }}
+            onClick={() => { sound.play('pointTick'); setN((v) => v + 1); }}
             whileTap={{ scale: 0.94 }}
             className="grid h-40 w-40 place-items-center rounded-full text-[40px] font-extrabold"
             style={{ background: room.palette.accent, color: '#0E1A1C', fontFamily: FONT }}
