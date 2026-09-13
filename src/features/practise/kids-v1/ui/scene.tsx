@@ -5,7 +5,7 @@ import { FONT, Scrim } from './chrome';
 import { useMotion, useQuiet } from './quiet';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import { startAmbience, stopAmbience } from '../kit/ambience';
-import { BOY_SRC, BOY_SRCSET, boySpriteForEmotion, boySpritesetForEmotion, type ChirpyPose } from './sprites';
+import { boyPlateForRoom, type BoyEmotion, type ChirpyPose } from './sprites';
 
 /**
  * The place: a full-bleed scene, and the two characters who live in it.
@@ -150,11 +150,14 @@ export function Chirpy({
   line,
   size = 54,
   align = 'right',
+  roomId = null,
 }: {
   pose?: ChirpyPose;
   line?: string | null;
   size?: number;
   align?: 'left' | 'right';
+  /** Which room this line is being said in — see TheBoy's `roomId`. */
+  roomId?: string | null;
 }) {
   const quiet = useQuiet();
   const m = useMotion();
@@ -197,17 +200,15 @@ export function Chirpy({
   // appearance, just his most common one.
   return (
     <div className={`flex items-end gap-2 ${align === 'left' ? 'flex-row' : 'flex-row-reverse'}`}>
-      <motion.img
-        src={BOY_SRC}
-        srcSet={BOY_SRCSET}
-        sizes={`${size}px`}
-        alt=""
-        aria-hidden
-        draggable={false}
+      {/* One boy, one source of truth about how he looks and moves. This used
+          to be its own <img> with its own bob, which is how the room plates
+          and the gaits would have missed half the app the moment they landed. */}
+      <TheBoy
+        size={size}
+        gaze="child"
         className="shrink-0"
-        style={{ height: size, width: 'auto', filter: 'drop-shadow(0 10px 22px rgba(0,0,0,0.55))' }}
-        animate={{ y: [0, -6, 0] }}
-        transition={m.loop ? { ...m.loop, duration: 5.5 } : undefined}
+        gait={gaitForRoom(roomId)}
+        roomId={roomId}
       />
       <motion.div
         key={line}
@@ -223,36 +224,137 @@ export function Chirpy({
   );
 }
 
+/**
+ * HOW HE MOVES.
+ *
+ * He used to do one thing everywhere: rise six pixels and sink back, every
+ * five and a half seconds, in all seven rooms and on the hub. That is not a
+ * character being alive, it is a sprite on a sine wave, and a child reads the
+ * difference immediately — the boy was furniture that happened to bob.
+ *
+ * So each room gets a gait. The shapes are deliberately not interchangeable:
+ * the Castle marches, the Park bounces, the Observatory barely moves at all,
+ * and the hub dances, because the hub is the one place he is not waiting for
+ * anybody. It is the cheapest possible characterisation and it is most of
+ * what "alive" means on screen.
+ *
+ * EVERY LOOP CLOSES. The first and last frame of each track are identical, so
+ * the cycle joins itself instead of snapping back to the start — a jump at
+ * the seam is the thing that makes a loop look like a loop.
+ *
+ * AND NONE OF IT RUNS IN THE QUIET STATE. `m.loop` is undefined when the app
+ * has quietened itself or the device asked for less motion, and that is the
+ * switch: he stands still. A distressed child does not get a dancing cartoon.
+ */
+export type BoyGait = 'still' | 'sway' | 'walk' | 'march' | 'bounce' | 'drift' | 'dance';
+
+interface Gait {
+  y: number[];
+  x: number[];
+  rotate: number[];
+  seconds: number;
+}
+
+const GAITS: Record<BoyGait, Gait> = {
+  /** The old behaviour, kept for anywhere that genuinely wants stillness. */
+  still:  { y: [0, -6, 0],          x: [0, 0, 0],             rotate: [0, 0, 0],            seconds: 5.5 },
+  /** Weight shifting foot to foot. Somebody standing in a garden. */
+  sway:   { y: [0, -5, 0, -5, 0],   x: [0, 7, 0, -7, 0],      rotate: [0, 1.6, 0, -1.6, 0], seconds: 6.4 },
+  /** Actually crossing the floor and coming back. */
+  walk:   { y: [0, -9, 0, -9, 0],   x: [-16, -5, 7, -5, -16], rotate: [0, -2, 0, 2, 0],     seconds: 5.2 },
+  /** Knees up. Faster, squarer, pleased with itself. */
+  march:  { y: [0, -14, 0, -14, 0], x: [0, 4, 0, -4, 0],      rotate: [0, -3, 0, 3, 0],     seconds: 3.4 },
+  /** Two hops and a little one, the way children actually bounce. */
+  bounce: { y: [0, -19, 0, -8, 0],  x: [0, 2, 0, -2, 0],      rotate: [0, 4, 0, -4, 0],     seconds: 2.7 },
+  /** Barely there. For the room where the whole point is sitting still. */
+  drift:  { y: [0, -10, 0],         x: [0, 9, 0],             rotate: [0, 1, 0],            seconds: 9 },
+  /** The hub. Shoulders, hips, a shuffle each way. */
+  dance:  { y: [0, -15, 0, -15, 0], x: [-11, 0, 11, 0, -11],  rotate: [-5, 0, 5, 0, -5],    seconds: 3.2 },
+};
+
+/** Which gait belongs to which virtue room. Keyed by the room ids in
+ *  best/rooms.ts — the same ids as the behaviours, which never renumber. */
+const ROOM_GAIT: Record<string, BoyGait> = {
+  kind: 'sway',
+  truth: 'walk',
+  choices: 'march',
+  include: 'bounce',
+  body: 'march',
+  help: 'walk',
+  mindheart: 'drift',
+};
+
+export function gaitForRoom(roomId: string | null | undefined): BoyGait {
+  return (roomId && ROOM_GAIT[roomId]) || 'still';
+}
+
 export function TheBoy({
   size = 190,
   gaze = 'scene',
   className = '',
   emotion = 'calm',
+  gait = 'still',
+  roomId = null,
 }: {
   size?: number;
   gaze?: 'scene' | 'child';
   className?: string;
-  emotion?: 'calm' | 'worry' | 'scared' | 'sad';
+  emotion?: BoyEmotion;
+  /** How he passes the time here. See GAITS. */
+  gait?: BoyGait;
+  /**
+   * Which room he's standing in, so he can wear that room's own plate if one
+   * has been drawn. Null on the hub, which is nobody's room.
+   */
+  roomId?: string | null;
 }) {
   const m = useMotion();
+  const plate = boyPlateForRoom(roomId, emotion);
+  const step = GAITS[gait];
+
   return (
     <motion.img
-      src={boySpriteForEmotion(emotion)}
-      srcSet={boySpritesetForEmotion(emotion)}
-      sizes={`${size}px`}
+      /* Keyed on the plate so moving between rooms mounts a fresh <img> and
+         re-attempts that room's own art. Without it the element persists,
+         React never rewrites the src we patched in onError, and the first
+         room that falls back would pin the fallback everywhere after it. */
+      key={plate.src}
+      src={plate.src}
+      /* Omitted rather than empty when a plate ships in one size only — an
+         `srcset=""` is a candidate list with nothing in it, which browsers
+         handle but no spec obliges them to handle the same way. */
+      srcSet={plate.srcset || undefined}
+      sizes={plate.srcset ? `${size}px` : undefined}
       alt=""
       aria-hidden
       draggable={false}
       className={className}
+      /* THE ROOM'S PLATE IS OPTIONAL AND MOSTLY ABSENT — see sprites.ts.
+         Asking for art that hasn't been drawn yet must cost the child
+         nothing, so a failed load quietly becomes the plate that exists
+         rather than a broken-image icon where a boy should be. */
+      onError={(e) => {
+        const img = e.currentTarget;
+        if (img.dataset.fellBack) return;
+        img.dataset.fellBack = 'true';
+        img.srcset = plate.fallbackSrcset ?? '';
+        img.src = plate.fallbackSrc;
+      }}
       style={{
         height: size,
         width: 'auto',
         filter: 'drop-shadow(0 18px 34px rgba(0,0,0,0.5))',
-        // Turned away = looking at the scene with the child, not at them.
-        transform: gaze === 'scene' ? 'scaleX(-1)' : 'none',
+        /* Turned away = looking at the scene with the child, not at them.
+           It lives in `style` as a motion value rather than as a CSS
+           `transform` string, and that is load-bearing: framer-motion builds
+           its own transform from x/y/rotate, and a plain `transform` here
+           would be overwritten by it — which is exactly what was happening,
+           so the shared-gaze rule in §2.2 above was silently not applying
+           anywhere the boy was also bobbing. Which was everywhere. */
+        scaleX: gaze === 'scene' ? -1 : 1,
       }}
-      animate={{ y: [0, -6, 0] }}
-      transition={m.loop ? { ...m.loop, duration: 5.5 } : undefined}
+      animate={m.loop ? { y: step.y, x: step.x, rotate: step.rotate } : { y: 0, x: 0, rotate: 0 }}
+      transition={m.loop ? { ...m.loop, duration: step.seconds } : { duration: 0.3 }}
     />
   );
 }
@@ -270,8 +372,13 @@ export function BoyAndChirpy({
   size = 240,
   gaze = 'scene',
   emotion = 'calm',
+  gait = 'still',
+  roomId = null,
 }: {
   size?: number;
+  /** How he passes the time. The hub hands him 'dance'. */
+  gait?: BoyGait;
+  roomId?: string | null;
   /**
    * Accepted, not read. Chirpy lives on the boy's back in the artwork now
    * rather than being a second sprite pinned to his shoulder, so there is
@@ -288,7 +395,7 @@ export function BoyAndChirpy({
   // to render him separately here. The boy is bigger now (default 240 instead of 190).
   return (
     <div className="relative" style={{ height: size, width: boyW }}>
-      <TheBoy size={size} gaze={gaze} emotion={emotion} />
+      <TheBoy size={size} gaze={gaze} emotion={emotion} gait={gait} roomId={roomId} />
     </div>
   );
 }

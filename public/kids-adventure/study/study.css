@@ -1,0 +1,110 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   STUDY ISLAND — only what school work needs on top of the shared theme:
+   year cards, topic cards, a question with its answers, and the little
+   shapes, clocks and coins a question sometimes has to draw.
+   ══════════════════════════════════════════════════════════════════════════ */
+.yearshelf,.topicshelf{margin-top:14px}
+.yearcard{text-decoration:none;color:inherit;display:block}
+.topicgrid{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0 0;position:relative;z-index:2}
+.topicchip{font-family:var(--round);font-weight:700;font-size:14px;color:var(--deep);background:#FFFDF6;
+  border:2px solid var(--c);border-radius:30px;padding:5px 12px;opacity:.9}
+.topiccard{text-align:left;font-family:var(--hand);cursor:pointer}
+.topiccard .play{display:inline-block;background:var(--t1);color:#fff;border-radius:30px;padding:6px 14px;
+  font-family:var(--round);font-weight:800;font-size:15px;box-shadow:0 3px 0 #2a5f92}
+.yearcard .play{display:inline-block;background:var(--t3);color:#fff;border-radius:30px;padding:7px 16px;
+  font-family:var(--round);font-weight:800;font-size:16px;box-shadow:0 3px 0 #38703f}
+
+/* a question */
+.qtag{font-family:var(--round);font-weight:800;font-size:15px;color:#fff;background:var(--c);border-radius:30px;
+  padding:6px 15px;display:inline-block;margin:2px 0 0}
+.qbar{max-width:420px;height:10px;border-radius:6px;background:#EFE6D2;overflow:hidden;margin:12px auto 0}
+.qbar span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--t7),var(--t3));
+  transition:width .3s ease}
+.qcount{font-family:var(--round);font-weight:700;font-size:15px;color:var(--ink2);margin:7px 0 0}
+.says > b{font-size:clamp(20px,4.6vw,27px);line-height:1.25}
+.qart{display:block;margin:10px 0 2px}
+.qshape,.qclock{width:min(130px,34vw);height:auto}
+.qbig{font-size:64px;line-height:1.1}
+.qthings{font-size:30px;line-height:1.5;letter-spacing:4px;word-break:break-all}
+.qcoins{display:inline-flex;gap:8px;flex-wrap:wrap}
+.coin{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#E8C27A,#C89A4B);
+  border:2px solid #A97F36;display:grid;place-items:center;font-family:var(--round);font-weight:800;font-size:15px;
+  color:#4A3208;box-shadow:0 3px 0 #8d6524}
+.coin.pound{background:radial-gradient(circle at 35% 30%,#F0D48A,#CBA24F);width:58px;height:58px;font-size:17px}
+
+
+/* ── the Quest card: the way into the full Year 2 adventure ──────────────── */
+.questcard{position:relative;z-index:2;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  margin:22px 0 6px;padding:20px 20px 18px;text-decoration:none;color:inherit;
+  background:linear-gradient(135deg,#FFFDF6,#FDF3DD);border:3px solid var(--gold);border-radius:24px;
+  box-shadow:0 8px 20px rgba(138,106,50,.2);transition:transform .16s ease}
+.questcard:hover{transform:translateY(-3px)}
+.questcard:active{transform:scale(.99)}
+.questcard .qicon{font-size:52px;line-height:1;flex:none}
+.questcard .qtext{flex:1;min-width:200px}
+.questcard .qtext b{display:block;font-family:var(--round);font-weight:800;font-size:clamp(21px,3.4vw,27px);color:var(--deep)}
+.questcard .qtext span{display:block;font-size:17px;color:var(--ink2);margin-top:2px}
+.questcard .play{flex:none;background:var(--t3);color:#fff;border-radius:30px;padding:11px 20px;
+  font-family:var(--round);font-weight:800;font-size:17px;box-shadow:0 4px 0 #38703f}
+
+/* ── the question, made impossible to miss ─────────────────────────────────
+   A child who cannot find the question cannot answer it. The question is now
+   the biggest, boldest thing on the screen by a clear margin, sitting on its
+   own tinted panel with a coloured rule above it, and if nothing is tapped for
+   a while it comes looking for them: `.hunt` gives it one slow wobble and a
+   ring of gold, which the eye catches even from across a room. */
+.says.ask{background:#FFFEF9;padding-top:18px}
+.says .qq{display:block;font-family:var(--round);font-weight:800;
+  font-size:clamp(24px,5.6vw,34px);line-height:1.2;color:var(--deep);
+  letter-spacing:-.2px;text-wrap:balance}
+.says.ask::before{content:'';position:absolute;left:16px;right:16px;top:-3px;height:5px;
+  background:var(--gold);border-radius:4px}
+.says.hunt{animation:hunt 1.1s ease 2;box-shadow:0 0 0 5px #F8C85866,0 6px 14px #8a6a321f}
+@keyframes hunt{
+  0%,100%{transform:none}
+  20%{transform:rotate(-1.2deg) scale(1.035)}
+  55%{transform:rotate(1.2deg) scale(1.035)}
+}
+/* an answer taken off the table by the second miss */
+
+/* the auto-advance: a button that fills up, so a child can SEE the next
+   question coming and knows the pause was on purpose */
+.gbtn.wait{position:relative;overflow:hidden}
+.gbtn.wait .tick{position:absolute;left:0;bottom:0;height:5px;width:0;background:#ffffff9c;
+  animation:ticking var(--d,1600ms) linear forwards}
+@keyframes ticking{from{width:0}to{width:100%}}
+.gbtn.ghostbtn{background:#FFFDF6;color:var(--ink2);box-shadow:0 4px 0 #E3D3B0}
+
+/* the look back at the question the round has already moved past */
+.lookback .sheet{text-align:left}
+.lookq{background:#FFFDF6;border:3px solid var(--edge);border-radius:18px;padding:12px 14px;margin:0 0 12px}
+.lookq b{display:block;font-family:var(--round);font-weight:800;font-size:22px;color:var(--deep);line-height:1.2}
+.looka{font-family:var(--round);font-weight:800;font-size:22px;color:#1F5B28;margin:0 0 6px}
+.looka .tick2{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;
+  background:var(--t3);color:#fff;font-size:17px;vertical-align:-5px;margin-right:8px}
+.lookwhy{font-size:17px;color:var(--ink2);margin:0 0 6px}
+.lookhow{font-size:16px;color:var(--ink2);margin:0 0 14px}
+
+
+@media (prefers-reduced-motion: reduce){
+  .says.hunt{animation:none}
+  .ans.nudge{animation:none}
+  .gbtn.wait .tick{animation:none;width:100%}
+}
+
+/* ── how hard? ─────────────────────────────────────────────────────────────
+   A seven-year-old who still needs number bonds should not be handed a screen
+   built for a four-year-old, and a four-year-old must not be handed harder
+   sums because an older sibling pressed something. So the choice is explicit,
+   per year, remembered — and it changes the questions, never the wording. */
+.stepup{position:relative;z-index:3;display:flex;align-items:stretch;justify-content:center;
+  gap:8px;flex-wrap:wrap;margin:18px 0 4px}
+.stepwhy{display:flex;align-items:center;font-family:var(--round);font-weight:700;font-size:16px;
+  color:var(--ink2);padding:0 4px}
+.stepbtn{border:3px solid #E0CFAB;background:#FFFDF6;border-radius:20px;padding:8px 16px;
+  font-family:var(--round);font-weight:800;font-size:16px;color:var(--deep);
+  box-shadow:0 3px 0 #E3D3B0;display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.stepbtn i{font-style:normal;font-family:var(--hand);font-weight:400;font-size:14px;color:var(--ink2)}
+.stepbtn[aria-pressed=true]{border-color:var(--t3);background:#F2FBF1;box-shadow:0 0 0 3px #50985833,0 3px 0 #E3D3B0}
+.stepbtn[aria-pressed=true] i{color:#2E7A38}
+.stepbtn:active{transform:scale(.97)}

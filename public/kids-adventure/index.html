@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+<meta name="theme-color" content="#8FD3FF" />
+<title>My Creative Journey | Kids Learning Adventure</title>
+<meta name="description" content="My Creative Journey — Art World for drawing and painting classes, Piano World for songs and notes, and Study Island for Reception &amp; KG, Year 1 and Year 2 school work. Tap a class to open it." />
+<link rel="icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:title" content="My Creative Journey" />
+<meta property="og:description" content="Art World and Piano World — a child's whole creative journey on one map." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.skrmblissai.in/kids-adventure" />
+<meta property="og:image" content="https://www.skrmblissai.in/kids-adventure/journey-map.webp" />
+<link rel="stylesheet" href="/kids-adventure/kit/adventure.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Patrick+Hand&display=swap');
+:root{
+  --round:'Baloo 2','Arial Rounded MT Bold','Trebuchet MS',sans-serif;
+  --hand:'Patrick Hand','Comic Sans MS','Chalkboard SE',cursive;
+  --ink:#141a3d;
+  /* The artwork's own measurements. Every hotspot below is expressed in these
+     pixels and converted to percentages, so the layer stays welded to the
+     illustration at any size. */
+  --mapw:1312; --maph:1199;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#0E3A5C;color:var(--ink);font-family:var(--round);overflow-x:hidden}
+
+/* ── the world ─────────────────────────────────────────────────────────────
+   On a wide screen the map is the page. On a phone it stays a MAP: the
+   artwork holds its aspect ratio at a readable size and the child drags it
+   around, rather than being shrunk to 30% where no class card is legible. */
+.viewport{width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;background:#0E3A5C}
+.stage{position:relative;width:100%;min-width:940px;max-width:1312px;margin:0 auto;aspect-ratio:1312/1199;
+  background:url('/kids-adventure/journey-map.webp') center/100% 100% no-repeat #8FD3FF}
+.bar{max-width:1000px;margin:0 auto;padding:14px 14px 0;display:flex;justify-content:center}
+.mute{border:0;background:#fffef8;border-radius:40px;padding:9px 18px;font-family:var(--round);font-weight:800;font-size:15px;
+  color:var(--ink);box-shadow:0 4px 0 #d3bb8e}
+.mute[aria-pressed=true]{background:#e7ddc6;color:#6b5f45}
+@media (min-width:1360px){.stage{border-radius:0}}
+
+/* ── hotspots ───────────────────────────────────────────────────────────── */
+.hs{position:absolute;display:block;border:0;background:transparent;padding:0;cursor:pointer;
+  border-radius:18px;-webkit-tap-highlight-color:transparent;transition:transform .16s ease}
+.hs::after{content:'';position:absolute;inset:-6px;border-radius:22px;pointer-events:none;
+  box-shadow:0 0 0 0 #fff0,0 0 0 0 #fff0;background:radial-gradient(closest-side,#ffffff5c,#fff0 72%);
+  opacity:0;transition:opacity .18s ease}
+.hs:hover::after,.hs:focus-visible::after{opacity:1}
+.hs:focus-visible{outline:3px dashed #fff;outline-offset:3px}
+.hs:active{transform:scale(.965)}
+.hs.round,.hs.round::after{border-radius:50%}
+.hs.tall::after{border-radius:16px}
+/* the two gates keep a slow breathing glow so a child knows where to start */
+.hs.gate::after{background:radial-gradient(closest-side,#ffffff70,#fff0 74%);opacity:.0;animation:breathe 3.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.08}50%{opacity:.5}}
+
+/* label that follows a tap/hover */
+.label{position:absolute;left:0;top:0;transform:translate(-50%,-124%);background:#fffef8;color:var(--ink);
+  font-family:var(--round);font-weight:800;font-size:15px;line-height:1.15;padding:7px 13px;border-radius:14px;
+  box-shadow:0 4px 0 #d3bb8e,0 10px 24px #0b1c3340;pointer-events:none;opacity:0;white-space:nowrap;z-index:9;
+  transition:opacity .2s ease,left .2s ease,top .2s ease}
+.label.on{opacity:1}
+.label small{display:block;font-family:var(--hand);font-weight:400;font-size:14px;opacity:.75;white-space:nowrap}
+
+/* live class count, laid over the painted panel only when it disagrees */
+.livecount{position:absolute;display:none;align-items:center;justify-content:center;
+  background:linear-gradient(#F7FAFE,#EEF4FB);border-radius:9px;color:#09083f;font-family:var(--round);font-weight:800;
+  letter-spacing:-.5px;pointer-events:none;z-index:6}
+.livecount.on{display:flex}
+
+/* particles: notes and paint splats that fly off whatever was tapped */
+.spark{position:absolute;pointer-events:none;z-index:8;font-size:26px;line-height:1;
+  animation:fly 1.1s cubic-bezier(.2,.7,.4,1) forwards}
+@keyframes fly{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+  25%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.35) rotate(var(--rot))}}
+
+/* ── drag-to-explore hint (phones only) ─────────────────────────────────── */
+.hint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:20;background:#fffef8f2;
+  border-radius:40px;padding:9px 18px;font-weight:800;font-size:14px;box-shadow:0 4px 0 #d3bb8e,0 10px 24px #0b1c3355}
+@media (min-width:960px){.hint{display:none}}
+
+/* ── the two ways in, spelled out under the map ─────────────────────────── */
+.doors{max-width:1000px;margin:0 auto;padding:20px 14px 34px;display:grid;gap:14px;grid-template-columns:1fr}
+@media (min-width:640px){.doors{grid-template-columns:1fr 1fr}}
+@media (min-width:980px){.doors{grid-template-columns:repeat(3,1fr)}}
+.door{display:flex;align-items:center;gap:14px;text-decoration:none;color:#fff;border-radius:22px;padding:15px 18px;
+  background:linear-gradient(140deg,var(--a),var(--b));box-shadow:0 6px 0 #00000038,0 14px 30px #0006}
+.door .ic{flex:none;width:52px;height:52px;border-radius:50%;background:#ffffff2e;display:grid;place-items:center;font-size:27px}
+.door b{display:block;font-size:21px;line-height:1.1}
+.door span{display:block;font-family:var(--hand);font-size:16px;opacity:.92}
+.grown{max-width:1000px;margin:0 auto;padding:0 14px 30px;color:#dbe9f7;font-family:var(--hand);font-size:16px;text-align:center;line-height:1.5}
+.grown a{color:#fff}
+@media (prefers-reduced-motion: reduce){
+  .hs.gate::after{animation:none;opacity:.16}
+  .spark{animation-duration:.01s}
+}
+
+/* the sticker shelf, on the dark water below the map */
+.shelf{max-width:1000px;margin:0 auto;padding:6px 14px 26px}
+.shelf h3{font-family:var(--round);font-weight:800;font-size:19px;color:#EAF3FB;text-align:center;margin:0 0 10px}
+.shelf .stickerbook{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.shelf .sticker{background:#ffffff14;border-color:#ffffff33}
+.shelf .sticker.have{background:#FFFDF6;border-color:#F0D9A8}
+.shelf .sticker img{width:58px;height:58px}
+.shelf .sticker b{font-size:12px;color:#CFE0EE}
+.shelf .sticker.have b{color:#4A5680}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MY CREATIVE JOURNEY
+     The painted map is the interface. A transparent layer of hotspots sits
+     welded to it in the artwork's own pixel coordinates (see HOTSPOTS below),
+     so every class card, piano step and signpost is tappable, makes its own
+     sound, and leads into the right app — while the page still looks exactly
+     like the illustration.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="viewport" id="viewport">
+  <div class="stage" id="stage" role="application" aria-label="My Creative Journey map — Art World and Piano World">
+    <div class="label" id="label" aria-hidden="true"></div>
+    <div class="livecount" id="livecount" aria-hidden="true"></div>
+  </div>
+</div>
+<p class="hint" id="hint">Drag the map to explore →</p>
+
+<div class="bar" id="mutebar"></div>
+
+<!-- Where they were last time. Hidden until there is somewhere to go back to,
+     and always a sign the child taps rather than a redirect. -->
+<div id="resume" hidden></div>
+
+<div class="doors">
+  <a class="door" style="--a:#F2A03D;--b:#E2622F" href="/kids-adventure/art">
+    <span class="ic">🎨</span><span><b>Art World</b><span>Sketch · Paint · Create · Imagine</span></span>
+  </a>
+  <a class="door" style="--a:#4E7BD4;--b:#2B3F86" href="/kids-adventure/piano">
+    <span class="ic">🎹</span><span><b>Piano World</b><span>Play · Practise · Improve · Shine</span></span>
+  </a>
+  <a class="door" style="--a:#5FA463;--b:#2F6B45" href="/kids-adventure/study/">
+    <span class="ic">📚</span><span><b>Study Island</b><span>Reception · Year 1 · Year 2</span></span>
+  </a>
+  <a class="door" style="--a:#6BBE6E;--b:#2F7A3A" href="/kids-adventure/dino/">
+    <span class="ic">🦖</span><span><b>Dino World</b><span>Six games · six real dinosaur voices</span></span>
+  </a>
+</div>
+<section class="shelf">
+  <h3>My sticker book</h3>
+  <div id="shelf"></div>
+</section>
+<p class="grown">All three worlds run in the browser — nothing to install, no account, and a child's classes, artwork, stars and stickers stay on their own device.<br>Built by <a href="/">Soulful Intelligence Studios</a></p>
+
+<script src="/kids-adventure/kit/sound.js"></script>
+<script src="/kids-adventure/kit/juice.js"></script>
+<script src="/kids-adventure/kit/journey.js"></script>
+<script>
+(function () {
+  'use strict';
+  var MAPW = 1312, MAPH = 1199;
+  var SND = (window.KJA && window.KJA.sound) || null;
+  var JUICE = (window.KJA && window.KJA.juice) || null;
+  var stage = document.getElementById('stage');
+  var label = document.getElementById('label');
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ART = '/kids-adventure/art', PIANO = '/kids-adventure/piano', STUDY = '/kids-adventure/study/';
+
+  /* ── HOTSPOTS ───────────────────────────────────────────────────────────
+     x, y, w, h are pixels in the 1312 × 1199 artwork, measured from it.
+     kind: how it sounds. go: where it leads. */
+  var CLASSES = [                                   /* art island class cards */
+    [1, 187, 647, 88, 116, '25 Jun'], [2, 289, 679, 88, 116, '2 Jul'],
+    [3, 340, 566, 88, 116, '9 Jul'],  [4, 204, 505, 88, 116, '16 Jul'],
+    [5, 322, 415, 88, 116, '23 Jul'], [6, 186, 356, 88, 116, '28 Jul'],
+    [7, 272, 265, 88, 116, '6 Aug'],  [8, 397, 233, 88, 116, '13 Aug'],
+    [9, 506, 263, 88, 116, '21 Aug'], [10, 585, 326, 88, 116, '27 Aug'],
+    [11, 667, 388, 88, 116, '2 Sep']
+  ];
+  var LEVELS = [                                    /* piano island steps */
+    [1, 896, 726, 148, 96, 'Basics & Notes',            261.63],
+    [2, 918, 626, 154, 106, 'Dyno My Pet Dinosaur (p2)', 293.66],
+    [3, 930, 536, 154, 80, 'Rhythm & Timing',            329.63],
+    [4, 974, 436, 122, 88, 'New Songs',                  392.00],
+    [5, 1002, 344, 148, 80, 'Your Own Melody',           523.25]
+  ];
+  var STRIP_X = [233, 325, 411, 494, 577, 660, 743, 826, 909, 993, 1077];
+  var SPOTS = [
+    { id: 'home',  x: 25,   y: 20,  w: 58,  h: 58,  round: 1, kind: 'pop',   go: '/',   t: 'Home', s: 'Soulful Intelligence' },
+    { id: 'me',    x: 600,  y: 16,  w: 112, h: 112, round: 1, kind: 'shine', t: 'That’s you!', s: 'the artist of this journey' },
+    { id: 'dream', x: 106,  y: 40,  w: 168, h: 78,  kind: 'shine', t: 'Small steps… big dreams', s: 'one class at a time' },
+    { id: 'title', x: 432,  y: 126, w: 402, h: 92,  kind: 'shine', t: 'My Creative Journey', s: 'Art · Piano · Imagination · You!' },
+    { id: 'peak',  x: 404,  y: 168, w: 194, h: 262, kind: 'ding', go: STUDY, gate: 1,
+      t: 'Study Island →', s: 'Reception & KG · Year 1 · Year 2' },
+    { id: 'says',  x: 796,  y: 40,  w: 140, h: 96,  kind: 'shine', t: 'You create, you explore, you grow' },
+    { id: 'score', x: 1111, y: 22,  w: 182, h: 92,  kind: 'ding',  t: 'Total classes', s: 'tap to count them up' },
+    { id: 'artsign',  x: 238, y: 160, w: 116, h: 92, kind: 'wood',  go: ART,   gate: 1, t: 'Art World →', s: 'drawing & painting classes' },
+    { id: 'pianosign',x: 986, y: 158, w: 140, h: 94, kind: 'wood',  go: PIANO, gate: 1, t: 'Piano World →', s: 'five levels, then the song' },
+    { id: 'arttools', x: 40,  y: 424, w: 116, h: 104, kind: 'wood', go: ART,   t: 'Sketch · Paint · Create · Imagine' },
+    { id: 'pianotools', x: 1196, y: 496, w: 106, h: 116, kind: 'wood', go: PIANO, t: 'Play · Practise · Improve · Shine' },
+    { id: 'motto', x: 536, y: 806, w: 268, h: 128, kind: 'shine', t: 'Different tools… same magic', s: 'your creativity!' },
+    { id: 'boat',  x: 646, y: 636, w: 92,  h: 96,  kind: 'water', t: 'A little boat between two worlds' },
+    { id: 'bridge',x: 616, y: 574, w: 168, h: 74,  kind: 'wood',  t: 'The bridge joins both worlds' },
+    { id: 'artdino',  x: 132, y: 780, w: 132, h: 128, kind: 'roar', go: ART,   t: 'Rex the painter', s: 'open Art World' },
+    { id: 'pianodino',x: 1138,y: 760, w: 132, h: 112, kind: 'roar', go: PIANO, t: 'Dyno at the piano', s: 'open Piano World' },
+    { id: 'artjourney',  x: 22,  y: 972, w: 152, h: 108, kind: 'page', go: ART,   t: 'Art Class Journey' },
+    { id: 'pianojourney',x: 1146,y: 966, w: 156, h: 108, kind: 'page', go: PIANO, t: 'Piano Class Journey' }
+  ];
+  CLASSES.forEach(function (c) {
+    SPOTS.push({ id: 'class' + c[0], x: c[1], y: c[2], w: c[3], h: c[4], kind: 'splat', go: ART,
+      t: 'Class ' + c[0] + ' · ' + c[5], s: 'open it in Art World', pitch: 300 + c[0] * 26 });
+  });
+  LEVELS.forEach(function (l) {
+    SPOTS.push({ id: 'level' + l[0], x: l[1], y: l[2], w: l[3], h: l[4], kind: 'note', go: PIANO, tall: 1,
+      t: 'Level ' + l[0] + ' · ' + l[5], s: 'open it in Piano World', pitch: l[6] });
+  });
+  STRIP_X.forEach(function (cx, i) {
+    SPOTS.push({ id: 'strip' + (i + 1), x: cx - 38, y: 988, w: 76, h: 118, kind: 'page', go: ART,
+      t: 'Class ' + (i + 1) + ' · ' + CLASSES[i][5], s: 'open it in Art World', pitch: 320 + i * 24 });
+  });
+
+  /* ── sound: the shared engine in kit/sound.js does the synthesis now, so a
+        tap on the map and a note in the piano game are the same instrument ── */
+  var SFX = {
+    note:  function (p) { if (SND) SND.piano(p || 330, 0, 1.1, 0.24); },
+    splat: function (p) { if (SND) SND.sfx.splat(p); },
+    wood:  function () { if (SND) SND.sfx.wood(); },
+    page:  function () { if (SND) SND.sfx.page(); },
+    pop:   function () { if (SND) SND.sfx.pop(); },
+    ding:  function () { if (SND) SND.sfx.star(); },
+    shine: function () { if (SND) SND.sfx.magic(); },
+    water: function () { if (SND) SND.sfx.water(); },
+    roar:  function () { if (SND) SND.sfx.roar(); },
+    chord: function () { if (SND) SND.chord([261.63, 329.63, 392, 523.25], 0, 1.6, 0.2); }
+  };
+  function tone(f, d, dur, vol, type) { if (SND) SND.osc({ f: f, when: d, dur: dur, vol: vol, type: type }); }
+
+  /* ── particles ─────────────────────────────────────────────────────────── */
+  var GLYPH = { note: ['♪', '♫', '♩'], splat: ['✦', '✿', '❀'],
+    shine: ['✨', '⭐', '✦'], ding: ['⭐', '✨'], page: ['✦'],
+    wood: ['✦'], pop: ['✨'], water: ['❀'], roar: ['✦', '✨'] };
+  var HUE = { note: '#2B3F86', splat: '#E2622F', shine: '#F2B33D', ding: '#F2B33D', page: '#7a5a2a',
+    wood: '#8A6440', pop: '#2F7FD1', water: '#2FA8D1', roar: '#43A857' };
+  function burst(px, py, kind) {
+    if (SND) SND.haptic(12);
+    if (reduce) return;
+    var glyphs = GLYPH[kind] || GLYPH.shine, n = kind === 'note' || kind === 'splat' ? 5 : 4;
+    for (var i = 0; i < n; i++) {
+      var s = document.createElement('span');
+      s.className = 'spark';
+      s.textContent = glyphs[i % glyphs.length];
+      s.style.color = HUE[kind] || '#F2B33D';
+      s.style.left = (px / MAPW * 100) + '%';
+      s.style.top = (py / MAPH * 100) + '%';
+      s.style.setProperty('--dx', (Math.random() * 90 - 45).toFixed(0) + 'px');
+      s.style.setProperty('--dy', (-45 - Math.random() * 60).toFixed(0) + 'px');
+      s.style.setProperty('--rot', (Math.random() * 60 - 30).toFixed(0) + 'deg');
+      s.style.animationDelay = (i * 0.05) + 's';
+      stage.appendChild(s);
+      setTimeout(function (n) { return function () { if (n.parentNode) n.parentNode.removeChild(n); }; }(s), 1400);
+    }
+  }
+
+  /* ── build the layer ───────────────────────────────────────────────────── */
+  function pct(v, total) { return (v / total * 100) + '%'; }
+  SPOTS.forEach(function (sp) {
+    var node = document.createElement(sp.go ? 'a' : 'button');
+    node.className = 'hs' + (sp.round ? ' round' : '') + (sp.tall ? ' tall' : '') + (sp.gate ? ' gate' : '');
+    node.id = 'hs-' + sp.id;
+    if (sp.go) { node.href = sp.go; } else { node.type = 'button'; }
+    node.style.left = pct(sp.x, MAPW); node.style.top = pct(sp.y, MAPH);
+    node.style.width = pct(sp.w, MAPW); node.style.height = pct(sp.h, MAPH);
+    node.setAttribute('aria-label', sp.t.replace(/→/g, '') + (sp.s ? ' — ' + sp.s : ''));
+    node.dataset.kind = sp.kind; node.dataset.pitch = sp.pitch || '';
+    node.dataset.t = sp.t; node.dataset.s = sp.s || '';
+    node.dataset.cx = sp.x + sp.w / 2; node.dataset.cy = sp.y + sp.h / 2;
+    stage.appendChild(node);
+  });
+
+  function showLabel(sp) {
+    label.innerHTML = sp.dataset.t + (sp.dataset.s ? '<small>' + sp.dataset.s + '</small>' : '');
+    var cx = Math.min(Math.max(+sp.dataset.cx, 150), MAPW - 150), cy = +sp.dataset.cy;
+    /* Anything near the top would hang its label off the artwork, so those
+       labels drop below their anchor instead. */
+    label.style.transform = cy < 190 ? 'translate(-50%,24%)' : 'translate(-50%,-124%)';
+    label.style.left = (cx / MAPW * 100) + '%';
+    label.style.top = (cy / MAPH * 100) + '%';
+    label.classList.add('on');
+    clearTimeout(showLabel.t);
+    showLabel.t = setTimeout(function () { label.classList.remove('on'); }, 2400);
+  }
+  function play(kind, pitch) { (SFX[kind] || SFX.pop)(pitch ? +pitch : 0); }
+
+  stage.addEventListener('pointerdown', function (e) {
+    var sp = e.target.closest('.hs'); if (!sp) return;
+    play(sp.dataset.kind, sp.dataset.pitch);
+    burst(+sp.dataset.cx, +sp.dataset.cy, sp.dataset.kind);
+    showLabel(sp);
+  });
+  /* A link must not navigate before its sound is heard. */
+  stage.addEventListener('click', function (e) {
+    var a = e.target.closest('a.hs'); if (!a) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+    e.preventDefault();
+    setTimeout(function () { window.location.href = a.getAttribute('href'); }, 230);
+  });
+  stage.addEventListener('keydown', function (e) {
+    var sp = e.target.closest('.hs'); if (!sp) return;
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    play(sp.dataset.kind, sp.dataset.pitch);
+    burst(+sp.dataset.cx, +sp.dataset.cy, sp.dataset.kind);
+    showLabel(sp);
+  });
+  stage.addEventListener('mouseover', function (e) {
+    var sp = e.target.closest('.hs'); if (!sp || !matchMedia('(hover:hover)').matches) return;
+    showLabel(sp);
+  });
+
+  /* Tapping the score panel counts the classes up out loud. */
+  var scoreEl = document.getElementById('hs-score');
+  if (scoreEl) scoreEl.addEventListener('click', function () {
+    var done = live().done;
+    for (var i = 0; i < Math.min(done, 12); i++) tone(392 + i * 32, 0.09 * i, 0.28, 0.13, 'sine');
+    SFX.chord();
+  });
+  /* Level 5 is a whole melody, not one note. */
+  var l5 = document.getElementById('hs-level5');
+  if (l5) l5.addEventListener('pointerdown', function () { SFX.chord(); });
+
+  /* ── live class count ──────────────────────────────────────────────────
+     Art Adventure keeps the real journey in localStorage on this same
+     origin, so the painted "11 / 48" can tell the truth. The overlay is
+     drawn ONLY when the real numbers differ from the painted ones — a
+     child whose journey still matches sees the untouched artwork. */
+  function live() {
+    var out = { done: 11, total: 48 };
+    try {
+      var k = JSON.parse(localStorage.getItem('aj2:kids') || 'null');
+      if (!k || !k.kids || !k.kids.length) return out;
+      var kid = null, i;
+      for (i = 0; i < k.kids.length; i++) if (k.kids[i].id === k.cur) kid = k.kids[i];
+      kid = kid || k.kids[0];
+      var cls = JSON.parse(localStorage.getItem('aj2:cls:' + kid.id) || '[]');
+      out.total = kid.total || 48;
+      out.done = cls.length;
+    } catch (e) { /* private mode, or nothing saved yet */ }
+    return out;
+  }
+  var lc = document.getElementById('livecount'), L = live();
+  if (L.done !== 11 || L.total !== 48) {
+    lc.textContent = L.done + ' / ' + L.total;
+    lc.style.left = pct(1154, MAPW); lc.style.top = pct(52, MAPH);
+    lc.style.width = pct(128, MAPW); lc.style.height = pct(38, MAPH);
+    lc.style.fontSize = 'clamp(13px,2.1vw,27px)';
+    lc.classList.add('on');
+  }
+
+  /* ── the star jar, the buddy and the way back in ───────────────────────
+     The map is the only screen that asks "who is coming with you?", and it is
+     the screen that offers yesterday's place back. Everything else just
+     carries the jar. */
+  var JOURNEY = (window.KJA && window.KJA.journey) || null;
+  if (JOURNEY) {
+    JOURNEY.stars.jar();
+    JOURNEY.visit.bar('#resume', { notHere: true });
+    /* asked once, after a beat — a picker in a child's face before the map has
+       even finished painting is a wall, not a welcome */
+    setTimeout(function () { JOURNEY.buddy.ask(); }, 1400);
+    JOURNEY.visit.mark('map', 'The journey map');
+  }
+
+  /* ── the shared toolbar, and the sticker shelf under the map ───────────── */
+  if (window.KJA && window.KJA.ui) window.KJA.ui.toolbar('#mutebar');
+  if (JUICE) {
+    var shelf = document.getElementById('shelf');
+    if (shelf) shelf.innerHTML = JUICE.stickers.bookHTML();
+  }
+
+  /* ── phones start in the middle of the map, where the bridge is ───────── */
+  var vp = document.getElementById('viewport');
+  function centre() {
+    if (vp.scrollWidth > vp.clientWidth) vp.scrollLeft = (vp.scrollWidth - vp.clientWidth) / 2;
+  }
+  centre(); addEventListener('resize', centre);
+  var hint = document.getElementById('hint');
+  vp.addEventListener('scroll', function () { hint.style.display = 'none'; }, { once: true });
+  setTimeout(function () { hint.style.display = 'none'; }, 7000);
+})();
+</script>
+</body>
+</html>

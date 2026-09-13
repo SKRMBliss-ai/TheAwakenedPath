@@ -74,6 +74,7 @@ export function GameShell({
   useEffect(() => () => sound.stopAll(), []);
 
   const finishPlay = () => {
+    sound.play('levelUp');
     // An off-screen game's noticing happens later, in real life — asking
     // "what did you catch?" now would be asking about something that hasn't
     // happened yet. Those games go straight to their closing line.

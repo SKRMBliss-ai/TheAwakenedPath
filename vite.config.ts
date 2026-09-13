@@ -50,7 +50,10 @@ export default defineConfig({
         // /twinsouls is a separate app (the Twin Souls portfolio) served from
         // this same hosting under a subpath — never precache its bundle into the
         // Mind Gym service worker (keeps the SW lean, respects mobile-load).
-        globIgnores: ['twinsouls/**', 'habitquest2026/**'],
+        // /kids-adventure is the same kind of thing: a static hub plus the Art
+        // Adventure app, one ~300KB single-file page that has no business in
+        // the Mind Gym precache.
+        globIgnores: ['twinsouls/**', 'habitquest2026/**', 'kids-adventure/**'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
@@ -87,7 +90,8 @@ export default defineConfig({
         // keeps offline and sub-route navigation working exactly as before.
         //
         // The urlPattern carries what navigateFallbackDenylist used to: /api
-        // (Cloud-Function rewrites), /twinsouls and /habitquest2026 (separate
+        // (Cloud-Function rewrites), /twinsouls, /habitquest2026 and
+        // /kids-adventure (separate
         // apps on this host — they must reach the network, not the Mind Gym
         // shell), and /.well-known (domain-verification files such as Apple
         // Pay's, which must be the real file rather than the app shell). Those
@@ -102,7 +106,7 @@ export default defineConfig({
           {
             urlPattern: ({ request, url }: { request: Request; url: URL }) =>
               request.mode === 'navigate' &&
-              !/^\/(?:api\/|twinsouls|habitquest2026|\.well-known\/)/.test(url.pathname),
+              !/^\/(?:api\/|twinsouls|habitquest2026|kids-adventure|\.well-known\/)/.test(url.pathname),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'app-shell',

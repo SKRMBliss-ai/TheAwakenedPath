@@ -5,6 +5,7 @@ import { COMPANIONS } from '../../../kids/data';
 import { CHROME, FONT } from '../ui/chrome';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
+import { useSpoken } from '../ui/useSpoken';
 
 /**
  * THE FIRST NIGHT — what a child meets before anything else.
@@ -46,6 +47,19 @@ export function FirstNight() {
   const [avatar, setAvatar] = useState<string | null>(null);
 
   const lit = beat !== 'dark';
+
+  /*
+    THE FIRST THING A CHILD MEETS, SAID OUT LOUD. Every word here lands
+    before a six-year-old has been asked to read anything, and this is the
+    one screen where failing to read it means failing to understand what has
+    happened at all — that somebody is in the dark and wants the light on.
+  */
+  useSpoken(
+    beat === 'dark' ? 'Is somebody there? I can\u2019t find the light. I\u2019m not scared. I\u2019d just rather it was on.'
+    : beat === 'lit' ? 'Oh! Oh, that\u2019s much better. You did that. I\u2019ve been sitting here for ages.'
+    : beat === 'name' ? 'What do I call you?'
+    : name.trim() ? `Right. ${name.trim()}. Who else is coming?` : 'Fair enough. Who else is coming?',
+  );
 
   const turnOnTheLight = () => {
     if (lit) return;
@@ -113,10 +127,11 @@ export function FirstNight() {
                   alt=""
                   aria-hidden
                   draggable={false}
-                  className="h-16 w-16 select-none"
+                  className="select-none"
                   animate={{ opacity: [0.13, 0.26, 0.13], y: [0, -5, 0] }}
                   transition={{ repeat: Infinity, duration: 3.4, ease: 'easeInOut' }}
-                  style={{ filter: 'brightness(0.35)' }}
+                  /* Height only, width auto. It was h-N w-N, i.e. a ~240x290 drawing forced into a square — squashed flat, which is most of what made him look cheap. */
+                  style={{ height: 76, width: 'auto', filter: 'brightness(0.35)' }}
                 />
                 <p
                   className="text-[19px] font-extrabold leading-snug"
@@ -165,8 +180,8 @@ export function FirstNight() {
                   alt=""
                   aria-hidden
                   draggable={false}
-                  className="h-24 w-24 select-none"
-                  style={{ filter: 'drop-shadow(0 10px 22px rgba(0,0,0,0.55))' }}
+                  className="select-none"
+                  style={{ height: 112, width: 'auto', filter: 'drop-shadow(0 10px 22px rgba(0,0,0,0.55))' }}
                 />
                 <p className="text-[22px] font-extrabold leading-snug" style={{ color: CHROME.text }}>
                   Oh! Oh, that’s much better.
@@ -192,7 +207,8 @@ export function FirstNight() {
                   alt=""
                   aria-hidden
                   draggable={false}
-                  className="h-16 w-16 select-none"
+                  className="select-none"
+                  style={{ height: 76, width: 'auto' }}
                 />
                 <p className="text-[21px] font-extrabold leading-snug" style={{ color: CHROME.text }}>
                   What do I call you?

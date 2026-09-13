@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+<meta name="theme-color" content="#FCF4E5" />
+<title>My Piano Adventure | Kids Learning Adventure</title>
+<meta name="description" content="My Piano Adventure — five levels from middle C to a tune of your own. Tap the keys on any card to hear the real notes, then open Song Adventure to play." />
+<link rel="icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:title" content="My Piano Adventure" />
+<meta property="og:description" content="Five piano levels for children — tap the keys, hear the notes, play the song." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.skrmblissai.in/kids-adventure/piano" />
+<link rel="stylesheet" href="/kids-adventure/kit/adventure.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MY PIANO ADVENTURE
+     The other half of the journey, on the same paper as Art World: same cards,
+     same painted tapes, same bead trail, same wooden signs. What belongs only
+     to this world is the keys — every card carries a small playable keyboard
+     that sounds the real notes of its level — and the way a finished level
+     fills a bead on the trail. The game itself lives in Song Adventure; this
+     screen is the journey through it.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="app">
+  <div class="deco" aria-hidden="true">
+    <i class="sm" style="left:-6px;top:34px;width:140px;height:184px;background-image:url('/kids-adventure/kit/dino-green.webp')"></i>
+    <i class="sm" style="right:-4px;top:44px;width:117px;height:115px;background-image:url('/kids-adventure/kit/ptero.webp')"></i>
+    <i style="left:-14px;top:2px;width:66px;height:126px;background-image:url('/kids-adventure/kit/splat-c.webp');opacity:.85"></i>
+    <i style="right:34px;top:-6px;width:124px;height:76px;background-image:url('/kids-adventure/kit/splat-b.webp');opacity:.85"></i>
+    <i class="sm" style="left:-18px;top:44%;width:53px;height:72px;background-image:url('/kids-adventure/kit/leaf-b.webp')"></i>
+    <i class="sm" style="right:-16px;top:38%;width:106px;height:63px;background-image:url('/kids-adventure/kit/splat-d.webp');opacity:.8"></i>
+    <i class="sm" style="left:-16px;top:66%;width:90px;height:108px;background-image:url('/kids-adventure/kit/splat-a.webp');opacity:.8"></i>
+    <i class="sm" style="right:-12px;bottom:120px;width:118px;height:148px;background-image:url('/kids-adventure/kit/dino-blue.webp')"></i>
+    <i class="sm" style="left:-24px;bottom:-8px;width:138px;height:116px;background-image:url('/kids-adventure/kit/mountains.webp')"></i>
+    <i class="sm" style="left:96px;bottom:-16px;width:266px;height:108px;background-image:url('/kids-adventure/kit/greenery.webp')"></i>
+  </div>
+
+  <a class="back" href="/kids-adventure" aria-label="Back to My Creative Journey">‹</a>
+  <div id="main"></div>
+  <p class="chapter">Every note you learn<br>is a new line in your song</p>
+  <div class="mutebar" id="mutebar"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="/kids-adventure/kit/sound.js"></script>
+<script src="/kids-adventure/kit/juice.js"></script>
+<script src="/kids-adventure/piano/songbook.js"></script>
+<script src="/kids-adventure/kit/journey.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return [].slice.call(document.querySelectorAll(s)); };
+  var TAPES = ['#3880C0','#E06098','#509858','#F89030','#A070C0','#50A8B0','#F0B828'];
+  var GAME = '/kids-adventure/piano/play/';
+
+  /* Five levels, the same five the journey map shows on the piano island. */
+  /* The studio's own three pieces. The shelf needs the icon and the word a
+     song counts its pieces in; everything that could contradict the notes —
+     how many parts there are, which keys it uses — is read from the shared
+     songbook instead of written out again here, because written out again
+     here is exactly how this shelf came to advertise Yankee Doodle as
+     "C, D, E and F" while the song itself reached down to G. */
+  var BOOK = (window.KJA && window.KJA.songbook) || null;
+  var SONGS = [
+    { id:'dyno',   icon:'🦖',  title:'Dyno My Pet Dinosaur', sub:'Two hands · four measures',        parts:4, word:'measures' },
+    { id:'clock',  icon:'🕰️', title:'The Clock Song',        sub:'Right hand · C, E and G · lyrics', parts:7, word:'parts' },
+    { id:'yankee', icon:'🎩',  title:'Yankee Doodle',         sub:'Right hand · four rows',           parts:4, word:'rows' }
+  ].map(function (s) {
+    var real = BOOK && BOOK.get(s.id);
+    if (real) { s.sub = real.sub; s.parts = real.units.length; s.title = real.title; }
+    return s;
+  });
+  var LEVELS = [
+    { n:1, name:'Basics & Notes',   note:'Find middle C, then say hello to every white key.',
+      keys:['C','D','E','F','G'], lit:[0],       f:[261.63] },
+    { n:2, name:'Dyno My Pet Dinosaur', note:'Your first whole song — one hand, five notes, one very patient dinosaur.',
+      keys:['C','D','E','F','G'], lit:[0,1,2],   f:[261.63,293.66,329.63] },
+    { n:3, name:'Rhythm & Timing',  note:'Clap it, count it, then play it in time.',
+      keys:['C','D','E','F','G'], lit:[0,2,4],   f:[261.63,329.63,392.00] },
+    { n:4, name:'New Songs',        note:'Three new tunes to learn by heart.',
+      keys:['C','D','E','F','G'], lit:[1,2,3,4], f:[293.66,329.63,349.23,392.00] },
+    { n:5, name:'Your Own Melody',  note:'Make up a tune nobody has ever played before. Yours.',
+      keys:['C','D','E','F','G'], lit:[0,1,2,3,4], f:[261.63,293.66,329.63,349.23,392.00] }
+  ];
+  var FREQ = { C:261.63, D:293.66, E:329.63, F:349.23, G:392.00 };
+
+  /* ── sound and juice from the shared kit ──────────────────────────────── */
+  var SND = (window.KJA && window.KJA.sound) || null;
+  var JUICE = (window.KJA && window.KJA.juice) || null;
+  function note(f) { if (SND) SND.piano(f, 0, 1.05, 0.24); }
+  function melody(fs) { (fs || []).forEach(function (f, i) { if (SND) SND.piano(f, i * 0.17, 0.7, 0.2); }); }
+  function ding() { if (SND) SND.sfx.star(); }
+  function pop() { if (SND) { SND.sfx.tap(); SND.haptic(10); } }
+  function confetti(n) { if (JUICE) JUICE.confetti(n); }
+
+  /* ── which levels are finished, kept per device ───────────────────────── */
+  var prog = { done: [], stars: {}, tunes: [], songs: {} };
+  try {
+    var raw = JSON.parse(localStorage.getItem('kja:piano') || 'null');
+    if (Array.isArray(raw)) prog.done = raw;                     /* the older format */
+    else if (raw && typeof raw === 'object') {
+      prog = { done: raw.done || [], stars: raw.stars || {}, tunes: raw.tunes || [], songs: raw.songs || {} };
+    }
+  } catch (e) {}
+  var done = prog.done;
+  function save() { prog.done = done; try { localStorage.setItem('kja:piano', JSON.stringify(prog)); } catch (e) {} }
+  function songsDone() { return Object.keys(prog.songs).filter(function (k) { return prog.songs[k].done; }).length; }
+  function isDone(n) { return done.indexOf(n) >= 0; }
+  function starsOf(n) {
+    var got = prog.stars[n] || 0, out = '';
+    for (var i = 1; i <= 3; i++) out += i <= got ? '★' : '☆';
+    return out;
+  }
+
+  function toast(t) {
+    var el = $('#toast'); el.textContent = t; el.classList.add('show');
+    clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('show'); }, 2200);
+  }
+
+  /* ── the bead trail, one bead per level ───────────────────────────────── */
+  function trailSVG() {
+    var total = LEVELS.length, W = 600, y = 23, x0 = 40, x1 = W - 40, gap = (x1 - x0) / (total - 1);
+    var s = '<svg viewBox="0 0 ' + W + ' 46" preserveAspectRatio="none" role="img" aria-label="' +
+      done.length + ' of ' + total + ' levels done"><path d="M' + x0 + ' ' + y + 'H' + x1 +
+      '" stroke="#E7D2AC" stroke-width="9" stroke-linecap="round"/>';
+    for (var i = 0; i < total; i++) {
+      var cx = x0 + gap * i, on = isDone(i + 1), c = TAPES[i % TAPES.length];
+      s += on
+        ? '<circle cx="' + cx + '" cy="' + y + '" r="15" fill="' + c + '" stroke="#fff" stroke-width="3"/>' +
+          '<path transform="translate(' + cx + ' ' + y + ') scale(.62)" d="M0-11 3.4-3.5 11.6-3.3 5 2 7.1 10 0 5.3-7.1 10-5 2-11.6-3.3-3.4-3.5Z" fill="#FFE9A8"/>'
+        : '<circle cx="' + cx + '" cy="' + y + '" r="11" fill="#FFFCF2" stroke="#E0CFAB" stroke-width="2.5"/>';
+    }
+    return s + '</svg>';
+  }
+
+  function titleHTML() {
+    var word = 'PIANO ADVENTURE', out = '', j = 0;
+    for (var i = 0; i < word.length; i++) {
+      var ch = word[i];
+      if (ch === ' ') { out += '<span style="width:.34em"></span>'; continue; }
+      out += '<span style="color:' + TAPES[j % TAPES.length] + ';--r:' + ((j * 53) % 7 - 3) + 'deg">' + ch + '</span>';
+      j++;
+    }
+    return '<p class="ptitle"><span class="my">MY</span><span class="pbig" style="--chars:' +
+      word.replace(/ /g, '').length + '">' + out + '</span></p>';
+  }
+
+  function keysHTML(l) {
+    var c = TAPES[(l.n - 1) % TAPES.length];
+    var W = 5 * 46 + 12, H = 150;
+    var h = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="Play the notes of level ' + l.n + '">';
+    l.keys.forEach(function (k, i) {                       /* white keys */
+      var x = 6 + i * 46, on = l.lit.indexOf(i) >= 0;
+      h += '<g class="key" data-note="' + k + '" tabindex="0" role="button" style="--c:' + c + '" aria-label="Note ' + k + '">' +
+        '<rect class="w" x="' + x + '" y="8" width="42" height="132" rx="7" fill="#fff" stroke="#002058" stroke-width="3"/>' +
+        (on ? '<text x="' + (x + 21) + '" y="126" text-anchor="middle" font-family="Baloo 2,sans-serif" ' +
+              'font-weight="800" font-size="17" fill="' + c + '">' + k + '</text>' : '') + '</g>';
+    });
+    [0, 1, 3].forEach(function (i, j) {                    /* black keys on top */
+      var x = 6 + i * 46 + 31, nn = ['D', 'E', 'G'][j];
+      h += '<g class="key" data-note="' + nn + '" tabindex="0" role="button" style="--c:' + c + '" aria-label="Black key ' + nn + '">' +
+        '<rect class="k" x="' + x + '" y="8" width="26" height="80" rx="5" fill="#002058"/></g>';
+    });
+    return h + '</svg>';
+  }
+
+  function cardHTML(l) {
+    var d = isDone(l.n), tilt = ((l.n * 37) % 5 - 2) * 0.8;
+    return '<article class="card' + (d ? '' : (done.length === l.n - 1 ? ' now' : '')) + '" style="--tilt:' + tilt + 'deg">' +
+      (done.length === l.n - 1 ? '<span class="crown">👑</span><span class="here">You are here!</span>' : '') +
+      '<span class="tape" style="--c:' + TAPES[(l.n - 1) % TAPES.length] + '">Level ' + l.n + '</span>' +
+      '<div class="frame kb">' + keysHTML(l) + '</div>' +
+      '<p class="lvlname">' + l.name + '</p>' +
+      '<p class="lvlnote">' + l.note + '</p>' +
+      '<div class="lvlfoot"><span class="cls"><s>' + starsOf(l.n) + '</s> ' + (d ? 'Done' : 'Level ' + l.n) + '</span>' +
+      '<span><a class="play" href="' + GAME + '?level=' + l.n + '" data-melody="' + l.n + '">Play →</a>' +
+      '<button class="tick ' + (d ? 'on' : '') + '" data-done="' + l.n + '" aria-pressed="' + d + '">' +
+      (d ? '✓ Learned' : 'Mark learned') + '</button></span></div></article>';
+  }
+
+  function songCard(s, i) {
+    var sp = prog.songs[s.id] || { parts: [], done: false };
+    var learned = (sp.parts || []).length, pct = Math.round(learned / s.parts * 100);
+    return '<article class="card" style="--tilt:' + ((i - 1) * 0.7) + 'deg">' +
+      (sp.done ? '<span class="crown">👑</span>' : '') +
+      '<span class="tape" style="--c:' + TAPES[(i + 3) % TAPES.length] + '">' + s.icon + ' Song</span>' +
+      '<div class="frame songface">' + s.icon + '</div>' +
+      '<p class="lvlname">' + s.title + '</p>' +
+      '<p class="lvlnote">' + s.sub + '<br>' +
+        (sp.done ? 'Whole piece learned ★★★'
+                 : learned ? learned + ' of ' + s.parts + ' ' + s.word + ' learned'
+                           : 'Not started yet') + '</p>' +
+      '<div class="pbar" aria-hidden="true"><span style="width:' + pct + '%"></span></div>' +
+      '<div class="lvlfoot"><span class="cls"><s>' + (sp.done ? '★★★' : '☆☆☆') + '</s></span>' +
+        '<span><a class="play" href="' + GAME + '?song=' + s.id + '">' + (learned ? 'Carry on →' : 'Open →') + '</a></span></div>' +
+    '</article>';
+  }
+  function render() {
+    document.documentElement.style.setProperty('--kid', TAPES[0]);
+    $('#main').innerHTML =
+      '<header>' + titleHTML() +
+      '<p class="count">' + done.length + ' <b>/</b> ' + LEVELS.length + ' levels</p>' +
+      '<p class="togo">' + (done.length >= LEVELS.length
+        ? 'Every level learned — now play whatever you like 🎹'
+        : (LEVELS.length - done.length) + ' to go before you write your own song') + '</p>' +
+      '<div class="trail"><span class="sign">Level 1</span>' + trailSVG() +
+      '<span class="sign r">Level 5</span><span class="peak"></span></div></header>' +
+      '<nav class="pills"><a class="pill" style="--c:var(--t7)" href="' + GAME + '">🎹 Play the songs ›</a>' +
+      '<a class="pill" style="--c:var(--t6)" href="/kids-adventure/art">🎨 Art World ›</a>' +
+      '<a class="pill" style="--c:var(--t3)" href="/kids-adventure/study/">📚 Study Island ›</a></nav>' +
+      '<div class="journey"><div class="sandpath"></div>' + rowsHTML() + '</div>' +
+      '<h2>The songbook</h2><p class="sub">Three whole pieces — hear them, then learn them a part at a time</p>' +
+      '<div class="cards songshelf" style="--per:' + (innerWidth >= 860 ? 3 : 1) + '">' +
+        SONGS.map(songCard).join('') + '</div>' +
+      buddyLine('is practising with you');
+    drawPath();
+    requestAnimationFrame(drawPath);
+    setTimeout(drawPath, 400);
+  }
+
+  /* Two levels to a row once there is room, one on a phone — the same sand
+     path snakes through them either way. */
+  function perRow() { return innerWidth >= 860 ? 2 : 1; }
+  function rowsHTML() {
+    var per = perRow(), out = '';
+    for (var i = 0; i < LEVELS.length; i += per) {
+      out += '<div class="row"><div class="cards" style="--per:' + per + '">' +
+        LEVELS.slice(i, i + per).map(cardHTML).join('') + '</div></div>';
+    }
+    return out;
+  }
+
+  /* The same measured sand path Art World uses. */
+  function drawPath() {
+    var wrap = $('.journey'); if (!wrap) return;
+    var rows = $$('.row'); if (!rows.length) return;
+    var W = wrap.clientWidth, H = wrap.clientHeight, pad = 26, turn = 46;
+    var ys = rows.map(function (r) { return r.offsetTop + r.offsetHeight / 2; });
+    var d = '', wob = function (y, i) { return y + Math.sin(i * 1.7) * 7; };
+    ys.forEach(function (y, i) {
+      var ltr = i % 2 === 0, x0 = ltr ? pad : W - pad, x1 = ltr ? W - pad : pad;
+      if (!i) d += 'M' + x0.toFixed(0) + ' ' + y.toFixed(0);
+      for (var k = 1; k <= 4; k++) {
+        var px = x0 + (x1 - x0) * k / 4, cx = x0 + (x1 - x0) * (k - 0.5) / 4;
+        d += ' Q' + cx.toFixed(0) + ' ' + wob(y, i * 4 + k).toFixed(0) + ' ' + px.toFixed(0) + ' ' + y.toFixed(0);
+      }
+      if (i < ys.length - 1) {
+        var ny = ys[i + 1], edge = ltr ? W - pad + turn : pad - turn;
+        d += ' C' + edge + ' ' + y + ' ' + edge + ' ' + ny + ' ' + x1.toFixed(0) + ' ' + ny.toFixed(0);
+      }
+    });
+    wrap.querySelector('.sandpath').innerHTML =
+      '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" fill="none" aria-hidden="true">' +
+      '<path d="' + d + '" stroke="#DFC091" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="' + d + '" stroke="#EDD9B0" stroke-width="88" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="' + d + '" stroke="#F6E9CE" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="' + d + '" stroke="#DCC49A" stroke-width="6" stroke-dasharray="5 30" stroke-linecap="round" opacity=".85"/>' +
+      '</svg>';
+  }
+
+  /* ── input ────────────────────────────────────────────────────────────── */
+  document.addEventListener('click', function (e) {
+    var k = e.target.closest('.key');
+    if (k) {
+      note(FREQ[k.dataset.note] || 261.63);
+      k.classList.add('hit');
+      setTimeout(function () { k.classList.remove('hit'); }, 180);
+      return;
+    }
+    var play = e.target.closest('.play');
+    if (play) {
+      /* Level cards carry a melody to hum on the way out; song cards do not. */
+      var lv = LEVELS[+play.dataset.melody - 1];
+      if (lv && lv.f) melody(lv.f); else pop();
+      return;
+    }
+    var t = e.target.closest('[data-done]');
+    if (t) {
+      var n = +t.dataset.done;
+      if (isDone(n)) { done = done.filter(function (x) { return x !== n; }); pop(); }
+      else {
+        done = done.concat(n);
+        if (SND) SND.sfx.levelUp();
+        confetti(40);
+        if (JUICE) {
+          JUICE.burstAt(t, 12);
+          if (done.length === LEVELS.length) JUICE.stickers.earn('piano-all-levels', 'All five piano levels learned');
+        }
+        toast(n === LEVELS.length ? 'Every level learned! 🎹' : 'Level ' + n + ' learned!');
+      }
+      save(); render();
+      return;
+    }
+
+  });
+  function paintMute() { if (window.KJA && window.KJA.ui) window.KJA.ui.toolbar('#mutebar'); }
+  var JY = (window.KJA && window.KJA.journey) || null;
+  /* the same companion every other island shows, so picking one once on the
+     map means meeting them again here rather than only in Dino World */
+  function buddyLine(verb) {
+    if (!JY) return '';
+    var b = JY.buddy.chosen(); if (!b) return '';
+    return '<p class="sub buddyline">' + JY.buddy.face(b, 30) + ' <b>' + b.name + '</b> ' + verb + '</p>';
+  }
+  if (JY) JY.visit.mark('piano', 'Piano World');
+
+  var rz, lastPer = perRow();
+  addEventListener('resize', function () {
+    clearTimeout(rz);
+    rz = setTimeout(function () {
+      if (perRow() !== lastPer) { lastPer = perRow(); render(); } else drawPath();
+    }, 180);
+  });
+
+  render(); paintMute();
+})();
+</script>
+</body>
+</html>

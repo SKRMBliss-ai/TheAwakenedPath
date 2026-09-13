@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CHROME, FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
-import { chirpySprite } from '../ui/sprites';
 import { agoLabel } from '../kit/cases';
 import { markAsked, type ChirpyRecollection } from '../kit/chirpyMemory';
 import * as sound from '../kit/sound';
+import { useSpoken } from '../ui/useSpoken';
 
 /**
  * "YOU TOLD ME ABOUT THIS. IT WAS AGES AGO."
@@ -38,6 +38,16 @@ export function ChirpyRemembers({
 
   const accent = '#8FD9C4';
 
+  /* THEIR OWN WORDS, READ BACK. The whole moment rests on recognising a
+     sentence they said weeks ago, which is precisely what a child who reads
+     slowly would miss on a card. */
+  useSpoken(answered
+    ? (answered === recollection.guess
+        ? `${answered}. I did remember, then. I don\u2019t always.`
+        : `${answered}. Not ${recollection.guess.toLowerCase()} \u2014 ${answered.toLowerCase()}. I\u2019ll keep it right this time.`)
+    : `You told me about this, ${agoLabel(recollection.day)}. ${recollection.quote}. ` +
+      `You were ${recollection.guess.toLowerCase()} about it, weren\u2019t you? I think that was it.`);
+
   const answer = (feeling: string) => {
     if (answered) return;
     sound.play('discovery');
@@ -67,17 +77,20 @@ export function ChirpyRemembers({
         fontFamily: FONT,
       }}
     >
-      <div className="flex items-start gap-3">
-        <img
-          src={chirpySprite(answered ? 'hopeful' : 'curious')}
-          alt=""
-          aria-hidden
-          draggable={false}
-          className="mt-0.5 h-11 w-11 shrink-0 select-none"
-          style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}
-        />
+      <div>
+        {/* THE SMALL CHIRPY IS GONE FROM THE HUB CARDS.
+              He is drawn at roughly 240x290, and every one of these cards was
+              cramming him into a 44px SQUARE — squashed on one axis and
+              downscaled to a fifth on the other, which is what made him look
+              cheap. He still has his face where he is actually the subject
+              and large enough to hold it (HelpChirpy, FirstNight, the season
+              curtain); on a text card a legible name in his own colour does
+              the same job without the picture doing him harm. */}
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.12em]" style={{ color: accent }}>
+          Chirpy remembers
+        </p>
 
-        <div className="min-w-0 flex-1">
+        <div className="mt-1.5 min-w-0 flex-1">
           <AnimatePresence mode="wait">
             {!answered ? (
               <motion.div key="asking" exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>

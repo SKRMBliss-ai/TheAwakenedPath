@@ -845,8 +845,8 @@ export default function SoulfulHome() {
               {/* Sub-Filter Tabs */}
               <div style={{ display: 'inline-flex', padding: 4, borderRadius: 999, background: isDark ? 'rgba(38,30,22,0.8)' : 'rgba(238,230,218,0.7)', border: `1px solid ${isDark ? 'rgba(196,145,58,0.3)' : 'rgba(196,181,160,0.5)'}`, marginBottom: 44 }}>
                 {[
-                  { key: 'all', label: 'ALL (9)' },
-                  { key: 'apps', label: 'APPS (6)' },
+                  { key: 'all', label: 'ALL (10)' },
+                  { key: 'apps', label: 'APPS (7)' },
                   { key: 'websites', label: 'WEBSITES (3)' }
                 ].map(tab => (
                   <button
@@ -898,6 +898,21 @@ export default function SoulfulHome() {
                     img: isDark
                       ? 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039444/HabitDark_eck1jo.jpg'
                       : 'https://res.cloudinary.com/dfopoyt9v/image/upload/v1770039266/HabitLight_owsbeo.jpg',
+                  },
+                  {
+                    // Kids Learning Adventure — the umbrella for the children's
+                    // apps. One card, one URL: /kids-adventure is a static hub
+                    // (public/kids-adventure/) that opens either Song Adventure
+                    // (the piano app, via the /simplypiano redirect) or Art
+                    // Adventure (public/kids-adventure/art/). Listing them
+                    // separately would put two half-cards where one product is.
+                    type: 'apps',
+                    tag: 'Kids Learning',
+                    title: 'Kids Learning Adventure',
+                    desc: 'A child\'s whole creative journey on one map — Art World for drawing and painting classes, Piano World for notes and songs, every class tappable and every tap a sound.',
+                    href: '/kids-adventure',
+                    action: 'Open app →',
+                    img: '/kids-adventure/journey-map.webp',
                   },
                   {
                     type: 'apps',
@@ -998,9 +1013,18 @@ export default function SoulfulHome() {
                         color: 'inherit',
                       }}
                     >
-                      {/* Cover image / video */}
+                      {/* Cover image / video. Taller than before, and
+                          contain rather than cover for the still image — a
+                          phone screenshot cropped to a 230px band under
+                          'cover' loses everything above and below the
+                          middle third, which was most of the app's own UI.
+                          Height goes up to fit a whole screenshot; the video
+                          and the card's own background sit behind it,
+                          so a narrower screenshot letterboxes into the
+                          card's own colour rather than into visible gaps. */}
                       <div style={{
-                        position: 'relative', width: '100%', height: 230, overflow: 'hidden', flexShrink: 0,
+                        position: 'relative', width: '100%', height: 340, overflow: 'hidden', flexShrink: 0,
+                        background: isDark ? 'rgba(14,10,7,0.6)' : 'rgba(238,230,218,0.5)',
                         borderBottom: `1px solid ${isDark ? 'rgba(196,145,58,0.18)' : 'rgba(0,0,0,0.06)'}`
                       }}>
                         {(app as any).youtubeId && playingVideo === app.title ? (
@@ -1055,7 +1079,7 @@ export default function SoulfulHome() {
                               onError={(e) => {
                                 (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=1000&auto=format&fit=crop';
                               }}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transition: 'transform 0.5s ease' }}
+                              style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center center', transition: 'transform 0.5s ease' }}
                             />
                             {(app as any).youtubeId && (
                               <button

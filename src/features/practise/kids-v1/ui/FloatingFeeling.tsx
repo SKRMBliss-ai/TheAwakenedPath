@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
 import { CHROME, FONT } from './chrome';
 import { useMotion } from './quiet';
-import { COMPANY, companionFor } from '../kit/feelingCompanions';
+import { COMPANY, companionFor, type FeelingIdle } from '../kit/feelingCompanions';
 import { loadPerch, savePerch, todaysFeeling } from '../kit/todaysFeeling';
 import * as sound from '../kit/sound';
 
@@ -76,6 +76,63 @@ function defaultPerch(room: { w: number; h: number }, size: number) {
   };
 }
 
+/**
+ * THE SHAPES OF THE IDLES — see kit/feelingCompanions for which feeling wears
+ * which, and for why they stopped all sharing one.
+ *
+ * Each track's first and last frame are identical so the loop closes on
+ * itself rather than snapping back. Where a movement needs uneven weighting
+ * (the squash on a landing, the dwell at the bottom of a heavy one) it says
+ * so with `times`, which framer requires to match the keyframe count — so
+ * every array inside one idle is the same length on purpose.
+ *
+ * `transformOrigin: bottom center` on the element means scaleY reads as
+ * weight settling onto the floor rather than the whole boy inflating.
+ */
+interface Idle {
+  y: number[];
+  x?: number[];
+  rotate?: number[];
+  scaleX?: number[];
+  scaleY?: number[];
+  seconds: number;
+  times?: number[];
+}
+
+const IDLES: Record<FeelingIdle, Idle> = {
+  /* The original. A hop that lands and gives a little — something with weight
+     in the room, which is what makes a child want to poke it. */
+  hop: {
+    y: [0, -16, 0, -4, 0],
+    scaleX: [1, 0.97, 1.05, 1, 1],
+    scaleY: [1, 1.04, 0.94, 1.01, 1],
+    seconds: 2.4,
+    times: [0, 0.3, 0.55, 0.72, 1],
+  },
+  /* Happy is the meditating plate — eyes shut, hands resting. He floats. */
+  float:   { y: [0, -9, 0],  scaleY: [1, 1.008, 1], seconds: 4.6 },
+  /* Shallow and slow, and it takes its time at the bottom. */
+  heavy:   { y: [0, -5, 0, -1, 0], scaleY: [1, 1.004, 1, 1.002, 1], seconds: 6.4, times: [0, 0.34, 0.6, 0.8, 1] },
+  /* Small, quick, and deliberately not frantic. */
+  tremble: { y: [0, -1, 0, -1, 0], x: [0, -1.5, 1.5, -1, 0], seconds: 0.95 },
+  /* Rehearsing something, over and over, the way worry does. */
+  sway:    { y: [0, -2, 0, -2, 0], x: [0, 5, 0, -5, 0], rotate: [0, 1, 0, -1, 0], seconds: 5 },
+  /* Several things at once and none of them finishing. */
+  jitter:  { y: [0, -3, -1, -4, 0], x: [0, -2, 2, -1, 0], seconds: 1.5 },
+  /* A room with nothing in it yet. Almost no movement, very slowly. */
+  slump:   { y: [0, -2, 0], rotate: [0, -1.5, 0], seconds: 8 },
+  /* A slow tilt away and back — looking at something that isn't his. */
+  lean:    { y: [0, -3, 0], x: [0, -4, 0], rotate: [0, -2.5, 0], seconds: 5.4 },
+  /* Downward, and it stays down. Shame makes people smaller. */
+  shrink:  { y: [0, 2, 0], scaleY: [1, 0.985, 1], seconds: 5.8, times: [0, 0.55, 1] },
+  /* Burns hot and goes out fast. */
+  flush:   { y: [0, -2, 0, -1, 0], scaleX: [1, 1.015, 1, 1.008, 1], scaleY: [1, 1.015, 1, 1.008, 1], seconds: 2.2 },
+  /* One very long breath, and that is all. */
+  breathe: { y: [0, -3, 0], scaleY: [1, 1.012, 1], seconds: 7.5 },
+};
+
+const STILL = { y: 0, x: 0, rotate: 0, scaleX: 1, scaleY: 1 };
+
 export function FloatingFeeling({
   /** Omit to use whatever the child named today. */
   feeling,
@@ -117,6 +174,11 @@ export function FloatingFeeling({
   }, []);
 
   if (!companion || !room) return null;
+
+  /* How this particular feeling sits in the room. `seconds` and `times` drive
+     the transition and must not leak into `animate` — framer would treat them
+     as properties to animate towards undefined. */
+  const { seconds, times, ...tracks } = IDLES[companion.idle] ?? IDLES.hop;
 
   const spot = perch ?? defaultPerch(room, size);
   const left = spot.x * room.w;
@@ -182,15 +244,11 @@ export function FloatingFeeling({
            * gives a little reads as something with weight in the room, which
            * is what makes a child want to poke it.
            */
-          animate={
-            m.quiet || held
-              ? { y: 0, scaleX: 1, scaleY: 1 }
-              : { y: [0, -16, 0, -4, 0], scaleX: [1, 0.97, 1.05, 1, 1], scaleY: [1, 1.04, 0.94, 1.01, 1] }
-          }
+          animate={m.quiet || held ? STILL : { ...STILL, ...tracks }}
           transition={
             m.quiet || held
               ? { duration: 0.25 }
-              : { repeat: Infinity, duration: 2.4, ease: 'easeInOut', times: [0, 0.3, 0.55, 0.72, 1] }
+              : { repeat: Infinity, duration: seconds, ease: 'easeInOut', times }
           }
           style={{ transformOrigin: 'bottom center' }}
         >

@@ -7,6 +7,7 @@ import { RoomScene } from '../ui/scene';
 import { artRoomFor, PAUSE_ROOM } from './rooms';
 import { agoLabel, loadCases } from '../kit/cases';
 import { starCount } from '../kit/sky';
+import { useSpoken } from '../ui/useSpoken';
 
 /**
  * THE ONE-MINUTE DOOR.
@@ -123,6 +124,12 @@ export function OneMinute({
   const done = at >= beats.length;
   const beat = beats[Math.min(at, beats.length - 1)];
 
+  /* Read aloud — this is the screen for the evening a child has the least
+     energy to decode text, so asking them to read it would defeat it. */
+  useSpoken(done
+    ? 'That\u2019s it. Nothing else tonight.'
+    : [beat.line, beat.quote ? `You said: ${beat.quote}` : '', beat.fact ?? ''].filter(Boolean).join(' '));
+
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
       <RoomScene room={art} dim={0.3} />
@@ -134,8 +141,8 @@ export function OneMinute({
             alt=""
             aria-hidden
             draggable={false}
-            className="h-16 w-16 select-none"
-            style={{ filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.5))' }}
+            className="select-none"
+            style={{ height: 76, width: 'auto', filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.5))' }}
           />
 
           <AnimatePresence mode="wait">

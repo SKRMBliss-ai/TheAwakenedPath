@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CHROME, FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
-import { chirpySprite } from '../ui/sprites';
 import { answerReveal, beatShown, REPLIES, type ArcBeat } from '../kit/chirpyArc';
 import * as sound from '../kit/sound';
+import { useSpoken } from '../ui/useSpoken';
 
 /**
  * Chirpy, mentioning something. See kit/chirpyArc for what he's circling and
@@ -25,6 +25,10 @@ export function ChirpyArc({ beat, onDone }: { beat: ArcBeat; onDone: () => void 
 
   const accent = '#8FD9C4';
   const isReveal = beat.kind === 'reveal';
+
+  /* He is speaking, so he is heard. His line first; once the child has
+     answered, what he says back. */
+  useSpoken(took ?? beat.line);
 
   const dismiss = () => {
     beatShown(beat.kind);
@@ -51,17 +55,17 @@ export function ChirpyArc({ beat, onDone }: { beat: ArcBeat; onDone: () => void 
         fontFamily: FONT,
       }}
     >
-      <div className="flex items-start gap-3">
-        <img
-          src={chirpySprite(took ? 'hopeful' : isReveal ? 'worried' : 'curious')}
-          alt=""
-          aria-hidden
-          draggable={false}
-          className="mt-0.5 h-11 w-11 shrink-0 select-none"
-          style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}
-        />
+      <div>
+        {/* No 44px sprite here any more — see ChirpyRemembers for why the
+            small ones had to go. His name in his own colour is enough, and
+            on the reveal it's arguably better: a cartoon face pulling a
+            worried expression undercuts the one moment in the arc where he
+            says something true about himself. */}
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.12em]" style={{ color: accent }}>
+          Chirpy
+        </p>
 
-        <div className="min-w-0 flex-1">
+        <div className="mt-1.5 min-w-0 flex-1">
           <AnimatePresence mode="wait">
             {took ? (
               <motion.p

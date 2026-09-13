@@ -15,6 +15,7 @@ import { CaughtFirefly } from './CaughtFirefly';
 import { GardenTree } from './GardenTree';
 import { HungDrawing } from './HungDrawing';
 import { type ReportingDay } from '../kit/reportingDay';
+import { SpeakButton } from '../ui/SpeakButton';
 import * as sound from '../kit/sound';
 
 /**
@@ -92,7 +93,7 @@ export function VirtueRoomView({
 
   const finishGame = (pts: number) => {
     awardPoints(pts, room.id);
-    sound.play('resolve');
+    sound.play(pts > 0 ? 'bonusPoints' : 'resolve');
     setPlaying(null);
   };
 
@@ -176,7 +177,7 @@ export function VirtueRoomView({
           </div>
         ) : (
           <div className="flex flex-1 flex-col justify-end gap-4 pb-4 pt-8">
-            <Chirpy pose={doneToday ? 'excited' : 'curious'} line={room.tagline} align="left" />
+            <Chirpy pose={doneToday ? 'excited' : 'curious'} line={room.tagline} align="left" roomId={room.id} />
             <Question room={art}>{room.name}</Question>
 
             {/* ── The tick — the actual point of the app ───────────────── */}
@@ -196,11 +197,26 @@ export function VirtueRoomView({
               </span>
             )}
 
+            {/* READ ME THE QUESTION. The single most important sentence in
+                the app, and the one a pre-reader is most likely to answer by
+                guessing. Beside the tick rather than inside it: a button
+                nested in a button is invalid and eats the tap. */}
+            <div className="-mb-2 flex items-center gap-2">
+              <SpeakButton
+                text={(reporting.isWeekend && room.weekendPrompt) || room.prompt}
+                accent={accent}
+                label="Read the question to me"
+              />
+              <span className="text-[11.5px] font-bold" style={{ color: CHROME.textSoft }}>
+                Read it to me
+              </span>
+            </div>
+
             <motion.button
               whileTap={{ scale: 0.99 }}
               onClick={() => {
                 const catching = !doneToday;
-                sound.play(catching ? 'discovery' : 'tap');
+                sound.play(catching ? 'miniWin' : 'tap');
                 setBehaviourOn(reporting.key, room.id, catching);
                 // The jar only appears when a light goes IN, and only on the
                 // journey. Unticking is silent and costs nothing, which is

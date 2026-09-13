@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" data-nojar>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+<meta name="theme-color" content="#FCF4E5" />
+<title>My Sticker Book | Kids Learning Adventure</title>
+<meta name="description" content="Every sticker earned across Art World, Piano World and Study Island, collected in one book." />
+<link rel="icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="stylesheet" href="/kids-adventure/kit/adventure.css">
+</head>
+<body>
+<div class="app">
+  <div class="deco" aria-hidden="true">
+    <i style="left:-14px;top:2px;width:54px;height:106px;background-image:url('/kids-adventure/kit/splat-c.webp');opacity:.8"></i>
+    <i style="right:24px;top:-4px;width:96px;height:62px;background-image:url('/kids-adventure/kit/splat-b.webp');opacity:.8"></i>
+    <i class="sm" style="left:-16px;bottom:-8px;width:138px;height:116px;background-image:url('/kids-adventure/kit/mountains.webp')"></i>
+    <i class="sm" style="left:96px;bottom:-16px;width:266px;height:108px;background-image:url('/kids-adventure/kit/greenery.webp')"></i>
+  </div>
+  <a class="back" href="/kids-adventure" aria-label="Back to My Creative Journey">‹</a>
+  <header>
+    <p class="ptitle"><span class="my">MY</span><span class="pbig" id="ttl"></span></p>
+    <p class="count" id="tally"></p>
+    <p class="togo">Three stars anywhere on the adventure finds a new one</p>
+  </header>
+  <div id="book"></div>
+  <nav class="pills">
+    <a class="pill" style="--c:var(--t7)" href="/kids-adventure/art">🎨 Art World ›</a>
+    <a class="pill" style="--c:var(--t1)" href="/kids-adventure/piano">🎹 Piano World ›</a>
+    <a class="pill" style="--c:var(--t3)" href="/kids-adventure/study/">📚 Study Island ›</a>
+  </nav>
+  <p class="chapter">Stickers are for coming back,<br>not for being fastest</p>
+</div>
+<div class="toast" id="toast"></div>
+<script src="/kids-adventure/kit/sound.js"></script>
+<script src="/kids-adventure/kit/juice.js"></script>
+<script src="/kids-adventure/kit/journey.js"></script>
+<script>
+(function () {
+  var T = ['#3880C0','#E06098','#509858','#F89030','#A070C0','#50A8B0','#F0B828'];
+  var word = 'STICKER BOOK', out = '', j = 0;
+  for (var i = 0; i < word.length; i++) {
+    var ch = word[i];
+    if (ch === ' ') { out += '<span style="width:.34em"></span>'; continue; }
+    out += '<span style="color:' + T[j % T.length] + ';--r:' + ((j * 53) % 7 - 3) + 'deg">' + ch + '</span>';
+    j++;
+  }
+  document.getElementById('ttl').innerHTML = out;
+  var S = window.KJA.juice.stickers;
+  document.getElementById('book').innerHTML = S.bookHTML();
+  document.getElementById('tally').innerHTML = S.have().length + ' <b>/</b> ' + S.all.length + ' found';
+  document.addEventListener('click', function (e) {
+    var s = e.target.closest('.sticker.have');
+    if (!s) return;
+    window.KJA.sound.sfx.pop();
+    window.KJA.juice.burstAt(s, 10);
+  });
+})();
+</script>
+</body>
+</html>

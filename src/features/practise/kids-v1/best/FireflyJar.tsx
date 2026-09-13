@@ -32,7 +32,13 @@ import { BEHAVIOURS } from '../../../kids/data';
  * this opacity goes grey against that — it reads as grey plastic rather
  * than glass with a lamp behind it.
  */
-const JAR_COLOR = 'rgba(255,238,206,0.44)';
+/*
+  Was 0.44, which on the catch screen's mid-tone background was fine and on
+  the hub's night sky was a ghost. Lifted to 0.72 so the glass reads as glass
+  at 60px against the darkest thing in the app — still translucent, still
+  clearly empty when it's empty, but present.
+*/
+const JAR_COLOR = 'rgba(255,238,206,0.72)';
 
 /**
  * How many lights DENSE MODE actually draws, whatever the true total is.
