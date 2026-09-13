@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Check, ChevronRight } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { CHROME, FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
 import { roomPoster, storageFallback, type RoomId } from '../rooms';
@@ -157,50 +157,22 @@ export function GreetingBubble({
 
 export type PillTone = 'gold' | 'blue';
 
-const TONE = {
-  gold: {
-    ring: '#FFA83D',
-    ringSoft: 'rgba(255,168,61,0.55)',
-    body: 'linear-gradient(135deg, #46265F 0%, #2C1742 58%, #3A1F52 100%)',
-    text: '#FFF4DC',
-    textGlow: 'rgba(255,196,110,0.85)',
-  },
-  blue: {
-    ring: '#3F7BFF',
-    ringSoft: 'rgba(63,123,255,0.55)',
-    body: 'linear-gradient(135deg, #1E38A8 0%, #202C82 55%, #3A2A86 100%)',
-    text: '#EAF2FF',
-    textGlow: 'rgba(120,175,255,0.85)',
-  },
-} as const;
-
 /**
- * One of the two lit ways on from the hub.
+ * One of the two lit ways on from the hub — rendered as full artwork.
  *
- * Glass over a neon rim, which is the only treatment in this app that says
- * "this is a control" without saying it in words — the room domes beside it
- * are lit too, but their light is warm and inside the arch, and these two
- * carry a hard ring around the outside. A child sorts them apart in a glance
- * long before they can read either label.
- *
- * Both pills are the same size and the same brightness in their own colour.
- * Making the daily one bigger would tell a child which one they are supposed
- * to want, and the point of having two is that some days it is the other one.
+ * The pill buttons are now drawn as complete images rather than CSS gradients.
+ * Each tone corresponds to a specific button artwork that conveys its purpose
+ * visually without needing text.
  */
 export function NeonDoorPill({
   tone,
-  icon,
-  label,
   onClick,
 }: {
   tone: PillTone;
-  icon: 'sun' | 'cloud';
-  /** Two short words per line — these wrap to two lines by design. */
-  label: string;
   onClick: () => void;
 }) {
   const m = useMotion();
-  const t = TONE[tone];
+  const src = tone === 'gold' ? '/assets/home/my journey.png' : '/assets/home/explore rooms.png';
 
   return (
     <motion.button
@@ -209,82 +181,19 @@ export function NeonDoorPill({
       whileHover={m.quiet ? undefined : { scale: 1.03 }}
       animate={m.quiet ? undefined : { opacity: [1, 0.92, 1] }}
       transition={m.quiet ? undefined : { repeat: Infinity, duration: 3.6, ease: 'easeInOut' }}
-      className="relative flex items-center gap-3 rounded-full py-3 pl-3 pr-3.5 sm:gap-3.5 sm:pr-4"
+      className="relative overflow-hidden rounded-full"
       style={{
         minHeight: m.target + 14,
         minWidth: 186,
-        fontFamily: FONT,
-        background: t.body,
-        border: `2px solid ${t.ring}`,
-        boxShadow: `0 0 0 1px rgba(255,255,255,0.14) inset, 0 0 26px -4px ${t.ring}, 0 14px 34px -12px rgba(0,0,0,0.9)`,
       }}
     >
-      {/* The gloss down the top edge. One highlight, not a full sheen: these
-          are lit objects in a dark room, not plastic. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-x-4 top-[3px] h-1/3 rounded-full"
-        style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.22) 0%, transparent 100%)' }}
+      <img
+        src={src}
+        alt={tone === 'gold' ? 'My Journey' : 'Explore Rooms'}
+        draggable={false}
+        className="h-full w-full object-contain"
       />
-
-      <span
-        aria-hidden
-        className="grid shrink-0 place-items-center"
-        style={{ filter: `drop-shadow(0 0 10px ${t.ringSoft})` }}
-      >
-        {icon === 'sun' ? <SunFace /> : <CloudFace />}
-      </span>
-
-      <span
-        className="relative flex-1 text-left text-[15.5px] font-extrabold leading-[1.12] sm:text-[16.5px]"
-        style={{ color: t.text, textShadow: `0 0 14px ${t.textGlow}` }}
-      >
-        {label}
-      </span>
-
-      <ChevronRight size={24} strokeWidth={3} color={t.text} className="shrink-0" />
     </motion.button>
-  );
-}
-
-/** The sun on the journey door: warm, awake, and pleased to see you. */
-function SunFace() {
-  return (
-    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden fill="none">
-      <g stroke="#FFE9B0" strokeWidth="3" strokeLinecap="round">
-        {Array.from({ length: 8 }).map((_, i) => {
-          const a = (i / 8) * Math.PI * 2;
-          return (
-            <line
-              key={i}
-              x1={20 + Math.cos(a) * 12.5}
-              y1={20 + Math.sin(a) * 12.5}
-              x2={20 + Math.cos(a) * 18}
-              y2={20 + Math.sin(a) * 18}
-            />
-          );
-        })}
-      </g>
-      <circle cx="20" cy="20" r="10.5" fill="#FFF3D0" />
-      <circle cx="16.4" cy="18" r="1.7" fill="#E08A1E" />
-      <circle cx="23.6" cy="18" r="1.7" fill="#E08A1E" />
-      <path d="M15.6 22.6a5.2 5.2 0 0 0 8.8 0" stroke="#E08A1E" strokeWidth="2.1" strokeLinecap="round" fill="none" />
-    </svg>
-  );
-}
-
-/** The cloud on the rooms door: the same face, cooler, drifting. */
-function CloudFace() {
-  return (
-    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden fill="none">
-      <path
-        d="M11 29c-3.9 0-6.6-2.9-6.6-6.4 0-3.2 2.3-5.8 5.4-6.3.6-4.4 4.3-7.6 8.8-7.6 4 0 7.4 2.6 8.5 6.2 3.9.2 6.9 3.2 6.9 7 0 4-3.2 7.1-7.3 7.1H11Z"
-        fill="#CFE6FF"
-      />
-      <circle cx="16.2" cy="19.6" r="1.8" fill="#1E5FC8" />
-      <circle cx="24.2" cy="19.6" r="1.8" fill="#1E5FC8" />
-      <path d="M15.6 24a5.6 5.6 0 0 0 9.2 0" stroke="#1E5FC8" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-    </svg>
   );
 }
 
