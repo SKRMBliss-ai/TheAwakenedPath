@@ -395,34 +395,122 @@ a{color:var(--sea-d)}
 
 /* ── the top bar, tidied ────────────────────────────────────────────────────
    Nine nav buttons, a search box and a toolbar were wrapping into three rows
-   of chrome above the actual lesson. Now it is two calm rows: who and where
-   on top, and one swipeable strip of places underneath. */
-.topbar-in{display:grid !important;grid-template-columns:auto 1fr auto;align-items:center;
+   of chrome above the actual lesson. Now there is one calm row — the way
+   back, the crest, one Places button holding all nine, and the four
+   sound toggles — and the lesson starts straight underneath it. */
+.topbar-in{display:grid !important;grid-template-columns:auto 1fr auto auto;align-items:center;
   row-gap:6px;column-gap:10px;padding:8px 12px 10px}
 .topbar-in > .y2home{grid-row:1;grid-column:1}
 .topbar-in > .brand{grid-row:1;grid-column:2;justify-self:start}
-.topbar-in > #kjabar{grid-row:1;grid-column:3}
+.topbar-in > .y2places{grid-row:1;grid-column:3}
+.topbar-in > #kjabar{grid-row:1;grid-column:4;margin-left:0 !important}
 .nav > .searchbox{flex:none}
-.topbar-in > .nav{grid-row:2;grid-column:2/4;margin-left:0 !important;
-  flex-wrap:nowrap !important;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;
-  -webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 0,#000 94%,transparent)}
-.topbar-in > .nav::-webkit-scrollbar{display:none}
-.topbar-in > .nav .btn{flex:none;font-size:14px;padding:8px 14px;min-height:42px}
 @media (max-width:760px){
+  /* on a phone the crest gives up its words and the toggles take their own
+     row, so nothing wraps and every target stays finger-sized */
   .topbar-in{grid-template-columns:auto 1fr auto;padding:6px 10px 8px;column-gap:6px}
-  /* the page says where you are; the bar only needs the crest and the way back,
-     which gives the four toggles a single row to sit in */
   .topbar-in > .brand{font-size:0;gap:0;padding:2px}
   .topbar-in > .brand .badge-logo{width:34px;height:34px;flex:0 0 34px}
-  .topbar-in > #kjabar{flex-wrap:nowrap}
+  .topbar-in > .y2places{grid-row:1;grid-column:3}
+  .topbar-in > #kjabar{grid-row:2;grid-column:1/4;flex-wrap:nowrap;justify-content:center}
   #kjabar.toolbar button,#kjabar.toolbar a{padding:7px 10px;font-size:14px}
-  .topbar-in > #kjabar{grid-row:1;grid-column:3}
-  /* search is a grown-up's tool; on a phone the Library button covers it */
-  .nav > .searchbox{display:none !important}
-  .topbar-in > .nav{grid-row:2;grid-column:1/4}
-  .topbar-in > .nav .btn{font-size:13.5px;padding:7px 12px;min-height:40px}
   .y2home{font-size:13.5px;padding:6px 11px}
 }
+/* ── the nav, folded away ───────────────────────────────────────────────────
+   Nine places, a search box and a player picker were a permanent strip of
+   chrome across the top of every lesson. They now live behind one button:
+   it opens on hover for anyone with a mouse and on tap for anyone without,
+   which gives the lesson itself the whole screen and gives a child one thing
+   to aim at instead of eleven. */
+.y2places{position:relative;grid-row:1;grid-column:3;justify-self:end}
+.y2trig{display:flex;align-items:center;gap:6px;font-family:var(--display);font-weight:800;
+  font-size:15px;color:#002058;background:#FFFDF6;border:2.5px solid var(--line);
+  border-radius:40px;padding:8px 15px;box-shadow:0 3px 0 #E3D3B0;cursor:pointer;min-height:42px}
+.y2trig .chev{font-size:12px;transition:transform .2s ease}
+.y2places[data-open] .y2trig{background:#FFF2CE;border-color:var(--gold,#F8C858)}
+.y2places[data-open] .y2trig .chev{transform:rotate(180deg)}
+.y2panel{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:min(88vw,330px);
+  background:#FEF8EA;border:3px solid var(--line);border-radius:20px;padding:10px;
+  box-shadow:0 16px 34px #16283c2e;display:none}
+.y2places[data-open] .y2panel{display:block}
+/* a hover bridge, so the pointer can cross the gap without the menu closing */
+.y2places::after{content:'';position:absolute;right:0;top:100%;width:100%;height:10px}
+.y2panel .nav{display:flex !important;flex-wrap:wrap !important;gap:8px;margin:0 !important;
+  overflow:visible !important;mask-image:none !important;padding:0 !important}
+.y2panel .nav .btn{flex:1 1 46%;justify-content:center;font-size:14px;min-height:44px}
+.y2panel .searchbox{flex:1 1 100%;display:flex !important;margin-bottom:2px}
+.y2panel .searchbox input{width:100%}
+@media (max-width:760px){
+  .y2panel{width:min(94vw,320px)}
+  .y2panel .searchbox{display:none !important}
+  .y2trig span.lbl{display:none}
+  .y2trig{padding:8px 13px}
+}
+
+/* ── the heading, once ──────────────────────────────────────────────────────
+   The concept header — eyebrow, title, blurb, objective, mastery bar — was
+   re-drawn in full above all nine steps of the same concept, so a child
+   scrolled past the same bold paragraph nine times to reach the thing they
+   came for. It now folds itself down to a single line a few seconds after the
+   page settles, and a tap opens it again. Nothing is removed; it just stops
+   taking the screen after it has been read. */
+.y2head{position:relative;transition:padding .3s ease}
+.y2head .y2fold{position:absolute;top:8px;right:10px;z-index:2;border:2px solid var(--line);
+  background:#FFFDF6;border-radius:30px;font-family:var(--display);font-weight:700;font-size:13px;
+  color:#4A5680;padding:4px 11px;cursor:pointer;box-shadow:0 2px 0 #E3D3B0}
+.y2head.slim{padding-top:10px;padding-bottom:10px;cursor:pointer}
+.y2head.slim > .row > div > *{display:none}
+.y2head.slim > .row > div > h1{display:block;font-size:clamp(19px,3.4vw,24px);margin:0}
+.y2head.slim > .notice,.y2head.slim > .bar,.y2head.slim > .meta{display:none}
+.y2head.slim .y2fold{top:50%;transform:translateY(-50%)}
+
+/* ── the question, made impossible to miss ─────────────────────────────────
+   A child who cannot find the question cannot answer it. It is now the
+   biggest thing on the screen by a clear margin, on its own panel under a
+   gold rule. */
+.qtext{font-family:var(--display) !important;font-weight:800 !important;
+  font-size:clamp(23px,4.8vw,32px) !important;line-height:1.22 !important;color:#002058 !important;
+  background:#FFFEF9;border:3px solid var(--line);border-top-width:6px;border-top-color:#F8C858;
+  border-radius:18px;padding:16px 16px 14px !important;margin:10px 0 14px !important;text-wrap:balance}
+/* an option taken off the board, and the one to tap once narrowing runs out */
+.opt.gone{opacity:.3;filter:grayscale(1)}
+.opt.showme{border-color:#3D9A4E !important;background:#F2FBF1 !important;
+  animation:y2show 1.2s ease-in-out infinite}
+@keyframes y2show{0%,100%{box-shadow:0 0 0 3px #3d9a4e33}50%{box-shadow:0 0 0 9px #3d9a4e4d}}
+/* the auto-advance, drawn so the pause reads as deliberate */
+.btn.waitbtn{position:relative;overflow:hidden}
+.btn.waitbtn .tick{position:absolute;left:0;bottom:0;height:5px;width:0;background:#ffffffa8;
+  animation:y2tick var(--d,1600ms) linear forwards}
+@keyframes y2tick{from{width:0}to{width:100%}}
+@media (prefers-reduced-motion: reduce){
+  .opt.showme{animation:none}
+  .btn.waitbtn .tick{animation:none;width:100%}
+}
+/* ── today's three games, on a concept's Play it step ──────────────────────
+   The ten games were always there; these three are the ones picked for today,
+   so coming back tomorrow is a different session rather than the same list in
+   the same order. */
+.todaygames{background:#FFF7E2;border:3px solid var(--gold,#F8C858);border-radius:20px;
+  padding:14px 14px 12px;margin:6px 0 18px}
+.todaygames h3{margin:0 0 4px}
+.todaygames .notice{margin:0 0 12px}
+.gamerow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:700px){.gamerow{grid-template-columns:1fr}}
+.gpick{border:3px solid var(--line);background:#FFFDF6;border-radius:16px;padding:12px 10px;
+  display:flex;flex-direction:column;gap:3px;text-align:left;box-shadow:0 4px 0 #E3D3B0;cursor:pointer}
+.gpick .gt{font-family:var(--display);font-weight:800;font-size:17px;color:#002058}
+.gpick .gd{font-size:15px;color:#4A5680;line-height:1.25}
+.gpick .lvl{font-family:var(--display);font-weight:700;font-size:13px;color:#8A7A55}
+.gpick.done{background:#F4F8F2;border-style:dashed}
+.gpick:active{transform:scale(.97)}
+/* the same game in the full list, marked so the two agree */
+.gtile.istoday{box-shadow:0 0 0 3px #F8C85877, 0 4px 0 #E3D3B0}
+
+/* the shared star jar sits above the Quest's own draggable one, and the page
+   keeps a lane clear so it never covers the last thing a child reads */
+.starjar{bottom:16px;right:16px}
+body{padding-bottom:96px}
+
 /* their screens scroll themselves into place, so every landing point needs to
    clear the sticky bar rather than hide behind it */
 #main,#stage,.wrap > section,[id]{scroll-margin-top:150px}
@@ -563,7 +651,14 @@ function announce(msg){
 }
 var PRAISE = ["Fantastic!","Great thinking!","You spotted it!","Brilliant!","Superstar!","Nice work!","You've got this!","Excellent!"];
 var NUDGE  = ["Not quite.","Have another look.","Close — try again.","Nearly there.","Let's think again."];
-function praise(){ return PRAISE[Math.floor(Math.random()*PRAISE.length)]; }
+/* Whoever the child picked as their buddy on the map speaks here too, in
+   their own words, rather than the Quest's stock praise — the same swap
+   Study Island's quick-practice rounds make. */
+function praise(){
+  var jy = window.KJA && window.KJA.journey;
+  if(jy && jy.buddy.chosen()) return jy.buddy.cheer();
+  return PRAISE[Math.floor(Math.random()*PRAISE.length)];
+}
 function nudge(){ return NUDGE[Math.floor(Math.random()*NUDGE.length)]; }
 
 /* ---------- badges ---------- */
@@ -5072,9 +5167,12 @@ function showHome(){
   var hero=el("section","hero");
   var nm = firstName();
   var hi = nm ? "Welcome back, "+esc(nm)+"!" : "Welcome to your Year 2 Quest!";
+  /* the same companion every other island shows, picked once on the map */
+  var heroJY = window.KJA && window.KJA.journey, heroBuddy = heroJY && heroJY.buddy.chosen();
   hero.innerHTML='<div class="hero-card"><div class="eyebrow">Year 2 · Key Stage 1 · England</div>'+
     '<h1>'+hi+'</h1>'+
     '<p class="lede">Seven worlds. '+CONCEPTS.length+' concepts. '+(CONCEPTS.length*10)+' games. Learn it, see it, try it, play it — then master it.</p>'+
+    (heroBuddy?'<p class="sub buddyline" style="justify-content:flex-start">'+heroJY.buddy.face(heroBuddy,28)+' <b>'+esc(heroBuddy.name)+'</b> is questing with you</p>':'')+
     '<div class="row" style="margin-top:12px">'+
     '<button class="btn btn-lg btn-grass" id="continueBtn">▶ Continue learning</button>'+
     '<button class="btn btn-lg btn-plum" data-go="den">🦕 My Collection</button>'+
@@ -5515,14 +5613,47 @@ function stepTry(b,c){
     });
   }
 }
+/* Ten games per concept, and a different three suggested every morning.
+
+   A child asked for "a new set of games to play for each concept" and for a
+   recap if they want to repeat one. The ten games were always here; what was
+   missing was a reason to come back tomorrow rather than work down the same
+   list in the same order. KJA.journey's day number picks today's three, which
+   is the same all day, different tomorrow, and walks the whole set before it
+   repeats — no server, nothing random to remember. All ten stay open
+   underneath, and one already played says so and plays again gladly. */
 function stepGames(b,c){
   var done=gamesDone(c.id);
+  var JY = window.KJA && window.KJA.journey;
+  var idx = c.games.map(function(g,i){ return i; });
+  var today = JY ? JY.daily.rotate(idx, 3, c.id.length + c.id.charCodeAt(0)) : idx.slice(0,3);
   b.innerHTML='<h2>🎮 Play it — ten different games</h2>'+
    '<p>Each game tests this concept in a different way, and they get harder as you go. You have played <b>'+done+' of 10</b>.</p>';
+
+  if(today.length){
+    var box=el("section","todaygames");
+    box.innerHTML='<h3>⭐ Today\u2019s three</h3>'+
+      '<p class="notice">Picked for today. Come back tomorrow for three more \u2014 or play any of the ten below, as often as you like.</p>';
+    var row=el("div","gamerow");
+    today.forEach(function(i){
+      var meta=GAME_META[i], sc=cstate(c.id).games[i];
+      var t=el("button","gpick"+(sc!=null?" done":""));
+      t.innerHTML='<span class="gt">'+meta.n+'</span>'+
+        '<span class="gd">'+esc(c.games[i].i||meta.d)+'</span>'+
+        '<span class="lvl">'+(sc!=null?"Played \u2014 best "+sc+"% \u00b7 play again":meta.lvl)+'</span>';
+      t.onclick=function(){ openGame(c,i); };
+      row.appendChild(t);
+    });
+    box.appendChild(row);
+    b.appendChild(box);
+  }
+
+  var all=el("h3",null,"All ten games");
+  b.appendChild(all);
   var grid=el("div","gamegrid");
   c.games.forEach(function(g,i){
     var meta=GAME_META[i], sc=cstate(c.id).games[i];
-    var t=el("button","gtile"+(sc!=null?" done":""));
+    var t=el("button","gtile"+(sc!=null?" done":"")+(today.indexOf(i)>=0?" istoday":""));
     t.innerHTML='<span class="gn">GAME '+(i+1)+'</span><span class="gt">'+meta.n+'</span>'+
       '<span class="gd">'+esc(g.i||meta.d)+'</span><span class="lvl">'+meta.lvl+'</span>'+
       (sc!=null?'<span class="tick">'+(sc>=90?"🏆":sc>=70?"⭐":"✅")+'</span><span class="gd">Best: '+sc+'%</span>':'');
@@ -5588,28 +5719,103 @@ function stepRevise(b,c){
 }
 
 /* ================= GENERIC QUIZ RUNNER ================= */
+/* A round that will not move past a question until it has been answered
+   correctly, and then moves on by itself.
+
+   Previously one tap ended the question either way: a wrong answer revealed
+   the right one and offered Next, so a child could walk the whole session
+   without ever working anything out. Now a wrong tap removes that option and
+   leaves the question up; from the second miss one of the remaining wrong
+   options is taken away each time, and when only the answer and one wrong one
+   are left it shows them, so nobody is stuck in front of a wall and nobody is
+   carried past something they did not understand.
+
+   The score is first-time-right (`right`), which is what stops "keep trying"
+   from also meaning "full marks for tapping everything". Getting it right
+   advances on its own after a beat, with the wait drawn as a filling bar, and
+   "Let me look" stops the clock for anyone who wants to sit with the answer.
+
+   Anything celebratory raised during the round — an egg reaching its tenth
+   star, most of all — is held by KJA.journey and let out when the round ends,
+   so a surprise never lands on top of a question. */
 function quizRunner(host, qs, done, opt){
   opt=opt||{};
-  var i=0, right=0;
+  var i=0, right=0, tries=0, firstTry=true, autoT=null;
+  var JY = window.KJA && window.KJA.journey;
   var d=dots(qs.length);
   var body=el("div"); host.appendChild(body); host.appendChild(d);
+  var NUDGES=["Nearly — have another look.","Not that one. Try again!",
+              "Good try. One of the others!","Hmm, not quite — go on, again."];
+  if(JY) JY.hold.open();
+  function finish(){
+    clearTimeout(autoT);
+    if(JY) JY.hold.release(2600);
+    done(pctOf(right,qs.length));
+  }
   function draw(){
-    if(i>=qs.length){ done(pctOf(right,qs.length)); return; }
+    clearTimeout(autoT); autoT=null;
+    if(i>=qs.length){ finish(); return; }
+    tries=0; firstTry=true;
     var q0=qs[i], sq=shuffleQ(q0.o,q0.a), q={q:q0.q,o:sq.o,a:sq.a,why:q0.why,tag:q0.tag};
     body.innerHTML='<div class="eyebrow">'+esc(opt.title||"Question")+' '+(i+1)+' of '+qs.length+(q.tag?' · '+esc(q.tag):'')+'</div>'+
       '<p class="qtext">'+esc(q.q)+'</p><div class="opts" id="qrOpts"></div><div id="qrFb"></div>';
     q.o.forEach(function(t,k){
       var btn=el("button","opt",esc(t)); if(String(t).length>18) btn.style.fontSize="16px";
-      btn.onclick=function(){
-        $$("#qrOpts .opt",body).forEach(function(x,j){ x.disabled=true; if(j===q.a) x.classList.add("right"); });
-        var ok=k===q.a; if(!ok) btn.classList.add("wrong"); else right++;
-        setDot(d,i,ok);
-        var f=fb($("#qrFb",body), ok, q.why||"");
-        var nx=el("button","btn btn-sm btn-sea", i===qs.length-1?"Finish →":"Next →");
-        nx.style.marginTop="10px"; nx.onclick=function(){ i++; draw(); }; f.appendChild(nx);
-      };
+      btn.onclick=function(){ tap(btn,k,q); };
       $("#qrOpts",body).appendChild(btn);
     });
+  }
+  function tap(btn,k,q){
+    var ok = k===q.a;
+    if(!ok){
+      tries++; firstTry=false;
+      btn.disabled=true; btn.classList.add("wrong");
+      play("wrong");
+      var box=$("#qrFb",body);
+      box.innerHTML='<div class="fb no">'+NUDGES[Math.min(tries-1,NUDGES.length-1)]+'</div>';
+      announce("Not quite");
+      if(tries>=2){
+        var all=$$("#qrOpts .opt",body);
+        var spare=all.filter(function(x,j){ return !x.disabled && j!==q.a; });
+        if(spare.length>1){
+          /* narrow the choice by one, so help arrives a step at a time */
+          var drop=spare[Math.floor(Math.random()*spare.length)];
+          drop.disabled=true; drop.classList.add("gone");
+        } else {
+          $$("#qrOpts .opt",body).forEach(function(x,j){ if(j===q.a) x.classList.add("showme"); });
+          box.innerHTML='<div class="fb no">Here it is — tap the glowing one.'+
+            (q.why?'<div class="sub">'+esc(q.why)+'</div>':'')+'</div>';
+        }
+      }
+      return;                                   /* the question stays up */
+    }
+    /* right */
+    $$("#qrOpts .opt",body).forEach(function(x,j){
+      x.disabled=true; x.classList.remove("showme");
+      if(j===q.a) x.classList.add("right");
+    });
+    if(firstTry) right++;
+    setDot(d,i,firstTry);
+    var f=fb($("#qrFb",body), true, q.why||"");
+    /* the star goes into the jar that follows them round the whole adventure */
+    if(JY && firstTry) JY.stars.add(1, $$("#qrOpts .opt.right",body)[0] || f);
+    var last = i===qs.length-1;
+    var waitMs = (q.why?2100:1400) + (last?600:0);
+    var nx=el("button","btn btn-sm btn-sea waitbtn", (last?"Finish →":"Next →")+
+      '<i class="tick" style="--d:'+waitMs+'ms"></i>');
+    nx.style.marginTop="10px";
+    nx.onclick=function(){ clearTimeout(autoT); autoT=null; i++; draw(); };
+    f.appendChild(nx);
+    var stay=el("button","btn btn-sm btn-ghost","⏸ Let me look");
+    stay.style.marginTop="10px"; stay.style.marginLeft="8px";
+    stay.onclick=function(){
+      clearTimeout(autoT); autoT=null;
+      nx.classList.remove("waitbtn");
+      var t=nx.querySelector(".tick"); if(t) t.remove();
+      stay.remove();
+    };
+    f.appendChild(stay);
+    autoT=setTimeout(function(){ autoT=null; i++; draw(); }, waitMs);
   }
   draw();
 }
@@ -7433,6 +7639,7 @@ games:[
      ═══════════════════════════════════════════════════════════════════════ -->
 <script src="/kids-adventure/kit/sound.js"></script>
 <script src="/kids-adventure/kit/juice.js"></script>
+<script src="/kids-adventure/kit/journey.js"></script>
 <script>
 (function () {
   var SND = window.KJA && window.KJA.sound, J = window.KJA && window.KJA.juice;
@@ -7460,7 +7667,8 @@ games:[
   /* keep the Quest's own sound flag in step with the adventure's mute */
   try { if (typeof setSound === 'function') setSound(!SND.isMuted()); } catch (e) {}
 
-  /* 2 · the way home and the shared toolbar, in their top bar */
+  /* 2 · the way home and the shared toolbar, in their top bar — and the nine
+        nav buttons folded away behind one of them */
   function dress() {
     var bar = document.querySelector('.topbar-in');
     if (!bar || document.getElementById('kjabar')) return;
@@ -7469,6 +7677,54 @@ games:[
     home.href = '/kids-adventure/study/';
     home.innerHTML = '‹ Study Island';
     bar.insertBefore(home, bar.firstChild);
+
+    /* Fold the whole nav strip into one button. It opens on hover for a
+       pointer and on tap for a finger, closes on Escape, on a click outside,
+       and on any choice made inside it — so the lesson gets the screen back
+       the moment a child has gone somewhere. */
+    var nav = bar.querySelector('.nav');
+    if (nav) {
+      var places = document.createElement('div');
+      places.className = 'y2places';
+      places.innerHTML = '<button class="y2trig" type="button" aria-expanded="false" ' +
+        'aria-label="Places to go">🧭 <span class="lbl">Places</span> <span class="chev">▾</span></button>' +
+        '<div class="y2panel"></div>';
+      bar.insertBefore(places, nav);
+      places.querySelector('.y2panel').appendChild(nav);
+      var trig = places.querySelector('.y2trig');
+      var hoverable = matchMedia('(hover:hover) and (pointer:fine)').matches;
+      /* Hover opens it and leaving closes it again — but a CLICK pins it open,
+         because a menu that shuts the instant you click the button you just
+         hovered is a menu that cannot be used with a mouse at all. Clicking a
+         pinned menu closes it. On a touch screen there is no hover, so the
+         click is the only thing that opens it. */
+      var pinned = false, shut = null;
+      function open(v) {
+        if (v) places.setAttribute('data-open', '1'); else places.removeAttribute('data-open');
+        trig.setAttribute('aria-expanded', String(!!v));
+      }
+      function close() { pinned = false; open(false); }
+      trig.addEventListener('click', function (e) {
+        e.stopPropagation();
+        clearTimeout(shut);
+        if (pinned) { close(); SND.sfx.tap(); }
+        else { pinned = true; open(true); SND.sfx.page(); }
+      });
+      if (hoverable) {
+        places.addEventListener('pointerenter', function () { clearTimeout(shut); open(true); });
+        places.addEventListener('pointerleave', function () {
+          if (pinned) return;
+          shut = setTimeout(function () { open(false); }, 260);
+        });
+      }
+      /* anything chosen inside closes it */
+      nav.addEventListener('click', function (e) {
+        if (e.target.closest('.btn') && !e.target.closest('.searchbox')) close();
+      });
+      document.addEventListener('click', function (e) { if (!places.contains(e.target)) close(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    }
+
     var box = document.createElement('div');
     box.id = 'kjabar';
     bar.appendChild(box);
@@ -7480,6 +7736,97 @@ games:[
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dress);
   else dress();
   setTimeout(dress, 400);
+
+  /* 3 · the heading, folded after it has been read
+        The same bold header sits above all nine steps of a concept. It stays
+        long enough to read and then folds to one line, with a tap to open it
+        again — the screen a child is working on should belong to the work. */
+  var foldT = null;
+  function foldHead() {
+    clearTimeout(foldT);
+    var main = document.getElementById('main');
+    if (!main) return;
+    var head = main.querySelector('section.panel');
+    /* only on the working screens: a concept page (it has the step strip) */
+    if (!head || !head.querySelector('h1') || !main.querySelector('.stepstrip')) return;
+    if (head.classList.contains('y2head')) return;
+    head.classList.add('y2head');
+    var btn = document.createElement('button');
+    btn.className = 'y2fold'; btn.type = 'button';
+    function label() {
+      var slim = head.classList.contains('slim');
+      btn.textContent = slim ? 'More ▾' : 'Hide ▴';
+      btn.setAttribute('aria-label', slim ? 'Show the whole heading' : 'Fold the heading away');
+      btn.setAttribute('aria-expanded', String(!slim));
+    }
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      head.classList.toggle('slim'); label(); SND.sfx.tap();
+    });
+    head.appendChild(btn);
+    /* a tap anywhere on the folded strip opens it too — a small target on a
+       phone is not a target */
+    head.addEventListener('click', function () {
+      if (head.classList.contains('slim')) { head.classList.remove('slim'); label(); SND.sfx.tap(); }
+    });
+    label();
+    foldT = setTimeout(function () {
+      if (!head.classList.contains('slim')) { head.classList.add('slim'); label(); }
+    }, 7000);
+  }
+
+  /* 4 · surprises wait for a gap
+        Their egg hatches the instant the tenth star lands, which is very
+        often the middle of a round. It is now held until the child has moved
+        on — a new screen, or the end of a round — which is the only moment a
+        full-screen surprise is a reward rather than an interruption. */
+  var waiting = [];
+  var theirHatch = window.hatchEgg;
+  if (typeof theirHatch === 'function') {
+    window.hatchEgg = function () {
+      var J2 = window.KJA && window.KJA.journey;
+      /* mid-round: queue it. Otherwise it can go now. */
+      if (J2 && J2.hold.isOpen()) { J2.hold.push(run); return; }
+      if (document.querySelector('#qrOpts .opt:not([disabled]), .opts .opt:not([disabled])')) { waiting.push(run); return; }
+      run();
+      function run() { try { theirHatch(); } catch (e) {} }
+    };
+  }
+  /* a new screen is a safe gap */
+  function flush() {
+    if (!waiting.length) return;
+    if (document.querySelector('.modal')) return;
+    if (document.querySelector('#qrOpts .opt:not([disabled]), .opts .opt:not([disabled])')) return;
+    (waiting.shift())();
+  }
+  var main0 = document.getElementById('main');
+  if (main0 && window.MutationObserver) {
+    var mo = new MutationObserver(function () {
+      clearTimeout(mo.t);
+      mo.t = setTimeout(function () { foldHead(); flush(); }, 260);
+    });
+    mo.observe(main0, { childList: true });
+  }
+  foldHead();
+
+  /* 5 · the shared jar, the buddy's own voice, and the way back in */
+  var J3 = window.KJA && window.KJA.journey;
+  if (J3) {
+    J3.visit.mark('quest', 'Year 2 Learning Quest');
+    /* the Quest is where the dinosaurs live, so its roars are worth having
+       ready before a child reaches the den */
+    SND.preload(['dino-roar', 'dino-chirp', 'magic-twinkle']);
+    MAP.badge = function () {
+      SND.sfx.twinkle();
+      if (J) J.stickers.earn('y2-badge-' + (window.S && S.badges ? S.badges.length : 0), 'A Year 2 Quest badge');
+      J3.surprise('A new Quest badge');
+    };
+    MAP.levelup = function () {
+      SND.sfx.levelUp();
+      if (J) { J.confetti(50); J.stickers.earn('y2-rank-' + (window.S && S.xp ? Math.floor(S.xp / 250) : 0), 'A new explorer level in the Year 2 Quest'); }
+      J3.surprise('A new explorer level');
+    };
+  }
 })();
 </script>
 </body>

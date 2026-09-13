@@ -235,7 +235,12 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
    playable keys inside each card belong to this world alone. */
 .ptitle{font-family:var(--round);font-weight:800;line-height:.9;margin:0;letter-spacing:-1px}
 .ptitle .my{display:block;font-size:clamp(20px,4vw,28px);color:var(--deep);letter-spacing:2px}
-.ptitle .pbig{display:block;font-size:clamp(38px,10.5vw,74px)}
+/* 10.5vw fits "MY JOURNEY" and runs "RECEPTION & KG" and "PIANO ADVENTURE"
+   into both edges of a phone: the painted title is one line of rotated
+   letters, so a long name cannot wrap out of trouble. Each screen sets
+   --chars to its own title length and the size divides down to fit, with
+   10.5vw kept as the ceiling so the short titles are unchanged. */
+.ptitle .pbig{display:block;font-size:clamp(22px,min(10.5vw, 112vw / var(--chars,10)),74px)}
 .ptitle .pbig span{display:inline-block;transform:rotate(var(--r));text-shadow:1px 2px 0 #00000012}
 .frame.kb{aspect-ratio:12/7;background:#FFFDF6;border-color:#E7D2AC;display:grid;place-items:center;padding:10px}
 .frame.kb svg{width:100%;height:100%;display:block}
@@ -367,8 +372,172 @@ h2{font-family:var(--round);font-weight:800;font-size:26px;margin:34px 0 4px;tex
 .toolbar button,.toolbar a{border:none;background:#FFFDF6;border-radius:40px;padding:8px 16px;font-family:var(--round);
   font-weight:700;font-size:14px;color:var(--ink2);box-shadow:0 3px 0 #E3D3B0;text-decoration:none}
 .toolbar button[aria-pressed=true]{background:var(--t3);color:#fff;box-shadow:0 3px 0 #38703f}
+
+/* ── the star jar ──────────────────────────────────────────────────────────
+   The one thing on screen that is always the child's, on every screen: a
+   painted glass jar in the corner with the running total of every star they
+   have ever earned. The glass fills up as the total climbs through its
+   levels, so there is something to watch even before you can read the number,
+   and the buddy's face sits inside looking out. Stars from an answer fly
+   across the screen into it. */
+.starjar{position:fixed;right:12px;bottom:14px;z-index:38;border:none;background:transparent;padding:0;
+  display:flex;flex-direction:column;align-items:center;gap:2px;filter:drop-shadow(0 6px 12px #8a6a3240);
+  -webkit-tap-highlight-color:transparent;--jar:#F0B828;--fill:0%}
+.starjar.left{right:auto;left:12px}
+.jarglass{position:relative;width:52px;height:58px;display:grid;place-items:center;overflow:hidden;
+  background:#FFFDF6cc;border:3px solid var(--jar);
+  border-radius:14px 14px 20px 20px/10px 10px 22px 22px;
+  box-shadow:inset 0 3px 0 #fff, inset 0 -6px 10px #8a6a3218}
+/* the jar's lid: a painted band across the top */
+.jarglass::before{content:'';position:absolute;top:0;left:-3px;right:-3px;height:11px;background:var(--jar);
+  border-radius:12px 12px 4px 4px;opacity:.92}
+.jarfill{position:absolute;left:0;right:0;bottom:0;height:var(--fill);
+  background:linear-gradient(180deg,#FFE79A,var(--jar));opacity:.55;transition:height .5s cubic-bezier(.3,1.4,.5,1)}
+/* a waterline, so the fill reads as something poured in */
+.jarfill::before{content:'';position:absolute;top:-2px;left:0;right:0;height:4px;background:#fff9;border-radius:50%}
+.jarface{position:relative;z-index:2;font-size:24px;line-height:1;font-style:normal;margin-top:6px}
+.jarglass img{position:relative;z-index:2;width:34px;height:34px;object-fit:contain;margin-top:5px}
+.jarnum{font-family:var(--round);font-weight:800;font-size:14px;color:var(--deep);background:#FFFDF6;
+  border:2px solid var(--jar);border-radius:30px;padding:1px 10px;min-width:34px;box-shadow:0 2px 0 #E3D3B0}
+.starjar.pulse .jarglass{animation:jarpulse .36s cubic-bezier(.3,1.6,.4,1)}
+@keyframes jarpulse{0%{transform:scale(1)}45%{transform:scale(1.16) rotate(-3deg)}100%{transform:scale(1)}}
+.starjar:active{transform:scale(.94)}
+/* the jar is fixed over the page, so every page keeps a lane clear for it
+   rather than letting it sit on top of the last thing a child reads */
+body{padding-bottom:96px}
+/* ── the buddy, along for the ride ──────────────────────────────────────
+   A child picks one favourite character on the map, once, and every island —
+   Dino World, Study Island, Piano World, Art World — shows the same face and
+   name doing that island's own verb ("is exploring", "is practising",
+   "is painting"), so it reads as one companion following the child around
+   the whole adventure rather than a decoration that only Dino World has. */
+.buddyline{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;
+  font-family:var(--hand);font-size:17px;color:var(--ink2)}
+.buddyline img{vertical-align:middle}
+.buddyline b{color:var(--deep)}
+
+/* a star travelling from the answer to the jar */
+.flystar{position:fixed;z-index:39;pointer-events:none;font-size:22px;
+  animation:flystar .8s cubic-bezier(.4,.1,.7,1) forwards}
+@keyframes flystar{
+  0%{transform:translate(-50%,-50%) scale(1.3) rotate(0);opacity:1}
+  70%{opacity:1}
+  100%{transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(.35) rotate(260deg);opacity:.2}
+}
+
+/* the progress card behind the jar */
+.jarcard .sheet{text-align:left}
+.jarrow{display:flex;align-items:center;gap:14px;background:#FFFDF6;border:3px solid var(--edge);
+  border-radius:18px;padding:12px 14px;margin:0 0 12px}
+.jarrow b{display:block;font-family:var(--round);font-weight:800;font-size:26px;color:var(--deep);line-height:1.1}
+.jarrow span{font-size:16px;color:var(--ink2)}
+.jarstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 16px}
+.jarstats div{background:#FFFDF6;border:2px dashed #E0CFAB;border-radius:16px;padding:10px 4px;text-align:center}
+.jarstats b{display:block;font-family:var(--round);font-weight:800;font-size:22px;color:var(--deep)}
+.jarstats span{font-size:14px;color:var(--ink2)}
+
+/* ── the buddy picker ──────────────────────────────────────────────────────
+   Asked once. From then on this character's colour, confetti, noise and words
+   are what a child gets when they do well, which is what turns "correct" into
+   somebody being pleased with you. */
+.sheet.wide{max-width:640px}
+.buddies{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;margin:0 0 16px}
+.buddy{border:3px solid #E0CFAB;background:#FFFDF6;border-radius:20px;padding:12px 8px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 4px 0 #E3D3B0;--bc:#F0B828}
+.buddy .bface{width:62px;height:62px;display:grid;place-items:center;border-radius:50%;position:relative}
+/* a wash of the buddy's own colour behind its face, painted as a tinted
+   pseudo-element rather than color-mix() so it renders on older phones too */
+.buddy .bface::before{content:'';position:absolute;inset:0;border-radius:50%;background:var(--bc);opacity:.22}
+.buddy .bface > *{position:relative;z-index:1}
+.buddy b{font-family:var(--round);font-weight:800;font-size:18px;color:var(--deep)}
+.buddy i{font-style:normal;font-size:14px;color:var(--ink2);line-height:1.15;text-align:center}
+.buddy.on{border-color:var(--bc);box-shadow:0 0 0 4px var(--bc),0 4px 0 #E3D3B0}
+.buddy.on .bface::before{opacity:.42}
+.buddy:active{transform:scale(.96)}
+
+/* the buddy's own confetti and its speech ribbon */
+.jgift{position:fixed;top:-40px;z-index:41;pointer-events:none;animation:jgift 2.6s linear forwards}
+@keyframes jgift{
+  0%{transform:translateY(0) rotate(0);opacity:1}
+  100%{transform:translateY(108vh) rotate(320deg);opacity:.9}
+}
+.jsay{position:fixed;left:50%;bottom:86px;transform:translate(-50%,20px);z-index:42;pointer-events:none;
+  background:#FFFDF6;border:3px solid var(--gold);border-radius:22px;padding:10px 18px;max-width:min(92vw,460px);
+  font-family:var(--round);font-weight:700;font-size:18px;color:var(--deep);text-align:center;
+  box-shadow:0 10px 22px #8a6a3233;opacity:0;transition:opacity .22s ease,transform .28s cubic-bezier(.3,1.5,.5,1)}
+.jsay.on{opacity:1;transform:translate(-50%,0)}
+.jsay i{display:block;font-style:normal;font-family:var(--hand);font-weight:400;font-size:16px;color:var(--ink2);margin-top:2px}
+.jsay .sface{display:inline-grid;place-items:center;vertical-align:-8px;margin-right:8px}
+.jsay .sface img{width:32px;height:32px;object-fit:contain}
+
+/* ── carry on where you left off ───────────────────────────────────────────
+   A signpost, never a redirect: a child who comes back tomorrow is offered
+   the exact place they stopped, and still chooses to go there. */
+.resume{display:flex;align-items:center;gap:12px;text-decoration:none;position:relative;z-index:3;
+  background:#FFF7E2;border:3px solid var(--gold);border-radius:22px;padding:10px 14px;margin:0 0 14px;
+  box-shadow:0 6px 14px #8a6a321f}
+.resume .rface{width:44px;height:44px;display:grid;place-items:center;flex:none}
+.resume .rface img{width:42px;height:42px;object-fit:contain}
+.resume .rtxt{flex:1;min-width:0}
+.resume .rtxt b{display:block;font-family:var(--round);font-weight:800;font-size:18px;color:var(--deep);line-height:1.15}
+.resume .rtxt i{font-style:normal;font-size:15px;color:var(--ink2)}
+.resume .rgo{font-family:var(--round);font-weight:800;font-size:26px;color:var(--gold);flex:none}
+.resume:active{transform:scale(.985)}
+
+
+.topiccard .ticon{display:block;font-size:44px;line-height:1.1;margin:10px 0 0}
+
+/* ── a question and its answers ────────────────────────────────────────────
+   Study Island, Dino World and the year pages all ask a child a question and
+   give them buttons to choose from, so the question furniture lives here
+   rather than three times over. States carry meaning: `good` and `bad` after
+   a tap, `faded` for an option narrowing has taken off the board, and `nudge`
+   for the one to tap once narrowing has run out. */
+.why{display:block;margin:9px 0 0;font-size:17px;color:#B3262B}
+.why.ok{color:#2E7A38}
+.answers{position:relative;z-index:2;display:grid;gap:12px;grid-template-columns:1fr 1fr;margin:16px 0 0}
+@media (min-width:700px){.answers{grid-template-columns:repeat(4,1fr)}}
+.ans{border:3px solid var(--edge);background:var(--card);border-radius:18px;padding:18px 12px;
+  font-family:var(--round);font-weight:800;font-size:clamp(19px,4.4vw,24px);color:var(--deep);
+  box-shadow:0 6px 14px #8a6a321f;transition:transform .12s ease,background .2s ease}
+.ans:hover:not([disabled]){transform:translateY(-3px);background:#FFFDF2}
+.ans[disabled]{cursor:default}
+.ans.good{background:#EAF7EA;border-color:var(--t3);color:#1F5B28}
+.ans.bad{background:#FBE9E9;border-color:#C0554F;color:#8E2B26}
+.ans.faded{opacity:.32;filter:grayscale(1)}
+/* and, once narrowing runs out, the one to tap.
+   The pulse is a glow, never a transform: a tap target that is still growing
+   and shrinking is one a small finger has to chase, and the child this is
+   helping is the one least able to chase it. */
+.ans.nudge{border-color:var(--t3);background:#F2FBF1;animation:nudge 1.2s ease-in-out infinite}
+@keyframes nudge{
+  0%,100%{box-shadow:0 0 0 3px #50985833}
+  50%{box-shadow:0 0 0 9px #5098584d}
+}
+
+/* ── today's three ────────────────────────────────────────────────────────
+   Something new on the shelf every morning, without a single new question
+   having to be written: the topics rotate by the calendar day. */
+.todaybox{position:relative;z-index:2;background:var(--card);border:3px solid var(--edge);
+  border-radius:22px;padding:26px 16px 16px;margin:22px 0 8px;box-shadow:0 8px 18px #8a6a3222}
+.todaybox .tape{position:absolute;top:-14px;left:50%;transform:translateX(-50%) rotate(-1.4deg)}
+.todaysub{text-align:center;font-size:17px;color:var(--ink2);margin:2px 0 14px}
+.todayrow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:620px){.todayrow{grid-template-columns:1fr}}
+.todaycard{border:3px solid var(--c);background:#FFFDF6;border-radius:18px;padding:14px 8px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 4px 0 #E3D3B0;--c:#F0B828}
+.todaycard .tdicon{font-size:34px;line-height:1}
+.todaycard b{font-family:var(--round);font-weight:800;font-size:17px;color:var(--deep);text-align:center;line-height:1.15}
+.todaycard i{font-style:normal;font-size:15px;color:var(--gold);letter-spacing:2px}
+.todaycard.did{background:#F4F8F2;border-style:dashed}
+.todaycard.did i{color:var(--t3);letter-spacing:0;font-family:var(--round);font-weight:700}
+.todaycard:active{transform:scale(.97)}
+
 @media (prefers-reduced-motion: reduce){
-  .jbit,.jspark,.jpop{display:none}
+  .jbit,.jspark,.jpop,.jgift,.flystar{display:none}
   .coach .dyno{animation:none}
   .jstamp span{animation:none}
+  .starjar.pulse .jarglass{animation:none}
+  .jarfill{transition:none}
+  .ans.nudge{animation:none}
 }

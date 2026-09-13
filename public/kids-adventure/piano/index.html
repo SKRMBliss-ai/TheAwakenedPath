@@ -48,6 +48,7 @@
 
 <script src="/kids-adventure/kit/sound.js"></script>
 <script src="/kids-adventure/kit/juice.js"></script>
+<script src="/kids-adventure/kit/journey.js"></script>
 <script>
 (function () {
   'use strict';
@@ -135,7 +136,8 @@
       out += '<span style="color:' + TAPES[j % TAPES.length] + ';--r:' + ((j * 53) % 7 - 3) + 'deg">' + ch + '</span>';
       j++;
     }
-    return '<p class="ptitle"><span class="my">MY</span><span class="pbig">' + out + '</span></p>';
+    return '<p class="ptitle"><span class="my">MY</span><span class="pbig" style="--chars:' +
+      word.replace(/ /g, '').length + '">' + out + '</span></p>';
   }
 
   function keysHTML(l) {
@@ -204,7 +206,8 @@
       '<div class="journey"><div class="sandpath"></div>' + rowsHTML() + '</div>' +
       '<h2>The songbook</h2><p class="sub">Three whole pieces — hear them, then learn them a part at a time</p>' +
       '<div class="cards songshelf" style="--per:' + (innerWidth >= 860 ? 3 : 1) + '">' +
-        SONGS.map(songCard).join('') + '</div>';
+        SONGS.map(songCard).join('') + '</div>' +
+      buddyLine('is practising with you');
     drawPath();
     requestAnimationFrame(drawPath);
     setTimeout(drawPath, 400);
@@ -286,6 +289,15 @@
 
   });
   function paintMute() { if (window.KJA && window.KJA.ui) window.KJA.ui.toolbar('#mutebar'); }
+  var JY = (window.KJA && window.KJA.journey) || null;
+  /* the same companion every other island shows, so picking one once on the
+     map means meeting them again here rather than only in Dino World */
+  function buddyLine(verb) {
+    if (!JY) return '';
+    var b = JY.buddy.chosen(); if (!b) return '';
+    return '<p class="sub buddyline">' + JY.buddy.face(b, 30) + ' <b>' + b.name + '</b> ' + verb + '</p>';
+  }
+  if (JY) JY.visit.mark('piano', 'Piano World');
 
   var rz, lastPer = perRow();
   addEventListener('resize', function () {
