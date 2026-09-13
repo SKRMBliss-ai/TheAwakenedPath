@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { RoomConfig } from '../rooms';
 import type { DialGame } from '../games/types';
-import { CHROME, Cta, FONT, Question } from '../ui/chrome';
+import { CHROME, FONT, Question } from '../ui/chrome';
 import { useMotion, useQuiet } from '../ui/quiet';
 import * as sound from '../kit/sound';
 
@@ -71,8 +71,23 @@ export function DialEngine({
   const set = (which: 'a' | 'b', v: number) => {
     if (affirming) return;
     sound.play('tap');
+    const nextA = which === 'a' ? v : a;
+    const nextB = which === 'b' ? v : b;
     if (which === 'a') setA(v); else setB(v);
-    if (!dual) timers.current.push(window.setTimeout(commit, 420));
+    /*
+      NOTHING HERE WAITS FOR A BUTTON ANY MORE.
+
+      A single dial always advanced on the tap. A dual round put a "That's it"
+      under the two scales and waited — which asked a child to confirm
+      something they had already said, twice. The moment both dials carry a
+      value the answer is complete, so it commits, on the same short beat as
+      the single case so the second dial visibly registers first.
+
+      Read from the values being set rather than from state: both setters are
+      queued, so `a`/`b` here are still the previous render's.
+    */
+    const done = dual ? nextA !== null && nextB !== null : nextA !== null;
+    if (done) timers.current.push(window.setTimeout(commit, 420));
   };
 
   // Warmth of the room follows the dials — the higher they are, the more the
@@ -118,8 +133,13 @@ export function DialEngine({
         />
       )}
 
-      {dual && !affirming && (
-        <Cta label={ready ? 'That’s it' : 'Set them both'} onClick={ready ? commit : () => {}} accent={room.palette.accent} />
+      {/* A line, not a button. It says why nothing has happened yet on a dual
+          round with one dial still empty; it has nothing to press because
+          setting the second dial is what moves the round on. */}
+      {dual && !ready && !affirming && (
+        <p className="text-[13.5px] font-bold" style={{ color: CHROME.textSoft }}>
+          Set them both.
+        </p>
       )}
 
       <AnimatePresence>

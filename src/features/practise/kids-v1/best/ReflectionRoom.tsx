@@ -12,7 +12,7 @@ import { MicButton } from '../ui/MicButton';
 import { HearYourself } from '../ui/HearYourself';
 import { SpeakButton } from '../ui/SpeakButton';
 import { allLinks, linkClip } from '../kit/voiceStore';
-import { Chirpy, RoomScene } from '../ui/scene';
+import { BoyAndChirpy, Chirpy, RoomScene } from '../ui/scene';
 import { DIM } from '../ui/scenery';
 import { LifetimeJar } from './LifetimeJar';
 import { LetThemGo } from './LetThemGo';
@@ -144,6 +144,21 @@ export function ReflectionRoom({
         </div>
 
         <div className="flex flex-col items-center gap-2 pt-5 text-center">
+          {/*
+            THE DANCING BOY LIVES HERE NOW.
+
+            He was the middle of the hub, at 288px, on a screen that is a
+            painting of a gym with a boy already painted into the middle of it
+            — so he was a second boy standing in front of the first one. The
+            hub is the artwork; this room is the one that ends a night, and a
+            child looking back over a month of it is the right audience for
+            somebody enjoying themselves.
+
+            Facing out rather than into the scene, which is the exemption
+            §2.2's shared-gaze rule makes for an invitation: nothing on this
+            screen is asking the child to report anything.
+          */}
+          <BoyAndChirpy size={172} pose="excited" gaze="child" gait="dance" roomId={art.id} />
           <Chirpy pose="hopeful" line="Come and see the whole map." align="left" />
           <Question room={art}>Look Back &amp; Learn</Question>
           <p className="max-w-md text-[13.5px] font-semibold" style={{ color: CHROME.textSoft }}>
