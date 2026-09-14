@@ -17,6 +17,7 @@ import { GardenTree } from './GardenTree';
 import { HungDrawing } from './HungDrawing';
 import { type ReportingDay } from '../kit/reportingDay';
 import { SpeakButton } from '../ui/SpeakButton';
+import { CARD_FACE, CARD_INK } from '../ui/trail';
 import * as sound from '../kit/sound';
 
 /**
@@ -148,7 +149,11 @@ export function VirtueRoomView({
         )}
       </AnimatePresence>
 
-      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-[74px] pb-28 pt-4 sm:px-20">
+      {/* The left gutter clears the door handle, which is a fixed fitting a
+          quarter of the way up that wall. Only the left needs it — this room
+          has no handle on the right — and giving the right side back its
+          margin is 20% more column on a phone, which the lit cards want. */}
+      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col pb-28 pl-[86px] pr-4 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
           {journey && (
             <div className="flex items-center gap-1.5">
@@ -213,6 +218,12 @@ export function VirtueRoomView({
               </span>
             </div>
 
+            {/* THE TICK, ON A LIT CARD — see ui/trail for the reasoning, and
+                the Truth Lab for where this treatment started. This is the
+                one sentence the whole app exists to ask, and it spent a long
+                time set in white on a translucent grey rectangle over a
+                painting, which is the least readable surface in the building.
+                It is a piece of paper handed to the child now. */}
             <motion.button
               whileTap={{ scale: 0.99 }}
               onClick={() => {
@@ -224,29 +235,31 @@ export function VirtueRoomView({
                 // the rule this whole app is built on.
                 if (catching && journey) setJustCaught(true);
               }}
-              className="flex w-full items-center gap-4 rounded-[24px] px-5 py-5 text-left backdrop-blur-md"
+              className="flex w-full items-center gap-4 rounded-[24px] px-5 py-5 text-left"
               style={{
-                background: doneToday ? CHROME.pillSelected : CHROME.pill,
-                border: `1px solid ${doneToday ? accent : CHROME.pillBorder}`,
-                boxShadow: doneToday ? `0 0 28px -8px ${accent}` : 'none',
+                background: CARD_FACE,
+                border: `2px solid ${accent}`,
+                boxShadow: doneToday
+                  ? `0 0 34px -4px ${accent}, 0 14px 30px -14px rgba(0,0,0,0.8)`
+                  : `0 0 20px -10px ${accent}, 0 12px 26px -16px rgba(0,0,0,0.75)`,
               }}
             >
               <span
                 className="grid h-11 w-11 shrink-0 place-items-center rounded-full"
                 style={{
                   background: doneToday ? accent : 'transparent',
-                  border: `2px solid ${doneToday ? accent : CHROME.pillBorder}`,
+                  border: `2px solid ${accent}`,
                 }}
               >
                 {doneToday && <Check size={22} strokeWidth={3} color="#0E1A1C" />}
               </span>
               <span className="min-w-0">
-                <span className="block text-[15px] font-extrabold leading-snug" style={{ color: CHROME.text }}>
+                <span className="block text-[15px] font-extrabold leading-snug" style={{ color: CARD_INK }}>
                   {/* Two of the seven assume a classroom; on a Saturday they
                       ask the version that works at home. See rooms.ts. */}
                   {(reporting.isWeekend && room.weekendPrompt) || room.prompt}
                 </span>
-                <span className="mt-1 block text-[12.5px] font-semibold" style={{ color: CHROME.textSoft }}>
+                <span className="mt-1 block text-[12.5px] font-semibold" style={{ color: `${CARD_INK}B0` }}>
                   {doneToday
                     ? `Ticked for ${reporting.isYesterday ? 'yesterday' : 'today'} · +${room.points}. Tap to change it.`
                     : 'Tap if you did. Tap again if you change your mind.'}
@@ -274,27 +287,41 @@ export function VirtueRoomView({
               </span>
               <span className="text-[15px] font-bold" style={{ color: CHROME.textSoft }}>{showLearn ? '−' : '+'}</span>
             </button>
+            {/* The paragraph, when it's open, on paper like everything else
+                worth reading in here. Shut, it's still just a row. */}
             <AnimatePresence>
               {showLearn && (
-                <motion.p
+                <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden px-1 text-[14px] font-semibold leading-relaxed"
-                  style={{ color: CHROME.textSoft }}
+                  className="overflow-hidden"
                 >
-                  {room.learn.body}
-                </motion.p>
+                  <p
+                    className="rounded-[20px] px-4 py-3.5 text-[14px] font-semibold leading-relaxed"
+                    style={{
+                      background: CARD_FACE,
+                      border: `2px solid ${accent}`,
+                      boxShadow: `0 0 20px -10px ${accent}, 0 12px 26px -16px rgba(0,0,0,0.75)`,
+                      color: CARD_INK,
+                    }}
+                  >
+                    {room.learn.body}
+                  </p>
+                </motion.div>
               )}
             </AnimatePresence>
 
-            {/* ── This room's own games ─────────────────────────────────── */}
+            {/* ── This room's own games ───────────────────────────────────
+                Left on the dark deliberately. These are things to GO AND DO
+                rather than things to read, and if every row on the screen is
+                a lit card then nothing on the screen is. */}
             {newGames.map((g) => (
               <button
                 key={g.id}
                 onClick={() => { sound.play('roomCard'); setPlaying(g); }}
                 className="w-full rounded-[20px] px-4 py-3.5 text-left backdrop-blur-md"
-                style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}` }}
+                style={{ background: CHROME.pill, border: `1px solid ${accent}66` }}
               >
                 <span className="block text-[14.5px] font-extrabold" style={{ color: CHROME.text }}>{g.title}</span>
                 <span className="mt-0.5 block text-[12px] font-semibold" style={{ color: CHROME.textSoft }}>

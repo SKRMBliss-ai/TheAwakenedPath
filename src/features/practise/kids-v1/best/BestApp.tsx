@@ -11,10 +11,11 @@ import { RoomScene } from '../ui/scene';
 import { timeOfDayForHour } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
-import { HubGreeting, HubHotspot, HubStage, HUB_BOXES, PhoneHub, type Hotspot, type HotspotKey } from './PaintedHub';
+import { HubBoy, HubGreeting, HubHotspot, HubStage, HUB_BOXES, PhoneHub, type Hotspot, type HotspotKey } from './PaintedHub';
 import { FloatingJar } from './FloatingJar';
 import { HelpChirpy } from './HelpChirpy';
 import { DifferentStoryRoom } from './DifferentStoryRoom';
+import { TruthLabRoom } from './TruthLabRoom';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, accentFor, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
@@ -241,7 +242,25 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               />
             )}
 
-            {view.at === 'room' && (
+            {/*
+              THE TRUTH LAB IS ITS OWN ROOM, and the branch is here rather
+              than at each entrance so there is only ever one of it. The dome
+              on the shelf, the row in the room sheet and the fourth stop on
+              the journey all arrive at the same place — a room that changed
+              shape depending on which door you came through would be the
+              single most confusing thing in the building.
+            */}
+            {view.at === 'room' && view.room.id === 'truth' && (
+              <TruthLabRoom
+                reporting={reporting}
+                journey={view.step !== null ? { index: view.step, total: VIRTUE_ROOMS.length } : undefined}
+                onExit={back}
+                onGrownUp={() => setView({ at: 'grownup' })}
+                onNext={view.step !== null ? () => nextRoom(view.step as number) : undefined}
+              />
+            )}
+
+            {view.at === 'room' && view.room.id !== 'truth' && (
               <VirtueRoomView
                 room={view.room}
                 reporting={reporting}
@@ -409,9 +428,31 @@ function RoomMap({
    * Chosen once on arrival rather than per render, so it can't change under
    * a child mid-read.
    */
-  /** The blue door's room sheet — every room, including the unshelved one. */
+  /** The blue door's room sheet — every room, including the unshelved ones. */
   const [sheet, setSheet] = useState(false);
 
+
+  /**
+   * NOTHING IS SAID UNTIL THE CHILD ASKS FOR IT.
+   *
+   * `moment` is what Chirpy has tonight; `asked` is whether the boy has been
+   * tapped. Both have to be true before a word appears.
+   *
+   * WHY IT IS GATED AT ALL. The hub used to open by talking. A child would
+   * land on their own front room and be immediately told a thing, several
+   * times an evening, and the single worst-behaved line in the app — the one
+   * about whether you're any good at your job — became its catchphrase
+   * because of it. That particular bug was a recording fault and is fixed
+   * (see ChirpyArc), but a screen that speaks before it is spoken to was
+   * always going to produce another one eventually.
+   *
+   * So the moment is still CHOSEN on arrival, exactly as before — it must not
+   * change under the child, and the choosing peeks at storage — and it simply
+   * waits. Tap the boy and Chirpy says tonight's thing. Don't, and the hub is
+   * a quiet room with your own figure standing in it, which is a perfectly
+   * good thing for it to be.
+   */
+  const [asked, setAsked] = useState(false);
   const [moment, setMoment] = useState<HubMoment | null>(null);
   useEffect(() => {
     setMoment(hubMoment(quiet, pointsByBehaviour));
@@ -422,6 +463,19 @@ function RoomMap({
     // arrive and then left alone.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiet]);
+
+  /**
+   * Tapping the boy. If Chirpy has nothing tonight this is a no-op with a
+   * sound on it, which is the honest outcome — better than inventing a line
+   * so the tap has something to show for itself.
+   */
+  const askChirpy = () => {
+    sound.play(moment ? 'roomCard' : 'tap');
+    setAsked(true);
+  };
+
+  /** Tonight's moment, but only once it has been asked for. */
+  const said = asked ? moment : null;
 
   /**
    * And whether anybody else is in tonight — almost never; see kit/visitor
@@ -462,7 +516,7 @@ function RoomMap({
    * rooms.ts rather than the virtue rooms this hub used to list — so the map
    * below is where the two halves of the app are joined. Five of them land on
    * a virtue room whose art IS that painting (Body Detective on the Healthy
-   * Body Zone, Thought Room on the Truth Lab, and so on); Feelings Room opens
+   * Body Zone, the Truth Lab dome on the Truth Lab room, and so on); Feelings Room opens
    * the walk that asks how today went; Pause is Pause.
    *
    * KINDNESS GARDEN HAS NO DOME, because the painting has no ninth alcove. It
@@ -480,17 +534,23 @@ function RoomMap({
   ): Hotspot => ({ id: key, label, accent, onClick, done, ...HUB_BOXES[key] });
 
   /**
-   * A KNOB IS NOT ITS DOOR.
+   * A KNOB IS ITS DOOR.
    *
-   * Both doors were painted with a big brass handle on them, and until now
-   * those handles were just pixels inside a door-shaped hit box. They are the
-   * one part of a door a child reaches for on purpose, so each one is its own
-   * way through — and because the painting never lettered them, each carries a
-   * `hint` that says what it is on hover. The door boxes in PaintedHub were
-   * shortened to stop above the brass so that no press is ever ambiguous.
+   * Both doors were painted with a big brass handle on them, and that handle
+   * is the one part of a door a child reaches for on purpose — so it is the
+   * whole control, and the lit panel above it is scenery. Because the painting
+   * never lettered the brass, each knob carries a `hint` with the name of the
+   * door it belongs to, and the two take it in turns to show it.
    */
-  const knob = (key: HotspotKey, label: string, accent: string, onClick: () => void): Hotspot =>
-    ({ id: key, label, accent, onClick, hint: label, ...HUB_BOXES[key] });
+  const knob = (
+    key: HotspotKey,
+    label: string,
+    accent: string,
+    onClick: () => void,
+    /** Where in the shared tooltip cycle this one speaks. See useHintBeat. */
+    hintDelayMs: number,
+  ): Hotspot =>
+    ({ id: key, label, accent, onClick, hint: label, hintDelayMs, ...HUB_BOXES[key] });
 
   const open = (id: string) => () => { const r = virtue(id); if (r) onOpen(r); };
   const ticked = (id: string) => !!today[id];
@@ -499,7 +559,12 @@ function RoomMap({
     dome('feelings', 'Feelings Room', '#E8A2D0', onDeepDive),
     dome('body', 'Body Detective', '#6FD3E8', open('body'), ticked('body')),
     dome('together', 'Together Games', '#E8944C', open('include'), ticked('include')),
-    dome('thought', 'Thought Room', '#C48BE8', open('truth'), ticked('truth')),
+    /* The one alcove whose painted name is out of date — see `sign` on
+       Hotspot for why the replacement is drawn rather than repainted. */
+    {
+      ...dome('thought', 'Truth Lab', '#C48BE8', open('truth'), ticked('truth')),
+      sign: { text: 'Truth Lab', left: 17.5, top: 73.2, width: 72.7, height: 25.4 },
+    },
     dome('bigfeelings', 'Big Feelings', '#E86FB4', open('choices'), ticked('choices')),
     dome('pause', 'Pause Room', '#8FD9C4', onPause),
     /*
@@ -518,31 +583,29 @@ function RoomMap({
     */
     dome('story', 'Different Story', '#7FC7F0', onStory),
     dome('reflection', 'Reflection Room', '#9FB4F5', open('mindheart'), ticked('mindheart')),
-    dome('explore', 'Explore every room', '#6FA8F0', () => setSheet(true)),
-    dome('journey', 'My Journey', '#FFC65C', () => { sound.play('arcadeBlip'); onStartJourney(); }),
 
     /*
-      THE KNOBS, AND WHY THESE TWO THINGS.
+      THE KNOBS ARE THE DOORS NOW, AND THEY GO WHERE THEIR SIGNS SAY.
 
-      Each knob belongs to the door it is screwed to, which is the whole
-      reason a knob is a sensible place to put anything at all.
+      Each door used to be two controls stacked a thumb's width apart: the lit
+      panel, which opened the door it was painted on, and the brass under it,
+      which went somewhere else entirely — Look Back on one, Chirpy's help on
+      the other. Nothing on the screen said so. A child aiming at a door got
+      one of two unrelated places depending on which half of it they hit,
+      which is not a choice, it is a coin toss.
 
-      THE GOLD DOOR is My Journey — the walk through all seven rooms, which
-      ENDS at the Observatory. So its handle is the way back to what the walk
-      has come to: the same Observatory, reached without having to do the walk
-      again first. It has no other entrance now that the bottom bar is gone,
-      and "Look back" was the only thing on that bar worth keeping.
+      So each door is one thing again, and the thing it is is the handle,
+      because that is the part of a door a person actually takes hold of. The
+      painted sign above it says Explore Rooms on the left and My Journey on
+      the right, and now that is where the handle goes.
 
-      THE BLUE DOOR is Explore Rooms, and its handle gives Chirpy his door
-      back. He had one on the right-hand wall until the painting replaced the
-      walls, and since then the only way to the thing he has been working up
-      to asking has been a row most children never scroll to inside the room
-      sheet. The character standing on the boy's shoulder in this very picture
-      should not be the hardest thing on the screen to reach.
-
+      NEITHER OF THE OLD DESTINATIONS IS LOST. Both are in the room sheet the
+      left-hand door opens — Chirpy's help was already there, and Look Back is
+      there now too (see RoomSheet). The Observatory is also still where the
+      journey ends, which is the way most children reach it anyway.
     */
-    knob('knobJourney', 'Look back', '#FFC65C', () => { sound.play('roomCard'); onReflection(); }),
-    knob('knobExplore', 'Chirpy needs a hand', '#8FD9C4', () => { sound.play('roomCard'); onHelpChirpy(); }),
+    knob('knobExplore', 'Explore Rooms', '#6FA8F0', () => { sound.play('roomCard'); setSheet(true); }, 900),
+    knob('knobJourney', 'My Journey', '#FFC65C', () => { sound.play('arcadeBlip'); onStartJourney(); }, 3900),
   ];
 
   return (
@@ -560,13 +623,22 @@ function RoomMap({
       <div className="hidden md:block">
         <HubStage>
           <HubGreeting name={name} onClick={onDeepDive} />
+          {/* The boy, breathing, over the painted one — and the switch that
+              lets Chirpy speak. See HubBoy, and `asked` above. */}
+          <HubBoy waiting={!!moment && !asked} onTap={askChirpy} />
           {spots.map((sp) => <HubHotspot key={sp.id} spot={sp} />)}
         </HubStage>
       </div>
 
       {/* A portrait screen cannot hold a landscape room — see PhoneHub. */}
       <div className="md:hidden">
-        <PhoneHub name={name} spots={spots} onGreeting={onDeepDive} />
+        <PhoneHub
+          name={name}
+          spots={spots}
+          onGreeting={onDeepDive}
+          waiting={!!moment && !asked}
+          onTapBoy={askChirpy}
+        />
       </div>
 
       {/* Every firefly the child has taken to the Observatory and let go of,
@@ -626,32 +698,35 @@ function RoomMap({
           className="pointer-events-auto w-full max-w-[25rem] rounded-[26px] backdrop-blur-md"
           style={{ background: 'rgba(10,6,22,0.72)' }}
         >
+          {/* `said` is tonight's moment once the boy has been tapped, and
+              null until then — so every branch below is gated by one thing
+              in one place rather than by six copies of the same check. */}
           <AnimatePresence mode="wait">
-            {moment?.kind === 'note' && (
-              <NoteFound key="note" note={moment.note} onDone={() => setMoment(null)} />
+            {said?.kind === 'note' && (
+              <NoteFound key="note" note={said.note} onDone={() => setMoment(null)} />
             )}
-            {moment?.kind === 'welcome' && (
-              <WelcomeBackCard key="welcome" line={moment.line} onDone={() => setMoment(null)} />
+            {said?.kind === 'welcome' && (
+              <WelcomeBackCard key="welcome" line={said.line} onDone={() => setMoment(null)} />
             )}
-            {moment?.kind === 'arc' && (
-              <ChirpyArc key="arc" beat={moment.beat} onDone={() => setMoment(null)} />
+            {said?.kind === 'arc' && (
+              <ChirpyArc key="arc" beat={said.beat} onDone={() => setMoment(null)} />
             )}
-            {moment?.kind === 'memory' && (
+            {said?.kind === 'memory' && (
               <ChirpyRemembers
                 key="memory"
-                recollection={moment.recollection}
+                recollection={said.recollection}
                 onDone={() => setMoment(null)}
               />
             )}
-            {moment?.kind === 'teaching' && (
+            {said?.kind === 'teaching' && (
               <TeachingMoment
-                key={`teaching-${moment.teaching.id}`}
-                teaching={moment.teaching}
+                key={`teaching-${said.teaching.id}`}
+                teaching={said.teaching}
                 onDone={() => setMoment(null)}
               />
             )}
-            {moment?.kind === 'game' && (
-              <GuessWhat key="game" game={moment.game} onDone={() => setMoment(null)} />
+            {said?.kind === 'game' && (
+              <GuessWhat key="game" game={said.game} onDone={() => setMoment(null)} />
             )}
           </AnimatePresence>
         </div>
@@ -679,6 +754,7 @@ function RoomMap({
             onOpen={(r) => { setSheet(false); onOpen(r); }}
             onPause={() => { setSheet(false); onPause(); }}
             onChirpy={() => { setSheet(false); onHelpChirpy(); }}
+            onReflection={() => { setSheet(false); onReflection(); }}
             onFriends={() => { setSheet(false); onFriends(); }}
             onClose={() => setSheet(false)}
           />
@@ -716,6 +792,7 @@ function RoomSheet({
   onOpen,
   onPause,
   onChirpy,
+  onReflection,
   onFriends,
   onClose,
 }: {
@@ -725,6 +802,8 @@ function RoomSheet({
   onPause: () => void;
   /** Chirpy's own ask. His door went with the wall the painting replaced. */
   onChirpy: () => void;
+  /** The Observatory. Its knob became its door — see the knob list above. */
+  onReflection: () => void;
   /** Not a room, and printed as one would be a lie — see below. */
   onFriends: () => void;
   onClose: () => void;
@@ -829,6 +908,27 @@ function RoomSheet({
               </span>
               <span className="block text-[11.5px] font-bold" style={{ color: '#8FD9C4' }}>
                 he’s been working up to asking
+              </span>
+            </span>
+          </button>
+
+          {/* THE OBSERVATORY, which lost its shortcut when the gold door's
+              knob became the gold door. It is where the journey ends, so
+              most children arrive by walking; this is for the evening when
+              somebody just wants to go and look at what they've collected
+              without doing all seven rooms again first. */}
+          <button
+            onClick={onReflection}
+            className="flex items-center gap-3 rounded-[16px] px-3 py-3 text-left"
+            style={{ minHeight: m.target, background: 'rgba(255,198,92,0.10)', border: '1px solid rgba(255,198,92,0.42)' }}
+          >
+            <span className="h-7 w-7 shrink-0" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[14px] font-extrabold leading-tight" style={{ color: CHROME.text }}>
+                Look back
+              </span>
+              <span className="block text-[11.5px] font-bold" style={{ color: '#FFC65C' }}>
+                everything you’ve caught
               </span>
             </span>
           </button>

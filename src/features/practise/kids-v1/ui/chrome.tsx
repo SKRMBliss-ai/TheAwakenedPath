@@ -41,12 +41,21 @@ export function QuietProvider({ quiet, children }: { quiet: boolean; children: R
  * gradient over the bottom 55% is what stops white text disappearing over a
  * bright lamp (UI §3.1). */
 
-export function Scrim({ room }: { room: RoomConfig }) {
+export function Scrim({ room, on = true }: { room: RoomConfig; on?: boolean }) {
   return (
     <div
       aria-hidden
       className="pointer-events-none absolute inset-0"
       style={{
+        /*
+          NOT PAINTED ON ARRIVAL. This veil is most of the reason nobody has
+          ever seen these rooms — it is around half-opaque at the top, and it
+          used to be there from the first frame, so the door opened onto an
+          already-dimmed painting. It fades in three seconds after the child
+          walks in instead. See SETTLE_MS in ui/scene, which owns the timing.
+        */
+        opacity: on ? 1 : 0,
+        transition: 'opacity 1600ms ease-in-out',
         /*
           IT COVERS THE WHOLE SCREEN NOW. This used to be `transparent 40%`,
           which meant the entire upper half of every room — the room's name,

@@ -209,7 +209,7 @@ export const KIDS_ROOMS: KidsRoom[] = [
     ],
   },
   {
-    id: 'kids-thought', gym: 'kids', title: 'Thought Room', glyph: '💭', tint: '#E3F0FF',
+    id: 'kids-thought', gym: 'kids', title: 'Truth Lab', glyph: '💭', tint: '#E3F0FF',
     whatPractising: 'Discover what your mind is saying.',
     scenario: 'Your mind says “I’m not good at this.”',
     strengths: ['awareness'],

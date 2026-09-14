@@ -126,7 +126,10 @@ export const ROOMS: RoomConfig[] = [
   },
   {
     id: 'thought',
-    name: 'Thought Room',
+    /* The painted sign over this door says TRUTH LAB, and has since the
+       artwork arrived — "Thought Room" was the name in the code, nowhere a
+       child could see. The id stays `thought` because it is a storage key. */
+    name: 'Truth Lab',
     tagline: 'There’s someone talking in there. Let’s go and listen.',
     trains: 'Noticing what your mind says',
     welcome: 'Careful in here. It’s noisy.',

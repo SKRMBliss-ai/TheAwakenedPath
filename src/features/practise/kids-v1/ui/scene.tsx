@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SCENE_MOODS, roomArt, storageFallback, type RoomConfig } from '../rooms';
 import { FONT, Scrim } from './chrome';
@@ -30,9 +30,37 @@ import { DIM, GAITS, ROOM_PROPS, type BoyGait, type RoomProp } from './scenery';
 
 /* ── The scene ──────────────────────────────────────────────────────── */
 
+/**
+ * HOW LONG THE ROOM GETS TO BE THE ROOM BEFORE THE TEXT ARRIVES.
+ *
+ * Somebody painted these rooms, and until now nobody ever saw one: the dim
+ * that holds the artwork back so the questions stay readable was painted on
+ * at the same instant as the artwork itself, so a child walked into a room
+ * that was already three-quarters dark. The picture was doing no work at all.
+ *
+ * So the door opens onto the room at full brightness, and the dim arrives
+ * three seconds later, slowly. It costs nothing — a child is still reading
+ * Chirpy's line at that point — and it is the difference between a place and
+ * a background.
+ *
+ * THE HUB IS NOT AFFECTED and never was: it paints its own sky rather than
+ * using RoomScene, and it has no dim of any kind. The painting there is at
+ * full brightness the whole time, which is the whole thesis of that screen.
+ */
+const SETTLE_MS = 3000;
+
 export function RoomScene({ room, dim = DIM.content }: { room: RoomConfig; dim?: number }) {
   const mood = SCENE_MOODS[room.scene];
   const quiet = useQuiet();
+
+  /* Starts undimmed and settles. Keyed off the mount, so walking into a room
+     restarts it and changing the dim mid-stay (the games dim further) does
+     not — the arrival is the thing being protected, not every later change. */
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setSettled(true), SETTLE_MS);
+    return () => window.clearTimeout(t);
+  }, []);
 
   /**
    * THE ROOM'S OWN SOUND. Every screen in the app renders one of these, so
@@ -90,11 +118,21 @@ export function RoomScene({ room, dim = DIM.content }: { room: RoomConfig; dim?:
           scrim so it recedes with everything else. See ROOM_PROPS. */}
       <Props roomId={room.id} />
 
+      {/* The dim, arriving late and slowly — see SETTLE_MS. Animated rather
+          than transitioned so framer-motion owns the timing, and rendered
+          even at zero so there is one element fading rather than one
+          appearing. */}
       {dim > 0 && (
-        <div className="absolute inset-0" style={{ background: `rgba(4,6,14,${dim})` }} />
+        <motion.div
+          className="absolute inset-0"
+          style={{ background: 'rgb(4,6,14)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: settled ? dim : 0 }}
+          transition={{ duration: 1.6, ease: 'easeInOut' }}
+        />
       )}
 
-      <Scrim room={room} />
+      <Scrim room={room} on={settled} />
     </div>
   );
 }

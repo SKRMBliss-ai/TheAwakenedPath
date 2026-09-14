@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { CHROME, FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
@@ -72,6 +73,74 @@ export interface Hotspot {
    * things here that have to introduce themselves.
    */
   hint?: string;
+  /**
+   * How long this hotspot waits before its turn to speak, in ms.
+   *
+   * The two knobs share one cycle and take it in turns — see HINT_ON/HINT_OFF
+   * below. Offsetting the second one by half the cycle is what stops both
+   * sides of the screen announcing themselves at the same moment, which reads
+   * as an interface with something urgent to tell you rather than as two
+   * fittings quietly saying what they are.
+   */
+  hintDelayMs?: number;
+  /**
+   * A replacement for the name PAINTED on this alcove, covering it.
+   *
+   * Only one room needs this and it is a rename: the sign on the middle shelf
+   * says THOUGHT ROOM, which is what the room was called in the code when the
+   * artwork was commissioned, and it is called the Truth Lab now. Everything
+   * else in the app renames in a line; a name baked into a 1600px painting
+   * does not.
+   *
+   * PATCHING THE PAINTING WAS THE OTHER OPTION AND IS WORSE. The plate could
+   * be repainted and the words redrawn into the file — but the signs in this
+   * room are lettered in a rounded playful face, nothing like it is installed
+   * anywhere the build runs, and "Truth Lab" set in DejaVu Sans next to seven
+   * hand-lettered neighbours would look exactly like what it was. Drawing it
+   * live gets Outfit, which is the app's own face and much the closer match,
+   * and it means the next rename is a string rather than an image edit.
+   *
+   * The measurements are of the painted plate, as a fraction of the alcove's
+   * own box, so the replacement rides the hover lift with everything else.
+   */
+  sign?: { text: string; left: number; top: number; width: number; height: number };
+}
+
+/**
+ * THE KNOBS SAY WHAT THEY ARE, UNPROMPTED, ON A LOOP.
+ *
+ * Hover is not a thing most of these children have. A tooltip that only
+ * appears on hover is a tooltip a phone never shows, so on the two fittings
+ * the painting never lettered the name comes up by itself, sits there long
+ * enough to be read, and goes away again. Three seconds on, three off, and
+ * the two knobs alternate so only one is ever talking.
+ *
+ * It does not stop after a while on purpose. This is a screen a child lands
+ * on several times a day for months, and the label is one line of eleven
+ * characters at the edge of a painting — it costs nothing to keep offering,
+ * and a child who has not yet worked out that the brass does something should
+ * not have to have been paying attention on day one.
+ */
+const HINT_ON = 3000;
+const HINT_OFF = 3000;
+
+function useHintBeat(enabled: boolean, delayMs: number) {
+  const [showing, setShowing] = useState(false);
+
+  useEffect(() => {
+    if (!enabled) return;
+    let on = false;
+    let timer = 0;
+    const step = () => {
+      on = !on;
+      setShowing(on);
+      timer = window.setTimeout(step, on ? HINT_ON : HINT_OFF);
+    };
+    timer = window.setTimeout(step, delayMs);
+    return () => window.clearTimeout(timer);
+  }, [enabled, delayMs]);
+
+  return showing;
 }
 
 /**
@@ -124,15 +193,66 @@ export const HUB_BOXES = {
   knobJourney: { left: 86.2, top: 50.2, width: 7.2, height: 11.0, radius: '44% 44% 44% 44% / 50% 50% 50% 50%' },
   /** The painted bubble is wiped out of the art; the live one sits here. */
   bubble:     { left: 26.4, top: 5.2,  width: 26.6, height: 14.4 },
+  /**
+   * THE BOY HIMSELF — where he is actually standing, cap to shoes, with
+   * Chirpy on his shoulder included in the width.
+   *
+   * This is the hit box rather than the drawing: it is the child's own figure
+   * in the middle of the room, and the one thing on this screen a child
+   * reaches for without being asked to.
+   */
+  boy:        { left: 37.2, top: 23.7, width: 18.2, height: 74.0, radius: '42% 42% 18% 18% / 22% 22% 10% 10%' },
 } as const;
 
 /**
- * The two doors, and the two knobs on them — PhoneHub sorts one flat list of
- * hotspots into three rows with these. Module-private deliberately: exporting
- * them would cost this file its fast refresh (react-refresh/only-export-components)
- * and nothing outside it needs them.
+ * THE ANIMATED BOY, AND HOW HE IS THE SAME BOY.
+ *
+ * He is painted into hub-room@1600.webp along with everything else, so there
+ * was nothing to animate: moving him meant moving the shelves behind him.
+ * The dome lift gets away with quoting a rectangle of the painting because it
+ * only happens on hover and only for a moment; a figure breathing all evening
+ * inside a rectangle of wallpaper would show its seams within seconds.
+ *
+ * What makes it work is that the cut-out sprite in assets/home/boy@640.webp
+ * is the SAME DRAWING — same pose, same pink cap, same bird on the shoulder —
+ * with an alpha channel. So it can be laid exactly over the painted boy,
+ * hiding him completely, and then moved. The numbers below are the
+ * registration, and they were NOT arrived at by eye. The first attempt was,
+ * and it had the scale about a fifth too small — which on screen is two boys
+ * and two birds, slightly apart: invisible at a glance and glaring at 200%,
+ * which is the worst way for a bug to be. These come from a search over scale
+ * and offset for the placement where the sprite's opaque pixels differ least
+ * from the painting beneath them, i.e. where the two drawings are provably
+ * the same drawing. Re-render the room and run that search again rather than
+ * nudging these by hand.
+ *
+ * WHY HE ONLY BREATHES. Any rotation or sideways drift uncovers the painted
+ * boy underneath, and a second child's elbow appearing from behind the first
+ * is worse than stillness. A scale about the feet cannot: the overlay only
+ * ever grows, so what is underneath stays underneath. It reads as breathing,
+ * which is what standing still actually looks like.
  */
-const DOOR_IDS: string[] = ['explore', 'journey'];
+const BOY_FIT = {
+  /** The sprite element itself, sized and placed to land on the painted boy. */
+  left: 30.875,
+  top: 21.277,
+  width: 30.375,
+  /** Where his feet are inside the sprite — the point the breathing pins. */
+  footOrigin: 'center 96.25%',
+} as const;
+
+/**
+ * The two knobs — PhoneHub sorts one flat list of hotspots into rows with
+ * this. Module-private deliberately: exporting it would cost this file its
+ * fast refresh (react-refresh/only-export-components) and nothing outside it
+ * needs it.
+ *
+ * THE DOOR PANELS ARE NO LONGER HOTSPOTS. Each door was two controls a
+ * thumb's width apart — the lit sign, and the brass under it — that went to
+ * two different places, which is a coin toss dressed up as a choice. The knob
+ * is the one a child reaches for, so the knob is the whole door now and the
+ * panel above it is scenery like the rest of the wall.
+ */
 const KNOB_IDS: string[] = ['knobExplore', 'knobJourney'];
 
 /**
@@ -206,6 +326,9 @@ export function HubStage({ children }: { children: React.ReactNode }) {
  */
 export function HubHotspot({ spot }: { spot: Hotspot }) {
   const m = useMotion();
+  /* The knobs introduce themselves on a loop. Nothing else does — every
+     other piece of this painting has its name written on it. */
+  const beat = useHintBeat(!!spot.hint, spot.hintDelayMs ?? 0);
 
   /* The slice of the painting that is this hotspot. See the note above. */
   const cutout = {
@@ -266,6 +389,34 @@ export function HubHotspot({ spot }: { spot: Hotspot }) {
           }}
         />
 
+        {/* The renamed sign, sitting exactly on the painted one. Inside the
+            lift so it rises with the alcove — a label that stayed put while
+            the shelf it is screwed to moved would read as a sticker. */}
+        {spot.sign && (
+          <span
+            aria-hidden
+            className="absolute grid place-items-center overflow-hidden rounded-full px-1"
+            style={{
+              left: `${spot.sign.left}%`,
+              top: `${spot.sign.top}%`,
+              width: `${spot.sign.width}%`,
+              height: `${spot.sign.height}%`,
+              /* The plate's own purple, sampled off the painting, so it reads
+                 as the sign rather than as something stuck over it. */
+              background: 'linear-gradient(180deg, #7B44CE 0%, #5A2495 100%)',
+              border: '1px solid rgba(214,182,255,0.55)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.32), 0 0 14px -4px #B07BF0',
+            }}
+          >
+            <span
+              className="truncate font-extrabold leading-none text-white"
+              style={{ fontSize: 'clamp(7px, 0.72vw, 13px)', letterSpacing: '0.01em' }}
+            >
+              {spot.sign.text}
+            </span>
+          </span>
+        )}
+
         {/* Ticked today. The one thing allowed to cover any part of the art,
             because it is the only thing on this screen the painting cannot
             possibly say for itself. */}
@@ -292,7 +443,9 @@ export function HubHotspot({ spot }: { spot: Hotspot }) {
       {spot.hint && (
         <span
           aria-hidden
-          className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-extrabold opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
+          /* Shown on its own beat, and still on hover and focus for anyone
+             who has a pointer and has gone looking. */
+          className={`pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-extrabold transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100 ${beat ? 'opacity-100' : 'opacity-0'}`}
           style={{
             background: 'rgba(10,6,22,0.92)',
             border: `1px solid ${spot.accent}`,
@@ -304,6 +457,124 @@ export function HubHotspot({ spot }: { spot: Hotspot }) {
         </span>
       )}
     </motion.button>
+  );
+}
+
+/**
+ * The boy, breathing, and the one thing on this screen that has to be tapped
+ * before anything happens.
+ *
+ * WHY HE IS NOW THE SWITCH. Chirpy used to start talking the moment the hub
+ * mounted, which meant the app opened by speaking at a child who had not
+ * asked it anything. Landing on your own front room and being immediately
+ * told a thing is what made one badly-behaved line feel like a catchphrase,
+ * and the fix for the line was only half the fix. So the evening's one moment
+ * now waits behind a tap, and the tap is on the child's own figure: nothing
+ * happens in here until you say so.
+ *
+ * "TAP ME" IS THERE BECAUSE NOTHING ELSE WOULD SAY IT. Every other control on
+ * this screen is a painted object that looks like what it does — a dome, a
+ * door, a handle. A boy standing in a room looks like a boy standing in a
+ * room. He gets a label until he has been tapped once, and then never again
+ * that evening.
+ */
+export function HubBoy({
+  waiting,
+  onTap,
+  tipBelow = false,
+}: {
+  waiting: boolean;
+  onTap: () => void;
+  /**
+   * Put the label under his feet rather than over his cap.
+   *
+   * For the phone hero, where the painting is only a couple of hundred pixels
+   * tall and the top of it is already occupied by the grown-up button and the
+   * sound toggle. Above his head there is the toolbar; below him there is
+   * floor.
+   */
+  tipBelow?: boolean;
+}) {
+  const m = useMotion();
+  const b = HUB_BOXES.boy;
+
+  return (
+    <>
+      {/* The drawing. Not the button — it is wider than he is (the sprite
+          carries transparent margins) and a hit box that size would swallow
+          the shelves either side of him. */}
+      <motion.img
+        src="/assets/home/boy@640.webp"
+        srcSet="/assets/home/boy@320.webp 320w, /assets/home/boy@640.webp 640w"
+        sizes="25vw"
+        alt=""
+        aria-hidden
+        draggable={false}
+        className="pointer-events-none absolute select-none"
+        style={{
+          left: `${BOY_FIT.left}%`,
+          top: `${BOY_FIT.top}%`,
+          width: `${BOY_FIT.width}%`,
+          transformOrigin: BOY_FIT.footOrigin,
+        }}
+        animate={m.quiet ? { scale: 1 } : { scale: [1, 1.028, 1] }}
+        transition={m.quiet ? { duration: 0.4 } : { repeat: Infinity, duration: 3.6, ease: 'easeInOut' }}
+      />
+
+      <motion.button
+        onClick={onTap}
+        aria-label={waiting ? 'Tap me — Chirpy has something to say' : 'Chirpy'}
+        whileTap={{ scale: 0.97 }}
+        className="group absolute focus:outline-none"
+        style={{
+          left: `${b.left}%`,
+          top: `${b.top}%`,
+          width: `${b.width}%`,
+          height: `${b.height}%`,
+          borderRadius: b.radius,
+          fontFamily: FONT,
+        }}
+      >
+        {/* A ring only on hover or focus, like every other hotspot. Nothing
+            is drawn on him at rest — he is a boy, not a button. */}
+        <span
+          aria-hidden
+          className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+          style={{
+            borderRadius: b.radius,
+            boxShadow: '0 0 42px -6px rgba(255,214,130,0.9)',
+          }}
+        />
+
+        {/* The invitation, above his head, and only until he's been tapped. */}
+        <AnimatePresence>
+          {waiting && (
+            <motion.span
+              aria-hidden
+              initial={{ opacity: 0, y: 6 }}
+              animate={m.quiet
+                ? { opacity: 1, y: 0 }
+                : { opacity: 1, y: [0, -4, 0] }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={m.quiet
+                ? { duration: 0.4 }
+                : { y: { repeat: Infinity, duration: 2.1, ease: 'easeInOut' }, opacity: { duration: 0.4 } }}
+              className={`pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-extrabold ${
+                tipBelow ? 'top-full mt-1' : 'bottom-full mb-1'
+              }`}
+              style={{
+                background: '#0B0818',
+                border: '1.5px solid #FFC65C',
+                color: CHROME.text,
+                boxShadow: '0 4px 18px rgba(0,0,0,0.7), 0 0 22px -4px #FFC65C',
+              }}
+            >
+              Tap me
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
+    </>
   );
 }
 
@@ -418,15 +689,19 @@ export function PhoneHub({
   name,
   spots,
   onGreeting,
+  waiting,
+  onTapBoy,
 }: {
   name: string;
   spots: Hotspot[];
   onGreeting: () => void;
+  /** Chirpy has something to say and hasn't been asked for it yet. */
+  waiting: boolean;
+  onTapBoy: () => void;
 }) {
   const m = useMotion();
-  const doors = spots.filter((s) => DOOR_IDS.includes(s.id));
   const knobs = spots.filter((s) => KNOB_IDS.includes(s.id));
-  const rooms = spots.filter((s) => !DOOR_IDS.includes(s.id) && !KNOB_IDS.includes(s.id));
+  const rooms = spots.filter((s) => !KNOB_IDS.includes(s.id));
 
   return (
     <div className="relative flex flex-col" style={{ fontFamily: FONT }}>
@@ -438,6 +713,11 @@ export function PhoneHub({
           draggable={false}
           className="absolute inset-0 h-full w-full select-none object-cover"
         />
+        {/* The boy breathes here too, and is still the switch — the hero is
+            the same painting at the same aspect, so the same percentages
+            land in the same place. See HubBoy. */}
+        <HubBoy waiting={waiting} onTap={onTapBoy} tipBelow />
+
         {/* No HubGreeting in here. Its geometry is percentages of the stage,
             and at 430px wide those percentages are a 110px bubble holding
             three lines of type — the words stop being words. The greeting is
@@ -516,45 +796,27 @@ export function PhoneHub({
           ))}
         </div>
 
-        {doors.map((d) => (
+        {/* The two doors, which on a wide screen are brass knobs on the
+            painted doors and here are simply the two big ways out of this
+            page. Full-width rows rather than a pair of half-width ones:
+            these are the only things on the hub that lead somewhere other
+            than a single room, and they should not look like the grid. */}
+        {knobs.map((k) => (
           <button
-            key={d.id}
-            onClick={d.onClick}
+            key={k.id}
+            onClick={k.onClick}
             className="rounded-full px-4 py-3.5 text-[14.5px] font-extrabold"
             style={{
               minHeight: m.target,
-              background: `${d.accent}1F`,
-              border: `1.5px solid ${d.accent}`,
+              background: `${k.accent}1F`,
+              border: `1.5px solid ${k.accent}`,
               color: CHROME.text,
-              boxShadow: `0 0 24px -10px ${d.accent}`,
+              boxShadow: `0 0 24px -10px ${k.accent}`,
             }}
           >
-            {d.label}
+            {k.label}
           </button>
         ))}
-
-        {/* The knobs, which on a wide screen are brass fittings on the doors
-            and here are simply two more places to go. No overlap to worry
-            about on a phone — the doors above are rows of their own — so
-            these can be plain, quieter buttons sitting under the door each
-            one belongs to. */}
-        <div className="grid grid-cols-2 gap-2.5">
-          {knobs.map((k) => (
-            <button
-              key={k.id}
-              onClick={k.onClick}
-              className="rounded-full px-2.5 py-2.5 text-[12px] font-extrabold leading-tight"
-              style={{
-                minHeight: m.target,
-                background: 'rgba(255,255,255,0.05)',
-                border: `1px solid ${k.accent}77`,
-                color: CHROME.textSoft,
-              }}
-            >
-              {k.label}
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );

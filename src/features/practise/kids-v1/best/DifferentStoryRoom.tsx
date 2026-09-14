@@ -135,7 +135,10 @@ export function DifferentStoryRoom({
         <div className="pointer-events-auto"><GrownUpExit onClick={onGrownUp} /></div>
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[27rem] flex-col gap-3.5 px-4 pb-28 pt-16">
+      {/* Left gutter for the door handle, which is a fixed fitting a quarter
+          of the way up the left wall and otherwise lands on top of whatever
+          card is at that height. Same reservation every other room makes. */}
+      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[27rem] flex-col gap-3.5 pb-28 pl-[72px] pr-4 pt-16 sm:px-5">
         <Chirpy pose={beat === 'land' ? 'hopeful' : 'curious'} line={chirpyLine} align="left" />
 
         {/* THE SITUATION, and it stays on screen the whole way through. Every

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CHROME, FONT } from './chrome';
 import { useMotion } from './quiet';
@@ -37,14 +38,44 @@ import * as sound from '../kit/sound';
  * magic yields, and it is not negotiable.
  */
 
-const PLATE = '/ui/handles/handle.webp';
+/**
+ * THE BRASS WAS TOO DARK TO FIND.
+ *
+ * The old plate was a photographic antique lever — dull, unlit, browner than
+ * the walls it hung on. In a room that is deliberately dim it disappeared,
+ * and the fix kept being to describe it better in a comment. The founder's
+ * own handle sheet has the answer on it: a lit gold rose with a star in the
+ * middle and a coloured swirl for the lever, drawn for exactly this app and
+ * bright enough to read against a dark wall without anything being dimmed to
+ * make room for it.
+ *
+ * Cut from assets/gym/rooms/door handles.png, top-left of the nine. Same
+ * orientation as the plate it replaces — rose on the left, lever sweeping
+ * right — so the mirroring below is unchanged.
+ */
+const PLATE = '/ui/handles/star@440.webp';
+const PLATE_SRCSET = '/ui/handles/star@220.webp 220w, /ui/handles/star@440.webp 440w';
 const SEAM = '/ui/handles/seam.webp';
+
+/**
+ * HOW BIG THE FITTING IS.
+ *
+ * 88px, which is what this was, is a thumbnail. It came from the old dark
+ * plate, where making it bigger only made a bigger brown smudge — so the
+ * size was chosen to keep it out of the way rather than to make it usable,
+ * and then the room complained it could not be seen. A door handle is
+ * something a child aims a whole hand at.
+ *
+ * Two sizes rather than one: a phone has no room for a 150px fitting beside
+ * a column of text, and a desktop has nothing but room.
+ */
+const PLATE_W_WIDE = 152;
 
 /** The lever swings this far when pressed. Small: it reads as weight, not spin. */
 const PRESS_DEG = 8;
 
 /** Where the rose sits in the plate — the point a real lever pivots about. */
-const PIVOT = '19% 50%';
+const PIVOT = '24% 50%';
 
 /** How long the name hangs there on arrival before it fades back. */
 const TIP_MS = 2800;
@@ -123,7 +154,7 @@ export function DoorHandle({
     window.setTimeout(onClick, m.quiet ? 420 : 320);
   }
 
-  return (
+  const handle = (
     <div
       /*
         FIXED, not absolute. Absolute made the handle span the whole
@@ -132,6 +163,9 @@ export function DoorHandle({
         the way down a very long page, i.e. nowhere a child would ever see
         it. Fixed keeps it on the wall of the room rather than on the wall of
         the document, so it is reachable at every scroll position.
+
+        AND IT IS PORTALLED OUT TO <body>, which is the other half of that
+        same fight — see the note on the return below.
       */
       className="pointer-events-none fixed inset-y-0 z-20 flex items-end"
       style={{ [side]: 0, paddingBottom: `${bottomVh}vh` } as React.CSSProperties}
@@ -149,8 +183,8 @@ export function DoorHandle({
           // outer falloff rather than the bright core. Straight, sharp and
           // full-strength it read as a laser down the side of the screen —
           // the opposite of light escaping around a door.
-          [side]: -46,
-          width: 92,
+          [side]: -52,
+          width: 116,
           // Was inset-y-0/h-full, which is right for one door on a wall and
           // wrong for three: the seams stacked into one continuous strip of
           // light down the whole edge, so no door had an edge of its own.
@@ -209,8 +243,8 @@ export function DoorHandle({
         {!m.quiet && (
           <motion.span
             aria-hidden
-            className="pointer-events-none absolute rounded-full"
-            style={{ width: 86, height: 86, background: `radial-gradient(circle, ${accent}77 0%, ${accent}22 42%, transparent 70%)` }}
+            className="pointer-events-none absolute h-[86px] w-[86px] rounded-full sm:h-[136px] sm:w-[136px]"
+            style={{ background: `radial-gradient(circle, ${accent}77 0%, ${accent}22 42%, transparent 70%)` }}
             animate={{ scale: [1, 1.4, 1], opacity: [0.85, 0.25, 0.85] }}
             transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
           />
@@ -225,31 +259,66 @@ export function DoorHandle({
           the mirror, is exactly right for the other wall.
         */}
         <div
+          /*
+            Just past the edge, and no further.
+
+            The old plate was pulled a quarter of its width off-screen, on the
+            principle that a real fitting runs on past the door frame. That
+            was free when the plate was a featureless brass oval. It is not
+            free now: the rose on this one carries a lit star, the star sits
+            about a quarter of the way in, and pulling a quarter of the plate
+            off the edge hid exactly the part that says "this is a thing, take
+            hold of it" — leaving a gold squiggle that reads as decoration.
+
+            So barely any of it goes. Enough that it is still attached to the
+            wall rather than floating beside it.
+          */
+          className={forward ? '-mr-[10px]' : '-ml-[10px]'}
           style={{
             transform: forward ? 'scaleX(-1)' : undefined,
-            // Runs off the edge of the screen the way a real fitting runs
-            // on past the door frame — and keeps the lever clear of content.
-            marginLeft: forward ? 0 : -22,
-            marginRight: forward ? -22 : 0,
             lineHeight: 0,
           }}
         >
           <motion.img
             src={PLATE}
+            srcSet={PLATE_SRCSET}
+            sizes={`${PLATE_W_WIDE}px`}
             alt=""
             aria-hidden
             draggable={false}
-            className="max-w-none select-none"
-            width={88}
+            /* Intrinsic size on the attributes, drawn size in the class, so
+               the browser reserves the right box before the file lands. */
+            width={440}
+            height={251}
+            /*
+              Written out rather than built from a constant: Tailwind reads
+              this file as text and never sees a class name it has to
+              assemble.
+
+              THE PHONE SIZE IS THE CONSTRAINED ONE. A room's content column
+              on a 420px screen runs from about 74px to about 346px, and this
+              fitting is pinned to the left edge at the same height as some of
+              it. 92px wide with 10 pulled off the edge leaves 82px on screen,
+              which clears the column, shows the whole star, and is still half
+              again the 66px the old dark plate managed. Wider screens have
+              the column centred with room to spare on both sides, so there
+              the fitting can be the size it wants to be.
+            */
+            className="h-auto w-[92px] max-w-none select-none sm:w-[152px]"
             animate={{ rotate: pressed ? PRESS_DEG : 0 }}
             transition={{ type: 'spring', stiffness: 240, damping: 15 }}
             style={{
               transformOrigin: PIVOT,
-              // The awake state, from the same pixels: warmer, brighter, and
-              // throwing light onto the wall around it.
+              // The awake state, from the same pixels: brighter, and throwing
+              // more light onto the wall around it.
+              //
+              // THE RESTING STATE IS NO LONGER NEARLY-OFF. The old plate was
+              // dark brass and had to be dimmed further to stay out of the
+              // way; this one is lit gold and can simply sit there at full
+              // strength. A control a child cannot find is not subtle.
               filter: live
-                ? `brightness(1.34) saturate(1.28) drop-shadow(0 0 20px ${accent}CC)`
-                : `brightness(${forward ? 1.12 : 1}) saturate(${forward ? 1.05 : 0.94}) drop-shadow(0 0 13px ${accent}88)`,
+                ? `brightness(1.18) saturate(1.14) drop-shadow(0 0 26px ${accent}EE)`
+                : `drop-shadow(0 0 18px ${accent}AA) drop-shadow(0 4px 12px rgba(0,0,0,0.55))`,
               transition: 'filter 520ms ease-out',
             }}
           />
@@ -294,6 +363,29 @@ export function DoorHandle({
       </motion.button>
     </div>
   );
+
+  /*
+    AND OUT TO <body>, WHICH IS THE OTHER HALF OF THE FIXED-POSITIONING FIGHT.
+
+    `position: fixed` means "against the viewport" only while no ancestor has
+    a transform, a filter or a clip-path on it. BestApp wraps every screen in
+    a framer-motion div that has all three at various points — it is the arch
+    wipe between rooms — and a transformed ancestor silently becomes the
+    containing block for anything fixed inside it.
+
+    On a desktop that is invisible: the wrapper happens to fill the viewport,
+    so "the bottom of the wrapper" and "the bottom of the screen" are the same
+    place. On a phone, or on half a screen, the room's content column is
+    taller than the viewport and the wrapper grows with it — so `items-end`
+    plus 26vh of padding put the handle 26vh above the bottom of a page that
+    scrolls, i.e. a long way below the fold. The handles were not missing on
+    narrow screens; they were rendered, correctly, somewhere nobody could see.
+
+    A portal is the fix rather than hunting transforms out of the ancestors:
+    the wipe is worth having, and this way the fitting is fixed to the actual
+    window no matter what any screen above it decides to animate later.
+  */
+  return typeof document === 'undefined' ? handle : createPortal(handle, document.body);
 }
 
 /*
