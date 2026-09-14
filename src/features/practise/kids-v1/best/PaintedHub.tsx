@@ -227,11 +227,24 @@ export const HUB_BOXES = {
  * the same drawing. Re-render the room and run that search again rather than
  * nudging these by hand.
  *
- * WHY HE ONLY BREATHES. Any rotation or sideways drift uncovers the painted
- * boy underneath, and a second child's elbow appearing from behind the first
- * is worse than stillness. A scale about the feet cannot: the overlay only
- * ever grows, so what is underneath stays underneath. It reads as breathing,
- * which is what standing still actually looks like.
+ * AND THE PAINTED BOY IS GONE NOW, which is what lets him move at all.
+ *
+ * For a while the overlay could only BREATHE — a scale about the feet, which
+ * is the one transform that never uncovers anything, because the overlay only
+ * ever grows. Anything else slid the sprite off the boy printed underneath and
+ * a second child's elbow appeared from behind the first.
+ *
+ * So the painted one was erased. Not as a rectangle — that smears a band of
+ * shelving twenty percent of the room wide, and the sprite's transparent
+ * margins are wider than the boy, so the smear shows on both sides of him
+ * forever. The mask is the SPRITE'S OWN ALPHA, laid where the overlay sits and
+ * grown by a few pixels: exactly the shape of the thing being hidden, and
+ * guaranteed to stay hidden by the thing hiding it. Underneath is a soft
+ * boy-shaped patch of blurred room, so the few pixels a step uncovers read as
+ * depth of field rather than as a hole.
+ *
+ * Re-render the painting and that erase has to be re-run, or he will be
+ * standing next to himself again.
  */
 const BOY_FIT = {
   /** The sprite element itself, sized and placed to land on the painted boy. */
@@ -519,8 +532,23 @@ export function HubBoy({
           width: `${BOY_FIT.width}%`,
           transformOrigin: BOY_FIT.footOrigin,
         }}
-        animate={m.quiet ? { scale: 1 } : { scale: [1, 1.028, 1] }}
-        transition={m.quiet ? { duration: 0.4 } : { repeat: Infinity, duration: 3.6, ease: 'easeInOut' }}
+        /*
+          A WEIGHT SHIFT, NOT A PULSE. The old idle was a 2.8% scale and
+          nothing else, which is what standing still looks like — and standing
+          still is what a child reads as a picture. This is the sway from
+          ui/scenery's gaits: weight going foot to foot, the small dip that
+          goes with it, and the lean that follows the dip. Pinned at the feet
+          so the floor never moves under him.
+        */
+        animate={m.quiet ? { scale: 1, x: 0, y: 0, rotate: 0 } : {
+          x: ['0%', '1.6%', '0%', '-1.6%', '0%'],
+          y: ['0%', '-1.1%', '0%', '-1.1%', '0%'],
+          rotate: [0, 1.1, 0, -1.1, 0],
+          scale: [1, 1.012, 1, 1.012, 1],
+        }}
+        transition={m.quiet
+          ? { duration: 0.4 }
+          : { repeat: Infinity, duration: 6.2, ease: 'easeInOut', times: [0, 0.25, 0.5, 0.75, 1] }}
       />
 
       <motion.button
@@ -561,8 +589,21 @@ export function HubBoy({
               transition={m.quiet
                 ? { duration: 0.4 }
                 : { y: { repeat: Infinity, duration: 2.1, ease: 'easeInOut' }, opacity: { duration: 0.4 } }}
-              className={`pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-extrabold ${
-                tipBelow ? 'top-full mt-1' : 'bottom-full mb-1'
+              /*
+                BESIDE HIM, NOT OVER HIM. Above his head is where the greeting
+                bubble already is — the label landed against the underside of
+                it and read as part of the bubble, which is the one thing on
+                this screen it must not be mistaken for. At his shoulder it is
+                unambiguously pointing at the boy.
+
+                The phone hero keeps it under his feet: there the painting is a
+                couple of hundred pixels tall and anything beside him is off
+                the crop.
+              */
+              className={`pointer-events-none absolute whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-extrabold ${
+                tipBelow
+                  ? 'left-1/2 top-full mt-1 -translate-x-1/2'
+                  : 'left-full top-[16%] ml-1'
               }`}
               style={{
                 background: '#0B0818',
@@ -702,7 +743,6 @@ export function PhoneHub({
   onTapBoy: () => void;
 }) {
   const m = useMotion();
-  const knobs = spots.filter((s) => KNOB_IDS.includes(s.id));
   const rooms = spots.filter((s) => !KNOB_IDS.includes(s.id));
 
   return (
@@ -798,27 +838,21 @@ export function PhoneHub({
           ))}
         </div>
 
-        {/* The two doors, which on a wide screen are brass knobs on the
-            painted doors and here are simply the two big ways out of this
-            page. Full-width rows rather than a pair of half-width ones:
-            these are the only things on the hub that lead somewhere other
-            than a single room, and they should not look like the grid. */}
-        {knobs.map((k) => (
-          <button
-            key={k.id}
-            onClick={k.onClick}
-            className="rounded-full px-4 py-3.5 text-[14.5px] font-extrabold"
-            style={{
-              minHeight: m.target,
-              background: `${k.accent}1F`,
-              border: `1.5px solid ${k.accent}`,
-              color: CHROME.text,
-              boxShadow: `0 0 24px -10px ${k.accent}`,
-            }}
-          >
-            {k.label}
-          </button>
-        ))}
+        {/*
+          THE TWO DOORS ARE NOT HERE ANY MORE, and that is the point.
+
+          They used to be a pair of full-width pills at the foot of this list,
+          which is what a phone gets when nobody thinks about the phone: the
+          two most important things on the hub, drawn as the two least
+          door-like objects on the page, below eight rooms that outrank them
+          visually. A child scrolling this list met the rooms first and the
+          ways ON last.
+
+          They are brass fittings pinned to the left and right walls now — the
+          same ones every room in the gym uses, at the same height, doing the
+          same thing. See BestApp, which hangs them outside this column so
+          they sit against the screen edges rather than inside the padding.
+        */}
       </div>
     </div>
   );

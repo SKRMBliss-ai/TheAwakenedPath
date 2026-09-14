@@ -66,10 +66,13 @@ const SEAM = '/ui/handles/seam.webp';
  * and then the room complained it could not be seen. A door handle is
  * something a child aims a whole hand at.
  *
- * Two sizes rather than one: a phone has no room for a 150px fitting beside
- * a column of text, and a desktop has nothing but room.
+ * Two sizes rather than one: a phone has no room for a wide fitting beside a
+ * column of text, and a desktop has nothing but room. Keep this in step with
+ * the `sm:` width on the plate below — it is the `sizes` hint that decides
+ * which file the browser fetches, and a stale one quietly ships the small
+ * plate to a screen drawing it at 210px.
  */
-const PLATE_W_WIDE = 152;
+const PLATE_W_WIDE = 210;
 
 /** The lever swings this far when pressed. Small: it reads as weight, not spin. */
 const PRESS_DEG = 8;
@@ -298,13 +301,17 @@ export function DoorHandle({
               THE PHONE SIZE IS THE CONSTRAINED ONE. A room's content column
               on a 420px screen runs from about 74px to about 346px, and this
               fitting is pinned to the left edge at the same height as some of
-              it. 92px wide with 10 pulled off the edge leaves 82px on screen,
-              which clears the column, shows the whole star, and is still half
-              again the 66px the old dark plate managed. Wider screens have
-              the column centred with room to spare on both sides, so there
-              the fitting can be the size it wants to be.
+              it. That column is what caps the phone width — go much past this
+              and the brass starts eating taps meant for the answers.
+
+              BOTH SIZES WENT UP, because "can a child find it" beat "is it
+              tidy". At 92/152 the fitting read as a gold squiggle in the
+              corner of a dark room: present, but not obviously a thing you
+              take hold of, and the one control every screen depends on. The
+              hub gets away with smaller because its doors are painted into
+              the art at full size; a room has only this.
             */
-            className="h-auto w-[92px] max-w-none select-none sm:w-[152px]"
+            className="h-auto w-[124px] max-w-none select-none sm:w-[210px]"
             animate={{ rotate: pressed ? PRESS_DEG : 0 }}
             transition={{ type: 'spring', stiffness: 240, damping: 15 }}
             style={{
