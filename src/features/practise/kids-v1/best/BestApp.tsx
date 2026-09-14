@@ -535,6 +535,25 @@ function RoomMap({
     done = false,
   ): Hotspot => ({ id: key, label, accent, onClick, done, ...HUB_BOXES[key] });
 
+  /**
+   * A KNOB IS ITS DOOR.
+   *
+   * Both doors were painted with a big brass handle on them, and that handle
+   * is the one part of a door a child reaches for on purpose — so it is the
+   * whole control, and the lit panel above it is scenery. Because the painting
+   * never lettered the brass, each knob carries a `hint` with the name of the
+   * door it belongs to, and the two take it in turns to show it.
+   */
+  const knob = (
+    key: HotspotKey,
+    label: string,
+    accent: string,
+    onClick: () => void,
+    /** Where in the shared tooltip cycle this one speaks. See useHintBeat. */
+    hintDelayMs: number,
+  ): Hotspot =>
+    ({ id: key, label, accent, onClick, hint: label, hintDelayMs, ...HUB_BOXES[key] });
+
   const open = (id: string) => () => { const r = virtue(id); if (r) onOpen(r); };
   const ticked = (id: string) => !!today[id];
 
@@ -568,23 +587,28 @@ function RoomMap({
     dome('reflection', 'Reflection Room', '#9FB4F5', open('mindheart'), ticked('mindheart')),
 
     /*
-      NOTHING ON THE DOORWAYS ANY MORE.
+      THE KNOBS ARE THE DOORS NOW, AND THEY GO WHERE THEIR SIGNS SAY.
 
-      Each of the two doors has carried a control at some point — first the
-      lit panel, then the brass knob, most recently the knob with a label
-      taking its turn announcing itself every few seconds. All of it sat at
-      the extreme left and right of the painting, which is the one part of
-      this artwork the hub cannot promise to show anybody: the stage is sized
-      to COVER the viewport, so on any screen narrower than the painting the
-      doors are the first thing the crop eats. Measured at 1280x820, the
-      Explore Rooms hotspot sat at x = -30 with its label at x = -34 — a
-      button and a caption hanging off the side of the screen, which reads as
-      something broken rather than as a way out.
+      Each door used to be two controls stacked a thumb's width apart: the lit
+      panel, which opened the door it was painted on, and the brass under it,
+      which went somewhere else entirely — Look Back on one, Chirpy's help on
+      the other. Nothing on the screen said so. A child aiming at a door got
+      one of two unrelated places depending on which half of it they hit,
+      which is not a choice, it is a coin toss.
 
-      So the doorways are scenery now, like the rest of the wall, and the two
-      places they led have moved to the strip at the foot of the screen where
-      the layout can actually guarantee they are on it. See HubAside.
+      So each door is one thing again, and the thing it is is the handle,
+      because that is the part of a door a person actually takes hold of. The
+      painted sign above it says Explore Rooms on the left and My Journey on
+      the right, and now that is where the handle goes.
+
+      RESTORED after a brief removal — see PaintedHub's note on HUB_BOXES for
+      the crop edge-case this reintroduces on narrow-aspect windows, and
+      HubAside for the pills at the foot of the page, which stay as a second
+      way to the same two places (load-bearing on the phone hero, which has no
+      doors in frame at all).
     */
+    knob('knobExplore', 'Explore Rooms', '#6FA8F0', () => { sound.play('roomCard'); setSheet(true); }, 900),
+    knob('knobJourney', 'My Journey', '#FFC65C', () => { sound.play('arcadeBlip'); onStartJourney(); }, 3900),
   ];
 
   return (
@@ -742,8 +766,6 @@ function RoomMap({
         total={VIRTUE_ROOMS.length}
         others={others}
         onOneMinute={onOneMinute}
-        onEveryRoom={() => { sound.play('roomCard'); setSheet(true); }}
-        onStartJourney={() => { sound.play('arcadeBlip'); onStartJourney(); }}
       />
 
       {/* The blue door opens this: every room the gym has, including the one
@@ -978,17 +1000,13 @@ function RoomSheet({
  * arrived with nothing in the tank.
  */
 function HubAside({
-  name, doneCount, total, others, onOneMinute, onEveryRoom, onStartJourney,
+  name, doneCount, total, others, onOneMinute,
 }: {
   name: string;
   doneCount: number;
   total: number;
   others: number | null;
   onOneMinute: () => void;
-  /** The room sheet, which used to be the left-hand door. */
-  onEveryRoom: () => void;
-  /** The walk through all seven, which used to be the right-hand door. */
-  onStartJourney: () => void;
 }) {
   const quiet = useQuiet();
   /** Recorded once per mount; the star for today arrives on the way in. */
@@ -1026,17 +1044,6 @@ function HubAside({
         <span className="hidden px-1 text-[11.5px] font-bold md:inline" style={{ color: CHROME.textSoft }}>
           {doneCount === 0 ? 'no rooms yet today' : `${doneCount} of ${total} rooms today`}
         </span>
-        {/* THE TWO DOORS, REHOUSED. They were controls on the painted
-            doorways until the crop kept putting them off the side of the
-            screen — see the note where the hotspots used to be. Here they are
-            in normal flow at the foot of the page, which is the one place the
-            layout can promise a child will actually find them.
-
-            Both survive on a phone, unlike the counts either side of them:
-            they are the only ways to these two places, and a strip that
-            hides its navigation on small screens has hidden the navigation. */}
-        <StripPill onClick={onEveryRoom} accent="#6FA8F0">Every room</StripPill>
-        <StripPill onClick={onStartJourney} accent="#FFC65C">My Journey</StripPill>
         <MinutePill onClick={onOneMinute} />
 
         {/* Other children, out there somewhere — and nothing at all when
@@ -1107,32 +1114,6 @@ function SoundToggle() {
  * this exists for is the one who opened the app with nothing in the tank and
  * should not have to sit through a flourish to find the door built for them.
  */
-/**
- * A way through, in the strip at the foot of the hub.
- *
- * Carries its destination's own colour, unlike the minute pill next to it,
- * because these two are places to go rather than a quiet offer — and because
- * the blue and the gold are the colours those two doorways were painted, so a
- * child who learnt the doors has not had to learn anything new.
- */
-function StripPill({
-  onClick, accent, children,
-}: {
-  onClick: () => void;
-  accent: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="rounded-full px-3.5 py-2 text-[11.5px] font-extrabold"
-      style={{ background: `${accent}1F`, border: `1px solid ${accent}`, color: CHROME.text }}
-    >
-      {children}
-    </button>
-  );
-}
-
 function MinutePill({ onClick }: { onClick: () => void }) {
   return (
     <button

@@ -8,7 +8,7 @@ import { DIM, ROOM_SIGN } from '../ui/scenery';
 import { useMotion, useQuiet } from '../ui/quiet';
 import { Eye, MessageCircle, Paintbrush, RotateCcw } from 'lucide-react';
 import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
-import { BodyMap } from '../ui/bodyMap';
+import { BodyPortrait } from '../ui/BodyPortrait';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { DrawingCanvas, type DrawingCanvasHandle } from '../ui/DrawingCanvas';
 import { THOUGHTS, MAYBES, FEELINGS, SIZES } from '../kit/checkinContent';
@@ -134,18 +134,15 @@ export function DeepDive({
    */
   const [bigCheck, setBigCheck] = useState<{ id: string; label: string } | null>(null);
   /**
-   * Has the opening film receded yet on THIS visit?
-   *
-   * It used to be a per-device flag: the cinematic played once ever, and
-   * every visit after got a separate, deliberately silent loop instead.
-   * Which meant the sound worked exactly once and then looked broken
-   * forever — same picture, no audio, because it was a different element.
-   * The film plays every time now, is skippable after two seconds, and
-   * carries its own sound the whole way.
+   * The opening film. It used to be a per-device flag: the cinematic played
+   * once ever, and every visit after got a separate, deliberately silent
+   * loop instead. Which meant the sound worked exactly once and then looked
+   * broken forever — same picture, no audio, because it was a different
+   * element. The film plays every time now, is skippable after two seconds,
+   * and carries its own sound the whole way.
    *
    * The quiet state still gets no cinematic at all (§7).
    */
-  const [filmSettled, setFilmSettled] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
 
   const step = STEPS[Math.min(stepIndex, STEPS.length - 1)];
@@ -186,9 +183,13 @@ export function DeepDive({
   /** All four cards are on the table — the case is assembled. */
   const caseComplete = !!(answers.feeling && answers.body && answers.story && answers.eyes);
   const onFeelingStep = step.id === 'feeling' && phase === 'ask';
-  const filmPlaying = onFeelingStep && !filmSettled && !quiet;
 
-  const finishFeelingIntro = () => setFilmSettled(true);
+  /* No longer read anywhere — the film used to gate the ask content until
+     it finished (see below), and that gate is gone. FeelingsIntro still
+     needs an onDone to fade its own soundtrack out and settle into its
+     blurred loop, so it keeps a callback; there's just nothing left for
+     DeepDive itself to do when it fires. */
+  const finishFeelingIntro = () => {};
 
   /**
    * The one way out, used by both exits.
@@ -264,6 +265,23 @@ export function DeepDive({
           {onFeelingStep
             ? <FeelingsIntro onDone={finishFeelingIntro} flash={orbFlash} />
             : <RoomScene room={art} dim={phase === 'ask' ? DIM.content : turned ? DIM.arrive : DIM.play} />}
+
+          {/* The invisible tap layer for "where do you feel it?", registered
+              against the SAME full-bleed box RoomScene just painted into —
+              see BodyPortrait's own doc comment for why that's what keeps it
+              lined up with the boy on every screen shape. */}
+          {step.id === 'body' && phase === 'ask' && (
+            <BodyPortrait
+              accent={accent}
+              suggested={null}
+              selected={bodyZones}
+              onToggle={(z) => {
+                setBodyZones(new Set([z]));
+                sound.play('tap');
+                answer('body', [BODY_ZONE_LABEL[z]]);
+              }}
+            />
+          )}
         </motion.div>
       </AnimatePresence>
 
@@ -398,8 +416,22 @@ export function DeepDive({
             </motion.div>
           )}
 
-          {/* ── The step being asked now ──────────────────────────────── */}
-          {phase === 'ask' && !filmPlaying && (
+          {/*
+            ── The step being asked now ──────────────────────────────────
+
+            ON THE FEELING STEP THIS NOW SHOWS FROM THE FIRST FRAME, layered
+            straight over the opening film rather than waiting for it to
+            finish. It used to wait: the six tappable balls only appeared
+            once the cinematic had receded, so a child watching the orbs
+            "gathering and blooming" in the video had nothing to press, and
+            then a DIFFERENT-looking set of balls popped up in their place a
+            few seconds later — two things that both looked like "the
+            feelings", only one of which ever worked. Showing the real,
+            tappable balls immediately means there's only ever one set on
+            screen, tapping never has to wait on the music, and a child who
+            wants to answer straight away can, over the top of the film.
+          */}
+          {phase === 'ask' && (
             <motion.div
               key={step.id}
               initial={{ opacity: 0, y: 16 }}
@@ -476,16 +508,12 @@ export function DeepDive({
               */}
               {step.id === 'body' && (
                 <>
-                  <BodyMap
-                    accent={accent}
-                    suggested={null}
-                    selected={bodyZones}
-                    onToggle={(z) => {
-                      setBodyZones(new Set([z]));
-                      sound.play('tap');
-                      answer('body', [BODY_ZONE_LABEL[z]]);
-                    }}
-                  />
+                  {/* BodyPortrait itself is NOT in here — it has to sit as a
+                      full-screen sibling of RoomScene rather than inside this
+                      scrolling content column, because it is registered
+                      against the painting's own full-bleed crop and the
+                      column is nowhere near that. See where RoomScene
+                      renders, and the file doc comment on BodyPortrait. */}
                   <button
                     onClick={() => answer('body', ['nowhere in particular'])}
                     className="self-start text-[12.5px] font-bold underline decoration-dotted underline-offset-4"

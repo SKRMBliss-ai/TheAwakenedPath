@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { CHROME, FONT } from '../ui/chrome';
@@ -64,6 +65,25 @@ export interface Hotspot {
   /** The dome's own light, for the ring. */
   accent: string;
   /**
+   * What to say on hover, for the pieces the painting does NOT name itself.
+   *
+   * Every dome has its title painted on it and every door has a painted sign,
+   * so those say nothing extra — a label floating over a label is noise. The
+   * door knobs have no lettering anywhere in the art, so they are the only
+   * things here that have to introduce themselves.
+   */
+  hint?: string;
+  /**
+   * How long this hotspot waits before its turn to speak, in ms.
+   *
+   * The two knobs share one cycle and take it in turns — see HINT_ON/HINT_OFF
+   * below. Offsetting the second one by half the cycle is what stops both
+   * sides of the screen announcing themselves at the same moment, which reads
+   * as an interface with something urgent to tell you rather than as two
+   * fittings quietly saying what they are.
+   */
+  hintDelayMs?: number;
+  /**
    * A replacement for the name PAINTED on this alcove, covering it.
    *
    * Only one room needs this and it is a rename: the sign on the middle shelf
@@ -86,6 +106,42 @@ export interface Hotspot {
   sign?: { text: string; left: number; top: number; width: number; height: number };
 }
 
+/**
+ * THE KNOBS SAY WHAT THEY ARE, UNPROMPTED, ON A LOOP.
+ *
+ * Hover is not a thing most of these children have. A tooltip that only
+ * appears on hover is a tooltip a phone never shows, so on the two fittings
+ * the painting never lettered the name comes up by itself, sits there long
+ * enough to be read, and goes away again. Three seconds on, three off, and
+ * the two knobs alternate so only one is ever talking.
+ *
+ * It does not stop after a while on purpose. This is a screen a child lands
+ * on several times a day for months, and the label is one line of eleven
+ * characters at the edge of a painting — it costs nothing to keep offering,
+ * and a child who has not yet worked out that the brass does something should
+ * not have to have been paying attention on day one.
+ */
+const HINT_ON = 3000;
+const HINT_OFF = 3000;
+
+function useHintBeat(enabled: boolean, delayMs: number) {
+  const [showing, setShowing] = useState(false);
+
+  useEffect(() => {
+    if (!enabled) return;
+    let on = false;
+    let timer = 0;
+    const step = () => {
+      on = !on;
+      setShowing(on);
+      timer = window.setTimeout(step, on ? HINT_ON : HINT_OFF);
+    };
+    timer = window.setTimeout(step, delayMs);
+    return () => window.clearTimeout(timer);
+  }, [enabled, delayMs]);
+
+  return showing;
+}
 
 /**
  * The eight lit alcoves, the two doors, and the speech bubble — where each one
@@ -104,19 +160,38 @@ export const HUB_BOXES = {
   pause:      { left: 67.3, top: 13.2, width: 12.4, height: 17.0, radius: '46% 46% 14% 14% / 34% 34% 14% 14%' },
   story:      { left: 68.8, top: 31.2, width: 12.4, height: 15.4, radius: '46% 46% 14% 14% / 34% 34% 14% 14%' },
   reflection: { left: 68.8, top: 46.4, width: 13.2, height: 18.4, radius: '46% 46% 14% 14% / 34% 34% 14% 14%' },
-  /*
-    THE TWO DOORWAYS ARE NOT IN HERE ANY MORE.
-
-    There were four boxes: a panel and a knob for each door. Every one of them
-    lived within a few per cent of the left or right edge of the painting —
-    and the edges are precisely what this screen cannot promise to show, since
-    the stage is sized to cover the viewport and crops the sides to do it. At
-    1280x820 the left-hand knob resolved to x = -30. A control off the side of
-    the screen is not a control.
-
-    The doorways are painted scenery now. Where they went is at the foot of
-    the page instead; see HubAside in best/BestApp.
-  */
+  /**
+   * THE DOORS — the painted sign and the panel above the handle, and NOT the
+   * whole leaf of the door.
+   *
+   * These used to run the full height of the doorway, 23.6% to 80%, which put
+   * the middle of the box at 51.8% — and the brass handle, which is now its
+   * own hotspot, is at 50.2% to 61.2%. The most natural place on earth to
+   * press a door is the middle of it, and the middle of it was the knob. A
+   * child aiming at Explore Rooms would have got Chirpy instead, and would
+   * have had no way of telling why.
+   *
+   * So the door ends where the handle begins. What is left is the piece a
+   * child actually reads and aims at anyway — the lit sign with its chevron,
+   * and the glowing panel under it — still around 200x230px of target at full
+   * size. The foot of each door is scenery now, like the rest of the wall.
+   */
+  explore:    { left: 1.4,  top: 23.6, width: 12.4, height: 25.6, radius: '10% 10% 6% 6% / 8% 8% 6% 6%' },
+  journey:    { left: 86.4, top: 23.6, width: 12.6, height: 25.6, radius: '10% 10% 6% 6% / 8% 8% 6% 6%' },
+  /**
+   * THE TWO BRASS KNOBS, which are their own fittings and not their doors.
+   *
+   * Measured off the art the same way as everything else: both doors were
+   * drawn with the handle at the same height, so these differ only in `left`.
+   *
+   * They sit just under the door boxes above with about a percent of clear
+   * wall between, so no press is ever ambiguous. A knob is the part of a door
+   * a person takes hold of, which is why it is worth being its own way
+   * through rather than another few pixels of the same button.
+   *
+   */
+  knobExplore: { left: 4.4,  top: 50.2, width: 7.2, height: 11.0, radius: '44% 44% 44% 44% / 50% 50% 50% 50%' },
+  knobJourney: { left: 86.2, top: 50.2, width: 7.2, height: 11.0, radius: '44% 44% 44% 44% / 50% 50% 50% 50%' },
   /** The painted bubble is wiped out of the art; the live one sits here. */
   bubble:     { left: 26.4, top: 5.2,  width: 26.6, height: 14.4 },
   /**
@@ -167,6 +242,20 @@ const BOY_FIT = {
   footOrigin: 'center 96.25%',
 } as const;
 
+
+/**
+ * The two knobs — PhoneHub sorts one flat list of hotspots into rows with
+ * this. Module-private deliberately: exporting it would cost this file its
+ * fast refresh (react-refresh/only-export-components) and nothing outside it
+ * needs it.
+ *
+ * THE DOOR PANELS ARE NO LONGER HOTSPOTS. Each door was two controls a
+ * thumb's width apart — the lit sign, and the brass under it — that went to
+ * two different places, which is a coin toss dressed up as a choice. The knob
+ * is the one a child reaches for, so the knob is the whole door now and the
+ * panel above it is scenery like the rest of the wall.
+ */
+const KNOB_IDS: string[] = ['knobExplore', 'knobJourney'];
 
 /**
  * Every box in HUB_BOXES that is a pressable piece of the painting — i.e. all
@@ -239,6 +328,9 @@ export function HubStage({ children }: { children: React.ReactNode }) {
  */
 export function HubHotspot({ spot }: { spot: Hotspot }) {
   const m = useMotion();
+  /* The knobs introduce themselves on a loop. Nothing else does — every
+     other piece of this painting has its name written on it. */
+  const beat = useHintBeat(!!spot.hint, spot.hintDelayMs ?? 0);
 
   /* The slice of the painting that is this hotspot. See the note above. */
   const cutout = {
@@ -347,6 +439,25 @@ export function HubHotspot({ spot }: { spot: Hotspot }) {
         )}
       </span>
 
+      {/* The name, for the fittings the painting never lettered — the knobs.
+          It sits ABOVE the hotspot rather than on it, because a knob is small
+          and a label printed over the top of one hides the thing it names. */}
+      {spot.hint && (
+        <span
+          aria-hidden
+          /* Shown on its own beat, and still on hover and focus for anyone
+             who has a pointer and has gone looking. */
+          className={`pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-extrabold transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100 ${beat ? 'opacity-100' : 'opacity-0'}`}
+          style={{
+            background: 'rgba(10,6,22,0.92)',
+            border: `1px solid ${spot.accent}`,
+            color: CHROME.text,
+            boxShadow: `0 0 20px -8px ${spot.accent}`,
+          }}
+        >
+          {spot.hint}
+        </span>
+      )}
     </motion.button>
   );
 }
@@ -591,7 +702,8 @@ export function PhoneHub({
   onTapBoy: () => void;
 }) {
   const m = useMotion();
-  const rooms = spots;
+  const knobs = spots.filter((s) => KNOB_IDS.includes(s.id));
+  const rooms = spots.filter((s) => !KNOB_IDS.includes(s.id));
 
   return (
     <div className="relative flex flex-col" style={{ fontFamily: FONT }}>
@@ -686,6 +798,27 @@ export function PhoneHub({
           ))}
         </div>
 
+        {/* The two doors, which on a wide screen are brass knobs on the
+            painted doors and here are simply the two big ways out of this
+            page. Full-width rows rather than a pair of half-width ones:
+            these are the only things on the hub that lead somewhere other
+            than a single room, and they should not look like the grid. */}
+        {knobs.map((k) => (
+          <button
+            key={k.id}
+            onClick={k.onClick}
+            className="rounded-full px-4 py-3.5 text-[14.5px] font-extrabold"
+            style={{
+              minHeight: m.target,
+              background: `${k.accent}1F`,
+              border: `1.5px solid ${k.accent}`,
+              color: CHROME.text,
+              boxShadow: `0 0 24px -10px ${k.accent}`,
+            }}
+          >
+            {k.label}
+          </button>
+        ))}
       </div>
     </div>
   );
