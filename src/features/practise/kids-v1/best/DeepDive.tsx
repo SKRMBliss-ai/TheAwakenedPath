@@ -11,7 +11,9 @@ import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
 import { BodyMap } from '../ui/bodyMap';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { DrawingCanvas, type DrawingCanvasHandle } from '../ui/DrawingCanvas';
-import { THOUGHTS, MAYBES } from '../kit/checkinContent';
+import { THOUGHTS, MAYBES, FEELINGS, SIZES } from '../kit/checkinContent';
+import { STEADY, STEADY_GROWNUP } from '../kit/steady';
+import { Steady } from '../ui/Steady';
 import { FeelingBalls } from './FeelingBalls';
 import { FeelingsIntro } from './FeelingsIntro';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
@@ -113,6 +115,25 @@ export function DeepDive({
   /** Set the instant a feeling ball is tapped, so the room blooms with it. */
   const [orbFlash, setOrbFlash] = useState(false);
   /**
+   * AN UNPLEASANT FEELING PICKED, WAITING ON "HOW BIG".
+   *
+   * §18's quiet state has no trigger anywhere in the live app — CheckIn.tsx
+   * has one but CheckIn.tsx is a dead shell nothing mounts any more, so a
+   * distressed child was never actually asked, and the app never actually
+   * went quiet. This is the live trigger.
+   *
+   * ONLY UNPLEASANT FEELINGS ASK. A child who picked Happy or Excited has
+   * nothing here to check the size of — the intensity question exists to
+   * catch a child in real distress, not to interrogate every feeling.
+   *
+   * Held here rather than folded into `answer('feeling', …)` because the
+   * feeling isn't recorded yet — the room needs one more tap first, and a
+   * child who is asked "how big" before their feeling has visibly landed
+   * would be answering a question about something the app hasn't
+   * acknowledged yet.
+   */
+  const [bigCheck, setBigCheck] = useState<{ id: string; label: string } | null>(null);
+  /**
    * Has the opening film receded yet on THIS visit?
    *
    * It used to be a per-device flag: the cinematic played once ever, and
@@ -129,6 +150,7 @@ export function DeepDive({
 
   const step = STEPS[Math.min(stepIndex, STEPS.length - 1)];
   const quiet = useQuiet();
+  const m = useMotion();
   /**
    * ONE beat runs after the five answered STEPS: the reveal. The four cards
    * sit as a grid, the mind's-story card can be turned over to its other
@@ -178,6 +200,32 @@ export function DeepDive({
    * off again.
    */
   const leave = () => { onQuiet(false); onFinish(answers); };
+
+  /**
+   * The feeling ball was tapped. Pleasant feelings answer immediately, same
+   * as before. An unpleasant one pauses on the intensity check — see
+   * `bigCheck` above.
+   */
+  const pickFeeling = (id: string, label: string) => {
+    setTodaysFeeling(label);
+    const def = FEELINGS.find((f) => f.id === id);
+    if (def && !def.ok) { setBigCheck({ id, label }); return; }
+    answer('feeling', label);
+  };
+
+  /**
+   * How big it is, answered. "Really" is the quiet-state trigger — see
+   * kit/steady for what changes once it fires. Every size still records the
+   * feeling and moves the walk on; the size itself is never stored, only
+   * used once, right here.
+   */
+  const sizeFeeling = (sizeId: string) => {
+    if (!bigCheck) return;
+    if (sizeId === 'really') onQuiet(true);
+    const { label } = bigCheck;
+    setBigCheck(null);
+    answer('feeling', label);
+  };
 
   const answer = (key: keyof DeepDiveAnswers, value: string | string[]) => {
     setAnswers((a) => ({ ...a, [key]: value }));
@@ -360,14 +408,53 @@ export function DeepDive({
               className="flex flex-col gap-3.5 pt-1"
             >
               <Chirpy pose={step.id === 'other' ? 'hopeful' : 'curious'} line={step.chirpy} align="left" />
+              {/*
+                SOMEBODY IS STILL HERE. Chirpy has already gone silent by
+                this point — he self-suppresses in the quiet state, see
+                ui/scene — and an empty room where a character used to be is
+                not company. Steady is what replaced him: see kit/steady for
+                §18 and why the body step and the "what happened" step are
+                the two that get a line and the others don't.
+              */}
+              <Steady line={
+                step.id === 'body' ? STEADY.body
+                : step.id === 'eyes' ? STEADY.situation
+                : null
+              } />
               <Question room={art}>{step.question}</Question>
               {step.hint && <SceneLine>{step.hint}</SceneLine>}
 
-              {step.id === 'feeling' && (
+              {step.id === 'feeling' && !bigCheck && (
                 <FeelingBalls
-                  onPick={(_, label) => { setTodaysFeeling(label); answer('feeling', label); }}
+                  onPick={pickFeeling}
                   onBurst={() => setOrbFlash(true)}
                 />
+              )}
+
+              {/*
+                §18's TRIGGER, LIVE. The one screen in the walk that decides
+                whether the rest of it stays clever or goes quiet.
+
+                Chirpy still speaks here — the quiet state hasn't started
+                yet, this IS the question that starts it — so this keeps his
+                voice rather than Steady's, which only speaks once quiet is
+                already on.
+              */}
+              {step.id === 'feeling' && bigCheck && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35 }}
+                  className="flex flex-col gap-3.5"
+                >
+                  <Chirpy pose="worried" line="Okay. How big is it?" align="left" />
+                  <Question room={art}>How big does {bigCheck.label.toLowerCase()} feel right now?</Question>
+                  <div className="flex flex-col" style={{ gap: m.gap }}>
+                    {SIZES.map((s) => (
+                      <Pill key={s.id} label={s.label} onClick={() => sizeFeeling(s.id)} accent={accent} />
+                    ))}
+                  </div>
+                </motion.div>
               )}
 
               {/*
@@ -489,6 +576,25 @@ export function DeepDive({
                   which is the only reason the Observatory ever has anything
                   to look at besides words. */}
               <DrawInvite accent={accent} onSave={(url) => setAnswers((a) => ({ ...a, drawing: url }))} />
+
+              {/*
+                THE FIFTH THING §18 SAYS, and the only one that's an offer
+                rather than a sentence — see kit/steady. It sits here, at the
+                very end of the walk, rather than earlier: offered midway it
+                reads as "this is too much for me, go and find an adult",
+                which is the opposite of the line the body/situation steps
+                just spent the walk saying ("I'm not going anywhere"). Here,
+                right after a child has finished telling the app something
+                big, is the moment they're most likely to want a person and
+                least likely to go hunting for the small heart in the corner.
+              */}
+              {quiet && (
+                <div className="flex flex-col gap-2">
+                  <Steady line={STEADY_GROWNUP} />
+                  <Pill label="Yes — help me tell someone" onClick={onGrownUp} accent={accent} />
+                </div>
+              )}
+
               {/* No "Done" button. The way on is the handle on the right
                   wall, which has been there the whole walk — the child
                   leaves through the room, not through a form. */}

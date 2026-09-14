@@ -10,6 +10,8 @@ import { DIM } from '../ui/scenery';
 import { getRoom } from '../rooms';
 import { CARD_FACE, CARD_INK, LitCard, StepHead, UnderNote } from '../ui/trail';
 import { nextStoryCase, storyCaseDone, type StoryBit } from '../kit/differentStory';
+import { band } from '../kit/band';
+import { DifferentStoryOlder } from './DifferentStoryOlder';
 import * as sound from '../kit/sound';
 
 /**
@@ -46,7 +48,7 @@ import * as sound from '../kit/sound';
  */
 
 /** Warm to cool and back, so no two neighbours share a colour. */
-const STEP_TINT = ['#7FC7F0', '#A971E8', '#4FBF87', '#FFC65C'] as const;
+const STEP_TINT = ['#7FC7F0', '#A971E8', '#4FBF87', '#FFC65C', '#FFC65C'] as const;
 
 export function DifferentStoryRoom({
   onExit,
@@ -63,6 +65,22 @@ export function DifferentStoryRoom({
   /* Fixed for the life of the visit. A memo rather than state so a re-render
      can't swap the situation under a child halfway through sorting it. */
   const kase = useMemo(() => nextStoryCase(), []);
+
+  /*
+    WHICH OF THE TWO VERSIONS THIS CHILD GETS.
+
+    §10 and §11 each have a 3-8 move and a 9-14 move, and they are not the
+    same exercise in two registers — they are different shapes. The younger one
+    sorts pre-written bits into piles and turns over pre-written alternatives,
+    which is right for somebody who cannot be asked to write four sentences and
+    for whom the sorting IS the thinking. The older one is a writing exercise
+    in which the child produces both lists and then their own alternatives, and
+    the asymmetry they find is theirs rather than the app's.
+
+    Read once, like the situation: a room that changed shape halfway through
+    because storage was written in another tab would be unexplainable.
+  */
+  const older = useMemo(() => band() === 'older', []);
 
   /** Which bits have been placed, and where they ended up. */
   const [placed, setPlaced] = useState<Record<string, 'camera' | 'mind'>>({});
@@ -110,8 +128,11 @@ export function DifferentStoryRoom({
     awardPoints(12);
   };
 
-  const line =
-    !sorted ? (reply ?? 'Pretend you’ve got a camera. Point it at what happened.')
+  const line = older
+    ? (carrying
+        ? 'Right. Off you go.'
+        : 'Two lists. One of them is what a camera got, and one of them is what you brought.')
+    : !sorted ? (reply ?? 'Pretend you’ve got a camera. Point it at what happened.')
     : !allTurned ? (turned.length === 0
         ? 'Your mind picked that one in about a tenth of a second and then stopped looking. Have a look underneath.'
         : 'Keep going. They all fit the same footage.')
@@ -152,6 +173,14 @@ export function DifferentStoryRoom({
           </p>
         </div>
 
+        {/* THE 9-14 VERSION — a different exercise, not the same one in
+            different words. See DifferentStoryOlder. */}
+        {older && !carrying && (
+          <DifferentStoryOlder kase={kase} accent={accent} tints={STEP_TINT} onCarry={carry} />
+        )}
+
+        {!older && (
+          <>
         {/* ── 1 · The camera test ───────────────────────────────────────
             One card at a time, and both piles building underneath it.
             Those two lists ARE §10 — the move is not "answer correctly",
@@ -265,8 +294,11 @@ export function DifferentStoryRoom({
           </motion.div>
         )}
 
+          </>
+        )}
+
         {carrying && (
-          <LitCard n={4} tint={STEP_TINT[3]} label="Taking this one" glow>
+          <LitCard n={older ? 5 : 4} tint={STEP_TINT[3]} label="Taking this one" glow>
             {carrying}
           </LitCard>
         )}

@@ -382,6 +382,29 @@ export const TEACHINGS: Teaching[] = [
     ],
   },
   {
+    /*
+      §15 · ANGER IS OFTEN STANDING IN FRONT OF SOMETHING ELSE, for 9–14.
+      The scared dog below is the same section for 3–8; this half had no card.
+
+      IT NEVER TELLS A CHILD THEIR ANGER IS "REALLY" SOMETHING ELSE, which the
+      document is explicit about and which is the difference between this
+      landing and being rejected on sight. That reframing is invalidating, a
+      thirteen-year-old spots it instantly, and it is also just wrong —
+      sometimes somebody was genuinely out of order. So the anger is real, it
+      is doing something useful by arriving first and taking the hit, and the
+      child is invited to look behind it rather than to give it up.
+    */
+    id: 'behindanger',
+    band: 'older',
+    kind: 'image',
+    open: ['Anger’s very good at getting there first.'],
+    land: [
+      'It turns up fast, it’s loud, and it takes the hit for you.',
+      'Have a look behind it sometime. Nine times out of ten there’s something quieter back there — hurt, or embarrassed, or scared, or left out.',
+      'It’s not lying to you. It’s standing in front of the thing that’s harder to say.',
+    ],
+  },
+  {
     id: 'scareddog',
     band: 'young',
     kind: 'image',
