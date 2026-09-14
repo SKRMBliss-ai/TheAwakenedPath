@@ -589,35 +589,40 @@ function RoomMap({
     dome('reflection', 'Reflection Room', '#9FB4F5', open('mindheart'), ticked('mindheart')),
 
     /*
-      THE KNOBS ARE THE DOORS NOW, AND THEY GO WHERE THEIR SIGNS SAY.
+      THE DOORS, AND THE BRASS ON THEM — FOUR CONTROLS, NOT TWO.
 
-      Each door used to be two controls stacked a thumb's width apart: the lit
-      panel, which opened the door it was painted on, and the brass under it,
-      which went somewhere else entirely — Look Back on one, Chirpy's help on
-      the other. Nothing on the screen said so. A child aiming at a door got
-      one of two unrelated places depending on which half of it they hit,
-      which is not a choice, it is a coin toss.
+      The lit panel with the painted sign goes where the sign says: the blue
+      door on the left lists every room, the gold door on the right starts the
+      walk. The handle screwed to each one is its own fitting with its own
+      destination, and both are worth having because each is the only way to
+      somewhere a child would otherwise go hunting for.
 
-      So each door is one thing again, and the thing it is is the handle,
-      because that is the part of a door a person actually takes hold of. The
-      painted sign above it says Explore Rooms on the left and My Journey on
-      the right, and now that is where the handle goes.
+      THE BLUE DOOR'S HANDLE gives Chirpy his door back. He had one on the
+      right-hand wall until the painting replaced the walls, and since then
+      the only way to the thing he has been working up to asking has been a
+      row most children never scroll to inside the room sheet. The bird
+      standing on the boy's shoulder in this very picture should not be the
+      hardest thing on the screen to reach.
 
-      RESTORED after a brief removal — see PaintedHub's note on HUB_BOXES for
-      the crop edge-case this reintroduces on narrow-aspect windows. Below md
-      the painted doors are off the sides of the cropped hero, so the same two
-      places hang on the screen's own walls as ordinary DoorHandles instead;
-      the pills that used to do that job are gone.
+      BELOW md THE PAINTED DOORS ARE OFF THE SIDES of the cropped hero, so the
+      two ways on hang on the screen's own walls as ordinary DoorHandles
+      instead — see the render below. The pills that used to do that job are
+      gone.
 
-      THE BRASS DOES NOT READ OUT THE SIGN ABOVE IT. Both knobs used to be
-      lettered with the words already painted on the door they hang on —
-      "Explore Rooms" over "Explore Rooms" — so the one moment the app had a
-      child's attention on a door was spent repeating what the door said. The
-      tooltip says what is BEHIND it instead, which is the thing a painted
-      sign cannot tell them.
+      THE GOLD DOOR'S HANDLE is the Observatory. The walk behind that door
+      ENDS there, so its handle is the way back to what the walk has come to,
+      reached without doing all seven rooms again first.
+
+      WHY THIS IS NOT THE COIN TOSS IT ONCE WAS. The door boxes used to run
+      the full height of the doorway, which put their centre — the most
+      natural place on earth to press a door — squarely on the handle. They
+      end above the brass now (see HUB_BOXES), with a strip of clear wall
+      between, so the two never compete for the same press.
     */
-    knob('knobExplore', 'Pick any room', '#6FA8F0', () => { sound.play('roomCard'); setSheet(true); }, 900),
-    knob('knobJourney', 'Tonight’s journey', '#FFC65C', () => { sound.play('arcadeBlip'); onStartJourney(); }, 3900),
+    dome('explore', 'Explore every room', '#6FA8F0', () => { sound.play('roomCard'); setSheet(true); }),
+    dome('journey', 'My Journey', '#FFC65C', () => { sound.play('arcadeBlip'); onStartJourney(); }),
+    knob('knobExplore', 'How’s Chirpy doing?', '#8FD9C4', () => { sound.play('roomCard'); onHelpChirpy(); }, 900),
+    knob('knobJourney', 'Reflections', '#FFC65C', () => { sound.play('roomCard'); onReflection(); }, 3900),
   ];
 
   return (
@@ -670,14 +675,24 @@ function RoomMap({
           hero above and the list below.
         */}
         {phone && spots
-          .filter((sp) => sp.id === 'knobExplore' || sp.id === 'knobJourney')
+          .filter((sp) => sp.id === 'explore' || sp.id === 'journey')
           .map((sp) => (
             <DoorHandle
               key={sp.id}
-              side={sp.id === 'knobExplore' ? 'left' : 'right'}
+              side={sp.id === 'explore' ? 'left' : 'right'}
               label={sp.label}
               accent={sp.accent}
-              bottomVh={34}
+              /*
+                UP ON THE HERO, NOT DOWN THE PAGE.
+
+                A DoorHandle is fixed to the viewport, and this page scrolls —
+                so wherever it hangs, it hangs over whatever has scrolled under
+                it. At 34vh that was the middle of the room list. At 80 it sits
+                inside the painting at the top, which is where the doors it
+                stands for are actually drawn, and where there is nothing to
+                cover but sky.
+              */
+              bottomVh={80}
               onClick={sp.onClick}
             />
           ))}
@@ -1410,4 +1425,3 @@ function RewardPerch({ onRewards }: { onRewards: () => void }) {
  * line of each pool is that door's own label, so the first thing a nudge
  * ever does is repeat the name before it starts finding other words for it.
  */
-

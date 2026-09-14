@@ -257,17 +257,15 @@ const BOY_FIT = {
 
 
 /**
- * The two knobs — PhoneHub sorts one flat list of hotspots into rows with
- * this. Module-private deliberately: exporting it would cost this file its
- * fast refresh (react-refresh/only-export-components) and nothing outside it
- * needs it.
+ * The doors and the knobs screwed to them — PhoneHub sorts one flat list of
+ * hotspots into rows with these. Module-private deliberately: exporting them
+ * would cost this file its fast refresh
+ * (react-refresh/only-export-components) and nothing outside it needs them.
  *
- * THE DOOR PANELS ARE NO LONGER HOTSPOTS. Each door was two controls a
- * thumb's width apart — the lit sign, and the brass under it — that went to
- * two different places, which is a coin toss dressed up as a choice. The knob
- * is the one a child reaches for, so the knob is the whole door now and the
- * panel above it is scenery like the rest of the wall.
+ * Neither is an alcove, so neither belongs in the grid of rooms on a phone:
+ * all four lead somewhere other than a single room.
  */
+const DOOR_IDS: string[] = ['explore', 'journey'];
 const KNOB_IDS: string[] = ['knobExplore', 'knobJourney'];
 
 /**
@@ -743,7 +741,10 @@ export function PhoneHub({
   onTapBoy: () => void;
 }) {
   const m = useMotion();
-  const rooms = spots.filter((s) => !KNOB_IDS.includes(s.id));
+  /* The two brass destinations only. The DOORS themselves are handled as
+     fittings on the screen's walls — see the note further down. */
+  const ways = spots.filter((s) => KNOB_IDS.includes(s.id));
+  const rooms = spots.filter((s) => !DOOR_IDS.includes(s.id) && !KNOB_IDS.includes(s.id));
 
   return (
     <div className="relative flex flex-col" style={{ fontFamily: FONT }}>
@@ -839,20 +840,44 @@ export function PhoneHub({
         </div>
 
         {/*
-          THE TWO DOORS ARE NOT HERE ANY MORE, and that is the point.
+          THE TWO DOORS ARE NOT IN THIS LIST, and that is the point.
 
-          They used to be a pair of full-width pills at the foot of this list,
-          which is what a phone gets when nobody thinks about the phone: the
-          two most important things on the hub, drawn as the two least
-          door-like objects on the page, below eight rooms that outrank them
-          visually. A child scrolling this list met the rooms first and the
-          ways ON last.
+          They used to be full-width pills at the foot of it, which is what a
+          phone gets when nobody thinks about the phone: the two most important
+          things on the hub, drawn as the two least door-like objects on the
+          page, under eight rooms that outrank them visually. A child scrolling
+          this list met the rooms first and the ways ON last.
 
-          They are brass fittings pinned to the left and right walls now — the
-          same ones every room in the gym uses, at the same height, doing the
-          same thing. See BestApp, which hangs them outside this column so
-          they sit against the screen edges rather than inside the padding.
+          They are brass fittings on the left and right walls now — the same
+          ones every room in the gym uses, at the same height, doing the same
+          thing. BestApp hangs them outside this column so they sit against the
+          screen edges rather than inside the padding.
+
+          What IS still a row here is the pair behind the handles — Chirpy and
+          the Observatory. Those have no door of their own to hang on, and a
+          wall can only carry so much brass before none of it means anything.
         */}
+        {/* The doors and their handles, which on a wide screen are painted
+            panels and brass fittings and here are simply the big ways out of
+            this page. Full-width rows rather than half-width ones: these are
+            the only things on the hub that lead somewhere other than a single
+            room, and they should not look like the grid. */}
+        {ways.map((k) => (
+          <button
+            key={k.id}
+            onClick={k.onClick}
+            className="rounded-full px-4 py-3.5 text-[14.5px] font-extrabold"
+            style={{
+              minHeight: m.target,
+              background: `${k.accent}1F`,
+              border: `1.5px solid ${k.accent}`,
+              color: CHROME.text,
+              boxShadow: `0 0 24px -10px ${k.accent}`,
+            }}
+          >
+            {k.label}
+          </button>
+        ))}
       </div>
     </div>
   );

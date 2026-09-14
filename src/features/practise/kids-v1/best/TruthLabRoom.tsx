@@ -6,7 +6,6 @@ import { CHROME, FONT, GrownUpExit } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
 import { useMotion } from '../ui/quiet';
-import { DIM } from '../ui/scenery';
 import { getRoom } from '../rooms';
 import { boySpriteForEmotion, chirpySprite, chirpySrcSet, type BoyEmotion, type ChirpyPose } from '../ui/sprites';
 import { CARD_FACE, CARD_INK, Connector, LitCard, StepHead, UnderNote } from '../ui/trail';
@@ -56,6 +55,24 @@ import * as sound from '../kit/sound';
  * same colour, so the trail reads as five things rather than one long one.
  */
 const STEP_TINT = ['#F0873B', '#A971E8', '#4FA3E8', '#4FBF87', '#FFC65C'] as const;
+
+/**
+ * WHAT THE UNLIT SURFACES IN HERE ARE MADE OF.
+ *
+ * The room runs its painting undimmed (see the RoomScene call below), and a
+ * panel at 6% white over a lit painting is a window onto it — the boy's face
+ * came straight through the four feeling options, and "Cross" was written
+ * across his eye. Everywhere else in the app that same 6% works, because
+ * everywhere else there is a scrim underneath it doing the real work.
+ *
+ * So the panels that are not lit cards are nearly solid instead. The tint
+ * still comes from the border, which is where it was doing the useful job
+ * anyway.
+ */
+const PANEL = 'rgba(12,7,26,0.92)';
+
+/** Text with nothing behind it but painting — the headings and the asks. */
+const OVER_ART = '0 2px 10px rgba(6,3,16,0.95), 0 0 26px rgba(6,3,16,0.8)';
 
 export function TruthLabRoom({
   reporting,
@@ -139,8 +156,16 @@ export function TruthLabRoom({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
-      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
-      <RoomScene room={art} dim={DIM.content} />
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} big />
+      {/*
+        NO DIM IN HERE. Every other room drops a scrim over its painting so
+        the question on top of it can be read; this one does not need to,
+        because nothing in here is read off the wall. The trail is five
+        opaque cream cards — see CARD_FACE in ui/trail — and an opaque card
+        is legible over anything, so the scrim was buying nothing and costing
+        the only lit room in the building its light.
+      */}
+      <RoomScene room={art} dim={0} />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-3 p-3 sm:p-4">
         {/* How far through the walk, when there is a walk. Same beads as
@@ -173,7 +198,7 @@ export function TruthLabRoom({
             this place is for in the child's words rather than the app's. */}
         <p
           className="max-w-[16rem] text-[19px] font-extrabold leading-[1.16]"
-          style={{ color: CHROME.text, transform: 'rotate(-2.5deg)', textWrap: 'balance' }}
+          style={{ color: CHROME.text, transform: 'rotate(-2.5deg)', textWrap: 'balance', textShadow: OVER_ART }}
         >
           Let’s look at what happened
           <span style={{ color: accent }}> together…</span>
@@ -185,7 +210,7 @@ export function TruthLabRoom({
             the whole trail is about, so it sits above it like a title. */}
         <div
           className="rounded-[20px] px-4 py-3.5"
-          style={{ background: 'rgba(10,6,22,0.6)', border: `1px solid ${accent}44` }}
+          style={{ background: PANEL, border: `1px solid ${accent}` }}
         >
           <p className="text-[11px] font-extrabold uppercase tracking-[0.12em]" style={{ color: accent }}>
             What happened
@@ -301,7 +326,7 @@ export function TruthLabRoom({
               className="flex w-full items-center gap-4 rounded-[24px] px-5 py-5 text-left backdrop-blur-md"
               style={{
                 minHeight: m.target,
-                background: doneToday ? CHROME.pillSelected : CHROME.pill,
+                background: doneToday ? CHROME.pillSelected : PANEL,
                 border: `1px solid ${doneToday ? accent : CHROME.pillBorder}`,
                 boxShadow: doneToday ? `0 0 28px -8px ${accent}` : 'none',
               }}
@@ -338,7 +363,10 @@ export function TruthLabRoom({
               className="w-full rounded-full px-4 py-3.5 text-[14.5px] font-extrabold"
               style={{
                 minHeight: m.target,
-                background: `${accent}1F`,
+                /* The accent wash it has always had, laid over the opaque
+                   panel rather than over the painting — same colour, but it
+                   is a button rather than a window. */
+                background: `linear-gradient(${accent}2E, ${accent}2E), ${PANEL}`,
                 border: `1.5px solid ${accent}`,
                 color: CHROME.text,
               }}
@@ -438,7 +466,7 @@ function Choices({
       transition={{ duration: 0.34 }}
       className="flex flex-col gap-2"
     >
-      <p className="px-1 text-[14px] font-extrabold" style={{ color: CHROME.text }}>{ask}</p>
+      <p className="px-1 text-[14px] font-extrabold" style={{ color: CHROME.text, textShadow: OVER_ART }}>{ask}</p>
       {options.map((o) => (
         <button
           key={o}
@@ -446,8 +474,8 @@ function Choices({
           className="rounded-[18px] px-4 py-3 text-left text-[14px] font-extrabold leading-snug"
           style={{
             minHeight: target,
-            background: 'rgba(255,255,255,0.07)',
-            border: `1.5px solid ${tint}77`,
+            background: PANEL,
+            border: `1.5px solid ${tint}`,
             color: CHROME.text,
           }}
         >
@@ -472,8 +500,8 @@ function FaceDown({
         className="relative ml-3 flex w-full items-center gap-3 rounded-[24px] px-4 py-4 text-left"
         style={{
           minHeight: target,
-          background: 'rgba(255,255,255,0.06)',
-          border: `2px dashed ${tint}88`,
+          background: PANEL,
+          border: `2px dashed ${tint}`,
           color: CHROME.text,
         }}
       >
@@ -529,8 +557,8 @@ function Alternative({
       className="ml-3 rounded-[18px] px-4 py-3 text-left"
       style={{
         minHeight: target,
-        background: turned ? CARD_FACE : 'rgba(255,255,255,0.06)',
-        border: turned ? `2px solid ${tint}` : `2px dashed ${tint}77`,
+        background: turned ? CARD_FACE : PANEL,
+        border: `2px ${turned ? 'solid' : 'dashed'} ${tint}`,
         boxShadow: turned ? `0 0 18px -10px ${tint}` : 'none',
         cursor: turned ? 'default' : 'pointer',
       }}
