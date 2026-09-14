@@ -11,7 +11,7 @@
 ## The rule everything here follows
 
 **Never explain an inner experience to a child. Build a moment where they catch it happening.**
-
+l
 A child who is *told* that squashing feelings doesn't work has learned a sentence. A child who has just tried not to laugh and failed has learned the thing itself, in their body, permanently. The second child never needs reminding.
 
 So every concept below arrives as one of three moves:
