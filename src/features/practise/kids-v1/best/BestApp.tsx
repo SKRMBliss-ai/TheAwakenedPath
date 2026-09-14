@@ -197,6 +197,16 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 
   const back = () => setView({ at: 'map' });
 
+  /**
+   * The journey: room by room, in order, ending at the Observatory. Answering
+   * one room carries the child to the next, so the day's round is a walk
+   * through a building rather than seven separate trips out to a menu.
+   */
+  const startJourney = () => {
+    sound.play('enterRoom');
+    setView({ at: 'room', room: VIRTUE_ROOMS[0], step: 0 });
+  };
+
   const nextRoom = (step: number) => {
     const next = step + 1;
     if (next >= VIRTUE_ROOMS.length) {
@@ -220,6 +230,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               <RoomMap
                 reporting={reporting}
                 onOpen={(r) => { sound.play('roomCard'); setView({ at: 'room', room: r, step: null }); }}
+                onStartJourney={startJourney}
                 onDeepDive={() => setView({ at: 'deep' })}
                 onHelpChirpy={() => setView({ at: 'helpchirpy' })}
                 onPause={() => setView({ at: 'pause' })}
@@ -326,6 +337,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 function RoomMap({
   reporting,
   onOpen,
+  onStartJourney,
   onDeepDive,
   onHelpChirpy,
   onPause,
@@ -340,6 +352,7 @@ function RoomMap({
   /** The day this session is answering for — see BestApp, where it's fixed. */
   reporting: ReportingDay;
   onOpen: (r: VirtueRoom) => void;
+  onStartJourney: () => void;
   onDeepDive: () => void;
   onHelpChirpy: () => void;
   onPause: () => void;
@@ -574,28 +587,35 @@ function RoomMap({
     dome('reflection', 'Reflection Room', '#9FB4F5', open('mindheart'), ticked('mindheart')),
 
     /*
-      THE KNOBS ARE THE DOORS NOW, AND THEY GO WHERE THEIR SIGNS SAY.
+      THE DOORS, AND THE BRASS ON THEM — FOUR CONTROLS, NOT TWO.
 
-      Each door used to be two controls stacked a thumb's width apart: the lit
-      panel, which opened the door it was painted on, and the brass under it,
-      which went somewhere else entirely — Look Back on one, Chirpy's help on
-      the other. Nothing on the screen said so. A child aiming at a door got
-      one of two unrelated places depending on which half of it they hit,
-      which is not a choice, it is a coin toss.
+      The lit panel with the painted sign goes where the sign says: the blue
+      door on the left lists every room, the gold door on the right starts the
+      walk. The handle screwed to each one is its own fitting with its own
+      destination, and both are worth having because each is the only way to
+      somewhere a child would otherwise go hunting for.
 
-      So each door is one thing again, and the thing it is is the handle,
-      because that is the part of a door a person actually takes hold of. The
-      painted sign above it says Explore Rooms on the left and My Journey on
-      the right, and now that is where the handle goes.
+      THE BLUE DOOR'S HANDLE gives Chirpy his door back. He had one on the
+      right-hand wall until the painting replaced the walls, and since then
+      the only way to the thing he has been working up to asking has been a
+      row most children never scroll to inside the room sheet. The bird
+      standing on the boy's shoulder in this very picture should not be the
+      hardest thing on the screen to reach.
 
-      RESTORED after a brief removal — see PaintedHub's note on HUB_BOXES for
-      the crop edge-case this reintroduces on narrow-aspect windows, and
-      HubAside for the pills at the foot of the page, which stay as a second
-      way to the same two places (load-bearing on the phone hero, which has no
-      doors in frame at all).
+      THE GOLD DOOR'S HANDLE is the Observatory. The walk behind that door
+      ENDS there, so its handle is the way back to what the walk has come to,
+      reached without doing all seven rooms again first.
+
+      WHY THIS IS NOT THE COIN TOSS IT ONCE WAS. The door boxes used to run
+      the full height of the doorway, which put their centre — the most
+      natural place on earth to press a door — squarely on the handle. They
+      end above the brass now (see HUB_BOXES), with a strip of clear wall
+      between, so the two never compete for the same press.
     */
-    knob('knobExplore', 'How’s Chirpy doing?', '#6FA8F0', () => { sound.play('roomCard'); onHelpChirpy(); }, 900),
-    knob('knobJourney', 'Reflections', '#FFC65C', () => { sound.play('arcadeBlip'); onReflection(); }, 3900),
+    dome('explore', 'Explore every room', '#6FA8F0', () => { sound.play('roomCard'); setSheet(true); }),
+    dome('journey', 'My Journey', '#FFC65C', () => { sound.play('arcadeBlip'); onStartJourney(); }),
+    knob('knobExplore', 'How’s Chirpy doing?', '#8FD9C4', () => { sound.play('roomCard'); onHelpChirpy(); }, 900),
+    knob('knobJourney', 'Reflections', '#FFC65C', () => { sound.play('roomCard'); onReflection(); }, 3900),
   ];
 
   return (

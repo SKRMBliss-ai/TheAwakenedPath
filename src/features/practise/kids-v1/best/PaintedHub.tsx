@@ -244,17 +244,15 @@ const BOY_FIT = {
 
 
 /**
- * The two knobs — PhoneHub sorts one flat list of hotspots into rows with
- * this. Module-private deliberately: exporting it would cost this file its
- * fast refresh (react-refresh/only-export-components) and nothing outside it
- * needs it.
+ * The doors and the knobs screwed to them — PhoneHub sorts one flat list of
+ * hotspots into rows with these. Module-private deliberately: exporting them
+ * would cost this file its fast refresh
+ * (react-refresh/only-export-components) and nothing outside it needs them.
  *
- * THE DOOR PANELS ARE NO LONGER HOTSPOTS. Each door was two controls a
- * thumb's width apart — the lit sign, and the brass under it — that went to
- * two different places, which is a coin toss dressed up as a choice. The knob
- * is the one a child reaches for, so the knob is the whole door now and the
- * panel above it is scenery like the rest of the wall.
+ * Neither is an alcove, so neither belongs in the grid of rooms on a phone:
+ * all four lead somewhere other than a single room.
  */
+const DOOR_IDS: string[] = ['explore', 'journey'];
 const KNOB_IDS: string[] = ['knobExplore', 'knobJourney'];
 
 /**
@@ -702,8 +700,8 @@ export function PhoneHub({
   onTapBoy: () => void;
 }) {
   const m = useMotion();
-  const knobs = spots.filter((s) => KNOB_IDS.includes(s.id));
-  const rooms = spots.filter((s) => !KNOB_IDS.includes(s.id));
+  const ways = spots.filter((s) => DOOR_IDS.includes(s.id) || KNOB_IDS.includes(s.id));
+  const rooms = spots.filter((s) => !DOOR_IDS.includes(s.id) && !KNOB_IDS.includes(s.id));
 
   return (
     <div className="relative flex flex-col" style={{ fontFamily: FONT }}>
@@ -798,12 +796,12 @@ export function PhoneHub({
           ))}
         </div>
 
-        {/* The two doors, which on a wide screen are brass knobs on the
-            painted doors and here are simply the two big ways out of this
-            page. Full-width rows rather than a pair of half-width ones:
-            these are the only things on the hub that lead somewhere other
-            than a single room, and they should not look like the grid. */}
-        {knobs.map((k) => (
+        {/* The doors and their handles, which on a wide screen are painted
+            panels and brass fittings and here are simply the big ways out of
+            this page. Full-width rows rather than half-width ones: these are
+            the only things on the hub that lead somewhere other than a single
+            room, and they should not look like the grid. */}
+        {ways.map((k) => (
           <button
             key={k.id}
             onClick={k.onClick}

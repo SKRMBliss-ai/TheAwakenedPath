@@ -71,6 +71,9 @@ const SEAM = '/ui/handles/seam.webp';
  */
 const PLATE_W_WIDE = 152;
 
+/** The `big` fitting at `lg` and up — see the prop's note for why only there. */
+const PLATE_W_BIG = 268;
+
 /** The lever swings this far when pressed. Small: it reads as weight, not spin. */
 const PRESS_DEG = 8;
 
@@ -88,12 +91,26 @@ export function DoorHandle({
   accent = '#FFD98A',
   bottomVh = 26,
   nudge = null,
+  big = false,
 }: {
   side: 'left' | 'right';
   /** Both the accessible name and the words on the tooltip. */
   label: string;
   onClick: () => void;
   accent?: string;
+  /**
+   * A fitting the size the founder's own room sheet draws it — brass that
+   * takes up a third of the wall rather than a thumbnail at the edge.
+   *
+   * ONLY GROWS ON A WIDE SCREEN. A room's content column is centred with
+   * hundreds of pixels spare either side once there is a desktop to spare
+   * them, and that space is where this goes. A phone has no such space: the
+   * column runs the full width, the fitting is pinned to the same edge at
+   * the same height, and a big plate there is a plate on top of the words.
+   * So the phone and tablet sizes are untouched and only `lg` gets the
+   * handle the sheet drew.
+   */
+  big?: boolean;
   /**
    * How far up the wall this fitting hangs, in vh. A wall can carry more
    * than one door: the hub stacks three, and they need to not sit on top of
@@ -183,14 +200,14 @@ export function DoorHandle({
           // outer falloff rather than the bright core. Straight, sharp and
           // full-strength it read as a laser down the side of the screen —
           // the opposite of light escaping around a door.
-          [side]: -52,
-          width: 116,
+          [side]: big ? -78 : -52,
+          width: big ? 174 : 116,
           // Was inset-y-0/h-full, which is right for one door on a wall and
           // wrong for three: the seams stacked into one continuous strip of
           // light down the whole edge, so no door had an edge of its own.
           // Now each is a panel of light around its own fitting.
           top: '50%',
-          height: 260,
+          height: big ? 390 : 260,
           transform: 'translateY(-50%)',
           opacity: m.quiet ? 0.3 : live ? 0.62 : 0.28,
           filter: `blur(3px) drop-shadow(0 0 26px ${accent}55)`,
@@ -243,7 +260,11 @@ export function DoorHandle({
         {!m.quiet && (
           <motion.span
             aria-hidden
-            className="pointer-events-none absolute h-[86px] w-[86px] rounded-full sm:h-[136px] sm:w-[136px]"
+            className={
+              big
+                ? 'pointer-events-none absolute h-[86px] w-[86px] rounded-full sm:h-[136px] sm:w-[136px] lg:h-[236px] lg:w-[236px]'
+                : 'pointer-events-none absolute h-[86px] w-[86px] rounded-full sm:h-[136px] sm:w-[136px]'
+            }
             style={{ background: `radial-gradient(circle, ${accent}77 0%, ${accent}22 42%, transparent 70%)` }}
             animate={{ scale: [1, 1.4, 1], opacity: [0.85, 0.25, 0.85] }}
             transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
@@ -282,7 +303,7 @@ export function DoorHandle({
           <motion.img
             src={PLATE}
             srcSet={PLATE_SRCSET}
-            sizes={`${PLATE_W_WIDE}px`}
+            sizes={`${big ? PLATE_W_BIG : PLATE_W_WIDE}px`}
             alt=""
             aria-hidden
             draggable={false}
@@ -304,7 +325,11 @@ export function DoorHandle({
               the column centred with room to spare on both sides, so there
               the fitting can be the size it wants to be.
             */
-            className="h-auto w-[92px] max-w-none select-none sm:w-[152px]"
+            className={
+              big
+                ? 'h-auto w-[92px] max-w-none select-none sm:w-[152px] lg:w-[268px]'
+                : 'h-auto w-[92px] max-w-none select-none sm:w-[152px]'
+            }
             animate={{ rotate: pressed ? PRESS_DEG : 0 }}
             transition={{ type: 'spring', stiffness: 240, damping: 15 }}
             style={{

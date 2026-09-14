@@ -161,7 +161,13 @@ export function StepHead({ n, tint, label }: { n: number; tint: string; label: s
 /** A quiet line under a card, on the dark rather than on the cream. */
 export function UnderNote({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-1 text-[12.5px] font-bold leading-snug" style={{ color: CHROME.textSoft }}>
+    <p
+      className="px-1 text-[12.5px] font-bold leading-snug"
+      /* Nothing behind this one but the room. Harmless where there is a scrim
+         under it; the difference between readable and not in the Truth Lab,
+         which runs its painting undimmed. */
+      style={{ color: CHROME.textSoft, textShadow: '0 2px 10px rgba(6,3,16,0.95)' }}
+    >
       {children}
     </p>
   );
