@@ -44,6 +44,8 @@
  *   real response. The child is reporting weather, not sitting an exam.
  */
 
+import { band, type Band } from './band';
+
 const KEY = 'mindgym.kidsv1.missions';
 
 /** How many days must pass after one comes back before another is offered. */
@@ -60,6 +62,14 @@ export interface Mission {
   id: string;
   /** Which section of the founder's document this carries out. */
   from: string;
+  /**
+   * Which band the document wrote this for; absent means everybody. Same rule
+   * as the teaching moves — see kit/band. The prediction log is the one that
+   * really needs it: §13 marks the scorekeeping version 9–14, and asking a
+   * five-year-old to hold onto a prediction across a week and compare it with
+   * what happened is asking for something they cannot do yet.
+   */
+  band?: Band;
   /** How he hands it over. */
   give: string[];
   /**
@@ -144,6 +154,7 @@ export const MISSIONS: Mission[] = [
   {
     id: 'prediction',
     from: '§13 · loud isn’t true',
+    band: 'older',
     give: [
       'This one’s a bit different. You’re collecting something.',
       'Next time your mind is completely certain something bad is about to happen — everyone will laugh, you’ll get told off, nobody will sit with you — hang on to exactly what it said.',
@@ -263,6 +274,7 @@ export const MISSIONS: Mission[] = [
   {
     id: 'theirs',
     from: '§16 · the spotlight isn’t on you',
+    band: 'older',
     give: [
       'Tomorrow, keep half an eye out for somebody else doing something embarrassing.',
       'Anybody. Tripping, saying the wrong thing, calling the teacher Mum.',
@@ -291,6 +303,7 @@ export const MISSIONS: Mission[] = [
   {
     id: 'bluecup',
     from: '§7 · feelings pass',
+    band: 'young',
     give: [
       'This one needs a grown-up, so it’s only half a secret.',
       'Ask someone at home what you used to get really upset about when you were little.',
@@ -386,13 +399,18 @@ export function missionToGive(): Mission | null {
   if (s.carrying) return null;
   if (s.lastBack && daysBetween(s.lastBack, today()) < REST_DAYS) return null;
 
+  /* Only what this child's band can use — see kit/band, and the note on
+     `band` above for why the scorekeeping one in particular is gated. */
+  const b = band();
+  const mine = MISSIONS.filter((m) => !m.band || m.band === b);
+
   const done = s.done ?? [];
-  const unseen = MISSIONS.filter((m) => !done.includes(m.id));
+  const unseen = mine.filter((m) => !done.includes(m.id));
   /* Round again rather than going quiet when all eight have been carried.
      These are practices, not levels — doing the feet one a second time three
      months later is the point of it, not a repeat of it. */
-  const pool = unseen.length ? unseen : MISSIONS;
-  return pool[0];
+  const pool = unseen.length ? unseen : mine;
+  return pool[0] ?? null;
 }
 
 /** They took it. It's theirs now until they say how it went. */
@@ -413,8 +431,10 @@ export function missionReported(id: string): void {
   const s = read();
   const done = s.done ?? [];
   const next = done.includes(id) ? done : [...done, id];
+  const b = band();
+  const mine = MISSIONS.filter((m) => !m.band || m.band === b);
   write({
-    done: next.length >= MISSIONS.length ? [] : next,
+    done: next.length >= mine.length ? [] : next,
     lastBack: today(),
   });
 }

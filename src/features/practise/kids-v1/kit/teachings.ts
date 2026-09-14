@@ -40,11 +40,23 @@
 
 const KEY = 'mindgym.kidsv1.teachings';
 
+import { band, type Band } from './band';
+
 export type TeachingKind = 'trapdoor' | 'experiment' | 'image';
 
 export interface Teaching {
   id: string;
   kind: TeachingKind;
+  /**
+   * Which band the document wrote this one for. Absent means it says "both
+   * bands", or says nothing, and it goes to everybody.
+   *
+   * This is not a suggestion. §16 needs several years of remembering other
+   * people's lives to work at all, and §7's blue cup is addressed to somebody
+   * who has recently stopped being a toddler — handed to the wrong child,
+   * each of them simply fails. See kit/band.
+   */
+  band?: Band;
   /** How he opens it. One or two lines, his own voice. */
   open: string[];
   /**
@@ -110,6 +122,7 @@ export const TEACHINGS: Teaching[] = [
   },
   {
     id: 'elephant',
+    band: 'older',
     kind: 'trapdoor',
     open: ['For the next ten seconds, do not think about a purple elephant.', 'Whatever you do. No purple elephant.'],
     dare: 'No purple elephant.',
@@ -160,6 +173,7 @@ export const TEACHINGS: Teaching[] = [
   },
   {
     id: 'jump',
+    band: 'young',
     kind: 'experiment',
     open: ['Jump up and down. Ten times.', 'Go on, properly.'],
     dare: 'Ten jumps. I’ll wait.',
@@ -173,6 +187,7 @@ export const TEACHINGS: Teaching[] = [
   },
   {
     id: 'spotlight',
+    band: 'older',
     kind: 'trapdoor',
     open: [
       'Think of something embarrassing you did. Not the worst one. A medium one.',
@@ -189,6 +204,7 @@ export const TEACHINGS: Teaching[] = [
   },
   {
     id: 'bestfriend',
+    band: 'older',
     kind: 'trapdoor',
     open: [
       'Your best mate comes to you and says: “I’m so stupid. I ruined everything. Everyone thinks I’m pathetic.”',
@@ -209,6 +225,87 @@ export const TEACHINGS: Teaching[] = [
     ],
   },
   {
+    /*
+      §7 · FEELINGS PASS, for 9–14. The blue cup below is the same section's
+      move for 3–8, and this is the one the document wrote for everybody
+      older — it had never been built, so half of §7 was missing.
+
+      IT IS A TRAPDOOR, which is easy to miss reading it. The child is asked a
+      question they cannot answer, and the failure to answer IS the finding:
+      three weeks ago something was the whole world and it is now completely
+      gone, and they have just proved that to themselves rather than been told.
+
+      THE SAFETY NOTE FROM THAT SECTION APPLIES AND IS ENFORCED ELSEWHERE:
+      "never deployed while a child is in the middle of something. 'This will
+      pass' said too early is dismissal." No teaching move runs in the quiet
+      state at all — see hubMoment — which is what keeps this one honest.
+    */
+    id: 'tuesdays',
+    band: 'older',
+    kind: 'trapdoor',
+    open: [
+      'Right — what were you upset about three Tuesdays ago?',
+      'Not a big one necessarily. Any one. Three Tuesdays.',
+    ],
+    dare: 'Three Tuesdays ago. Have a proper go.',
+    go: 'Thinking',
+    hold: 10,
+    land: [
+      'No. Me neither.',
+      'At the time it was the whole world. Now you can’t even find it.',
+      'I’m not saying it didn’t matter. It did. It’s just not where it was.',
+    ],
+  },
+  {
+    /*
+      §9 · TWO FEELINGS AT ONCE, for 3–8. The holiday below is the 9–14 move
+      for the same section; this one had never been built.
+
+      THE WOBBLY TOOTH IS DOING A DIFFERENT JOB HERE than it does in §5, which
+      is why the same object appears twice in this library and why that is not
+      a duplication to tidy up. In §5 it is a thing your tongue keeps going
+      back to — a sticky thought. Here it is a thing you want gone and want to
+      keep at the same instant, which is the cleanest example of genuinely
+      mixed feeling a small child has actually lived through.
+    */
+    id: 'wobblyboth',
+    band: 'young',
+    kind: 'image',
+    open: ['A wobbly tooth again. But a different bit of it this time.'],
+    land: [
+      'You want it out. And you don’t want it out.',
+      'At the exact same time. Both of those are true and neither one is winning.',
+      'Feelings do that. They come in pairs sometimes.',
+    ],
+  },
+  {
+    /*
+      §8 · YOUR MIND WRITES TO PROTECT YOU, for 9–14. The smoke alarm below is
+      the same section for 3–8.
+
+      THE DOCUMENT SAYS THIS SECTION "MATTERS MORE THAN ANY OTHER MOVE HERE",
+      and the reason is worth restating: it is the screen where a child
+      decides whether to keep being honest with the app. If the fear story
+      ever lands as "you thought the wrong thing", they start giving safe
+      answers and the whole path becomes theatre. So nothing in here is a
+      correction. The mind is not wrong, it is not negative, and it is not
+      broken — it went for the worst version on purpose, because the worst
+      version is the one that would hurt if it arrived unannounced.
+    */
+    id: 'dangerjob',
+    band: 'older',
+    kind: 'image',
+    open: [
+      'That story your mind wrote earlier — the bad one.',
+      'It came from the part of you whose entire job is spotting trouble early.',
+    ],
+    land: [
+      'It went for the worst version. It always does.',
+      'Not because it’s miserable. Because the worst version is the one that would really hurt if it turned up and you hadn’t thought about it.',
+      'That’s not you being negative. That’s a smoke alarm doing exactly what it’s for.',
+    ],
+  },
+  {
     id: 'guarddog',
     kind: 'image',
     open: ['Your brain has a guard dog.', 'Its whole job is to bark if something’s coming.'],
@@ -220,6 +317,7 @@ export const TEACHINGS: Teaching[] = [
   },
   {
     id: 'smokealarm',
+    band: 'young',
     kind: 'image',
     open: ['Have you ever burnt toast and set the smoke alarm off?'],
     land: [
@@ -231,6 +329,7 @@ export const TEACHINGS: Teaching[] = [
   },
   {
     id: 'sofa',
+    band: 'young',
     kind: 'image',
     open: ['When you watch a scary bit in a film, you get scared. Properly scared.'],
     land: [
@@ -241,6 +340,7 @@ export const TEACHINGS: Teaching[] = [
   },
   {
     id: 'wobblytooth',
+    band: 'young',
     kind: 'image',
     open: ['You know when you’ve got a wobbly tooth?'],
     land: [
@@ -251,6 +351,7 @@ export const TEACHINGS: Teaching[] = [
   },
   {
     id: 'bluecup',
+    band: 'young',
     kind: 'image',
     open: ['When you were little — really little — you used to cry about the blue cup.'],
     land: [
@@ -261,6 +362,7 @@ export const TEACHINGS: Teaching[] = [
   },
   {
     id: 'holiday',
+    band: 'older',
     kind: 'image',
     open: ['The last day of a holiday.'],
     land: [
@@ -281,6 +383,7 @@ export const TEACHINGS: Teaching[] = [
   },
   {
     id: 'scareddog',
+    band: 'young',
     kind: 'image',
     open: ['When a dog is scared, what does it do?'],
     land: [
@@ -361,9 +464,23 @@ export function teachingForToday(): Teaching | null {
   const t = today();
   if (s.last === t) return null;
 
+  /*
+    ONLY WHAT THIS CHILD'S BAND CAN ACTUALLY USE.
+
+    An unbanded move goes to everybody; a banded one goes only to its own
+    band. And when the age is unknown — a child declined to say, or storage is
+    off — the banded moves are all held back rather than guessed at. That
+    leaves eight genuinely universal ones, which is a smaller library but not
+    a worse one: every single move in it is something the document marked as
+    working at any age. Guessing would eventually hand a five-year-old §16.
+  */
+  const b = band();
+  const forMe = TEACHINGS.filter((x) => !x.band || x.band === b);
+
   const seen = s.seen ?? [];
-  const unseen = TEACHINGS.filter((x) => !seen.includes(x.id));
-  const pool = unseen.length ? unseen : TEACHINGS;
+  const unseen = forMe.filter((x) => !seen.includes(x.id));
+  const pool = unseen.length ? unseen : forMe;
+  if (!pool.length) return null;
   return pool[hash(t) % pool.length];
 }
 
@@ -371,8 +488,20 @@ export function teachingForToday(): Teaching | null {
 export function teachingShown(id: string): void {
   const s = read();
   const seen = s.seen ?? [];
-  /* A full pass empties the list rather than growing it forever — see the
-     note above on why the library restarts instead of falling silent. */
   const next = seen.includes(id) ? seen : [...seen, id];
-  write({ seen: next.length >= TEACHINGS.length ? [] : next, last: today() });
+
+  /*
+    A full pass empties the list rather than growing it forever — see the note
+    above on why the library restarts instead of falling silent.
+
+    MEASURED AGAINST THIS CHILD'S OWN POOL, not against all of TEACHINGS. A
+    nine-year-old is never offered the ten moves written for the other band,
+    so waiting for eighteen ids to accumulate would mean the list never resets
+    and `unseen` is empty forever after the fourteenth — which still works,
+    because of the fallback in teachingForToday, but grows a dead array in
+    storage for the lifetime of the install.
+  */
+  const b = band();
+  const mine = TEACHINGS.filter((x) => !x.band || x.band === b);
+  write({ seen: next.length >= mine.length ? [] : next, last: today() });
 }

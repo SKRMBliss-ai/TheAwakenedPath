@@ -5,6 +5,7 @@ import { recollectionForToday, type ChirpyRecollection } from './chirpyMemory';
 import { guessingGameForToday, type GuessingGame } from './guessingGame';
 import { teachingForToday, type Teaching } from './teachings';
 import { missionToGive, missionToReport, type Mission } from './missions';
+import { bandUnknown } from './band';
 
 /**
  * ONE THING. THE HUB SHOWS ONE THING.
@@ -60,6 +61,8 @@ export type HubMoment =
   | { kind: 'arc'; beat: ArcBeat }
   | { kind: 'memory'; recollection: ChirpyRecollection }
   | { kind: 'teaching'; teaching: Teaching }
+  /** How old are you — asked once, ever. See best/HowOld. */
+  | { kind: 'age' }
   /** A secret game to go and play out in the world. */
   | { kind: 'mission'; mission: Mission }
   /** Asking how the one they're carrying went. */
@@ -105,23 +108,18 @@ export function hubMoment(
   if (recollection) return { kind: 'memory', recollection };
 
   /*
-    A TEACHING MOVE — and it sits here, above the game, because it is the
-    thing this list was missing.
+    HOW OLD ARE YOU — once, and above both of the things it decides.
 
-    Everything over it is rare, timed or finite, so in practice the bottom of
-    this list is what Chirpy does on an ordinary evening, and an ordinary
-    evening is most of them. Until now the only thing down here was the
-    guessing game, which records nothing and leads nowhere by design. That
-    was a friend who turns up and plays a round of guess-what, every single
-    night, forever.
-
-    The teaching moves are the other thing a friend does: shows you something.
-    One a day at most, sixteen of them, and they take turns — see
-    kit/teachings, which also explains why this cannot be Math.random.
-
-    ABOVE THE GAME rather than below it because the library is finite and the
-    game is not. Put the game first and these would surface roughly never.
+    Ten of the eighteen teaching moves and three of the eight secret games are
+    banded, and until Chirpy knows which band he is talking to, every one of
+    them is held back (see kit/band). So this question is worth more than any
+    single evening's move: answering it roughly doubles the library. It goes
+    above them both for that reason, and it can only ever appear once —
+    bandUnknown goes false the moment a child taps a number OR says they'd
+    rather not, and there is no path that asks twice.
   */
+  if (bandUnknown()) return { kind: 'age' };
+
   /*
     A NEW SECRET GAME, ABOVE THE TEACHING MOVES AND NOT BELOW THEM.
 
@@ -139,6 +137,25 @@ export function hubMoment(
   const mission = missionToGive();
   if (mission) return { kind: 'mission', mission };
 
+  /*
+    A TEACHING MOVE — and it sits here, above the game, because it is the
+    thing this list was missing.
+
+    Everything over it is rare, timed or finite, so in practice the bottom of
+    this list is what Chirpy does on an ordinary evening, and an ordinary
+    evening is most of them. Until now the only thing down here was the
+    guessing game, which records nothing and leads nowhere by design. That
+    was a friend who turns up and plays a round of guess-what, every single
+    night, forever.
+
+    The teaching moves are the other thing a friend does: shows you something.
+    One a day at most, twenty-one of them now, and they take turns — see
+    kit/teachings, which also explains why this cannot be Math.random and
+    which of them each band is allowed.
+
+    ABOVE THE GAME rather than below it because the library is finite and the
+    game is not. Put the game first and these would surface roughly never.
+  */
   const teaching = teachingForToday();
   if (teaching) return { kind: 'teaching', teaching };
 
