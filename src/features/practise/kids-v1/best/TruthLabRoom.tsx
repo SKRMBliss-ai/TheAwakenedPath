@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
 import { CHROME, FONT, GrownUpExit } from '../ui/chrome';
@@ -8,7 +8,7 @@ import { Chirpy, RoomScene } from '../ui/scene';
 import { useMotion } from '../ui/quiet';
 import { getRoom } from '../rooms';
 import { boySpriteForEmotion, type BoyEmotion } from '../ui/sprites';
-import { CARD_FACE, CARD_INK, Connector, LitCard, StepHead, UnderNote } from '../ui/trail';
+import { Connector, LitCard, StepHead, UnderNote } from '../ui/trail';
 import { nextTruthCase, truthCaseDone, roomNameToday, type TruthFeeling } from '../kit/truthLab';
 import { type ReportingDay } from '../kit/reportingDay';
 import * as sound from '../kit/sound';
@@ -253,7 +253,12 @@ export function TruthLabRoom({
           <FaceDown tint={STEP_TINT[2]} label="Your mind said" hint="Tap to hear it" onTurn={hear} target={m.target} />
         )}
         {heard && (
-          <LitCard n={3} tint={STEP_TINT[2]} label="Your mind said">
+          <LitCard
+            n={3}
+            tint={STEP_TINT[2]}
+            label="Your mind said"
+            aside={<LoudCloud word={kase.mind.word} tint={STEP_TINT[2]} />}
+          >
             <Loud said={kase.mind.said} word={kase.mind.word} tint={STEP_TINT[2]} />
           </LitCard>
         )}
@@ -438,7 +443,7 @@ function Choices({
         <button
           key={o}
           onClick={() => onPick(o)}
-          className="rounded-[18px] px-4 py-3 text-left text-[14px] font-extrabold leading-snug"
+          className="rounded-[26px] px-4 py-3 text-left text-[14px] font-extrabold leading-snug"
           style={{
             minHeight: target,
             background: PANEL,
@@ -493,6 +498,42 @@ function FaceDown({
  * before they can learn to take apart the sentence it is sitting in. See
  * kit/truthLab, where each case names its own.
  */
+/**
+ * The loud word again, in a thought bubble on the end of the card.
+ *
+ * Straight off the mockup (`his mind said.png`), and it earns the space: the
+ * whole point of step three is that one word, and saying it twice — once in
+ * the sentence where the mind put it, once on its own where it can be looked
+ * at — is the difference between reading the sentence and noticing it.
+ *
+ * Drawn rather than an image, because the word is different every evening.
+ */
+function LoudCloud({ word, tint }: { word: string; tint: string }) {
+  return (
+    <span aria-hidden className="relative hidden shrink-0 pr-1 sm:block">
+      <span
+        className="grid place-items-center rounded-[46%] px-3 py-3 text-[13px] font-extrabold uppercase leading-none tracking-[0.04em] text-white"
+        style={{
+          background: `radial-gradient(circle at 34% 26%, ${tint} 0%, ${tint}D8 62%, ${tint}B0 100%)`,
+          boxShadow: `0 0 0 3px ${tint}33, 0 3px 12px rgba(0,0,0,0.35)`,
+          maxWidth: '7.5rem',
+        }}
+      >
+        {word}…
+      </span>
+      {/* The two trailing puffs every thought bubble has, smallest last. */}
+      <span
+        className="absolute -bottom-1 left-1 block h-2.5 w-2.5 rounded-full"
+        style={{ background: `${tint}D8`, boxShadow: `0 0 0 2px ${tint}33` }}
+      />
+      <span
+        className="absolute -bottom-3 left-0 block h-1.5 w-1.5 rounded-full"
+        style={{ background: `${tint}B0` }}
+      />
+    </span>
+  );
+}
+
 function Loud({ said, word, tint }: { said: string; word: string; tint: string }) {
   const at = said.indexOf(word);
   if (at < 0) return <>{said}</>;
@@ -516,46 +557,28 @@ function Alternative({
 }: {
   text: string; turned: boolean; tint: string; onTurn: () => void; target: number;
 }) {
+  /* Turned, it IS a lit card — no number, because these four are a set
+     rather than a sequence — so it is one, rather than a second hand-kept
+     copy of the card style that drifts the first time the trail is
+     restyled. The card brings its own spring on the way in, which is the
+     turn. */
+  if (turned) {
+    return <LitCard tint={tint} className="ml-3">{text}</LitCard>;
+  }
+
   return (
     <motion.button
       onClick={onTurn}
-      animate={turned ? { scale: 1 } : { scale: 1 }}
-      whileTap={turned ? undefined : { scale: 0.98 }}
-      className="ml-3 rounded-[18px] px-4 py-3 text-left"
+      whileTap={{ scale: 0.98 }}
+      className="ml-3 rounded-[26px] px-4 py-3 text-left"
       style={{
         minHeight: target,
-        background: turned ? CARD_FACE : PANEL,
-        border: `2px ${turned ? 'solid' : 'dashed'} ${tint}`,
-        boxShadow: turned ? `0 0 18px -10px ${tint}` : 'none',
-        cursor: turned ? 'default' : 'pointer',
+        background: PANEL,
+        border: `2px dashed ${tint}`,
+        color: CHROME.textSoft,
       }}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {turned ? (
-          <motion.span
-            key="face"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.28 }}
-            className="block text-[14px] font-extrabold leading-snug"
-            style={{ color: CARD_INK }}
-          >
-            {text}
-          </motion.span>
-        ) : (
-          <motion.span
-            key="down"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="block text-[13.5px] font-bold"
-            style={{ color: CHROME.textSoft }}
-          >
-            Turn this one over
-          </motion.span>
-        )}
-      </AnimatePresence>
+      <span className="block text-[13.5px] font-bold">Turn this one over</span>
     </motion.button>
   );
 }
