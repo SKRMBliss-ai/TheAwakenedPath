@@ -8,7 +8,7 @@ import { Chirpy, RoomScene } from '../ui/scene';
 import { useMotion } from '../ui/quiet';
 import { DIM } from '../ui/scenery';
 import { getRoom } from '../rooms';
-import { boySpriteForEmotion, type BoyEmotion } from '../ui/sprites';
+import { boySpriteForEmotion, chirpySprite, chirpySrcSet, type BoyEmotion, type ChirpyPose } from '../ui/sprites';
 import { CARD_FACE, CARD_INK, Connector, LitCard, StepHead, UnderNote } from '../ui/trail';
 import { nextTruthCase, truthCaseDone, roomNameToday, type TruthFeeling } from '../kit/truthLab';
 import { type ReportingDay } from '../kit/reportingDay';
@@ -228,7 +228,7 @@ export function TruthLabRoom({
           <FaceDown tint={STEP_TINT[2]} label="Your mind said" hint="Tap to hear it" onTurn={hear} target={m.target} />
         )}
         {heard && (
-          <LitCard n={3} tint={STEP_TINT[2]} label="Your mind said">
+          <LitCard n={3} tint={STEP_TINT[2]} label="Your mind said" aside={<ChirpyAt pose="alarmed" />}>
             <Loud said={kase.mind.said} word={kase.mind.word} tint={STEP_TINT[2]} />
           </LitCard>
         )}
@@ -269,7 +269,7 @@ export function TruthLabRoom({
           />
         )}
         {truth && (
-          <LitCard n={5} tint={STEP_TINT[4]} label="The truth" glow>
+          <LitCard n={5} tint={STEP_TINT[4]} label="The truth" glow aside={<ChirpyAt pose="excited" />}>
             {truth}
           </LitCard>
         )}
@@ -376,6 +376,15 @@ export function TruthLabRoom({
  * ui/sprites), which does not matter here — nothing on this card is ever the
  * standing one, so the crop never changes mid-trail.
  */
+/**
+ * The face at the right-hand end of a card.
+ *
+ * BIG ENOUGH TO BE A CHARACTER. At 62px this was a thumbnail — a child read
+ * the card and never looked at it, which wastes the one thing on the trail
+ * that says "this happened to somebody" rather than describing it. The
+ * reference art has these at about a third of the card's width, and that is
+ * what makes the trail read as a story with a person in it.
+ */
 function Face({ emotion }: { emotion: BoyEmotion }) {
   return (
     <img
@@ -383,8 +392,32 @@ function Face({ emotion }: { emotion: BoyEmotion }) {
       alt=""
       aria-hidden
       draggable={false}
-      className="h-[62px] w-auto shrink-0 select-none"
-      style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.28))' }}
+      className="h-[78px] w-auto shrink-0 select-none sm:h-[94px]"
+      style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))' }}
+    />
+  );
+}
+
+/**
+ * Chirpy at the end of a card, for the two steps that are not about the
+ * child's own face.
+ *
+ * Step 3 is the sentence the mind produced and step 5 is what the child
+ * decided to keep — neither is a feeling, so neither wants the feeling
+ * plate. He is drawn smaller than the boy on purpose: the boy is who this
+ * happened to, and Chirpy is who was standing next to them.
+ */
+function ChirpyAt({ pose }: { pose: ChirpyPose }) {
+  return (
+    <img
+      src={chirpySprite(pose)}
+      srcSet={chirpySrcSet(pose)}
+      sizes="72px"
+      alt=""
+      aria-hidden
+      draggable={false}
+      className="h-[62px] w-auto shrink-0 select-none sm:h-[72px]"
+      style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.34))' }}
     />
   );
 }
