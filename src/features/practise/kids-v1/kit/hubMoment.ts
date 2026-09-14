@@ -4,6 +4,7 @@ import { arcBeatForToday, type ArcBeat } from './chirpyArc';
 import { recollectionForToday, type ChirpyRecollection } from './chirpyMemory';
 import { guessingGameForToday, type GuessingGame } from './guessingGame';
 import { teachingForToday, type Teaching } from './teachings';
+import { missionToGive, missionToReport, type Mission } from './missions';
 
 /**
  * ONE THING. THE HUB SHOWS ONE THING.
@@ -35,6 +36,11 @@ import { teachingForToday, type Teaching } from './teachings';
  *      (which keeps indefinitely), then a teaching move, and last the
  *      guessing game.
  *
+ *      A SECRET GAME COMING BACK sits near the top of Chirpy's own list,
+ *      above even the arc. It is the one thing on it that is a promise being
+ *      kept rather than a thing being said, and a mission nobody ever asks
+ *      about trains a child to ignore the next one.
+ *
  *      THE GAME IS LAST ON PURPOSE, and that is not the same as it being
  *      least. Everything above it is rare, timed or finite, so in practice
  *      "last" means the game is what Chirpy does on the ordinary evenings
@@ -54,6 +60,10 @@ export type HubMoment =
   | { kind: 'arc'; beat: ArcBeat }
   | { kind: 'memory'; recollection: ChirpyRecollection }
   | { kind: 'teaching'; teaching: Teaching }
+  /** A secret game to go and play out in the world. */
+  | { kind: 'mission'; mission: Mission }
+  /** Asking how the one they're carrying went. */
+  | { kind: 'missionback'; mission: Mission }
   | { kind: 'game'; game: GuessingGame };
 
 /**
@@ -74,6 +84,19 @@ export function hubMoment(
 
   const welcome = peekWelcomeBack();
   if (welcome) return { kind: 'welcome', line: welcome };
+
+  /*
+    A QUESTION HE ALREADY ASKED COMES BEFORE ANYTHING NEW.
+
+    If Chirpy hands a child a secret game and then spends the next fortnight
+    showing them purple elephants instead of ever asking how it went, the
+    child learns that he doesn't actually follow anything up — and the next
+    mission he hands over is worth nothing, because they already know he
+    won't ask. Outstanding business first. It is also the warmest thing on
+    this list: somebody remembered.
+  */
+  const back = missionToReport();
+  if (back) return { kind: 'missionback', mission: back };
 
   const beat = arcBeatForToday();
   if (beat) return { kind: 'arc', beat };
@@ -99,6 +122,23 @@ export function hubMoment(
     ABOVE THE GAME rather than below it because the library is finite and the
     game is not. Put the game first and these would surface roughly never.
   */
+  /*
+    A NEW SECRET GAME, ABOVE THE TEACHING MOVES AND NOT BELOW THEM.
+
+    A teaching move is available every single day; a mission is available
+    roughly twice a week (kit/missions rests for two days after each one comes
+    back, and never hands out a second while one is still out). Put the
+    missions underneath and the daily thing would win every time they
+    collided, which is every time — and the whole off-screen half of the
+    founder's document would ship as dead code.
+
+    Above, the collision goes the other way and costs almost nothing: the
+    teaching library is finite and rotates, so a move that loses today is a
+    move that arrives tomorrow.
+  */
+  const mission = missionToGive();
+  if (mission) return { kind: 'mission', mission };
+
   const teaching = teachingForToday();
   if (teaching) return { kind: 'teaching', teaching };
 

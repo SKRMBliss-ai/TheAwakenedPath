@@ -23,6 +23,7 @@ import { ChirpyRemembers } from './ChirpyRemembers';
 import { ChirpyArc } from './ChirpyArc';
 import { GuessWhat } from './GuessWhat';
 import { TeachingMoment } from './TeachingMoment';
+import { SecretGameBack, SecretGameGiven } from './SecretGame';
 import { ReleasedSky } from './LetThemGo';
 import { TheVisitor } from './TheVisitor';
 import { NoteFound } from './NoteFound';
@@ -722,6 +723,22 @@ function RoomMap({
               <TeachingMoment
                 key={`teaching-${said.teaching.id}`}
                 teaching={said.teaching}
+                onDone={() => setMoment(null)}
+              />
+            )}
+            {/* The two halves of a secret game — handing one over, and
+                asking about it days later. See kit/missions. */}
+            {said?.kind === 'mission' && (
+              <SecretGameGiven
+                key={`mission-${said.mission.id}`}
+                mission={said.mission}
+                onDone={() => setMoment(null)}
+              />
+            )}
+            {said?.kind === 'missionback' && (
+              <SecretGameBack
+                key={`missionback-${said.mission.id}`}
+                mission={said.mission}
                 onDone={() => setMoment(null)}
               />
             )}
