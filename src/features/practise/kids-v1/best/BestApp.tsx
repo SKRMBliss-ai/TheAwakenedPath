@@ -13,6 +13,7 @@ import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
 import { HubBoy, HubGreeting, HubHotspot, HubStage, HUB_BOXES, PhoneHub, type Hotspot, type HotspotKey } from './PaintedHub';
 import { FloatingJar } from './FloatingJar';
+import { DoorHandle } from '../ui/DoorHandle';
 import { HelpChirpy } from './HelpChirpy';
 import { DifferentStoryRoom } from './DifferentStoryRoom';
 import { TruthLabRoom } from './TruthLabRoom';
@@ -432,6 +433,7 @@ function RoomMap({
    */
   /** The blue door's room sheet — every room, including the unshelved ones. */
   const [sheet, setSheet] = useState(false);
+  const phone = useIsPhoneWidth();
 
 
   /**
@@ -602,6 +604,11 @@ function RoomMap({
       standing on the boy's shoulder in this very picture should not be the
       hardest thing on the screen to reach.
 
+      BELOW md THE PAINTED DOORS ARE OFF THE SIDES of the cropped hero, so the
+      two ways on hang on the screen's own walls as ordinary DoorHandles
+      instead — see the render below. The pills that used to do that job are
+      gone.
+
       THE GOLD DOOR'S HANDLE is the Observatory. The walk behind that door
       ENDS there, so its handle is the way back to what the walk has come to,
       reached without doing all seven rooms again first.
@@ -649,6 +656,46 @@ function RoomMap({
           waiting={!!moment && !asked}
           onTapBoy={askChirpy}
         />
+
+        {/*
+          THE TWO DOORS, AS DOORS, ON THE ONE SCREEN THAT HAD NONE.
+
+          Above md the painted doors are in frame and carry brass knobs. Below
+          it the hero is cropped to the middle of the room, both doors are off
+          the sides of it, and the two ways on had become a pair of pills at
+          the bottom of a list of eight rooms — outranked by every one of them.
+
+          So they hang on the screen's own left and right walls instead, using
+          the same fitting every room in the gym uses. A child who has learned
+          that brass means "a way through" in the Kindness Garden now meets the
+          same brass, in the same place, on the hub.
+
+          Stacked at different heights because one wall carries one door: 34vh
+          and 34vh on opposite sides never collide, and both sit clear of the
+          hero above and the list below.
+        */}
+        {phone && spots
+          .filter((sp) => sp.id === 'explore' || sp.id === 'journey')
+          .map((sp) => (
+            <DoorHandle
+              key={sp.id}
+              side={sp.id === 'explore' ? 'left' : 'right'}
+              label={sp.label}
+              accent={sp.accent}
+              /*
+                UP ON THE HERO, NOT DOWN THE PAGE.
+
+                A DoorHandle is fixed to the viewport, and this page scrolls —
+                so wherever it hangs, it hangs over whatever has scrolled under
+                it. At 34vh that was the middle of the room list. At 80 it sits
+                inside the painting at the top, which is where the doors it
+                stands for are actually drawn, and where there is nothing to
+                cover but sky.
+              */
+              bottomVh={80}
+              onClick={sp.onClick}
+            />
+          ))}
       </div>
 
       {/* Every firefly the child has taken to the Observatory and let go of,
@@ -802,6 +849,32 @@ function RoomMap({
  * What's added is the only new information a virtue room has — whether it was
  * ticked today, and what has been earned in it.
  */
+/**
+ * Whether this is a phone-shaped window, watched rather than sampled once.
+ *
+ * The two hub DoorHandles need this because a DoorHandle PORTALS ITSELF TO
+ * document.body — it hangs on the screen's own wall, not inside whatever laid
+ * it out — so wrapping them in a `md:hidden` div hides nothing at all: the
+ * wrapper is hidden and the portal carries on rendering at the viewport edge.
+ * Below md they are the only doors on the page; above it they would be a
+ * second pair of handles floating over the painted ones.
+ *
+ * Matches Tailwind's `md` so the two halves of the hub can never disagree
+ * about which one is on screen.
+ */
+function useIsPhoneWidth() {
+  const [narrow, setNarrow] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767.98px)').matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767.98px)');
+    const on = () => setNarrow(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return narrow;
+}
+
 /* ── What the blue door opens ────────────────────────────────────────── */
 
 /**
