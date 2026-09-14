@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { Check, Cloud, Heart, Quote, User } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
 import { CHROME, FONT, GrownUpExit } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
@@ -55,6 +55,24 @@ import * as sound from '../kit/sound';
  * same colour, so the trail reads as five things rather than one long one.
  */
 const STEP_TINT = ['#F0873B', '#A971E8', '#4FA3E8', '#4FBF87', '#FFC65C'] as const;
+
+/**
+ * THE FOUR ANSWERED CARDS' OWN COLOURS — saturated, not the pale wash the
+ * turned-over alternatives use.
+ *
+ * The composed room mockup (handed over separately from the individual card
+ * exports in docs/source-material/room-mockups) draws these solid: a deep
+ * tint for the card itself, a brighter version of the same hue for the label
+ * and the icon's circle. Four rather than five, because step four — turning
+ * the alternatives over — has no card of its own in that mockup; it stays in
+ * STEP_TINT's pale style below.
+ */
+const STORY_COLOR = {
+  felt:  { bg: '#7A2A44', bgDark: '#3C1220', label: '#FF9FB3', iconBg: '#E14E6E' },
+  sat:   { bg: '#22407B', bgDark: '#0F2040', label: '#A6C6FF', iconBg: '#4C7FE0' },
+  mind:  { bg: '#0F565C', bgDark: '#082F33', label: '#7BEFE2', iconBg: '#22B3A8' },
+  truth: { bg: '#432874', bgDark: '#20123C', label: '#DABEFF', iconBg: '#9163F2' },
+} as const;
 
 /**
  * WHAT THE UNLIT SURFACES IN HERE ARE MADE OF.
@@ -222,9 +240,9 @@ export function TruthLabRoom({
 
         {/* ── 1 · You felt ──────────────────────────────────────────────── */}
         {felt ? (
-          <LitCard n={1} tint={STEP_TINT[0]} label="You felt" aside={<Face emotion={felt.face} />}>
+          <StoryCard colors={STORY_COLOR.felt} icon={<Heart size={18} color="#fff" fill="#fff" />} label="You felt" portrait={<Face emotion={felt.face} />}>
             {felt.word}. And it was real.
-          </LitCard>
+          </StoryCard>
         ) : (
           <Choices
             tint={STEP_TINT[0]}
@@ -241,9 +259,9 @@ export function TruthLabRoom({
             a child who can find a feeling in their body has somewhere to
             look next time that is not their own thoughts. */}
         {felt && (
-          <LitCard n={2} tint={STEP_TINT[1]} label="It sat here">
+          <StoryCard colors={STORY_COLOR.sat} icon={<User size={18} color="#fff" />} label="It sat here">
             {felt.body}
-          </LitCard>
+          </StoryCard>
         )}
 
         {/* ── 3 · What the mind said ────────────────────────────────────
@@ -252,19 +270,10 @@ export function TruthLabRoom({
         {felt && !heard && (
           <FaceDown tint={STEP_TINT[2]} label="Your mind said" hint="Tap to hear it" onTurn={hear} target={m.target} />
         )}
-        {/* The bubble rather than a character on this one: the mockup for the
-            step (`his mind said.png`) puts the loud word itself on the end of
-            the card, and that word is the one thing on the trail worth
-            looking at twice. Chirpy stands at the end of step five instead. */}
         {heard && (
-          <LitCard
-            n={3}
-            tint={STEP_TINT[2]}
-            label="Your mind said"
-            aside={<LoudCloud word={kase.mind.word} tint={STEP_TINT[2]} />}
-          >
-            <Loud said={kase.mind.said} word={kase.mind.word} tint={STEP_TINT[2]} />
-          </LitCard>
+          <StoryCard colors={STORY_COLOR.mind} icon={<Cloud size={18} color="#fff" fill="#fff" />} label="Your mind said">
+            <Loud said={kase.mind.said} word={kase.mind.word} />
+          </StoryCard>
         )}
 
         {/* ── 4 · What else could be true ───────────────────────────────
@@ -303,9 +312,9 @@ export function TruthLabRoom({
           />
         )}
         {truth && (
-          <LitCard n={5} tint={STEP_TINT[4]} label="The truth" glow aside={<ChirpyAt pose="excited" />}>
+          <StoryCard colors={STORY_COLOR.truth} icon={<Quote size={18} color="#fff" fill="#fff" />} label="The truth" glow portrait={<ChirpyAt pose="excited" />}>
             {truth}
-          </LitCard>
+          </StoryCard>
         )}
 
         {/* ── And then today's actual question ──────────────────────────
@@ -414,13 +423,68 @@ export function TruthLabRoom({
  * standing one, so the crop never changes mid-trail.
  */
 /**
- * The face at the right-hand end of a card.
+ * THE CARD ITSELF, in the composed mockup's own style — solid and saturated
+ * rather than the pale cream the individual card exports use.
  *
- * BIG ENOUGH TO BE A CHARACTER. At 62px this was a thumbnail — a child read
- * the card and never looked at it, which wastes the one thing on the trail
- * that says "this happened to somebody" rather than describing it. The
- * reference art has these at about a third of the card's width, and that is
- * what makes the trail read as a story with a person in it.
+ * A round icon standing in for the numbered bead (this trail's steps are not
+ * a sequence a child re-orders, so a heart or a speech mark says what the
+ * step IS rather than where it falls), the label in a bright tint of the same
+ * hue, the sentence in white, and — where there is one — a portrait bleeding
+ * past the top and bottom of the pill rather than sitting inside it, which is
+ * why the wrapper is `overflow-visible` and not `overflow-hidden`.
+ */
+function StoryCard({
+  colors, icon, label, portrait, glow = false, children,
+}: {
+  colors: { bg: string; bgDark: string; label: string; iconBg: string };
+  icon: React.ReactNode;
+  label: string;
+  /** A face or a bird, bled past the card's own edge — see Face, ChirpyAt. */
+  portrait?: React.ReactNode;
+  glow?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 220, damping: 22 }}
+      className="relative flex items-center gap-3 rounded-[34px] py-3 pl-3 pr-4"
+      style={{
+        background: `linear-gradient(155deg, ${colors.bg} 0%, ${colors.bgDark} 100%)`,
+        boxShadow: glow
+          ? `0 0 0 4px ${colors.iconBg}40, 0 0 36px -4px ${colors.iconBg}, 0 14px 30px -14px rgba(0,0,0,0.8)`
+          : `0 0 0 3px ${colors.iconBg}30, 0 0 22px -6px ${colors.iconBg}CC, 0 10px 24px -16px rgba(0,0,0,0.7)`,
+      }}
+    >
+      <span
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full sm:h-10 sm:w-10"
+        style={{ background: colors.iconBg, boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className="block text-[12px] font-extrabold uppercase leading-none tracking-[0.06em]"
+          style={{ color: colors.label }}
+        >
+          {label}
+        </span>
+        <span className="mt-1.5 block text-[14.5px] font-bold leading-snug text-white">
+          {children}
+        </span>
+      </span>
+      {portrait}
+    </motion.div>
+  );
+}
+
+/**
+ * The face at the right-hand end of a card, bled past its top and bottom
+ * edge — the reference art has these at about a third of the card's width,
+ * and letting the portrait overrun the pill rather than sitting inside it is
+ * what makes the trail read as a story with a person in it rather than a
+ * form with a thumbnail.
  */
 function Face({ emotion }: { emotion: BoyEmotion }) {
   return (
@@ -429,7 +493,7 @@ function Face({ emotion }: { emotion: BoyEmotion }) {
       alt=""
       aria-hidden
       draggable={false}
-      className="h-[78px] w-auto shrink-0 select-none sm:h-[94px]"
+      className="-my-4 h-[92px] w-auto shrink-0 select-none sm:h-[112px]"
       style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))' }}
     />
   );
@@ -453,7 +517,7 @@ function ChirpyAt({ pose }: { pose: ChirpyPose }) {
       alt=""
       aria-hidden
       draggable={false}
-      className="h-[62px] w-auto shrink-0 select-none sm:h-[72px]"
+      className="-my-3 h-[76px] w-auto shrink-0 select-none sm:h-[92px]"
       style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.34))' }}
     />
   );
@@ -536,42 +600,12 @@ function FaceDown({
  * kit/truthLab, where each case names its own.
  */
 /**
- * The loud word again, in a thought bubble on the end of the card.
- *
- * Straight off the mockup (`his mind said.png`), and it earns the space: the
- * whole point of step three is that one word, and saying it twice — once in
- * the sentence where the mind put it, once on its own where it can be looked
- * at — is the difference between reading the sentence and noticing it.
- *
- * Drawn rather than an image, because the word is different every evening.
+ * A glass chip in the running sentence, rather than tinted to the card —
+ * StoryCard's four backgrounds are each a different hue, and a highlight
+ * keyed to `tint` would have needed a fifth colour just for this. White glass
+ * reads on any of them.
  */
-function LoudCloud({ word, tint }: { word: string; tint: string }) {
-  return (
-    <span aria-hidden className="relative hidden shrink-0 pr-1 sm:block">
-      <span
-        className="grid place-items-center rounded-[46%] px-3 py-3 text-[13px] font-extrabold uppercase leading-none tracking-[0.04em] text-white"
-        style={{
-          background: `radial-gradient(circle at 34% 26%, ${tint} 0%, ${tint}D8 62%, ${tint}B0 100%)`,
-          boxShadow: `0 0 0 3px ${tint}33, 0 3px 12px rgba(0,0,0,0.35)`,
-          maxWidth: '7.5rem',
-        }}
-      >
-        {word}…
-      </span>
-      {/* The two trailing puffs every thought bubble has, smallest last. */}
-      <span
-        className="absolute -bottom-1 left-1 block h-2.5 w-2.5 rounded-full"
-        style={{ background: `${tint}D8`, boxShadow: `0 0 0 2px ${tint}33` }}
-      />
-      <span
-        className="absolute -bottom-3 left-0 block h-1.5 w-1.5 rounded-full"
-        style={{ background: `${tint}B0` }}
-      />
-    </span>
-  );
-}
-
-function Loud({ said, word, tint }: { said: string; word: string; tint: string }) {
+function Loud({ said, word }: { said: string; word: string }) {
   const at = said.indexOf(word);
   if (at < 0) return <>{said}</>;
   return (
@@ -579,7 +613,7 @@ function Loud({ said, word, tint }: { said: string; word: string; tint: string }
       {said.slice(0, at)}
       <span
         className="rounded-md px-1"
-        style={{ background: `${tint}2E`, color: tint, boxShadow: `inset 0 0 0 1.5px ${tint}66` }}
+        style={{ background: 'rgba(255,255,255,0.2)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,0.4)' }}
       >
         {word}
       </span>
