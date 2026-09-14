@@ -197,16 +197,6 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 
   const back = () => setView({ at: 'map' });
 
-  /**
-   * The journey: room by room, in order, ending at the Observatory. Answering
-   * one room carries the child to the next, so the day's round is a walk
-   * through a building rather than seven separate trips out to a menu.
-   */
-  const startJourney = () => {
-    sound.play('enterRoom');
-    setView({ at: 'room', room: VIRTUE_ROOMS[0], step: 0 });
-  };
-
   const nextRoom = (step: number) => {
     const next = step + 1;
     if (next >= VIRTUE_ROOMS.length) {
@@ -230,7 +220,6 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               <RoomMap
                 reporting={reporting}
                 onOpen={(r) => { sound.play('roomCard'); setView({ at: 'room', room: r, step: null }); }}
-                onStartJourney={startJourney}
                 onDeepDive={() => setView({ at: 'deep' })}
                 onHelpChirpy={() => setView({ at: 'helpchirpy' })}
                 onPause={() => setView({ at: 'pause' })}
@@ -337,7 +326,6 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 function RoomMap({
   reporting,
   onOpen,
-  onStartJourney,
   onDeepDive,
   onHelpChirpy,
   onPause,
@@ -352,7 +340,6 @@ function RoomMap({
   /** The day this session is answering for — see BestApp, where it's fixed. */
   reporting: ReportingDay;
   onOpen: (r: VirtueRoom) => void;
-  onStartJourney: () => void;
   onDeepDive: () => void;
   onHelpChirpy: () => void;
   onPause: () => void;
@@ -607,8 +594,8 @@ function RoomMap({
       way to the same two places (load-bearing on the phone hero, which has no
       doors in frame at all).
     */
-    knob('knobExplore', 'Explore Rooms', '#6FA8F0', () => { sound.play('roomCard'); setSheet(true); }, 900),
-    knob('knobJourney', 'My Journey', '#FFC65C', () => { sound.play('arcadeBlip'); onStartJourney(); }, 3900),
+    knob('knobExplore', 'How’s Chirpy doing?', '#6FA8F0', () => { sound.play('roomCard'); onHelpChirpy(); }, 900),
+    knob('knobJourney', 'Reflections', '#FFC65C', () => { sound.play('arcadeBlip'); onReflection(); }, 3900),
   ];
 
   return (
@@ -1345,4 +1332,3 @@ function RewardPerch({ onRewards }: { onRewards: () => void }) {
  * line of each pool is that door's own label, so the first thing a nudge
  * ever does is repeat the name before it starts finding other words for it.
  */
-
