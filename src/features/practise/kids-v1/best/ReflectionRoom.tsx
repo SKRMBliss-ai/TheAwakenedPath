@@ -22,6 +22,7 @@ import { shownIds, toggleShown } from '../kit/shown';
 import { allHung, hangIn, takeDown } from '../kit/hung';
 import { pastSeasons } from '../kit/seasons';
 import { VIRTUE_ROOMS } from './rooms';
+import { CARD_INK, LitCard } from '../ui/trail';
 
 /**
  * THE REFLECTION OBSERVATORY — where the day's journey ends.
@@ -138,7 +139,7 @@ export function ReflectionRoom({
 
       <RoomScene room={art} dim={DIM.content} />
 
-      <div className="relative mx-auto w-full max-w-4xl px-[74px] pb-28 pt-4 sm:px-20">
+      <div className="relative mx-auto w-full max-w-4xl pb-28 pl-[86px] pr-4 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
           <GrownUpExit onClick={onGrownUp} />
         </div>
@@ -172,13 +173,27 @@ export function ReflectionRoom({
             kit/oneTrueLine for the rules it keeps (never a target, never the
             virtue they do least, and no favourite unless there really is
             one). */}
-        <div className="mx-auto mt-4 flex max-w-md items-center justify-center gap-2.5">
-          <p
-            className="text-center text-[18px] font-extrabold leading-snug sm:text-[20px]"
-            style={{ color: CHROME.text, textWrap: 'balance' }}
-          >
-            {oneTrueLine(s.completions)}
-          </p>
+        {/* ON A LIT CARD, like the rooms that ask a child something — see
+            ui/trail. This is one sentence about the child, assembled from
+            months of their own answers, and it was set in white type directly
+            on a painting of an observatory at night, which is the least
+            readable surface this app has. It is the only card in this room
+            that glows: everything below is a record to browse, and this is the
+            room talking.
+
+            NO NUMBERED BEAD, and nothing else in here gets one either. A trail
+            means "these are steps, in order, and you are on one of them",
+            which is true of the Truth Lab and the Different Story room and is
+            not true of an observatory — this is a place you wander around. The
+            card is the part of that language that applies; the beads are not. */}
+        <div className="mx-auto mt-4 flex max-w-md items-center gap-2.5">
+          <div className="min-w-0 flex-1">
+            <LitCard tint={accent} glow>
+              <span className="block text-[16.5px] leading-snug sm:text-[18px]" style={{ textWrap: 'balance' }}>
+                {oneTrueLine(s.completions)}
+              </span>
+            </LitCard>
+          </div>
           {/* The room's one spoken-out-loud fact, on demand. */}
           <SpeakButton text={oneTrueLine(s.completions)} accent={accent} />
         </div>
@@ -199,23 +214,16 @@ export function ReflectionRoom({
             </p>
             <div className="mt-2.5 flex flex-col gap-2">
               {seasons.slice().reverse().map((k) => (
-                <div
-                  key={k.n}
-                  className="rounded-[18px] px-4 py-3"
-                  style={{ background: 'rgba(10,8,24,0.5)', border: `1px solid ${CHROME.pillBorder}` }}
-                >
-                  <p className="text-[13.5px] font-extrabold" style={{ color: CHROME.text }}>
-                    Season {k.n}
-                    <span className="ml-2 text-[11.5px] font-bold" style={{ color: CHROME.textSoft }}>
-                      {agoLabel(k.to)}
-                    </span>
-                  </p>
-                  <p className="mt-0.5 text-[12.5px] font-semibold leading-snug" style={{ color: CHROME.textSoft }}>
+                /* A finished season is a keepsake — three months of somebody's
+                   evenings, and the only thing in this room a child will ever
+                   want to go back and re-read. It gets paper. */
+                <LitCard key={k.n} tint={accent} label={`Season ${k.n} · ${agoLabel(k.to)}`}>
+                  <span className="block text-[13px] font-semibold leading-snug" style={{ color: `${CARD_INK}C0` }}>
                     {k.fireflies} {k.fireflies === 1 ? 'firefly' : 'fireflies'} · {k.days}{' '}
                     {k.days === 1 ? 'day' : 'days'} you came
                     {k.mostDone ? ` · mostly ${k.mostDone.toLowerCase()}` : ''}
-                  </p>
-                </div>
+                  </span>
+                </LitCard>
               ))}
             </div>
           </div>
