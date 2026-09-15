@@ -11,6 +11,7 @@ import { RoomScene } from '../ui/scene';
 import { timeOfDayForHour } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
+import { WorryLab } from './WorryLab';
 import { HubBoy, HubGreeting, HubHotspot, HubStage, HUB_BOXES, PhoneHub, type Hotspot, type HotspotKey } from './PaintedHub';
 import { FloatingJar } from './FloatingJar';
 import { DoorHandle } from '../ui/DoorHandle';
@@ -77,6 +78,9 @@ type View =
   | { at: 'room'; room: VirtueRoom; step: number | null }
   | { at: 'pause' }
   | { at: 'deep' }
+  /** Worried or Scared, picked in the Feelings Room — see DeepDive's
+   *  `onWorryLab`. `label` is the feeling word, already spoken. */
+  | { at: 'worrylab'; label: string }
   | { at: 'helpchirpy' }
   /** The room the painting's Different Story dome has always pointed at. */
   | { at: 'story' }
@@ -283,7 +287,12 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                    hardest thinking in the app and the only material the
                    Observatory can show a child about themselves. */
                 onFinish={(answers) => { saveCase(answers); back(); }}
+                onWorryLab={(label) => setView({ at: 'worrylab', label })}
               />
+            )}
+
+            {view.at === 'worrylab' && (
+              <WorryLab label={view.label} onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
             )}
 
             {view.at === 'helpchirpy' && (

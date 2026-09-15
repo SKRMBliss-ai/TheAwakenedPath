@@ -220,8 +220,13 @@ export function UnderNote({ children }: { children: React.ReactNode }) {
       className="px-1 text-[12.5px] font-bold leading-snug"
       /* Nothing behind this one but the room. Harmless where there is a scrim
          under it; the difference between readable and not in the Truth Lab,
-         which runs its painting undimmed. */
-      style={{ color: CHROME.textSoft, textShadow: '0 2px 10px rgba(6,3,16,0.95)' }}
+         which runs its painting undimmed — and where this line can land on a
+         lit lantern, which is why it carries a tight dark edge as well as a
+         wide one and is at full white rather than the soft grey. */
+      style={{
+        color: CHROME.text,
+        textShadow: '0 1px 2px rgba(6,3,16,1), 0 2px 10px rgba(6,3,16,0.95), 0 0 28px rgba(6,3,16,0.9)',
+      }}
     >
       {children}
     </p>

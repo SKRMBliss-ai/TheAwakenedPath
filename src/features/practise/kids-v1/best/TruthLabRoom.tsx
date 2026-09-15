@@ -89,8 +89,21 @@ const STORY_COLOR = {
  */
 const PANEL = 'rgba(12,7,26,0.92)';
 
-/** Text with nothing behind it but painting — the headings and the asks. */
-const OVER_ART = '0 2px 10px rgba(6,3,16,0.95), 0 0 26px rgba(6,3,16,0.8)';
+/**
+ * Text with nothing behind it but painting — the headings and the asks.
+ *
+ * Heavier than it looks like it needs to be, because this room stopped
+ * dimming its painting: the two loose lines in here now sit on lit wood and
+ * a lantern rather than on a scrim, and white on gold pine is white on
+ * nothing. The tight first layer is what separates the letterforms; the wide
+ * ones put the dark back behind the words that the scrim used to.
+ */
+const OVER_ART = [
+  '0 1px 2px rgba(6,3,16,1)',
+  '0 2px 10px rgba(6,3,16,0.95)',
+  '0 0 30px rgba(6,3,16,0.92)',
+  '0 0 62px rgba(6,3,16,0.75)',
+].join(', ');
 
 export function TruthLabRoom({
   reporting,
@@ -178,12 +191,21 @@ export function TruthLabRoom({
       {/*
         NO DIM IN HERE. Every other room drops a scrim over its painting so
         the question on top of it can be read; this one does not need to,
-        because nothing in here is read off the wall. The trail is five
-        opaque cream cards — see CARD_FACE in ui/trail — and an opaque card
-        is legible over anything, so the scrim was buying nothing and costing
-        the only lit room in the building its light.
+        because nothing in here is read off the wall. The trail is opaque
+        cards, and an opaque card is legible over anything, so the scrim was
+        buying nothing and costing the only lit room in the building its
+        light. `dim={0}` now takes the scrim with it — see RoomScene.
+
+        AND IT IS THE ROOM ON THE SIGN, not the boy at his desk. The `thought`
+        room's own painting is a child writing under a lamp with his thoughts
+        in bubbles above him, which is the right picture for the two steps of
+        the DeepDive walk that use it and the wrong one for this: a child
+        walks through a door marked TRUTH LAB and wants to be standing in the
+        place behind it. So this screen overrides the art with the room from
+        the founder's own composed sheet — the door, the lantern, and the
+        five books a child is here to do one of.
       */}
-      <RoomScene room={art} dim={0} />
+      <RoomScene room={art} dim={0} art="/rooms/truth-lab.webp" />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-3 p-3 sm:p-4">
         {/* How far through the walk, when there is a walk. Same beads as
@@ -219,7 +241,11 @@ export function TruthLabRoom({
           style={{ color: CHROME.text, transform: 'rotate(-2.5deg)', textWrap: 'balance', textShadow: OVER_ART }}
         >
           Let’s look at what happened
-          <span style={{ color: accent }}> together…</span>
+          {/* Lavender, not the room's own accent. The accent here is a warm
+              gold, which was fine against a scrim and is invisible now the
+              room is lit: gold lettering on lit pine, over a lantern. The
+              composed sheet writes this line in lavender anyway. */}
+          <span style={{ color: '#DABEFF' }}> together…</span>
         </p>
 
         <Chirpy pose={step === 6 ? 'excited' : 'curious'} line={line} align="left" />
