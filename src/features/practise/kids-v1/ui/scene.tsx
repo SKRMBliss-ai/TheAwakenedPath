@@ -49,7 +49,24 @@ import { DIM, GAITS, ROOM_PROPS, type BoyGait, type RoomProp } from './scenery';
  */
 const SETTLE_MS = 3000;
 
-export function RoomScene({ room, dim = DIM.content }: { room: RoomConfig; dim?: number }) {
+export function RoomScene({
+  room,
+  dim = DIM.content,
+  art,
+}: {
+  room: RoomConfig;
+  dim?: number;
+  /**
+   * A different painting for the same room, where one screen wants its own.
+   *
+   * The Truth Lab and two steps of the DeepDive walk share the `thought`
+   * room — same palette, same tone, same storage key — but the walk's two
+   * steps want the boy at his desk while the Lab wants the room its sign
+   * hangs in. One override beats splitting the room in rooms.ts and having
+   * to keep two entries of everything else in step.
+   */
+  art?: string;
+}) {
   const mood = SCENE_MOODS[room.scene];
   const quiet = useQuiet();
 
@@ -90,7 +107,8 @@ export function RoomScene({ room, dim = DIM.content }: { room: RoomConfig; dim?:
 
       {room.painted && (
         <img
-          src={roomArt(room.id)}
+          key={art ?? room.id}
+          src={art ?? roomArt(room.id)}
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
           draggable={false}
@@ -132,7 +150,17 @@ export function RoomScene({ room, dim = DIM.content }: { room: RoomConfig; dim?:
         />
       )}
 
-      <Scrim room={room} on={settled} />
+      {/*
+        `dim={0}` MEANS UNDIMMED, INCLUDING THIS.
+
+        The scrim used to paint whatever the dim was set to, so a room asking
+        for no dim at all still got a veil that runs from 58% at the top to
+        95% at the foot — which is most of a blackout. The Truth Lab is the
+        one caller that asks for zero, it asks because its trail is opaque
+        cards that need no help being read, and it was getting the darkest
+        room in the building anyway. A prop that says none should mean none.
+      */}
+      {dim > 0 && <Scrim room={room} on={settled} />}
     </div>
   );
 }

@@ -164,33 +164,49 @@ export function WorryLab({
  * a worry getting smaller. The cloud itself carries the whole idea: it
  * actually shrinks, so the shrinking is the thing being watched rather than
  * being told about.
+ *
+ * IT IS WHITE, AND IT IS BIG. This was a 172px ring washed in the room's own
+ * accent at 19% with a small glyph in the middle of it — a dark blue circle
+ * on a dark blue night sky, in a painting that already has clouds in it. On
+ * the actual screen there was nothing to see, so there was nothing to tap.
+ * The one control the whole room turns on cannot be the least visible thing
+ * on it: a cloud is cloud-shaped and lit from inside, and the accent does its
+ * work in the halo behind rather than in the cloud itself.
  */
 function WorryCloud({
   taps, needed, accent, onTap,
 }: { taps: number; needed: number; accent: string; onTap: () => void }) {
   const left = needed - taps;
-  const scale = 1 - (taps / needed) * 0.58;
+  const scale = 1 - (taps / needed) * 0.62;
   return (
     <div className="flex flex-col items-center gap-3 py-2">
       <motion.button
         onClick={onTap}
         disabled={left <= 0}
         aria-label="Tap the worry to make it smaller"
-        whileTap={left > 0 ? { scale: scale * 0.88 } : undefined}
-        animate={{ scale, opacity: left > 0 ? 1 : 0.5 }}
+        whileTap={left > 0 ? { scale: scale * 0.9 } : undefined}
+        animate={{ scale, opacity: left > 0 ? 1 : 0 }}
         transition={{ type: 'spring', stiffness: 260, damping: 16 }}
-        className="grid place-items-center rounded-full"
-        style={{
-          height: 172,
-          width: 172,
-          background: `${accent}30`,
-          border: `2px solid ${accent}`,
-          boxShadow: `0 0 44px -10px ${accent}`,
-        }}
+        className="relative grid place-items-center border-0 bg-transparent p-0"
+        style={{ height: 196, width: 196 }}
       >
-        <Cloud size={86} color={CHROME.text} fill={`${accent}CC`} strokeWidth={1.6} />
+        {/* The glow it sits in, which is where the room's colour went. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-full"
+          style={{ background: `radial-gradient(circle, ${accent}7A 0%, ${accent}24 46%, transparent 72%)` }}
+        />
+        {/* Filled white with a cool edge, so it has a silhouette rather than
+            being a flat white patch the eye reads as a hole in the sky. */}
+        <Cloud
+          size={172}
+          color="#B9C7F2"
+          fill="#FFFFFF"
+          strokeWidth={1.4}
+          style={{ filter: `drop-shadow(0 0 32px ${accent}) drop-shadow(0 12px 26px rgba(0,0,0,0.55))` }}
+        />
       </motion.button>
-      <p className="text-[13px] font-bold" style={{ color: CHROME.textSoft }}>
+      <p className="text-[14px] font-extrabold" style={{ color: CHROME.text }}>
         {left > 0 ? 'Tap it again' : 'There it goes…'}
       </p>
     </div>

@@ -176,6 +176,43 @@ export function BodyPortrait({
             </radialGradient>
           </defs>
 
+          {/*
+            WHERE A CHILD MAY TAP, DRAWN.
+
+            These zones were `fill="transparent"` and nothing else, on the
+            reasoning that the painted boy is the control and an outline drawn
+            over him would be clutter on top of the art. What it actually
+            meant was a screen that says "tap anywhere" above a hologram with
+            no marks on it at all: seven places do something, the rest of the
+            picture does nothing, and there was no way to tell which was
+            which. A target you cannot see is not a target.
+
+            So each one carries a soft dashed outline until it is chosen. In
+            white rather than the room's own accent, which is the same cyan
+            the hologram is lit in — a cyan ring on a cyan boy is back where
+            we started. Selected zones drop the outline and take the accent
+            glow below instead, so choosing a place visibly changes it.
+          */}
+          {ZONES.filter((z) => !selected.has(z.id)).map((z, zi) => (
+            <g key={`hint-${z.id}`}>
+              {z.targets.map((t, i) => (
+                <motion.ellipse
+                  key={i}
+                  cx={t.cx}
+                  cy={t.cy}
+                  rx={t.rx}
+                  ry={t.ry}
+                  fill="rgba(255,255,255,0.06)"
+                  stroke="rgba(255,255,255,0.72)"
+                  strokeWidth={2.5}
+                  strokeDasharray="11 10"
+                  animate={m.loop ? { opacity: [0.55, 0.9, 0.55] } : { opacity: 0.75 }}
+                  transition={m.loop ? { ...m.loop, duration: 3.4, delay: zi * 0.22 } : { duration: 0.3 }}
+                />
+              ))}
+            </g>
+          ))}
+
           {/* Lit places. Drawn under the tap targets so a tap always lands. */}
           {ZONES.filter((z) => selected.has(z.id)).map((z) => (
             <g key={`glow-${z.id}`}>
