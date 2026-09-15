@@ -102,10 +102,19 @@ export function DeepDive({
   onFinish,
   onGrownUp,
   onQuiet,
+  onWorryLab,
 }: {
   onFinish: (answers: DeepDiveAnswers) => void;
   onGrownUp: () => void;
   onQuiet: (q: boolean) => void;
+  /**
+   * Worried or Scared, once its size is answered, leaves this walk rather
+   * than continuing it — see `sizeFeeling` below for why those two feelings
+   * specifically. The label is what's already been spoken aloud and set as
+   * today's feeling; the Worry Lab gets it so its own opening line can use
+   * it without asking again.
+   */
+  onWorryLab: (label: string) => void;
 }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState<DeepDiveAnswers>({});
@@ -223,8 +232,14 @@ export function DeepDive({
   const sizeFeeling = (sizeId: string) => {
     if (!bigCheck) return;
     if (sizeId === 'really') onQuiet(true);
-    const { label } = bigCheck;
+    const { id, label } = bigCheck;
     setBigCheck(null);
+    /* Worried and Scared have somewhere better to go than the next of these
+       five questions — a worry is a thing with a shape (what it's about,
+       what a child could do about it), not a story to be talked out of. The
+       other four unpleasant feelings (sad, angry) still carry on into the
+       usual story/eyes/other chain. */
+    if (id === 'worried' || id === 'scared') { onWorryLab(label); return; }
     answer('feeling', label);
   };
 
