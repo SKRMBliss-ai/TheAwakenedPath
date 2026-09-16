@@ -37,6 +37,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
   const [mode, setMode] = useState<'reflect' | 'play' | 'learn'>('reflect');
   const [mobile, setMobile] = useState<'feelings' | 'choices' | null>(null);
   const [saved, setSaved] = useState(false);
+  const [openingDoor, setOpeningDoor] = useState<string | null>(null);
   const today = todayKey();
   const room = VIRTUE_ROOMS.find((r) => r.id === selected);
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
@@ -47,9 +48,12 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
   const noteKey = `${today}:${selected ?? ''}`;
   const note = s.monthReviews[month]?.[noteKey] ?? '';
   const open = (id: string, next: typeof mode) => {
-    setSelected(id); setMode(next); setSaved(false); sound.play('roomCard'); dialog.current?.showModal();
+    setOpeningDoor(id); sound.play('discovery');
+    window.setTimeout(() => {
+      setSelected(id); setMode(next); setSaved(false); dialog.current?.showModal();
+    }, reduced || quiet ? 0 : 380);
   };
-  const close = () => { dialog.current?.close(); setSelected(null); };
+  const close = () => { dialog.current?.close(); setSelected(null); setOpeningDoor(null); };
   const write = (value: string) => { s.setMonthReview(month, noteKey, value); setSaved(false); };
 
   return <main className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
@@ -73,15 +77,15 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
         <header className="mg-shelf-title"><span aria-hidden="true">☀</span><h2>My Good Choices</h2><p>Small choices. Big growth. A brighter you.</p></header>
         <div className="mg-shelf">{SHELF.map(([id, art, prompt]) => {
           const b = BEHAVIOURS.find((v) => v.id === id)!;
-          return <article className={`mg-room mg-room-${id}`} key={id}>
-            <button className="mg-room-door" onClick={() => open(id, 'reflect')} aria-label={`Open ${b.title}`}><img src={`${A}room_${art}.webp`} alt="" /><span>{b.title}</span></button>
+          return <article className={`mg-room mg-room-${id} ${openingDoor === id ? 'mg-door-opening' : ''}`} key={id}>
+            <button className="mg-room-door" onMouseEnter={() => { if (!quiet && !reduced) sound.play('discovery'); }} onClick={() => open(id, 'reflect')} aria-label={`Open ${b.title}`}><img src={`${A}room_${art}.webp`} alt="" /><span>{b.title}</span><span className="mg-door-shutter" aria-hidden="true"><i>✦</i><b>{b.title}</b><small>tap to enter</small></span></button>
             <div className="mg-room-paper"><p>{prompt}</p><button className="mg-play" onClick={() => open(id, 'play')}>▶ Play<span className="sr-only"> {b.title}</span></button><button className="mg-learn" onClick={() => open(id, 'learn')}>▣ Learn<span className="sr-only"> {b.title}</span></button></div>
           </article>;
         })}<div className="mg-shelf-note">Little Choices<br />Make a Brighter Tomorrow<br /><button onClick={onReflection}>📖 My Inner Diary</button></div></div>
       </section>
       <footer className="mg-safety"><button onClick={onExitGym}>‹ Back</button><button onClick={onGrownUp}>♡ Talk to a grown-up</button></footer>
     </div>
-    <dialog className="mg-room-dialog" aria-labelledby="mg-room-title" ref={dialog} onClose={() => setSelected(null)} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
+    <dialog className="mg-room-dialog" aria-labelledby="mg-room-title" ref={dialog} onClose={() => { setSelected(null); setOpeningDoor(null); }} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
       {room && behaviour && <><header><h2 id="mg-room-title">{behaviour.title}</h2><button onClick={close} aria-label="Close room">×</button></header>
         <nav aria-label="Room activities">{(['reflect', 'play', 'learn'] as const).map((item) => <button key={item} onClick={() => setMode(item)} aria-pressed={mode === item}>{item === 'reflect' ? 'My day' : item === 'play' ? 'Play' : 'Learn'}</button>)}</nav>
         {mode === 'reflect' && <><p>{behaviour.prompt}</p><div className="mg-day-options"><button aria-pressed={!!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, true)}>Yes, I did</button><button aria-pressed={!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, false)}>Not today</button></div><label htmlFor="mg-home-note">Something to remember (if you like)</label><textarea id="mg-home-note" value={note} onChange={(e) => write(e.target.value)} rows={3} /><MicButton onText={(text) => write(note ? `${note} ${text}` : text)} /><button className="mg-save" onClick={() => setSaved(true)}>{saved ? 'Saved in your diary' : 'Save my thought'}</button><p role="status">{saved ? 'Your thought is saved on this device.' : 'You can stop whenever you like.'}</p></>}
