@@ -393,6 +393,17 @@ export function ReflectionRoom({
             first thing this particular room needs to show. This section is
             also expected to move house entirely once there's a better room
             for it; it stays lightweight here on purpose. */}
+        <section aria-label="Thoughts from My Good Choices" className="mt-5 rounded-[20px] bg-[#fff3d8] p-4 text-[#39235a]">
+          <h2 className="text-lg font-extrabold">My Good Choices — thoughts to remember</h2>
+          {Object.entries(review).filter(([key, value]) => /^\d{4}-\d{2}-\d{2}:/.test(key) && value.trim()).sort(([a], [b]) => b.localeCompare(a)).map(([key, value]) => {
+            const [date, id] = key.split(':');
+            return <article key={key} className="mt-3 border-t border-[#bd9d72] pt-3">
+              <h3 className="font-bold">{BEHAVIOURS.find((b) => b.id === id)?.title ?? 'My thought'} · <time dateTime={date}>{date}</time></h3>
+              <p className="mt-1 whitespace-pre-wrap">{value}</p>
+            </article>;
+          })}
+          {!Object.entries(review).some(([key, value]) => /^\d{4}-\d{2}-\d{2}:/.test(key) && value.trim()) && <p className="mt-2">Thoughts you save in your seven rooms will appear here.</p>}
+        </section>
         <CaseShelf accent={accent} cases={cases} onDelete={deleteCase} />
 
         {/* ── The doodle wall, LAST ───────────────────────────────────

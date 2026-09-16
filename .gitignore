@@ -34,3 +34,7 @@ functions/jaas-key.pk
 # Regenerable art masters and proof sheets (scripts/prepare-gym-art.mjs).
 # Kept out of public/ so they never enter the PWA precache.
 art-build/
+
+# Extracted design handoffs; source archives remain tracked in src/assets.
+.tmp-home-reference/
+.tmp-design-v2/

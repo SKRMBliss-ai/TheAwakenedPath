@@ -34,6 +34,7 @@ import { LeaveANote } from './LeaveANote';
 import { OneMinute } from './OneMinute';
 import { SeasonEnd } from './SeasonEnd';
 import { FirstNight } from './FirstNight';
+import { HomeScreen } from './HomeScreen';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
 import { visitorForToday, type Visitor } from '../kit/visitor';
@@ -138,6 +139,7 @@ function archWipe(plain: boolean) {
 
 export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
   const onboarded = useKidStore((s) => s.onboarded);
+  const name = useKidStore((s) => s.name);
   const completions = useKidStore((s) => s.completions);
 
   /** Same arithmetic as the Observatory's jar — one per virtue per day it was
@@ -207,11 +209,6 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
    * one room carries the child to the next, so the day's round is a walk
    * through a building rather than seven separate trips out to a menu.
    */
-  const startJourney = () => {
-    sound.play('enterRoom');
-    setView({ at: 'room', room: VIRTUE_ROOMS[0], step: 0 });
-  };
-
   const nextRoom = (step: number) => {
     const next = step + 1;
     if (next >= VIRTUE_ROOMS.length) {
@@ -232,18 +229,11 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
             {...archWipe(plainMotion)}
           >
             {view.at === 'map' && (
-              <RoomMap
-                reporting={reporting}
-                onOpen={(r) => { sound.play('roomCard'); setView({ at: 'room', room: r, step: null }); }}
-                onStartJourney={startJourney}
-                onDeepDive={() => setView({ at: 'deep' })}
-                onHelpChirpy={() => setView({ at: 'helpchirpy' })}
-                onPause={() => setView({ at: 'pause' })}
+              <HomeScreen
+                name={name}
                 onReflection={() => setView({ at: 'reflection' })}
-                onStory={() => setView({ at: 'story' })}
-                onRewards={() => setView({ at: 'rewards' })}
-                onFriends={() => setView({ at: 'friends' })}
-                onOneMinute={() => setView({ at: 'oneminute' })}
+                onOpenRoom={(r) => setView({ at: 'room', room: r, step: null })}
+                onDeepDive={() => setView({ at: 'deep' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
               />
@@ -344,7 +334,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 
 /* ── The map ─────────────────────────────────────────────────────────── */
 
-function RoomMap({
+export function LegacyRoomMap({
   reporting,
   onOpen,
   onStartJourney,
