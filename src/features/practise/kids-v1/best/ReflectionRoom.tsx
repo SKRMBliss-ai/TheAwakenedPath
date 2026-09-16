@@ -86,6 +86,7 @@ export function ReflectionRoom({
 
   const now = new Date();
   const [month, setMonth] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1));
+  const [saved, setSaved] = useState(false);
   const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -137,7 +138,7 @@ export function ReflectionRoom({
           learns one door learns them all. */}
       <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
 
-      <RoomScene room={art} dim={DIM.content} />
+      <RoomScene room={art} dim={DIM.content} art="/mind-gym/diary/background_environment.png" />
 
       <div className="relative mx-auto w-full max-w-4xl pb-28 pl-[86px] pr-4 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
@@ -161,6 +162,11 @@ export function ReflectionRoom({
           */}
           <BoyAndChirpy size={172} pose="excited" gaze="child" gait="dance" roomId={art.id} />
           <Chirpy pose="hopeful" line="Come and see the whole map." align="left" />
+          <img
+            src="/mind-gym/diary/header_book_title.png"
+            alt="My Inner Diary"
+            className="max-h-28 w-full max-w-[31rem] object-contain"
+          />
           <Question room={art}>Look Back &amp; Learn</Question>
           <p className="max-w-md text-[13.5px] font-semibold" style={{ color: CHROME.textSoft }}>
             {stars === 1 ? 'One night in the gym' : `${stars} nights in the gym`}
@@ -237,22 +243,26 @@ export function ReflectionRoom({
             limit; this can't be allowed to move because of it. */}
         <div
           className="mt-5 rounded-[22px] p-3 backdrop-blur-md sm:p-4"
-          style={{ background: 'rgba(10,8,24,0.55)', border: `1px solid ${CHROME.pillBorder}` }}
+          style={{
+            background: 'linear-gradient(145deg, rgba(255,252,255,0.95), rgba(244,232,255,0.91))',
+            border: '2px solid rgba(255,255,255,0.82)',
+            boxShadow: '0 14px 36px rgba(33, 13, 68, 0.28)',
+          }}
         >
           <div className="flex items-center justify-between gap-3 px-1 pb-3">
             <button
               onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
               className="grid h-8 w-8 place-items-center rounded-full text-[15px] font-bold"
-              style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}`, color: CHROME.text }}
+              style={{ background: '#7c4cc8', border: '1px solid rgba(255,255,255,0.8)', color: '#fff' }}
               aria-label="Previous month"
             >‹</button>
-            <p className="text-[14.5px] font-extrabold" style={{ color: CHROME.text }}>
+            <p className="text-[14.5px] font-extrabold" style={{ color: '#442270' }}>
               {month.toLocaleString(undefined, { month: 'long', year: 'numeric' })}
             </p>
             <button
               onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
               className="grid h-8 w-8 place-items-center rounded-full text-[15px] font-bold"
-              style={{ background: CHROME.pill, border: `1px solid ${CHROME.pillBorder}`, color: CHROME.text }}
+              style={{ background: '#7c4cc8', border: '1px solid rgba(255,255,255,0.8)', color: '#fff' }}
               aria-label="Next month"
             >›</button>
           </div>
@@ -266,7 +276,7 @@ export function ReflectionRoom({
                   <span
                     key={d}
                     className="w-[18px] shrink-0 text-center text-[9px] font-bold"
-                    style={{ color: isThisMonth && d === now.getDate() ? accent : 'rgba(255,255,255,0.4)' }}
+                    style={{ color: isThisMonth && d === now.getDate() ? '#c33c91' : '#6d5683' }}
                   >
                     {d}
                   </span>
@@ -278,7 +288,7 @@ export function ReflectionRoom({
 
               {BEHAVIOURS.map((b) => (
                 <div key={b.id} className="flex items-center gap-1 py-[3px]">
-                  <span className="w-[120px] shrink-0 truncate pr-1 text-[11px] font-bold" style={{ color: CHROME.text }}>
+                  <span className="w-[120px] shrink-0 truncate pr-1 text-[11px] font-bold" style={{ color: '#442270' }}>
                     <span className="mr-1">{b.icon}</span>{b.title}
                   </span>
                   {days.map((d) => {
@@ -292,9 +302,9 @@ export function ReflectionRoom({
                         aria-label={`${b.title}, day ${d}${on ? ', done' : ''}`}
                         className="h-[18px] w-[18px] shrink-0 rounded-full transition-all"
                         style={{
-                          background: on ? b.color : 'rgba(255,255,255,0.07)',
+                          background: on ? b.color : 'rgba(105,72,142,0.15)',
                           boxShadow: on ? `0 0 10px -2px ${b.color}` : 'none',
-                          border: `1px solid ${on ? b.color : 'rgba(255,255,255,0.12)'}`,
+                          border: `1px solid ${on ? b.color : 'rgba(105,72,142,0.16)'}`,
                           opacity: future ? 0.25 : 1,
                           cursor: future ? 'default' : 'pointer',
                         }}
@@ -313,7 +323,7 @@ export function ReflectionRoom({
           </div>
 
           <p className="pt-2.5 text-center text-[11.5px] font-semibold" style={{ color: CHROME.textSoft }}>
-            Tap any day to mark it — past days too. An empty square is just a day nobody ticked.
+            Tap any day to mark it — past days too. An empty square is simply a day nobody ticked.
           </p>
         </div>
 
@@ -398,6 +408,15 @@ export function ReflectionRoom({
           I am the master of my choices.
         </p>
 
+        <button
+          type="button"
+          onClick={() => setSaved(true)}
+          className="mx-auto mt-6 flex min-h-14 w-full max-w-sm items-center justify-center rounded-full px-6 text-[17px] font-extrabold text-white transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-4 focus-visible:outline-white"
+          style={{ background: 'linear-gradient(100deg, #7f42dc, #ec4a9f)', boxShadow: '0 8px 0 #50228c, 0 0 28px rgba(236,74,159,.65)' }}
+          aria-live="polite"
+        >
+          {saved ? 'Saved for this month ✨' : '📖 Save This Month  →'}
+        </button>
         <Cta label="Back to the rooms" onClick={onExit} accent={accent} />
 
         {/* THE WAY IN FOR A PARENT, and deliberately the dullest thing on the
