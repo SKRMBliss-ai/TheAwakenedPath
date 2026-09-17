@@ -17,6 +17,9 @@
  */
 
 export interface Case {
+  /** Story Lab keeps the initial thought separately from the child's story. */
+  thought?: string;
+  sessionId?: string;
   /**
    * Stable across deletions, unlike a position in this array.
    *
@@ -56,26 +59,26 @@ const KEEP = 40;
  */
 const MAX_DRAWING_CHARS = 220_000;
 
-export function saveCase(c: Omit<Case, 'day'>): void {
+export function saveCase(c: Omit<Case, 'day'>): boolean {
   // A walk where nothing was said is not a case. Half-finished ones are
   // dropped rather than shelved: a child looking back should find things
   // they actually worked out, not a list of times they wandered off.
-  if (!c.feeling && !c.story) return;
+  if (!c.feeling && !c.story) return false;
 
   const entry: Case = { ...c, id: newCaseId(), day: new Date().toISOString().slice(0, 10) };
   if (entry.drawing && entry.drawing.length > MAX_DRAWING_CHARS) {
     delete entry.drawing;
   }
 
-  const all = [entry, ...loadCases()].slice(0, KEEP);
-  if (writeCases(all)) return;
+  const all = [entry, ...loadCases().filter(old => !c.sessionId || old.sessionId !== c.sessionId)].slice(0, KEEP);
+  if (writeCases(all)) return true;
 
   // The write failed even after capping this drawing — most likely because
   // older cases' own drawings have accumulated toward the quota over weeks
   // of use. Strip every drawing but the one just made and try once more: a
   // child would miss TODAY's words and picture first, so those are what
   // survive if anything has to give.
-  writeCases(all.map((x, i) => (i === 0 ? x : { ...x, drawing: undefined })));
+  return writeCases(all.map((x, i) => (i === 0 ? x : { ...x, drawing: undefined })));
 }
 
 function writeCases(all: Case[]): boolean {

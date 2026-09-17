@@ -8,6 +8,8 @@ import { MicButton } from '../ui/MicButton';
 import { VIRTUE_ROOMS, type VirtueRoom } from './rooms';
 import { roomGamesFor } from './roomGames';
 import { RoomGamePlayer } from './RoomGamePlayer';
+import { GoodChoicesShelf } from './GoodChoicesShelf';
+import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
 import './HomeScreen.css';
 
@@ -16,12 +18,6 @@ const STEPS = [
   ['feeling', 'Feeling', 'What are you feeling?'], ['body', 'Body', 'What do you notice?'],
   ['thought', 'Thought', 'What’s going through your mind?'], ['what_happened', 'What happened?', 'Let’s look at what happened.'],
   ['story', 'Story', 'Make sense of it.'], ['another_way', 'Another way to see it', 'Try a new perspective.'],
-];
-const SHELF = [
-  ['kind', 'be_kind', 'What could you do today to be kind?'], ['truth', 'tell_truth', 'What happens when we tell the truth?'],
-  ['choices', 'make_good_choices', 'Which choice helps you and others?'], ['include', 'include_everyone', 'How can you include someone new today?'],
-  ['body', 'take_care_body', 'What helps your body and mind feel good?'], ['help', 'help_others', 'Who could you help today?'],
-  ['mindheart', 'mind_heart_time', 'Take a quiet breath. What are you grateful for?'],
 ];
 
 /** Composed from the approved two-flow home handoff; all controls are semantic. */
@@ -67,17 +63,11 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
       </section>
       <section className="mg-character" aria-label="Your guide">
         <div className="mg-greeting"><img src={`${A}boy_fullbody.webp`} alt="" /><div><b>Hello{name ? `, ${name}` : ''}!<br />How would you like<br />to begin today?</b><p>You can explore your feelings<br />or make good choices!</p></div></div>
-        <div className="mg-boy-wrap"><img className="mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" /><img className="mg-chirpy" src={`${A}chirpy.webp`} alt="Chirpy" /><p className="mg-chirpy-line">I’m here<br />with you!<br />♡ Chirpy!</p></div>
+        <div className="mg-boy-wrap"><img className="mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" /><img className="mg-chirpy" src={chirpySprite('curious')} alt="Chirpy" /><p className="mg-chirpy-line">I’m here<br />with you!<br />♡ Chirpy!</p></div>
       </section>
       <section className={`mg-choices ${mobile === 'choices' ? 'mg-mobile-open' : ''}`} aria-label="My Good Choices">
         <header className="mg-shelf-title"><span aria-hidden="true">☀</span><h2>My Good Choices</h2><p>Small choices. Big growth. A brighter you.</p></header>
-        <div className="mg-shelf">{SHELF.map(([id, art, prompt]) => {
-          const b = BEHAVIOURS.find((v) => v.id === id)!;
-          return <article className={`mg-room mg-room-${id}`} key={id}>
-            <button className="mg-room-door" onClick={() => open(id, 'reflect')} aria-label={`Open ${b.title}`}><img src={`${A}room_${art}.webp`} alt="" /><span>{b.title}</span></button>
-            <div className="mg-room-paper"><p>{prompt}</p><button className="mg-play" onClick={() => open(id, 'play')}>▶ Play<span className="sr-only"> {b.title}</span></button><button className="mg-learn" onClick={() => open(id, 'learn')}>▣ Learn<span className="sr-only"> {b.title}</span></button></div>
-          </article>;
-        })}<div className="mg-shelf-note">Little Choices<br />Make a Brighter Tomorrow<br /><button onClick={onReflection}>📖 My Inner Diary</button></div></div>
+        <GoodChoicesShelf onAction={open} onDiary={onReflection} />
       </section>
       <footer className="mg-safety"><button onClick={onExitGym}>‹ Back</button><button onClick={onGrownUp}>♡ Talk to a grown-up</button></footer>
     </div>

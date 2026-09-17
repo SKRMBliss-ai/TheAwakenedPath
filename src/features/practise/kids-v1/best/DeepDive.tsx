@@ -19,6 +19,8 @@ import { FeelingsIntro } from './FeelingsIntro';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { setTodaysFeeling } from '../kit/todaysFeeling';
 import * as sound from '../kit/sound';
+import { StoryLabRoom } from './StoryLabRoom';
+import { saveCase } from '../kit/cases';
 
 /**
  * THE FIVE STEPS, ON ONE SCREEN.
@@ -89,6 +91,8 @@ const CONFESSION = [
 ];
 
 export interface DeepDiveAnswers {
+  thought?: string;
+  sessionId?: string;
   feeling?: string;
   body?: string[];
   story?: string;
@@ -259,6 +263,14 @@ export function DeepDive({
   }, [phase]);
 
   useEffect(() => () => sound.stopMusic(), []);
+
+  // Feeling and Body remain the existing rooms. From here onward one Story
+  // Lab stays mounted while the four remaining pieces assemble in place.
+  if (stepIndex >= 2) return <StoryLabRoom carried={answers}
+    onBody={() => setStepIndex(1)}
+    onExit={() => { onQuiet(false); onFinish({}); }}
+    onGrownUp={onGrownUp}
+    onSave={saveCase} />;
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>

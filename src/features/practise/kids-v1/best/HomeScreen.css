@@ -10,28 +10,19 @@
 @media(min-width:1101px){.mg-world{min-height:720px;height:max(100svh,56.28vw);max-height:1080px}.mg-feelings{padding:18px 14px}.mg-invitation{margin-top:8px}.mg-room-paper button{min-height:36px}.mg-room-paper p{min-height:30px}.mg-shelf-title{min-height:90px}.mg-steps img{max-height:75px}}
 @media(max-width:760px){.mg-world{display:flex;flex-direction:column}.mg-mobile-doors{order:0}.mg-feelings,.mg-choices{order:1}.mg-character{order:2}}
 @media(prefers-reduced-motion:reduce){.mg-home *{transition:none!important;animation:none!important}}
-/* The approved desktop illustration is the visual source of truth. The
-   overlaid DOM retains named, keyboard-operable controls and live progress.
-   Mobile keeps the separately composed, reflowing two-destination view. */
-@media(min-width:1101px){
-  .mg-world{height:56.28vw;min-height:0;max-height:1080px;background-image:url('/mind-gym/home/approved-scene.webp');background-size:100% 100%}
-  .mg-logo{width:10vw;height:11vw;opacity:0}
-  .mg-top{inset:4px 8px auto}.mg-tools{gap:5px}.mg-points,.mg-month{min-height:4.9vw;background:#171641}
-  .mg-feelings{left:14.5%;top:14%;width:25%;height:75%;border:0;background:none;box-shadow:none;padding:0;text-shadow:none}
-  .mg-feelings h1,.mg-feelings h2,.mg-invitation,.mg-steps{opacity:0;pointer-events:none}
-  .mg-start{position:absolute;left:7%;bottom:0;width:86%;height:10%;min-height:0;background:transparent;border:0;box-shadow:none;color:transparent;text-shadow:none}
-  .mg-start:hover{box-shadow:0 0 24px #9ffcff;background:#bffaff20}
-  .mg-character{left:36.4%;top:5.8%;width:20.4%;height:16%}
-  .mg-greeting{width:100%;height:100%;margin:0;padding:1vw;border-radius:2vw;align-items:center;box-shadow:none;border:0}
-  .mg-greeting>img{width:4vw;height:5vw;flex-shrink:0}.mg-greeting b{font-size:1.35vw}.mg-greeting p{font-size:.95vw;margin-top:.5vw}.mg-greeting:after{display:none}.mg-boy-wrap{display:none}
-  .mg-choices{right:1%;top:20.5%;width:43%;height:72.5%}
-  .mg-shelf-title{position:absolute;top:-24%;height:23%;width:100%;opacity:0;pointer-events:none}
-  .mg-shelf{height:100%;border:0;background:none;gap:1.6% 1%;grid-template-rows:repeat(4,minmax(0,1fr))}
-  .mg-room{border:0;background:none;box-shadow:none}.mg-room-door{width:57%;background:transparent;border-radius:20%;transform:none}
-  .mg-room-door img,.mg-room-door>span{opacity:0}.mg-room-door:hover,.mg-room-door:focus-visible{background:#fff2a522;box-shadow:0 0 18px #ffe080;transform:none}
-  .mg-room-paper{width:43%;height:80%;align-self:end;margin:0 0 2%;padding:0;border:0;background:none;box-shadow:none;transform:none;display:flex;flex-direction:column;justify-content:end}
-  .mg-room-paper p{opacity:0;flex:1}.mg-room-paper button{height:25%;min-height:0;margin:0 8% 3% 4%;width:88%;background:transparent;color:transparent;border:0;border-radius:12px}.mg-room-paper button:hover{background:#ffffff33;box-shadow:0 0 10px #efcfff}
-  .mg-shelf-note{font-size:0;text-shadow:none;align-self:end;padding:0 0 4%}.mg-shelf-note button{font-size:12px;margin:0 auto;background:#432462ec}
-  .mg-room-mindheart .mg-room-paper{transform:translateX(2.4vw)}
-  .mg-safety{bottom:5px}.mg-safety button{min-height:32px;font-size:11px;padding:5px 12px}
-}
+.mg-world{background-image:url('/mind-gym/closed-home/environment.webp')}
+.mg-cabinet{position:relative;min-width:0;min-height:0;perspective:900px;isolation:isolate;border-bottom:5px ridge #a16932;background:#45230f;transition:transform .22s,filter .22s}
+.mg-cabinet.is-hovered{transform:translateY(-3px) scale(1.025);filter:brightness(1.12);z-index:3}.mg-cabinet.is-open{z-index:4;filter:drop-shadow(0 0 8px #ffce65)}
+.mg-cabinet-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.mg-cabinet-inside,.mg-cabinet-door{position:absolute;left:20.28%;top:26.86%;width:71.23%;height:69.71%;border-radius:24% 24% 3% 3% / 22% 22% 3% 3%}
+.mg-cabinet-inside{overflow:hidden;box-shadow:inset 0 0 15px #ffce71}.mg-cabinet-inside img{width:100%;height:100%;object-fit:cover}
+.mg-cabinet-door{padding:0;transform-origin:left center;transition:transform .65s cubic-bezier(.2,.75,.2,1),filter .2s;backface-visibility:hidden;z-index:2}.mg-cabinet-door img{width:100%;height:100%;border-radius:inherit}
+.mg-cabinet.is-open .mg-cabinet-door{transform:rotateY(-108deg);pointer-events:none}.mg-cabinet.is-hovered .mg-cabinet-door{filter:drop-shadow(0 0 7px #ffd45b)}
+.mg-cabinet-name{position:absolute;left:6%;right:1%;top:1%;height:25%;display:flex;align-items:center;justify-content:center;padding:2px 8px;text-align:center;border:2px ridge #b8a55a;border-radius:45% 40% 20% 20%;background:linear-gradient(#768735,#34420d);font-size:clamp(12px,1.15vw,20px);line-height:1.05;font-weight:900;text-shadow:0 2px 3px #251326;pointer-events:none;z-index:3}
+.mg-cabinet-truth .mg-cabinet-name{background:linear-gradient(#2875b7,#15155e)}.mg-cabinet-choices .mg-cabinet-name{background:linear-gradient(#e95648,#861d20)}.mg-cabinet-include .mg-cabinet-name,.mg-cabinet-mindheart .mg-cabinet-name{background:linear-gradient(#a449dd,#481673)}.mg-cabinet-body .mg-cabinet-name{background:linear-gradient(#279eb8,#174665)}.mg-cabinet-help .mg-cabinet-name{background:linear-gradient(#db831e,#793906)}
+.mg-cabinet-preview{position:absolute;z-index:5;right:-3%;top:26%;width:61%;min-height:74%;padding:14px 6px 6px;border:3px ridge #e9b879;border-radius:12px;background:linear-gradient(115deg,#fff4d2,#fae2c6);box-shadow:0 4px 14px #180c28;color:#352070;animation:mg-preview-in .45s ease both}
+.mg-cabinet-preview[hidden]{display:none}.mg-cabinet-preview p{font-size:clamp(11px,.9vw,16px);line-height:1.1;text-align:center;font-weight:800;margin:0 0 4px}.mg-cabinet-preview>button:not(.mg-preview-close){display:block;width:100%;min-height:32px;border-radius:9px;background:linear-gradient(#bb6eec,#6d1abd);color:white;font-weight:850;margin-top:3px;font-size:13px}.mg-cabinet-preview>button:last-child{background:linear-gradient(#f5cce8,#c99ace);color:#352070}.mg-preview-close{position:absolute;right:0;top:-14px;width:30px;height:30px;border-radius:50%;background:#43215e;color:white;font-size:23px;border:1px solid #efca83}
+@keyframes mg-preview-in{from{opacity:0;translate:8px 0}to{opacity:1;translate:0 0}}
+@media(max-width:760px){.mg-shelf{grid-template-columns:1fr 1fr;grid-template-rows:none;gap:5px}.mg-cabinet{aspect-ratio:212/190}.mg-cabinet-name{font-size:14px}.mg-cabinet-preview{width:106%;top:24%;right:-3%;padding:18px 6px 8px}.mg-cabinet:nth-child(even) .mg-cabinet-preview{right:0}.mg-cabinet-preview p{font-size:13px}.mg-cabinet-preview>button:not(.mg-preview-close){min-height:44px;font-size:15px}.mg-preview-close{width:44px;height:44px;top:-27px}.mg-cabinet.is-open{margin-bottom:35px}.mg-shelf-note{font-size:13px;padding:8px}}
+.mg-still .mg-cabinet.is-hovered{transform:none}
+@media(prefers-reduced-motion:reduce){.mg-cabinet.is-hovered{transform:none}}
