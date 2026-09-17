@@ -109,3 +109,78 @@
   .mg-blocks{display:none}
   .mg-steps li:not(:last-child):before{display:none}
 }
+
+/* ── The shelf, measured against the mockup ────────────────────────────── */
+
+/*
+  THE CABINET ART WAS BEING STRETCHED 46% WIDE, and every complaint about this
+  shelf came from that one line.
+
+  door-*-clean.webp is a self-contained cabinet — sign, door, lantern, vines
+  and the little parchment note — drawn at 900x675, i.e. 4:3. It was painted
+  into the cell with `object-fit: fill`, and the cell is about 1.94:1. So the
+  whole thing was stretched horizontally by nearly half: the door came out far
+  wider than it was drawn, and the note's text came out squashed and
+  unreadable. Nothing was wrong with the art or the sizes; it was the fit.
+
+  `contain` is the whole fix. The door returns to the width it was drawn at
+  (narrower), and the note returns to its drawn shape (readable) — the two
+  things the mockup comparison asked for, from one word.
+*/
+.mg-cabinet-door img,
+.mg-cabinet.is-open .mg-open-art{object-fit:contain}
+
+/*
+  THE WOOD BETWEEN THE ROOMS.
+
+  `contain` leaves space either side of each cabinet, because the cell is wider
+  than 4:3. In the mockup that space is not empty: the cabinets are set into a
+  carpentered shelf — thick planks under each row and a post down the middle
+  between the two columns. So the space becomes the shelf, which is what the
+  mockup has and the build did not.
+
+  Drawn on the grid itself rather than per-cabinet, so the planks run the full
+  width and line up across both columns instead of stopping at each cell.
+*/
+.mg-shelf{position:relative}
+/*
+  ONLY THE POST. The first attempt filled the whole shelf with plank grain and
+  turned it into one solid brown board — the painted room stopped showing
+  between the cabinets, which is the opposite of what the mockup does, and it
+  buried the diary note underneath it. The horizontal planks are already drawn
+  per row by .mg-cabinet:after, so all that is missing is the upright between
+  the two columns.
+*/
+.mg-shelf:before{
+  content:'';position:absolute;z-index:0;pointer-events:none;
+  left:calc(50% - 8px);top:1%;width:16px;bottom:9%;
+  background:linear-gradient(90deg,#4a2814,#8a5228 42%,#a9683a 52%,#43240f);
+  border-radius:3px;
+  box-shadow:0 0 10px #1b0c1f88;
+  opacity:.95;
+}
+/* A plank under every row, not only the last: each cabinet is standing on
+   something. Kept on the cabinet so it moves with the row when the grid
+   reflows at other viewports. */
+.mg-cabinet:after{
+  height:13px;
+  background:linear-gradient(#c98a4a,#8a5228 45%,#3d2011);
+  border-radius:3px/60%;
+  box-shadow:0 5px 9px #1b0c1faa,inset 0 1px 0 #e8b57e66;
+}
+.mg-cabinet{z-index:1}
+/* Above the post, or the wood swallows the words. */
+.mg-shelf-note{position:relative;z-index:2}
+
+/*
+  THE FEELINGS PORTAL COMES DOWN A LITTLE, so the floor shows.
+
+  It was 76% of the world's height starting at 15%, which put its foot almost
+  on the bottom edge and hid the lit floor the whole scene stands on — the
+  mockup shows a good band of it under the panel, and that floor is most of
+  what makes the room feel like a room rather than a wall.
+*/
+/* Desktop only, and it has to say so: this file's mobile block appears ABOVE
+   these overrides, so an unscoped rule here would beat it and hand the phone's
+   opened panel a 29% width. */
+@media(min-width:761px){.mg-feelings{top:14%;height:68%;width:29%}}
