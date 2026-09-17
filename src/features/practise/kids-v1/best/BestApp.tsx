@@ -16,7 +16,8 @@ import { HubBoy, HubGreeting, HubHotspot, HubStage, HUB_BOXES, PhoneHub, type Ho
 import { FloatingJar } from './FloatingJar';
 import { DoorHandle } from '../ui/DoorHandle';
 import { HelpChirpy } from './HelpChirpy';
-import { DifferentStoryRoom } from './DifferentStoryRoom';
+import { StoryLabRoom } from './StoryLabRoom';
+import type { DeepDiveAnswers } from './DeepDive';
 import { TruthLabRoom } from './TruthLabRoom';
 import { ReflectionRoom } from './ReflectionRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, accentFor, artRoomFor, type VirtueRoom } from './rooms';
@@ -149,6 +150,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
     0,
   );
   const [view, setView] = useState<View>({ at: 'map' });
+  const [storyAnswers, setStoryAnswers] = useState<DeepDiveAnswers>({});
   const [quiet, setQuiet] = useState(false);
   const reduced = useReducedMotion();
 
@@ -291,7 +293,16 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 
             {view.at === 'pause' && <PauseRoom onExit={back} />}
             {view.at === 'story' && (
-              <DifferentStoryRoom onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
+              <StoryLabRoom
+                carried={storyAnswers}
+                onBody={back}
+                onExit={back}
+                onGrownUp={() => setView({ at: 'grownup' })}
+                onSave={(answers) => {
+                  setStoryAnswers(answers);
+                  return saveCase(answers);
+                }}
+              />
             )}
             {view.at === 'reflection' && (
               <ReflectionRoom
