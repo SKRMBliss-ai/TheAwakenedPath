@@ -29,3 +29,70 @@
 .sl-thought-field{min-height:350px;padding:5px 5px 110px}.sl-thought-clouds{gap:12px 16px}.sl-thought-cloud{width:130px;min-height:90px!important;font-size:15px;padding:20px 17px}.sl-thinking-boy{height:145px;width:43%;bottom:-22px;left:-8px}.sl-desk{bottom:-22px;left:-10px;width:48%;height:15px}.sl-own-words{font-size:15px;padding:10px 15px;margin:10px 0 10px auto;max-width:60%;position:relative;z-index:3}.sl-guide{width:100%;gap:8px;padding:16px 0 0}.sl-guide img{width:73px;height:85px}.sl-guide-bubble{font-size:13px;padding:12px}.sl-memory-theatre{border-width:8px;margin-bottom:12px;width:100%;border-radius:13px}.sl-memory-theatre figcaption{font-size:9px;bottom:7px}.sl-event-options{gap:8px}.sl-event-options button{padding:9px 5px;font-size:12px;min-height:73px}.sl-event-options button span{font-size:21px;width:28px;height:28px}
 .sl-orbit{height:250px}.sl-orbit-clue{font-size:11px;padding:9px 8px;min-height:74px;width:37%}.sl-story-orb{top:13%;height:75%}.sl-story-book{padding:14px 19px;border-width:3px;border-bottom-width:9px}.sl-story-book p{font-size:18px}.sl-confirm-options{grid-template-columns:repeat(4,1fr);gap:6px}.sl-confirm-options button{padding:9px 4px;font-size:12px;min-height:54px}.sl-confirm-ask{font-size:13px}.sl-possibility-windows{gap:12px}.sl-window{padding:9px 6px;min-height:245px;border-width:3px}.sl-window h3{font-size:14px;min-height:30px}.sl-window>img,.sl-possibility-light{height:105px}.sl-window p{font-size:13px;min-height:80px;padding:9px 5px}.sl-alternatives{gap:8px}.sl-alternatives button{font-size:12px;padding:10px}.sl-same-event{font-size:11px;padding:7px 10px}.sl-stop{left:12px;right:12px;gap:7px;flex-wrap:wrap}.sl-stop button{font-size:11px;padding:7px 12px}.sl-constellation{gap:10px}.sl-constellation>span{font-size:23px}.sl-constellation small{font-size:9px}.sl-room[data-step='3'] .sl-own-words,.sl-room[data-step='4'] .sl-own-words,.sl-room[data-step='5'] .sl-own-words{max-width:none;margin:16px auto 8px}}
 @media(prefers-reduced-motion:reduce){.sl-room *{animation:none!important;transition:none!important}}
+
+/* ── The journey strip goes along the bottom, as the reference draws it ── */
+
+/*
+  THE PROGRESS WAS A LEFT RAIL; THE APPROVED SHEET PUTS IT UNDER THE STAGE.
+
+  Six numbered stops on one horizontal run with a line through them, the
+  current one lit and labelled "You are here", the two that happen elsewhere
+  labelled as such. It reads as a map of the whole walk rather than as a
+  sidebar menu, and it gives the stage back the width the rail was taking —
+  which is most of why the middle of this screen felt cramped next to the
+  reference.
+
+  Done by moving grid areas rather than by moving the markup: the rail is
+  already a semantic <ol> with the right states on it, and re-ordering the DOM
+  would put the progress before the question for a screen reader.
+*/
+@media(min-width:1051px){
+  .sl-layout{
+    grid-template-columns:minmax(0,1fr) minmax(120px,17%);
+    grid-template-areas:"theatre guide" "rail rail";
+    row-gap:10px;
+  }
+  .sl-theatre{grid-area:theatre}
+  .sl-guide{grid-area:guide}
+  .sl-rail{grid-area:rail;padding:6px 0 0}
+
+  .sl-rail ol{
+    position:relative;display:flex;justify-content:space-between;gap:6px;
+    padding:14px 24px 10px;
+    background:linear-gradient(#3a2258b0,#241542b0);
+    border:1px solid #7d5bb8;border-radius:28px;
+    box-shadow:inset 0 0 22px #6b3fae55;
+  }
+  /* The run the stops sit on, behind them. */
+  .sl-rail ol:before{
+    content:'';position:absolute;z-index:0;left:7%;right:7%;top:42px;height:3px;
+    background:linear-gradient(90deg,#8ce4ff,#c69bff);opacity:.5;border-radius:2px;
+  }
+  .sl-rail li{
+    position:relative;z-index:1;flex:1;min-width:0;
+    display:flex;flex-direction:column;align-items:center;gap:5px;
+    min-height:0;margin:0;padding:0;
+    border:0;background:none;box-shadow:none;border-radius:0;
+    font-size:13px;text-align:center;line-height:1.15;
+  }
+  .sl-rail .sl-current{background:none;box-shadow:none;border:0;color:#fff}
+  .sl-current .sl-step-symbol{filter:drop-shadow(0 0 9px #e8c1ff) drop-shadow(0 0 20px #b072ff)}
+  .sl-rail .sl-collected{color:#bff3d8}
+  .sl-step-symbol{width:46px;height:46px}
+
+  /* "You are here" under the stop the child is standing on, and a quiet note
+     under the two that are rooms of their own — both straight off the sheet. */
+  .sl-rail li>span:nth-child(2):after{
+    display:block;margin-top:2px;font-size:10.5px;font-weight:700;opacity:.85;
+  }
+  .sl-rail .sl-current>span:nth-child(2):after{content:'You are here';color:#f3d2ff}
+  .sl-rail li:nth-child(1)>span:nth-child(2):after,
+  .sl-rail li:nth-child(2)>span:nth-child(2):after{content:'(In its own room)';color:#c8b6e8}
+  .sl-rail .sl-current:nth-child(1)>span:nth-child(2):after,
+  .sl-rail .sl-current:nth-child(2)>span:nth-child(2):after{content:'You are here';color:#f3d2ff}
+
+  /* The rail's own tagline goes: "Same you. Brighter views." already sits
+     under Chirpy on the right, the reference has nothing under the strip, and
+     a second copy here only crowds the foot of the screen. */
+  .sl-rail-note{display:none}
+}
