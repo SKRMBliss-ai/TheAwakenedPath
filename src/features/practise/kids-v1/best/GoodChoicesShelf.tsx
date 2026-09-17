@@ -48,7 +48,7 @@ export function GoodChoicesShelf({ onAction, onDiary }: {
       door?.focus(); cancel();
     }
   }}>
-    {ROOMS.map(([id, art, prompt]) => {
+    {ROOMS.map(([id, , prompt]) => {
       const title = BEHAVIOURS.find(b => b.id === id)!.title;
       const isOpen = opened === id;
       return <article key={id} className={`mg-cabinet mg-cabinet-${id} ${isOpen ? 'is-open' : ''} ${hovered === id ? 'is-hovered' : ''}`}
@@ -56,18 +56,20 @@ export function GoodChoicesShelf({ onAction, onDiary }: {
         onPointerLeave={e => { if (e.pointerType !== 'touch' && !e.currentTarget.contains(document.activeElement)) leave(id); }}
         onFocus={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) approach(id); }}
         onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leave(id); }}>
-        <img className="mg-cabinet-frame" src={`/mind-gym/closed-home/frame-${id}.webp`} alt="" />
-        <div className="mg-cabinet-inside" aria-hidden="true"><img src={`/mind-gym/home/room_${art}.webp`} alt="" /></div>
         <button className="mg-cabinet-door" data-door={id} aria-label={`${title} room. Click to open preview.`} aria-expanded={isOpen}
-          aria-controls={`preview-${id}`} onClick={() => pin(id)}>
-          <img src={`/mind-gym/closed-home/door-${id}.png`} alt="" />
+          aria-controls={`preview-${id}`} tabIndex={isOpen ? -1 : 0} onClick={() => pin(id)}>
+          <img src={`/mind-gym/closed-home/door-${id}-clean.webp`} alt="" />
         </button>
-        <span className="mg-cabinet-name" aria-hidden="true">{title}</span>
         <div id={`preview-${id}`} className="mg-cabinet-preview" hidden={!isOpen}>
-          <button className="mg-preview-close" aria-label={`Close ${title} preview`} onClick={shut}>×</button>
-          <p>{prompt}</p>
+          <img className="mg-open-art" src={`/mind-gym/closed-home/open-${id}.webp`} alt="" />
+          <button className="mg-preview-close" aria-label={`Close ${title} preview`} onClick={e => {
+            const door = e.currentTarget.closest('article')?.querySelector<HTMLButtonElement>('[data-door]');
+            shut(); door?.focus();
+          }}>×</button>
+          <div className="mg-open-invitation"><p>{prompt}</p>
           <button onClick={() => { shut(); onAction(id, 'play'); }}>▶ Play<span className="sr-only"> {title}</span></button>
           <button onClick={() => { shut(); onAction(id, 'learn'); }}>▤ Learn<span className="sr-only"> {title}</span></button>
+          </div>
         </div>
       </article>;
     })}
