@@ -109,6 +109,13 @@
         }
       },
       {
+        "source": "/api/chirpy-voice",
+        "function": {
+          "functionId": "chirpyVoice",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/daily-meditation",
         "function": {
           "functionId": "getDailyMeditation",

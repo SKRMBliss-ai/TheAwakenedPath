@@ -1682,6 +1682,7 @@ const AI_DAILY_CAPS = {
     getGrounding: 300,
     getDailyMeditation: 150, // one call can be reused by every visitor that day — see below
     analyzeEmotion: 500,     // cheapest per call (one word out), used most often
+    chirpyVoice: 400,        // short lines, heavily cached at the edge — see below
 };
 const aiHits = new Map(); // "endpoint:key" -> number[] of request timestamps
 
@@ -4729,5 +4730,118 @@ exports.notifyAdminOnKidsRegistration = onDocumentCreated({
         console.log('Admin notified of Kids Challenge registration for:', data.email);
     } catch (error) {
         console.error('Failed to notify admin of kids registration:', error);
+    }
+});
+
+/* ===========================================================================
+ * CHIRPY'S VOICE — Gemini TTS, with the performance written down once.
+ *
+ * Chirpy used to speak through the browser's own speechSynthesis, and the code
+ * that did it carried an apology in its comments: no mainstream platform ships
+ * a child's voice, so it asked for one, found none, and fell back to a calm
+ * ADULT FEMALE voice. A small purple bird who is meant to be a child's
+ * companion — never a teacher — was being read by a newsreader. That is why he
+ * sounded like nobody.
+ *
+ * Gemini's TTS models take their direction as natural language in the prompt.
+ * There are no inline tags of the ElevenLabs `[soft]` kind, and bracketed stage
+ * directions inside the dialogue risk being read ALOUD — so the direction is
+ * one block ending in a colon, and the dialogue follows it. See
+ * scripts/chirpy-voice-audition.mjs, which auditions voices against a fixed
+ * performance and refuses to run if the prompts differ by a byte.
+ *
+ * THE DIRECTION LIVES HERE, NOT IN THE CLIENT. If the caller could pass it,
+ * Chirpy's character would be a thing any page could quietly restyle, and the
+ * one place it must never drift is the one thing children recognise him by.
+ * =========================================================================== */
+
+const CHIRPY_DIRECTION =
+    'Read this as a small friendly bird talking to a six-year-old friend. ' +
+    'Light, warm and curious, never instructive and never sing-song. ' +
+    'Slightly quicker and higher than an adult reading voice, but calm. ' +
+    'Let questions lift gently at the end. Let the pauses breathe:';
+
+/** Gemini returns headerless signed 16-bit LE PCM; nothing plays that. */
+function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
+    const blockAlign = (channels * bits) / 8;
+    const header = Buffer.alloc(44);
+    header.write('RIFF', 0);
+    header.writeUInt32LE(36 + pcm.length, 4);
+    header.write('WAVE', 8);
+    header.write('fmt ', 12);
+    header.writeUInt32LE(16, 16);
+    header.writeUInt16LE(1, 20);
+    header.writeUInt16LE(channels, 22);
+    header.writeUInt32LE(rate, 24);
+    header.writeUInt32LE(rate * blockAlign, 28);
+    header.writeUInt16LE(blockAlign, 32);
+    header.writeUInt16LE(bits, 34);
+    header.write('data', 36);
+    header.writeUInt32LE(pcm.length, 40);
+    return Buffer.concat([header, pcm]);
+}
+
+exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
+    const text = String((req.body && req.body.text) || '').trim();
+    /* Chirpy's lines are one or two sentences. A long body is either a bug or
+       somebody using the gym's voice budget as a general TTS service. */
+    if (!text) return res.status(400).send('No line to say.');
+    if (text.length > 400) return res.status(413).send('That line is too long for Chirpy.');
+
+    if (aiRateLimited('chirpyVoice', callerKey(req))) {
+        return res.status(429).send('Too many requests — please wait a moment.');
+    }
+    if (!(await reserveAiBudget('chirpyVoice'))) {
+        return res.status(503).send('Chirpy is resting his voice.');
+    }
+
+    /* Auditioned in scripts/chirpy-voice-audition.mjs. Overridable so the
+       audition's winner can be switched without a redeploy of the client. */
+    const voiceName = String((req.body && req.body.voice) || 'Puck');
+
+    try {
+        const response = await fetch(
+            'https://generativelanguage.googleapis.com/v1beta/models/'
+            + 'gemini-2.5-flash-preview-tts:generateContent',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': geminiKey.value(),
+                },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `${CHIRPY_DIRECTION}\n\n${text}` }] }],
+                    generationConfig: {
+                        responseModalities: ['AUDIO'],
+                        speechConfig: {
+                            voiceConfig: { prebuiltVoiceConfig: { voiceName } },
+                        },
+                    },
+                }),
+            },
+        );
+
+        if (!response.ok) throw new Error(`Gemini TTS ${response.status}`);
+        const data = await response.json();
+        const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+        if (!part?.data) throw new Error('Gemini TTS returned no audio');
+
+        /* The sample rate comes off the response's own mimeType rather than a
+           constant: a hardcoded header would silently pitch-shift Chirpy if the
+           model ever returned something other than 24 kHz, which is the one
+           failure that would be heard but not noticed. */
+        const rate = Number(/rate=(\d+)/.exec(part.mimeType || '')?.[1]) || 24000;
+        const wav = chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
+
+        /* His lines repeat all evening and across children, and they never
+           change for a given text — so let the CDN carry the second one. */
+        res.set('Content-Type', 'audio/wav');
+        res.set('Cache-Control', 'public, max-age=86400, s-maxage=604800, immutable');
+        return res.send(wav);
+    } catch (error) {
+        console.error('Chirpy voice failure:', error.message);
+        /* 502 rather than a silent empty body: the client falls back to the
+           browser's own voice on any non-OK, and a child hears SOMETHING. */
+        return res.status(502).send('Chirpy lost his voice for a moment.');
     }
 });
