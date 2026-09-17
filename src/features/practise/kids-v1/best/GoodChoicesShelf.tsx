@@ -21,22 +21,17 @@ export function GoodChoicesShelf({ onAction, onDiary }: {
   const [hovered, setHovered] = useState<string | null>(null);
   const [opened, setOpened] = useState<string | null>(null);
   const pinned = useRef<string | null>(null);
-  const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const pending = useRef<string | null>(null);
-  useEffect(() => () => { clearTimeout(hoverTimer.current); clearTimeout(closeTimer.current); }, []);
-  const cancel = () => { clearTimeout(hoverTimer.current); clearTimeout(closeTimer.current); pending.current = null; };
+  useEffect(() => () => { clearTimeout(closeTimer.current); }, []);
+  const cancel = () => { clearTimeout(closeTimer.current); };
   const approach = (id: string) => {
     clearTimeout(closeTimer.current);
     setHovered(id);
-    if (pending.current === id || opened === id) return;
-    clearTimeout(hoverTimer.current);
-    pending.current = id;
+    if (opened === id) return;
     if (!quiet) playDoorbell();
-    hoverTimer.current = setTimeout(() => { pending.current = null; pinned.current = null; setOpened(id); }, 2000);
   };
   const leave = (id: string) => {
-    clearTimeout(hoverTimer.current); pending.current = null; setHovered(null);
+    setHovered(null);
     closeTimer.current = setTimeout(() => { if (pinned.current !== id) setOpened(current => current === id ? null : current); }, 250);
   };
   const pin = (id: string) => {
@@ -63,9 +58,9 @@ export function GoodChoicesShelf({ onAction, onDiary }: {
         onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leave(id); }}>
         <img className="mg-cabinet-frame" src={`/mind-gym/closed-home/frame-${id}.webp`} alt="" />
         <div className="mg-cabinet-inside" aria-hidden="true"><img src={`/mind-gym/home/room_${art}.webp`} alt="" /></div>
-        <button className="mg-cabinet-door" data-door={id} aria-label={`${title} room. Press Enter to preview.`} aria-expanded={isOpen}
+        <button className="mg-cabinet-door" data-door={id} aria-label={`${title} room. Click to open preview.`} aria-expanded={isOpen}
           aria-controls={`preview-${id}`} onClick={() => pin(id)}>
-          <img src={`/mind-gym/closed-home/door-${id}.webp`} alt="" />
+          <img src={`/mind-gym/closed-home/door-${id}.png`} alt="" />
         </button>
         <span className="mg-cabinet-name" aria-hidden="true">{title}</span>
         <div id={`preview-${id}`} className="mg-cabinet-preview" hidden={!isOpen}>
