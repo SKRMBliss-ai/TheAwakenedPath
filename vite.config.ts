@@ -2,6 +2,52 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+// @ts-expect-error — plain .mjs, shared with scripts/ and deliberately untyped
+import { parseTeachingMoves } from './scripts/parseTeachingMoves.mjs'
+
+/**
+ * CHIRPY'S TEACHING LINES COME OUT OF THE DOCUMENT, NOT OUT OF THE CODE.
+ *
+ * They used to be eighteen hand-transcribed objects in kit/teachings.ts, which
+ * made MIND_GYM_TEACHING_MOVES.md a thing somebody had copied FROM once. The
+ * founder edits the document; the app carries on saying the old words; nothing
+ * reports the drift. Adding a nineteenth move meant editing TypeScript.
+ *
+ * This serves the parsed document as a module instead. Write a new numbered
+ * section with a `### The move` under it and Chirpy starts saying it — the dev
+ * server hot-reloads on save (the file is added as a watch dependency) and the
+ * production build reads it fresh.
+ *
+ * IT FAILS THE BUILD ON A SECTION IT CANNOT READ. A parser that quietly skipped
+ * a malformed move would mean a teaching the founder has written, and believes
+ * is live, that no child ever meets.
+ */
+const TEACHING_MOVES_DOC = 'docs/source-material/mind-gym-claude-code-kit/kit/reference/MIND_GYM_TEACHING_MOVES.md'
+
+function teachingMoves(): import('vite').Plugin {
+  const virtualId = 'virtual:teaching-moves'
+  const resolvedId = '\0' + virtualId
+  return {
+    name: 'mind-gym-teaching-moves',
+    resolveId: (id) => (id === virtualId ? resolvedId : null),
+    load(id) {
+      if (id !== resolvedId) return null
+      const path = resolve(process.cwd(), TEACHING_MOVES_DOC)
+      const { teachings, asides, problems } = parseTeachingMoves(readFileSync(path, 'utf8'))
+      if (problems.length) {
+        this.error(`Teaching moves document:\n  - ${problems.join('\n  - ')}`)
+      }
+      // Named in the log so nothing in the document is ever silently dropped.
+      const skipped = asides.map((a: { number: number; title: string }) => `§${a.number} ${a.title}`).join(', ')
+      this.info?.(`${teachings.length} teaching moves${skipped ? `; asides: ${skipped}` : ''}`)
+      this.addWatchFile(path)
+      return `export const TEACHINGS = ${JSON.stringify(teachings)};\n`
+        + `export const ASIDES = ${JSON.stringify(asides)};\n`
+    },
+  }
+}
 
 // In production, /twinsouls is a real static directory (the Twin Souls
 // portfolio, built separately and copied into dist/). The dev server has no
@@ -28,6 +74,7 @@ const twinsoulsDevRedirect = {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    teachingMoves(),
     twinsoulsDevRedirect,
     react(),
     tailwindcss(),

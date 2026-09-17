@@ -415,6 +415,10 @@ The scorekeeping version is powerful because it hands a pre-teen actual data abo
 >
 > **"So… why is what you just said good enough for them and not for you?"**
 
+**Replies:** You’re not stupid. You had a bad day.; That’s not true, and I’d know.; Everyone messes things up. It’s not the end.; I’m still here. That hasn’t changed.
+
+*(the app offers these as taps for a child who would rather choose than type. Every one is warm — there is deliberately no unkind option, because the point is not what the child picks, it is that they are already kind and have never once aimed it at themselves.)*
+
 ### Why this works
 
 The trapdoor is the whole point. The child gives their kindest, most natural answer *before* discovering it applies to them, so it can't be dismissed as being nice to yourself on purpose. It's their own voice, their own words, handed back. Nothing an adult could say lands within a mile of this.

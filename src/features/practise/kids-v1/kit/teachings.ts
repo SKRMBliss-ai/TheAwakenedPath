@@ -41,6 +41,8 @@
 const KEY = 'mindgym.kidsv1.teachings';
 
 import { band, type Band } from './band';
+// Parsed from MIND_GYM_TEACHING_MOVES.md at build time — see vite.config.ts.
+import { TEACHINGS as DOC_TEACHINGS, ASIDES as DOC_ASIDES } from 'virtual:teaching-moves';
 
 export type TeachingKind = 'trapdoor' | 'experiment' | 'image';
 
@@ -86,347 +88,38 @@ export interface Teaching {
 }
 
 /**
- * The library.
+ * The library, READ OUT OF THE DOCUMENT.
  *
- * ORDER IS NOT IMPORTANCE — it's roughly the document's order, and the
- * rotation below ignores it anyway. What order does control is which move a
- * child meets first, and that is deliberately `notlaugh`: it is the funniest,
- * the fastest, and the one absolutely nobody fails to feel.
+ * These eighteen used to be hand-transcribed objects sitting right here, which
+ * made MIND_GYM_TEACHING_MOVES.md something somebody had copied FROM once. The
+ * founder edits the document, the app carries on saying the old words, and
+ * nothing anywhere reports the drift — and adding a nineteenth move meant
+ * editing TypeScript, which is the wrong skill to need.
+ *
+ * So the document is the source now. `virtual:teaching-moves` is the Vite
+ * plugin in vite.config.ts: it parses the markdown at load, hot-reloads the dev
+ * server when the file is saved, and FAILS THE BUILD on a section it cannot
+ * read — because a move the founder has written and believes is live, that no
+ * child ever meets, is the one failure worth being loud about.
+ *
+ * Write a new `## 19 · …` with a `### The move` under it and Chirpy starts
+ * saying it. Nothing here needs touching.
+ *
+ * ORDER IS NOT IMPORTANCE — it is the document's order, and the rotation below
+ * ignores it anyway.
  */
-export const TEACHINGS: Teaching[] = [
-  {
-    id: 'notlaugh',
-    kind: 'trapdoor',
-    open: ['Quick. Try not to laugh.', 'No smiling either. Off you go.'],
-    dare: 'Absolutely no laughing.',
-    go: 'I’m ready',
-    hold: 7,
-    land: [
-      'How did that go?',
-      'Funny thing about feelings. The harder you hold one down, the harder it pushes back up.',
-      'Same as trying not to laugh in assembly. Same as trying not to cry when someone asks if you’re alright.',
-    ],
-  },
-  {
-    id: 'quiethead',
-    kind: 'trapdoor',
-    open: ['Go quiet inside your head.', 'Completely quiet. No thoughts at all. Ten seconds.'],
-    dare: 'Nothing. Not one thought.',
-    go: 'Starting now',
-    hold: 10,
-    land: [
-      'So. Did it stay quiet?',
-      'Something started talking, didn’t it. Probably about how this was a weird thing to ask you to do.',
-      'That’s the thing we’re looking for. It never stops. It’s talking right now, about this.',
-    ],
-  },
-  {
-    id: 'elephant',
-    band: 'older',
-    kind: 'trapdoor',
-    open: ['For the next ten seconds, do not think about a purple elephant.', 'Whatever you do. No purple elephant.'],
-    dare: 'No purple elephant.',
-    go: 'Fine',
-    hold: 10,
-    land: [
-      'Yeah.',
-      'Telling yourself not to think about something is a really good way to think about it.',
-    ],
-  },
-  {
-    id: 'hopping',
-    kind: 'experiment',
-    open: ['Right now, think about hopping.', 'Really picture it. Hopping on one leg.'],
-    dare: 'Picture the hopping.',
-    go: 'Thinking about it',
-    hold: 5,
-    land: [
-      '…Are you hopping?',
-      'No. Thinking and doing are two different machines.',
-      'Your brain can say anything it likes. Your legs are yours.',
-    ],
-  },
-  {
-    id: 'itch',
-    kind: 'experiment',
-    open: ['Find an itch. Anywhere — your arm, your nose, your ankle.', 'Now don’t scratch it. Just watch it.'],
-    dare: 'Don’t fight it. Don’t scratch it. Watch what it does.',
-    go: 'Found one',
-    hold: 15,
-    land: [
-      'It got worse. Then it got weird. Then it went, without you doing anything.',
-      'Wanting to shout does that. So does wanting to hit something, or run away, or say the mean thing.',
-      'It gets huge, and then it goes, all by itself, if you can stay there while it does.',
-    ],
-  },
-  {
-    id: 'twoofyou',
-    kind: 'experiment',
-    open: ['Say this out loud: “I am cross.”', 'Now say this one: “I notice I am cross.”'],
-    dare: 'Say them again. Both of them.',
-    go: 'Said it',
-    hold: 6,
-    land: [
-      'Feel the difference?',
-      'In the second one there are two of you. The cross one — and the one who noticed.',
-    ],
-  },
-  {
-    id: 'jump',
-    band: 'young',
-    kind: 'experiment',
-    open: ['Jump up and down. Ten times.', 'Go on, properly.'],
-    dare: 'Ten jumps. I’ll wait.',
-    go: 'Jumping',
-    hold: 12,
-    land: [
-      'Now stop. Stand still. What’s your heart doing?',
-      'You can feel it, can’t you. You just found something happening inside you.',
-      'That’s the game. Feelings do that too — they show up somewhere in there.',
-    ],
-  },
-  {
-    id: 'spotlight',
-    band: 'older',
-    kind: 'trapdoor',
-    open: [
-      'Think of something embarrassing you did. Not the worst one. A medium one.',
-      'Got it? Now think of something embarrassing somebody else did, in front of you, this year.',
-    ],
-    dare: 'Anyone. Any embarrassing thing. This year.',
-    go: 'Looking',
-    hold: 10,
-    land: [
-      'Struggling?',
-      'Everyone is. Everyone remembers their own and almost none of anyone else’s.',
-      'Which means the thing you’re still cringing about — they’ve forgotten it. They were busy cringing about theirs.',
-    ],
-  },
-  {
-    id: 'bestfriend',
-    band: 'older',
-    kind: 'trapdoor',
-    open: [
-      'Your best mate comes to you and says: “I’m so stupid. I ruined everything. Everyone thinks I’m pathetic.”',
-    ],
-    pick: {
-      ask: 'What do you say to them?',
-      replies: [
-        'You’re not stupid. You had a bad day.',
-        'That’s not true, and I’d know.',
-        'Everyone messes things up. It’s not the end.',
-        'I’m still here. That hasn’t changed.',
-      ],
-    },
-    land: [
-      'Nice. Really nice, actually.',
-      'Now — that thought was yours. You said it about yourself, earlier.',
-      'So why is what you just said good enough for them and not for you?',
-    ],
-  },
-  {
-    /*
-      §7 · FEELINGS PASS, for 9–14. The blue cup below is the same section's
-      move for 3–8, and this is the one the document wrote for everybody
-      older — it had never been built, so half of §7 was missing.
+export const TEACHINGS: Teaching[] = DOC_TEACHINGS;
 
-      IT IS A TRAPDOOR, which is easy to miss reading it. The child is asked a
-      question they cannot answer, and the failure to answer IS the finding:
-      three weeks ago something was the whole world and it is now completely
-      gone, and they have just proved that to themselves rather than been told.
-
-      THE SAFETY NOTE FROM THAT SECTION APPLIES AND IS ENFORCED ELSEWHERE:
-      "never deployed while a child is in the middle of something. 'This will
-      pass' said too early is dismissal." No teaching move runs in the quiet
-      state at all — see hubMoment — which is what keeps this one honest.
-    */
-    id: 'tuesdays',
-    band: 'older',
-    kind: 'trapdoor',
-    open: [
-      'Right — what were you upset about three Tuesdays ago?',
-      'Not a big one necessarily. Any one. Three Tuesdays.',
-    ],
-    dare: 'Three Tuesdays ago. Have a proper go.',
-    go: 'Thinking',
-    hold: 10,
-    land: [
-      'No. Me neither.',
-      'At the time it was the whole world. Now you can’t even find it.',
-      'I’m not saying it didn’t matter. It did. It’s just not where it was.',
-    ],
-  },
-  {
-    /*
-      §9 · TWO FEELINGS AT ONCE, for 3–8. The holiday below is the 9–14 move
-      for the same section; this one had never been built.
-
-      THE WOBBLY TOOTH IS DOING A DIFFERENT JOB HERE than it does in §5, which
-      is why the same object appears twice in this library and why that is not
-      a duplication to tidy up. In §5 it is a thing your tongue keeps going
-      back to — a sticky thought. Here it is a thing you want gone and want to
-      keep at the same instant, which is the cleanest example of genuinely
-      mixed feeling a small child has actually lived through.
-    */
-    id: 'wobblyboth',
-    band: 'young',
-    kind: 'image',
-    open: ['A wobbly tooth again. But a different bit of it this time.'],
-    land: [
-      'You want it out. And you don’t want it out.',
-      'At the exact same time. Both of those are true and neither one is winning.',
-      'Feelings do that. They come in pairs sometimes.',
-    ],
-  },
-  {
-    /*
-      §8 · YOUR MIND WRITES TO PROTECT YOU, for 9–14. The smoke alarm below is
-      the same section for 3–8.
-
-      THE DOCUMENT SAYS THIS SECTION "MATTERS MORE THAN ANY OTHER MOVE HERE",
-      and the reason is worth restating: it is the screen where a child
-      decides whether to keep being honest with the app. If the fear story
-      ever lands as "you thought the wrong thing", they start giving safe
-      answers and the whole path becomes theatre. So nothing in here is a
-      correction. The mind is not wrong, it is not negative, and it is not
-      broken — it went for the worst version on purpose, because the worst
-      version is the one that would hurt if it arrived unannounced.
-    */
-    id: 'dangerjob',
-    band: 'older',
-    kind: 'image',
-    open: [
-      'That story your mind wrote earlier — the bad one.',
-      'It came from the part of you whose entire job is spotting trouble early.',
-    ],
-    land: [
-      'It went for the worst version. It always does.',
-      'Not because it’s miserable. Because the worst version is the one that would really hurt if it turned up and you hadn’t thought about it.',
-      'That’s not you being negative. That’s a smoke alarm doing exactly what it’s for.',
-    ],
-  },
-  {
-    id: 'guarddog',
-    kind: 'image',
-    open: ['Your brain has a guard dog.', 'Its whole job is to bark if something’s coming.'],
-    land: [
-      'Sometimes it’s right. Mostly it’s the postman.',
-      'You wouldn’t get rid of the dog. It’s trying to look after you.',
-      'You just learn to check. Postman, or actually something?',
-    ],
-  },
-  {
-    id: 'smokealarm',
-    band: 'young',
-    kind: 'image',
-    open: ['Have you ever burnt toast and set the smoke alarm off?'],
-    land: [
-      'Screaming. The whole house. For toast.',
-      'Was the alarm being naughty? No. It was doing its job. It just can’t tell toast from a fire.',
-      'Your brain’s got one of those. It goes off loud, about things that turn out to be toast.',
-      'It’s not broken. It’s just very keen.',
-    ],
-  },
-  {
-    id: 'sofa',
-    band: 'young',
-    kind: 'image',
-    open: ['When you watch a scary bit in a film, you get scared. Properly scared.'],
-    land: [
-      'But you also know you’re sitting on the sofa.',
-      'Both at once. The scared you, and the you that knows where the sofa is.',
-      'That second one is always there, even when a feeling is really big.',
-    ],
-  },
-  {
-    id: 'wobblytooth',
-    band: 'young',
-    kind: 'image',
-    open: ['You know when you’ve got a wobbly tooth?'],
-    land: [
-      'And your tongue keeps going back to it. Poke. Poke.',
-      'Even when you’ve decided to stop.',
-      'Some thoughts are wobbly teeth.',
-    ],
-  },
-  {
-    id: 'bluecup',
-    band: 'young',
-    kind: 'image',
-    open: ['When you were little — really little — you used to cry about the blue cup.'],
-    land: [
-      'Someone gave you the red cup, and it was the worst thing that had ever happened.',
-      'It really was, at the time. I’m not being funny about it.',
-      'Do you still mind about the blue cup?',
-    ],
-  },
-  {
-    id: 'holiday',
-    band: 'older',
-    kind: 'image',
-    open: ['The last day of a holiday.'],
-    land: [
-      'You’re not happy, and you’re not sad. You’re both, fully, at once.',
-      'And neither one cancels the other out.',
-      'That’s not you being confused. That’s just how people are built.',
-    ],
-  },
-  {
-    id: 'loudshop',
-    kind: 'image',
-    open: ['In a shop, the loudest person is not usually the one who knows the most.'],
-    land: [
-      'Same in your head.',
-      'The thought that keeps hammering at you — the one that’s practically shouting — that’s not the reliable one. It’s the loudest one.',
-      'Loud and right are different things.',
-    ],
-  },
-  {
-    /*
-      §15 · ANGER IS OFTEN STANDING IN FRONT OF SOMETHING ELSE, for 9–14.
-      The scared dog below is the same section for 3–8; this half had no card.
-
-      IT NEVER TELLS A CHILD THEIR ANGER IS "REALLY" SOMETHING ELSE, which the
-      document is explicit about and which is the difference between this
-      landing and being rejected on sight. That reframing is invalidating, a
-      thirteen-year-old spots it instantly, and it is also just wrong —
-      sometimes somebody was genuinely out of order. So the anger is real, it
-      is doing something useful by arriving first and taking the hit, and the
-      child is invited to look behind it rather than to give it up.
-    */
-    id: 'behindanger',
-    band: 'older',
-    kind: 'image',
-    open: ['Anger’s very good at getting there first.'],
-    land: [
-      'It turns up fast, it’s loud, and it takes the hit for you.',
-      'Have a look behind it sometime. Nine times out of ten there’s something quieter back there — hurt, or embarrassed, or scared, or left out.',
-      'It’s not lying to you. It’s standing in front of the thing that’s harder to say.',
-    ],
-  },
-  {
-    id: 'scareddog',
-    band: 'young',
-    kind: 'image',
-    open: ['When a dog is scared, what does it do?'],
-    land: [
-      'It barks. Big and loud and fierce. So you think it’s angry.',
-      'It’s not angry. It’s scared, standing in front of the scared with something loud.',
-      'People do that too. Sometimes the shouty feeling has a smaller, softer one hiding behind it.',
-    ],
-  },
-  {
-    id: 'feet',
-    kind: 'image',
-    open: ['Here’s a game nobody can see you playing.'],
-    land: [
-      'Next time you’re waiting — in a queue, in the car, in assembly, waiting for someone to stop talking —',
-      'can you feel your feet? Inside your shoes. Right now.',
-      'You can wiggle your toes and nobody will know. That’s it. That’s the whole game.',
-      'Your head can be miles away. Your feet are always right here.',
-    ],
-  },
-];
+/**
+ * §18, which is not a move and must never be rotated in as one.
+ *
+ * "When a child arrives already upset, none of the above applies." The lines
+ * under it are what to say INSTEAD of teaching — short, undemanding, and the
+ * most important in the document. They are here so the file that owns the
+ * teaching also owns the rule that switches it off.
+ */
+export const COMFORT_LINES: string[] =
+  DOC_ASIDES.find((a) => a.number === 18)?.lines ?? [];
 
 interface Store {
   /** Ids already met, in the order they were met. */
