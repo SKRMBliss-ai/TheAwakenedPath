@@ -9,6 +9,7 @@ import { VIRTUE_ROOMS, type VirtueRoom } from './rooms';
 import { roomGamesFor } from './roomGames';
 import { RoomGamePlayer } from './RoomGamePlayer';
 import { GoodChoicesShelf } from './GoodChoicesShelf';
+import { DailyWelcome } from './DailyWelcome';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
 import './HomeScreen.css';
@@ -49,6 +50,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
   const write = (value: string) => { s.setMonthReview(month, noteKey, value); setSaved(false); };
 
   return <main className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
+    <DailyWelcome />
     <div className="mg-world">
       <header className="mg-top">
         <button className="mg-logo" onClick={onExitGym} aria-label="Leave Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>

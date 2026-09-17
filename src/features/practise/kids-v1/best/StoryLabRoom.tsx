@@ -49,9 +49,10 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave }: {
   const capture = (value: string) => {
     const text = value.trim();
     if (!text) return;
-    if (step === 2) { setThought(text); setStory(text); go(3); }
-    else if (step === 3) { setEvent(text); go(4); }
-    else if (step === 4) { setStory(text); setConfirmed(true); go(5); }
+    savedOnce.current = false; setSaved(false); setSaveError(false);
+    if (step === 2) { setThought(text); setStory(text); setConfirmed(false); setAlternative(''); go(3); }
+    else if (step === 3) { setEvent(text); setConfirmed(false); setAlternative(''); go(4); }
+    else if (step === 4) { setStory(text); setConfirmed(true); setAlternative(''); go(5); }
     else if (step === 5) { setAlternative(text); go(6); }
   };
   const clues = [carried.feeling || 'Not sure yet', carried.body?.join(', ') || 'Not sure yet', thought, event, confirmed ? story : '', alternative];
@@ -87,7 +88,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave }: {
           {step === 4 && <div className="sl-assembly">
             <div className="sl-orbit" aria-label="Your feeling, body, thought and event joining together">{[carried.feeling, carried.body?.join(', '), thought, event].map((text, i) => <motion.div key={i} className={`sl-orbit-clue sl-orbit-${i}`} initial={still ? false : { opacity: 0, scale: .6 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: still ? 0 : .8, delay: still ? 0 : i * .18 }}><b>{STEPS[i === 3 ? 3 : i]}</b><span>{text || 'Not sure yet'}</span></motion.div>)}<div className="sl-story-orb" aria-hidden="true">✧</div></div>
             <div className="sl-story-book"><small>Story my mind made</small><p>“{story}”</p></div>
-            <p className="sl-confirm-ask">Does this sound like what your mind was saying?</p><div className="sl-confirm-options"><button onClick={() => { setConfirmed(true); go(5); }}>✓ Yes</button><button onClick={showOwn}>Almost</button><button onClick={showOwn}>✎ Change it</button><button onClick={() => { setStory('I’m not sure what story my mind made yet.'); setConfirmed(true); go(5); }}>Not sure</button></div>
+            <p className="sl-confirm-ask">Does this sound like what your mind was saying?</p><div className="sl-confirm-options"><button onClick={() => capture(story)}>✓ Yes</button><button onClick={showOwn}>Almost</button><button onClick={showOwn}>✎ Change it</button><button onClick={() => capture('I’m not sure what story my mind made yet.')}>Not sure</button></div>
           </div>}
           {(step === 5 || step === 6) && <><p className="sl-same-event"><b>The same event</b> {event}</p><div className="sl-possibility-windows"><div className="sl-window sl-original"><h3>Original story</h3><span aria-hidden="true">☁</span><p>“{story}”</p></div><div className="sl-window sl-another"><h3>Another possibility</h3><span aria-hidden="true">✧</span><p>{alternative ? `“${alternative}”` : 'A little space for another way to see it…'}</p></div></div>
             {step === 5 && <div className="sl-alternatives">{options.map(text => <button key={text} onClick={() => capture(text)}>{text}</button>)}</div>}

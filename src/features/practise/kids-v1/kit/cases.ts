@@ -65,12 +65,15 @@ export function saveCase(c: Omit<Case, 'day'>): boolean {
   // they actually worked out, not a list of times they wandered off.
   if (!c.feeling && !c.story) return false;
 
-  const entry: Case = { ...c, id: newCaseId(), day: new Date().toISOString().slice(0, 10) };
+  const existing = loadCases();
+  const previous = c.sessionId ? existing.find(old => old.sessionId === c.sessionId) : undefined;
+  // Revising a journey must preserve its identity for pinned grown-up shares.
+  const entry: Case = { ...c, id: previous?.id ?? newCaseId(), day: previous?.day ?? new Date().toISOString().slice(0, 10) };
   if (entry.drawing && entry.drawing.length > MAX_DRAWING_CHARS) {
     delete entry.drawing;
   }
 
-  const all = [entry, ...loadCases().filter(old => !c.sessionId || old.sessionId !== c.sessionId)].slice(0, KEEP);
+  const all = [entry, ...existing.filter(old => !c.sessionId || old.sessionId !== c.sessionId)].slice(0, KEEP);
   if (writeCases(all)) return true;
 
   // The write failed even after capping this drawing — most likely because
