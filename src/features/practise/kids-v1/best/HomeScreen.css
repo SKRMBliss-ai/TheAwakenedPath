@@ -46,12 +46,13 @@
   .mg-cabinet{border:0;background:none;box-shadow:none;transform:none}
   .mg-cabinet-frame,.mg-cabinet-name{opacity:0;pointer-events:none}
   .mg-cabinet-inside{opacity:0;pointer-events:none}
-  .mg-cabinet-door{position:absolute;inset:0;width:100%;height:100%;transform-origin:left center;background:transparent;border:0}
-  .mg-cabinet:hover,.mg-cabinet:focus-within{transform:none;background:#fff2a522;box-shadow:0 0 18px #ffe080}
+  .mg-cabinet-door{position:absolute;left:8%;top:4%;width:84%;height:92%;padding:0;transform-origin:left center;background:transparent;border:0}
+  .mg-cabinet-door img{opacity:1;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;transition:filter .22s}
+  .mg-cabinet:hover,.mg-cabinet:focus-within{transform:translateY(-4px) scale(1.03);background:#fff2a522;box-shadow:0 0 18px #ffe080}
   .mg-cabinet.is-open{background:#ffcf6330;box-shadow:0 0 18px #ffe080}
   .mg-cabinet.is-open .mg-cabinet-inside{opacity:1;pointer-events:none;z-index:1}
   .mg-cabinet.is-open .mg-cabinet-door{pointer-events:none;z-index:2}
-  .mg-cabinet.is-open .mg-cabinet-door img{opacity:1;width:100%;height:100%;object-fit:fill}
+  .mg-cabinet.is-open .mg-cabinet-door img{filter:brightness(1.08)}
   .mg-cabinet-preview{right:-3%;top:26%;width:61%;min-height:74%}
   .mg-shelf-note{font-size:0;text-shadow:none;align-self:end;padding:0 0 4%}
   .mg-shelf-note button{font-size:12px;margin:0 auto;background:#432462ec}
