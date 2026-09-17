@@ -12,6 +12,7 @@ import { GoodChoicesShelf } from './GoodChoicesShelf';
 import { DailyWelcome } from './DailyWelcome';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
+import { isMuted, setMuted } from '../../../../lib/sfx';
 import './HomeScreen.css';
 
 const A = '/mind-gym/home/';
@@ -34,6 +35,16 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
   const [mode, setMode] = useState<'reflect' | 'play' | 'learn'>('reflect');
   const [mobile, setMobile] = useState<'feelings' | 'choices' | null>(null);
   const [saved, setSaved] = useState(false);
+  /*
+    THE SOUND SWITCH CAME BACK.
+
+    The redesign dropped it: the only way to turn audio on became the "Enable
+    sound" button inside the daily welcome dialog, which a child dismisses once
+    and never sees again — after that the gym is silent with no way to fix it,
+    and nothing on screen explains why. It is the one control that has to be
+    reachable from the room a child is standing in.
+  */
+  const [mutedState, setMutedState] = useState(() => isMuted());
   const today = todayKey();
   const room = VIRTUE_ROOMS.find((r) => r.id === selected);
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
@@ -54,7 +65,12 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
     <div className="mg-world">
       <header className="mg-top">
         <button className="mg-logo" onClick={onExitGym} aria-label="Leave Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
-        <div className="mg-tools"><span className="mg-points"><span aria-hidden="true">⭐</span><span><b>{points}</b><small>choice points today</small></span></span>
+        <div className="mg-tools"><button
+            className="mg-sound"
+            onClick={() => { const next = !mutedState; setMuted(next); setMutedState(next); if (!next) sound.play('tap'); }}
+            aria-pressed={!mutedState}
+            aria-label={mutedState ? 'Sounds are off. Turn sounds on.' : 'Sounds are on. Turn sounds off.'}
+          ><span aria-hidden="true">{mutedState ? '🔇' : '🔊'}</span></button><span className="mg-points"><span aria-hidden="true">⭐</span><span><b>{points}</b><small>points earned today</small></span></span>
           <button className="mg-month" onClick={onReflection} aria-label="Open My Inner Diary and browse months"><b>{new Date().toLocaleString('en', { month: 'short' }).toUpperCase()}</b><span>This month<small>{days} {days === 1 ? 'day' : 'days'} remembered</small><span aria-hidden="true">● ● ● ● ✦</span></span></button></div>
       </header>
       <div className="mg-mobile-doors"><button onClick={() => setMobile(mobile === 'feelings' ? null : 'feelings')} aria-expanded={mobile === 'feelings'}>Funny Feeling?<small>Step into your mind →</small></button><button onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button></div>
@@ -71,6 +87,19 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
         <header className="mg-shelf-title"><span aria-hidden="true">☀</span><h2>My Good Choices</h2><p>Small choices. Big growth. A brighter you.</p></header>
         <GoodChoicesShelf onAction={open} onDiary={onReflection} />
       </section>
+      {/*
+        THE PAINTED LETTERING IN THE CORNERS.
+
+        Both are in the approved reference and in neither shipped background —
+        the clean environment asset is the room only, so these were lost in the
+        hand-off. They are scenery, not controls: stacked wooden blocks on the
+        left under the Feelings portal, and the four words the gym is for on
+        the right by the sleeping dog. aria-hidden, because a child gains
+        nothing from a screen reader listing the furniture.
+      */}
+      <p className="mg-blocks mg-blocks-left" aria-hidden="true"><span>Brighter<br />Feelings</span><span>Brighter<br />Tomorrows</span></p>
+      <p className="mg-blocks mg-blocks-right" aria-hidden="true"><span>KINDER</span><span>BRAVER</span><span>CALMER</span><span>HAPPIER YOU ♡</span></p>
+
       <footer className="mg-safety"><button onClick={onExitGym}>‹ Back</button><button onClick={onGrownUp}>♡ Talk to a grown-up</button></footer>
     </div>
     <dialog className="mg-room-dialog" aria-labelledby="mg-room-title" ref={dialog} onClose={() => setSelected(null)} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>

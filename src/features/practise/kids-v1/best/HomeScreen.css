@@ -35,3 +35,77 @@
 .mg-character{position:relative;left:auto;top:auto;width:min(310px,90%);height:520px;margin:28px auto 0;order:2}.mg-greeting{width:100%;margin:0;padding:14px}.mg-greeting b{font-size:19px}.mg-greeting p{font-size:13px}.mg-boy-wrap{height:380px}.mg-chirpy-line{font-size:15px}.mg-shelf-title{height:90px;min-height:0;margin-top:22px;border:0;background:transparent;box-shadow:none}.mg-shelf-title h2{font-size:30px}.mg-shelf-title p{font-size:12px}.mg-shelf{height:auto;grid-template-columns:1fr 1fr;grid-template-rows:none;gap:10px 3px;border:0;background:none}.mg-cabinet{aspect-ratio:4/3}.mg-cabinet.is-open{grid-column:1/-1;aspect-ratio:1.75}.mg-open-invitation{top:25%;right:1%;bottom:5%;width:41%;gap:6px;padding:7px}.mg-open-invitation p{font-size:13px}.mg-open-invitation button{min-height:44px;font-size:17px}.mg-preview-close{width:36px;height:36px;font-size:26px}.mg-shelf-note{font-size:13px;padding:8px}.mg-safety{bottom:14px;left:12px;right:12px}.mg-safety button{font-size:12px;padding:8px 12px}}
 .mg-still *{transition:none!important;animation:none!important}
 @media(prefers-reduced-motion:reduce){.mg-home *{transition:none!important;animation:none!important}}
+
+/* ── The things the approved reference has and the build had lost ──────── */
+
+/*
+  THE GLOWING PATH DOWN THE SIX STEPS.
+
+  In the reference the steps are not a list — they are a route. A lit line
+  leaves the first bubble, swings out to the second, back for the third, and
+  carries on down into the Start My Journey button. That single line is most of
+  why the left side reads as a journey rather than as a numbered menu, and it
+  was the biggest thing missing from the build.
+
+  Drawn per-step rather than as one SVG on purpose: the bubbles are laid out by
+  flex, so their exact positions depend on the panel's height at this viewport.
+  A hard-coded path would come unstuck from them. Each step owns the segment
+  that leaves it, as a rounded border on a box between this bubble and the next
+  — so the line is always attached at both ends, whatever the flex does.
+*/
+.mg-steps{position:relative}
+.mg-steps li{position:relative}
+.mg-steps li:not(:last-child):before{
+  content:'';position:absolute;z-index:0;pointer-events:none;
+  left:11%;top:62%;width:15%;height:52%;
+  border-left:3px solid #bdf3ff;border-bottom:3px solid #bdf3ff;
+  border-bottom-left-radius:18px;
+  box-shadow:0 0 9px #57d8ff,inset 0 0 6px #57d8ff;opacity:.85;
+}
+/* The even steps sit further right, so their segment reaches back the other
+   way — mirrored, and hung from the right edge of the bubble instead. */
+.mg-steps li:nth-child(even):not(:last-child):before{
+  left:auto;right:76%;
+  border-left:0;border-bottom:3px solid #bdf3ff;border-right:3px solid #bdf3ff;
+  border-bottom-left-radius:0;border-bottom-right-radius:18px;
+}
+.mg-steps img{position:relative;z-index:1}
+
+/* The four-point sparkle over the title, as drawn. */
+.mg-feelings h1{position:relative}
+.mg-feelings h1:before{
+  content:'✦';position:absolute;left:50%;top:-.62em;transform:translateX(-50%);
+  font-size:.42em;color:#ffffff;text-shadow:0 0 10px #8ce9ff,0 0 22px #3aa9ff;
+}
+
+/*
+  THE LETTERING IN THE CORNERS — wooden blocks left, word blocks right.
+  Scenery: no pointer events, and hidden from screen readers at the markup.
+
+  Held well clear of the bottom edge because .mg-world is `max(100svh,62vw)`
+  tall — on a wide window it is TALLER than the viewport, so its own bottom is
+  below the fold and anything pinned near it is simply never seen.
+*/
+.mg-blocks{position:absolute;z-index:2;pointer-events:none;display:flex;margin:0;font-weight:900;line-height:1.08}
+.mg-blocks span{
+  padding:6px 10px;border-radius:5px;
+  box-shadow:0 3px 6px #170b1f88,inset 0 1px 0 #ffffff26;
+  text-shadow:0 2px 3px #1b0d24;
+}
+.mg-blocks-left{left:1.2%;bottom:13.5%;flex-direction:column;gap:7px;font-size:clamp(9px,.82vw,15px);color:#f1e7ff}
+.mg-blocks-left span{background:linear-gradient(#6b4aa8,#432b74);border:1px solid #9c7fd8}
+.mg-blocks-right{right:.7%;bottom:10.5%;flex-direction:column;gap:5px;align-items:flex-end;font-size:clamp(8px,.72vw,13px);letter-spacing:.06em;color:#fff6e2}
+.mg-blocks-right span{background:linear-gradient(#4b4fc0,#2f2f86);border:1px solid #8f93e8}
+
+/* The sound switch, back in the corner where the rest of the chrome lives. */
+.mg-sound{
+  min-width:44px;min-height:44px;display:grid;place-items:center;
+  background:#171641e8;border:1px solid #b8a5d5;border-radius:15px;font-size:19px;
+}
+.mg-sound[aria-pressed=false]{opacity:.62}
+
+@media(max-width:760px){
+  /* No room for furniture on a phone — the two doors are the whole point. */
+  .mg-blocks{display:none}
+  .mg-steps li:not(:last-child):before{display:none}
+}
