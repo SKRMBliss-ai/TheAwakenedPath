@@ -71,13 +71,47 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave }: {
     <header className="sl-header">
       <button className="sl-back" onClick={() => step === 2 ? onBody() : go(step - 1)} aria-label="Previous journey step">←</button>
       <button className="sl-logo" onClick={onExit} aria-label="Back to Mind Gym">Mind<span>Gym</span></button>
+      {/*
+        THE SHELF OF WHAT THIS ROOM IS FOR, from the sheet's header band:
+        thoughts, stories, possibilities — the three things the walk turns over,
+        stacked as books beside the sign.
+
+        Scenery, so aria-hidden. A screen reader reading out "THOUGHTS STORIES
+        POSSIBILITIES" before the child gets to the question would be three
+        words of furniture in front of the only thing that matters.
+      */}
+      <p className="sl-header-books" aria-hidden="true"><span>THOUGHTS</span><span>STORIES</span><span>POSSIBILITIES</span></p>
       <div className="sl-title"><h1>Story Lab</h1><p>Explore your mind. Find new perspectives.</p></div>
+      {/* The two notes pinned either side of the sign in the sheet. The second
+          one is the room's whole thesis, so it is the one that stays lit. */}
+      <p className="sl-header-notes" aria-hidden="true">
+        <span>Different Thoughts<br />Create Brighter<br />Tomorrows ♡</span>
+      </p>
       <button className="sl-grownup" onClick={onGrownUp}>♡ Talk to a grown-up</button>
     </header>
     <div className="sl-layout">
       <nav className="sl-rail" aria-label="Journey progress"><ol>{STEPS.map((label, i) => <li key={label} className={i === step ? 'sl-current' : i < step ? 'sl-collected' : ''} aria-current={i === step ? 'step' : undefined}>
         <span className="sl-step-symbol" aria-hidden="true"><img src={`/mind-gym/home/icon_${STEP_ART[i]}.webp`} alt="" />{i < step && <b>✓</b>}</span><span>{i + 1}. {label}</span><span className="sr-only">{i < step ? ' — collected' : i === step ? ' — current step' : ' — coming up'}</span>
-      </li>)}</ol><p className="sl-rail-note">Small steps.<br />Brighter views.</p></nav>
+      </li>)}</ol>
+        {/*
+          THE END OF THE RUN, as the sheet draws it: the destination sitting at
+          the right-hand end of the line, with Chirpy standing next to it.
+
+          It is a statement, not a button — there is nowhere to go from it, and
+          a six-year-old who presses a thing that does nothing has been told the
+          screen is broken. It lights once all six are behind them.
+
+          Chirpy and "Same you. Brighter views." moved here out of the
+          right-hand column, where they were a second copy of things the strip
+          already says — and where they were costing the stage the vertical
+          room that was pushing this whole strip off the bottom of a laptop.
+        */}
+        <div className={`sl-rail-end ${step >= 6 ? 'sl-rail-done' : ''}`}>
+          <p className="sl-rail-badge"><span aria-hidden="true">★</span>You’ve Explored<br />New Perspectives!</p>
+          <p className="sl-rail-note">Same you. Brighter views. <span aria-hidden="true">♡</span></p>
+        </div>
+        <img className="sl-rail-chirpy" src={chirpySprite(step >= 6 ? 'excited' : 'hopeful')} alt="" aria-hidden="true" />
+      </nav>
       <section className="sl-theatre" aria-labelledby="sl-prompt">
         <div className="sl-memory-trail" aria-label="Collected clues">{clues.map((text, i) => text && <span key={STEPS[i]} className={`sl-clue sl-clue-${i}`}><b>{SYMBOLS[i]} {STEPS[i]}</b><span>{text}</span></span>)}</div>
         <div className="sl-stage-heading"><img className="sl-prompt-chirpy" src={chirpySprite('curious')} alt="" /><p>{step < 6 ? `Step ${step + 1} of 6` : 'Your journey'}</p><h2 id="sl-prompt" tabIndex={-1} ref={heading}>{PROMPTS[step - 2]}</h2>
@@ -99,7 +133,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave }: {
           {step === 6 && <div className="sl-complete"><div className="sl-constellation" aria-label="Six connected journey pieces">{STEPS.map((label, i) => <span key={label}>{SYMBOLS[i]}<small>{label}</small></span>)}</div><button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved' : '✧ Save This Journey'}</button><button onClick={onExit}>Back to Mind Gym</button></div>}
         </motion.div>
       </section>
-      <aside className="sl-guide" aria-label="Chirpy’s guide"><div className="sl-guide-bubble" role="status">{quiet ? PROMPTS[step - 2] : step === 2 ? 'Thoughts pop into our minds all the time.' : step === 3 ? 'A short answer is enough.' : step === 4 ? 'Your mind made a story from those pieces.' : step === 5 ? 'We can keep the first story and explore another.' : 'Look at everything you noticed.'}</div><img src={chirpySprite(step === 6 ? 'hopeful' : 'curious')} alt="Chirpy" /><p>Same you.<br />Brighter views. ♡</p></aside>
+      <aside className="sl-guide" aria-label="Chirpy’s guide"><div className="sl-guide-bubble" role="status">{quiet ? PROMPTS[step - 2] : step === 2 ? 'Thoughts pop into our minds all the time.' : step === 3 ? 'A short answer is enough.' : step === 4 ? 'Your mind made a story from those pieces.' : step === 5 ? 'We can keep the first story and explore another.' : 'Look at everything you noticed.'}</div><img src={chirpySprite(step === 6 ? 'hopeful' : 'curious')} alt="Chirpy" /></aside>
     </div>
     {saveError && <p role="alert">This device couldn’t save your journey. Your words are still here; you can try again.</p>}
     <footer className="sl-stop"><button onClick={onExit}>Stop for now</button>{step < 6 && step !== 4 && <button onClick={() => capture('I’m not sure yet.')}>I’m not sure — keep going</button>}</footer>
