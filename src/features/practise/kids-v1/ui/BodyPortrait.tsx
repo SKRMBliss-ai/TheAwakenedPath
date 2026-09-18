@@ -84,7 +84,28 @@ function useCoverRect(
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
-    return () => ro.disconnect();
+    /*
+      AND THE WINDOW ITSELF, which is what was actually missing.
+
+      Measured across four viewports, this overlay stayed at 1512x2268 at
+      x:0,y:-754 — the box it was born in — while the room art underneath
+      resized to every one of them. So on any window that gets dragged the tap
+      zones and the lit places slide off the painted boy and sit on the
+      background, which is exactly what it looked like.
+
+      The observer alone was not enough: it watches this element's own box, and
+      that box is only as truthful as the chain of parents above it happens to
+      be at the moment it is read. The window's own resize is the one event
+      that is always true, so it re-measures on that as well — belt and braces,
+      and both are cheap.
+    */
+    window.addEventListener('resize', measure);
+    window.addEventListener('orientationchange', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('orientationchange', measure);
+    };
   }, [ref, naturalW, naturalH]);
 
   return rect;
@@ -161,10 +182,27 @@ export function BodyPortrait({
       {/* Nothing renders until the container has been measured once — a
           frame of zones sized to a 0×0 box is worse than a frame of nothing. */}
       {cover && (
-        <motion.svg
-          viewBox={`0 0 ${ART_W} ${ART_H}`}
+        /*
+          THE GEOMETRY GOES ON A PLAIN DIV, and that is the whole bug.
+
+          It used to be inline style on the motion.svg itself. Measured across
+          four viewports, the overlay stayed at 1512x2268 at x:0,y:-754 — the
+          box it mounted in — while the container underneath it correctly
+          reported 1512, 1100, 820 and 390. The measurement was right the whole
+          time; it just never reached the screen. framer-motion takes ownership
+          of width/height/left/top on a motion component, so React's later
+          style updates are ignored and the first values stick.
+
+          So the box a child taps is positioned by React, and motion only
+          animates the opacity of the drawing inside it.
+        */
+        <div
           className="absolute"
           style={{ left: cover.left, top: cover.top, width: cover.width, height: cover.height }}
+        >
+        <motion.svg
+          viewBox={`0 0 ${ART_W} ${ART_H}`}
+          className="absolute inset-0 h-full w-full"
           animate={m.loop ? { opacity: [0.9, 1, 0.9] } : undefined}
           transition={m.loop ? { ...m.loop, duration: 5.6 } : undefined}
         >
@@ -284,6 +322,7 @@ export function BodyPortrait({
             ))}
           </AnimatePresence>
         </motion.svg>
+        </div>
       )}
     </div>
   );
