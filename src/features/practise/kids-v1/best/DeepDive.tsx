@@ -11,10 +11,11 @@ import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
 import { BodyPortrait } from '../ui/BodyPortrait';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { DrawingCanvas, type DrawingCanvasHandle } from '../ui/DrawingCanvas';
-import { THOUGHTS, MAYBES, FEELINGS, SIZES } from '../kit/checkinContent';
+import { THOUGHTS, MAYBES, FEELINGS } from '../kit/checkinContent';
 import { STEADY, STEADY_GROWNUP } from '../kit/steady';
 import { Steady } from '../ui/Steady';
 import { FeelingBalls } from './FeelingBalls';
+import { SizeBalloons } from './SizeBalloons';
 import { FeelingsIntro } from './FeelingsIntro';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { setTodaysFeeling } from '../kit/todaysFeeling';
@@ -520,11 +521,16 @@ export function DeepDive({
                 >
                   <Chirpy pose="worried" line="Okay. How big is it?" align="left" />
                   <Question room={art}>How big does {bigCheck.label.toLowerCase()} feel right now?</Question>
-                  <div className="flex flex-col" style={{ gap: m.gap }}>
-                    {SIZES.map((s) => (
-                      <Pill key={s.id} label={s.label} onClick={() => sizeFeeling(s.id)} accent={accent} />
-                    ))}
-                  </div>
+                  {/*
+                    Popped, not picked from a list. The question one step
+                    earlier is answered by bursting a balloon, and answering
+                    this one off a menu made the walk change its grammar
+                    halfway through — see SizeBalloons.
+                  */}
+                  <SizeBalloons
+                    hue={FEELINGS.find((f) => f.id === bigCheck.id)?.hue ?? 280}
+                    onPick={sizeFeeling}
+                  />
                 </motion.div>
               )}
 
