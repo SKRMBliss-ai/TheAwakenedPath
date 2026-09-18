@@ -161,7 +161,6 @@ export function DeepDive({
 
   const step = STEPS[Math.min(stepIndex, STEPS.length - 1)];
   const quiet = useQuiet();
-  const m = useMotion();
   /**
    * ONE beat runs after the five answered STEPS: the reveal. The four cards
    * sit as a grid, the mind's-story card can be turned over to its other
