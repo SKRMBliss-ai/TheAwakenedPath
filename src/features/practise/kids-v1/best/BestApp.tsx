@@ -21,6 +21,7 @@ import { StoryLabRoom } from './StoryLabRoom';
 import type { DeepDiveAnswers } from './DeepDive';
 import { TruthLabRoom } from './TruthLabRoom';
 import { ReflectionRoom } from './ReflectionRoom';
+import { DiaryRoom } from './DiaryRoom';
 import { VIRTUE_ROOMS, PAUSE_ROOM, accentFor, artRoomFor, type VirtueRoom } from './rooms';
 import { VirtueRoomView } from './VirtueRoomView';
 import { ChirpyRemembers } from './ChirpyRemembers';
@@ -91,6 +92,7 @@ type View =
   | { at: 'friends' }
   | { at: 'rewards' }
   | { at: 'grownup' }
+  | { at: 'observatory' }
   /** The parent's note composer. Nothing to do with 'grownup', which is the
    *  safety screen — see LeaveANote's note on why they must not be conflated. */
   | { at: 'leavenote' }
@@ -311,9 +313,20 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 }}
               />
             )}
+            {/*
+              MY INNER DIARY is the month itself — the dot grid, the four
+              things to look back on, the chips and putting the month away, as
+              approved_reference_diary.png draws it. The Observatory it grew
+              out of is still here behind "My pictures & saved cases": it
+              holds the drawings, the saved cases and the grown-up's note, and
+              none of that is on the diary's own page.
+            */}
             {view.at === 'reflection' && (
+              <DiaryRoom onExit={back} onOlder={() => setView({ at: 'observatory' })} />
+            )}
+            {view.at === 'observatory' && (
               <ReflectionRoom
-                onExit={back}
+                onExit={() => setView({ at: 'reflection' })}
                 onGrownUp={() => setView({ at: 'grownup' })}
                 onLeaveNote={() => setView({ at: 'leavenote' })}
               />

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { useKidStore } from '../../../kids/store';
 import { BEHAVIOURS, todayKey } from '../../../kids/data';
@@ -10,6 +10,8 @@ import { roomGamesFor } from './roomGames';
 import { RoomGamePlayer } from './RoomGamePlayer';
 import { GoodChoicesShelf } from './GoodChoicesShelf';
 import { DailyWelcome } from './DailyWelcome';
+import { HowOld } from './HowOld';
+import { bandUnknown } from '../kit/band';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
 import { TEACHINGS } from '../kit/teachings';
@@ -62,6 +64,27 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
     need the whole move around them, and half a trapdoor is just a confusing
     instruction.
   */
+  /*
+    CHIRPY ASKS HOW OLD THEY ARE, ON THE SCREEN THEY ACTUALLY LAND ON.
+
+    He has always had the question (see HowOld and kit/band), and it has always
+    been ordered above everything else he could say — but it was only ever
+    offered in the painted hub, behind a tap on the boy there. A child who
+    comes in through this home page and walks straight into a journey is never
+    asked, so ten of the eighteen teaching moves and three of the eight secret
+    games stay locked for them for good.
+
+    Asked once, ever: bandUnknown() goes false the moment they tap a number OR
+    say they would rather not, it is kept on this device only, and it is read
+    back on every later visit. It waits for the welcome film to be out of the
+    way first — two things asking for attention at once is neither of them.
+  */
+  const [askAge, setAskAge] = useState(false);
+  useEffect(() => {
+    if (!bandUnknown()) return;
+    const timer = setTimeout(() => setAskAge(bandUnknown()), 2600);
+    return () => clearTimeout(timer);
+  }, []);
   const [teaching, setTeaching] = useState<string | null>(null);
   const lastTeaching = useRef('');
   const sayTeaching = () => {
@@ -97,6 +120,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
 
   return <main className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
     <DailyWelcome />
+    {askAge && <HowOld onDone={() => setAskAge(false)} />}
     <div className="mg-world">
       <header className="mg-top">
         <button className="mg-logo" onClick={onExitGym} aria-label="Leave Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>

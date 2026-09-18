@@ -1,0 +1,271 @@
+/*
+  MY INNER DIARY, measured off approved_reference_diary.png (1402x1123).
+
+  A cosy attic with the month laid out as a dot for every day, four things to
+  look back on, and the month put away at the end. The painted room is the
+  background; everything a child touches is built in code, as the handoff's
+  README asks — day numbers, dots, totals, month switching and the writing all
+  have to be real.
+*/
+.dy-room{
+  min-height:100svh;color:#fff;
+  background:linear-gradient(#1c0f2e66,#1c0f2e88),url('/mind-gym/diary/room.webp') center top/cover fixed;
+  padding:16px 18px 30px;
+}
+.dy-room :is(h1,h2){font-family:inherit}
+.dy-room button{cursor:pointer}
+.dy-room button:focus-visible{outline:3px solid #ffe9a8;outline-offset:3px}
+.dy-page{max-width:1300px;margin:auto;display:flex;flex-direction:column;gap:14px}
+
+/* ── The band across the top ───────────────────────────────────────────── */
+
+.dy-top{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:14px;min-height:150px}
+.dy-back{
+  display:flex;align-items:center;gap:10px;align-self:start;
+  background:none;border:0;padding:4px;color:#fff;font-weight:900;font-size:17px;text-align:left;
+  text-shadow:0 2px 6px #1a0b2a;
+}
+.dy-back>span:first-child{
+  display:grid;place-items:center;width:46px;height:46px;border-radius:50%;
+  background:linear-gradient(#b585f2,#6a39b8);border:2px solid #e6cfff;font-size:24px;
+  box-shadow:0 0 16px #a678ee99;
+}
+.dy-back small{display:block;font-size:11px;font-weight:700;opacity:.85}
+
+/* The friend leaning on her books, exactly as the sheet stacks them. */
+.dy-friend{position:relative;width:190px;height:150px;align-self:end}
+.dy-bust{position:absolute;left:36px;bottom:34px;width:150px;filter:drop-shadow(0 6px 10px #1a0b2a88)}
+.dy-books{position:absolute;left:0;bottom:0;width:126px;filter:drop-shadow(0 6px 10px #1a0b2a88)}
+
+/* The open book the title is written across. */
+.dy-title{
+  position:relative;justify-self:center;text-align:center;
+  padding:22px 54px 26px;min-width:min(100%,430px);
+  background:
+    linear-gradient(90deg,#cfa457 0 6px,#fff8e6 6px 48%,#e3cda0 50%,#fff8e6 52% calc(100% - 6px),#cfa457 calc(100% - 6px)),
+    #fff8e6;
+  border:4px solid #7b4bbf;border-radius:16px 16px 34px 34px/16px 16px 22px 22px;
+  box-shadow:0 12px 26px -10px #1a0b2a,inset 0 0 26px #d8b87a55;
+}
+.dy-title h1{font-size:clamp(28px,3.1vw,46px);font-weight:1000;color:#5a2ca0;line-height:1;text-shadow:0 2px 0 #ffffff}
+.dy-title p{margin:8px 0 0;font-size:clamp(14px,1.3vw,21px);font-weight:900;color:#6b3bb5;display:flex;gap:9px;justify-content:center;align-items:center}
+.dy-title p span{color:#f4b73f;font-size:.95em}
+
+/* The shelf of months: this one in gold, the three behind it as spines. */
+.dy-months{position:relative;display:flex;align-items:center;gap:7px;align-self:start;padding-top:6px}
+.dy-months ol{display:flex;gap:6px;list-style:none;margin:0;padding:0}
+.dy-months li{display:flex}
+.dy-months li>*{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  width:72px;min-height:74px;padding:8px 4px;
+  border:2px solid #a487dd;border-radius:6px 10px 10px 6px;
+  background:linear-gradient(#8f6fd4,#6a4bb0);color:#f4ecff;
+  font-weight:900;font-size:16px;line-height:1;
+  box-shadow:0 5px 12px -4px #1a0b2a,inset 3px 0 0 #d8c8f6;
+}
+.dy-months button{cursor:pointer}
+.dy-months small{font-size:11px;font-weight:700;opacity:.9}
+/* This month is the one standing open on the shelf: gold, and not a button,
+   because there is nowhere to go from where you already are. */
+.dy-months li.dy-month-now span{color:#e09a10;font-size:15px}
+li.dy-month-now{
+  flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  width:76px;min-height:80px;padding:8px 4px;
+  border:2px solid #f6d68a;border-radius:6px 10px 10px 6px;
+  background:linear-gradient(#ffe9a8,#f3c24f);color:#5a3a06;
+  font-weight:900;font-size:16px;line-height:1;
+  box-shadow:0 5px 14px -4px #1a0b2a,0 0 18px #f3c24f66,inset 3px 0 0 #fff4cf;
+}
+.dy-arrow{
+  width:38px;height:38px;flex:0 0 auto;border-radius:50%;
+  background:linear-gradient(#b585f2,#6a39b8);border:2px solid #e6cfff;color:#fff;
+  font-size:21px;line-height:1;box-shadow:0 0 14px #a678ee88;
+}
+.dy-arrow:disabled{opacity:.35;cursor:default}
+.dy-tagline{
+  position:absolute;left:46px;top:100%;margin:6px 0 0;
+  font-size:13px;font-weight:800;line-height:1.3;color:#f6ecff;text-shadow:0 2px 6px #1a0b2a;
+}
+.dy-tagline span{color:#ffc7e4}
+
+/* ── The month, a dot at a time ────────────────────────────────────────── */
+
+.dy-grid-panel{
+  background:linear-gradient(#fffaf0f2,#f6eeffee);backdrop-filter:blur(3px);
+  border:2px solid #e8d8ff;border-radius:26px;padding:14px 16px 12px;
+  box-shadow:0 14px 34px -14px #12061f;
+  overflow-x:auto;scrollbar-width:thin;
+}
+.dy-grid{min-width:660px;display:flex;flex-direction:column;gap:5px;color:#3c2168}
+/* The header row and every choice row share one track list, so a day number
+   always sits over its own column, at any width and any month length. */
+.dy-grid{--dy-name:186px;--dy-tally:44px}
+.dy-row{
+  display:grid;align-items:center;gap:4px;
+  grid-template-columns:var(--dy-name) repeat(var(--dy-days),minmax(0,1fr)) var(--dy-tally);
+}
+.dy-head-row .dy-row-name{font-size:12px;font-weight:900;color:#6b4ba8}
+.dy-daynum{font-size:11px;font-weight:800;color:#6b4ba8;text-align:center}
+.dy-row-name{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:850;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dy-row-icon{font-size:16px;flex:0 0 auto}
+.dy-dot{
+  aspect-ratio:1;width:100%;max-width:26px;justify-self:center;
+  border:0;border-radius:50%;padding:0;
+  background:linear-gradient(#e7e1f2,#d8d0e8);
+  box-shadow:inset 0 1px 2px #ffffffcc,0 1px 2px #1a0b2a22;
+  display:grid;place-items:center;font-size:11px;color:#fff;
+  transition:background .25s,box-shadow .25s,transform .15s;
+}
+.dy-dot:hover:not(:disabled){transform:scale(1.18)}
+.dy-dot:disabled{opacity:.45;cursor:default}
+.dy-on{background:var(--dot);box-shadow:0 0 9px -1px var(--dot),inset 0 1px 2px #ffffff88}
+.dy-today{background:linear-gradient(#ffd66b,#f0a91c);box-shadow:0 0 12px -1px #f0a91c}
+.dy-today.dy-on{background:var(--dot)}
+.dy-tally{
+  justify-self:end;min-width:34px;padding:3px 9px;border-radius:11px;
+  background:#ffffffee;border:1px solid var(--dot);color:var(--dot);
+  font-size:14px;font-weight:900;text-align:center;
+}
+.dy-grid-foot{
+  margin:11px 0 0;padding:7px 12px;border-radius:13px;
+  background:linear-gradient(#fff6dd,#f8ead0);border:1px solid #e9d5a8;
+  color:#6b4a1d;font-size:12.5px;font-weight:800;text-align:center;
+}
+.dy-grid-foot span{color:#f0a91c;margin:0 8px}
+
+/* ── Look Back & Learn ─────────────────────────────────────────────────── */
+
+.dy-learn{
+  background:linear-gradient(#efe6ffee,#e3d6fbe8);backdrop-filter:blur(3px);
+  border:2px solid #e8d8ff;border-radius:26px;padding:14px 16px 18px;
+  box-shadow:0 14px 34px -14px #12061f;
+}
+.dy-learn h2{font-size:clamp(21px,2.1vw,31px);font-weight:1000;color:#5a2ca0;text-align:center;line-height:1.1}
+.dy-learn h2 span{color:#f0a91c;margin:0 12px;font-size:.8em}
+.dy-learn-sub{margin:3px 0 12px;text-align:center;font-size:13px;font-weight:800;color:#6b4ba8}
+.dy-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dy-card{position:relative;background:#fffdfaf2;border:1px solid #e6d9f7;border-radius:18px;padding:11px 13px 12px;box-shadow:0 5px 14px -6px #12061f}
+.dy-card label{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:900;color:#3c2168;margin-bottom:8px}
+.dy-card-icon{font-size:18px;flex:0 0 auto}
+.dy-card textarea{
+  width:100%;resize:vertical;min-height:58px;
+  background:#f4eefc;border:1px solid #e0d2f4;border-radius:12px;padding:9px 11px;
+  color:#32215c;font-size:14px;font-family:inherit;
+}
+.dy-card textarea::placeholder{color:#9b8bc0}
+.dy-card-mic{position:absolute;right:14px;top:9px}
+
+/* ── The chips, and putting the month away ─────────────────────────────── */
+
+.dy-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;list-style:none;margin:0;padding:0}
+.dy-chips li{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 15px;border-radius:24px;
+  background:#fffdfaf2;border:1px solid #e6d9f7;color:#3c2168;
+  font-size:13px;font-weight:850;
+  box-shadow:0 4px 12px -5px #12061f;
+}
+.dy-foot{display:flex;flex-direction:column;align-items:center;gap:10px}
+.dy-save{
+  display:flex;align-items:center;gap:14px;
+  padding:15px 44px;border:2px solid #ffd3f0;border-radius:40px;
+  background:linear-gradient(90deg,#b45ef0,#f05fb4);color:#fff;
+  font-size:clamp(18px,1.9vw,27px);font-weight:1000;
+  box-shadow:0 0 28px -4px #f05fb4,0 10px 24px -10px #12061f;
+  text-shadow:0 2px 5px #5a1046;
+}
+.dy-save:disabled{opacity:.72;cursor:default}
+.dy-older{background:#2b1a4bd9;border:1px solid #b195d2;border-radius:24px;padding:8px 18px;color:#f0e6ff;font-size:13px;font-weight:800}
+.dy-note{margin:0;text-align:center;font-size:13px;font-weight:800;color:#ffeab8;min-height:19px;text-shadow:0 2px 6px #1a0b2a}
+
+.dy-still *{animation:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){.dy-room *{animation:none!important;transition:none!important}}
+
+/* ── Narrower windows ──────────────────────────────────────────────────── */
+
+@media(max-width:1100px){
+  .dy-top{grid-template-columns:auto minmax(0,1fr);row-gap:10px}
+  .dy-friend{display:none}
+  .dy-title{grid-column:1/-1;order:3;min-width:0;width:100%;padding:16px 24px 18px}
+  .dy-months{order:2;justify-self:end}
+  .dy-tagline{display:none}
+  .dy-grid{--dy-name:150px}
+}
+@media(max-width:760px){
+  .dy-room{padding:12px 10px 26px}
+  .dy-cards{grid-template-columns:1fr}
+  .dy-months li>*{width:58px;min-height:62px;font-size:14px}
+  li.dy-month-now{width:62px;min-height:66px;font-size:14px}
+  .dy-grid{--dy-name:128px;--dy-tally:38px}
+  .dy-grid{min-width:600px}
+  .dy-row-name{font-size:12px}
+  .dy-chips li{font-size:11.5px;padding:6px 11px}
+  .dy-save{padding:13px 26px;gap:10px}
+}
+
+/* ── Corrections after looking at it ───────────────────────────────────── */
+
+/*
+  THE SHELF OF MONTHS WAS FOUR DIFFERENT SHAPES.
+
+  The current month was written straight into its <li> while the others were
+  wrapped in a button, so the one rule that sizes a spine only reached three of
+  them — the gold one came out as a star, a name and a year in three stacked
+  boxes. They are all a span or a button inside an li now, and the gold is a
+  colour on that, not a different element.
+*/
+.dy-months li{display:flex;align-items:stretch}
+li.dy-month-now{all:unset;display:flex}
+.dy-months li>*{box-sizing:border-box}
+.dy-month-now>span{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  width:76px;min-height:80px;padding:8px 4px;
+  border:2px solid #f6d68a;border-radius:6px 10px 10px 6px;
+  background:linear-gradient(#ffe9a8,#f3c24f);color:#5a3a06;
+  font-weight:900;font-size:16px;line-height:1;
+  box-shadow:0 5px 14px -4px #1a0b2a,0 0 18px #f3c24f66,inset 3px 0 0 #fff4cf;
+}
+.dy-month-now i{font-style:normal;color:#e09a10;font-size:15px}
+
+/* She leans on the books; both were half the size the sheet draws them. */
+.dy-friend{width:236px;height:172px}
+.dy-bust{left:52px;bottom:30px;width:186px}
+.dy-books{left:0;bottom:0;width:150px}
+
+/* The page is taller than the window, so the wall needs a colour under it —
+   a fixed background paints the viewport and leaves the rest bare. */
+.dy-room{background-color:#241543}
+
+/* The tagline hangs below the shelf rather than behind it. */
+.dy-tagline{left:auto;right:4px;top:calc(100% + 2px);text-align:right}
+
+/*
+  ONE STAR, NOT SEVEN. Today used to put a gold star in all seven rows, which
+  is a column of stars shouting over the month. Today is a lit column now, and
+  the star sits once, on the first row, the way the sheet draws it.
+*/
+.dy-today:not(.dy-on){background:linear-gradient(#fff2c9,#ffdf92);box-shadow:0 0 10px -2px #f0a91c}
+.dy-today>span{color:#b07400;font-size:12px;text-shadow:0 1px 0 #fff}
+.dy-today.dy-on>span{color:#fff;text-shadow:0 1px 2px #00000055}
+
+/* "Take Care of My Body" is the longest of the seven and was being cut. */
+.dy-grid{--dy-name:200px}
+.dy-row-name{font-size:13px}
+@media(max-width:1100px){.dy-grid{--dy-name:168px}}
+
+/*
+  THE TITLE IS ONE LINE ON AN OPEN BOOK.
+
+  "My Inner Diary" was wrapping to two, which turned the book into a square and
+  lost the shape the sheet leads with. It gets the width it needs, and the
+  spine and the page curve are drawn properly instead of hinted at.
+*/
+.dy-title{
+  min-width:min(100%,600px);padding:20px 60px 24px;
+  background:
+    radial-gradient(120% 90% at 50% 0,#ffffff 0 42%,transparent 60%),
+    linear-gradient(90deg,#d9b877 0 7px,#fffaee 7px 47%,#e0c99a 47% 53%,#fffaee 53% calc(100% - 7px),#d9b877 calc(100% - 7px)),
+    #fffaee;
+  border-radius:14px 14px 40px 40px/14px 14px 26px 26px;
+}
+.dy-title h1{white-space:nowrap;font-size:clamp(24px,3.3vw,50px)}
