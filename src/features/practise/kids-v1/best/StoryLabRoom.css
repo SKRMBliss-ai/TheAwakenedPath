@@ -368,3 +368,113 @@
   .sl-stop{left:10px;right:10px;gap:7px}
   .sl-stop button{font-size:11px;padding:6px 10px}
 }
+
+/* ── Measured against the sheet, panel by panel ────────────────────────── */
+
+/*
+  FIVE THINGS WERE MAKING THIS READ AS A DIFFERENT SCREEN, and none of them
+  were the layout. Stacked against approved_reference_story_lab.png at the same
+  scale, the shapes line up; the light does not.
+
+  1. THE ROOM WAS BEHIND A CURTAIN. Each panel carried a near-opaque dark wash
+     over the painting, so four bright lamplit windows came out as four murky
+     ones. The wash is half what it was.
+  2. AN ANSWERED PANEL WENT DARK. Everything not chosen dropped to a third of
+     its opacity and lost half its colour, so "I can't do it" and "It's not
+     fair" were almost gone — where the sheet keeps all six clouds lit and
+     simply rings the one that was picked. The others stay readable now; the
+     choice is shown by lifting one, not by burying five.
+  3. CHIRPY WAS HALF THE SIZE HE IS DRAWN, and dimmed once a panel was behind
+     them. He is the same bird in every panel in the sheet, and the same size.
+  4. THE CLOUDS WERE TOO SMALL to fill the space they are drawn in.
+  5. AND THERE WAS A GREEN BAR ACROSS THE FOOT OF EVERY PANEL that the sheet
+     does not have at all — my own addition, from before the strip at the foot
+     started carrying every answer. It has gone; that job is done twice
+     already, in the strip and in the lit card.
+*/
+.sl-panel{background:linear-gradient(#2a1b4759,#180f2d85),url('/mind-gym/story-lab/room-backdrop-v2.webp') center/cover}
+.sl-panel-done{border-color:#8f70d0}
+.sl-panel-done .sl-ask-chirpy{opacity:1}
+
+.sl-not-chosen{opacity:.72;filter:none}
+/* The door to their own words is never one of the "not chosen" — it is still
+   open in every panel, and the sheet draws it lit. */
+.sl-card-own.sl-not-chosen,.sl-cloud-own.sl-not-chosen{opacity:1}
+.sl-chosen{box-shadow:0 0 0 2.5px #8ce4ff,0 0 18px -2px #8ce4ff,0 4px 12px #1a0e3266!important}
+
+.sl-ask-chirpy{width:84px;height:92px}
+.sl-ask-bubble h3{font-size:16.5px}
+.sl-ask-bubble p{font-size:12px}
+
+/* Bigger, brighter, and fewer per row — the sheet scatters six across the top
+   two thirds of the panel rather than stacking them in a grid. */
+.sl-thought-cloud{width:132px;min-height:70px!important;font-size:13.5px;padding:15px 11px}
+.sl-thought-clouds{gap:4px;padding-bottom:104px}
+.sl-thinking-boy{width:168px;height:196px;left:-16px}
+.sl-desk-note{left:150px;bottom:8px;padding:8px 10px;font-size:11.5px}
+
+/* An open book with two pages and a spine, which is what the sheet draws under
+   the ring — it had flattened to a cream bar. */
+.sl-book{
+  padding:11px 20px 14px;
+  background:
+    linear-gradient(90deg,#c39a52 0 4px,#fff6da 4px 46%,#d9bd82 47% 53%,#fff6da 54% calc(100% - 4px),#c39a52 calc(100% - 4px)),
+    radial-gradient(120% 90% at 50% 0,#ffffffcc 0 40%,transparent 62%);
+  border-radius:10px 10px 22px 22px/10px 10px 14px 14px;
+}
+.sl-book small{color:#4b2a86}
+.sl-book p{font-size:15px}
+
+/* The ring fills more of its box, as it does in the sheet, and the four pieces
+   tuck in against it instead of hugging the panel edge. */
+.sl-orbit-bubble{width:min(60%,210px)}
+.sl-orbit-boy{width:min(27%,98px)}
+.sl-orbit-clue{width:32%;min-width:104px}
+.sl-orbit-0,.sl-orbit-2{left:-4px}
+.sl-orbit-1,.sl-orbit-3{right:-4px}
+
+/* ── Scattered, not stacked; and the book is a book ────────────────────── */
+
+/*
+  THE CLOUDS SAT IN A NEAT TWO-COLUMN GRID. The sheet drifts them across the
+  top two-thirds at slightly different sizes and heights, which is most of why
+  its panel reads as thoughts floating and ours read as a list with rounded
+  corners. Same flex wrap, nudged per cloud — no positions to keep in step with
+  the copy, and it still reflows on a phone.
+*/
+.sl-thought-cloud:nth-child(1){translate:-6px 10px;scale:1.04}
+.sl-thought-cloud:nth-child(2){translate:8px -6px;scale:1.09}
+.sl-thought-cloud:nth-child(3){translate:-14px 4px}
+.sl-thought-cloud:nth-child(4){translate:12px 12px;scale:.96}
+.sl-thought-cloud:nth-child(5){translate:-8px -4px;scale:1.05}
+.sl-thought-cloud:nth-child(6){translate:10px 6px;scale:.98}
+
+/*
+  AND THE BOOK WAS A CREAM BAR. The sheet opens a real book under the ring —
+  two pages meeting at a shaded gutter, the outer edges curved, the block of
+  pages visible beneath. Drawn rather than filled: the gutter is a gradient
+  band, the page edges are the border, and the stack under it is the shadow.
+*/
+.sl-book{
+  position:relative;padding:13px 22px 15px;
+  background:
+    linear-gradient(90deg,transparent 0 46%,#c9a86a55 47% 50%,#b8955433 50% 53%,transparent 54%),
+    radial-gradient(130% 100% at 50% -10%,#ffffffee 0 38%,transparent 66%),
+    linear-gradient(#fffaea,#f6e8c6);
+  border:0;border-radius:6px 6px 26px 26px/6px 6px 16px 16px;
+  box-shadow:
+    0 3px 0 -1px #e8d3a4,0 6px 0 -2px #d9bd82,0 9px 0 -3px #c19f68,
+    0 0 22px #ffdc8466,0 12px 20px -8px #150a2c;
+}
+.sl-book:before{
+  content:'';position:absolute;inset:4px 6px 6px;border-radius:4px 4px 20px 20px;
+  border:1px solid #e2caa0;pointer-events:none;
+}
+.sl-book small{color:#4b2a86;position:relative}
+.sl-book p{position:relative}
+
+/* The ring is the biggest thing in its panel in the sheet. */
+.sl-orbit-bubble{width:min(66%,232px)}
+.sl-orbit-boy{width:min(29%,106px)}
+.sl-orbit-clue{width:31%;min-width:100px;font-size:9.6px}
+.sl-orbit-clue b{font-size:10px}

@@ -492,3 +492,28 @@
 .mg-boy-said .mg-tapme{animation:none;opacity:.55}
 .mg-still .mg-boy,.mg-still .mg-tapme{animation:none}
 @media(prefers-reduced-motion:reduce){.mg-boy,.mg-tapme{animation:none!important}}
+
+/* ── The portal is an arch, not a rounded box ──────────────────────────── */
+
+/*
+  I READ THE CROP WRONG THE FIRST TIME.
+
+  closed_left_funny_feeling_reference.png was flattened to a 7% rounded
+  rectangle on the strength of a glance at its corners. Cropped and enlarged,
+  the top is plainly a dome: the arch sweeps the full width of the portal and
+  rises about 43px over a 766px panel, with the title sitting under the curve
+  rather than inside a corner.
+
+  So the top radius spans the whole width (50%) and is shallow in height, which
+  is what draws an arch rather than a bubble; the foot keeps a small radius
+  where it meets the floor. The feathered light layer and the bloom both
+  inherit it, so the glow follows the same curve.
+*/
+@media(min-width:761px){
+  .mg-feelings{
+    border-radius:50% 50% 13% 13% / 9% 9% 5% 5%;
+    /* Room under the curve for the title, which used to start at the very top
+       of a square box. */
+    padding:5.5% 1.6% 1.8%;
+  }
+}

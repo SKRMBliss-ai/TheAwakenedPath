@@ -35,7 +35,7 @@ const STEPS = ['Feeling', 'Body', 'Thought', 'What happened?', 'Story', 'Another
 const STEP_ART = ['feeling', 'body', 'thought', 'what_happened', 'story', 'another_way'];
 const TITLES = ['3. Thought', '4. What Happened?', '5. Story', '6. Another Way'];
 const PROMPTS = ['What was your mind saying?', 'What actually happened?', 'Here’s the story your mind made…', 'Could anything else be true?'];
-const SUBS = ['Tap a thought, or say it in your own words.', '', 'Your mind connects the pieces and tries to make sense of them.', 'Let’s see some other possible stories.'];
+const SUBS = ['Tap a thought, or tell me in your own words.', 'Let’s look at what a little camera could see.', 'Your mind connects the pieces and tries to make sense of it.', 'Let’s see some other possible stories.'];
 
 type Option = { text: string; icon: string; own?: boolean };
 
@@ -107,8 +107,8 @@ function useNarrow() {
 }
 
 /** The panel frame every step shares — the sheet's rounded window on the room. */
-function Panel({ index, step, answer, chirpy, children, onBack, onHome }: {
-  index: number; step: number; answer: string; chirpy: string;
+function Panel({ index, step, chirpy, children, onBack, onHome }: {
+  index: number; step: number; chirpy: string;
   children: ReactNode; onBack: () => void; onHome: () => void;
 }) {
   const current = index === step;
@@ -125,9 +125,6 @@ function Panel({ index, step, answer, chirpy, children, onBack, onHome }: {
       <div className="sl-ask-bubble"><h3>{PROMPTS[index - 2]}</h3>{SUBS[index - 2] && <p>{SUBS[index - 2]}</p>}</div>
     </div>
     <div className="sl-panel-body">{children}</div>
-    {/* What they said, held in the panel that asked for it — the sheet's own
-        way of keeping the whole walk on screen at once. */}
-    {done && answer && <p className="sl-panel-answer"><span aria-hidden="true">✓</span>{answer}</p>}
   </div>;
 }
 
@@ -252,7 +249,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave }: {
             transition={{ duration: .45, ease: [0.22, 0.61, 0.36, 1] }}
           >
             {position > 0 && <span className="sl-film-arrow" aria-hidden="true">›</span>}
-            <Panel index={index} step={step} answer={answers[index]} onBack={back} onHome={onExit}
+            <Panel index={index} step={step} onBack={back} onHome={onExit}
               chirpy={index === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(index === 5 ? 'hopeful' : 'curious')}>
 
               {index === 2 && <div className="sl-thought-field">
@@ -270,7 +267,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave }: {
               {index === 3 && <>
                 <figure className="sl-screen" aria-label="Memory theatre">
                   <img src="/mind-gym/story-lab/memory-illustration.webp" alt="An illustrated example of a moment in a school playground" />
-                  <figcaption>{ageBand === 'older' ? 'What happened, before deciding what it meant?' : 'What would a little camera have seen?'}</figcaption>
+                  <figcaption className="sr-only">{ageBand === 'older' ? 'What happened, before deciding what it meant?' : 'What would a little camera have seen?'}</figcaption>
                 </figure>
                 <div className="sl-cards">{eventOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(3, option.text)}`} disabled={step !== 3} onClick={() => pick(option)}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
