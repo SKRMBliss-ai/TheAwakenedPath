@@ -96,3 +96,156 @@
      a second copy here only crowds the foot of the screen. */
   .sl-rail-note{display:none}
 }
+
+/* ── The room fits the window, so the journey strip is always in sight ─── */
+
+/*
+  THE STRIP WAS BELOW THE FOLD ON EVERY REAL LAPTOP.
+
+  The page came to 986px tall. That fits a 1024px window, which is what it was
+  checked in — and nothing else. A laptop gives about 740px of usable height,
+  so the progress strip AND the "Say it your way" button were both off the
+  bottom, and the one thing on screen telling a child where they are in the
+  walk had to be scrolled for.
+
+  So the room is a column the height of the window: the header takes what it
+  needs, the STAGE takes the rest and scrolls inside itself if a step is tall,
+  and the strip and the stop bar are pinned where they can always be seen.
+  Scrolling the middle is right — scrolling the frame is not.
+*/
+@media(min-width:1051px){
+  /*
+    THE STRIP IS PINNED TO THE WINDOW, not squeezed into it.
+
+    The first attempt made the room a 100svh flex column and let the stage
+    scroll inside it. That fitted, and it broke the stage: the thinking boy,
+    the thought clouds and the "Say it your way" button are absolutely placed
+    against a stage that was assumed to be tall, so compressing it dropped all
+    three straight on top of the strip.
+
+    Pinning instead leaves the stage exactly the size it was designed at. The
+    page may still scroll for a tall step — which is fine, that is the stage's
+    own business — but the strip a child reads to know where they are never
+    moves, and the room reserves room at its foot so nothing hides underneath.
+  */
+  .sl-room{padding-bottom:210px}
+  .sl-rail{
+    position:fixed;z-index:6;left:24px;right:24px;bottom:66px;
+    padding:0;
+    /* The sheet's band is light lavender over the room, not another dark
+       panel — it reads as a strip of daylight laid across the floor. */
+    background:linear-gradient(#cdb6f0d9,#b79ae4cc);
+    border:1px solid #e6d8ff99;border-radius:26px;
+    box-shadow:0 10px 30px -10px #150a2caa;
+    backdrop-filter:blur(3px);
+  }
+  .sl-rail li{color:#37215e}
+  .sl-rail .sl-current{color:#1d0f3d}
+  .sl-rail .sl-collected{color:#245c45}
+  .sl-rail .sl-current>span:nth-child(2):after{color:#4a2a80}
+  .sl-rail li:nth-child(1)>span:nth-child(2):after,
+  .sl-rail li:nth-child(2)>span:nth-child(2):after{color:#5b4586}
+  .sl-rail ol{
+    background:none;border:0;box-shadow:none;
+  }
+  .sl-rail ol:before{background:linear-gradient(90deg,#7b52c4,#9a6fe0);opacity:.55}
+
+  /* The stage is free to be as tall as it likes again. */
+  .sl-theatre{min-height:0}
+
+  /* ── The end of the run ─────────────────────────────────────────────── */
+
+  /* The strip becomes a row: six stops, then the destination, then Chirpy. */
+  .sl-rail{display:flex;align-items:center;gap:14px}
+  .sl-rail ol{flex:1 1 auto;padding:12px 30px 8px}
+  /* The arrow at the end of the line, pointing at the badge. */
+  .sl-rail ol:after{
+    content:'';position:absolute;z-index:0;right:16px;top:34px;
+    border:7px solid transparent;border-left-color:#7b52c4;opacity:.7;
+  }
+
+  .sl-rail-end{flex:0 0 auto;text-align:center;margin:0}
+  .sl-rail-badge{
+    display:block;margin:0;padding:9px 16px;
+    border-radius:20px;font-size:13px;font-weight:900;line-height:1.2;
+    background:linear-gradient(#4a2a73,#331d55);
+    border:1px solid #8c68c6;color:#efe0ff;
+    box-shadow:0 3px 12px #1a0d2a88;
+    opacity:.62;transition:opacity .4s,box-shadow .4s;
+  }
+  .sl-rail-badge>span{
+    display:inline-block;margin-right:7px;font-size:19px;color:#ffd257;
+    vertical-align:-2px;
+  }
+  /* Lit only once the whole walk is behind them. */
+  .sl-rail-done .sl-rail-badge{
+    opacity:1;
+    background:linear-gradient(#6b3fae,#452a78);
+    border-color:#ffd98a;
+    box-shadow:0 0 22px -4px #ffd98a,0 3px 12px #1a0d2a88;
+  }
+  .sl-rail-note{
+    display:block;margin:6px 0 0;font-size:11.5px;font-weight:700;
+    color:#3d2568;text-shadow:none;
+  }
+  .sl-rail-chirpy{
+    flex:0 0 auto;height:96px;width:auto;
+    filter:drop-shadow(0 6px 9px #1c0a26);
+  }
+}
+
+/* ── The header band, as the sheet draws it ────────────────────────────── */
+
+/*
+  The sheet's header is not just a sign: it carries the three words this room
+  works on, stacked as book spines, and a note giving the room's thesis. Both
+  were missing, which is why the live header read as a title bar rather than as
+  the top of a place.
+
+  Hidden below 1051px: the header there already wraps to two rows for the
+  controls that matter, and furniture is the first thing to go.
+*/
+@media(min-width:1051px){
+  .sl-header-books{
+    display:flex;flex-direction:column;gap:3px;margin:0;
+    align-self:center;flex:0 0 auto;
+  }
+  /* Spines, not labels: a block of cream page edges at the left end, a gold
+     rule along the top and bottom of the board, and each one piled a little
+     off the one below — the way the sheet stacks them under Chirpy. */
+  .sl-header-books span{
+    padding:5px 10px 5px 22px;border-radius:2px 5px 5px 2px;
+    font-size:9.5px;font-weight:900;letter-spacing:.08em;
+    color:#f6eeff;text-shadow:0 1px 2px #150a2c;
+    background:
+      linear-gradient(90deg,#f3e3bd 0 8px,#cbb488 8px 13px,transparent 13px),
+      linear-gradient(#5d4a9c,#3a2c6c 55%,#241a4a);
+    box-shadow:
+      0 3px 5px #150a2c99,
+      inset 0 1px 0 #d9b96e88,inset 0 -1px 0 #d9b96e66;
+  }
+  .sl-header-books span:nth-child(2){
+    margin-left:4px;
+    background:linear-gradient(90deg,#f3e3bd 0 8px,#cbb488 8px 13px,transparent 13px),linear-gradient(#8d5aae,#5a3377 55%,#37204b);
+  }
+  .sl-header-books span:nth-child(3){
+    margin-left:-2px;
+    background:linear-gradient(90deg,#f3e3bd 0 8px,#cbb488 8px 13px,transparent 13px),linear-gradient(#4a68b4,#2c3d7c 55%,#1c2450);
+  }
+
+  .sl-header-notes{
+    margin:0;align-self:center;flex:0 0 auto;
+  }
+  .sl-header-notes span{
+    display:block;padding:9px 13px;
+    font-size:11px;font-weight:800;line-height:1.25;text-align:center;
+    color:#4a2f14;
+    background:linear-gradient(#fff6de,#f0dcb4);
+    border:1px solid #c9a56a;border-radius:4px;
+    box-shadow:0 3px 8px #170b1f66;
+    transform:rotate(-1.5deg);
+  }
+}
+@media(max-width:1050px){
+  .sl-header-books,.sl-header-notes{display:none}
+}
