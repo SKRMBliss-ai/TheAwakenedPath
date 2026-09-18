@@ -453,3 +453,42 @@
 @media(min-width:761px) and (min-aspect-ratio:7/4){
   .mg-cabinet-door img{transform:scale(1.3)}
 }
+
+/* ── The explorer is tappable, and says so ─────────────────────────────── */
+
+/*
+  He was inside .mg-character, which is pointer-events:none so the painted room
+  stays clickable behind it — so he could not be tapped at all. He gets the
+  events back on himself only, and a quiet shift of weight so he reads as
+  someone standing there rather than a sticker.
+*/
+.mg-character{pointer-events:none}
+.mg-boy-wrap{
+  pointer-events:auto;background:none;border:0;padding:0;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mg-boy{animation:mg-shift 3.4s ease-in-out infinite;transform-origin:50% 100%}
+.mg-boy-wrap:hover .mg-boy,.mg-boy-wrap:focus-visible .mg-boy{animation-duration:1.5s}
+.mg-boy-said .mg-boy{animation-duration:1.1s}
+@keyframes mg-shift{
+  0%,100%{translate:0 0;rotate:0deg}
+  50%{translate:0 -7px;rotate:-.7deg}
+}
+/* The invitation. It pulses rather than sits, because a still label on a busy
+   painting is the easiest thing on the screen to stop seeing. */
+.mg-tapme{
+  /* On the floor at his feet. Beside his head it landed on the Funny Feeling
+     panel's invitation at every width under 1600px. */
+  position:absolute;z-index:4;left:50%;bottom:-3%;translate:-50% 0;
+  padding:5px 11px;border-radius:16px;
+  background:linear-gradient(#fff6c8,#ffd977);color:#5a3a06;
+  font-size:clamp(10px,.9vw,15px);font-weight:900;white-space:nowrap;
+  box-shadow:0 3px 9px #1b0c1f88,0 0 16px #ffd97788;
+  animation:mg-tapme 2.6s ease-in-out infinite;
+}
+.mg-tapme:before{content:'';position:absolute;left:50%;top:-5px;margin-left:-5px;border:5px solid transparent;border-bottom-color:#fff6c8;border-top:0}
+@keyframes mg-tapme{0%,100%{scale:1;opacity:.92}50%{scale:1.07;opacity:1}}
+/* Once he has said something the label has done its job. */
+.mg-boy-said .mg-tapme{animation:none;opacity:.55}
+.mg-still .mg-boy,.mg-still .mg-tapme{animation:none}
+@media(prefers-reduced-motion:reduce){.mg-boy,.mg-tapme{animation:none!important}}

@@ -12,6 +12,8 @@ import { GoodChoicesShelf } from './GoodChoicesShelf';
 import { DailyWelcome } from './DailyWelcome';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
+import { TEACHINGS } from '../kit/teachings';
+import { speak } from '../kit/chirpyVoice';
 import { isMuted, setMuted } from '../../../../lib/sfx';
 import './HomeScreen.css';
 
@@ -45,6 +47,39 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
     reachable from the room a child is standing in.
   */
   const [mutedState, setMutedState] = useState(() => isMuted());
+  /*
+    THE BOY HAS SOMETHING TO SAY, AND HE ASKS TO BE ASKED.
+
+    He stood in the middle of the home page doing nothing, which on a screen
+    where everything else lights up and opens reads as scenery. Now he shifts
+    his weight, wears a "Tap me", and hands back one of the founder's own
+    teaching lines when a child takes him up on it — read out loud, in Chirpy's
+    voice, and written into the bubble he is already standing under.
+
+    The lines come from the teaching-moves document via kit/teachings, never
+    from a list kept in here: the document is the source, and it is meant to
+    grow. Only the OPENING lines are used — a teaching's dare and its landing
+    need the whole move around them, and half a trapdoor is just a confusing
+    instruction.
+  */
+  const [teaching, setTeaching] = useState<string | null>(null);
+  const lastTeaching = useRef('');
+  const sayTeaching = () => {
+    const pool = TEACHINGS.flatMap(t => t.open).filter(line => line.length > 14 && line.length < 140);
+    if (!pool.length) return;
+    let line = pool[Math.floor(Math.random() * pool.length)];
+    /* Never the same one twice running — a repeat reads as the tap not
+       working, and they will stop tapping. */
+    if (pool.length > 1) {
+      for (let tries = 0; tries < 6 && line === lastTeaching.current; tries += 1) {
+        line = pool[Math.floor(Math.random() * pool.length)];
+      }
+    }
+    lastTeaching.current = line;
+    setTeaching(line);
+    sound.play('tap');
+    speak(line, quiet);
+  };
   const today = todayKey();
   const room = VIRTUE_ROOMS.find((r) => r.id === selected);
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
@@ -80,8 +115,15 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
         <button className="mg-start" onClick={() => { sound.play('enterRoom'); onDeepDive(); }}>Start My Journey <span aria-hidden="true">›</span></button>
       </section>
       <section className="mg-character" aria-label="Your guide">
-        <div className="mg-greeting"><img src={`${A}boy_fullbody.webp`} alt="" /><div><b>Hello{name ? `, ${name}` : ''}!<br />How would you like<br />to begin today?</b><p>You can explore your feelings<br />or make good choices!</p></div></div>
-        <div className="mg-boy-wrap"><img className="mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" /><img className="mg-chirpy" src={chirpySprite('curious')} alt="Chirpy" /><p className="mg-chirpy-line">I’m here<br />with you!<br />♡ Chirpy!</p></div>
+        <div className="mg-greeting" aria-live="polite"><img src={`${A}boy_fullbody.webp`} alt="" /><div>{teaching
+          ? <><b>{teaching}</b><p>Tap me again for another one.</p></>
+          : <><b>Hello{name ? `, ${name}` : ''}!<br />How would you like<br />to begin today?</b><p>You can explore your feelings<br />or make good choices!</p></>}</div></div>
+        <button className={`mg-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
+          <img className="mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" />
+          <img className="mg-chirpy" src={chirpySprite(teaching ? 'excited' : 'curious')} alt="Chirpy" />
+          <span className="mg-chirpy-line">I’m here<br />with you!<br />♡ Chirpy!</span>
+          <span className="mg-tapme" aria-hidden="true">Tap me</span>
+        </button>
       </section>
       <section className={`mg-choices ${mobile === 'choices' ? 'mg-mobile-open' : ''}`} aria-label="My Good Choices">
         <header className="mg-shelf-title"><span aria-hidden="true">☀</span><h2>My Good Choices</h2><p>Small choices. Big growth. A brighter you.</p></header>
