@@ -12,7 +12,7 @@ import { MicButton } from '../ui/MicButton';
 import { HearYourself } from '../ui/HearYourself';
 import { SpeakButton } from '../ui/SpeakButton';
 import { allLinks, linkClip } from '../kit/voiceStore';
-import { BoyAndChirpy, Chirpy, RoomScene } from '../ui/scene';
+import { Chirpy, RoomScene } from '../ui/scene';
 import { DIM } from '../ui/scenery';
 import { LifetimeJar } from './LifetimeJar';
 import { LetThemGo } from './LetThemGo';
@@ -138,7 +138,7 @@ export function ReflectionRoom({
           learns one door learns them all. */}
       <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
 
-      <RoomScene room={art} dim={DIM.content} art="/mind-gym/diary/background_environment.png" />
+      <RoomScene room={art} dim={DIM.content} art="/mind-gym/diary/room.webp" />
 
       <div className="relative mx-auto w-full max-w-4xl pb-28 pl-[86px] pr-4 pt-4 sm:px-20">
         <div className="flex items-center justify-between gap-3">
@@ -147,20 +147,21 @@ export function ReflectionRoom({
 
         <div className="flex flex-col items-center gap-2 pt-5 text-center">
           {/*
-            THE DANCING BOY LIVES HERE NOW.
+            THE DANCING BOY HAS GONE, and it is the same bug he was moved here
+            to escape.
 
-            He was the middle of the hub, at 288px, on a screen that is a
-            painting of a gym with a boy already painted into the middle of it
-            — so he was a second boy standing in front of the first one. The
-            hub is the artwork; this room is the one that ends a night, and a
-            child looking back over a month of it is the right audience for
-            somebody enjoying themselves.
+            He came out of the hub because the hub is a painting with a boy
+            already in the middle of it, so he was a second boy standing in
+            front of the first. But FloatingFeeling — mounted at the top of
+            this room, as it is in every room — carries the boy and Chirpy
+            into the corner of the screen wherever a child goes. So he landed
+            next to a copy of himself again: two boys and two Chirpys on one
+            page.
 
-            Facing out rather than into the scene, which is the exemption
-            §2.2's shared-gaze rule makes for an invitation: nothing on this
-            screen is asking the child to report anything.
+            The companion is the one that stays, because it is the one that is
+            the same in every room and the one a child can pick up and move.
+            Chirpy keeps his line; it is the invitation this screen opens with.
           */}
-          <BoyAndChirpy size={172} pose="excited" gaze="child" gait="dance" roomId={art.id} />
           <Chirpy pose="hopeful" line="Come and see the whole map." align="left" />
           <img
             src="/mind-gym/diary/header_book_title.png"
