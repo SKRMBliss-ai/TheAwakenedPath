@@ -100,7 +100,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
       <p className="mg-blocks mg-blocks-left" aria-hidden="true"><span>Brighter<br />Feelings</span><span>Brighter<br />Tomorrows</span></p>
       <p className="mg-blocks mg-blocks-right" aria-hidden="true"><span>KINDER</span><span>BRAVER</span><span>CALMER</span><span>HAPPIER YOU ♡</span></p>
 
-      <footer className="mg-safety"><button onClick={onExitGym}>‹ Back</button><button onClick={onGrownUp}>♡ Talk to a grown-up</button></footer>
+      <footer className="mg-safety"><button className="chrome-fade" onClick={onExitGym}>‹ Back</button><button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button></footer>
     </div>
     <dialog className="mg-room-dialog" aria-labelledby="mg-room-title" ref={dialog} onClose={() => setSelected(null)} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
       {room && behaviour && <><header><h2 id="mg-room-title">{behaviour.title}</h2><button onClick={close} aria-label="Close room">×</button></header>

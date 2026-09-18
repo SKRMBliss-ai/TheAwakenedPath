@@ -1,0 +1,16 @@
+/*
+  The one rule behind useIdleChrome. Anything wearing `chrome-fade` steps back
+  while nothing is being touched, and is fully present again the instant
+  anything is — including on hover and on keyboard focus, so it is never
+  something a child has to wake up before they can use it.
+*/
+.chrome-fade{transition:opacity .75s ease}
+body[data-chrome-quiet] .chrome-fade{opacity:.3}
+body[data-chrome-quiet] .chrome-fade:hover,
+body[data-chrome-quiet] .chrome-fade:focus,
+body[data-chrome-quiet] .chrome-fade:focus-visible,
+body[data-chrome-quiet] .chrome-fade:focus-within{opacity:1}
+@media(prefers-reduced-motion:reduce){
+  .chrome-fade{transition:none}
+  body[data-chrome-quiet] .chrome-fade{opacity:1}
+}

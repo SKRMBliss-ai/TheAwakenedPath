@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, Heart } from 'lucide-react';
 import type { RoomConfig } from '../rooms';
 import { QuietContext, useMotion } from './quiet';
+import './idleChrome.css';
 
 /**
  * The chrome — the UI that floats on top of the art.
@@ -105,7 +106,7 @@ export function GrownUpExit({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="flex h-11 items-center gap-2 rounded-full px-4 text-[13px] font-bold transition hover:brightness-125"
+      className="chrome-fade flex h-11 items-center gap-2 rounded-full px-4 text-[13px] font-bold transition hover:brightness-125"
       style={{ background: CHROME.adultExit, color: CHROME.text, border: `1px solid ${CHROME.backBorder}` }}
     >
       <Heart size={15} strokeWidth={2.4} />

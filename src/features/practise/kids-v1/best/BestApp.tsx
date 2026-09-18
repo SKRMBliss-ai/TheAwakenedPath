@@ -7,6 +7,7 @@ import { BEHAVIOURS } from '../../../kids/data';
 import { RewardsScreen, Friends } from '../../../kids/screens';
 import { CHROME, Cta, FONT, QuietProvider, BackButton, GrownUpExit } from '../ui/chrome';
 import { useMotion, useQuiet } from '../ui/quiet';
+import { useIdleChrome } from '../ui/idleChrome';
 import { RoomScene } from '../ui/scene';
 import { timeOfDayForHour } from '../rooms';
 import { GrownUp } from '../GrownUp';
@@ -152,6 +153,12 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
   const [view, setView] = useState<View>({ at: 'map' });
   const [storyAnswers, setStoryAnswers] = useState<DeepDiveAnswers>({});
   const [quiet, setQuiet] = useState(false);
+  /*
+    THE FURNITURE STEPS BACK ON EVERY SCREEN, not just in the Story Lab.
+    Mounted here, once, so a room does not have to remember to ask for it —
+    and never in quiet mode, where nothing should change on its own.
+  */
+  useIdleChrome(!quiet);
   const reduced = useReducedMotion();
 
   /**
