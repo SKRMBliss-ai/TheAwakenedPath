@@ -73,6 +73,6 @@ export function GoodChoicesShelf({ onAction, onDiary }: {
         </div>
       </article>;
     })}
-    <div className="mg-shelf-note">Little choices.<br />A brighter tomorrow.<button onClick={onDiary}>📖 My Inner Diary</button></div>
+    <div className="mg-shelf-note">Little Choices<br />Make a Brighter Tomorrow<button onClick={onDiary}>📖 My Inner Diary</button></div>
   </div>;
 }

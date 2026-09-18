@@ -184,3 +184,213 @@
    these overrides, so an unscoped rule here would beat it and hand the phone's
    opened panel a 29% width. */
 @media(min-width:761px){.mg-feelings{top:14%;height:68%;width:29%}}
+
+/* ── The room is the window, measured off the approved reference ────────── */
+
+/*
+  THE PAGE MADE YOU SCROLL, AND THAT WAS ONE LINE.
+
+  .mg-world was `height:max(100svh,62vw)` with `min-height:820px`. On a 1512px
+  desktop that is 937px tall — taller than the ~760px a browser actually gives
+  you — so the bottom of the shelf, the floor and the Start My Journey button
+  were all below the fold on a machine at 100% zoom. Nothing was wrong with any
+  of the pieces; the room itself was bigger than the window.
+
+  It is now exactly the window. Everything inside is positioned in per-cent of
+  the room, so the whole composition scales down together instead of being cut
+  off — which is also what "zoom out, it's too expanded" was describing: the
+  background was being blown up 2.6x from a 764px-wide source to fill a room
+  taller than the screen. At window height it is scaled about 1.6x and you see
+  the arch, the steps and the floor the reference shows.
+
+  Every number below is measured off approved_reference_closed_doors.png
+  (1672x941) and written as a per-cent of it.
+*/
+@media(min-width:761px){
+  .mg-world{height:100svh;min-height:0}
+
+  /* Panel: x 265→672, y 62→828 of 1672x941. */
+  .mg-feelings{left:15.8%;top:6.6%;width:24.4%;height:81.4%;padding:2.2% 1.6% 1.8%}
+
+  /* Shelf cabinets: x 948→1560, y 116→941. The dog and the word blocks live
+     in the strip to the right of that, so the shelf stops at 93.3%. */
+  .mg-choices{right:6.7%;top:12.3%;width:36.6%;height:84%}
+  .mg-shelf-title{height:11%;min-height:0}
+  .mg-shelf{height:89%}
+}
+
+/*
+  THE FUNNY FEELING PORTAL IS A ROUNDED WINDOW, NOT A DOME.
+
+  The build had it as an arch (46%/20% radii), which is why it read as a
+  different shape from closed_left_funny_feeling_reference.png at every width.
+  The reference draws a tall rounded rectangle cut into the wall, lit from
+  inside: deep navy at the edges, a warmer blue in the middle, a cyan rim, and
+  a starfield over the whole thing.
+*/
+.mg-feelings{
+  border-radius:7% / 4.5%;
+  background:
+    radial-gradient(1.5px 1.5px at 18% 12%,#ffffffcc,transparent),
+    radial-gradient(1.5px 1.5px at 72% 8%,#dff6ffaa,transparent),
+    radial-gradient(1.5px 1.5px at 41% 26%,#ffffffbb,transparent),
+    radial-gradient(1.5px 1.5px at 88% 34%,#cfeaffaa,transparent),
+    radial-gradient(1.5px 1.5px at 12% 47%,#ffffffaa,transparent),
+    radial-gradient(1.5px 1.5px at 63% 55%,#ffffffbb,transparent),
+    radial-gradient(1.5px 1.5px at 29% 68%,#dff6ffaa,transparent),
+    radial-gradient(1.5px 1.5px at 81% 74%,#ffffffaa,transparent),
+    radial-gradient(1.5px 1.5px at 50% 88%,#ffffffbb,transparent),
+    radial-gradient(ellipse at 48% 38%,#15409ce8,#102a6ee0 58%,#071744ee);
+  box-shadow:inset 0 0 30px #5fe0ffaa,inset 0 0 90px #1f6fd066,0 0 26px #2ea6ff99;
+}
+
+/* The invitation is an outlined pill in the reference — a line of light, not a
+   filled blue box sitting on a blue panel. */
+.mg-invitation{
+  background:#0d2a6a4d;border:2px solid #79e3ff;
+  box-shadow:0 0 10px #35a9ff88,inset 0 0 10px #35a9ff44;
+}
+
+/* The zigzag: the reference swings the even stops about a quarter of the
+   panel's width to the right, not an eighth. */
+.mg-steps li:nth-child(even){margin-left:24%}
+.mg-steps img{width:22%}
+
+/* ── The shelf reads at arm's length ───────────────────────────────────── */
+
+/*
+  THE CABINET NOTES WERE 20% TOO SMALL TO READ.
+
+  `contain` fixed the stretching, but it also pinned each cabinet to the height
+  of its row — and the row is nearly twice as wide as the art, so a third of
+  every cell was empty air while "Kindness makes a brighter world." rendered at
+  about 50px across. The reference paints it at about 65.
+
+  So the art is drawn a fifth larger than its cell and allowed to spill. The
+  spill is leaves and vine, which is exactly how the reference has neighbouring
+  cabinets meet — and there is width to spare on both sides, so it grows into
+  the empty air rather than into the next room.
+*/
+.mg-cabinet-door{overflow:visible}
+
+/*
+  THE FLOOR SIGN IS CARPENTRY, NOT A CAPTION.
+
+  In the reference the eighth space on the shelf is not a cabinet — it is a
+  wooden board resting on the same plank as Mind & Heart Time and butted up
+  against the post between the columns, carrying "Little Choices / Make a
+  Brighter Tomorrow". It was a centred paragraph floating in the gap, which is
+  why it looked like text that had fallen off something.
+*/
+.mg-shelf-note{
+  align-self:stretch;justify-self:stretch;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;margin:0;padding:6% 8% 7%;
+  color:#fff3d8;line-height:1.15;
+  background:repeating-linear-gradient(1.5deg,#6b3d1c,#7d4a24 14px,#40230f 16px,#744324 21px);
+  border-radius:6px/9%;
+  box-shadow:0 6px 10px #1b0c1faa,inset 0 2px 0 #d69f6a55,inset 0 -3px 6px #24110844;
+  text-shadow:0 2px 3px #24120a;
+}
+.mg-shelf-note button{
+  margin:0;padding:6px 12px;border:1px solid #ffda7c;border-radius:11px;
+  background:linear-gradient(#63397f,#3c2059);
+  font-size:clamp(11px,.92vw,16px);font-weight:850;
+  box-shadow:0 2px 5px #1b0c1f99;
+}
+
+/* A shade bigger, because these are meant to be read from a chair. */
+.mg-blocks-left{font-size:clamp(10px,.95vw,17px)}
+.mg-blocks-right{font-size:clamp(9px,.84vw,15px)}
+
+/*
+  THE PANEL'S TYPE WAS SIZED OFF THE VIEWPORT, NOT OFF THE PANEL.
+
+  "Funny Feeling?" at 3vw is 45px on a 1512px screen, and 45px of that phrase
+  is wider than the 369px portal it has to sit inside — so the title ran under
+  the greeting bubble and the step captions ran off the right edge. The panel
+  is 24.4% of the width, so its type has to be a fraction of that, not of the
+  window.
+*/
+@media(min-width:761px){
+  .mg-feelings h1{font-size:clamp(19px,2.3vw,40px)}
+  .mg-feelings h2{font-size:clamp(13px,1.32vw,23px)}
+  .mg-invitation{font-size:clamp(10px,.86vw,15px);margin:2.5% 0 1%;padding:6px 12px}
+  .mg-steps b{font-size:clamp(11px,1.03vw,18px)}
+  .mg-steps span{font-size:clamp(9px,.79vw,14px)}
+  .mg-start{font-size:clamp(14px,1.5vw,26px);min-height:0;height:9%}
+  .mg-start span{font-size:1.15em;margin-left:6px}
+  /* The swing is a sixth of the panel, not a quarter — a quarter left the even
+     captions only half a column to wrap in. */
+  .mg-steps li:nth-child(even){margin-left:16%}
+
+  /* A shade more again, now that the shelf has its reference width back. */
+  /*
+    HOW FAR IT CAN GROW DEPENDS ON THE SHAPE OF THE WINDOW.
+
+    The art is 1.33:1 and `contain` pins it to the cell's HEIGHT, so the room
+    it has left to grow into is however much wider than 1.33 x cell-height the
+    cell happens to be — and that is decided by the window's aspect ratio, not
+    its width. On a 16:9 screen there is a third of the cell spare; on a 10:7
+    one there is almost none, and a fixed 1.28 sent each cabinet over its
+    neighbour's note. So the step-up is gated on the ratio it needs.
+
+    CLOSED DOORS ONLY. The open art is a 1.69:1 painting of the room behind the
+    door — it already fills the cell, and scaling it pushed the room out from
+    under the Play/Learn card, which is positioned against the cell.
+  */
+  .mg-cabinet-door img{transform:scale(1.04)}
+}
+@media(min-width:761px) and (min-aspect-ratio:3/2){
+  .mg-cabinet-door img{transform:scale(1.12)}
+}
+@media(min-width:761px) and (min-aspect-ratio:8/5){
+  .mg-cabinet-door img{transform:scale(1.18)}
+}
+@media(min-width:761px) and (min-aspect-ratio:7/4){
+  .mg-cabinet-door img{transform:scale(1.28)}
+
+  /*
+    The word blocks belong in the strip past the shelf's right edge, beside the
+    sleeping dog — they were sitting on top of the Tell the Truth column.
+  */
+  .mg-blocks-right{right:.4%;bottom:2.5%;font-size:clamp(8px,.72vw,13px)}
+  .mg-blocks-left{bottom:14%}
+
+  /* The floor sign stops short of the bottom bar, so "My Inner Diary" is never
+     under "Talk to a grown-up". */
+  .mg-shelf-note{align-self:start;height:76%;padding:4% 7%}
+}
+
+/*
+  THE GREETING SAT TWO PER CENT TOO FAR LEFT and clipped the portal's title.
+  In the reference the bubble's left edge (37.1%) clears the panel's (40.2%)
+  by a whisker; the build had it at 35% and "Funny Feeling?" ran underneath.
+*/
+@media(min-width:761px){
+  .mg-character{left:38.5%;top:5%}
+  .mg-greeting{width:112%;margin-left:-4%}
+  .mg-blocks-left{left:3.2%;bottom:12%}
+  /*
+    The shipped environment already paints KINDER / BRAVER / CALMER on the
+    parchment above the books on the right — the reference's background does
+    not, which is why these were added. Keeping both gives the same four words
+    twice in one corner, so the drawn ones win.
+  */
+  .mg-blocks-right{display:none}
+}
+
+/* Chirpy's aside belongs in the gap between the boy and the shelf — at -1% it
+   was starting underneath the Be Kind vines. */
+@media(min-width:761px){
+  .mg-chirpy-line{right:13%;top:26%}
+  .mg-steps li:nth-child(even){margin-left:19%}
+}
+
+/* The opened room's invitation had to fit a question and two buttons into 74px
+   of a 142px cell, so the question spilled out of the top of the card and read
+   straight over the artwork. It gets the height of the cell now. */
+@media(min-width:761px){
+  .mg-open-invitation{top:9%;bottom:3%;width:43%;gap:3px;padding:5px 4px}
+  .mg-open-invitation button{min-height:26px}
+}
