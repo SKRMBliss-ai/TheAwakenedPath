@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { Mic } from 'lucide-react';
 import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
-import { Mic } from 'lucide-react';
 import { MicButton } from '../ui/MicButton';
 import { chirpySprite } from '../ui/sprites';
 import { band } from '../kit/band';
@@ -10,20 +10,33 @@ import * as sound from '../kit/sound';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
+/*
+  THE WALK IS A FILMSTRIP NOW, which is what approved_reference_story_lab.png
+  has been showing all along.
+
+  The sheet is not four alternative designs for one screen — it is the screen,
+  at the end of the walk: 3. Thought, 4. What Happened?, 5. Story and 6.
+  Another Way standing side by side with arrows between them. So that is what
+  this builds. The child starts with one panel. Answering it slides the next in
+  from the right and everything shrinks to make room, and what they already
+  said stays on screen, lit, in the panel that asked for it.
+
+  EVERY PANEL IS DRAWN AT 386x675 AND THEN SCALED. That is the size of the
+  sheet's own crops, so the proportions inside a panel are the sheet's
+  proportions at every window size — one number changes, never the layout. The
+  number is measured from the space actually available (see useFilmScale), not
+  guessed from the viewport, because the header above it reflows.
+*/
+const PANEL_W = 386;
+const PANEL_H = 675;
+const PANEL_GAP = 30;
+
 const STEPS = ['Feeling', 'Body', 'Thought', 'What happened?', 'Story', 'Another way'];
 const STEP_ART = ['feeling', 'body', 'thought', 'what_happened', 'story', 'another_way'];
-const PROMPTS = ['What was your mind saying?', 'What actually happened?', 'Here’s the story your mind made…', 'Could anything else be true?', 'Look at everything you noticed.'];
-const ASIDES = ['Thoughts pop into our minds all the time.', 'A short answer is enough.', 'Your mind made a story from those pieces.', 'We can keep the first story and explore another.', 'Look at everything you noticed.'];
+const TITLES = ['3. Thought', '4. What Happened?', '5. Story', '6. Another Way'];
+const PROMPTS = ['What was your mind saying?', 'What actually happened?', 'Here’s the story your mind made…', 'Could anything else be true?'];
+const SUBS = ['Tap a thought, or say it in your own words.', '', 'Your mind connects the pieces and tries to make sense of them.', 'Let’s see some other possible stories.'];
 
-/**
- * One option on the stage.
- *
- * `own` marks the last card in every list — the one that opens the child's own
- * words instead of answering for them. It used to be a separate full-width
- * button under the choices, which cost a row of height on every step; the
- * sheet's own "Something else" and "My own idea…" cards are that door, so it
- * moved inside the grid and wears a microphone.
- */
 type Option = { text: string; icon: string; own?: boolean };
 
 const THOUGHTS: Option[] = [
@@ -38,14 +51,87 @@ const EVENTS: Option[] = [
 ];
 const POSSIBILITIES: Option[] = [
   { text: 'Maybe it only happened this time.', icon: '✳' },
-  { text: 'Maybe there’s something I don’t know yet.', icon: '❋' },
+  { text: 'Maybe they were busy with something else.', icon: '❋' },
   { text: 'Maybe I can try again in a different way.', icon: '✦' },
 ];
 const SAY_IT: Option = { text: 'Say it your way', icon: 'mic', own: true };
 const SOMETHING_ELSE: Option = { text: 'Something else', icon: 'mic', own: true };
 const MY_OWN: Option = { text: 'My own idea…', icon: 'mic', own: true };
 
-/** One mounted room: the central stage transforms, and every clue remains. */
+/**
+ * How big a panel can be drawn, measured from the room it is actually given.
+ *
+ * Arithmetic against the viewport is what put buttons under the pinned strip
+ * twice before: the header wraps, the question runs to three lines, and every
+ * hand-written offset drifts. This measures the strip's own box instead, so it
+ * is right whatever happens above it.
+ */
+function useFilmScale(count: number) {
+  const box = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.5);
+  const measure = useCallback(() => {
+    const node = box.current;
+    if (!node) return;
+    /* The CONTENT box, not the border box: padding on this element is not
+       room a panel can be drawn in, and counting it is what put the panels
+       under the pinned strip. */
+    const style = getComputedStyle(node);
+    const width = node.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    const height = node.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    if (!width || !height) return;
+    const usable = width - (count - 1) * PANEL_GAP - 8;
+    setScale(Math.max(0.2, Math.min(height / PANEL_H, usable / (count * PANEL_W))));
+  }, [count]);
+  useLayoutEffect(() => {
+    measure();
+    const node = box.current;
+    if (!node || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [measure]);
+  return { box, scale };
+}
+
+/** True while the window is too narrow to stand more than one panel side by side. */
+function useNarrow() {
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.innerWidth < 760);
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 759px)');
+    const sync = () => setNarrow(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+  return narrow;
+}
+
+/** The panel frame every step shares — the sheet's rounded window on the room. */
+function Panel({ index, step, answer, chirpy, children, onBack, onHome }: {
+  index: number; step: number; answer: string; chirpy: string;
+  children: ReactNode; onBack: () => void; onHome: () => void;
+}) {
+  const current = index === step;
+  const done = index < step;
+  return <div className={`sl-panel ${current ? 'sl-panel-now' : ''} ${done ? 'sl-panel-done' : ''}`}>
+    <div className="sl-panel-bar">
+      <button className="sl-panel-back" onClick={onBack} aria-label={`Back from ${TITLES[index - 2]}`}>←</button>
+      <h2>{TITLES[index - 2]}</h2>
+      <button className="sl-panel-home" onClick={onHome} aria-label="Back to Mind Gym">⌂</button>
+    </div>
+    <p className="sl-dots" aria-hidden="true">{STEPS.map((label, i) => <span key={label} className={i === index ? 'sl-dot-now' : i < index ? 'sl-dot-done' : ''} />)}</p>
+    <div className="sl-ask">
+      <img className="sl-ask-chirpy" src={chirpy} alt={current ? 'Chirpy' : ''} aria-hidden={!current} />
+      <div className="sl-ask-bubble"><h3>{PROMPTS[index - 2]}</h3>{SUBS[index - 2] && <p>{SUBS[index - 2]}</p>}</div>
+    </div>
+    <div className="sl-panel-body">{children}</div>
+    {/* What they said, held in the panel that asked for it — the sheet's own
+        way of keeping the whole walk on screen at once. */}
+    {done && answer && <p className="sl-panel-answer"><span aria-hidden="true">✓</span>{answer}</p>}
+  </div>;
+}
+
+/** One mounted room: four panels that arrive in turn and then stand together. */
 export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave }: {
   carried: DeepDiveAnswers;
   onBody: () => void;
@@ -69,75 +155,84 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave }: {
   const [saveError, setSaveError] = useState(false);
   const savedOnce = useRef(false);
   const [sessionId] = useState(() => `story-${Date.now()}`);
-  const heading = useRef<HTMLHeadingElement>(null);
+  const heading = useRef<HTMLDivElement>(null);
   const moved = useRef(false);
+
   /*
-    The heading takes focus after the scene has finished sliding, not before.
-    With `mode="wait"` the incoming step has not mounted yet when go() runs, so
-    a requestAnimationFrame here would focus the node on its way out.
+    ON A PHONE THERE IS ROOM FOR ONE PANEL.
+
+    Four of them across 390px puts each at a quarter scale, where the sheet's
+    12px type lands at 3px and nothing can be read or pressed. So a narrow
+    window shows the panel being answered; the ones behind it are still in the
+    strip at the foot, each with the answer it took.
+  */
+  const narrow = useNarrow();
+  const reached = Math.min(step, 5);
+  const panels = narrow ? [reached] : [2, 3, 4, 5].filter(index => index <= reached);
+  const { box, scale } = useFilmScale(panels.length);
+
+  /*
+    EVERY ARRIVAL IS AUDIBLE. A panel sliding in is the app saying "that's
+    kept, here's the next bit"; silence made it read as the screen redrawing.
+    The whoosh is the soft one, not the door — this happens four times in a
+    minute and a dramatic cue four times is a nag.
   */
   useEffect(() => {
     if (!moved.current) { moved.current = true; return; }
-    const timer = setTimeout(() => heading.current?.focus({ preventScroll: true }), still ? 0 : 430);
+    if (!quiet) sound.play(step === 4 ? 'discovery' : step >= 6 ? 'miniWin' : 'exitRoom');
+    const timer = setTimeout(() => heading.current?.focus({ preventScroll: true }), still ? 0 : 420);
     return () => clearTimeout(timer);
-  }, [step, still]);
-  const go = (next: number) => {
-    setStep(next); setWriting(false); setDraft('');
-    if (!quiet) sound.play('roomCard');
-  };
+  }, [step, still, quiet]);
+
   const capture = (value: string) => {
     const text = value.trim();
     if (!text) return;
     savedOnce.current = false; setSaved(false); setSaveError(false);
-    if (step === 2) { setThought(text); setStory(text); setConfirmed(false); setAlternative(''); go(3); }
-    else if (step === 3) { setEvent(text); setConfirmed(false); setAlternative(''); go(4); }
-    else if (step === 4) { setStory(text); setConfirmed(true); setAlternative(''); go(5); }
-    else if (step === 5) { setAlternative(text); go(6); }
+    setWriting(false); setDraft('');
+    if (step === 2) { setThought(text); setStory(text); setConfirmed(false); setAlternative(''); setStep(3); }
+    else if (step === 3) { setEvent(text); setConfirmed(false); setAlternative(''); setStep(4); }
+    else if (step === 4) { setStory(text); setConfirmed(true); setAlternative(''); setStep(5); }
+    else if (step === 5) { setAlternative(text); setStep(6); }
   };
-  /*
-    WHAT THE CHILD HAS SAID SO FAR LIVES IN THE STRIP AT THE FOOT.
-
-    It used to be a row of bubbles above the stage AND six labelled stops
-    below, which said the same four things twice and took the top of the
-    screen to do it. The strip already names every step in order, so the
-    answer belongs under the step that asked for it.
-  */
   const answers = [carried.feeling || '', carried.body?.join(', ') || '', thought, event, confirmed ? story : '', alternative];
-  const showOwn = () => { setDraft(step === 4 ? story : ''); setWriting(true); };
+  const showOwn = () => { if (!quiet) sound.play('tap'); setDraft(step === 4 ? story : ''); setWriting(true); };
+  const pick = (option: Option) => {
+    if (option.own) { showOwn(); return; }
+    if (!quiet) sound.play('tap');
+    capture(option.text);
+  };
   const save = () => {
     if (savedOnce.current) return;
     const ok = onSave({ ...carried, thought, eyes: event, story, other: alternative, sessionId });
     savedOnce.current = ok; setSaved(ok); setSaveError(!ok);
+    if (ok && !quiet) sound.play('resolve');
   };
-  const options: Option[] = step === 2 ? (quiet ? [...THOUGHTS.slice(0, 3), SAY_IT] : [...THOUGHTS, SAY_IT])
-    : step === 3 ? (quiet ? [...EVENTS.slice(0, 3), SOMETHING_ELSE] : [...EVENTS, SOMETHING_ELSE])
-      : [...POSSIBILITIES, MY_OWN];
-  const choose = (option: Option) => option.own ? showOwn() : capture(option.text);
+  const back = () => { if (step === 2) { onBody(); return; } if (!quiet) sound.play('exitRoom'); setStep(step - 1); };
 
-  const slide = still ? {} : {
-    initial: { opacity: 0, x: 90 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -90 },
-    transition: { duration: .4, ease: [0.22, 0.61, 0.36, 1] as const },
+  const thoughtOptions = quiet ? [...THOUGHTS.slice(0, 3), SAY_IT] : [...THOUGHTS, SAY_IT];
+  const eventOptions = quiet ? [...EVENTS.slice(0, 3), SOMETHING_ELSE] : [...EVENTS, SOMETHING_ELSE];
+  const otherOptions = [...POSSIBILITIES, MY_OWN];
+
+  const chosen = (index: number) => answers[index];
+  const cardClass = (index: number, text: string) => {
+    const value = chosen(index);
+    if (!value) return '';
+    return value === text ? 'sl-chosen' : 'sl-not-chosen';
   };
+
+  /** The child's own words, in whichever panel asked for them. */
+  const ownForm = <form className="sl-own-form" onSubmit={e => { e.preventDefault(); capture(draft); }}>
+    <label htmlFor="sl-own-answer">{step === 4 ? 'The story my mind made' : 'Your own words'}</label>
+    <textarea id="sl-own-answer" autoFocus value={draft} onChange={e => setDraft(e.target.value)} rows={2} maxLength={400} />
+    <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button><button type="button" onClick={() => setWriting(false)}>Cancel</button></div>
+  </form>;
 
   return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''}`} style={{ fontFamily: FONT }} data-step={step}>
     <header className="sl-header">
-      <button className="sl-back" onClick={() => step === 2 ? onBody() : go(step - 1)} aria-label="Previous journey step">←</button>
+      <button className="sl-back" onClick={back} aria-label="Previous journey step">←</button>
       <button className="sl-logo" onClick={onExit} aria-label="Back to Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
-      {/*
-        THE SHELF OF WHAT THIS ROOM IS FOR, from the sheet's header band:
-        thoughts, stories, possibilities — the three things the walk turns over,
-        stacked as books beside the sign. Scenery, so aria-hidden.
-      */}
       <p className="sl-header-books" aria-hidden="true"><span>THOUGHTS</span><span>STORIES</span><span>POSSIBILITIES</span></p>
-      {/*
-        The sign is painted on the wall of the room rather than sitting on top
-        of it as a control, and it steps back once it has been read — see
-        useIdleChrome.
-      */}
       <div className="sl-title chrome-fade"><h1>Story Lab</h1><p>Explore your mind. Find new perspectives.</p></div>
-      {/* The two notes pinned either side of the sign in the sheet. */}
       <p className="sl-header-notes" aria-hidden="true">
         <span>Different Thoughts<br />Create Brighter<br />Tomorrows ♡</span>
         <span>Same You<br />Brighter<br />Views ♡</span>
@@ -145,105 +240,82 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave }: {
       <button className="sl-grownup chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
     </header>
 
-    <div className="sl-layout">
-      <section className="sl-theatre" aria-labelledby="sl-prompt">
-        <AnimatePresence mode="wait" initial={false}>
-          {/*
-            THE WHOLE SCENE TRAVELS, not just the answers.
+    <div className="sl-film" ref={box} style={{ '--sl-scale': scale } as CSSProperties}>
+      <div className="sl-film-row" tabIndex={-1} ref={heading}>
+        <AnimatePresence initial={false}>
+          {panels.map((index, position) => <motion.div
+            key={index}
+            className="sl-slot"
+            layout={!still}
+            initial={still ? false : { opacity: 0, x: 140, scale: .92 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: .45, ease: [0.22, 0.61, 0.36, 1] }}
+          >
+            {position > 0 && <span className="sl-film-arrow" aria-hidden="true">›</span>}
+            <Panel index={index} step={step} answer={answers[index]} onBack={back} onHome={onExit}
+              chirpy={index === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(index === 5 ? 'hopeful' : 'curious')}>
 
-            Going forward now reads as movement along the strip at the foot:
-            the question and everything under it leave to the left together and
-            the next step arrives from the right, so a child sees the journey
-            advance rather than the screen redraw.
-          */}
-          <motion.div key={step} className="sl-scene" {...slide}>
-            <div className="sl-ask">
-              <img className="sl-ask-chirpy" src={step === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(step === 6 ? 'excited' : 'curious')} alt="Chirpy" />
-              <div className="sl-ask-bubble">
-                <h2 id="sl-prompt" tabIndex={-1} ref={heading}>{PROMPTS[step - 2]}</h2>
-                <p>{step === 2 ? 'Tap a thought, or say it in your own words.' : step === 3 ? (ageBand === 'older' ? 'What happened, before deciding what it meant?' : 'What would a little camera have seen?') : step === 4 ? 'Your mind connects the pieces and tries to make sense of them.' : step === 5 ? 'Let’s explore some other possible stories.' : 'The same moment can have more than one possible story.'}</p>
-              </div>
-              {/* Chirpy's aside — the second bubble, moved up out of the
-                  right-hand column so the stage has the full width. */}
-              <p className="sl-aside" role="status">{quiet ? PROMPTS[step - 2] : ASIDES[step - 2]}</p>
-            </div>
-
-            <div className="sl-stage">
-              {step === 2 && <div className="sl-thought-field">
-                <img className="sl-thinking-boy" src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="Your explorer thinking" />
-                <div className="sl-desk" aria-hidden="true" />
-                <p className="sl-desk-note" aria-hidden="true">Your<br />Thoughts<br />Matter<br /><span>♡</span></p>
-                <div className="sl-thought-clouds">{options.map((option, i) => <motion.button
+              {index === 2 && <div className="sl-thought-field">
+                <div className="sl-thought-clouds">{thoughtOptions.map((option, i) => <button
                   key={option.text}
-                  className={`sl-thought-cloud ${option.own ? 'sl-cloud-own' : ''}`}
+                  className={`sl-thought-cloud ${option.own ? 'sl-cloud-own' : ''} ${cardClass(2, option.text)}`}
                   style={{ '--drift-delay': `${i * -.7}s` } as CSSProperties}
-                  whileHover={still ? undefined : { scale: 1.06, y: -5 }}
-                  onClick={() => choose(option)}
-                >{option.own && <span className="sl-mic" aria-hidden="true"><Mic size={14} strokeWidth={2.6} /></span>}{option.text}</motion.button>)}</div>
+                  disabled={step !== 2}
+                  onClick={() => pick(option)}
+                >{option.own && <span className="sl-mic" aria-hidden="true"><Mic size={13} strokeWidth={2.6} /></span>}{option.text}</button>)}</div>
+                <img className="sl-thinking-boy" src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="Your explorer thinking" />
+                <p className="sl-desk-note" aria-hidden="true">Your<br />Thoughts<br />Matter<br /><span>♡</span></p>
               </div>}
 
-              {step === 3 && <>
-                <figure className="sl-memory-theatre" aria-label="Memory theatre">
+              {index === 3 && <>
+                <figure className="sl-screen" aria-label="Memory theatre">
                   <img src="/mind-gym/story-lab/memory-illustration.webp" alt="An illustrated example of a moment in a school playground" />
-                  <figcaption>Picture your own moment — this is just an example.</figcaption>
+                  <figcaption>{ageBand === 'older' ? 'What happened, before deciding what it meant?' : 'What would a little camera have seen?'}</figcaption>
                 </figure>
-                <div className="sl-cards">{options.map(option => <button key={option.text} className={option.own ? 'sl-card-own' : ''} onClick={() => choose(option)}>
-                  <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={16} strokeWidth={2.6} /> : option.icon}</span>{option.text}
+                <div className="sl-cards">{eventOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(3, option.text)}`} disabled={step !== 3} onClick={() => pick(option)}>
+                  <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
                 </button>)}</div>
               </>}
 
-              {step === 4 && <div className="sl-assembly">
+              {index === 4 && <div className="sl-assembly">
                 <div className="sl-orbit" aria-label="Your feeling, body, thought and event joining together">
-                  {/* The founder's own art for this beat: the lit bubble from
-                      the story bundle, with the sitting boy inside it. */}
                   <img className="sl-orbit-bubble" src="/mind-gym/story-lab/story-bubble.webp" alt="" aria-hidden="true" />
                   <img className="sl-orbit-boy" src="/mind-gym/story-lab/boy-sitting.webp" alt="" />
-                  {[0, 1, 2, 3].map(i => <motion.div key={i} className={`sl-orbit-clue sl-orbit-${i}`}
-                    initial={still ? false : { opacity: 0, scale: .6 }} animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: still ? 0 : .7, delay: still ? 0 : .15 + i * .16 }}>
+                  {[0, 1, 2, 3].map(i => <div key={i} className={`sl-orbit-clue sl-orbit-${i}`}>
                     <span className="sl-orbit-icon" aria-hidden="true"><img src={`/mind-gym/home/icon_${STEP_ART[i]}.webp`} alt="" /></span>
                     <b>{STEPS[i]}</b><span>{answers[i] || 'Not sure yet'}</span>
-                  </motion.div>)}
+                  </div>)}
                   <span className="sl-orbit-arrow" aria-hidden="true">▼</span>
                 </div>
                 <div className="sl-book"><small>Story my mind made:</small><p>“{story}”</p></div>
                 <p className="sl-confirm-ask">Does this sound like what your mind was saying?</p>
                 <div className="sl-cards sl-confirm">
-                  <button onClick={() => capture(story)}><span className="sl-card-icon sl-icon-yes" aria-hidden="true">✓</span>Yes</button>
-                  <button onClick={showOwn}><span className="sl-card-icon sl-icon-almost" aria-hidden="true">◑</span>Almost</button>
-                  <button onClick={showOwn} className="sl-card-own"><span className="sl-card-icon" aria-hidden="true"><Mic size={16} strokeWidth={2.6} /></span>Change it</button>
-                  <button onClick={() => capture('I’m not sure what story my mind made yet.')}><span className="sl-card-icon sl-icon-unsure" aria-hidden="true">?</span>Not sure</button>
+                  <button disabled={step !== 4} onClick={() => { if (!quiet) sound.play('tap'); capture(story); }}><span className="sl-card-icon sl-icon-yes" aria-hidden="true">✓</span>Yes</button>
+                  <button disabled={step !== 4} onClick={showOwn}><span className="sl-card-icon sl-icon-almost" aria-hidden="true">◑</span>Almost</button>
+                  <button disabled={step !== 4} onClick={showOwn} className="sl-card-own"><span className="sl-card-icon" aria-hidden="true"><Mic size={15} strokeWidth={2.6} /></span>Change it</button>
+                  <button disabled={step !== 4} onClick={() => { if (!quiet) sound.play('tap'); capture('I’m not sure what story my mind made yet.'); }}><span className="sl-card-icon sl-icon-unsure" aria-hidden="true">?</span>Not sure</button>
                 </div>
               </div>}
 
-              {(step === 5 || step === 6) && <>
+              {index === 5 && <>
                 <div className="sl-possibility-windows">
-                  <div className="sl-window sl-original"><h3>Original Story</h3><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>“{story}”</p></div>
-                  <div className="sl-window sl-another"><h3>Another Possibility</h3>{alternative ? <img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /> : <span className="sl-possibility-light" aria-hidden="true">✧</span>}<p>{alternative ? `“${alternative}”` : 'A little space for another way to see it…'}</p></div>
+                  <div className="sl-window sl-original"><h4>Original Story</h4><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>“{story}”</p></div>
+                  <div className="sl-window sl-another"><h4>Another Possibility</h4>{alternative ? <img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /> : <span className="sl-possibility-light" aria-hidden="true">✧</span>}<p>{alternative ? `“${alternative}”` : 'A little space for another way to see it…'}</p></div>
                 </div>
-                {step === 5 && <div className="sl-cards sl-wide">{options.map(option => <button key={option.text} className={option.own ? 'sl-card-own' : ''} onClick={() => choose(option)}>
-                  <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={16} strokeWidth={2.6} /> : option.icon}</span>{option.text}
-                </button>)}</div>}
-                {step === 6 && <p className="sl-truth">More than one story can be true.<br />You get to choose what to believe.</p>}
+                <div className="sl-cards sl-wide">{otherOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(5, option.text)}`} disabled={step !== 5} onClick={() => pick(option)}>
+                  <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
+                </button>)}</div>
+                <p className="sl-truth">More than one story can be true.<br />You get to choose what to believe.</p>
               </>}
 
-              {writing && <form className="sl-own-form" onSubmit={e => { e.preventDefault(); capture(draft); }}>
-                <label htmlFor="sl-own-answer">{step === 4 ? 'The story my mind made' : 'Your own words'}</label>
-                <textarea id="sl-own-answer" autoFocus value={draft} onChange={e => setDraft(e.target.value)} rows={2} maxLength={600} />
-                <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button><button type="button" onClick={() => setWriting(false)}>Cancel</button></div>
-              </form>}
-
-              {step === 6 && <div className="sl-complete">
-                <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved' : '✧ Save This Journey'}</button>
-                <button onClick={onExit}>Back to Mind Gym</button>
-              </div>}
-            </div>
-          </motion.div>
+              {writing && step === index && ownForm}
+            </Panel>
+          </motion.div>)}
         </AnimatePresence>
-      </section>
+      </div>
     </div>
 
-    {saveError && <p role="alert">This device couldn’t save your journey. Your words are still here; you can try again.</p>}
+    {saveError && <p role="alert" className="sl-save-error">This device couldn’t save your journey. Your words are still here; you can try again.</p>}
 
     <nav className="sl-rail" aria-label="Journey progress">
       <ol>{STEPS.map((label, i) => <li key={label} className={i === step ? 'sl-current' : i < step ? 'sl-collected' : ''} aria-current={i === step ? 'step' : undefined}>
@@ -252,18 +324,12 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave }: {
         <span className="sl-step-answer">{i === step ? 'You are here' : answers[i] || (i < 2 ? '(In its own room)' : '')}</span>
         <span className="sr-only">{i < step ? ' — collected' : i === step ? ' — current step' : ' — coming up'}</span>
       </li>)}</ol>
-      {/*
-        THE END OF THE RUN, as the sheet draws it: the destination sitting at
-        the right-hand end of the line. It is a statement, not a button — there
-        is nowhere to go from it, and a six-year-old who presses a thing that
-        does nothing has been told the screen is broken. It lights once all six
-        are behind them.
-      */}
       <p className={`sl-rail-badge ${step >= 6 ? 'sl-rail-done' : ''}`}><span aria-hidden="true">★</span>You’ve Explored<br />New Perspectives!</p>
     </nav>
 
     <footer className="sl-stop">
       <button className="chrome-fade" onClick={onExit}>Stop for now</button>
+      {step >= 6 && <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved' : '✧ Save This Journey'}</button>}
       {step < 6 && step !== 4 && <button className="chrome-fade" onClick={() => capture('I’m not sure yet.')}>I’m not sure — keep going</button>}
     </footer>
   </motion.main>;

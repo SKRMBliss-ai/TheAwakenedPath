@@ -466,7 +466,19 @@ export function DeepDive({
               transition={{ duration: 0.4 }}
               className="flex flex-col gap-3.5 pt-1"
             >
-              <Chirpy pose={step.id === 'other' ? 'hopeful' : 'curious'} line={step.chirpy} align="left" />
+              {/*
+                ONE CHIRPY, ONE QUESTION.
+
+                The intensity check below is a second question inside the
+                feeling step, and it used to be ADDED to this one rather than
+                replacing it — so the screen carried "Have a look. Any of these
+                bouncing about in you?" over "How are you feeling right now?"
+                over "Pop the one that fits", with the balls already gone and
+                nothing left to pop, and then asked how big it was underneath.
+                Three instructions, two of them about a choice the child had
+                already made.
+              */}
+              {!bigCheck && <Chirpy pose={step.id === 'other' ? 'hopeful' : 'curious'} line={step.chirpy} align="left" />}
               {/*
                 SOMEBODY IS STILL HERE. Chirpy has already gone silent by
                 this point — he self-suppresses in the quiet state, see
@@ -480,8 +492,8 @@ export function DeepDive({
                 : step.id === 'eyes' ? STEADY.situation
                 : null
               } />
-              <Question room={art}>{step.question}</Question>
-              {step.hint && <SceneLine>{step.hint}</SceneLine>}
+              {!bigCheck && <Question room={art}>{step.question}</Question>}
+              {step.hint && !bigCheck && <SceneLine>{step.hint}</SceneLine>}
 
               {step.id === 'feeling' && !bigCheck && (
                 <FeelingBalls

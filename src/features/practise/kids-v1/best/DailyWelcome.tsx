@@ -8,7 +8,16 @@ import './DailyWelcome.css';
 /** A brief, optional welcome on the first home visit of each local day. */
 export function DailyWelcome() {
   const [visible, setVisible] = useState(needsDailyWelcome);
-  const [muted, setMuted] = useState(true);
+  /*
+    THE WELCOME COMES WITH ITS SOUND ON.
+
+    It opened silent with an "Enable sound" button a child had to find, which
+    meant almost nobody ever heard it. Browsers will not autoplay audible video
+    without a prior gesture, so this asks for sound first and only falls back
+    to silence if the browser refuses — where it does, the button is still
+    there and the film still plays.
+  */
+  const [muted, setMuted] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const quiet = useQuiet();
@@ -20,7 +29,14 @@ export function DailyWelcome() {
     rememberDailyWelcome();
     dialog.current?.showModal();
     const player = video.current;
-    if (!reduced && !quiet) void player?.play().catch(() => { /* Native play control remains available. */ });
+    if (!reduced && !quiet) {
+      player?.play().catch(() => {
+        /* Autoplay with sound was refused. Mute and try once more, so the
+           film still runs — rather than a still frame and no explanation. */
+        setMuted(true);
+        void player.play().catch(() => { /* Native play control remains available. */ });
+      });
+    }
     return () => { player?.pause(); };
   }, [visible, reduced, quiet]);
 
