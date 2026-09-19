@@ -38,6 +38,8 @@ import { OneMinute } from './OneMinute';
 import { SeasonEnd } from './SeasonEnd';
 import { FirstNight } from './FirstNight';
 import { HomeScreen } from './HomeScreen';
+import { BehaviourPracticeRoom } from './BehaviourPracticeRoom';
+import { ROOM_PILLARS } from '../kit/behaviourPractice';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
 import { visitorForToday, type Visitor } from '../kit/visitor';
@@ -80,6 +82,7 @@ type View =
   | { at: 'map' }
   /** `step` is the position in the run when the child is on the journey. */
   | { at: 'room'; room: VirtueRoom; step: number | null }
+  | { at: 'practice'; room: VirtueRoom }
   | { at: 'pause' }
   | { at: 'deep' }
   /** Worried or Scared, picked in the Feelings Room — see DeepDive's
@@ -244,11 +247,16 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 name={name}
                 onReflection={() => setView({ at: 'reflection' })}
                 onOpenRoom={(r) => setView({ at: 'room', room: r, step: null })}
+                onPractice={(room) => setView({ at: 'practice', room })}
                 onDeepDive={() => setView({ at: 'deep' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
               />
             )}
+
+            {view.at === 'practice' && <BehaviourPracticeRoom key={view.room.id}
+              room={view.room} pillar={ROOM_PILLARS[view.room.id]} onExit={back}
+              onGrownUp={() => setView({ at: 'grownup' })} />}
 
             {/*
               THE TRUTH LAB IS ITS OWN ROOM, and the branch is here rather

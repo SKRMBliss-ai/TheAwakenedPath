@@ -27,8 +27,9 @@ const STEPS = [
 ];
 
 /** Composed from the approved two-flow home handoff; all controls are semantic. */
-export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym, onReflection }: {
+export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection }: {
   name: string; onDeepDive: () => void; onOpenRoom: (room: VirtueRoom) => void;
+  onPractice: (room: VirtueRoom) => void;
   onGrownUp: () => void; onExitGym: () => void; onReflection: () => void;
 }) {
   const s = useKidStore();
@@ -107,12 +108,14 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
   const room = VIRTUE_ROOMS.find((r) => r.id === selected);
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
   const game = room ? roomGamesFor(room.id)[0] : undefined;
-  const points = BEHAVIOURS.reduce((n, b) => n + (s.completions[today]?.[b.id] ? b.points : 0), 0);
+  const points = s.points;
   const month = today.slice(0, 7);
   const days = Object.entries(s.completions).filter(([date, values]) => date.startsWith(month) && Object.values(values).some(Boolean)).length;
   const noteKey = `${today}:${selected ?? ''}`;
   const note = s.monthReviews[month]?.[noteKey] ?? '';
   const open = (id: string, next: typeof mode) => {
+    const practiceRoom = VIRTUE_ROOMS.find(r => r.id === id);
+    if (next === 'play' && practiceRoom && id !== 'mindheart') { onPractice(practiceRoom); return; }
     setSelected(id); setMode(next); setSaved(false); sound.play('roomCard'); dialog.current?.showModal();
   };
   const close = () => { dialog.current?.close(); setSelected(null); };
@@ -129,7 +132,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
             onClick={() => { const next = !mutedState; setMuted(next); setMutedState(next); if (!next) sound.play('tap'); }}
             aria-pressed={!mutedState}
             aria-label={mutedState ? 'Sounds are off. Turn sounds on.' : 'Sounds are on. Turn sounds off.'}
-          ><span aria-hidden="true">{mutedState ? '🔇' : '🔊'}</span></button><span className="mg-points"><span aria-hidden="true">⭐</span><span><b>{points}</b><small>points earned today</small></span></span>
+          ><span aria-hidden="true">{mutedState ? '🔇' : '🔊'}</span></button><span className="mg-points"><span aria-hidden="true">⭐</span><span><b>{points}</b><small>Mind Stars</small></span></span>
           <button className="mg-month" onClick={onReflection} aria-label="Open My Inner Diary and browse months"><b>{new Date().toLocaleString('en', { month: 'short' }).toUpperCase()}</b><span>This month<small>{days} {days === 1 ? 'day' : 'days'} remembered</small><span aria-hidden="true">● ● ● ● ✦</span></span></button></div>
       </header>
       <div className="mg-mobile-doors"><button onClick={() => setMobile(mobile === 'feelings' ? null : 'feelings')} aria-expanded={mobile === 'feelings'}>Funny Feeling?<small>Step into your mind →</small></button><button onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button></div>
@@ -170,7 +173,10 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onGrownUp, onExitGym,
     </div>
     <dialog className="mg-room-dialog" aria-labelledby="mg-room-title" ref={dialog} onClose={() => setSelected(null)} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
       {room && behaviour && <><header><h2 id="mg-room-title">{behaviour.title}</h2><button onClick={close} aria-label="Close room">×</button></header>
-        <nav aria-label="Room activities">{(['reflect', 'play', 'learn'] as const).map((item) => <button key={item} onClick={() => setMode(item)} aria-pressed={mode === item}>{item === 'reflect' ? 'My day' : item === 'play' ? 'Play' : 'Learn'}</button>)}</nav>
+        <nav aria-label="Room activities">{(['reflect', 'play', 'learn'] as const).map((item) => <button key={item} onClick={() => {
+          if (item === 'play' && room.id !== 'mindheart') { close(); onPractice(room); }
+          else setMode(item);
+        }} aria-pressed={mode === item}>{item === 'reflect' ? 'My day' : item === 'play' ? 'Play' : 'Learn'}</button>)}</nav>
         {mode === 'reflect' && <><p>{behaviour.prompt}</p><div className="mg-day-options"><button aria-pressed={!!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, true)}>Yes, I did</button><button aria-pressed={!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, false)}>Not today</button></div><label htmlFor="mg-home-note">Something to remember (if you like)</label><textarea id="mg-home-note" value={note} onChange={(e) => write(e.target.value)} rows={3} /><MicButton onText={(text) => write(note ? `${note} ${text}` : text)} /><button className="mg-save" onClick={() => setSaved(true)}>{saved ? 'Saved in your diary' : 'Save my thought'}</button><p role="status">{saved ? 'Your thought is saved on this device.' : 'You can stop whenever you like.'}</p></>}
         {mode === 'learn' && <><h3>{room.learn.title}</h3><p>{room.learn.body}</p><button className="mg-save" onClick={() => { close(); onOpenRoom(room); }}>Explore this room →</button></>}
         {mode === 'play' && (game ? <RoomGamePlayer key={game.id} game={game} accent="#ffe099" onDone={(earned) => { const marker = `home:${game.id}`; if (!(s.scenariosDone[today] ?? []).includes(marker)) { s.completeScenario(marker); s.awardPoints(earned, room.id); } setMode('reflect'); }} /> : <button className="mg-save" onClick={() => { close(); onOpenRoom(room); }}>Enter the {behaviour.title} activity →</button>)}

@@ -76,6 +76,12 @@ export function setAge(years: number): void {
   write({ years });
 }
 
+/** Optional existing profile age; never ask again just to start practice. */
+export function childAge(): number | undefined {
+  const years = read().years;
+  return typeof years === 'number' && Number.isFinite(years) ? years : undefined;
+}
+
 /** They'd rather not say. A complete answer, and he doesn't ask again. */
 export function declineAge(): void {
   write({ declined: true });

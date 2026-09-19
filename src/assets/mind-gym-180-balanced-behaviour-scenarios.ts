@@ -15,6 +15,8 @@
 //
 // This file assumes your existing `Scenario` type is in scope.
 
+import type { Scenario } from '../features/kids/scenarios';
+
 export type BehaviourPillar =
   | 'BeKind'
   | 'TellTheTruth'
