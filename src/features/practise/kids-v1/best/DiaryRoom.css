@@ -269,3 +269,43 @@ li.dy-month-now{all:unset;display:flex}
   border-radius:14px 14px 40px 40px/14px 14px 26px 26px;
 }
 .dy-title h1{white-space:nowrap;font-size:clamp(24px,3.3vw,50px)}
+
+/* Keep the painted layout, but give controls their own space and real touch targets. */
+.dy-top{position:relative;grid-template-columns:236px minmax(0,1fr) auto;padding-top:54px}
+.dy-back{position:absolute;left:0;top:0}
+.dy-title{min-width:0;padding-left:22px;padding-right:22px}
+.dy-title h1{font-size:clamp(24px,3vw,42px)}
+.dy-card label{padding-right:44px;min-height:36px}
+.dy-card-mic{top:11px}
+.dy-day-dialog{margin:auto;width:min(560px,calc(100vw - 24px));max-height:88dvh;overflow:auto;padding:22px;border:2px solid #d9bcf4;border-radius:24px;background:#fff8ec;color:#3c2168;box-shadow:0 20px 90px #18082788}
+.dy-day-dialog::backdrop{background:#201135aa;backdrop-filter:blur(4px)}
+.dy-day-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dy-day-dialog h2{font-size:22px;font-weight:900}
+.dy-day-dialog button,.dy-day-dialog select{min-height:44px;border-radius:14px;padding:10px 14px;border:1px solid #cbb2e6;background:#eee2ff;color:#3c2168;cursor:pointer}
+.dy-day-dialog button[aria-pressed=true]{background:#6943a0;color:#fff}
+.dy-day-dialog label{display:block;font-weight:800;margin:14px 0 5px}
+.dy-day-dialog textarea,.dy-day-dialog select{width:100%;font:inherit}
+.dy-day-dialog textarea{border:1px solid #cbb2e6;background:#fff;border-radius:12px;padding:12px;margin-bottom:12px;color:#3c2168}
+.dy-day-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.dy-day-dialog :focus-visible{outline:3px solid #6b3bb5;outline-offset:3px}
+@media(max-width:1100px){
+  .dy-top{grid-template-columns:minmax(0,1fr);padding-top:54px}
+  .dy-months{justify-self:center}
+  .dy-title{order:3;grid-column:auto}
+}
+@media(pointer:coarse),(max-width:900px){
+  .dy-grid{min-width:max-content;gap:0}
+  .dy-row{grid-template-columns:190px repeat(var(--dy-days),44px) 44px;gap:0;min-height:44px}
+  .dy-dot{max-width:none;width:44px;height:44px;aspect-ratio:auto;background-clip:content-box;padding:10px;box-shadow:none}
+  .dy-dot>span{line-height:24px}
+  .dy-row-name{position:sticky;left:0;background:#fcf6ff;z-index:1;min-height:44px;padding-right:8px}
+}
+@media(max-width:480px){
+  .dy-months{gap:4px;width:100%;justify-content:center}
+  .dy-months ol{gap:3px;min-width:0;flex:1}
+  .dy-months li{flex:1;min-width:0}
+  .dy-months li>*{width:100%;min-width:0;min-height:62px;font-size:13px}
+  .dy-arrow{width:32px;height:44px}
+  .dy-title{padding-left:12px;padding-right:12px}
+  .dy-day-choices{grid-template-columns:1fr}
+}

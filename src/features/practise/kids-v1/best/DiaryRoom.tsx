@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useKidStore } from '../../../kids/store';
 import { BEHAVIOURS } from '../../../kids/data';
 import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
 import { MicButton } from '../ui/MicButton';
+import { HearYourself } from '../ui/HearYourself';
+import { allLinks, linkClip } from '../kit/voiceStore';
 import * as sound from '../kit/sound';
 import { band } from '../kit/band';
 import './DiaryRoom.css';
@@ -80,6 +82,10 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
   const today = new Date();
   const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [clips, setClips] = useState(allLinks);
+  const [selectedDay, setSelectedDay] = useState<{ day: number; behaviour: string } | null>(null);
+  const dayDialog = useRef<HTMLDialogElement>(null);
   const questions = QUESTIONS[band() === 'young' ? 'young' : 'older'];
 
   const key = monthKey(month);
@@ -95,6 +101,7 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
     if (thisMonth && day > today.getDate()) return;
     const on = done(day, id);
     s.setBehaviourOn(dayKey(month, day), id, !on);
+    setSaved(false); setSaveError('');
     if (!quiet) sound.play(on ? 'tap' : 'discovery');
   };
   const go = (by: number) => {
@@ -103,8 +110,24 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
     setMonth(next); setSaved(false);
     if (!quiet) sound.play('exitRoom');
   };
-  const write = (k: string, value: string) => { s.setMonthReview(key, k, value); setSaved(false); };
-  const keep = () => { setSaved(true); if (!quiet) sound.play('resolve'); };
+  const write = (k: string, value: string) => { s.setMonthReview(key, k, value); setSaved(false); setSaveError(''); };
+  const keep = () => {
+    try {
+      // Retry the existing store's persistence without creating a second diary.
+      s.setMonthReview(key, 'learned', review.learned ?? '');
+      const stored = JSON.parse(localStorage.getItem('my-best-every-day') ?? '{}').state;
+      const current = useKidStore.getState();
+      if (!stored || JSON.stringify(stored.monthReviews?.[key]) !== JSON.stringify(current.monthReviews[key]) ||
+        days.some(day => JSON.stringify(stored.completions?.[dayKey(month, day)] ?? {}) !== JSON.stringify(current.completions[dayKey(month, day)] ?? {}))) {
+        throw new Error('Diary could not be persisted');
+      }
+      setSaved(true); setSaveError('');
+      if (!quiet) sound.play('resolve');
+    } catch {
+      setSaved(false);
+      setSaveError('Your words are still here, but this device could not save them. Keep this page open and ask a grown-up for help.');
+    }
+  };
 
   /* The three months behind this one, as the spines on the shelf. */
   const behind = [1, 2, 3].map(n => shift(month, -n));
@@ -157,26 +180,31 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
                   key={day}
                   className={`dy-dot ${done(day, row.id) ? 'dy-on' : ''} ${isToday ? 'dy-today' : ''}`}
                   disabled={ahead}
-                  onClick={() => toggle(day, row.id)}
+                  onClick={() => { setSelectedDay({ day, behaviour: row.id }); dayDialog.current?.showModal(); }}
                   aria-pressed={done(day, row.id)}
-                  aria-label={`${b?.title ?? row.id}, day ${day}`}
+                  aria-label={`${b?.title ?? row.id}, ${FULL[month.getMonth()]} ${day}, ${month.getFullYear()}. Open diary day`}
+                  aria-haspopup="dialog"
                 >{isToday && row.id === 'kind' && <span aria-hidden="true">★</span>}</button>;
               })}
               <span className="dy-tally">{tally(row.id)}</span>
             </div>;
           })}
         </div>
-        <p className="dy-grid-foot"><span aria-hidden="true">✨</span>Tap a day to save a good choice or open a little practice.<span aria-hidden="true">✨</span></p>
+        <p className="dy-grid-foot"><span aria-hidden="true">✨</span>Tap a day to remember a choice or read your words. Blank days are okay.<span aria-hidden="true">✨</span></p>
       </section>
 
       <section className="dy-learn" aria-label="Look Back &amp; Learn">
         <h2><span aria-hidden="true">✦</span>Look Back &amp; Learn<span aria-hidden="true">✦</span></h2>
         <p className="dy-learn-sub">Your thoughts matter. Be honest, be you. <span aria-hidden="true">💜</span></p>
         <div className="dy-cards">
-          {questions.map(q => <div key={q.key} className="dy-card">
+          {questions.map(q => <div key={`${key}:${q.key}`} className="dy-card">
             <label htmlFor={`dy-${q.key}`}><span className="dy-card-icon" aria-hidden="true">{q.icon}</span>{q.q}</label>
             <textarea id={`dy-${q.key}`} rows={2} placeholder="Write your thoughts…" value={review[q.key] ?? ''} onChange={e => write(q.key, e.target.value)} />
-            <MicButton className="dy-card-mic" onText={text => write(q.key, review[q.key] ? `${review[q.key]} ${text}` : text)} />
+            <MicButton className="dy-card-mic" accent="#663398" onText={text => write(q.key, review[q.key] ? `${review[q.key]} ${text}` : text)} onVoice={clip => {
+              const voiceKey = `${key}:${q.key}`;
+              linkClip(voiceKey, clip); setClips(allLinks()); setSaved(false);
+            }} />
+            <HearYourself clipId={clips[`${key}:${q.key}`] ?? null} accent="#663398" />
           </div>)}
         </div>
       </section>
@@ -191,7 +219,23 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
         </button>
         <button className="dy-older" onClick={onOlder}>My pictures &amp; saved cases →</button>
       </footer>
-      <p className="dy-note" role="status">{saved ? 'Kept on this device. You can keep adding to it whenever you like.' : ''}</p>
+      <p className="dy-note" role="status">{saveError || (saved ? 'Kept on this device. You can keep adding to it whenever you like.' : '')}</p>
     </div>
+    <dialog ref={dayDialog} className="dy-day-dialog" aria-labelledby="dy-day-heading" onClose={() => setSelectedDay(null)}>
+      {selectedDay && <>
+        <header><h2 id="dy-day-heading">{FULL[month.getMonth()]} {selectedDay.day}, {month.getFullYear()}</h2><button autoFocus aria-label="Close diary day" onClick={() => dayDialog.current?.close()}>×</button></header>
+        <p>Remember a small choice. You can change your mind.</p>
+        <div className="dy-day-choices">{BEHAVIOURS.map(b => <button key={b.id} aria-pressed={done(selectedDay.day, b.id)} onClick={() => toggle(selectedDay.day, b.id)}>
+          {b.icon} {b.title} {done(selectedDay.day, b.id) ? '✓' : ''}
+        </button>)}</div>
+        <label htmlFor="dy-day-behaviour">A thought about</label>
+        <select id="dy-day-behaviour" value={selectedDay.behaviour} onChange={e => setSelectedDay({ ...selectedDay, behaviour: e.target.value })}>
+          {BEHAVIOURS.map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
+        </select>
+        <label htmlFor="dy-day-words">My words</label>
+        <textarea id="dy-day-words" rows={4} value={review[`${dayKey(month, selectedDay.day)}:${selectedDay.behaviour}`] ?? ''} onChange={e => write(`${dayKey(month, selectedDay.day)}:${selectedDay.behaviour}`, e.target.value)} />
+        <button onClick={() => dayDialog.current?.close()}>Back to my diary</button>
+      </>}
+    </dialog>
   </motion.main>;
 }
