@@ -1,17 +1,21 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { useKidStore, type SavedReflection } from '../../../kids/store';
 import { FONT } from '../ui/chrome';
-import { speak } from '../kit/chirpyVoice';
+import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import { useQuiet } from '../ui/quiet';
 import * as sound from '../kit/sound';
 import './ReflectionPath.css';
 
 const MAX_BRICKS = 10;
 
-const BRICK_EMPTY = '/mind-gym/reflection/reflection_brick_empty@4x.png';
-const BRICK_HOVER = '/mind-gym/reflection/reflection_brick_hover@4x.png';
-const BRICK_DONE  = '/mind-gym/reflection/reflection_brick_completed@4x.png';
+/** The approved handoff art — MindGym_Reflection_Path_Implementation_Pack. */
+const A = '/mind-gym/reflection/';
+
+const BRICK_EMPTY  = `${A}reflection_brick_empty@4x.png`;
+const BRICK_HOVER  = `${A}reflection_brick_hover@4x.png`;
+const BRICK_DONE   = `${A}reflection_brick_completed@4x.png`;
+const BRICK_LOCKED = `${A}reflection_brick_locked@4x.png`;
 
 const TAG_LABELS: Record<string, string> = {
   brave: 'Brave',
@@ -25,67 +29,203 @@ const TAG_LABELS: Record<string, string> = {
 const FILTER_TABS = ['All', 'Recent', 'Favourites', 'Brave', 'Calm', 'Kind', 'Belonging', 'Try Again'] as const;
 type FilterTab = typeof FILTER_TABS[number];
 
+/** The four words on the spines of the book stack, straight off the sheet. */
+const SPINES = ['Calmer', 'Kinder', 'Braver', 'Happier Tomorrows'];
+
 /**
- * Stable per-session sample — picks up to MAX_BRICKS reflections using a
- * seed based on today's date. Favourites get a small weight boost.
+ * THE ROOM IS PAINTED, NOT DESCRIBED.
+ *
+ * Every screen in the handoff is a lit place — a waterfall behind the path, a
+ * rug and a beanbag in the room, lanterns hung over the playback. The build had
+ * none of it: 22 of the pack's plates sat unused in public/ while the CSS drew
+ * flat gradients, which is the whole of why it did not look like the reference.
+ *
+ * So the decor is a layer of its own, behind the content and inert to the
+ * pointer, arranged per screen. Each plate is optional — one that fails to load
+ * removes itself rather than leaving a broken image where a lantern should be,
+ * because none of this is load-bearing for the reflection underneath it.
  */
-function sampleReflections(reflections: SavedReflection[]): SavedReflection[] {
-  if (!reflections.length) return [];
-  // Build weighted pool: favourites appear twice
-  const pool: SavedReflection[] = [];
-  for (const r of reflections) { pool.push(r); if (r.favourite) pool.push(r); }
-  // Seeded shuffle — stable for today
-  const seed = Math.floor(Date.now() / 86_400_000);
-  let s = seed;
-  const rand = () => { s = ((s * 1664525 + 1013904223) | 0) >>> 0; return s / 0x100000000; };
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  // Deduplicate while preserving order
-  const seen = new Set<string>();
-  const result: SavedReflection[] = [];
-  for (const r of pool) {
-    if (!seen.has(r.id)) { seen.add(r.id); result.push(r); }
-    if (result.length >= MAX_BRICKS) break;
-  }
-  return result;
+function Decor({ variant, still }: { variant: 'room' | 'path' | 'library' | 'playback'; still: boolean }) {
+  const hide = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; };
+  const plate = (file: string, cls: string) => (
+    <img key={file + cls} src={`${A}${file}`} alt="" aria-hidden="true" className={cls} onError={hide} draggable={false} />
+  );
+
+  return (
+    <div className={`rp-decor rp-decor-${variant} ${still ? 'rp-decor-still' : ''}`} aria-hidden="true">
+      {variant === 'path' && <>
+        {plate('waterfall.png', 'rp-d rp-d-waterfall')}
+        {plate('crystal_cluster.png', 'rp-d rp-d-crystal')}
+        {plate('lantern_star.png', 'rp-d rp-d-lantern-l')}
+        {plate('lantern_star.png', 'rp-d rp-d-lantern-r')}
+        {plate('plant_decor.png', 'rp-d rp-d-plant-l')}
+        {plate('plant_pot.png', 'rp-d rp-d-plant-r')}
+        {plate('cloud_element.png', 'rp-d rp-d-cloud')}
+        {plate('sparkles_trail.png', 'rp-d rp-d-sparkles')}
+      </>}
+
+      {variant === 'room' && <>
+        {plate('window_view.png', 'rp-d rp-d-window')}
+        {plate('waterfall.png', 'rp-d rp-d-room-fall')}
+        {plate('lantern_star.png', 'rp-d rp-d-lantern-l')}
+        {plate('lantern_star.png', 'rp-d rp-d-lantern-r')}
+        {plate('plant_decor.png', 'rp-d rp-d-plant-l')}
+        {plate('plant_pot.png', 'rp-d rp-d-plant-r')}
+        {plate('rug.png', 'rp-d rp-d-rug')}
+        {plate('beanbag.png', 'rp-d rp-d-beanbag')}
+        {plate('table_cup.png', 'rp-d rp-d-cup')}
+        {plate('magic_swirl.png', 'rp-d rp-d-swirl')}
+      </>}
+
+      {variant === 'library' && <>
+        {plate('window_view.png', 'rp-d rp-d-window')}
+        {plate('bench.png', 'rp-d rp-d-bench')}
+        {plate('plant_decor.png', 'rp-d rp-d-plant-l')}
+        {plate('plant_pot.png', 'rp-d rp-d-plant-r')}
+        {plate('lantern_star.png', 'rp-d rp-d-lantern-l')}
+        {plate('sparkles_trail.png', 'rp-d rp-d-sparkles')}
+      </>}
+
+      {variant === 'playback' && <>
+        {plate('crystal_cluster.png', 'rp-d rp-d-crystal')}
+        {plate('beanbag.png', 'rp-d rp-d-beanbag')}
+        {plate('rug.png', 'rp-d rp-d-rug')}
+        {plate('plant_decor.png', 'rp-d rp-d-plant-l')}
+        {plate('hearts_particles.png', 'rp-d rp-d-hearts')}
+        {plate('magic_swirl.png', 'rp-d rp-d-swirl')}
+      </>}
+    </div>
+  );
+}
+
+/** The four painted word-blocks that lean against the wall in every scene. */
+function Spines() {
+  return <p className="rp-spines" aria-hidden="true">{SPINES.map((s) => <span key={s}>{s}</span>)}</p>;
 }
 
 /** ── Playback screen ──────────────────────────────────────────────────── */
 
-function PlaybackView({ reflection, onBack, onGrownUp }: {
+function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourites, still, quiet }: {
   reflection: SavedReflection;
   onBack: () => void;
   onGrownUp: () => void;
+  onShuffle: () => void;
+  onPlayFavourites: () => void;
+  still: boolean;
+  quiet: boolean;
 }) {
   const toggleFav = useKidStore((s) => s.toggleReflectionFavourite);
   const isFav = useKidStore((s) => s.savedReflections.find((r) => r.id === reflection.id)?.favourite ?? false);
+  /*
+    THE SELECTOR RETURNS THE ARRAY, AND THE FILTER HAPPENS HERE.
+    `useKidStore(s => s.savedReflections.filter(...))` builds a new array on
+    every call, so useSyncExternalStore compares two different references,
+    decides the store changed, and re-renders forever — which took the whole
+    screen down to the error boundary rather than merely being slow.
+  */
+  const allSaved = useKidStore((s) => s.savedReflections);
+  const favourites = useMemo(() => allSaved.filter((r) => r.favourite), [allSaved]);
+  const [speaking, setSpeaking] = useState(false);
+  const [withMe, setWithMe] = useState(false);
+
+  /*
+    NO INVENTED CLOCK. The reference draws a scrubber with 0:00 / 2:24 on it,
+    but nothing here is a recording — the line is spoken by the browser's own
+    voice, whose length we do not know and cannot seek inside. A progress bar
+    counting against a made-up duration would be a lie the child can catch
+    (it finishes talking while the bar is half full), so the transport shows
+    whether it is speaking, and the bar animates only as a "still going"
+    indicator. Every other control in the sheet is real.
+  */
+  useEffect(() => () => stopSpeaking(), []);
+  useEffect(() => { setSpeaking(false); setWithMe(false); stopSpeaking(); }, [reflection.id]);
+
+  const say = () => {
+    if (speaking) { stopSpeaking(); setSpeaking(false); return; }
+    setSpeaking(true);
+    speak(reflection.pathLabel, quiet);
+    /* The voice has no reliable end event across browsers, so the indicator
+       stands down on a timer scaled to the length of the line. */
+    window.setTimeout(() => setSpeaking(false), Math.max(2600, reflection.pathLabel.length * 95));
+  };
 
   return (
     <div className="rp-room rp-playback" style={{ fontFamily: FONT }}>
+      <Decor variant="playback" still={still} />
       <header className="rp-header">
         <button className="rp-back" onClick={onBack} aria-label="Back to Reflection Path">←</button>
-        <h1>Play &amp; Relax</h1>
-        <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp}>♡</button>
+        <div className="rp-title">
+          <h1>Play &amp; Relax Mode</h1>
+          <p>Your reflection, a little gentler, a little brighter.</p>
+        </div>
+        <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp} aria-label="Talk to a grown-up">♡</button>
       </header>
 
+      {/* The row of hung lanterns, each carrying one of the child's own lines. */}
+      {favourites.length > 0 && (
+        <ul className="rp-lanterns" aria-label="Your favourite reflections">
+          {favourites.slice(0, 4).map((f) => (
+            <li key={f.id}><button onClick={() => { sound.play('tap'); speak(f.pathLabel, quiet); }}>{f.pathLabel}</button></li>
+          ))}
+        </ul>
+      )}
+
       <div className="rp-playback-stage">
-        <img
-          src="/mind-gym/reflection/chirpy_character.png"
-          alt="Chirpy"
-          className="rp-chirpy"
-        />
+        <img src={`${A}child_character.png`} alt="" aria-hidden="true" className="rp-child rp-child-rest"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+        <img src={`${A}chirpy_character.png`} alt="" aria-hidden="true" className="rp-chirpy"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+
         <div className="rp-playback-card">
+          <span className="rp-card-eyebrow">✦ Today’s Reflection</span>
           <span className="rp-tag-pill">{TAG_LABELS[reflection.tag] ?? 'Reflection'}</span>
-          <p className="rp-playback-phrase">"{reflection.pathLabel}"</p>
+          <p className="rp-playback-phrase">“{reflection.pathLabel}”</p>
           {reflection.feeling && (
             <p className="rp-feeling-echo">You felt: <strong>{reflection.feeling}</strong></p>
           )}
+          {/*
+            BOTH STORIES STAY. The handoff is explicit that the first story is
+            never marked wrong — so it is kept beside the new one as what the
+            mind said, with the other possibility under it.
+          */}
           {reflection.anotherWay && reflection.anotherWay !== reflection.pathLabel && (
-            <blockquote className="rp-full-story">{reflection.anotherWay}</blockquote>
+            <div className="rp-both">
+              {reflection.originalStory && <p className="rp-story-was"><b>Your mind said:</b> “{reflection.originalStory}”</p>}
+              <blockquote className="rp-full-story"><b>Another possibility:</b> “{reflection.anotherWay}”</blockquote>
+            </div>
           )}
         </div>
+      </div>
+
+      <div className="rp-transport">
+        <div className={`rp-transport-bar ${speaking ? 'is-playing' : ''}`}>
+          <img src={`${A}open_magic_book.png`} alt="" aria-hidden="true" className="rp-transport-art"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          <div className="rp-transport-meta">
+            <b>A Kinder Story for You</b>
+            <small>{speaking ? 'Playing…' : 'Narrated by your friend'}</small>
+            <span className="rp-transport-track"><i /></span>
+          </div>
+          <button className="rp-transport-btn" onClick={say} aria-pressed={speaking}
+            aria-label={speaking ? 'Stop playing this reflection' : 'Play this reflection'}>
+            {speaking ? '❚❚' : '▶'}
+          </button>
+        </div>
+
+        <div className="rp-relax-actions">
+          <button onClick={say} aria-pressed={speaking}><span aria-hidden="true">🎧</span> Listen quietly</button>
+          <button className={withMe ? 'rp-on' : ''} aria-pressed={withMe}
+            onClick={() => { sound.play('tap'); setWithMe(true); speak(reflection.pathLabel, quiet); }}>
+            <span aria-hidden="true">🎤</span> Say it with me
+          </button>
+          <button onClick={() => { sound.play('tap'); onPlayFavourites(); }} disabled={!favourites.length}>
+            <span aria-hidden="true">♥</span> Play all favourites
+          </button>
+          <button onClick={() => { sound.play('tap'); onShuffle(); }}>
+            <span aria-hidden="true">⇄</span> Shuffle one more
+          </button>
+        </div>
+        {withMe && <p className="rp-with-me-hint" role="status">Say it out loud with me — as many times as you like.</p>}
       </div>
 
       <footer className="rp-stop">
@@ -96,19 +236,21 @@ function PlaybackView({ reflection, onBack, onGrownUp }: {
         >
           {isFav ? '♥ Saved to favourites' : '♡ Add to favourites'}
         </button>
-        <button className="rp-cta" onClick={onBack}>Back to my path</button>
+        <button className="rp-cta rp-cta-small" onClick={onBack}>Back to my path</button>
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
       </footer>
+      <p className="rp-footer-note" aria-hidden="true">Little by little, your brighter story grows. ♡</p>
     </div>
   );
 }
 
 /** ── Library screen ──────────────────────────────────────────────────── */
 
-function LibraryView({ onBack, onPlay, onGrownUp }: {
+function LibraryView({ onBack, onPlay, onGrownUp, still }: {
   onBack: () => void;
   onPlay: (r: SavedReflection) => void;
   onGrownUp: () => void;
+  still: boolean;
 }) {
   const reflections = useKidStore((s) => s.savedReflections);
   const toggleFav = useKidStore((s) => s.toggleReflectionFavourite);
@@ -128,12 +270,22 @@ function LibraryView({ onBack, onPlay, onGrownUp }: {
   }, [reflections, tab]);
 
   return (
-    <div className="rp-room" style={{ fontFamily: FONT }}>
+    <div className="rp-room rp-library" style={{ fontFamily: FONT }}>
+      <Decor variant="library" still={still} />
       <header className="rp-header">
-        <button className="rp-back" onClick={onBack} aria-label="Back to Reflection Path">←</button>
-        <h1>My Reflection Library</h1>
-        <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp}>♡</button>
+        <button className="rp-back" onClick={onBack} aria-label="Back to the Reflection Room">←</button>
+        <div className="rp-title">
+          <h1>My Reflection Library</h1>
+          <p>All your reflections live here.</p>
+        </div>
+        <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp} aria-label="Talk to a grown-up">♡</button>
       </header>
+
+      <div className="rp-chirpy-says">
+        <img src={`${A}chirpy_character.png`} alt="" aria-hidden="true"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+        <p>Look how much you’ve grown!</p>
+      </div>
 
       <nav className="rp-filter-tabs" aria-label="Filter reflections">
         {FILTER_TABS.map((t) => (
@@ -148,7 +300,9 @@ function LibraryView({ onBack, onPlay, onGrownUp }: {
         ))}
       </nav>
 
-      <div className="rp-library-list">
+      <p className="rp-count" role="status">{filtered.length} {filtered.length === 1 ? 'reflection' : 'reflections'}</p>
+
+      <div className="rp-library-grid">
         {filtered.length === 0 && (
           <p className="rp-empty">
             {tab === 'Favourites'
@@ -157,15 +311,14 @@ function LibraryView({ onBack, onPlay, onGrownUp }: {
           </p>
         )}
         {filtered.map((r) => (
-          <div key={r.id} className="rp-library-item">
-            <button
-              className="rp-library-phrase"
-              onClick={() => onPlay(r)}
-              aria-label={`Play reflection: ${r.pathLabel}`}
-            >
-              <span className="rp-tag-pill">{TAG_LABELS[r.tag] ?? r.tag}</span>
-              <p>"{r.pathLabel}"</p>
-              {r.feeling && <small>You felt: {r.feeling}</small>}
+          <article key={r.id} className="rp-card">
+            <button className="rp-card-open" onClick={() => onPlay(r)} aria-label={`Play reflection: ${r.pathLabel}`}>
+              <span className="rp-card-art" aria-hidden="true">
+                <img src={BRICK_DONE} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              </span>
+              <p className="rp-card-phrase">“{r.pathLabel}”</p>
+              <span className={`rp-tag-pill rp-tag-${r.tag}`}>{TAG_LABELS[r.tag] ?? r.tag}</span>
+              {r.feeling && <small className="rp-card-feeling">You felt: {r.feeling}</small>}
             </button>
             <button
               onClick={() => { sound.play('tap'); toggleFav(r.id); }}
@@ -175,19 +328,102 @@ function LibraryView({ onBack, onPlay, onGrownUp }: {
             >
               {r.favourite ? '♥' : '♡'}
             </button>
-          </div>
+          </article>
         ))}
       </div>
 
       <footer className="rp-stop">
-        <button className="chrome-fade" onClick={onBack}>← Back to path</button>
+        <button className="chrome-fade" onClick={onBack}>← Back to the room</button>
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
       </footer>
+      <p className="rp-footer-note" aria-hidden="true">Different thoughts create brighter tomorrows. ♡</p>
     </div>
   );
 }
 
-/** ── Main path screen ────────────────────────────────────────────────── */
+/** ── The Reflection Room — the door the whole feature opens behind ────── */
+
+function RoomView({ picks, onPlayOne, onShuffle, onLibrary, onPath, onExit, onGrownUp, still, hasAny }: {
+  picks: SavedReflection[];
+  onPlayOne: () => void;
+  onShuffle: () => void;
+  onLibrary: () => void;
+  onPath: () => void;
+  onExit: () => void;
+  onGrownUp: () => void;
+  still: boolean;
+  hasAny: boolean;
+}) {
+  return (
+    <div className="rp-room rp-roomview" style={{ fontFamily: FONT }}>
+      <Decor variant="room" still={still} />
+      <header className="rp-header">
+        <button className="rp-back" onClick={onExit} aria-label="Back to Mind Gym">←</button>
+        <div className="rp-title rp-arch">
+          <h1>Reflection Room <span aria-hidden="true">♡</span></h1>
+          <p>Welcome back! Let’s take a moment.</p>
+        </div>
+        <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp} aria-label="Talk to a grown-up">♡</button>
+      </header>
+
+      <div className="rp-room-stage">
+        <img src={`${A}child_character.png`} alt="" aria-hidden="true" className="rp-child"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+        <img src={`${A}chirpy_character.png`} alt="" aria-hidden="true" className="rp-chirpy"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+
+        {hasAny ? (
+          <>
+            <p className="rp-welcome">Here are a few gentle reflections from your journey.</p>
+            {/*
+              THREE PICKS, NOT THE WHOLE ARCHIVE. The handoff asks the room to
+              open with a small, calm handful and to keep everything else one
+              tap away in the library — a child who walks in on twelve cards is
+              being given homework, not a moment.
+            */}
+            <ul className="rp-picks" aria-label="A few reflections from your journey">
+              {picks.map((r) => (
+                <li key={r.id}>
+                  <button onClick={onPlayOne} aria-label={`Play reflection: ${r.pathLabel}`}>
+                    <span className={`rp-tag-pill rp-tag-${r.tag}`}>{TAG_LABELS[r.tag] ?? r.tag}</span>
+                    <span className="rp-pick-phrase">“{r.pathLabel}”</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <div className="rp-empty-state">
+            <img src={`${A}open_magic_book.png`} alt="" className="rp-empty-book" aria-hidden="true"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <h2>Your room is waiting.</h2>
+            <p>Finish a Story Lab journey and your first reflection will be here, ready to visit again.</p>
+          </div>
+        )}
+      </div>
+
+      <div className="rp-room-actions">
+        <button className="rp-cta rp-cta-big" onClick={onPlayOne} disabled={!hasAny}>
+          <span aria-hidden="true">▶</span> Play one for me
+        </button>
+        <div className="rp-room-secondary">
+          <button onClick={onShuffle} disabled={!hasAny}><span aria-hidden="true">⇄</span> Shuffle reflections</button>
+          <button onClick={onLibrary}><span aria-hidden="true">📖</span> Open My Reflection Library</button>
+          <button onClick={onPath} disabled={!hasAny}><span aria-hidden="true">✦</span> Walk my Reflection Path</button>
+        </div>
+      </div>
+
+      <Spines />
+      <footer className="rp-stop">
+        <button className="chrome-fade" onClick={onExit}>← Back to Mind Gym</button>
+        <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
+      </footer>
+      <p className="rp-footer-note" aria-hidden="true">Same you. Brighter views. ♡</p>
+    </div>
+  );
+}
+
+/** ── The path of bricks ──────────────────────────────────────────────── */
 
 export function ReflectionPath({ onExit, onGrownUp }: {
   onExit: () => void;
@@ -195,30 +431,60 @@ export function ReflectionPath({ onExit, onGrownUp }: {
 }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
+  const still = quiet || !!reduced;
   const allReflections = useKidStore((s) => s.savedReflections);
   const markPlayed = useKidStore((s) => s.markReflectionPlayed);
 
-  const [inner, setInner] = useState<'path' | 'library' | 'playback'>('path');
+  const [inner, setInner] = useState<'room' | 'path' | 'library' | 'playback'>('room');
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [visitedIds, setVisitedIds] = useState<Set<string>>(new Set());
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  /*
+    SHUFFLE IS A REAL RESHUFFLE. The sample is seeded on the day so the path is
+    the same place for the whole visit — "Shuffle reflections" bumps this nonce
+    to deal a fresh hand on demand, which is the one thing that button means.
+  */
+  const [shuffleNonce, setShuffleNonce] = useState(0);
+  const returnTo = useRef<'room' | 'path'>('room');
 
-  const sample = useMemo(() => sampleReflections(allReflections), [allReflections]);
+  const sample = useMemo(() => {
+    if (!allReflections.length) return [];
+    const pool: SavedReflection[] = [];
+    for (const r of allReflections) { pool.push(r); if (r.favourite) pool.push(r); }
+    let s = Math.floor(Date.now() / 86_400_000) + shuffleNonce * 7919;
+    const rand = () => { s = ((s * 1664525 + 1013904223) | 0) >>> 0; return s / 0x100000000; };
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const seen = new Set<string>();
+    const result: SavedReflection[] = [];
+    for (const r of pool) {
+      if (!seen.has(r.id)) { seen.add(r.id); result.push(r); }
+      if (result.length >= MAX_BRICKS) break;
+    }
+    return result;
+  }, [allReflections, shuffleNonce]);
 
-  const playReflection = (r: SavedReflection) => {
+  const playReflection = (r: SavedReflection, from: 'room' | 'path' = 'path') => {
+    returnTo.current = from;
     sound.play('roomCard');
     setPlayingId(r.id);
     setVisitedIds((v) => new Set([...v, r.id]));
     markPlayed(r.id);
-    if (!quiet) speak(r.pathLabel, quiet);
     setInner('playback');
   };
 
-  const playRandom = () => {
+  const playRandom = (from: 'room' | 'path' = 'path') => {
     if (!sample.length) return;
     const unvisited = sample.filter((r) => !visitedIds.has(r.id));
     const pool = unvisited.length ? unvisited : sample;
-    playReflection(pool[Math.floor(Math.random() * pool.length)]);
+    playReflection(pool[Math.floor(Math.random() * pool.length)], from);
+  };
+
+  const playFavourites = () => {
+    const favs = allReflections.filter((r) => r.favourite);
+    if (favs.length) playReflection(favs[Math.floor(Math.random() * favs.length)], returnTo.current);
   };
 
   const playingReflection = allReflections.find((r) => r.id === playingId);
@@ -227,8 +493,12 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     return (
       <PlaybackView
         reflection={playingReflection}
-        onBack={() => setInner('path')}
+        onBack={() => setInner(returnTo.current)}
         onGrownUp={onGrownUp}
+        onShuffle={() => playRandom(returnTo.current)}
+        onPlayFavourites={playFavourites}
+        still={still}
+        quiet={quiet}
       />
     );
   }
@@ -236,88 +506,120 @@ export function ReflectionPath({ onExit, onGrownUp }: {
   if (inner === 'library') {
     return (
       <LibraryView
-        onBack={() => setInner('path')}
-        onPlay={(r) => playReflection(r)}
+        onBack={() => setInner('room')}
+        onPlay={(r) => playReflection(r, 'room')}
         onGrownUp={onGrownUp}
+        still={still}
       />
     );
   }
 
+  if (inner === 'room') {
+    return (
+      <RoomView
+        picks={sample.slice(0, 3)}
+        hasAny={allReflections.length > 0}
+        onPlayOne={() => playRandom('room')}
+        onShuffle={() => { sound.play('tap'); setShuffleNonce((n) => n + 1); }}
+        onLibrary={() => { sound.play('tap'); setInner('library'); }}
+        onPath={() => { sound.play('tap'); setInner('path'); }}
+        onExit={onExit}
+        onGrownUp={onGrownUp}
+        still={still}
+      />
+    );
+  }
+
+  /* The path itself — the bricks, laid as a journey rather than a list. */
+  const slots = Array.from({ length: MAX_BRICKS }, (_, i) => sample[i] ?? null);
+
   return (
-    <div className="rp-room" style={{ fontFamily: FONT }}>
+    <div className="rp-room rp-pathview" style={{ fontFamily: FONT }}>
+      <Decor variant="path" still={still} />
       <header className="rp-header">
-        <button className="rp-back" onClick={onExit} aria-label="Back to Mind Gym">←</button>
+        <button className="rp-back" onClick={() => setInner('room')} aria-label="Back to the Reflection Room">←</button>
         <div className="rp-title">
-          <h1>My Reflection Path</h1>
-          <p>Everything you've worked out. One brick at a time.</p>
+          <h1>Reflection Path</h1>
+          <p>Tap a glowing brick to open a reflection from your journey.</p>
         </div>
-        <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp}>♡</button>
+        <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp} aria-label="Talk to a grown-up">♡</button>
       </header>
 
-      {allReflections.length === 0 ? (
-        <div className="rp-empty-state">
-          <img
-            src="/mind-gym/reflection/open_magic_book.png"
-            alt=""
-            className="rp-empty-book"
-            aria-hidden="true"
-          />
-          <h2>Your path is waiting.</h2>
-          <p>Finish a Story Lab journey and your first reflection will appear here as a glowing brick on the path.</p>
-          <button className="rp-cta" onClick={onExit}>Back to Mind Gym</button>
-        </div>
-      ) : (
-        <>
-          <div className="rp-path-actions">
-            <button className="rp-cta" onClick={playRandom}>
-              <span aria-hidden="true">▶</span> Play one for me
-            </button>
-            <button className="rp-open-library" onClick={() => { sound.play('tap'); setInner('library'); }}>
-              Open My Reflection Library →
-            </button>
-          </div>
+      <div className="rp-chirpy-says rp-chirpy-path">
+        <img src={`${A}chirpy_character.png`} alt="" aria-hidden="true"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+        <p>Each brick holds a surprise from your journey!</p>
+      </div>
 
-          <div className="rp-bricks" role="list" aria-label="Your reflection path">
-            {sample.map((r, i) => {
-              const visited = visitedIds.has(r.id);
-              const hovered = hoveredId === r.id;
-              const brickSrc = hovered ? BRICK_HOVER : visited ? BRICK_DONE : BRICK_EMPTY;
+      <div className="rp-path-actions">
+        <button className="rp-cta" onClick={() => playRandom('path')} disabled={!sample.length}>
+          <span aria-hidden="true">▶</span> Play one for me
+        </button>
+        <button className="rp-open-library" onClick={() => { sound.play('tap'); setShuffleNonce((n) => n + 1); }} disabled={!sample.length}>
+          <span aria-hidden="true">⇄</span> Shuffle reflections
+        </button>
+        <button className="rp-open-library" onClick={() => { sound.play('tap'); setInner('library'); }}>
+          <span aria-hidden="true">📖</span> Open My Reflection Library
+        </button>
+      </div>
 
-              return (
-                <button
-                  key={r.id}
-                  role="listitem"
-                  className={`rp-brick${visited ? ' rp-brick-visited' : ''}${reduced ? '' : ' rp-brick-animated'}`}
-                  style={{ '--brick-index': i } as React.CSSProperties}
-                  onClick={() => playReflection(r)}
-                  onMouseEnter={() => setHoveredId(r.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  onFocus={() => setHoveredId(r.id)}
-                  onBlur={() => setHoveredId(null)}
-                  aria-label={`Reflection ${i + 1}: ${r.pathLabel}`}
-                >
-                  <img src={brickSrc} alt="" className="rp-brick-img" aria-hidden="true" />
-                  <div className="rp-brick-text">
-                    <span className="rp-tag-pill rp-tag-small">{TAG_LABELS[r.tag] ?? r.tag}</span>
-                    <span className="rp-brick-phrase">{r.pathLabel}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+      <div className="rp-bricks" role="list" aria-label="Your reflection path">
+        {slots.map((r, i) => {
+          /*
+            A LOCKED BRICK IS A PROMISE, NOT A FAILURE. The path is always ten
+            stones long, so a child with three reflections can see where the
+            next seven go — the pack ships a locked plate for exactly this and
+            it was never used. They are inert and not in the tab order.
+          */
+          if (!r) {
+            return (
+              <div key={`locked-${i}`} role="listitem" className="rp-brick rp-brick-locked"
+                style={{ '--brick-index': i } as React.CSSProperties} aria-hidden="true">
+                <img src={BRICK_LOCKED} alt="" className="rp-brick-img"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              </div>
+            );
+          }
+          const visited = visitedIds.has(r.id);
+          const hovered = hoveredId === r.id;
+          const brickSrc = hovered ? BRICK_HOVER : visited ? BRICK_DONE : BRICK_EMPTY;
 
-          {allReflections.length > MAX_BRICKS && (
-            <button className="rp-more-link" onClick={() => { sound.play('tap'); setInner('library'); }}>
-              +{allReflections.length - MAX_BRICKS} more in your library →
+          return (
+            <button
+              key={r.id}
+              role="listitem"
+              className={`rp-brick${visited ? ' rp-brick-visited' : ''}${still ? '' : ' rp-brick-animated'}`}
+              style={{ '--brick-index': i } as React.CSSProperties}
+              onClick={() => playReflection(r, 'path')}
+              onMouseEnter={() => setHoveredId(r.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              onFocus={() => setHoveredId(r.id)}
+              onBlur={() => setHoveredId(null)}
+              aria-label={`Reflection ${i + 1}: ${r.pathLabel}`}
+            >
+              <img src={brickSrc} alt="" className="rp-brick-img" aria-hidden="true"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              <div className="rp-brick-text">
+                <span className={`rp-tag-pill rp-tag-small rp-tag-${r.tag}`}>{TAG_LABELS[r.tag] ?? r.tag}</span>
+                <span className="rp-brick-phrase">{r.pathLabel}</span>
+              </div>
             </button>
-          )}
-        </>
+          );
+        })}
+      </div>
+
+      {allReflections.length > MAX_BRICKS && (
+        <button className="rp-more-link" onClick={() => { sound.play('tap'); setInner('library'); }}>
+          +{allReflections.length - MAX_BRICKS} more in your library →
+        </button>
       )}
 
+      <Spines />
       <footer className="rp-stop">
-        <button className="chrome-fade" onClick={onExit}>← Back to Mind Gym</button>
+        <button className="chrome-fade" onClick={() => setInner('room')}>← Back to the room</button>
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
       </footer>
+      <p className="rp-footer-note" aria-hidden="true">All your experiences make a brighter you. ♡</p>
     </div>
   );
 }
