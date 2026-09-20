@@ -1,0 +1,432 @@
+/* ── Reflection Path room ───────────────────────────────────────────── */
+
+.rp-room {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  width: 100%;
+  background: linear-gradient(160deg, #1b0e35 0%, #0d0620 60%, #1a1030 100%);
+  color: #f0e8ff;
+  overflow-x: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.rp-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.5rem;
+  flex-shrink: 0;
+}
+
+.rp-back {
+  background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #f0e8ff;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1.1rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.rp-back:hover { background: rgba(255,255,255,0.16); }
+
+.rp-title { flex: 1; }
+.rp-title h1 { font-size: 1.15rem; font-weight: 900; color: #e0d0ff; margin: 0; }
+.rp-title p  { font-size: 0.75rem; font-weight: 600; color: rgba(224,208,255,0.6); margin: 0.15rem 0 0; }
+
+.rp-room h1 { font-size: 1.15rem; font-weight: 900; color: #e0d0ff; margin: 0; flex: 1; }
+
+.rp-grownup-btn {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #f0e8ff;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+/* ── Path actions bar ────────────────────────────────────────────────── */
+
+.rp-path-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  flex-wrap: wrap;
+}
+
+.rp-cta {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(139,92,246,0.45);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.rp-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(139,92,246,0.55); }
+.rp-cta:active { transform: scale(0.97); }
+
+.rp-open-library {
+  background: transparent;
+  border: 1px solid rgba(224,208,255,0.35);
+  color: rgba(224,208,255,0.8);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s;
+}
+.rp-open-library:hover { border-color: rgba(224,208,255,0.6); color: #e0d0ff; }
+
+/* ── Bricks grid ────────────────────────────────────────────────────── */
+
+.rp-bricks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem 1rem 1rem;
+  flex: 1;
+}
+
+@media (max-width: 440px) {
+  .rp-bricks { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+}
+@media (min-width: 700px) {
+  .rp-bricks { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+
+/* ── Single brick ───────────────────────────────────────────────────── */
+
+.rp-brick {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  /* staggered entrance */
+  animation: rpBrickIn 0.45s ease both;
+  animation-delay: calc(var(--brick-index, 0) * 60ms);
+}
+
+@keyframes rpBrickIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.94); }
+  to   { opacity: 1; transform: none; }
+}
+
+.rp-brick:not(.rp-brick-animated) { animation: none; }
+
+.rp-brick:hover,
+.rp-brick:focus-visible {
+  transform: translateY(-4px) scale(1.02);
+  filter: drop-shadow(0 8px 20px rgba(139,92,246,0.55));
+  outline: none;
+}
+.rp-brick:active { transform: scale(0.97); }
+
+.rp-brick-visited { filter: drop-shadow(0 0 8px rgba(255,215,0,0.4)); }
+
+.rp-brick-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  /* The brick PNG defines the visual shape; text floats above it */
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Text lives OVER the PNG — centered absolutely */
+.rp-brick-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.6rem;
+  gap: 0.25rem;
+}
+
+.rp-brick-phrase {
+  font-size: clamp(0.6rem, 2.4vw, 0.78rem);
+  font-weight: 800;
+  line-height: 1.25;
+  color: #2d1a4a;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.3);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+/* ── Tag pill ────────────────────────────────────────────────────────── */
+
+.rp-tag-pill {
+  display: inline-block;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: rgba(139,92,246,0.22);
+  color: #c4a8ff;
+  border: 1px solid rgba(139,92,246,0.38);
+}
+
+.rp-tag-small {
+  font-size: 0.58rem;
+  padding: 0.12rem 0.4rem;
+  background: rgba(255,255,255,0.18);
+  color: #3a1c5e;
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ── More link ───────────────────────────────────────────────────────── */
+
+.rp-more-link {
+  background: transparent;
+  border: none;
+  color: rgba(196,168,255,0.7);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.25rem 1rem 0.75rem;
+  text-align: center;
+  width: 100%;
+}
+.rp-more-link:hover { color: #c4a8ff; }
+
+/* ── Empty state ─────────────────────────────────────────────────────── */
+
+.rp-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  gap: 1rem;
+}
+
+.rp-empty-book {
+  width: min(200px, 55vw);
+  height: auto;
+  opacity: 0.85;
+  filter: drop-shadow(0 8px 24px rgba(139,92,246,0.4));
+}
+
+.rp-empty-state h2 {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #e0d0ff;
+  margin: 0;
+}
+.rp-empty-state p {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: rgba(224,208,255,0.7);
+  margin: 0;
+  max-width: 28ch;
+}
+
+/* ── Playback screen ─────────────────────────────────────────────────── */
+
+.rp-playback { }
+
+.rp-playback-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 1.5rem 1rem;
+}
+
+.rp-chirpy {
+  width: min(120px, 28vw);
+  height: auto;
+  animation: rpFloat 4s ease-in-out infinite;
+  filter: drop-shadow(0 8px 20px rgba(139,92,246,0.4));
+}
+
+@keyframes rpFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.rp-playback-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 20px;
+  padding: 1.5rem 1.25rem;
+  max-width: 28rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  backdrop-filter: blur(8px);
+}
+
+.rp-playback-phrase {
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.5;
+  color: #f0e8ff;
+  margin: 0;
+}
+
+.rp-feeling-echo {
+  font-size: 0.82rem;
+  color: rgba(196,168,255,0.75);
+  margin: 0;
+}
+
+.rp-full-story {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: rgba(224,208,255,0.7);
+  border-left: 3px solid rgba(139,92,246,0.5);
+  margin: 0;
+  padding-left: 0.75rem;
+  font-style: italic;
+}
+
+.rp-fav-btn {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #f0e8ff;
+  border-radius: 999px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.rp-fav-btn.rp-fav-active {
+  background: rgba(255,107,107,0.2);
+  border-color: rgba(255,107,107,0.45);
+  color: #ffb3b3;
+}
+.rp-fav-btn:hover { background: rgba(255,255,255,0.12); }
+
+/* ── Library screen ──────────────────────────────────────────────────── */
+
+.rp-filter-tabs {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.rp-filter-tabs::-webkit-scrollbar { display: none; }
+
+.rp-filter-tabs button {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(224,208,255,0.7);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.rp-filter-tabs button.rp-tab-active,
+.rp-filter-tabs button[aria-pressed="true"] {
+  background: rgba(139,92,246,0.3);
+  border-color: rgba(139,92,246,0.55);
+  color: #e0d0ff;
+}
+.rp-filter-tabs button:hover { background: rgba(255,255,255,0.1); color: #e0d0ff; }
+
+.rp-library-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.rp-library-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.rp-library-phrase {
+  flex: 1;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: #f0e8ff;
+}
+.rp-library-phrase p { font-size: 0.88rem; font-weight: 700; line-height: 1.4; margin: 0; }
+.rp-library-phrase small { font-size: 0.72rem; color: rgba(196,168,255,0.65); display: block; }
+.rp-library-phrase:hover p { color: #e0d0ff; }
+
+.rp-fav-icon {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  padding: 0.75rem 0.9rem;
+  cursor: pointer;
+  color: rgba(255,255,255,0.4);
+  transition: color 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+.rp-fav-icon.rp-fav-active { color: #ff8080; }
+.rp-fav-icon:hover { transform: scale(1.2); }
+
+.rp-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: rgba(196,168,255,0.55);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+
+.rp-stop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem 1.25rem;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}

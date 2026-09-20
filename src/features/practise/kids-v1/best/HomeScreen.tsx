@@ -27,10 +27,11 @@ const STEPS = [
 ];
 
 /** Composed from the approved two-flow home handoff; all controls are semantic. */
-export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection }: {
+export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onReflectionPath }: {
   name: string; onDeepDive: () => void; onOpenRoom: (room: VirtueRoom) => void;
   onPractice: (room: VirtueRoom) => void;
   onGrownUp: () => void; onExitGym: () => void; onReflection: () => void;
+  onReflectionPath?: () => void;
 }) {
   const s = useKidStore();
   const quiet = useQuiet();
@@ -109,6 +110,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
   const game = room ? roomGamesFor(room.id)[0] : undefined;
   const points = s.points;
+  const reflectionCount = s.savedReflections?.length ?? 0;
   const month = today.slice(0, 7);
   const days = Object.entries(s.completions).filter(([date, values]) => date.startsWith(month) && Object.values(values).some(Boolean)).length;
   const noteKey = `${today}:${selected ?? ''}`;
@@ -169,7 +171,11 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       <p className="mg-blocks mg-blocks-left" aria-hidden="true"><span>Brighter<br />Feelings</span><span>Brighter<br />Tomorrows</span></p>
       <p className="mg-blocks mg-blocks-right" aria-hidden="true"><span>KINDER</span><span>BRAVER</span><span>CALMER</span><span>HAPPIER YOU ♡</span></p>
 
-      <footer className="mg-safety"><button className="chrome-fade" onClick={onExitGym}>‹ Back</button><button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button></footer>
+      <footer className="mg-safety">
+        <button className="chrome-fade" onClick={onExitGym}>‹ Back</button>
+        {onReflectionPath && reflectionCount > 0 && <button className="mg-reflection-path-btn" onClick={onReflectionPath}>✦ My Reflection Path <span className="mg-reflection-count">{reflectionCount}</span></button>}
+        <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
+      </footer>
     </div>
     <dialog className="mg-room-dialog" aria-labelledby="mg-room-title" ref={dialog} onClose={() => setSelected(null)} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
       {room && behaviour && <><header><h2 id="mg-room-title">{behaviour.title}</h2><button onClick={close} aria-label="Close room">×</button></header>

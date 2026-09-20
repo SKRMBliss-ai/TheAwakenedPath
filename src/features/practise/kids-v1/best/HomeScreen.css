@@ -10,19 +10,16 @@
 .mg-character{position:absolute;left:36.7%;top:7%;width:21%;height:85%;pointer-events:none}.mg-greeting{position:relative;z-index:3;background:linear-gradient(#fff,#e4edff);border:0;border-radius:25px;padding:16px 12px;display:flex;gap:10px;color:#1622ab;width:116%;margin-left:-8%;box-shadow:0 7px 20px #201a6855}.mg-greeting:after{content:'';position:absolute;right:20%;top:100%;border:13px solid transparent;border-top-color:#e4edff;border-left-color:#e4edff}.mg-greeting>img{width:42px;height:65px;object-fit:cover;object-position:top;border-radius:50%}.mg-greeting b{font-size:clamp(15px,1.35vw,23px);line-height:1.12;display:block}.mg-greeting p{font-size:clamp(11px,.95vw,16px);line-height:1.15;margin-top:7px}.mg-boy-wrap{position:absolute;bottom:0;width:100%;height:76%}.mg-boy{position:absolute;bottom:0;width:100%;height:100%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 7px #25102855)}.mg-chirpy{position:absolute;left:-6%;top:27%;width:35%;filter:drop-shadow(0 0 5px #6b3489)}.mg-chirpy-line{position:absolute;right:-1%;top:5%;transform:rotate(-12deg);font-size:clamp(12px,1.05vw,18px);font-weight:800;text-shadow:0 2px 6px #241144}
 .mg-choices{position:absolute;right:1.3%;top:12%;width:41%;height:79%}.mg-shelf-title{height:14%;min-height:85px;text-align:center;background:repeating-linear-gradient(3deg,#583016,#683b1b 18px,#38200f 20px,#653715 25px);border:0;border-radius:45% 38% 12% 14%;box-shadow:0 7px 7px #1c0b1599;position:relative;display:flex;flex-direction:column;justify-content:center}.mg-shelf-title>span{position:absolute;top:-28px;left:45%;font-size:44px;color:#ffda57;text-shadow:0 0 12px #ffaa00}.mg-shelf-title h2{font-size:clamp(25px,2.8vw,48px);font-weight:1000;color:#fff3b1;text-shadow:0 0 6px #ffa509,0 0 18px #f46900;line-height:1.05}.mg-shelf-title p{font-size:clamp(10px,.95vw,16px);margin:5px 0}
 .mg-shelf{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,minmax(0,1fr));height:86%;gap:3px 0;border:0;background:transparent}
-.mg-cabinet{position:relative;min-width:0;min-height:0;border:0;background:transparent;transition:filter .25s,transform .25s}
-.mg-cabinet:after{content:'';position:absolute;bottom:0;left:0;right:0;height:8px;z-index:0;background:linear-gradient(#b07335,#784219,#361b10);border-radius:40%;box-shadow:0 4px 7px #1b0c1f}
-.mg-cabinet.is-hovered{transform:translateY(-3px) scale(1.025);filter:drop-shadow(0 0 7px #ffd877);z-index:3}.mg-cabinet.is-open{z-index:4}
-.mg-cabinet-door{position:absolute;inset:0;width:100%;height:100%;background:none;border:0;padding:0;z-index:1;transition:opacity .35s,transform .45s;transform-origin:left center}
-.mg-cabinet-door img{width:100%;height:100%;object-fit:fill;border:0;mix-blend-mode:normal}
-.mg-cabinet.is-open .mg-cabinet-door{opacity:0;transform:perspective(700px) rotateY(-80deg);pointer-events:none}
-.mg-cabinet-preview{position:absolute;inset:0;z-index:2;border:0;background:none;border-radius:0;animation:mg-reveal .4s ease-out both}.mg-cabinet-preview[hidden]{display:none}
-.mg-open-art{width:100%;height:100%;object-fit:fill;display:block;border-radius:10px}
-.mg-open-invitation{position:absolute;right:1%;top:26%;width:40%;bottom:5%;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:5px;background:linear-gradient(110deg,#fff6dc,#fde8d4);color:#281778;border-radius:5px}
-.mg-open-invitation p{margin:0;text-align:center;font-size:clamp(10px,.85vw,15px);line-height:1.1;font-weight:800}
-.mg-open-invitation button{min-height:32px;border:0;border-radius:12px;color:white;background:linear-gradient(#b267ed,#751bca);font-size:clamp(12px,.95vw,17px);font-weight:850}
-.mg-open-invitation button:last-child{background:linear-gradient(#f0d1eb,#c49fda);color:#30157e}
-.mg-preview-close{position:absolute;right:0;top:0;z-index:3;width:30px;height:30px;border:0;border-radius:50%;background:#39234fe8;color:white;font-size:23px}
+.mg-room-card{position:relative;min-width:0;min-height:0;border:0;background:transparent;border-radius:12px;overflow:hidden}
+.mg-room-card:after{content:'';position:absolute;bottom:0;left:0;right:0;height:8px;z-index:0;background:linear-gradient(#b07335,#784219,#361b10);border-radius:40%;box-shadow:0 4px 7px #1b0c1f}
+.mg-room-image{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;border:0}
+.mg-room-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:12px;gap:8px;background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,0.4) 100%);color:white;z-index:1;opacity:0;transition:opacity 0.3s ease;pointer-events:none}
+.mg-room-card:hover .mg-room-overlay{opacity:1;pointer-events:auto}
+.mg-room-overlay h3{margin:0;font-size:16px;font-weight:900;text-align:center;text-shadow:0 2px 4px #000}
+.mg-room-overlay p{margin:0;font-size:12px;font-weight:700;text-align:center;line-height:1.2;text-shadow:0 1px 3px #000}
+.mg-room-buttons{display:flex;gap:8px;width:100%}
+.mg-play-btn,.mg-learn-btn{flex:1;min-height:32px;border:0;border-radius:12px;color:white;background:linear-gradient(#b267ed,#751bca);font-size:12px;font-weight:850;cursor:pointer}
+.mg-learn-btn{background:linear-gradient(#f0d1eb,#c49fda);color:#30157e}
 .mg-shelf-note{align-self:center;text-align:center;font-weight:800;font-size:clamp(12px,1vw,18px);text-shadow:0 2px 4px #130711;padding:8px}.mg-shelf-note button{display:block;margin:10px auto 0;padding:9px;border-radius:12px;background:#432462;border:1px solid #ffda7c;min-height:44px}
 .mg-safety{position:absolute;bottom:12px;left:18px;right:18px;display:flex;justify-content:space-between;z-index:5}.mg-safety button{min-height:44px;border:0;background:#32205de8;border-radius:30px;padding:8px 18px;font-weight:800}.mg-mobile-doors{display:none}
 .mg-room-dialog{color:white;background:linear-gradient(140deg,#45266b,#191332);border:2px solid #e3b667;border-radius:24px;padding:24px;width:min(520px,calc(100vw - 28px));max-height:85svh;overflow:auto;margin:auto;box-shadow:0 12px 60px #12081e}.mg-room-dialog::backdrop{background:#12091dcc;backdrop-filter:blur(4px)}.mg-room-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px}.mg-room-dialog h2{font-size:24px;font-weight:900}.mg-room-dialog header button{font-size:30px;min-width:44px;min-height:44px}.mg-room-dialog nav,.mg-day-options{display:flex;gap:8px;margin:16px 0}.mg-room-dialog nav button,.mg-day-options button{min-height:44px;border:1px solid #dcb8ff;padding:8px 14px;border-radius:20px}.mg-room-dialog button[aria-pressed=true]{background:#8b46b6}.mg-room-dialog p{margin:14px 0;line-height:1.5}.mg-room-dialog textarea{display:block;width:100%;border:1px solid #dac0ff;background:#f4ecff;color:#321354;border-radius:12px;padding:10px;margin:8px 0}.mg-save{display:block;background:#9654ca;border-radius:18px;min-height:46px;padding:10px 18px;margin:12px 0}.mg-dialog-grownup{display:block;min-height:44px;text-decoration:underline;margin-top:14px}.mg-room-dialog h3{font-size:19px;font-weight:900;margin-top:20px}
@@ -32,7 +29,7 @@
 @media(max-width:760px){.mg-world{height:auto;min-height:100svh;padding:100px 12px 80px;display:flex;flex-direction:column;background-attachment:fixed}.mg-top{inset:12px 12px auto}.mg-logo{font-size:29px}.mg-logo small{font-size:7px}.mg-tools{gap:4px}.mg-points{padding:6px;font-size:9px}.mg-points>span:first-child{font-size:20px}.mg-points b{font-size:16px}.mg-month{font-size:9px;padding:5px;gap:5px}.mg-month>b{padding:3px}
 .mg-mobile-doors{display:grid;grid-template-columns:1fr 1fr;gap:12px;order:0;margin-top:16px}.mg-mobile-doors button{min-height:100px;border:0;border-radius:34% 34% 15% 15%;background:radial-gradient(ellipse,#1c81d8d9,#17216ba6);box-shadow:0 0 18px #5ebcff66,inset 0 0 15px #66cfff44;font-weight:900;font-size:21px;text-shadow:0 0 9px #399bff;padding:12px 8px;line-height:1.1}.mg-mobile-doors button+button{background:linear-gradient(#915823df,#4b250ca6);box-shadow:0 0 18px #ffa83b44;text-shadow:0 0 8px #ffb322}.mg-mobile-doors small{display:block;font-size:12px;font-weight:700;margin-top:9px}
 .mg-feelings,.mg-choices{display:none;position:relative;left:auto;right:auto;top:auto;width:100%;height:auto;order:1;border:0;box-shadow:none;background:none}.mg-mobile-open{display:block;margin:24px auto}.mg-feelings.mg-mobile-open{display:flex;padding:12px 10px;max-width:430px;background:radial-gradient(ellipse,#143cae99,transparent 75%);border:0}.mg-feelings h1{font-size:32px}.mg-feelings h2{font-size:20px}.mg-invitation{font-size:14px;border:0;background:#12357599}.mg-steps{padding:12px 0}.mg-steps li{min-height:77px}.mg-steps img{width:75px;height:75px}.mg-steps b{font-size:18px}.mg-steps span{font-size:14px}.mg-start{font-size:23px}
-.mg-character{position:relative;left:auto;top:auto;width:min(310px,90%);height:520px;margin:28px auto 0;order:2}.mg-greeting{width:100%;margin:0;padding:14px}.mg-greeting b{font-size:19px}.mg-greeting p{font-size:13px}.mg-boy-wrap{height:380px}.mg-chirpy-line{font-size:15px}.mg-shelf-title{height:90px;min-height:0;margin-top:22px;border:0;background:transparent;box-shadow:none}.mg-shelf-title h2{font-size:30px}.mg-shelf-title p{font-size:12px}.mg-shelf{height:auto;grid-template-columns:1fr 1fr;grid-template-rows:none;gap:10px 3px;border:0;background:none}.mg-cabinet{aspect-ratio:4/3}.mg-cabinet.is-open{grid-column:1/-1;aspect-ratio:1.75}.mg-open-invitation{top:25%;right:1%;bottom:5%;width:41%;gap:6px;padding:7px}.mg-open-invitation p{font-size:13px}.mg-open-invitation button{min-height:44px;font-size:17px}.mg-preview-close{width:36px;height:36px;font-size:26px}.mg-shelf-note{font-size:13px;padding:8px}.mg-safety{bottom:14px;left:12px;right:12px}.mg-safety button{font-size:12px;padding:8px 12px}}
+.mg-character{position:relative;left:auto;top:auto;width:min(310px,90%);height:520px;margin:28px auto 0;order:2}.mg-greeting{width:100%;margin:0;padding:14px}.mg-greeting b{font-size:19px}.mg-greeting p{font-size:13px}.mg-boy-wrap{height:380px}.mg-chirpy-line{font-size:15px}.mg-shelf-title{height:90px;min-height:0;margin-top:22px;border:0;background:transparent;box-shadow:none}.mg-shelf-title h2{font-size:30px}.mg-shelf-title p{font-size:12px}.mg-shelf{height:auto;grid-template-columns:1fr 1fr;grid-template-rows:none;gap:10px 3px;border:0;background:none}.mg-room-card{aspect-ratio:4/3}.mg-room-overlay{padding:8px;gap:6px}.mg-room-overlay p{font-size:11px}.mg-room-buttons button{min-height:40px;font-size:15px}.mg-shelf-note{font-size:13px;padding:8px}.mg-safety{bottom:14px;left:12px;right:12px}.mg-safety button{font-size:12px;padding:8px 12px}}
 .mg-still *{transition:none!important;animation:none!important}
 @media(prefers-reduced-motion:reduce){.mg-home *{transition:none!important;animation:none!important}}
 
@@ -113,44 +110,24 @@
 /* ── The shelf, measured against the mockup ────────────────────────────── */
 
 /*
-  THE CABINET ART WAS BEING STRETCHED 46% WIDE, and every complaint about this
-  shelf came from that one line.
+  THE ROOM CARDS USE THE FULL SPACE.
 
-  door-*-clean.webp is a self-contained cabinet — sign, door, lantern, vines
-  and the little parchment note — drawn at 900x675, i.e. 4:3. It was painted
-  into the cell with `object-fit: fill`, and the cell is about 1.94:1. So the
-  whole thing was stretched horizontally by nearly half: the door came out far
-  wider than it was drawn, and the note's text came out squashed and
-  unreadable. Nothing was wrong with the art or the sizes; it was the fit.
-
-  `contain` is the whole fix. The door returns to the width it was drawn at
-  (narrower), and the note returns to its drawn shape (readable) — the two
-  things the mockup comparison asked for, from one word.
+  Each room_*.webp is painted at the full viewport aspect ratio and should
+  fill its cell completely — no letterboxing, no scaling. The object-fit:fill
+  ensures the room image covers the entire card.
 */
-.mg-cabinet-door img,
-.mg-cabinet.is-open .mg-open-art{object-fit:contain}
+.mg-room-image{object-fit:fill}
 
 /*
-  THE WOOD BETWEEN THE ROOMS.
+  THE WOOD BETWEEN THE ROOMS — visual structure for the shelf.
 
-  `contain` leaves space either side of each cabinet, because the cell is wider
-  than 4:3. In the mockup that space is not empty: the cabinets are set into a
-  carpentered shelf — thick planks under each row and a post down the middle
-  between the two columns. So the space becomes the shelf, which is what the
-  mockup has and the build did not.
+  The cards are set into a carpentered shelf — thick planks under each row and a
+  post down the middle between the two columns.
 
-  Drawn on the grid itself rather than per-cabinet, so the planks run the full
+  Drawn on the grid itself rather than per-card, so the planks run the full
   width and line up across both columns instead of stopping at each cell.
 */
 .mg-shelf{position:relative}
-/*
-  ONLY THE POST. The first attempt filled the whole shelf with plank grain and
-  turned it into one solid brown board — the painted room stopped showing
-  between the cabinets, which is the opposite of what the mockup does, and it
-  buried the diary note underneath it. The horizontal planks are already drawn
-  per row by .mg-cabinet:after, so all that is missing is the upright between
-  the two columns.
-*/
 .mg-shelf:before{
   content:'';position:absolute;z-index:0;pointer-events:none;
   left:calc(50% - 8px);top:1%;width:16px;bottom:9%;
@@ -159,17 +136,13 @@
   box-shadow:0 0 10px #1b0c1f88;
   opacity:.95;
 }
-/* A plank under every row, not only the last: each cabinet is standing on
-   something. Kept on the cabinet so it moves with the row when the grid
-   reflows at other viewports. */
-.mg-cabinet:after{
+.mg-room-card:after{
   height:13px;
   background:linear-gradient(#c98a4a,#8a5228 45%,#3d2011);
   border-radius:3px/60%;
   box-shadow:0 5px 9px #1b0c1faa,inset 0 1px 0 #e8b57e66;
 }
-.mg-cabinet{z-index:1}
-/* Above the post, or the wood swallows the words. */
+.mg-room-card{z-index:1}
 .mg-shelf-note{position:relative;z-index:2}
 
 /*
@@ -259,19 +232,12 @@
 /* ── The shelf reads at arm's length ───────────────────────────────────── */
 
 /*
-  THE CABINET NOTES WERE 20% TOO SMALL TO READ.
+/*
+  THE ROOM CARDS FILL THEIR CELLS.
 
-  `contain` fixed the stretching, but it also pinned each cabinet to the height
-  of its row — and the row is nearly twice as wide as the art, so a third of
-  every cell was empty air while "Kindness makes a brighter world." rendered at
-  about 50px across. The reference paints it at about 65.
-
-  So the art is drawn a fifth larger than its cell and allowed to spill. The
-  spill is leaves and vine, which is exactly how the reference has neighbouring
-  cabinets meet — and there is width to spare on both sides, so it grows into
-  the empty air rather than into the next room.
+  Each room image is drawn to fill the card's aspect ratio completely, with
+  text overlaid on hover or always visible depending on the design.
 */
-.mg-cabinet-door{overflow:visible}
 
 /*
   THE FLOOR SIGN IS CARPENTRY, NOT A CAPTION.
@@ -335,20 +301,8 @@
     one there is almost none, and a fixed 1.28 sent each cabinet over its
     neighbour's note. So the step-up is gated on the ratio it needs.
 
-    CLOSED DOORS ONLY. The open art is a 1.69:1 painting of the room behind the
-    door — it already fills the cell, and scaling it pushed the room out from
-    under the Play/Learn card, which is positioned against the cell.
+    Room cards fill their cells completely.
   */
-  .mg-cabinet-door img{transform:scale(1.04)}
-}
-@media(min-width:761px) and (min-aspect-ratio:3/2){
-  .mg-cabinet-door img{transform:scale(1.12)}
-}
-@media(min-width:761px) and (min-aspect-ratio:8/5){
-  .mg-cabinet-door img{transform:scale(1.18)}
-}
-@media(min-width:761px) and (min-aspect-ratio:7/4){
-  .mg-cabinet-door img{transform:scale(1.28)}
 
   /*
     The word blocks belong in the strip past the shelf's right edge, beside the
@@ -387,13 +341,7 @@
   .mg-steps li:nth-child(even){margin-left:19%}
 }
 
-/* The opened room's invitation had to fit a question and two buttons into 74px
-   of a 142px cell, so the question spilled out of the top of the card and read
-   straight over the artwork. It gets the height of the cell now. */
-@media(min-width:761px){
-  .mg-open-invitation{top:9%;bottom:3%;width:43%;gap:3px;padding:5px 4px}
-  .mg-open-invitation button{min-height:26px}
-}
+/* Room card overlay sizing is handled by the card component. */
 
 /* ── The portal is light in the wall, not a panel on top of it ─────────── */
 
@@ -438,20 +386,13 @@
 
   .mg-choices{top:12.3%;height:73.7%;width:34.6%;right:6.9%}
 }
-/* The shelf lost a tenth of its height, so the cabinets take back the width
-   that frees up — the notes stay the size they were. */
-@media(min-width:761px) and (min-aspect-ratio:7/4){
-  .mg-cabinet-door img{transform:scale(1.34)}
-}
+/* The shelf has consistent sizing across all aspects. */
 
 /* The shelf sign needs its own room back: at 11% of a shorter shelf the top
    row's vine spill was climbing over "Small choices. Big growth." */
 @media(min-width:761px){
   .mg-shelf-title{height:16%}
   .mg-shelf{height:84%}
-}
-@media(min-width:761px) and (min-aspect-ratio:7/4){
-  .mg-cabinet-door img{transform:scale(1.3)}
 }
 
 /* ── The explorer is tappable, and says so ─────────────────────────────── */
@@ -517,3 +458,8 @@
     padding:5.5% 1.6% 1.8%;
   }
 }
+
+/* Reflection Path button in the home page footer */
+.mg-reflection-path-btn{background:linear-gradient(135deg,rgba(139,92,246,0.25),rgba(109,40,217,0.3));border:1px solid rgba(139,92,246,0.45);border-radius:999px;color:#e0d0ff;font-size:.78rem;font-weight:800;padding:.4rem 1rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;transition:background .18s}
+.mg-reflection-path-btn:hover{background:rgba(139,92,246,0.4)}
+.mg-reflection-count{background:rgba(139,92,246,0.6);color:#fff;border-radius:999px;padding:0 .4rem;font-size:.68rem;font-weight:900}

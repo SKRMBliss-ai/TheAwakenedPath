@@ -1,7 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
 import { BEHAVIOURS } from '../../../kids/data';
-import { useQuiet } from '../ui/quiet';
-import { playDoorbell } from '../kit/doorbell';
 
 const ROOMS = [
   ['kind', 'be_kind', 'What kind thing could you do today?'],
@@ -13,66 +10,24 @@ const ROOMS = [
   ['mindheart', 'mind_heart_time', 'Want a quiet moment to breathe or reflect?'],
 ];
 
-export function GoodChoicesShelf({ onAction, onDiary }: {
+export function GoodChoicesShelf({ onAction }: {
   onAction: (id: string, mode: 'play' | 'learn') => void;
-  onDiary: () => void;
+  onDiary?: () => void;
 }) {
-  const quiet = useQuiet();
-  const [hovered, setHovered] = useState<string | null>(null);
-  const [opened, setOpened] = useState<string | null>(null);
-  const pinned = useRef<string | null>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => { clearTimeout(closeTimer.current); }, []);
-  const cancel = () => { clearTimeout(closeTimer.current); };
-  const approach = (id: string) => {
-    clearTimeout(closeTimer.current);
-    setHovered(id);
-    if (opened === id) return;
-    if (!quiet) playDoorbell();
-  };
-  const leave = (id: string) => {
-    setHovered(null);
-    closeTimer.current = setTimeout(() => { if (pinned.current !== id) setOpened(current => current === id ? null : current); }, 250);
-  };
-  const pin = (id: string) => {
-    cancel();
-    if (pinned.current === id) { pinned.current = null; setOpened(null); }
-    else { pinned.current = id; setOpened(id); if (!quiet) playDoorbell(); }
-  };
-  const shut = () => { cancel(); pinned.current = null; setOpened(null); setHovered(null); };
-
-  return <div className="mg-shelf" onKeyDown={e => {
-    if (e.key === 'Escape') {
-      e.preventDefault(); shut();
-      const door = e.currentTarget.querySelector<HTMLButtonElement>(`[data-door="${opened}"]`);
-      door?.focus(); cancel();
-    }
-  }}>
-    {ROOMS.map(([id, , prompt]) => {
+  return <div className="mg-shelf">
+    {ROOMS.map(([id, slug, prompt]) => {
       const title = BEHAVIOURS.find(b => b.id === id)!.title;
-      const isOpen = opened === id;
-      return <article key={id} className={`mg-cabinet mg-cabinet-${id} ${isOpen ? 'is-open' : ''} ${hovered === id ? 'is-hovered' : ''}`}
-        onPointerEnter={e => { if (e.pointerType !== 'touch') approach(id); }}
-        onPointerLeave={e => { if (e.pointerType !== 'touch' && !e.currentTarget.contains(document.activeElement)) leave(id); }}
-        onFocus={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) approach(id); }}
-        onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leave(id); }}>
-        <button className="mg-cabinet-door" data-door={id} aria-label={`${title} room. Click to open preview.`} aria-expanded={isOpen}
-          aria-controls={`preview-${id}`} tabIndex={isOpen ? -1 : 0} onClick={() => pin(id)}>
-          <img src={`/mind-gym/closed-home/door-${id}-clean.webp`} alt="" />
-        </button>
-        <div id={`preview-${id}`} className="mg-cabinet-preview" hidden={!isOpen}>
-          <img className="mg-open-art" src={`/mind-gym/closed-home/open-${id}.webp`} alt="" />
-          <button className="mg-preview-close" aria-label={`Close ${title} preview`} onClick={e => {
-            const door = e.currentTarget.closest('article')?.querySelector<HTMLButtonElement>('[data-door]');
-            shut(); door?.focus();
-          }}>×</button>
-          <div className="mg-open-invitation"><p>{prompt}</p>
-          <button onClick={() => { shut(); onAction(id, 'play'); }}>▶ Play<span className="sr-only"> {title}</span></button>
-          <button onClick={() => { shut(); onAction(id, 'learn'); }}>▤ Learn<span className="sr-only"> {title}</span></button>
+      return <article key={id} className={`mg-room-card mg-room-${id}`}>
+        <img src={`/mind-gym/home/room_${slug}.webp`} alt={`${title} room`} className="mg-room-image" />
+        <div className="mg-room-overlay">
+          <h3>{title}</h3>
+          <p>{prompt}</p>
+          <div className="mg-room-buttons">
+            <button onClick={() => onAction(id, 'play')} className="mg-play-btn">▶ Play</button>
+            <button onClick={() => onAction(id, 'learn')} className="mg-learn-btn">▤ Learn</button>
           </div>
         </div>
       </article>;
     })}
-    <div className="mg-shelf-note">Little Choices<br />Make a Brighter Tomorrow<button onClick={onDiary}>📖 My Inner Diary</button></div>
   </div>;
 }

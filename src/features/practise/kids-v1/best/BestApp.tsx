@@ -12,7 +12,7 @@ import { RoomScene } from '../ui/scene';
 import { timeOfDayForHour } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
-import { WorryLab } from './WorryLab';
+import { ReflectionPath } from './ReflectionPath';
 import { HubBoy, HubGreeting, HubHotspot, HubStage, HUB_BOXES, PhoneHub, type Hotspot, type HotspotKey } from './PaintedHub';
 import { FloatingJar } from './FloatingJar';
 import { DoorHandle } from '../ui/DoorHandle';
@@ -47,6 +47,7 @@ import { hubMoment, type HubMoment } from '../kit/hubMoment';
 import { welcomeBackShown } from '../kit/awayFor';
 import { othersToday } from '../kit/others';
 import { saveCase } from '../kit/cases';
+import { buildSavedReflection } from './reflectionUtils';
 import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
 import { COMPANY } from '../kit/feelingCompanions';
 import { markVisit, releasedCount } from '../kit/sky';
@@ -85,10 +86,8 @@ type View =
   | { at: 'practice'; room: VirtueRoom }
   | { at: 'pause' }
   | { at: 'deep' }
-  /** Worried or Scared, picked in the Feelings Room — see DeepDive's
-   *  `onWorryLab`. `label` is the feeling word, already spoken. */
-  | { at: 'worrylab'; label: string }
   | { at: 'helpchirpy' }
+  | { at: 'reflectionpath' }
   /** The room the painting's Different Story dome has always pointed at. */
   | { at: 'story' }
   | { at: 'reflection' }
@@ -246,6 +245,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               <HomeScreen
                 name={name}
                 onReflection={() => setView({ at: 'reflection' })}
+                onReflectionPath={() => setView({ at: 'reflectionpath' })}
                 onOpenRoom={(r) => setView({ at: 'room', room: r, step: null })}
                 onPractice={(room) => setView({ at: 'practice', room })}
                 onDeepDive={() => setView({ at: 'deep' })}
@@ -292,16 +292,9 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               <DeepDive
                 onQuiet={setQuiet}
                 onGrownUp={() => setView({ at: 'grownup' })}
-                /* The five answers used to be dropped here. They are the
-                   hardest thinking in the app and the only material the
-                   Observatory can show a child about themselves. */
                 onFinish={(answers) => { saveCase(answers); back(); }}
-                onWorryLab={(label) => setView({ at: 'worrylab', label })}
+                onReflectionPath={() => setView({ at: 'reflectionpath' })}
               />
-            )}
-
-            {view.at === 'worrylab' && (
-              <WorryLab label={view.label} onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
             )}
 
             {view.at === 'helpchirpy' && (
@@ -315,11 +308,17 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onBody={back}
                 onExit={back}
                 onGrownUp={() => setView({ at: 'grownup' })}
+                onReflectionPath={() => setView({ at: 'reflectionpath' })}
                 onSave={(answers) => {
                   setStoryAnswers(answers);
-                  return saveCase(answers);
+                  const ok = saveCase(answers);
+                  if (ok) useKidStore.getState().addSavedReflection(buildSavedReflection(answers));
+                  return ok;
                 }}
               />
+            )}
+            {view.at === 'reflectionpath' && (
+              <ReflectionPath onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
             )}
             {/*
               MY INNER DIARY is the month itself — the dot grid, the four

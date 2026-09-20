@@ -478,3 +478,7 @@
 .sl-orbit-boy{width:min(29%,106px)}
 .sl-orbit-clue{width:31%;min-width:100px;font-size:9.6px}
 .sl-orbit-clue b{font-size:10px}
+
+/* Reflection Path CTA after journey save */
+.sl-stop .sl-reflection-cta{background:linear-gradient(135deg,#7c3aed,#4c1d95);border-color:#a78bfa;animation:rpCtaGlow 2s ease-in-out infinite alternate}
+@keyframes rpCtaGlow{from{box-shadow:0 0 12px rgba(124,58,237,0.4)}to{box-shadow:0 0 26px rgba(124,58,237,0.75)}}

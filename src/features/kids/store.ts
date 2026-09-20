@@ -12,6 +12,25 @@ import { BEHAVIOURS, BADGES, REWARDS, todayKey } from './data';
 type DayCompletions = Record<string, boolean>; // behaviourId -> done
 type Reflection = { proud?: string; feeling?: string };
 
+export type ReflectionTag = 'brave' | 'calm' | 'kind' | 'belonging' | 'try_again' | 'other';
+
+export interface SavedReflection {
+  id: string;
+  sourceSessionId?: string;
+  createdAt: string;
+  feeling?: string;
+  body?: string;
+  thought?: string;
+  whatHappened?: string;
+  originalStory?: string;
+  anotherWay?: string;
+  /** Short label rendered on the brick — 60 chars max. */
+  pathLabel: string;
+  tag: ReflectionTag;
+  favourite: boolean;
+  timesPlayed: number;
+}
+
 interface KidState {
   onboarded: boolean;
   name: string;
@@ -21,6 +40,8 @@ interface KidState {
   completions: Record<string, DayCompletions>;   // dateKey -> {behaviourId: true}
   missionsDone: Record<string, string[]>;         // dateKey -> [mission text]
   reflections: Record<string, Reflection>;
+  /** Saved reflections from Story Lab journeys — one per completed journey. */
+  savedReflections: SavedReflection[];
   monthReviews: Record<string, Record<string, string>>; // "YYYY-MM" -> {q1..q4}
   scenariosDone: Record<string, string[]>;               // dateKey -> [scenarioId]
   streak: number;
@@ -35,6 +56,9 @@ interface KidState {
   completeMission: (text: string, points: number) => void;
   setReflection: (r: Reflection) => void;
   setMonthReview: (month: string, key: string, value: string) => void;
+  addSavedReflection: (r: SavedReflection) => void;
+  toggleReflectionFavourite: (id: string) => void;
+  markReflectionPlayed: (id: string) => void;
   reset: () => void;
 }
 
@@ -85,6 +109,7 @@ export const useKidStore = create<KidState>()(
       completions: {},
       missionsDone: {},
       reflections: {},
+      savedReflections: [],
       monthReviews: {},
       scenariosDone: {},
       streak: 0,
@@ -174,9 +199,19 @@ export const useKidStore = create<KidState>()(
 
       setReflection: (r) => set((s) => ({ reflections: { ...s.reflections, [todayKey()]: { ...s.reflections[todayKey()], ...r } } })),
 
+      addSavedReflection: (r) => set((s) => ({ savedReflections: [...s.savedReflections, r] })),
+
+      toggleReflectionFavourite: (id) => set((s) => ({
+        savedReflections: s.savedReflections.map((r) => r.id === id ? { ...r, favourite: !r.favourite } : r),
+      })),
+
+      markReflectionPlayed: (id) => set((s) => ({
+        savedReflections: s.savedReflections.map((r) => r.id === id ? { ...r, timesPlayed: r.timesPlayed + 1 } : r),
+      })),
+
       reset: () => set({
         onboarded: false, name: '', avatarId: 'sunny', points: 0, pointsByBehaviour: {},
-        completions: {}, missionsDone: {}, reflections: {}, monthReviews: {}, scenariosDone: {},
+        completions: {}, missionsDone: {}, reflections: {}, savedReflections: [], monthReviews: {}, scenariosDone: {},
         streak: 0, badges: [], rewards: [],
       }),
     }),
