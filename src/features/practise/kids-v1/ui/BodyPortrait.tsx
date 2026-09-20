@@ -64,6 +64,9 @@ function useCoverRect(
   ref: React.RefObject<HTMLElement | null>,
   naturalW: number,
   naturalH: number,
+  /** When true, matches object-position:top — image anchored at top edge,
+   *  overflow goes below. Pass this whenever the <img> also uses top. */
+  topAnchor = false,
 ): CoverRect | null {
   const [rect, setRect] = useState<CoverRect | null>(null);
 
@@ -78,12 +81,14 @@ function useCoverRect(
       const scale = Math.max(cw / naturalW, ch / naturalH);
       const width = naturalW * scale;
       const height = naturalH * scale;
-      setRect({ width, height, left: (cw - width) / 2, top: (ch - height) / 2 });
+      setRect({ width, height, left: (cw - width) / 2, top: topAnchor ? 0 : (ch - height) / 2 });
     };
 
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    /* eslint-disable-next-line react-hooks/exhaustive-deps -- topAnchor is a
+       primitive; changes here invalidate the effect correctly via the dep array. */
     /*
       AND THE WINDOW ITSELF, which is what was actually missing.
 
@@ -106,7 +111,7 @@ function useCoverRect(
       window.removeEventListener('resize', measure);
       window.removeEventListener('orientationchange', measure);
     };
-  }, [ref, naturalW, naturalH]);
+  }, [ref, naturalW, naturalH, topAnchor]);
 
   return rect;
 }
@@ -157,15 +162,19 @@ export function BodyPortrait({
   selected,
   suggested,
   onToggle,
+  topAnchor = false,
 }: {
   accent: string;
   selected: Set<BodyZoneId>;
   suggested: BodyZoneId | null;
   onToggle: (zone: BodyZoneId) => void;
+  /** Pass true when RoomScene is using objectPosition="top", so the SVG overlay
+   *  matches the same anchor and tap zones land on the painted boy. */
+  topAnchor?: boolean;
 }) {
   const m = useMotion();
   const containerRef = useRef<HTMLDivElement>(null);
-  const cover = useCoverRect(containerRef, ART_W, ART_H);
+  const cover = useCoverRect(containerRef, ART_W, ART_H, topAnchor);
   const [ripples, setRipples] = useState<Ripple[]>([]);
 
   const tap = (zone: BodyZoneId, cx: number, cy: number) => {

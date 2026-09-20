@@ -34,19 +34,19 @@ const PANEL_GAP = 30;
 const STEPS = ['Feeling', 'Body', 'Thought', 'What happened?', 'Story', 'Another way'];
 const STEP_ART = ['feeling', 'body', 'thought', 'what_happened', 'story', 'another_way'];
 const TITLES = ['3. Thought', '4. What Happened?', '5. Story', '6. Another Way'];
-const PROMPTS = ['What was your mind saying?', 'What actually happened?', 'Here’s the story your mind made…', 'Could anything else be true?'];
-const SUBS = ['Tap a thought, or tell me in your own words.', 'Let’s look at what a little camera could see.', 'Your mind connects the pieces and tries to make sense of it.', 'Let’s see some other possible stories.'];
+const PROMPTS = ['What was your mind saying?', 'What actually happened?', "Here's the story your mind made…", "Could anything else be true?"];
+const SUBS = ['Tap a thought, or tell me in your own words.', "Let's look at what a little camera could see.", 'Your mind connects the pieces and tries to make sense of it.', "Let's see some other possible stories."];
 
 type Option = { text: string; icon: string; own?: boolean };
 
 const THOUGHTS: Option[] = [
-  { text: 'I can’t do it.', icon: '☁' }, { text: 'They don’t like me.', icon: '☁' },
-  { text: 'It’s not fair.', icon: '☁' }, { text: 'What if…?', icon: '☁' },
-  { text: 'I’m going to get in trouble.', icon: '☁' }, { text: 'I’m not sure.', icon: '☁' },
+  { text: "I can't do it.", icon: '☁' }, { text: "They don't like me.", icon: '☁' },
+  { text: "It's not fair.", icon: '☁' }, { text: 'What if…?', icon: '☁' },
+  { text: "I'm going to get in trouble.", icon: '☁' }, { text: "I'm not sure.", icon: '☁' },
 ];
 const EVENTS: Option[] = [
   { text: 'Someone said something', icon: '☏' }, { text: 'I had to wait', icon: '◷' },
-  { text: 'I didn’t get to join', icon: '♧' }, { text: 'I made a mistake', icon: '✧' },
+  { text: "I didn't get to join", icon: '♧' }, { text: 'I made a mistake', icon: '✧' },
   { text: 'Something changed', icon: '↝' },
 ];
 const POSSIBILITIES: Option[] = [
@@ -277,29 +277,57 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
               </>}
 
               {index === 4 && <div className="sl-assembly">
-                <div className="sl-orbit" aria-label="Your feeling, body, thought and event joining together">
-                  <img className="sl-orbit-bubble" src="/mind-gym/story-lab/story-bubble.webp" alt="" aria-hidden="true" />
-                  <img className="sl-orbit-boy" src="/mind-gym/story-lab/boy-sitting.webp" alt="" />
-                  {[0, 1, 2, 3].map(i => <div key={i} className={`sl-orbit-clue sl-orbit-${i}`}>
-                    <span className="sl-orbit-icon" aria-hidden="true"><img src={`/mind-gym/home/icon_${STEP_ART[i]}.webp`} alt="" /></span>
-                    <b>{STEPS[i]}</b><span>{answers[i] || 'Not sure yet'}</span>
-                  </div>)}
-                  <span className="sl-orbit-arrow" aria-hidden="true">▼</span>
+                {/* ── Story scene: bubble + badges + boy ───────────── */}
+                <div className="sl-story-scene" aria-label="Your feeling, body, thought and event joining together">
+                  <div className="sl-scene-center">
+                    <img className="sl-scene-bubble" src="/mind-gym/story-lab/story-bubble-magic.png" alt="" aria-hidden="true" />
+                    <img className="sl-scene-boy" src="/mind-gym/story-lab/story-boy-sad.png" alt="A child sitting inside a glowing bubble" />
+                    {/* Top-left: Thought */}
+                    <div className="sl-badge sl-badge-thought">
+                      <span className="sl-badge-label">Thought</span>
+                      <span className="sl-badge-val">"{answers[2] || '…'}"</span>
+                    </div>
+                    {/* Top-right: What happened */}
+                    <div className="sl-badge sl-badge-event">
+                      <span className="sl-badge-label">What happened</span>
+                      <span className="sl-badge-val">"{answers[3] || '…'}"</span>
+                    </div>
+                    {/* Left: Feeling */}
+                    <div className="sl-badge sl-badge-feeling">
+                      <span className="sl-badge-label">Feeling</span>
+                      <span className="sl-badge-val">{answers[0] || '…'}</span>
+                    </div>
+                    {/* Right: Body */}
+                    <div className="sl-badge sl-badge-body">
+                      <span className="sl-badge-label">Body</span>
+                      <span className="sl-badge-val">{answers[1] || '…'}</span>
+                    </div>
+                  </div>
+                  <span className="sl-scene-arrow" aria-hidden="true">▼</span>
                 </div>
-                <div className="sl-book"><small>Story my mind made:</small><p>“{story}”</p></div>
+
+                {/* ── Story book ───────────────────────────────────── */}
+                <div className="sl-story-book">
+                  <img className="sl-book-frame" src="/mind-gym/story-lab/story-book-open.png" alt="" aria-hidden="true" />
+                  <div className="sl-book-text">
+                    <p className="sl-book-heading">Story my mind made:</p>
+                    <p className="sl-book-quote">"{story}"</p>
+                  </div>
+                </div>
+
                 <p className="sl-confirm-ask">Does this sound like what your mind was saying?</p>
                 <div className="sl-cards sl-confirm">
                   <button disabled={step !== 4} onClick={() => { if (!quiet) sound.play('tap'); capture(story); }}><span className="sl-card-icon sl-icon-yes" aria-hidden="true">✓</span>Yes</button>
                   <button disabled={step !== 4} onClick={showOwn}><span className="sl-card-icon sl-icon-almost" aria-hidden="true">◑</span>Almost</button>
                   <button disabled={step !== 4} onClick={showOwn} className="sl-card-own"><span className="sl-card-icon" aria-hidden="true"><Mic size={15} strokeWidth={2.6} /></span>Change it</button>
-                  <button disabled={step !== 4} onClick={() => { if (!quiet) sound.play('tap'); capture('I’m not sure what story my mind made yet.'); }}><span className="sl-card-icon sl-icon-unsure" aria-hidden="true">?</span>Not sure</button>
+                  <button disabled={step !== 4} onClick={() => { if (!quiet) sound.play('tap'); capture("I'm not sure what story my mind made yet."); }}><span className="sl-card-icon sl-icon-unsure" aria-hidden="true">?</span>Not sure</button>
                 </div>
               </div>}
 
               {index === 5 && <>
                 <div className="sl-possibility-windows">
-                  <div className="sl-window sl-original"><h4>Original Story</h4><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>“{story}”</p></div>
-                  <div className="sl-window sl-another"><h4>Another Possibility</h4>{alternative ? <img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /> : <span className="sl-possibility-light" aria-hidden="true">✧</span>}<p>{alternative ? `“${alternative}”` : 'A little space for another way to see it…'}</p></div>
+                  <div className="sl-window sl-original"><h4>Original Story</h4><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>"{story}"</p></div>
+                  <div className="sl-window sl-another"><h4>Another Possibility</h4>{alternative ? <img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /> : <span className="sl-possibility-light" aria-hidden="true">✧</span>}<p>{alternative ? `"${alternative}"` : 'A little space for another way to see it…'}</p></div>
                 </div>
                 <div className="sl-cards sl-wide">{otherOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(5, option.text)}`} disabled={step !== 5} onClick={() => pick(option)}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
@@ -314,7 +342,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       </div>
     </div>
 
-    {saveError && <p role="alert" className="sl-save-error">This device couldn’t save your journey. Your words are still here; you can try again.</p>}
+    {saveError && <p role="alert" className="sl-save-error">This device couldn't save your journey. Your words are still here; you can try again.</p>}
 
     <nav className="sl-rail" aria-label="Journey progress">
       <ol>{STEPS.map((label, i) => <li key={label} className={i === step ? 'sl-current' : i < step ? 'sl-collected' : ''} aria-current={i === step ? 'step' : undefined}>
@@ -323,14 +351,14 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
         <span className="sl-step-answer">{i === step ? 'You are here' : answers[i] || (i < 2 ? '(In its own room)' : '')}</span>
         <span className="sr-only">{i < step ? ' — collected' : i === step ? ' — current step' : ' — coming up'}</span>
       </li>)}</ol>
-      <p className={`sl-rail-badge ${step >= 6 ? 'sl-rail-done' : ''}`}><span aria-hidden="true">★</span>You’ve Explored<br />New Perspectives!</p>
+      <p className={`sl-rail-badge ${step >= 6 ? 'sl-rail-done' : ''}`}><span aria-hidden="true">★</span>You've Explored<br />New Perspectives!</p>
     </nav>
 
     <footer className="sl-stop">
       <button className="chrome-fade" onClick={onExit}>Stop for now</button>
       {step >= 6 && <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved ✓' : '✧ Save This Journey'}</button>}
       {saved && onReflectionPath && <button className="sl-save sl-reflection-cta" onClick={onReflectionPath}>✦ See My Reflection Path →</button>}
-      {step < 6 && step !== 4 && <button className="chrome-fade" onClick={() => capture('I’m not sure yet.')}>I’m not sure — keep going</button>}
+      {step < 6 && step !== 4 && <button className="chrome-fade" onClick={() => capture("I'm not sure yet.")}>{"I'm not sure — keep going"}</button>}
     </footer>
   </motion.main>;
 }

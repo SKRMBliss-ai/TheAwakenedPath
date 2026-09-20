@@ -53,6 +53,7 @@ export function RoomScene({
   room,
   dim = DIM.content,
   art,
+  objectPosition = 'center',
 }: {
   room: RoomConfig;
   dim?: number;
@@ -66,6 +67,12 @@ export function RoomScene({
    * to keep two entries of everything else in step.
    */
   art?: string;
+  /**
+   * CSS object-position for the room painting. Default 'center'. Pass 'top'
+   * for the body room so the hologram boy's face is never cropped on short
+   * or landscape screens — the overflow goes to the bottom instead.
+   */
+  objectPosition?: string;
 }) {
   const mood = SCENE_MOODS[room.scene];
   const quiet = useQuiet();
@@ -110,7 +117,8 @@ export function RoomScene({
           key={art ?? room.id}
           src={art ?? roomArt(room.id)}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover object-center"
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ objectPosition }}
           draggable={false}
           onError={(e) => {
             const img = e.currentTarget;

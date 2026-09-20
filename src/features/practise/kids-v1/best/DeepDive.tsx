@@ -288,7 +288,11 @@ export function DeepDive({
               other step keeps its painted still. */}
           {onFeelingStep
             ? <FeelingsIntro onDone={finishFeelingIntro} flash={orbFlash} />
-            : <RoomScene room={art} dim={phase === 'ask' ? DIM.content : turned ? DIM.arrive : DIM.play} />}
+            : <RoomScene
+                room={art}
+                dim={phase === 'ask' ? DIM.content : turned ? DIM.arrive : DIM.play}
+                objectPosition={step.id === 'body' ? 'top' : 'center'}
+              />}
 
           {/* The invisible tap layer for "where do you feel it?", registered
               against the SAME full-bleed box RoomScene just painted into —
@@ -299,6 +303,7 @@ export function DeepDive({
               accent={accent}
               suggested={null}
               selected={bodyZones}
+              topAnchor
               onToggle={(z) => {
                 setBodyZones(new Set([z]));
                 sound.play('tap');
