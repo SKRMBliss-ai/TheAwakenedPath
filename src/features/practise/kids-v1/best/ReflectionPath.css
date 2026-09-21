@@ -771,3 +771,135 @@
   .rp-chain li + li::before{content:'↓';left:50%;top:-11px;translate:-50% 0}
   .rp-chain{gap:14px 6px}
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   THE REFLECTION PATH, laid against reflection_path_magic_journey.png.
+
+   The stones climb from the bottom left towards the Reflection Room at the
+   top right. They are placed absolutely on a stage, because the reference's
+   path is irregular by design — a grid of equal cards is the thing it is
+   deliberately not.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.rp-pathview .rp-header{padding-bottom:2px}
+.rp-path-title h1{font-size:clamp(20px,2.6vw,32px);color:#fff3d6;text-shadow:0 0 10px #ffb14d,0 0 26px #ff8a1e77}
+.rp-path-title p{font-size:clamp(11px,1.05vw,15px);color:#e6d8ffcc}
+
+.rp-stage{position:relative;flex:1 1 auto;min-height:430px;margin:4px 0 0}
+
+/* Stones ────────────────────────────────────────────────────────────── */
+.rp-bricks{list-style:none;position:absolute;inset:0;padding:0;margin:0;display:block}
+.rp-slot{position:absolute;translate:-6% -50%}
+.rp-slot .rp-brick{
+  position:relative;width:100%;background:none;border:0;padding:0;cursor:pointer;
+  display:block;transition:transform .2s,filter .2s;
+  animation:rpBrickIn .5s ease both;animation-delay:calc(var(--brick-index,0) * 90ms);
+}
+.rp-slot .rp-brick:not(.rp-brick-animated){animation:none}
+.rp-slot .rp-brick:hover,.rp-slot .rp-brick:focus-visible{
+  transform:translateY(-6px) scale(1.06);
+  filter:drop-shadow(0 10px 22px #ffd48a66);outline:none;z-index:3;
+}
+.rp-slot .rp-brick-img{width:100%;height:auto;display:block;pointer-events:none}
+.rp-slot .rp-brick-text{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;padding:6% 11% 9%;
+}
+.rp-brick-icon{font-size:clamp(11px,1.15vw,16px);line-height:1;filter:drop-shadow(0 1px 1px #fff8)}
+.rp-slot .rp-brick-phrase{
+  font-size:clamp(8.5px,.82vw,12px);font-weight:900;line-height:1.16;text-align:center;
+  color:#3a1e0a;text-shadow:0 1px 0 #ffe3b3cc;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  overflow-wrap:anywhere;
+}
+
+/* The walker, the signs and the door ────────────────────────────────── */
+.rp-walker{position:absolute;left:1.5%;bottom:4%;width:27%;max-width:290px;z-index:2;pointer-events:none}
+.rp-walker .rp-child{width:72%;height:auto;display:block;margin-left:18%;filter:drop-shadow(0 12px 22px #0a041899)}
+.rp-walker .rp-chirpy{position:absolute;left:0;top:6%;width:32%;height:auto;animation:rpFloat 4s ease-in-out infinite}
+.rp-walker-line{
+  position:absolute;left:24%;top:-4%;margin:0;max-width:78%;
+  font-size:clamp(9px,.85vw,12.5px);font-weight:850;line-height:1.2;color:#2c1470;
+  background:linear-gradient(#fff,#ece0ff);border-radius:14px;padding:6px 10px;
+  box-shadow:0 5px 14px #0c052288;
+}
+
+.rp-sign{
+  position:absolute;z-index:2;margin:0;padding:9px 12px;max-width:17%;
+  font-size:clamp(8.5px,.8vw,12px);font-weight:800;line-height:1.28;color:#4a2f12;
+  background:linear-gradient(#f6e6c4,#e6cd9f);border:1px solid #b98f55;
+  border-radius:5px;box-shadow:0 5px 14px #0a0418aa;transform:rotate(-1.4deg);
+}
+.rp-sign b{display:block;color:#c0436a;font-size:13px;margin-top:2px}
+.rp-sign-left{left:1.5%;top:2%}
+.rp-sign-right{right:1.5%;top:14%;transform:rotate(1.6deg);text-align:center}
+
+.rp-posts{position:absolute;right:1%;bottom:16%;z-index:2;margin:0;display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.rp-posts span{
+  font-size:clamp(9px,.85vw,13px);font-weight:900;color:#ffeab6;
+  background:linear-gradient(#7a4a1e,#4a2810);border:1px solid #ffca7a55;
+  border-radius:4px;padding:4px 11px;box-shadow:0 3px 8px #0a0418aa;
+  transform:rotate(-2deg);
+}
+.rp-posts span:nth-child(2){transform:rotate(1.5deg)}
+
+.rp-arch{
+  position:absolute;right:4%;top:0;width:17%;max-width:190px;z-index:2;
+  background:none;border:0;padding:0;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;
+  transition:transform .2s,filter .2s;
+}
+.rp-arch:hover,.rp-arch:focus-visible{transform:scale(1.05);filter:drop-shadow(0 0 20px #d4b0ffaa);outline:none}
+.rp-arch img{width:100%;height:auto;display:block;filter:drop-shadow(0 0 20px #b98bff66)}
+.rp-arch span{
+  order:-1;font-size:clamp(11px,1.05vw,16px);font-weight:1000;line-height:1.05;text-align:center;
+  color:#fff4d6;text-shadow:0 0 9px #ffb14d,0 0 20px #ff8a1eaa;
+}
+.rp-arch b{color:#ff9ec4}
+
+/* The bar along the foot ────────────────────────────────────────────── */
+.rp-footbar{
+  flex-shrink:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:9px 16px;margin:0 12px;border-radius:18px;
+  background:linear-gradient(#5a37a8bb,#33206ebb);border:1px solid #c79bff55;
+  box-shadow:0 8px 24px #0a0418aa;
+}
+.rp-footbar .rp-cta{flex:0 0 auto}
+.rp-foot-link{
+  flex:0 0 auto;min-height:42px;padding:7px 14px;cursor:pointer;
+  font-size:clamp(11px,.95vw,14px);font-weight:850;line-height:1.15;color:#f0e6ff;
+  background:#ffffff1a;border:1px solid #ffffff33;border-radius:14px;
+  display:flex;align-items:center;gap:7px;transition:background .18s;
+}
+.rp-foot-link:hover:not(:disabled){background:#ffffff2e}
+.rp-foot-link:disabled{opacity:.45;cursor:not-allowed}
+.rp-foot-note{
+  margin:0 0 0 auto;font-size:clamp(10px,.9vw,13px);font-weight:850;line-height:1.2;
+  color:#fff1cf;text-align:right;
+}
+.rp-foot-note span{color:#ffd257;margin-right:5px}
+.rp-foot-note b{color:#ff9ec4}
+
+.rp-stop-slim{padding-top:6px;padding-bottom:10px}
+
+/* Narrow: the climb cannot hold its shape, so the stones stack in order. */
+@media(max-width:860px){
+  .rp-stage{min-height:0;padding:6px 10px 0}
+  .rp-bricks{position:static;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+  .rp-slot{position:static;translate:none;width:auto!important}
+  .rp-walker,.rp-sign,.rp-posts{display:none}
+  .rp-arch{position:static;width:46%;margin:10px auto 0}
+  .rp-footbar{margin:8px 10px 0;gap:8px}
+  .rp-foot-note{margin:4px 0 0;text-align:center;width:100%}
+}
+
+/* The bubble belongs in front of the boy, not under his cap. */
+.rp-walker{width:30%;max-width:330px}
+.rp-walker-line{z-index:3;left:30%;top:-10%;max-width:76%;background:linear-gradient(#fff,#efe6ff)}
+.rp-walker .rp-child{position:relative;z-index:2}
+.rp-walker .rp-chirpy{z-index:3}
+
+/* Stones a touch smaller, so the climb keeps air around it and the top of the
+   path does not lean on the archway. */
+.rp-slot{translate:-8% -50%}
+.rp-stage{min-height:470px}

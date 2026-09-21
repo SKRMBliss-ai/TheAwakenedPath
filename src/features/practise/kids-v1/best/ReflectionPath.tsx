@@ -15,7 +15,33 @@ const A = '/mind-gym/reflection/';
 const BRICK_EMPTY  = `${A}reflection_brick_empty@4x.png`;
 const BRICK_HOVER  = `${A}reflection_brick_hover@4x.png`;
 const BRICK_DONE   = `${A}reflection_brick_completed@4x.png`;
-const BRICK_LOCKED = `${A}reflection_brick_locked@4x.png`;
+
+/**
+ * WHERE EACH STONE SITS, AS THE REFERENCE LAYS THEM.
+ *
+ * reflection_path_magic_journey.png does not draw a grid — it draws a path
+ * climbing from the bottom left to the Reflection Room at the top right, with
+ * the stones at irregular sizes and offsets so it reads as somewhere you walk
+ * rather than as a list of cards. Ten slots, in percentages of the stage, so
+ * the climb holds its shape at every width.
+ */
+const PATH_SLOTS = [
+  { left: 3,  top: 70, size: 20 },
+  { left: 20, top: 79, size: 18 },
+  { left: 35, top: 66, size: 21 },
+  { left: 50, top: 76, size: 18 },
+  { left: 57, top: 54, size: 19 },
+  { left: 68, top: 67, size: 17 },
+  { left: 72, top: 42, size: 18 },
+  { left: 83, top: 54, size: 17 },
+  { left: 85, top: 30, size: 16 },
+  { left: 68, top: 22, size: 15 },
+];
+
+/** A small mark per category, as the reference paints on each stone. */
+const TAG_ICON: Record<string, string> = {
+  brave: '⛰', calm: '🌿', kind: '💬', belonging: '👥', try_again: '☀', other: '✦',
+};
 
 const TAG_LABELS: Record<string, string> = {
   brave: 'Brave',
@@ -572,96 +598,118 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     );
   }
 
-  /* The path itself — the bricks, laid as a journey rather than a list. */
-  const slots = Array.from({ length: MAX_BRICKS }, (_, i) => sample[i] ?? null);
+  /*
+    THE PATH IS A PATH.
+
+    Laid against reflection_path_magic_journey.png rather than as a grid: the
+    stones climb from the bottom left towards the Reflection Room at the top
+    right, the boy walks at the near end of them with Chirpy, the signs stand
+    where the reference stands them, and the three controls sit in a bar along
+    the foot.
+
+    AND THERE ARE NO LOCKED STONES. An earlier pass padded the path to ten
+    slots with the pack's `locked` plate, on the reasoning that a child with
+    three reflections should see where the next seven go. The reference does
+    no such thing, and in practice it filled the screen with grey slabs and
+    made a young path look broken. A path is as long as the walking done on it.
+  */
+  const walked = sample.slice(0, PATH_SLOTS.length);
 
   return (
     <div className="rp-room rp-pathview" style={{ fontFamily: FONT }}>
       <Decor variant="path" still={still} />
       <header className="rp-header">
         <button className="rp-back" onClick={() => go('room')} aria-label="Back to the Reflection Room">←</button>
-        <div className="rp-title">
+        <div className="rp-title rp-path-title">
           <h1>Reflection Path</h1>
           <p>Tap a glowing brick to open a reflection from your journey.</p>
         </div>
         <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp} aria-label="Talk to a grown-up">♡</button>
       </header>
 
-      <div className="rp-chirpy-says rp-chirpy-path">
-        <img src={`${A}chirpy_character.png`} alt="" aria-hidden="true"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-        <p>Each brick holds a surprise from your journey!</p>
+      <div className="rp-stage">
+        {/* The parchment on the wall, and the bird who explains the place. */}
+        <p className="rp-sign rp-sign-left" aria-hidden="true">
+          Every step you’ve taken has helped you grow. Tap a glowing brick to revisit a special reflection! <b>♡</b>
+        </p>
+        <div className="rp-walker">
+          <img className="rp-chirpy" src={`${A}chirpy_character.png`} alt="" aria-hidden="true"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          <p className="rp-walker-line">Each brick holds a surprise from your journey!</p>
+          <img className="rp-child" src={`${A}child_character.png`} alt="" aria-hidden="true"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+        </div>
+
+        {/* The destination, standing at the top of the climb. */}
+        <button className="rp-arch" onClick={() => go('room')}>
+          <img src={`${A}reflection_portal.png`} alt="" aria-hidden="true"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          <span>Reflection<br />Room <b aria-hidden="true">♡</b></span>
+        </button>
+
+        <p className="rp-sign rp-sign-right" aria-hidden="true">Same You<br />Brighter Views <b>♡</b></p>
+        <p className="rp-posts" aria-hidden="true">
+          <span>Kinder Choices</span><span>Braver Me</span><span>Happier Tomorrows</span>
+        </p>
+
+        <ul className="rp-bricks" aria-label="Your reflection path">
+          {walked.map((r, i) => {
+            const slot = PATH_SLOTS[i];
+            const visited = visitedIds.has(r.id);
+            const hovered = hoveredId === r.id;
+            const brickSrc = hovered ? BRICK_HOVER : visited ? BRICK_DONE : BRICK_EMPTY;
+            return (
+              <li key={r.id} className="rp-slot"
+                style={{ left: `${slot.left}%`, top: `${slot.top}%`, width: `${slot.size}%`, '--brick-index': i } as React.CSSProperties}>
+                <button
+                  className={`rp-brick${visited ? ' rp-brick-visited' : ''}${still ? '' : ' rp-brick-animated'}`}
+                  onClick={() => playReflection(r, 'path')}
+                  onMouseEnter={() => setHoveredId(r.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  onFocus={() => setHoveredId(r.id)}
+                  onBlur={() => setHoveredId(null)}
+                  aria-label={`Reflection ${i + 1}: ${r.pathLabel}`}
+                >
+                  <img src={brickSrc} alt="" className="rp-brick-img" aria-hidden="true"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  <span className="rp-brick-text">
+                    <span className="rp-brick-icon" aria-hidden="true">{TAG_ICON[r.tag] ?? '✦'}</span>
+                    <span className="rp-brick-phrase">{r.pathLabel}</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        {!walked.length && (
+          <div className="rp-empty-state">
+            <img src={`${A}open_magic_book.png`} alt="" className="rp-empty-book" aria-hidden="true"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <h2>Your path is waiting.</h2>
+            <p>Finish a Story Lab journey and your first reflection will appear here as a glowing brick.</p>
+          </div>
+        )}
       </div>
 
-      <div className="rp-path-actions">
-        <button className="rp-cta" onClick={() => playRandom('path')} disabled={!sample.length}>
+      {/* The bar along the foot, as the reference draws it. */}
+      <div className="rp-footbar">
+        <button className="rp-cta" onClick={() => playRandom('path')} disabled={!walked.length}>
           <span aria-hidden="true">▶</span> Play one for me
         </button>
-        <button className="rp-open-library" onClick={() => { sound.play('tap'); setShuffleNonce((n) => n + 1); }} disabled={!sample.length}>
+        <button className="rp-foot-link" onClick={() => { if (!quiet) sound.play('tap'); setShuffleNonce((n) => n + 1); }} disabled={!walked.length}>
           <span aria-hidden="true">⇄</span> Shuffle reflections
         </button>
-        <button className="rp-open-library" onClick={() => go('library')}>
-          <span aria-hidden="true">📖</span> Open My Reflection Library
+        <button className="rp-foot-link" onClick={() => go('library')}>
+          <span aria-hidden="true">📖</span> Open My<br />Reflection Library
         </button>
+        <p className="rp-foot-note"><span aria-hidden="true">★</span> All your experiences<br />make a brighter you. <b aria-hidden="true">♡</b></p>
       </div>
 
-      <div className="rp-bricks" role="list" aria-label="Your reflection path">
-        {slots.map((r, i) => {
-          /*
-            A LOCKED BRICK IS A PROMISE, NOT A FAILURE. The path is always ten
-            stones long, so a child with three reflections can see where the
-            next seven go — the pack ships a locked plate for exactly this and
-            it was never used. They are inert and not in the tab order.
-          */
-          if (!r) {
-            return (
-              <div key={`locked-${i}`} role="listitem" className="rp-brick rp-brick-locked"
-                style={{ '--brick-index': i } as React.CSSProperties} aria-hidden="true">
-                <img src={BRICK_LOCKED} alt="" className="rp-brick-img"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-              </div>
-            );
-          }
-          const visited = visitedIds.has(r.id);
-          const hovered = hoveredId === r.id;
-          const brickSrc = hovered ? BRICK_HOVER : visited ? BRICK_DONE : BRICK_EMPTY;
-
-          return (
-            <button
-              key={r.id}
-              role="listitem"
-              className={`rp-brick${visited ? ' rp-brick-visited' : ''}${still ? '' : ' rp-brick-animated'}`}
-              style={{ '--brick-index': i } as React.CSSProperties}
-              onClick={() => playReflection(r, 'path')}
-              onMouseEnter={() => setHoveredId(r.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              onFocus={() => setHoveredId(r.id)}
-              onBlur={() => setHoveredId(null)}
-              aria-label={`Reflection ${i + 1}: ${r.pathLabel}`}
-            >
-              <img src={brickSrc} alt="" className="rp-brick-img" aria-hidden="true"
-                onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-              <div className="rp-brick-text">
-                <span className={`rp-tag-pill rp-tag-small rp-tag-${r.tag}`}>{TAG_LABELS[r.tag] ?? r.tag}</span>
-                <span className="rp-brick-phrase">{r.pathLabel}</span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {allReflections.length > MAX_BRICKS && (
-        <button className="rp-more-link" onClick={() => go('library')}>
-          +{allReflections.length - MAX_BRICKS} more in your library →
-        </button>
-      )}
-
-      <Spines />
-      <footer className="rp-stop">
+      <footer className="rp-stop rp-stop-slim">
         <button className="chrome-fade" onClick={() => go('room')}>← Back to the room</button>
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
       </footer>
-      <p className="rp-footer-note" aria-hidden="true">All your experiences make a brighter you. ♡</p>
     </div>
   );
 }
