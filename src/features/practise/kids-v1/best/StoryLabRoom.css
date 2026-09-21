@@ -523,3 +523,32 @@
 /* Reflection Path CTA after journey save */
 .sl-stop .sl-reflection-cta{background:linear-gradient(135deg,#7c3aed,#4c1d95);border-color:#a78bfa;animation:rpCtaGlow 2s ease-in-out infinite alternate}
 @keyframes rpCtaGlow{from{box-shadow:0 0 12px rgba(124,58,237,0.4)}to{box-shadow:0 0 26px rgba(124,58,237,0.75)}}
+
+/*
+  THE STORY SCENE, SPACED LIKE THE SHEET.
+
+  First pass put the two round badges at the vertical middle and the two cloud
+  badges at 4% — and at the panel's real size those overlap, so "Thought" and
+  "What happened" were being cut in half by the Feeling and Body circles
+  sitting on top of them. The sheet keeps four clearly separate corners around
+  the bubble, so the clouds go to the top edge, the circles drop below their
+  midpoint, and everything shrinks enough to leave air between them.
+*/
+.sl-scene-center{min-height:196px}
+.sl-scene-bubble{width:46%}
+.sl-badge{max-width:27%;padding:4px 6px}
+.sl-badge-thought,.sl-badge-event{top:0}
+.sl-badge-feeling,.sl-badge-body{top:62%;width:24%;max-width:24%}
+
+/*
+  THE BOOK IS A FRAME AND NOTHING ELSE NOW.
+
+  story-book-open.png shipped with a sample story set across its pages, and the
+  panel drew the child's own story over the top of it — two stories in the same
+  place, neither readable. scripts/clear-story-book-text.mjs wipes the plate
+  back to blank paper; this keeps the live text inside the flat part of the
+  page, above the fanned block at the foot.
+*/
+.sl-book-text{top:22%;bottom:32%;left:19%;right:19%;gap:2px}
+.sl-book-heading{font-size:9px;letter-spacing:.2px}
+.sl-book-quote{font-size:11.5px;-webkit-line-clamp:3}
