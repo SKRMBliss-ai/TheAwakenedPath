@@ -36,7 +36,7 @@ import eightBitPoints from '../../../assets/make-more-sound-8bit-video-game-poin
 export type Cue =
   | 'tap' | 'roomCard' | 'enterRoom' | 'exitRoom' | 'discovery' | 'resolve'
   | 'breathComplete' | 'tapHit' | 'breatheIn' | 'breatheOut' | 'storyTheme'
-  | 'balloonPop' | 'twoStories'
+  | 'balloonPop' | 'twoStories' | 'panelSlide'
   | 'levelUp' | 'bonusPoints' | 'arcadeBlip' | 'miniWin' | 'pointTick';
 
 interface CueDef { src: string; volume: number; interruptible?: boolean }
@@ -47,6 +47,18 @@ const TABLE: Record<Cue, CueDef> = {
   roomCard:   { src: bubblePop,      volume: 0.45 },
   enterRoom:  { src: dramaticWhoosh, volume: 0.50 },
   exitRoom:   { src: softWhoosh,     volume: 0.35 },
+  /*
+    A PANEL ARRIVING IN THE STORY LAB.
+
+    This used to borrow `exitRoom` — the soft whoosh — on the reasoning that a
+    cue heard four times in a minute should stay out of the way. Watched rather
+    than reasoned about, that is the wrong call: the slide is the one moment
+    the walk feels like it is going somewhere, and a soft hiss under it reads
+    as the screen redrawing rather than as the next bit arriving. It takes the
+    dramatic swing, a little under the volume `enterRoom` uses, and it
+    interrupts itself so a fast answer does not stack two swooshes.
+  */
+  panelSlide: { src: dramaticWhoosh, volume: 0.44, interruptible: true },
   discovery:  { src: brightNotify,   volume: 0.45 },
   resolve:    { src: calmPiano,      volume: 0.42 },
 

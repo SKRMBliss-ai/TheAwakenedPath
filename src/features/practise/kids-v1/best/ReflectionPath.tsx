@@ -127,6 +127,7 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
   const favourites = useMemo(() => allSaved.filter((r) => r.favourite), [allSaved]);
   const [speaking, setSpeaking] = useState(false);
   const [withMe, setWithMe] = useState(false);
+  const [breathing, setBreathing] = useState(false);
 
   /*
     NO INVENTED CLOCK. The reference draws a scrubber with 0:00 / 2:24 on it,
@@ -141,6 +142,7 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
   useEffect(() => { setSpeaking(false); setWithMe(false); stopSpeaking(); }, [reflection.id]);
 
   const say = () => {
+    if (!quiet) sound.play('tap');
     if (speaking) { stopSpeaking(); setSpeaking(false); return; }
     setSpeaking(true);
     speak(reflection.pathLabel, quiet);
@@ -184,15 +186,31 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
             <p className="rp-feeling-echo">You felt: <strong>{reflection.feeling}</strong></p>
           )}
           {/*
-            BOTH STORIES STAY. The handoff is explicit that the first story is
-            never marked wrong — so it is kept beside the new one as what the
-            mind said, with the other possibility under it.
+            MY STORY REFLECTIONS — the chain, as the transition sheet draws it.
+
+            story_lab_to_reflection_room_transition.png lays the reflection out
+            as four linked cards: what happened, the old story, another way,
+            and the affirmation that came out of it. Showing only the last two
+            loses the thing the walk was for — a child seeing that the same
+            event carried two different stories, and that they chose one.
+
+            Each link renders only if that step was answered, so a reflection
+            saved from a shorter walk shows a shorter chain rather than empty
+            cards.
           */}
-          {reflection.anotherWay && reflection.anotherWay !== reflection.pathLabel && (
-            <div className="rp-both">
-              {reflection.originalStory && <p className="rp-story-was"><b>Your mind said:</b> “{reflection.originalStory}”</p>}
-              <blockquote className="rp-full-story"><b>Another possibility:</b> “{reflection.anotherWay}”</blockquote>
-            </div>
+          {(reflection.whatHappened || reflection.originalStory || reflection.anotherWay) && (
+            <ol className="rp-chain" aria-label="My story reflection">
+              {reflection.whatHappened && (
+                <li><b>What happened</b><span>{reflection.whatHappened}</span></li>
+              )}
+              {reflection.originalStory && (
+                <li className="rp-chain-old"><b>Old story</b><span>“{reflection.originalStory}”</span></li>
+              )}
+              {reflection.anotherWay && reflection.anotherWay !== reflection.originalStory && (
+                <li className="rp-chain-new"><b>Another way</b><span>“{reflection.anotherWay}”</span></li>
+              )}
+              <li className="rp-chain-affirm"><b>My affirmation</b><span>“{reflection.pathLabel}”</span></li>
+            </ol>
           )}
         </div>
       </div>
@@ -224,7 +242,18 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
           <button onClick={() => { sound.play('tap'); onShuffle(); }}>
             <span aria-hidden="true">⇄</span> Shuffle one more
           </button>
+          {/* The third action the transition sheet draws beside the other two. */}
+          <button className={breathing ? 'rp-on' : ''} aria-pressed={breathing}
+            onClick={() => { sound.play('tap'); setBreathing((v) => !v); }}>
+            <span aria-hidden="true">❁</span> Breathe and believe
+          </button>
         </div>
+        {breathing && (
+          <p className="rp-breathe" role="status">
+            <span className="rp-breathe-orb" aria-hidden="true" />
+            Breathe in… and out. Now say it once more, slowly.
+          </p>
+        )}
         {withMe && <p className="rp-with-me-hint" role="status">Say it out loud with me — as many times as you like.</p>}
       </div>
 
@@ -466,13 +495,26 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     return result;
   }, [allReflections, shuffleNonce]);
 
+  /*
+    EVERY MOVE BETWEEN SCREENS IS AUDIBLE.
+
+    Walking from the room to the path, opening the library, coming back — each
+    is a door, and silence made them read as the page swapping. One helper so
+    the cue cannot be forgotten at a call site, and so it is silenced in one
+    place for a child who has asked for quiet.
+  */
+  const go = (next: 'room' | 'path' | 'library' | 'playback') => {
+    if (!quiet) sound.play(next === 'playback' ? 'enterRoom' : 'panelSlide');
+    setInner(next);
+  };
+
   const playReflection = (r: SavedReflection, from: 'room' | 'path' = 'path') => {
     returnTo.current = from;
-    sound.play('roomCard');
+    if (!quiet) sound.play('roomCard');
     setPlayingId(r.id);
     setVisitedIds((v) => new Set([...v, r.id]));
     markPlayed(r.id);
-    setInner('playback');
+    go('playback');
   };
 
   const playRandom = (from: 'room' | 'path' = 'path') => {
@@ -493,7 +535,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     return (
       <PlaybackView
         reflection={playingReflection}
-        onBack={() => setInner(returnTo.current)}
+        onBack={() => go(returnTo.current)}
         onGrownUp={onGrownUp}
         onShuffle={() => playRandom(returnTo.current)}
         onPlayFavourites={playFavourites}
@@ -506,7 +548,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
   if (inner === 'library') {
     return (
       <LibraryView
-        onBack={() => setInner('room')}
+        onBack={() => go('room')}
         onPlay={(r) => playReflection(r, 'room')}
         onGrownUp={onGrownUp}
         still={still}
@@ -521,8 +563,8 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         hasAny={allReflections.length > 0}
         onPlayOne={() => playRandom('room')}
         onShuffle={() => { sound.play('tap'); setShuffleNonce((n) => n + 1); }}
-        onLibrary={() => { sound.play('tap'); setInner('library'); }}
-        onPath={() => { sound.play('tap'); setInner('path'); }}
+        onLibrary={() => go('library')}
+        onPath={() => go('path')}
         onExit={onExit}
         onGrownUp={onGrownUp}
         still={still}
@@ -537,7 +579,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     <div className="rp-room rp-pathview" style={{ fontFamily: FONT }}>
       <Decor variant="path" still={still} />
       <header className="rp-header">
-        <button className="rp-back" onClick={() => setInner('room')} aria-label="Back to the Reflection Room">←</button>
+        <button className="rp-back" onClick={() => go('room')} aria-label="Back to the Reflection Room">←</button>
         <div className="rp-title">
           <h1>Reflection Path</h1>
           <p>Tap a glowing brick to open a reflection from your journey.</p>
@@ -558,7 +600,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         <button className="rp-open-library" onClick={() => { sound.play('tap'); setShuffleNonce((n) => n + 1); }} disabled={!sample.length}>
           <span aria-hidden="true">⇄</span> Shuffle reflections
         </button>
-        <button className="rp-open-library" onClick={() => { sound.play('tap'); setInner('library'); }}>
+        <button className="rp-open-library" onClick={() => go('library')}>
           <span aria-hidden="true">📖</span> Open My Reflection Library
         </button>
       </div>
@@ -609,14 +651,14 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       </div>
 
       {allReflections.length > MAX_BRICKS && (
-        <button className="rp-more-link" onClick={() => { sound.play('tap'); setInner('library'); }}>
+        <button className="rp-more-link" onClick={() => go('library')}>
           +{allReflections.length - MAX_BRICKS} more in your library →
         </button>
       )}
 
       <Spines />
       <footer className="rp-stop">
-        <button className="chrome-fade" onClick={() => setInner('room')}>← Back to the room</button>
+        <button className="chrome-fade" onClick={() => go('room')}>← Back to the room</button>
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
       </footer>
       <p className="rp-footer-note" aria-hidden="true">All your experiences make a brighter you. ♡</p>

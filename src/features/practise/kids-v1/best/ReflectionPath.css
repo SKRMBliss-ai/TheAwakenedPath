@@ -721,3 +721,53 @@
 .rp-filter-tabs button{color:#e9dcff;border-color:#c79bff55;background:#2c1650cc}
 .rp-filter-tabs button:hover{background:#3d2070e0}
 .rp-filter-tabs .rp-tab-active{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;border-color:#ffffff66}
+
+/* ── My Story Reflections, the four-card chain ───────────────────────── */
+/* story_lab_to_reflection_room_transition.png lays a reflection out as linked
+   cards with arrows between them: what happened, the old story, another way,
+   the affirmation. */
+.rp-chain{
+  list-style:none;display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;
+  padding:0;margin:10px 0 0;
+}
+.rp-chain li{
+  flex:1 1 118px;min-width:0;position:relative;
+  display:flex;flex-direction:column;gap:3px;
+  padding:8px 9px;text-align:left;
+  background:#ffffff14;border:1px solid #ffffff2e;border-radius:12px;
+}
+.rp-chain li + li::before{
+  content:'→';position:absolute;left:-10px;top:50%;translate:0 -50%;
+  font-size:13px;font-weight:900;color:#ffd48a;z-index:1;
+}
+.rp-chain b{font-size:10px;font-weight:900;letter-spacing:.3px;color:#ffd98a;text-transform:none}
+.rp-chain span{font-size:11.5px;font-weight:800;line-height:1.3;color:#f4ecff;overflow-wrap:anywhere}
+.rp-chain-old{background:#ff9ec41f;border-color:#ff9ec44d}
+.rp-chain-old b{color:#ffb9d4}
+.rp-chain-new{background:#8ee8c41f;border-color:#8ee8c44d}
+.rp-chain-new b{color:#9fe8cb}
+.rp-chain-affirm{background:#ffd48a26;border-color:#ffd48a66}
+.rp-chain-affirm b{color:#ffe0a6}
+
+/* Five actions now, so they lay out by fit rather than in fixed pairs. */
+.rp-relax-actions{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+
+.rp-breathe{
+  margin:0;display:flex;align-items:center;justify-content:center;gap:9px;
+  font-size:12.5px;font-weight:800;color:#cfe9ff;text-align:center;
+}
+.rp-breathe-orb{
+  width:16px;height:16px;flex-shrink:0;border-radius:50%;
+  background:radial-gradient(circle,#bfe9ff,#4aa8e0);
+  box-shadow:0 0 14px #7fd0ff99;
+  animation:rp-breathe 6s ease-in-out infinite;
+}
+@keyframes rp-breathe{0%,100%{transform:scale(.7);opacity:.75}50%{transform:scale(1.35);opacity:1}}
+@media(prefers-reduced-motion:reduce){.rp-breathe-orb{animation:none}}
+.rp-still .rp-breathe-orb{animation:none}
+
+@media(max-width:600px){
+  .rp-chain li{flex:1 1 100%}
+  .rp-chain li + li::before{content:'↓';left:50%;top:-11px;translate:-50% 0}
+  .rp-chain{gap:14px 6px}
+}

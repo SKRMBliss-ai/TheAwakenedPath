@@ -552,3 +552,118 @@
 .sl-book-text{top:22%;bottom:32%;left:19%;right:19%;gap:2px}
 .sl-book-heading{font-size:9px;letter-spacing:.2px}
 .sl-book-quote{font-size:11.5px;-webkit-line-clamp:3}
+
+/* ══════════════════════════════════════════════════════════════════════
+   STORY LAB COMPLETE — the door to the Reflection Room.
+
+   Drawn against reference_scenes/story_lab_to_reflection_room_transition.png
+   in MindGym_Reflection_Path_Implementation_Pack: the child finishes the
+   fourth panel and is met by an archway rather than by a Save button in the
+   footer, which is where they were stopping.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.sl-complete{
+  position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+  padding:18px;overflow-y:auto;
+  background:
+    radial-gradient(60% 45% at 50% 42%, #7a4bd655 0%, transparent 70%),
+    rgba(14,7,28,.86);
+  backdrop-filter:blur(7px);
+}
+.sl-complete-card{
+  position:relative;width:min(520px,100%);max-height:100%;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;
+  padding:22px 22px 18px;
+  background:linear-gradient(165deg,#43266fee,#241145ee 60%,#1a0d35ee);
+  border:1.5px solid #ffd48a77;border-radius:26px;
+  box-shadow:0 22px 60px #08031acc,inset 0 0 40px #ffb45c1f;
+}
+.sl-complete-kicker{
+  margin:0;font-size:13px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;
+  color:#ffd98a;text-shadow:0 0 10px #ff9e2e66;
+}
+.sl-complete-big{
+  margin:0;font-size:clamp(30px,5vw,44px);font-weight:1000;line-height:1.02;
+  color:#fff6dd;text-shadow:0 0 12px #ffb14d,0 0 30px #ff8a1e88;
+}
+.sl-complete-said{margin:0;font-size:14px;font-weight:800;line-height:1.35;color:#f0e6ff;max-width:34ch}
+.sl-complete-grow{
+  margin:2px 0 0;font-size:12.5px;font-weight:800;line-height:1.35;color:#2b1550;
+  background:linear-gradient(#ffeec0,#ffd694);border-radius:14px;padding:7px 14px;
+  box-shadow:0 5px 14px #0b0420aa;
+}
+.sl-complete-chirpy{display:flex;align-items:center;gap:9px;margin-top:4px}
+.sl-complete-chirpy img{width:52px;height:auto;filter:drop-shadow(0 0 10px #9a6bd977)}
+.sl-complete-chirpy p{
+  margin:0;font-size:12.5px;font-weight:850;color:#2c1470;text-align:left;
+  background:linear-gradient(#fff,#e8dbff);border-radius:15px;padding:8px 13px;
+  box-shadow:0 5px 14px #0b042088;
+}
+
+/*
+  THE ARCHWAY.
+
+  The label started life absolutely placed over the plate, which put it on the
+  arch's own stonework and its crowning star — two bright things in the same
+  120px. The plate is busy at the top by design, so the name sits above the
+  doorway as its own line, which is the reading order the sheet has anyway.
+*/
+.sl-portal{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  gap:2px;margin:4px 0 2px;
+}
+.sl-portal-label{
+  order:-1;font-size:17px;font-weight:1000;line-height:1.08;text-align:center;
+  color:#fff4d6;text-shadow:0 0 10px #ffb14d,0 0 24px #ff8a1eaa;
+}
+.sl-portal-label b{color:#ff9ec4;font-size:15px}
+.sl-portal img{
+  width:min(210px,58%);height:auto;
+  filter:drop-shadow(0 0 26px #b98bff77);
+  animation:sl-portal-breathe 5.5s ease-in-out infinite;
+}
+@keyframes sl-portal-breathe{0%,100%{filter:drop-shadow(0 0 20px #b98bff55)}50%{filter:drop-shadow(0 0 34px #d4b0ff99)}}
+.sl-still .sl-portal img{animation:none}
+@media(prefers-reduced-motion:reduce){.sl-portal img{animation:none}}
+
+.sl-complete-steps{
+  list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;
+  padding:0;margin:2px 0 0;counter-reset:none;
+}
+.sl-complete-steps li{
+  font-size:11px;font-weight:900;letter-spacing:.3px;color:#ffe9bd;
+  background:#2c1550cc;border:1px solid #ffd48a55;border-radius:999px;padding:4px 11px;
+}
+
+.sl-enter-reflection{
+  margin-top:8px;width:100%;min-height:56px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  font-size:clamp(16px,2.2vw,21px);font-weight:950;color:#fff;
+  background:linear-gradient(135deg,#a855f7,#6d28d9);
+  border:1.5px solid #ffffff5e;border-radius:999px;
+  box-shadow:0 0 26px #a855f766,0 8px 22px #0b0420aa;
+  transition:transform .16s,box-shadow .16s;
+}
+.sl-enter-reflection:hover{transform:translateY(-2px);box-shadow:0 0 34px #a855f788,0 10px 26px #0b0420aa}
+.sl-enter-reflection:active{transform:scale(.98)}
+
+.sl-continues{margin:0;font-size:11.5px;font-weight:700;color:#d9c9ff;opacity:.85}
+
+.sl-complete-signs{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin:4px 0 0}
+.sl-complete-signs span{
+  font-size:10px;font-weight:900;color:#ffeab6;
+  background:linear-gradient(#6b3d18,#40220d);border:1px solid #ffca7a44;
+  border-radius:4px;padding:3px 9px;box-shadow:0 2px 6px #0b0420aa;
+}
+
+.sl-look-again{margin-top:6px;min-height:40px;font-size:12.5px;text-decoration:underline;color:#e6d8ff}
+
+.sl-still .sl-complete-card,.sl-still .sl-complete{animation:none!important}
+@media(prefers-reduced-motion:reduce){.sl-complete *{animation:none!important;transition:none!important}}
+
+@media(max-width:600px){
+  .sl-complete{padding:10px}
+  .sl-complete-card{padding:16px 14px 14px;gap:6px;border-radius:20px}
+  .sl-complete-chirpy img{width:42px}
+  .sl-portal img{width:60%}
+}

@@ -31,8 +31,18 @@ const PANEL_W = 386;
 const PANEL_H = 675;
 const PANEL_GAP = 30;
 
-const STEPS = ['Feeling', 'Body', 'Thought', 'What happened?', 'Story', 'Another way'];
+/*
+  SEVEN STEPS, NOT SIX — the Reflection Room is the last one.
+
+  The transition sheet in MindGym_Reflection_Path_Implementation_Pack runs its
+  progress bar to "7. Reflection Room (Rest, listen, grow)". Ending the rail at
+  "6. Another way" tells a child the walk stops at the last panel, which is
+  exactly where they were stopping. The seventh has no answer of its own; it is
+  the door, and it lights up when the other six are behind them.
+*/
+const STEPS = ['Feeling', 'Body', 'Thought', 'What happened?', 'Story', 'Another way', 'Reflection Room'];
 const STEP_ART = ['feeling', 'body', 'thought', 'what_happened', 'story', 'another_way'];
+const LAST_STEP = STEPS.length - 1;
 const TITLES = ['3. Thought', '4. What Happened?', '5. Story', '6. Another Way'];
 const PROMPTS = ['What was your mind saying?', 'What actually happened?', "Here's the story your mind made…", "Could anything else be true?"];
 const SUBS = ['Tap a thought, or tell me in your own words.', "Let's look at what a little camera could see.", 'Your mind connects the pieces and tries to make sense of it.', "Let's see some other possible stories."];
@@ -171,14 +181,21 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const { box, scale } = useFilmScale(panels.length);
 
   /*
-    EVERY ARRIVAL IS AUDIBLE. A panel sliding in is the app saying "that's
-    kept, here's the next bit"; silence made it read as the screen redrawing.
-    The whoosh is the soft one, not the door — this happens four times in a
-    minute and a dramatic cue four times is a nag.
+    EVERY ARRIVAL IS AUDIBLE, AND IT IS THE BIG SWOOSH.
+
+    A panel sliding in is the app saying "that's kept, here's the next bit".
+    This used to use the soft whoosh, on the reasoning that a cue heard four
+    times in a minute should stay out of the way — but the slide is the one
+    moment the walk feels like it is moving, and underplaying it made the
+    strip read as a redraw. `panelSlide` is the dramatic swing (see the sound
+    table), and it interrupts itself so answering quickly cannot stack two.
+
+    The last step keeps its own cue: arriving at the end of the journey is a
+    different event from another panel joining the strip.
   */
   useEffect(() => {
     if (!moved.current) { moved.current = true; return; }
-    if (!quiet) sound.play(step === 4 ? 'discovery' : step >= 6 ? 'miniWin' : 'exitRoom');
+    if (!quiet) sound.play(step >= 6 ? 'miniWin' : 'panelSlide');
     const timer = setTimeout(() => heading.current?.focus({ preventScroll: true }), still ? 0 : 420);
     return () => clearTimeout(timer);
   }, [step, still, quiet]);
@@ -207,6 +224,27 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     if (ok && !quiet) sound.play('resolve');
   };
   const back = () => { if (step === 2) { onBody(); return; } if (!quiet) sound.play('exitRoom'); setStep(step - 1); };
+
+  /*
+    THE END OF THE WALK IS A DOOR, NOT A BUTTON IN THE FOOTER.
+
+    The Reflection Path handoff draws this beat
+    (reference_scenes/story_lab_to_reflection_room_transition.png): once the
+    fourth panel is answered the child gets "Story Lab Complete — you did it",
+    the archway to the Reflection Room, and one clear way through it. What was
+    here instead was a Save button and a link in the footer, under a strip of
+    four panels, which is where a child stops.
+
+    It saves itself on arrival rather than asking, because Chirpy's line on
+    that screen promises the reflections are already kept — and a promise the
+    child has to press a button to make true is not one. `save` is guarded by
+    savedOnce, so running it here costs nothing if it has already happened.
+  */
+  const [leftComplete, setLeftComplete] = useState(false);
+  useEffect(() => {
+    if (step >= 6 && !savedOnce.current) save();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- save is guarded by savedOnce
+  }, [step]);
 
   const thoughtOptions = quiet ? [...THOUGHTS.slice(0, 3), SAY_IT] : [...THOUGHTS, SAY_IT];
   const eventOptions = quiet ? [...EVENTS.slice(0, 3), SOMETHING_ELSE] : [...EVENTS, SOMETHING_ELSE];
@@ -246,9 +284,19 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
             key={index}
             className="sl-slot"
             layout={!still}
-            initial={still ? false : { opacity: 0, x: 140, scale: .92 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: .45, ease: [0.22, 0.61, 0.36, 1] }}
+            /*
+              THE SLIDE IS THE EVENT, SO IT IS ALLOWED TO BE ONE.
+
+              A 140px drift over .45s reads as a layout shift. The panel now
+              comes in from off the strip on a spring, with a little tilt that
+              settles — the "magically, dramatically" the walk is asking for —
+              while the panels already standing shuffle along underneath via
+              the layout transition. Still honours the quiet/reduced-motion
+              flag, which drops all of it.
+            */
+            initial={still ? false : { opacity: 0, x: 360, scale: .8, rotate: 4 }}
+            animate={{ opacity: 1, x: 0, scale: 1, rotate: 0 }}
+            transition={still ? { duration: 0 } : { type: 'spring', stiffness: 170, damping: 20, mass: .9 }}
           >
             {position > 0 && <span className="sl-film-arrow" aria-hidden="true">›</span>}
             <Panel index={index} step={step} onBack={back} onHome={onExit}
@@ -344,13 +392,73 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 
     {saveError && <p role="alert" className="sl-save-error">This device couldn't save your journey. Your words are still here; you can try again.</p>}
 
+    <AnimatePresence>
+      {step >= 6 && !leftComplete && <motion.section
+        className="sl-complete"
+        aria-labelledby="sl-complete-title"
+        initial={still ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: still ? 0 : .5 }}
+      >
+        <motion.div
+          className="sl-complete-card"
+          initial={still ? false : { opacity: 0, y: 34, scale: .94 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={still ? { duration: 0 } : { type: 'spring', stiffness: 150, damping: 19, delay: .12 }}
+        >
+          <p className="sl-complete-kicker" id="sl-complete-title">Story Lab Complete!</p>
+          <h2 className="sl-complete-big">You did it!</h2>
+          <p className="sl-complete-said">You explored a new perspective and found another way.</p>
+          <p className="sl-complete-grow">Your brighter stories are ready to keep growing.</p>
+
+          <div className="sl-complete-chirpy">
+            <img src={chirpySprite('hopeful')} alt="" aria-hidden="true" />
+            <p role="status">{saved
+              ? 'Your reflections are saved and waiting for you!'
+              : 'Your words are safe here with me.'}</p>
+          </div>
+
+          <div className="sl-portal">
+            <img src="/mind-gym/reflection/reflection_portal.png" alt="" aria-hidden="true"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <span className="sl-portal-label">Reflection<br />Room <b aria-hidden="true">♡</b></span>
+          </div>
+
+          <ol className="sl-complete-steps" aria-label="What you did">
+            <li>Feel</li><li>Explore</li><li>Find Another Way</li><li>Keep Growing</li>
+          </ol>
+
+          {onReflectionPath && <button className="sl-enter-reflection" onClick={() => { if (!quiet) sound.play('enterRoom'); onReflectionPath(); }}>
+            <span aria-hidden="true">⌸</span> Enter Reflection Room <span aria-hidden="true">›</span>
+          </button>}
+          <p className="sl-continues">Your journey continues…</p>
+
+          <p className="sl-complete-signs" aria-hidden="true">
+            <span>Same You, Brighter Views</span><span>Kinder Thoughts</span><span>Bigger Tomorrows</span>
+          </p>
+
+          <button className="chrome-fade sl-look-again" onClick={() => setLeftComplete(true)}>Look at my stories again</button>
+        </motion.div>
+      </motion.section>}
+    </AnimatePresence>
+
     <nav className="sl-rail" aria-label="Journey progress">
-      <ol>{STEPS.map((label, i) => <li key={label} className={i === step ? 'sl-current' : i < step ? 'sl-collected' : ''} aria-current={i === step ? 'step' : undefined}>
-        <span className="sl-step-symbol" aria-hidden="true"><img src={`/mind-gym/home/icon_${STEP_ART[i]}.webp`} alt="" />{i < step && <b>✓</b>}</span>
-        <span className="sl-step-label">{i + 1}. {label}</span>
-        <span className="sl-step-answer">{i === step ? 'You are here' : answers[i] || (i < 2 ? '(In its own room)' : '')}</span>
-        <span className="sr-only">{i < step ? ' — collected' : i === step ? ' — current step' : ' — coming up'}</span>
-      </li>)}</ol>
+      <ol>{STEPS.map((label, i) => {
+        const door = i === LAST_STEP;
+        return <li key={label} className={`${i === step ? 'sl-current' : i < step ? 'sl-collected' : ''} ${door ? 'sl-step-door' : ''}`} aria-current={i === step ? 'step' : undefined}>
+          <span className="sl-step-symbol" aria-hidden="true">
+            <img src={door ? '/mind-gym/reflection/reflection_portal.png' : `/mind-gym/home/icon_${STEP_ART[i]}.webp`} alt=""
+              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            {i < step && <b>✓</b>}
+          </span>
+          <span className="sl-step-label">{i + 1}. {label}</span>
+          <span className="sl-step-answer">{door
+            ? 'Rest, listen, grow'
+            : i === step ? 'You are here' : answers[i] || (i < 2 ? '(In its own room)' : '')}</span>
+          <span className="sr-only">{i < step ? ' — collected' : i === step ? ' — current step' : ' — coming up'}</span>
+        </li>;
+      })}</ol>
       <p className={`sl-rail-badge ${step >= 6 ? 'sl-rail-done' : ''}`}><span aria-hidden="true">★</span>You've Explored<br />New Perspectives!</p>
     </nav>
 
