@@ -146,8 +146,15 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
   const setAffirmation = useKidStore((s) => s.setReflectionAffirmation);
   const isFav = useKidStore((s) => s.savedReflections.find((r) => r.id === reflection.id)?.favourite ?? false);
   const currentAffirmation = useKidStore((s) => s.savedReflections.find((r) => r.id === reflection.id)?.affirmation);
-  const [showAffirmationPicker, setShowAffirmationPicker] = useState(!currentAffirmation);
-  const [affirmationChoices] = useState(() => pickThreeAffirmations(reflection.tag));
+  const [showAffirmationPicker, setShowAffirmationPicker] = useState(true);
+  const [affirmationChoices] = useState(() => {
+    const three = pickThreeAffirmations(reflection.tag);
+    // If they already picked one, keep it visible so they can re-select or swap it out.
+    if (currentAffirmation && !three.includes(currentAffirmation)) {
+      three[2] = currentAffirmation;
+    }
+    return three;
+  });
   /*
     THE SELECTOR RETURNS THE ARRAY, AND THE FILTER HAPPENS HERE.
     `useKidStore(s => s.savedReflections.filter(...))` builds a new array on
