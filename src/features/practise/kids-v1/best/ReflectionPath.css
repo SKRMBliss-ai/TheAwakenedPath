@@ -903,3 +903,8 @@
    path does not lean on the archway. */
 .rp-slot{translate:-8% -50%}
 .rp-stage{min-height:470px}
+
+/* A stone not yet earned. Inert, and quiet enough that the lit ones lead. */
+.rp-slot-locked{pointer-events:none}
+.rp-brick-locked{display:block;width:100%;opacity:.55}
+.rp-brick-locked .rp-brick-img{filter:saturate(.5) brightness(.85)}

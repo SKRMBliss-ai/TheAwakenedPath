@@ -15,6 +15,7 @@ const A = '/mind-gym/reflection/';
 const BRICK_EMPTY  = `${A}reflection_brick_empty@4x.png`;
 const BRICK_HOVER  = `${A}reflection_brick_hover@4x.png`;
 const BRICK_DONE   = `${A}reflection_brick_completed@4x.png`;
+const BRICK_LOCKED = `${A}reflection_brick_locked@4x.png`;
 
 /**
  * WHERE EACH STONE SITS, AS THE REFERENCE LAYS THEM.
@@ -607,13 +608,14 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     where the reference stands them, and the three controls sit in a bar along
     the foot.
 
-    AND THERE ARE NO LOCKED STONES. An earlier pass padded the path to ten
-    slots with the pack's `locked` plate, on the reasoning that a child with
-    three reflections should see where the next seven go. The reference does
-    no such thing, and in practice it filled the screen with grey slabs and
-    made a young path look broken. A path is as long as the walking done on it.
+    THE PATH IS ALWAYS TEN STONES. The reference draws a full path, and the
+    pack ships a `locked` plate for the ones not yet earned, so the stones the
+    child has not reached stand there waiting rather than the path stopping
+    short. Locked stones are inert and out of the tab order — they are scenery
+    that shows where this is going, not controls that do nothing.
   */
   const walked = sample.slice(0, PATH_SLOTS.length);
+  const stones = PATH_SLOTS.map((slot, i) => ({ slot, i, reflection: walked[i] ?? null }));
 
   return (
     <div className="rp-room rp-pathview" style={{ fontFamily: FONT }}>
@@ -653,14 +655,25 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         </p>
 
         <ul className="rp-bricks" aria-label="Your reflection path">
-          {walked.map((r, i) => {
-            const slot = PATH_SLOTS[i];
+          {stones.map(({ slot, i, reflection: r }) => {
+            const style = { left: `${slot.left}%`, top: `${slot.top}%`, width: `${slot.size}%`, '--brick-index': i } as React.CSSProperties;
+
+            if (!r) {
+              return (
+                <li key={`locked-${i}`} className="rp-slot rp-slot-locked" style={style} aria-hidden="true">
+                  <span className="rp-brick rp-brick-locked">
+                    <img src={BRICK_LOCKED} alt="" className="rp-brick-img"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  </span>
+                </li>
+              );
+            }
+
             const visited = visitedIds.has(r.id);
             const hovered = hoveredId === r.id;
             const brickSrc = hovered ? BRICK_HOVER : visited ? BRICK_DONE : BRICK_EMPTY;
             return (
-              <li key={r.id} className="rp-slot"
-                style={{ left: `${slot.left}%`, top: `${slot.top}%`, width: `${slot.size}%`, '--brick-index': i } as React.CSSProperties}>
+              <li key={r.id} className="rp-slot" style={style}>
                 <button
                   className={`rp-brick${visited ? ' rp-brick-visited' : ''}${still ? '' : ' rp-brick-animated'}`}
                   onClick={() => playReflection(r, 'path')}
@@ -673,7 +686,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
                   <img src={brickSrc} alt="" className="rp-brick-img" aria-hidden="true"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   <span className="rp-brick-text">
-                    <span className="rp-brick-icon" aria-hidden="true">{TAG_ICON[r.tag] ?? '✦'}</span>
+                    <span className="rp-brick-icon" aria-hidden="true">{TAG_ICON[r.tag] ?? '\u2726'}</span>
                     <span className="rp-brick-phrase">{r.pathLabel}</span>
                   </span>
                 </button>
