@@ -60,11 +60,29 @@ let speaking: string | null = null;
  */
 const heard = new Map<string, string>();
 
+/*
+  WHO IS LISTENING FOR THE END OF THE LINE.
+
+  A player that shows time has to stop when the voice stops, and both paths
+  here end differently: the Gemini clip fires `ended` on its <audio>, the
+  browser voice fires `onend` on its utterance. Callers register once and are
+  told either way, so nothing has to guess with a timer. Cleared whenever a
+  new line starts or speech is cancelled, so a stale screen is never notified.
+*/
+let endListener: (() => void) | null = null;
+function finished() { const fn = endListener; endListener = null; fn?.(); }
+
+/** The clip currently playing, when there is one — it carries a real duration
+ *  and a real currentTime, which the browser voice does not. */
+export function currentClip(): HTMLAudioElement | null { return current; }
+
 function browserVoice(text: string) {
   if (!isVoiceSupported()) return;
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
+    u.onend = () => { if (speaking === text) finished(); };
+    u.onerror = () => { if (speaking === text) finished(); };
     // Lifting the pitch gets most of the way to young without the chipmunk
     // effect the old 1.15-on-a-default-voice had — the rate matters as much as
     // the pitch, so he stays slow.
@@ -78,9 +96,11 @@ function browserVoice(text: string) {
  * ever says one thing at a time, so a new line always wins over the old one
  * rather than queueing behind it.
  */
-export function speak(text: string, quiet: boolean) {
-  if (isMuted() || quiet || !text) return;
+export function speak(text: string, quiet: boolean, onEnd?: () => void) {
+  if (isMuted() || quiet || !text) { onEnd?.(); return; }
   stopSpeaking();
+  endListener = onEnd ?? null;
+  speaking = text;
 
   const cached = heard.get(text);
   if (cached) { play(cached, text); return; }
@@ -115,6 +135,8 @@ function play(url: string, text: string) {
     const audio = new Audio(url);
     current = audio;
     speaking = text;
+    audio.addEventListener('ended', () => { if (speaking === text) finished(); });
+    audio.addEventListener('error', () => browserVoice(text));
     void audio.play().catch(() => browserVoice(text));
   } catch { browserVoice(text); }
 }
@@ -123,6 +145,7 @@ export function stopSpeaking() {
   try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
   if (current) { try { current.pause(); } catch { /* ignore */ } current = null; }
   speaking = null;
+  endListener = null;
 }
 
 /**

@@ -145,7 +145,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   onExit: () => void;
   onGrownUp: () => void;
   onSave: (answers: DeepDiveAnswers) => boolean;
-  /** Called when the child taps "See My Reflection Path" after saving. */
+  /** Called when the child steps through the door to the Reflection Room. */
   onReflectionPath?: () => void;
 }) {
   const quiet = useQuiet();
@@ -465,7 +465,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     <footer className="sl-stop">
       <button className="chrome-fade" onClick={onExit}>Stop for now</button>
       {step >= 6 && <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved ✓' : '✧ Save This Journey'}</button>}
-      {saved && onReflectionPath && <button className="sl-save sl-reflection-cta" onClick={onReflectionPath}>✦ See My Reflection Path →</button>}
+      {saved && onReflectionPath && <button className="sl-save sl-reflection-cta" onClick={onReflectionPath}>✦ My Reflection Room →</button>}
       {step < 6 && step !== 4 && <button className="chrome-fade" onClick={() => capture("I'm not sure yet.")}>{"I'm not sure — keep going"}</button>}
     </footer>
   </motion.main>;
