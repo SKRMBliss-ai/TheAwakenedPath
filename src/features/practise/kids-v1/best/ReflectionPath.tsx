@@ -254,27 +254,32 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
               {reflection.anotherWay && reflection.anotherWay !== reflection.originalStory && (
                 <li className="rp-chain-new"><b>Another way</b><span>"{reflection.anotherWay}"</span></li>
               )}
-              <li className="rp-chain-affirm">
-                <b>My affirmation</b>
-                <span>"{currentAffirmation || reflection.pathLabel}"</span>
-              </li>
+              {/* Only show the affirmation slot once the child has actually chosen one */}
+              {currentAffirmation && (
+                <li className="rp-chain-affirm">
+                  <b>My affirmation</b>
+                  <span>"{currentAffirmation}"</span>
+                </li>
+              )}
             </ol>
           )}
 
-          {/* Affirmation picker: shown if no affirmation chosen yet */}
+          {/* Affirmation picker — always visible, above the transport */}
           {showAffirmationPicker && (
             <div className="rp-affirmation-picker">
               <p className="rp-affirmation-prompt">
-                Which words resonate with you? Pick one that feels right.
+                {currentAffirmation
+                  ? 'Your affirmation — pick again or keep it.'
+                  : 'Pick an affirmation to carry with you.'}
               </p>
               <div className="rp-affirmation-choices">
                 {affirmationChoices.map((affirmation) => (
                   <button
                     key={affirmation}
                     onClick={() => chooseAffirmation(affirmation)}
-                    className="rp-affirmation-choice"
+                    className={`rp-affirmation-choice${currentAffirmation === affirmation ? ' rp-affirmation-chosen' : ''}`}
                   >
-                    "{affirmation}"
+                    {affirmation}
                   </button>
                 ))}
               </div>
@@ -285,7 +290,7 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
                 }}
                 className="rp-affirmation-custom"
               >
-                Say my own affirmation instead
+                Say my own instead
               </button>
             </div>
           )}
