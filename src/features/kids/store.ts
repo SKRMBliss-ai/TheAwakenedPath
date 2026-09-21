@@ -29,6 +29,8 @@ export interface SavedReflection {
   tag: ReflectionTag;
   favourite: boolean;
   timesPlayed: number;
+  /** Affirmation chosen by the child during playback. */
+  affirmation?: string;
 }
 
 interface KidState {
@@ -59,6 +61,7 @@ interface KidState {
   addSavedReflection: (r: SavedReflection) => void;
   toggleReflectionFavourite: (id: string) => void;
   markReflectionPlayed: (id: string) => void;
+  setReflectionAffirmation: (id: string, affirmation: string) => void;
   reset: () => void;
 }
 
@@ -207,6 +210,10 @@ export const useKidStore = create<KidState>()(
 
       markReflectionPlayed: (id) => set((s) => ({
         savedReflections: s.savedReflections.map((r) => r.id === id ? { ...r, timesPlayed: r.timesPlayed + 1 } : r),
+      })),
+
+      setReflectionAffirmation: (id, affirmation) => set((s) => ({
+        savedReflections: s.savedReflections.map((r) => r.id === id ? { ...r, affirmation } : r),
       })),
 
       reset: () => set({

@@ -5,6 +5,7 @@ import { FONT } from '../ui/chrome';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import { useQuiet } from '../ui/quiet';
 import * as sound from '../kit/sound';
+import { pickThreeAffirmations } from '../kit/affirmations';
 import './ReflectionPath.css';
 
 const MAX_BRICKS = 10;
@@ -142,7 +143,11 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
   quiet: boolean;
 }) {
   const toggleFav = useKidStore((s) => s.toggleReflectionFavourite);
+  const setAffirmation = useKidStore((s) => s.setReflectionAffirmation);
   const isFav = useKidStore((s) => s.savedReflections.find((r) => r.id === reflection.id)?.favourite ?? false);
+  const currentAffirmation = useKidStore((s) => s.savedReflections.find((r) => r.id === reflection.id)?.affirmation);
+  const [showAffirmationPicker, setShowAffirmationPicker] = useState(!currentAffirmation);
+  const [affirmationChoices] = useState(() => pickThreeAffirmations(reflection.tag));
   /*
     THE SELECTOR RETURNS THE ARRAY, AND THE FILTER HAPPENS HERE.
     `useKidStore(s => s.savedReflections.filter(...))` builds a new array on
@@ -176,6 +181,12 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
     /* The voice has no reliable end event across browsers, so the indicator
        stands down on a timer scaled to the length of the line. */
     window.setTimeout(() => setSpeaking(false), Math.max(2600, reflection.pathLabel.length * 95));
+  };
+
+  const chooseAffirmation = (affirmation: string) => {
+    if (!quiet) sound.play('tap');
+    setAffirmation(reflection.id, affirmation);
+    setShowAffirmationPicker(false);
   };
 
   return (
@@ -226,18 +237,50 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
             cards.
           */}
           {(reflection.whatHappened || reflection.originalStory || reflection.anotherWay) && (
-            <ol className="rp-chain" aria-label="My story reflection">
+            <ol className=”rp-chain” aria-label=”My story reflection”>
               {reflection.whatHappened && (
                 <li><b>What happened</b><span>{reflection.whatHappened}</span></li>
               )}
               {reflection.originalStory && (
-                <li className="rp-chain-old"><b>Old story</b><span>“{reflection.originalStory}”</span></li>
+                <li className=”rp-chain-old”><b>Old story</b><span>”{reflection.originalStory}”</span></li>
               )}
               {reflection.anotherWay && reflection.anotherWay !== reflection.originalStory && (
-                <li className="rp-chain-new"><b>Another way</b><span>“{reflection.anotherWay}”</span></li>
+                <li className=”rp-chain-new”><b>Another way</b><span>”{reflection.anotherWay}”</span></li>
               )}
-              <li className="rp-chain-affirm"><b>My affirmation</b><span>“{reflection.pathLabel}”</span></li>
+              <li className=”rp-chain-affirm”>
+                <b>My affirmation</b>
+                <span>”{currentAffirmation || reflection.pathLabel}”</span>
+              </li>
             </ol>
+          )}
+
+          {/* Affirmation picker: shown if no affirmation chosen yet */}
+          {showAffirmationPicker && (
+            <div className=”rp-affirmation-picker”>
+              <p className=”rp-affirmation-prompt”>
+                Which words resonate with you? Pick one that feels right.
+              </p>
+              <div className=”rp-affirmation-choices”>
+                {affirmationChoices.map((affirmation) => (
+                  <button
+                    key={affirmation}
+                    onClick={() => chooseAffirmation(affirmation)}
+                    className=”rp-affirmation-choice”
+                  >
+                    “{affirmation}”
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => {
+                  if (!quiet) sound.play('tap');
+                  setShowAffirmationPicker(false);
+                }}
+                className=”rp-affirmation-custom”
+              >
+                Say my own affirmation instead
+              </button>
+            </div>
           )}
         </div>
       </div>
