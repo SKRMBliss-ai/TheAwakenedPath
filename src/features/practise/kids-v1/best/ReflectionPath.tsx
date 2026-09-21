@@ -219,7 +219,7 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
         <div className="rp-playback-card">
           <span className="rp-card-eyebrow">✦ Today’s Reflection</span>
           <span className="rp-tag-pill">{TAG_LABELS[reflection.tag] ?? 'Reflection'}</span>
-          <p className="rp-playback-phrase">“{reflection.pathLabel}”</p>
+          <p className="rp-playback-phrase">"{reflection.pathLabel}"</p>
           {reflection.feeling && (
             <p className="rp-feeling-echo">You felt: <strong>{reflection.feeling}</strong></p>
           )}
@@ -237,37 +237,37 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
             cards.
           */}
           {(reflection.whatHappened || reflection.originalStory || reflection.anotherWay) && (
-            <ol className=”rp-chain” aria-label=”My story reflection”>
+            <ol className="rp-chain" aria-label="My story reflection">
               {reflection.whatHappened && (
                 <li><b>What happened</b><span>{reflection.whatHappened}</span></li>
               )}
               {reflection.originalStory && (
-                <li className=”rp-chain-old”><b>Old story</b><span>”{reflection.originalStory}”</span></li>
+                <li className="rp-chain-old"><b>Old story</b><span>"{reflection.originalStory}"</span></li>
               )}
               {reflection.anotherWay && reflection.anotherWay !== reflection.originalStory && (
-                <li className=”rp-chain-new”><b>Another way</b><span>”{reflection.anotherWay}”</span></li>
+                <li className="rp-chain-new"><b>Another way</b><span>"{reflection.anotherWay}"</span></li>
               )}
-              <li className=”rp-chain-affirm”>
+              <li className="rp-chain-affirm">
                 <b>My affirmation</b>
-                <span>”{currentAffirmation || reflection.pathLabel}”</span>
+                <span>"{currentAffirmation || reflection.pathLabel}"</span>
               </li>
             </ol>
           )}
 
           {/* Affirmation picker: shown if no affirmation chosen yet */}
           {showAffirmationPicker && (
-            <div className=”rp-affirmation-picker”>
-              <p className=”rp-affirmation-prompt”>
+            <div className="rp-affirmation-picker">
+              <p className="rp-affirmation-prompt">
                 Which words resonate with you? Pick one that feels right.
               </p>
-              <div className=”rp-affirmation-choices”>
+              <div className="rp-affirmation-choices">
                 {affirmationChoices.map((affirmation) => (
                   <button
                     key={affirmation}
                     onClick={() => chooseAffirmation(affirmation)}
-                    className=”rp-affirmation-choice”
+                    className="rp-affirmation-choice"
                   >
-                    “{affirmation}”
+                    "{affirmation}"
                   </button>
                 ))}
               </div>
@@ -276,7 +276,7 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
                   if (!quiet) sound.play('tap');
                   setShowAffirmationPicker(false);
                 }}
-                className=”rp-affirmation-custom”
+                className="rp-affirmation-custom"
               >
                 Say my own affirmation instead
               </button>
@@ -415,7 +415,7 @@ function LibraryView({ onBack, onPlay, onGrownUp, still }: {
               <span className="rp-card-art" aria-hidden="true">
                 <img src={BRICK_DONE} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
               </span>
-              <p className="rp-card-phrase">“{r.pathLabel}”</p>
+              <p className="rp-card-phrase">"{r.pathLabel}"</p>
               <span className={`rp-tag-pill rp-tag-${r.tag}`}>{TAG_LABELS[r.tag] ?? r.tag}</span>
               {r.feeling && <small className="rp-card-feeling">You felt: {r.feeling}</small>}
             </button>
@@ -485,7 +485,7 @@ function RoomView({ picks, onPlayOne, onShuffle, onLibrary, onPath, onExit, onGr
                 <li key={r.id}>
                   <button onClick={onPlayOne} aria-label={`Play reflection: ${r.pathLabel}`}>
                     <span className={`rp-tag-pill rp-tag-${r.tag}`}>{TAG_LABELS[r.tag] ?? r.tag}</span>
-                    <span className="rp-pick-phrase">“{r.pathLabel}”</span>
+                    <span className="rp-pick-phrase">"{r.pathLabel}"</span>
                   </button>
                 </li>
               ))}

@@ -4,12 +4,12 @@ type Affirmations = Record<ReflectionTag, string[]>;
 
 export const AFFIRMATIONS: Affirmations = {
   brave: [
-    'I am brave, even when I'm scared.',
+    "I am brave, even when I'm scared.",
     'I can do hard things.',
     'My courage grows every day.',
     'I am stronger than my fears.',
     'I choose to be brave, step by step.',
-    'Fear doesn't stop me from trying.',
+    "Fear doesn't stop me from trying.",
     'I believe in my own strength.',
     'I can face anything with courage.',
     'My brave heart leads the way.',
@@ -42,7 +42,7 @@ export const AFFIRMATIONS: Affirmations = {
   belonging: [
     'I belong right here, right now.',
     'I am worthy of love and friendship.',
-    'I belong, even when I'm different.',
+    "I belong, even when I'm different.",
     'My voice matters in this world.',
     'I am exactly where I need to be.',
     'People care about me, truly.',
@@ -78,7 +78,7 @@ export const AFFIRMATIONS: Affirmations = {
 };
 
 export function getAffirmationsForTag(tag: ReflectionTag): string[] {
-  return AFFIRMATIONS[tag] || AFFIRMATIONS.other;
+  return AFFIRMATIONS[tag] ?? AFFIRMATIONS.other;
 }
 
 export function pickThreeAffirmations(tag: ReflectionTag): string[] {
