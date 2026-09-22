@@ -829,7 +829,12 @@
   transform:translateY(-6px) scale(1.06);
   filter:drop-shadow(0 10px 22px #ffd48a66);outline:none;z-index:3;
 }
-.rp-slot .rp-brick-img{width:100%;height:auto;display:block;pointer-events:none}
+/* One box for every stone, lit or locked. The two plates are different
+   shapes — the locked one is a fifth taller at the same width — so without
+   this the right bank stood on its own shoulders wherever the run had not
+   reached it yet, and only there, which looked like a bug in the layout
+   rather than in the art. */
+.rp-slot .rp-brick-img{width:100%;height:auto;aspect-ratio:2/1;object-fit:contain;display:block;pointer-events:none}
 .rp-slot .rp-brick-text{
   position:absolute;inset:0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:1px;padding:6% 11% 9%;
@@ -843,11 +848,16 @@
 }
 
 /* The walker, the signs and the door ────────────────────────────────── */
-.rp-walker{position:absolute;left:1.5%;bottom:4%;width:27%;max-width:290px;z-index:2;pointer-events:none}
+/* He stood in the bottom-left corner, which is now the first stone of the
+   left bank. The foot of the middle is the one place both banks leave free,
+   and it is also where somebody looking up at the door would stand. */
+.rp-walker{position:absolute;left:50%;bottom:-2%;translate:-50% 0;width:min(15%,178px);z-index:2;pointer-events:none}
 .rp-walker .rp-child{width:72%;height:auto;display:block;margin-left:18%;filter:drop-shadow(0 12px 22px #0a041899)}
 .rp-walker .rp-chirpy{position:absolute;left:0;top:6%;width:32%;height:auto;animation:rpFloat 4s ease-in-out infinite}
+/* Straight up the middle, inside the column the two banks leave open, so
+   it never lands on a stone. */
 .rp-walker-line{
-  position:absolute;left:24%;top:-4%;margin:0;max-width:78%;
+  position:absolute;left:50%;translate:-50% 0;bottom:102%;top:auto;margin:0;max-width:min(210px,21vw);
   font-size:clamp(9px,.85vw,12.5px);font-weight:850;line-height:1.2;color:#2c1470;
   background:linear-gradient(#fff,#ece0ff);border-radius:14px;padding:6px 10px;
   box-shadow:0 5px 14px #0c052288;
@@ -861,9 +871,11 @@
 }
 .rp-sign b{display:block;color:#c0436a;font-size:13px;margin-top:2px}
 .rp-sign-left{left:1.5%;top:2%}
-.rp-sign-right{right:1.5%;top:14%;transform:rotate(1.6deg);text-align:center}
+.rp-sign-right{right:1.5%;top:2%;transform:rotate(1.6deg);text-align:center}
 
-.rp-posts{position:absolute;right:1%;bottom:16%;z-index:2;margin:0;display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+/* Under the left-hand sign, because the bottom-right corner they used to
+   hang in is the first stone of the right bank now. */
+.rp-posts{position:absolute;left:1%;top:22%;z-index:2;margin:0;display:flex;flex-direction:column;gap:5px;align-items:flex-start}
 .rp-posts span{
   font-size:clamp(9px,.85vw,13px);font-weight:900;color:#ffeab6;
   background:linear-gradient(#7a4a1e,#4a2810);border:1px solid #ffca7a55;
@@ -872,13 +884,28 @@
 }
 .rp-posts span:nth-child(2){transform:rotate(1.5deg)}
 
+/*
+  THE DOOR IS THE MIDDLE OF THE ROOM NOW.
+
+  It used to sit in the top-right corner at 17% with the stones climbing
+  towards it diagonally, which read as a path that happened to end near a
+  door rather than as a walk towards one. Centred, and half again as big, it
+  is plainly the thing the two banks of stones are arriving at.
+
+  The stones' own `top` values are set against this: the lowest pair of them
+  sit at 45%, which is just under where the arch's feet land at this width.
+*/
 .rp-arch{
-  position:absolute;right:4%;top:0;width:17%;max-width:190px;z-index:2;
+  position:absolute;left:50%;top:1%;translate:-50% 0;
+  /* Sized off the viewport's HEIGHT as well as its width. On a short
+     window a door fixed at 300px eats half the stage and the stones have
+     nowhere left to stand clear of it. */
+  width:clamp(150px,min(26%,30svh),300px);z-index:3;
   background:none;border:0;padding:0;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;
   transition:transform .2s,filter .2s;
 }
-.rp-arch:hover,.rp-arch:focus-visible{transform:scale(1.05);filter:drop-shadow(0 0 20px #d4b0ffaa);outline:none}
+.rp-arch:hover,.rp-arch:focus-visible{transform:translateX(-50%) scale(1.05);filter:drop-shadow(0 0 20px #d4b0ffaa);outline:none}
 .rp-arch img{width:100%;height:auto;display:block;filter:drop-shadow(0 0 20px #b98bff66)}
 .rp-arch span{
   order:-1;font-size:clamp(11px,1.05vw,16px);font-weight:1000;line-height:1.05;text-align:center;
@@ -923,7 +950,7 @@
   .rp-bricks{position:static;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
   .rp-slot{position:static;translate:none;width:auto!important}
   .rp-walker,.rp-sign,.rp-posts{display:none}
-  .rp-arch{position:static;width:46%;margin:10px auto 0}
+  .rp-arch{position:static;left:auto;top:auto;translate:none;width:56%;max-width:280px;margin:12px auto 0}
   .rp-footbar{margin:8px 10px 0;gap:8px}
   .rp-foot-note{margin:4px 0 0;text-align:center;width:100%}
 }
@@ -935,14 +962,17 @@
    does the opposite job at the top end, keeping him from growing with a very
    wide window. Between them the path always starts clear of him. */
 .rp-walker{width:24%;max-width:300px}
-.rp-walker-line{z-index:3;left:30%;top:-10%;max-width:76%;background:linear-gradient(#fff,#efe6ff)}
+/* Last word on where the line sits — the rule above is the one that gets
+   overridden. Straight above his head and wider than he is, because he is
+   only 178px and the sentence is not short. */
+.rp-walker-line{z-index:3;left:50%;translate:-50% 0;top:auto;bottom:104%;max-width:none;width:min(230px,24vw);background:linear-gradient(#fff,#efe6ff)}
 .rp-walker .rp-child{position:relative;z-index:2}
 .rp-walker .rp-chirpy{z-index:3}
 
 /* Stones a touch smaller, so the climb keeps air around it and the top of the
    path does not lean on the archway. */
 .rp-slot{translate:-8% -50%}
-.rp-stage{min-height:470px}
+.rp-stage{min-height:540px}
 
 /* A stone not yet earned. Inert, and quiet enough that the lit ones lead. */
 .rp-slot-locked{pointer-events:none}
@@ -1000,5 +1030,5 @@
   the middle of their own cells.
 */
 @media(min-width:1001px){
-  .rp-slot{max-width:186px}
+  .rp-slot{max-width:168px}
 }

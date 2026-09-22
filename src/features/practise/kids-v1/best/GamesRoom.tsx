@@ -210,7 +210,19 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
     data-phase={state.phase}
     style={{ fontFamily: FONT, '--gr-accent': art.palette.accent } as CSSProperties}
   >
-    <RoomScene room={art} dim={0.34} />
+    {/*
+      CONTAIN, NOT COVER, and the blurred bed behind it does the rest.
+
+      The room paintings are 820x1152 portraits. Cover on a 1512-wide window
+      scales one up by about half again and shows a slice of it — which is why
+      this arrived as a giant soft face behind the chests. Contain draws the
+      whole painting at about 0.74, so it is drawn smaller than the source rather
+      than blown up, and RoomScene fills the space either side with the same
+      image blurred out. Nothing here has to be aimed at, so there is no
+      reason to crop it, and `feather` melts its two vertical edges into the
+      blur so it does not read as a picture hung in the middle of the wall.
+    */}
+    <RoomScene room={art} dim={0.34} fit="contain" feather />
     <Scenery />
 
     <header className="gr-top">

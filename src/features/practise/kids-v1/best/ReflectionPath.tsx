@@ -21,27 +21,36 @@ const BRICK_LOCKED = `${A}reflection_brick_locked@4x.png`;
 /**
  * WHERE EACH STONE SITS, AS THE REFERENCE LAYS THEM.
  *
- * reflection_path_magic_journey.png does not draw a grid — it draws a path
- * climbing from the bottom left to the Reflection Room at the top right, with
- * the stones at irregular sizes and offsets so it reads as somewhere you walk
- * rather than as a list of cards. Ten slots, in percentages of the stage, so
- * the climb holds its shape at every width.
+ * Not a grid: a path, and now two of them. The door is the middle of the
+ * room and the stones arrive at it from both sides, five to a bank, mirrored
+ * about the centre line so the composition is symmetrical and the archway is
+ * plainly what the walk is for.
+ *
+ * Every number is a percentage of the stage, which is what keeps the shape at
+ * every width — and `size` is a percentage too, capped in the stylesheet so a
+ * wide window buys the path air rather than buying the stones size.
+ *
+ * The banks stop short of each other on purpose. Closing the gap would put a
+ * tenth stone where the door should be.
  */
 const PATH_SLOTS = [
-  /* The climb starts at 20%, not at the left edge: the boy and Chirpy sit in
-     the bottom-left corner of this stage (.rp-walker), and a stone under
-     there is a reflection the child cannot see or reach. */
-  { left: 27, top: 76, size: 13 },
-  { left: 37, top: 84, size: 12 },
-  { left: 46, top: 68, size: 13.5 },
-  { left: 55, top: 78, size: 12 },
-  { left: 61, top: 54, size: 12.5 },
-  { left: 69, top: 68, size: 11.5 },
-  { left: 72, top: 41, size: 12 },
-  { left: 84, top: 57, size: 11.5 },
-  /* Held clear of the archway's foot, which fills the top-right corner. */
-  { left: 79, top: 31, size: 11 },
-  { left: 66, top: 20, size: 10.5 },
+  /* LEFT BANK, climbing in towards the door. The top stone stops at 48%,
+     which is below where the archway's steps land — the first attempt put it
+     at 45% and the stone sat on the doorstep. The 10.5% between each one is
+     what keeps a stone off the shoulders of the one below it. */
+  { left: 6,  top: 90, size: 11.5 },
+  { left: 13, top: 79.5, size: 11 },
+  { left: 20, top: 69, size: 11.5 },
+  { left: 27, top: 58.5, size: 11 },
+  { left: 33, top: 48, size: 10.5 },
+  /* RIGHT BANK: the same five mirrored, each one at 100 - left - size. The
+     13% they leave between them at the top is the door's own column, and it
+     stays clear all the way down for the boy and his line. */
+  { left: 82.5, top: 90, size: 11.5 },
+  { left: 76,   top: 79.5, size: 11 },
+  { left: 68.5, top: 69, size: 11.5 },
+  { left: 62,   top: 58.5, size: 11 },
+  { left: 56.5, top: 48, size: 10.5 },
 ];
 
 /** A small mark per category, as the reference paints on each stone. */
