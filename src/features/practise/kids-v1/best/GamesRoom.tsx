@@ -327,7 +327,14 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
     data-phase={state.phase}
     style={{ fontFamily: FONT, '--gr-accent': art.palette.accent } as CSSProperties}
   >
-    <RoomScene room={art} dim={awakePhase === 'dim' ? 0.65 : 0.34} fit="contain" feather />
+    {/*
+      'cover', not 'contain'. Contained, the painting sat as a letterboxed
+      panel with dead bands either side of it — and the scenery below is
+      positioned against the viewport, so the books, the chalkboard and the
+      plant all landed in those bands, floating on flat purple instead of
+      standing in the room.
+    */}
+    <RoomScene room={art} dim={awakePhase === 'dim' ? 0.6 : 0.34} fit="cover" />
 
     <AmbientLayer still={still} />
 

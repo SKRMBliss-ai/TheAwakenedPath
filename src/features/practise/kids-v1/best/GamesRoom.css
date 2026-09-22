@@ -45,7 +45,10 @@
 .gr-scenery-btn:disabled{cursor:default;opacity:.7}
 
 /* Rug — large target centred at the bottom */
-.gr-rug-btn{left:50%;bottom:3%;transform:translateX(-50%);width:min(46%,560px)}
+/* Capped well under the old 560px: the source sprite is only 127px across,
+   and past about twice that it stops reading as a rug and starts reading as
+   a smear. */
+.gr-rug-btn{left:50%;bottom:3%;transform:translateX(-50%);width:min(30%,300px)}
 .gr-rug-btn img{width:100%;height:auto;opacity:.92}
 .gr-rug-btn:not(:disabled):hover img,.gr-rug-btn:focus-visible img{
   opacity:1;filter:drop-shadow(0 8px 18px #c9aef899) drop-shadow(0 0 12px #8b5cf655);
