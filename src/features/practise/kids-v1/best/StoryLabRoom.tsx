@@ -227,7 +227,11 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
-  const still = quiet || reduced;
+  /* Thoughts should float and cycle for every feeling — including angry, sad,
+     scared — so `still` tracks the OS prefers-reduced-motion only, not quiet.
+     Quiet mode still calms everything else (target sizes, transitions, Chirpy)
+     through the `quiet` boolean used directly below. */
+  const still = !!reduced;
   const [ageBand] = useState(() => band());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
@@ -450,12 +454,11 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const kept = (pool: Option[], text: string, icon: string): Option[] =>
     [pool.find((o) => o.text === text) ?? { text, icon }];
 
-  /* "Say it your way" has its own shelf under the sky now (see sl-own-rail),
-     so it is no longer appended here — in the quiet state that frees the slot
-     it used to take, and the still list shows six rather than four. Thoughts
-     keep rotating after selection so the child sees more clouds and picks up
-     on new patterns; the CSS class .sl-chosen marks their selection. */
-  const thoughtOptions = quiet ? thoughtPool.slice(0, 6) : thoughtRoll.items;
+  /* "Say it your way" has its own shelf under the sky now (see sl-own-rail).
+     All feelings — including quiet-mode (angry, sad, scared at high intensity) —
+     get the full rotating window of 8 so they float and cycle the same way.
+     The CSS class .sl-chosen marks whichever was selected. */
+  const thoughtOptions = thoughtRoll.items;
   const eventOptions = event ? kept(eventPool, event, '✧')
     : quiet ? [...eventPool.slice(0, 4), SOMETHING_ELSE] : [...eventRoll.items, SOMETHING_ELSE];
   const otherOptions = [...POSSIBILITIES, MY_OWN];

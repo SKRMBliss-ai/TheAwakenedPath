@@ -836,7 +836,8 @@
 */
 .sl-rolling-out .sl-thought-cloud:not(.sl-cloud-own),
 .sl-rolling-out > button:not(.sl-card-own){
-  opacity:0;transition:opacity .43s ease;pointer-events:none;
+  opacity:0;transform:translateY(-14px) scale(.92);
+  transition:opacity .43s ease,transform .43s ease;pointer-events:none;
 }
 /*
   No fill-mode on the way in, and that is not a detail. A finished animation
@@ -846,11 +847,16 @@
   finishes, which is exactly what the fade-out then needs to take hold of.
 */
 .sl-thought-clouds .sl-thought-cloud{
-  animation:sl-drift var(--drift-dur,5s) ease-in-out infinite,sl-roll-in .5s ease-out;
+  animation:sl-drift var(--drift-dur,5s) ease-in-out infinite,sl-cloud-arrive .5s cubic-bezier(.22,1,.36,1);
   animation-delay:var(--drift-delay),0s;
 }
 .sl-cards > button{animation:sl-roll-in .5s ease-out}
 @keyframes sl-roll-in{from{opacity:0}}
+/* New clouds drift down from the sky as they arrive. */
+@keyframes sl-cloud-arrive{
+  from{opacity:0;transform:translateY(-22px) scale(.88)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
 
 /*
   Floating thought particles drifting from the boy's head up into the clouds.
