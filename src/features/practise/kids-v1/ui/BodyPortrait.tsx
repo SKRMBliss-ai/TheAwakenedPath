@@ -64,10 +64,11 @@ function useCoverRect(
   ref: React.RefObject<HTMLElement | null>,
   naturalW: number,
   naturalH: number,
-  /** When true, matches object-position:top — image anchored at top edge,
-   *  overflow goes below. Pass this whenever the <img> also uses top.
+  /** The painting's object-position Y as a fraction: 0 is `top`, 0.5 is
+   *  `center`, 1 is `bottom`. Must be whatever the <img> underneath uses, or
+   *  the overlay and the painting disagree about which part got cropped.
    *  Ignored under 'contain', which never overflows and so always centres. */
-  topAnchor = false,
+  focusY = 0.5,
   /** Must match the object-fit the painting underneath is drawn with. */
   fit: 'cover' | 'contain' = 'cover',
 ): CoverRect | null {
@@ -94,7 +95,11 @@ function useCoverRect(
         width,
         height,
         left: (cw - width) / 2,
-        top: fit === 'cover' && topAnchor ? 0 : (ch - height) / 2,
+        /* The same formula CSS uses for object-position: the overflow is
+           shared out in the focus fraction's proportion. At 0.5 it is the
+           plain centring a contained image also gets, which is why contain
+           can take this branch too. */
+        top: fit === 'cover' ? -(focusY * (height - ch)) : (ch - height) / 2,
       });
     };
 
@@ -123,7 +128,7 @@ function useCoverRect(
       window.removeEventListener('resize', measure);
       window.removeEventListener('orientationchange', measure);
     };
-  }, [ref, naturalW, naturalH, topAnchor, fit]);
+  }, [ref, naturalW, naturalH, focusY, fit]);
 
   return rect;
 }
@@ -189,23 +194,24 @@ export function BodyPortrait({
   selected,
   suggested,
   onToggle,
-  topAnchor = false,
+  focusY = 0.5,
   fit = 'cover',
 }: {
   accent: string;
   selected: Set<BodyZoneId>;
   suggested: BodyZoneId | null;
   onToggle: (zone: BodyZoneId) => void;
-  /** Pass true when RoomScene is using objectPosition="top", so the SVG overlay
-   *  matches the same anchor and tap zones land on the painted boy. */
-  topAnchor?: boolean;
+  /** RoomScene's objectPosition Y as a fraction — 0 for `top`, 0.5 for
+   *  `center`. Must be the same number, or the tap zones land on whichever
+   *  part of the painting got cropped away. */
+  focusY?: number;
   /** Must match the `fit` RoomScene is painting with, or every tap lands in
    *  the wrong place. See useCoverRect. */
   fit?: 'cover' | 'contain';
 }) {
   const m = useMotion();
   const containerRef = useRef<HTMLDivElement>(null);
-  const cover = useCoverRect(containerRef, ART_W, ART_H, topAnchor, fit);
+  const cover = useCoverRect(containerRef, ART_W, ART_H, focusY, fit);
   const [ripples, setRipples] = useState<Ripple[]>([]);
 
   const tap = (zone: BodyZoneId, cx: number, cy: number) => {

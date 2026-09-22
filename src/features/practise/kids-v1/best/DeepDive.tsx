@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getRoom, type RoomId } from '../rooms';
+import { getRoom, roomArt, type RoomId } from '../rooms';
 import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
@@ -90,6 +90,56 @@ function suggestedBodyZone(feeling: string | undefined): BodyZoneId | null {
     case 'happy':   return 'chest';
     default:        return null;
   }
+}
+
+/* ── How the body room is framed ───────────────────────────────────────── *
+ *
+ * Both numbers are read off the hologram boy's position in
+ * public/rooms/body.webp, which is 1024x1536. He runs from about row 265
+ * (top of the hair) to about row 1230 (the soles on the disc): 965 rows, and
+ * every tap zone in ui/BodyPortrait sits between them. Re-paint the room and
+ * both of these move — measure them again rather than nudging.
+ */
+
+/**
+ * The widest the stage may be, as a multiple of its own height.
+ *
+ * Under `cover` a stage this shape shows 1024/1.05 ≈ 975 of the painting's
+ * rows, whatever size the window is — the boy's 965 with ten to spare. Any
+ * wider and the scale goes up, the visible band shrinks, and his head or his
+ * feet leave the screen along with the zones on them.
+ */
+const BODY_STAGE_MAX_ASPECT = 1.05;
+
+/**
+ * Where to hold that band. The boy sits slightly above the painting's middle,
+ * so plain centring clips his hair on the tightest stage; 0.46 puts the 975
+ * visible rows at about 258–1233 and holds him whole all the way down to a
+ * square-ish stage, where there is slack to spare either side.
+ */
+const BODY_FOCUS_Y = 0.46;
+
+/**
+ * Is the window a shape `cover` can frame the whole boy in?
+ *
+ * Below about half as wide as it is tall there is no vertical crop left to
+ * trade — cover starts cropping the SIDES instead, and his right hand is the
+ * first thing to go. A portrait phone is the case that matters here, and it
+ * keeps `contain`, which is what it has always had and what it should have:
+ * the letterbox nobody minds on a phone is exactly the bars that made a
+ * desktop look like one.
+ */
+function useCoverableStage() {
+  const [ok, setOk] = useState(() =>
+    typeof window === 'undefined' ? true : window.matchMedia('(min-aspect-ratio: 53/100)').matches);
+  useEffect(() => {
+    const query = window.matchMedia('(min-aspect-ratio: 53/100)');
+    const sync = () => setOk(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+  return ok;
 }
 
 const EYES_OPTIONS = [
@@ -224,6 +274,12 @@ export function DeepDive({
   const caseComplete = !!(answers.feeling && answers.body && answers.story && answers.eyes);
   const onFeelingStep = step.id === 'feeling' && phase === 'ask';
 
+  /** The one step where the painting is also the control. */
+  const bodyAsk = step.id === 'body' && phase === 'ask';
+  /* One value, read by the painting and by the overlay that has to line up
+     with it. Two literals here is how they drift apart. */
+  const bodyFit = useCoverableStage() ? 'cover' : 'contain';
+
   /** Chirpy's line on the body step, when the feeling has a usual home. */
   const bodySuggestion = step.id === 'body' ? suggestedBodyZone(answers.feeling) : null;
   const bodyHint = bodySuggestion
@@ -327,32 +383,74 @@ export function DeepDive({
               other step keeps its painted still. */}
           {onFeelingStep
             ? <FeelingsIntro onDone={finishFeelingIntro} flash={orbFlash} />
-            : <RoomScene
-                room={art}
-                dim={phase === 'ask' ? DIM.content : turned ? DIM.arrive : DIM.play}
-                objectPosition="center"
-                /* The body room is the one painting a child has to aim at, so
-                   it is fitted rather than cropped — see RoomScene's `fit`. */
-                fit={step.id === 'body' && phase === 'ask' ? 'contain' : 'cover'}
-              />}
+            : bodyAsk
+              /*
+                THE BODY ROOM IS A STAGE, NOT THE WHOLE WINDOW.
 
-          {/* The invisible tap layer for "where do you feel it?", registered
-              against the SAME full-bleed box RoomScene just painted into —
-              see BodyPortrait's own doc comment for why that's what keeps it
-              lined up with the boy on every screen shape. */}
-          {step.id === 'body' && phase === 'ask' && (
-            <BodyPortrait
-              accent={accent}
-              suggested={bodySuggestion}
-              selected={bodyZones}
-              fit="contain"
-              onToggle={(z) => {
-                setBodyZones(new Set([z]));
-                sound.play('tap');
-                answer('body', [BODY_ZONE_LABEL[z]]);
-              }}
-            />
-          )}
+                Fitting the painting to the viewport kept every tap zone
+                reachable and turned a desktop into a phone: body.webp is
+                1024x1536, so on a 1512x850 window `contain` drew it 567px
+                wide and filled the remaining thousand pixels with blur. A
+                portrait strip down the middle of a landscape screen.
+
+                It cannot be solved by cropping less. To fill 1512px from a
+                1024px-wide painting you have to scale it 1.48x, which leaves
+                542 of its 1536 rows on screen — and the hologram boy alone is
+                965 rows tall. Whole boy and full width cannot both be had.
+
+                So the painting gets a stage of its own, no wider than
+                BODY_STAGE_MAX_ASPECT times its height, and fills it with
+                `cover`. At that shape cover shows 1024/1.05 ≈ 975 rows, which
+                is the boy plus ten to spare, and the stage is 892px on that
+                same window rather than 567. The room carries on past its
+                edges as the blurred bed below, so there is no seam — what was
+                a phone on a desk is now a lit examination panel in a wider
+                room.
+              */
+              ? <>
+                  <img
+                    aria-hidden
+                    alt=""
+                    src={roomArt(art.id)}
+                    draggable={false}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    style={{ filter: 'blur(34px) saturate(1.15) brightness(0.5)', transform: 'scale(1.18)' }}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                  <div className="absolute inset-0 flex justify-center">
+                    {/* RoomScene and BodyPortrait are siblings in THIS box, so
+                        the overlay measures the same width and height the
+                        painting was drawn into — which is the whole reason the
+                        tap zones land on the boy. Moving one without the other
+                        is how they came apart before. */}
+                    <div className="relative h-full" style={{ width: `min(100%, ${BODY_STAGE_MAX_ASPECT * 100}svh)` }}>
+                      <RoomScene
+                        room={art}
+                        dim={DIM.content}
+                        objectPosition={`center ${BODY_FOCUS_Y * 100}%`}
+                        fit={bodyFit}
+                      />
+                      <BodyPortrait
+                        accent={accent}
+                        suggested={bodySuggestion}
+                        selected={bodyZones}
+                        fit={bodyFit}
+                        focusY={BODY_FOCUS_Y}
+                        onToggle={(z) => {
+                          setBodyZones(new Set([z]));
+                          sound.play('tap');
+                          answer('body', [BODY_ZONE_LABEL[z]]);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </>
+              : <RoomScene
+                  room={art}
+                  dim={phase === 'ask' ? DIM.content : turned ? DIM.arrive : DIM.play}
+                  objectPosition="center"
+                  fit="cover"
+                />}
         </motion.div>
       </AnimatePresence>
 
