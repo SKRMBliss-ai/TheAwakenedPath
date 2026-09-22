@@ -911,8 +911,14 @@
 
 .rp-stop-slim{padding-top:6px;padding-bottom:10px}
 
-/* Narrow: the climb cannot hold its shape, so the stones stack in order. */
-@media(max-width:860px){
+/* Narrow: the climb cannot hold its shape, so the stones stack in order.
+
+   The threshold was 860px, which was optimistic. The boy and Chirpy are a
+   per-cent of the stage with a pixel cap, so the narrower the window the more
+   of it they take — at 900px they were across nearly a third of the path and
+   the first stone's words were behind the boy's shoulder. Below 1000px the
+   grid is simply the better answer. */
+@media(max-width:1000px){
   .rp-stage{min-height:0;padding:6px 10px 0}
   .rp-bricks{position:static;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
   .rp-slot{position:static;translate:none;width:auto!important}
@@ -923,7 +929,12 @@
 }
 
 /* The bubble belongs in front of the boy, not under his cap. */
-.rp-walker{width:30%;max-width:330px}
+/* 24%, not 30%. He is a per-cent of the stage with a pixel cap, so the
+   narrower the window the more of the path he covers — at 1040px he reached
+   across a third of it and stood in front of the first stone's words. The cap
+   does the opposite job at the top end, keeping him from growing with a very
+   wide window. Between them the path always starts clear of him. */
+.rp-walker{width:24%;max-width:300px}
 .rp-walker-line{z-index:3;left:30%;top:-10%;max-width:76%;background:linear-gradient(#fff,#efe6ff)}
 .rp-walker .rp-child{position:relative;z-index:2}
 .rp-walker .rp-chirpy{z-index:3}
@@ -969,4 +980,25 @@
 /* Reduced motion gets the dimming without the breathing. */
 @media (prefers-reduced-motion: reduce){
   .rp-arch-resting img{animation:none}
+}
+
+/*
+  A STONE IS A STEPPING STONE, NOT A PAVING SLAB.
+
+  The slots are sized as a per-cent of the stage so the climb keeps its shape
+  as the window changes, and on a wide desktop that arithmetic ran away with
+  itself: the stage is the full width of the screen, so a 21% stone on a
+  1900px window was drawn nearly 400px across. Ten of those cannot fit on one
+  path, so they sat on each other — a stone's text disappearing under the
+  stone above it — and each one was big enough to read as a slab rather than
+  as somewhere you put your foot.
+
+  The percentages come down (see PATH_SLOTS) and this caps what they can reach
+  on the widest screens, so the path gains air instead of the stones gaining
+  size. Desktop only: under 860px the stones stop being a path at all and
+  stack into a two-column grid, where a 186px cap would leave them stranded in
+  the middle of their own cells.
+*/
+@media(min-width:1001px){
+  .rp-slot{max-width:186px}
 }

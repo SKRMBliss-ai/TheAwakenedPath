@@ -28,16 +28,20 @@ const BRICK_LOCKED = `${A}reflection_brick_locked@4x.png`;
  * the climb holds its shape at every width.
  */
 const PATH_SLOTS = [
-  { left: 3,  top: 70, size: 20 },
-  { left: 20, top: 79, size: 18 },
-  { left: 35, top: 66, size: 21 },
-  { left: 50, top: 76, size: 18 },
-  { left: 57, top: 54, size: 19 },
-  { left: 68, top: 67, size: 17 },
-  { left: 72, top: 42, size: 18 },
-  { left: 83, top: 54, size: 17 },
-  { left: 85, top: 30, size: 16 },
-  { left: 68, top: 22, size: 15 },
+  /* The climb starts at 20%, not at the left edge: the boy and Chirpy sit in
+     the bottom-left corner of this stage (.rp-walker), and a stone under
+     there is a reflection the child cannot see or reach. */
+  { left: 27, top: 76, size: 13 },
+  { left: 37, top: 84, size: 12 },
+  { left: 46, top: 68, size: 13.5 },
+  { left: 55, top: 78, size: 12 },
+  { left: 61, top: 54, size: 12.5 },
+  { left: 69, top: 68, size: 11.5 },
+  { left: 72, top: 41, size: 12 },
+  { left: 84, top: 57, size: 11.5 },
+  /* Held clear of the archway's foot, which fills the top-right corner. */
+  { left: 79, top: 31, size: 11 },
+  { left: 66, top: 20, size: 10.5 },
 ];
 
 /** A small mark per category, as the reference paints on each stone. */
