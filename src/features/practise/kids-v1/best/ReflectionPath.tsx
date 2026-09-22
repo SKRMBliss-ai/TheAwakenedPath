@@ -184,10 +184,11 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
     if (!quiet) sound.play('tap');
     if (speaking) { stopSpeaking(); setSpeaking(false); return; }
     setSpeaking(true);
-    speak(reflection.pathLabel, quiet);
+    const line = currentAffirmation || reflection.pathLabel;
+    speak(line, quiet);
     /* The voice has no reliable end event across browsers, so the indicator
        stands down on a timer scaled to the length of the line. */
-    window.setTimeout(() => setSpeaking(false), Math.max(2600, reflection.pathLabel.length * 95));
+    window.setTimeout(() => setSpeaking(false), Math.max(2600, line.length * 95));
   };
 
   const chooseAffirmation = (affirmation: string) => {

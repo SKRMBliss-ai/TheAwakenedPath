@@ -49,20 +49,70 @@ const SUBS = ['Tap a thought, or tell me in your own words.', "Let's look at wha
 
 type Option = { text: string; icon: string; own?: boolean };
 
-const THOUGHTS: Option[] = [
-  { text: "I can't do it.", icon: '☁' }, { text: "They don't like me.", icon: '☁' },
-  { text: "It's not fair.", icon: '☁' }, { text: 'What if…?', icon: '☁' },
-  { text: "I'm going to get in trouble.", icon: '☁' }, { text: "I'm not sure.", icon: '☁' },
+// Younger: 5–7 year-olds, simpler language and more concrete situations
+const THOUGHTS_YOUNGER: Option[] = [
+  { text: "I can't do it.", icon: '☁' },
+  { text: "Nobody likes me.", icon: '☁' },
+  { text: "It's not fair.", icon: '☁' },
+  { text: "I'm going to get in trouble.", icon: '☁' },
+  { text: "I'm scared.", icon: '☁' },
+  { text: "I don't want to.", icon: '☁' },
 ];
-const EVENTS: Option[] = [
-  { text: 'Someone said something', icon: '☏' }, { text: 'I had to wait', icon: '◷' },
-  { text: "I didn't get to join", icon: '♧' }, { text: 'I made a mistake', icon: '✧' },
-  { text: 'Something changed', icon: '↝' },
+const EVENTS_YOUNGER: Option[] = [
+  { text: 'Someone said something mean', icon: '☏' },
+  { text: 'I had to wait my turn', icon: '◷' },
+  { text: "I wasn't picked", icon: '♧' },
+  { text: 'I got something wrong', icon: '✧' },
+  { text: 'Something felt different', icon: '↝' },
 ];
-const POSSIBILITIES: Option[] = [
+const POSSIBILITIES_YOUNGER: Option[] = [
+  { text: 'Maybe it was just this one time.', icon: '✳' },
+  { text: 'Maybe they were having a hard day too.', icon: '❋' },
+  { text: 'Maybe I can try a different way next time.', icon: '✦' },
+];
+
+// Middle: 8–10 year-olds
+const THOUGHTS_MIDDLE: Option[] = [
+  { text: "I can't do this.", icon: '☁' },
+  { text: "They don't like me.", icon: '☁' },
+  { text: "It's not fair.", icon: '☁' },
+  { text: 'What if something goes wrong?', icon: '☁' },
+  { text: "I'm going to get in trouble.", icon: '☁' },
+  { text: "I always mess things up.", icon: '☁' },
+];
+const EVENTS_MIDDLE: Option[] = [
+  { text: 'Someone said something hurtful', icon: '☏' },
+  { text: 'I had to wait', icon: '◷' },
+  { text: "I was left out", icon: '♧' },
+  { text: 'I made a mistake', icon: '✧' },
+  { text: 'Something changed unexpectedly', icon: '↝' },
+];
+const POSSIBILITIES_MIDDLE: Option[] = [
   { text: 'Maybe it only happened this time.', icon: '✳' },
-  { text: 'Maybe they were busy with something else.', icon: '❋' },
-  { text: 'Maybe I can try again in a different way.', icon: '✦' },
+  { text: 'Maybe they were dealing with something else.', icon: '❋' },
+  { text: 'Maybe I can try a different approach.', icon: '✦' },
+];
+
+// Older: 11+ year-olds
+const THOUGHTS_OLDER: Option[] = [
+  { text: "I can't handle this.", icon: '☁' },
+  { text: "They don't like me.", icon: '☁' },
+  { text: "It's not fair.", icon: '☁' },
+  { text: 'What if everything goes wrong?', icon: '☁' },
+  { text: "I always make things worse.", icon: '☁' },
+  { text: "Nobody understands me.", icon: '☁' },
+];
+const EVENTS_OLDER: Option[] = [
+  { text: 'Someone said something hurtful', icon: '☏' },
+  { text: 'I was excluded or left out', icon: '♧' },
+  { text: 'I made a mistake in front of others', icon: '✧' },
+  { text: 'Plans changed at the last minute', icon: '↝' },
+  { text: 'I felt pressure to perform', icon: '◷' },
+];
+const POSSIBILITIES_OLDER: Option[] = [
+  { text: 'Maybe this was a one-off, not a pattern.', icon: '✳' },
+  { text: 'Maybe they were caught up in their own stuff.', icon: '❋' },
+  { text: 'Maybe there is another explanation I have not considered.', icon: '✦' },
 ];
 const SAY_IT: Option = { text: 'Say it your way', icon: 'mic', own: true };
 const SOMETHING_ELSE: Option = { text: 'Something else', icon: 'mic', own: true };
@@ -246,6 +296,10 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     // eslint-disable-next-line react-hooks/exhaustive-deps -- save is guarded by savedOnce
   }, [step]);
 
+  const THOUGHTS = ageBand === 'young' ? THOUGHTS_YOUNGER : ageBand === 'older' ? THOUGHTS_OLDER : THOUGHTS_MIDDLE;
+  const EVENTS = ageBand === 'young' ? EVENTS_YOUNGER : ageBand === 'older' ? EVENTS_OLDER : EVENTS_MIDDLE;
+  const POSSIBILITIES = ageBand === 'young' ? POSSIBILITIES_YOUNGER : ageBand === 'older' ? POSSIBILITIES_OLDER : POSSIBILITIES_MIDDLE;
+
   const thoughtOptions = quiet ? [...THOUGHTS.slice(0, 3), SAY_IT] : [...THOUGHTS, SAY_IT];
   const eventOptions = quiet ? [...EVENTS.slice(0, 3), SOMETHING_ELSE] : [...EVENTS, SOMETHING_ELSE];
   const otherOptions = [...POSSIBILITIES, MY_OWN];
@@ -258,7 +312,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   };
 
   /** The child's own words, in whichever panel asked for them. */
-  const ownForm = <form className="sl-own-form" onSubmit={e => { e.preventDefault(); capture(draft); }}>
+  const ownForm = <form className="sl-own-form" onSubmit={e => { e.preventDefault(); if (!quiet) sound.play('tap'); capture(draft); }}>
     <label htmlFor="sl-own-answer">{step === 4 ? 'The story my mind made' : 'Your own words'}</label>
     <textarea id="sl-own-answer" autoFocus value={draft} onChange={e => setDraft(e.target.value)} rows={2} maxLength={400} />
     <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button><button type="button" onClick={() => setWriting(false)}>Cancel</button></div>
