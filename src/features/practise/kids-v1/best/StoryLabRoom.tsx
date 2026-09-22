@@ -13,32 +13,38 @@ import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
-/**
- * Floating thought particles that drift from the boy's head up into the clouds.
- * Creates a visual connection showing thoughts originating from the mind.
- */
+/* Boy's head sits roughly at left 55px, bottom 120px within the thought field. */
+const BUBBLE_ORIGINS = [
+  { left: 42, bottom: 128, size: 9 },
+  { left: 62, bottom: 118, size: 12 },
+  { left: 50, bottom: 134, size: 8 },
+  { left: 68, bottom: 122, size: 10 },
+];
+
 function ThoughtParticles({ show }: { show: boolean }) {
   const still = useReducedMotion();
   if (still || !show) return null;
 
   return (
-    <AnimatePresence>
-      {Array.from({ length: 3 }).map((_, i) => (
-        <motion.div
+    <>
+      {BUBBLE_ORIGINS.map((o, i) => (
+        <motion.span
           key={i}
           className="sl-thought-particle"
-          initial={{ opacity: 0, y: 0, x: 0 }}
-          animate={{ opacity: [0, 0.6, 0.4, 0], y: -140, x: (i - 1) * 15 }}
-          transition={{ duration: 3.2 + i * 0.4, ease: 'easeInOut', repeat: Infinity, delay: i * 0.8 }}
+          style={{ left: o.left, bottom: o.bottom, width: o.size, height: o.size } as CSSProperties}
+          initial={{ opacity: 0 }}
+          animate={{
+            opacity: [0, 0.85, 0.55, 0.2, 0],
+            y: [0, -55, -110, -165],
+            x: [0, (i % 2 === 0 ? 9 : -9), (i % 2 === 0 ? 5 : -14), (i % 2 === 0 ? 13 : -7)],
+          }}
+          transition={{ duration: 2.6 + i * 0.5, ease: 'easeInOut', repeat: Infinity, delay: i * 0.85 }}
           aria-hidden="true"
-        >
-          ◯
-        </motion.div>
+        />
       ))}
-    </AnimatePresence>
+    </>
   );
 }
-
 /*
   THE WALK IS A FILMSTRIP NOW, which is what approved_reference_story_lab.png
   has been showing all along.
@@ -81,8 +87,7 @@ const POSSIBILITIES: Option[] = [
   { text: 'Maybe they were busy with something else.', icon: '❋' },
   { text: 'Maybe I can try again in a different way.', icon: '✦' },
 ];
-/* The Thought panel's equivalent is not in a list at all — it is the shelf
-   under the clouds, see sl-own-rail. */
+const SAY_IT: Option = { text: 'Say it your way', icon: 'mic', own: true };
 const SOMETHING_ELSE: Option = { text: 'Something else', icon: 'mic', own: true };
 const MY_OWN: Option = { text: 'My own idea…', icon: 'mic', own: true };
 
@@ -136,10 +141,10 @@ function useFilmScale(count: number) {
  */
 
 /** How many of the pool stand on screen at once, per panel. */
-const THOUGHT_WINDOW = 8;
+const THOUGHT_WINDOW = 6;
 const EVENT_WINDOW = 5;
 /** How long a set stays before the next comes round. */
-const ROTATE_MS = 3400;
+const ROTATE_MS = 3000;
 /** Long enough to read as drifting off rather than blinking out. */
 const FADE_MS = 430;
 
@@ -227,11 +232,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
-  /* Thoughts should float and cycle for every feeling — including angry, sad,
-     scared — so `still` tracks the OS prefers-reduced-motion only, not quiet.
-     Quiet mode still calms everything else (target sizes, transitions, Chirpy)
-     through the `quiet` boolean used directly below. */
-  const still = !!reduced;
+  const still = quiet || reduced;
   const [ageBand] = useState(() => band());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
@@ -434,16 +435,15 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 
   /*
     A child reaching for a cloud with a mouse or a keyboard stops the clock;
-    see useRotatingWindow. Touch has no hover to read, which is why that also
-    pauses it — the set the child is reaching for stays while they reach. But
-    after selection, the thoughts keep rotating so they see more patterns.
+    see useRotatingWindow. Touch has no hover to read, which is why the answer
+    itself also pauses it — the set the child tapped is the set that stays.
   */
   const [reaching, setReaching] = useState(false);
   const hold = { onPointerEnter: () => setReaching(true), onPointerLeave: () => setReaching(false),
                  onFocus: () => setReaching(true), onBlur: () => setReaching(false) };
 
   const thoughtRoll = useRotatingWindow(thoughtPool, THOUGHT_WINDOW, ROTATE_MS,
-    still || writing || reaching || step !== 2);
+    still || writing || reaching || !!thought || step !== 2);
   const eventRoll = useRotatingWindow(eventPool, EVENT_WINDOW, ROTATE_MS,
     still || writing || reaching || !!event || step !== 3);
 
@@ -454,11 +454,8 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const kept = (pool: Option[], text: string, icon: string): Option[] =>
     [pool.find((o) => o.text === text) ?? { text, icon }];
 
-  /* "Say it your way" has its own shelf under the sky now (see sl-own-rail).
-     All feelings — including quiet-mode (angry, sad, scared at high intensity) —
-     get the full rotating window of 8 so they float and cycle the same way.
-     The CSS class .sl-chosen marks whichever was selected. */
-  const thoughtOptions = thoughtRoll.items;
+  const thoughtOptions = thought ? kept(thoughtPool, thought, '☁')
+    : quiet ? [...thoughtPool.slice(0, 4), SAY_IT] : [...thoughtRoll.items, SAY_IT];
   const eventOptions = event ? kept(eventPool, event, '✧')
     : quiet ? [...eventPool.slice(0, 4), SOMETHING_ELSE] : [...eventRoll.items, SOMETHING_ELSE];
   const otherOptions = [...POSSIBILITIES, MY_OWN];
@@ -517,25 +514,37 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 
               {index === 2 && <div className={`sl-thought-field ${!thought ? 'sl-field-railed' : ''}`}>
                 <ThoughtParticles show={!thought} />
-                <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{thoughtOptions.map((option, i) => <button
-                  key={option.text}
-                  className={`sl-thought-cloud ${cardClass(2, option.text)}`}
-                  /* Each cloud drifts on its own clock and its own path, so a
-                     skyful of them read as weather rather than a grid twitching
-                     in unison. The numbers are derived from the index, not
-                     random, so they stay put across re-renders — and the
-                     cycles are coprime enough that eight of them never fall
-                     back into step with each other. */
-                  style={{
-                    '--drift-delay': `${(i % 8) * -1.1}s`,
-                    '--drift-dur': `${5.4 + (i % 5) * 1.3}s`,
-                    '--drift-x': `${((i % 5) - 2) * 3}px`,
-                    '--drift-y': `${-5 - (i % 4) * 3}px`,
-                    '--drift-rot': `${((i % 5) - 2) * 1.1}deg`,
-                  } as CSSProperties}
-                  disabled={step !== 2}
-                  onClick={() => pick(option)}
-                >{option.text}</button>)}</div>
+                <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>
+                  {thoughtOptions.map((option, i) => (
+                    /* Two wrappers give independent X and Y bounce: the span
+                       carries its own CSS animation for X, the button for Y.
+                       Both use `alternate` direction with coprime durations so
+                       each cloud traces a unique Lissajous-ish path, and
+                       negative delays spread them across the cycle. */
+                    <span
+                      key={option.text}
+                      className="sl-cloud-mover"
+                      style={{
+                        '--bx': `${14 + (i % 4) * 8}px`,
+                        '--bx-dur': `${6.2 + (i % 7) * 0.55}s`,
+                        '--bx-del': `${-(i % 7) * 0.92}s`,
+                      } as CSSProperties}
+                    >
+                      <button
+                        className={`sl-thought-cloud ${cardClass(2, option.text)}`}
+                        style={{
+                          '--by': `${10 + (i % 4) * 7}px`,
+                          '--by-dur': `${4.7 + (i % 5) * 0.9}s`,
+                          '--by-del': `${-(i % 5) * 1.1}s`,
+                        } as CSSProperties}
+                        disabled={step !== 2}
+                        onClick={() => pick(option)}
+                      >
+                        {option.text}
+                      </button>
+                    </span>
+                  ))}
+                </div>
 
                 {/*
                   HIS OWN WORDS ARE NOT ONE OF THE CLOUDS.
@@ -632,7 +641,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
               {index === 5 && <>
                 <div className="sl-possibility-windows">
                   <div className="sl-window sl-original"><h4>Original Story</h4><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>"{story}"</p></div>
-                  <div className="sl-window sl-another"><h4>Another Possibility</h4><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>{alternative ? `"${alternative}"` : 'A little space for another way to see it…'}</p></div>
+                  <div className="sl-window sl-another"><h4>Another Possibility</h4>{alternative ? <img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /> : <span className="sl-possibility-light" aria-hidden="true">✧</span>}<p>{alternative ? `"${alternative}"` : 'A little space for another way to see it…'}</p></div>
                 </div>
                 <div className="sl-cards sl-wide">{otherOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(5, option.text)}`} disabled={step !== 5} onClick={() => pick(option)}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}

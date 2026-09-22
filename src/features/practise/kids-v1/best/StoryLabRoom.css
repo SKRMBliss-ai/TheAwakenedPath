@@ -170,8 +170,7 @@
     radial-gradient(ellipse 24% 28% at 82% 50%,#000 98%,transparent),
     radial-gradient(ellipse 46% 29% at 50% 66%,#000 98%,transparent);
 }
-/* The microphone is one more choice among them, not a button of its own.
-   Still used by the Events panel, where "Something else" does sit in the list. */
+/* The microphone is one more choice among them, not a button of its own. */
 .sl-cloud-own{
   width:auto;min-height:40px!important;padding:9px 15px;border-radius:24px;
   color:#20206b;font-size:13px;background:linear-gradient(#cfeeff,#9ecdff);
@@ -180,59 +179,6 @@
 }
 .sl-cloud-own:before{display:none}
 .sl-mic{display:inline-grid;place-items:center;width:23px;height:23px;margin-right:7px;border-radius:50%;background:#2f57c4;vertical-align:-6px}
-
-/* ── The shelf under the sky: "Say it your way" ────────────────────────── */
-/*
-  It is not weather, so it does not drift, and it is not one of twelve, so it
-  does not compete. A single lit ledge across the foot of the panel, clear of
-  the boy on the left, holding the one answer that is always available.
-
-  Laid over the clouds rather than in their flow: the cloud field already
-  reserves its own foot (padding-bottom below), so nothing is ever covered,
-  and the rail keeps the same place whatever the sky is doing above it.
-*/
-.sl-own-rail{
-  /* Starts clear of the boy drawn into the bottom-left corner; he leaves the
-     panel at 900px and the rail takes the full width back (see below). */
-  position:absolute;left:126px;right:0;bottom:0;z-index:3;
-  display:flex;justify-content:center;padding:0 4px 2px;
-  pointer-events:none;
-}
-.sl-say-own{
-  pointer-events:auto;
-  display:flex;align-items:center;gap:9px;
-  max-width:100%;padding:8px 13px 8px 10px;
-  border:1px solid #bfe4ff;border-radius:16px;
-  text-align:left;color:#16215e;
-  background:linear-gradient(#f4fbff,#cfe9ff 58%,#b4d8ff);
-  box-shadow:0 5px 16px -6px #0b0a2fcc,0 0 18px -4px #8fd0ff88,inset 0 1px 0 #fff;
-  transition:scale .22s ease,box-shadow .22s ease,filter .22s ease;
-}
-.sl-say-own:hover:not(:disabled){
-  scale:1.035;
-  box-shadow:0 7px 20px -6px #0b0a2fcc,0 0 26px -2px #a5dcffcc,inset 0 1px 0 #fff;
-}
-.sl-say-own:disabled{opacity:.55}
-.sl-say-own .sl-mic{
-  width:27px;height:27px;margin:0;flex:0 0 auto;
-  background:linear-gradient(#4f7ce8,#2b49b4);color:#fff;
-  box-shadow:0 0 0 3px #ffffff8c,0 2px 5px #1a2a6a66;
-  vertical-align:baseline;
-}
-.sl-say-own-text{display:flex;flex-direction:column;min-width:0;line-height:1.15}
-.sl-say-own-text b{font-size:13px;font-weight:900;letter-spacing:.01em}
-.sl-say-own-text small{font-size:10px;font-weight:700;color:#3f5296;margin-top:1px}
-.sl-say-own-go{
-  flex:0 0 auto;margin-left:2px;font-size:17px;font-weight:900;line-height:1;
-  color:#3559c8;opacity:.75;
-}
-/*
-  The shelf and the pinned note want the same 46px at the foot of a 386px
-  panel, and only one of them is a control. So the note stands down while the
-  shelf is up and comes back the moment a thought is chosen — which is the
-  same bargain it already makes with the hush state further down.
-*/
-.sl-field-railed .sl-desk-note{display:none}
 /*
   The boy in the corner, wearing whatever the child brought in — the plate is
   chosen in StoryLabRoom's `companion`. These are the chest-up /feelings cuts
@@ -276,10 +222,7 @@
 @media(min-width:900px){
   .sl-room-boy{display:block}
   .sl-thinking-boy{display:none}
-  /* The boy has gone but the shelf has not, so the clouds keep its foot
-     rather than the 14px they took back from him. */
-  .sl-thought-clouds{padding-bottom:58px}
-  .sl-own-rail{left:0}
+  .sl-thought-clouds{padding-bottom:14px}
   .sl-desk-note{left:8px}
 }
 @keyframes sl-boy-bounce{
@@ -491,16 +434,9 @@
 .sl-stop .sl-save{background:linear-gradient(#b45dff,#6341b2);border-color:#ddc2fa;font-size:15px;font-weight:900;padding:8px 22px;box-shadow:0 0 20px #c895ff}
 .sl-stop .sl-save:disabled{opacity:.7;cursor:default}
 
-/*
-  Four stops rather than three, so a cloud wanders rather than swinging
-  between two posts. 0% and 100% are deliberately absent: the resting
-  translate comes from the nth-child scatter below, and naming it here would
-  flatten every cloud onto the same spot before it set off.
-*/
 @keyframes sl-drift{
-  27%{translate:var(--drift-x,0) var(--drift-y,-5px);rotate:var(--drift-rot,0deg)}
-  52%{translate:calc(var(--drift-x,0px) * -.7) calc(var(--drift-y,-5px) * .35);rotate:calc(var(--drift-rot,0deg) * -.7)}
-  78%{translate:calc(var(--drift-x,0px) * .45) calc(var(--drift-y,-5px) * .8);rotate:calc(var(--drift-rot,0deg) * .35)}
+  33%{translate:var(--drift-x,0) var(--drift-y,-5px);rotate:var(--drift-rot,0deg)}
+  66%{translate:calc(var(--drift-x,0px) * -1) calc(var(--drift-y,-5px) * .45);rotate:calc(var(--drift-rot,0deg) * -.6)}
 }
 
 /*
@@ -638,8 +574,6 @@
 .sl-thought-cloud:nth-child(4){translate:12px 12px;scale:.96}
 .sl-thought-cloud:nth-child(5){translate:-8px -4px;scale:1.05}
 .sl-thought-cloud:nth-child(6){translate:10px 6px;scale:.98}
-.sl-thought-cloud:nth-child(7){translate:-11px -8px;scale:1.02}
-.sl-thought-cloud:nth-child(8){translate:6px 9px;scale:1.07}
 
 /*
   AND THE BOOK WAS A CREAM BAR. The sheet opens a real book under the ring —
@@ -836,8 +770,21 @@
 */
 .sl-rolling-out .sl-thought-cloud:not(.sl-cloud-own),
 .sl-rolling-out > button:not(.sl-card-own){
-  opacity:0;transform:translateY(-14px) scale(.92);
-  transition:opacity .43s ease,transform .43s ease;pointer-events:none;
+  opacity:0;transition:opacity .43s ease;pointer-events:none;
+}
+/*
+  Two-wrapper bounce: outer span carries X, inner button carries Y.
+  Coprime durations per cloud mean every cloud traces a different path.
+  animation-direction:alternate avoids the snapping reset you get from
+  a single keyframe cycle — it just reverses, smoothly, end to end.
+*/
+.sl-cloud-mover{
+  display:inline-flex;
+  animation:sl-bounce-x var(--bx-dur,7s) ease-in-out var(--bx-del,0s) infinite alternate;
+}
+@keyframes sl-bounce-x{
+  from{transform:translateX(calc(var(--bx,18px)*-1))}
+  to{transform:translateX(var(--bx,18px))}
 }
 /*
   No fill-mode on the way in, and that is not a detail. A finished animation
@@ -847,24 +794,27 @@
   finishes, which is exactly what the fade-out then needs to take hold of.
 */
 .sl-thought-clouds .sl-thought-cloud{
-  animation:sl-drift var(--drift-dur,5s) ease-in-out infinite,sl-cloud-arrive .5s cubic-bezier(.22,1,.36,1);
-  animation-delay:var(--drift-delay),0s;
+  animation:sl-cloud-arrive .45s ease-out,
+            sl-bounce-y var(--by-dur,5s) ease-in-out var(--by-del,0s) infinite alternate;
 }
+@keyframes sl-bounce-y{
+  from{transform:translateY(calc(var(--by,14px)*-1))}
+  to{transform:translateY(var(--by,14px))}
+}
+@keyframes sl-cloud-arrive{from{opacity:0}}
 .sl-cards > button{animation:sl-roll-in .5s ease-out}
 @keyframes sl-roll-in{from{opacity:0}}
-/* New clouds drift down from the sky as they arrive. */
-@keyframes sl-cloud-arrive{
-  from{opacity:0;transform:translateY(-22px) scale(.88)}
-  to{opacity:1;transform:translateY(0) scale(1)}
-}
 
 /*
-  Floating thought particles drifting from the boy's head up into the clouds.
-  Creates visual connection showing thoughts originating from the mind.
-  Only visible in step 3 before a thought is selected.
+  Bubble particles rising from the boy's head toward the thought clouds.
+  Each is a small translucent circle — border + faint fill give it that
+  soap-bubble look without needing an image.
 */
 .sl-thought-particle{
-  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
-  font-size:8px;color:#b8a2ff;text-shadow:0 0 6px #7f68cc;
-  pointer-events:none;z-index:0;
+  position:absolute;
+  border-radius:50%;
+  border:1.5px solid rgba(180,155,255,.8);
+  background:rgba(150,130,255,.15);
+  box-shadow:inset 0 0 4px rgba(180,160,255,.3),0 0 8px rgba(160,130,255,.4);
+  pointer-events:none;z-index:3;
 }
