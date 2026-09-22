@@ -60,20 +60,41 @@ let speaking: string | null = null;
  */
 const heard = new Map<string, string>();
 
+/**
+ * Bumped by every stop and every new line, so a queued utterance can tell
+ * whether it is still the one wanted by the time it actually runs.
+ */
+let voiceToken = 0;
+
 function browserVoice(text: string) {
   if (!isVoiceSupported()) return;
-  try {
-    /* No cancel() here. Every caller has already stopped whatever was
-       speaking, and Chrome is known to drop an utterance queued in the same
-       task as a cancel — so cancelling twice risked the one thing this
-       function exists to guarantee. */
-    const u = new SpeechSynthesisUtterance(text);
-    // Lifting the pitch gets most of the way to young without the chipmunk
-    // effect the old 1.15-on-a-default-voice had — the rate matters as much as
-    // the pitch, so he stays slow.
-    speakCalmly(u, { rate: 0.9, pitch: 1.25 });
-    window.speechSynthesis.speak(u);
-  } catch { /* ignore — the line is still on screen */ }
+  /*
+    THE UTTERANCE CANNOT GO IN THE SAME TASK AS THE CANCEL.
+
+    Every caller reaches here just after stopSpeaking(), which calls
+    speechSynthesis.cancel() — and Chrome drops an utterance queued in the
+    same task as a cancel. This function used to note that hazard and then
+    queue synchronously anyway, so the line was dropped on the spot. In the
+    Story Lab it was dropped twice per step: React runs the previous effect's
+    cleanup (a cancel) and the next effect's body (a cancel and a speak) in
+    one commit, so Chirpy went silent for the whole walk.
+
+    A turn of the event loop is enough for the cancel to have settled. The
+    token is what keeps the delay honest — a child who moves on within those
+    few milliseconds must not be caught up by the previous panel's question.
+  */
+  const token = ++voiceToken;
+  setTimeout(() => {
+    if (token !== voiceToken || isMuted() || speaking !== text) return;
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      // Lifting the pitch gets most of the way to young without the chipmunk
+      // effect the old 1.15-on-a-default-voice had — the rate matters as much as
+      // the pitch, so he stays slow.
+      speakCalmly(u, { rate: 0.9, pitch: 1.25 });
+      window.speechSynthesis.speak(u);
+    } catch { /* ignore — the line is still on screen */ }
+  }, 60);
 }
 
 /**
@@ -141,6 +162,10 @@ function play(url: string, text: string) {
 }
 
 export function stopSpeaking() {
+  /* Abandons any utterance still waiting out the cancel in browserVoice —
+     without this, a line stopped within those few milliseconds would go on
+     to speak over whatever replaced it. */
+  voiceToken += 1;
   try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
   if (current) { try { current.pause(); } catch { /* ignore */ } current = null; }
   speaking = null;

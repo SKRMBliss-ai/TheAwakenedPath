@@ -55,7 +55,8 @@ const POSSIBILITIES: Option[] = [
   { text: 'Maybe they were busy with something else.', icon: '❋' },
   { text: 'Maybe I can try again in a different way.', icon: '✦' },
 ];
-const SAY_IT: Option = { text: 'Say it your way', icon: 'mic', own: true };
+/* The Thought panel's equivalent is not in a list at all — it is the shelf
+   under the clouds, see sl-own-rail. */
 const SOMETHING_ELSE: Option = { text: 'Something else', icon: 'mic', own: true };
 const MY_OWN: Option = { text: 'My own idea…', icon: 'mic', own: true };
 
@@ -109,10 +110,10 @@ function useFilmScale(count: number) {
  */
 
 /** How many of the pool stand on screen at once, per panel. */
-const THOUGHT_WINDOW = 6;
+const THOUGHT_WINDOW = 8;
 const EVENT_WINDOW = 5;
 /** How long a set stays before the next comes round. */
-const ROTATE_MS = 3000;
+const ROTATE_MS = 3400;
 /** Long enough to read as drifting off rather than blinking out. */
 const FADE_MS = 430;
 
@@ -422,8 +423,11 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const kept = (pool: Option[], text: string, icon: string): Option[] =>
     [pool.find((o) => o.text === text) ?? { text, icon }];
 
+  /* "Say it your way" has its own shelf under the sky now (see sl-own-rail),
+     so it is no longer appended here — in the quiet state that frees the slot
+     it used to take, and the still list shows six rather than four. */
   const thoughtOptions = thought ? kept(thoughtPool, thought, '☁')
-    : quiet ? [...thoughtPool.slice(0, 4), SAY_IT] : [...thoughtRoll.items, SAY_IT];
+    : quiet ? thoughtPool.slice(0, 6) : thoughtRoll.items;
   const eventOptions = event ? kept(eventPool, event, '✧')
     : quiet ? [...eventPool.slice(0, 4), SOMETHING_ELSE] : [...eventRoll.items, SOMETHING_ELSE];
   const otherOptions = [...POSSIBILITIES, MY_OWN];
@@ -480,24 +484,46 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
             <Panel index={index} step={step} onBack={back} onHome={onExit}
               chirpy={index === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(index === 5 ? 'hopeful' : 'curious')}>
 
-              {index === 2 && <div className="sl-thought-field">
+              {index === 2 && <div className={`sl-thought-field ${!thought ? 'sl-field-railed' : ''}`}>
                 <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{thoughtOptions.map((option, i) => <button
                   key={option.text}
-                  className={`sl-thought-cloud ${option.own ? 'sl-cloud-own' : ''} ${cardClass(2, option.text)}`}
+                  className={`sl-thought-cloud ${cardClass(2, option.text)}`}
                   /* Each cloud drifts on its own clock and its own path, so a
-                     dozen of them read as weather rather than a grid twitching
+                     skyful of them read as weather rather than a grid twitching
                      in unison. The numbers are derived from the index, not
-                     random, so they stay put across re-renders. */
+                     random, so they stay put across re-renders — and the
+                     cycles are coprime enough that eight of them never fall
+                     back into step with each other. */
                   style={{
-                    '--drift-delay': `${(i % 7) * -.9}s`,
-                    '--drift-dur': `${5 + (i % 4) * 1.4}s`,
-                    '--drift-x': `${(i % 3) - 1}px`,
-                    '--drift-y': `${-4 - (i % 3) * 2.5}px`,
-                    '--drift-rot': `${((i % 5) - 2) * .8}deg`,
+                    '--drift-delay': `${(i % 8) * -1.1}s`,
+                    '--drift-dur': `${5.4 + (i % 5) * 1.3}s`,
+                    '--drift-x': `${((i % 5) - 2) * 3}px`,
+                    '--drift-y': `${-5 - (i % 4) * 3}px`,
+                    '--drift-rot': `${((i % 5) - 2) * 1.1}deg`,
                   } as CSSProperties}
                   disabled={step !== 2}
                   onClick={() => pick(option)}
-                >{option.own && <span className="sl-mic" aria-hidden="true"><Mic size={13} strokeWidth={2.6} /></span>}{option.text}</button>)}</div>
+                >{option.text}</button>)}</div>
+
+                {/*
+                  HIS OWN WORDS ARE NOT ONE OF THE CLOUDS.
+
+                  Mixed into the drift it was a sentence to scan past on the
+                  way to the sentences — and it is the one option that is true
+                  whatever the sky is showing, including when none of it fits.
+                  So it stands on its own shelf under the weather, still, lit,
+                  and always in the same place.
+                */}
+                {!thought && <div className="sl-own-rail">
+                  <button className="sl-say-own" onClick={showOwn} disabled={step !== 2}>
+                    <span className="sl-mic" aria-hidden="true"><Mic size={14} strokeWidth={2.6} /></span>
+                    <span className="sl-say-own-text">
+                      <b>Say it your way</b>
+                      <small>None of these? Tell me yourself.</small>
+                    </span>
+                    <span className="sl-say-own-go" aria-hidden="true">›</span>
+                  </button>
+                </div>}
                 <img
                   className="sl-thinking-boy"
                   /* Keyed on the plate so a child who steps back and changes
