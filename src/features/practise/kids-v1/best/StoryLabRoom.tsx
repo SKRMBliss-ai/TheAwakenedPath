@@ -9,6 +9,7 @@ import { band } from '../kit/band';
 import { thoughtsFor, eventsFor, type Option } from '../kit/storyLabContent';
 import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
+import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
@@ -273,6 +274,52 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     if (ok && !quiet) sound.play('resolve');
   };
   const back = () => { if (step === 2) { onBody(); return; } if (!quiet) sound.play('exitRoom'); setStep(step - 1); };
+
+  /*
+    THE STORY LAB HAD NO VOICE, AND IT IS THE ROOM THAT NEEDED ONE MOST.
+
+    Every other screen reads Chirpy's line out loud — the hub, Help Chirpy,
+    the Reflection Room, and every room drawn by ui/scene, which speaks in the
+    Chirpy component itself. This room draws its own panels, so it never went
+    through that component and never spoke. Four of the six steps of the walk
+    happen in here, so a child who cannot yet read got the whole middle of the
+    journey in silence, including the two questions that ask them to say
+    something about themselves.
+
+    The sub-line goes with it. "Tap a thought, or tell me in your own words"
+    is the half that tells a pre-reader there is a way in that is not reading,
+    so speaking the question without it is the wrong half.
+
+    `speak` already returns early in the quiet state and honours the app's own
+    mute, so there is no second switch to find here. Stopping on the way out
+    matters as much as starting: the cleanup runs on every step change too, so
+    a child who moves on quickly is not talked over by the question they have
+    already answered.
+  */
+  useEffect(() => {
+    const line = PROMPTS[step - 2];
+    if (!line) return;
+    const sub = SUBS[step - 2];
+    speak(sub ? `${line} ${sub}` : line, quiet);
+    return () => stopSpeaking();
+  }, [step, quiet]);
+
+  /*
+    AND A BED UNDER IT. The walk plays music in the Different Story reveal and
+    the Reflection Room sits in a forest lullaby, so the Story Lab was the one
+    long stretch where the sound simply stopped — a child walked out of the
+    body room into four silent panels and back into music at the end.
+
+    `playMusicWhenAllowed` rather than `playMusic`: the room is reached by
+    tapping, so the tab has been touched and it will usually start at once,
+    but the retry costs nothing and is the difference between a bed and
+    silence on a phone that has just been reloaded.
+  */
+  useEffect(() => {
+    if (quiet) return;
+    const cancel = sound.playMusicWhenAllowed('storyTheme');
+    return () => { cancel(); sound.stopMusic(); };
+  }, [quiet]);
 
   /*
     THE END OF THE WALK IS A DOOR, NOT A BUTTON IN THE FOOTER.
