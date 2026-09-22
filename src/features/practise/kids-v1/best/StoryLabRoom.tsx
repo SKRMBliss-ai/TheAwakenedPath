@@ -13,12 +13,23 @@ import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
-/* Boy's head sits roughly at left 55px, bottom 120px within the thought field. */
+/*
+  Boy's head sits at roughly left 55px, bottom 125px within the thought field.
+  The clouds sit ~300px above that, so particles need to travel the full distance.
+  10 bubbles with a 0.35s stagger give a near-continuous stream — at any moment
+  there are 3–4 visible in flight at once, which reads as a flow not a pulse.
+*/
 const BUBBLE_ORIGINS = [
-  { left: 42, bottom: 128, size: 9 },
-  { left: 62, bottom: 118, size: 12 },
-  { left: 50, bottom: 134, size: 8 },
-  { left: 68, bottom: 122, size: 10 },
+  { left: 46, bottom: 132, size: 10 },
+  { left: 60, bottom: 122, size: 8 },
+  { left: 52, bottom: 138, size: 7 },
+  { left: 66, bottom: 118, size: 11 },
+  { left: 55, bottom: 128, size: 6 },
+  { left: 42, bottom: 124, size: 9 },
+  { left: 63, bottom: 134, size: 7 },
+  { left: 50, bottom: 119, size: 8 },
+  { left: 58, bottom: 130, size: 6 },
+  { left: 44, bottom: 126, size: 10 },
 ];
 
 function ThoughtParticles({ show }: { show: boolean }) {
@@ -27,21 +38,31 @@ function ThoughtParticles({ show }: { show: boolean }) {
 
   return (
     <>
-      {BUBBLE_ORIGINS.map((o, i) => (
-        <motion.span
-          key={i}
-          className="sl-thought-particle"
-          style={{ left: o.left, bottom: o.bottom, width: o.size, height: o.size } as CSSProperties}
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: [0, 0.85, 0.55, 0.2, 0],
-            y: [0, -55, -110, -165],
-            x: [0, (i % 2 === 0 ? 9 : -9), (i % 2 === 0 ? 5 : -14), (i % 2 === 0 ? 13 : -7)],
-          }}
-          transition={{ duration: 2.6 + i * 0.5, ease: 'easeInOut', repeat: Infinity, delay: i * 0.85 }}
-          aria-hidden="true"
-        />
-      ))}
+      {BUBBLE_ORIGINS.map((o, i) => {
+        /* Alternate left/right drift so bubbles fan out naturally on the way up */
+        const dir = i % 2 === 0 ? 1 : -1;
+        const spread = 10 + (i % 4) * 11;
+        return (
+          <motion.span
+            key={i}
+            className="sl-thought-particle"
+            style={{ left: o.left, bottom: o.bottom, width: o.size, height: o.size } as CSSProperties}
+            animate={{
+              opacity: [0, 0.9, 0.75, 0.45, 0.1, 0],
+              y: [0, -70, -150, -230, -300, -310],
+              x: [0, dir * spread * 0.25, dir * spread * 0.55, dir * spread * 0.8, dir * spread, dir * spread * 0.9],
+              scale: [0.5, 1, 0.95, 0.8, 0.55, 0.2],
+            }}
+            transition={{
+              duration: 2.4 + (i % 5) * 0.28,
+              ease: 'easeOut',
+              repeat: Infinity,
+              delay: i * 0.35,
+            }}
+            aria-hidden="true"
+          />
+        );
+      })}
     </>
   );
 }
