@@ -140,15 +140,26 @@
 /* The clouds finish above the boy's head — he is drawn into the bottom-left
    of this panel, and a cloud landing on his cap is the one thing the sheet
    never does. */
-.sl-thought-clouds{position:relative;z-index:2;display:flex;flex-wrap:wrap;align-content:space-evenly;justify-content:center;gap:6px;padding-bottom:78px;height:100%}
+/* A dozen clouds need the room the boy was taking, so they use the full
+   height and tighten up. Scroll is there for the longest lists rather than
+   letting a cloud fall off the bottom of the panel. */
+.sl-thought-clouds{
+  position:relative;z-index:2;display:flex;flex-wrap:wrap;
+  align-content:center;justify-content:center;gap:5px;
+  padding-bottom:78px;height:100%;overflow-y:auto;scrollbar-width:none;
+  transition:padding-bottom .6s ease;
+}
+.sl-thought-clouds::-webkit-scrollbar{display:none}
 .sl-thought-cloud{
   position:relative;isolation:isolate;
-  width:112px;min-height:58px!important;padding:12px 8px;
+  width:104px;min-height:52px!important;padding:10px 7px;
   color:#31408f;background:none;border:0;
-  font-weight:850;line-height:1.12;font-size:12.5px;
+  font-weight:850;line-height:1.1;font-size:11.5px;
   filter:drop-shadow(0 0 5px #ffffffdd) drop-shadow(0 0 11px #8fc0ff88);
-  animation:sl-drift 5s ease-in-out infinite;animation-delay:var(--drift-delay);
+  animation:sl-drift var(--drift-dur,5s) ease-in-out infinite;animation-delay:var(--drift-delay);
+  transition:scale .25s ease,filter .25s ease;
 }
+.sl-thought-cloud:hover:not(:disabled){scale:1.06;filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 16px #a9d4ffcc)}
 .sl-thought-cloud:before{
   content:'';position:absolute;inset:0;z-index:-1;
   background:radial-gradient(ellipse at 50% 34%,#fff,#e9f4ff 82%);
@@ -372,7 +383,30 @@
 .sl-stop .sl-save{background:linear-gradient(#b45dff,#6341b2);border-color:#ddc2fa;font-size:15px;font-weight:900;padding:8px 22px;box-shadow:0 0 20px #c895ff}
 .sl-stop .sl-save:disabled{opacity:.7;cursor:default}
 
-@keyframes sl-drift{50%{translate:0 -5px}}
+@keyframes sl-drift{
+  33%{translate:var(--drift-x,0) var(--drift-y,-5px);rotate:var(--drift-rot,0deg)}
+  66%{translate:calc(var(--drift-x,0px) * -1) calc(var(--drift-y,-5px) * .45);rotate:calc(var(--drift-rot,0deg) * -.6)}
+}
+
+/*
+  ── The three-second hush ───────────────────────────────────────────────────
+
+  Everything that is not a thought cloud steps back once the child has had a
+  look at the room (see the `focused` timer in StoryLabRoom.tsx). Opacity and
+  not display, so nothing reflows and the clouds do not jump when it happens;
+  pointer-events go with it so a faded control cannot be pressed by accident.
+*/
+.sl-focused :is(.sl-header-books,.sl-header-notes,.sl-title,.sl-grownup,.sl-desk-note){
+  opacity:0;pointer-events:none;transition:opacity .9s ease;
+}
+.sl-focused .sl-thinking-boy{opacity:.16;transition:opacity .9s ease}
+.sl-focused .sl-panel-now .sl-ask{opacity:.4;transition:opacity .9s ease}
+.sl-focused .sl-panel-now .sl-thought-clouds{padding-bottom:16px}
+/* The clouds themselves come up a touch as the room goes down. */
+.sl-focused .sl-thought-cloud{filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 15px #9fcbffaa)}
+/* Anything focus-visible inside the hush comes straight back — a child
+   arriving by keyboard must be able to see where they are. */
+.sl-focused :is(.sl-grownup,.sl-desk-note):focus-visible{opacity:1;pointer-events:auto}
 @keyframes sl-breathe{50%{scale:1.035;filter:drop-shadow(0 0 22px #b7eeffaa)}}
 .sl-still *{animation:none!important;transition:none!important}
 .sl-quiet .sl-grownup{border:3px solid #fff0ae}

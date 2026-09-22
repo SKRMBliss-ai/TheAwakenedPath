@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Mic } from 'lucide-react';
 import { FONT } from '../ui/chrome';
@@ -6,6 +6,7 @@ import { useQuiet } from '../ui/quiet';
 import { MicButton } from '../ui/MicButton';
 import { chirpySprite } from '../ui/sprites';
 import { band } from '../kit/band';
+import { thoughtsFor, eventsFor, type Option } from '../kit/storyLabContent';
 import * as sound from '../kit/sound';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
@@ -47,72 +48,10 @@ const TITLES = ['3. Thought', '4. What Happened?', '5. Story', '6. Another Way']
 const PROMPTS = ['What was your mind saying?', 'What actually happened?', "Here's the story your mind made…", "Could anything else be true?"];
 const SUBS = ['Tap a thought, or tell me in your own words.', "Let's look at what a little camera could see.", 'Your mind connects the pieces and tries to make sense of it.', "Let's see some other possible stories."];
 
-type Option = { text: string; icon: string; own?: boolean };
-
-// Younger: 5–7 year-olds, simpler language and more concrete situations
-const THOUGHTS_YOUNGER: Option[] = [
-  { text: "I can't do it.", icon: '☁' },
-  { text: "Nobody likes me.", icon: '☁' },
-  { text: "It's not fair.", icon: '☁' },
-  { text: "I'm going to get in trouble.", icon: '☁' },
-  { text: "I'm scared.", icon: '☁' },
-  { text: "I don't want to.", icon: '☁' },
-];
-const EVENTS_YOUNGER: Option[] = [
-  { text: 'Someone said something mean', icon: '☏' },
-  { text: 'I had to wait my turn', icon: '◷' },
-  { text: "I wasn't picked", icon: '♧' },
-  { text: 'I got something wrong', icon: '✧' },
-  { text: 'Something felt different', icon: '↝' },
-];
-const POSSIBILITIES_YOUNGER: Option[] = [
-  { text: 'Maybe it was just this one time.', icon: '✳' },
-  { text: 'Maybe they were having a hard day too.', icon: '❋' },
-  { text: 'Maybe I can try a different way next time.', icon: '✦' },
-];
-
-// Middle: 8–10 year-olds
-const THOUGHTS_MIDDLE: Option[] = [
-  { text: "I can't do this.", icon: '☁' },
-  { text: "They don't like me.", icon: '☁' },
-  { text: "It's not fair.", icon: '☁' },
-  { text: 'What if something goes wrong?', icon: '☁' },
-  { text: "I'm going to get in trouble.", icon: '☁' },
-  { text: "I always mess things up.", icon: '☁' },
-];
-const EVENTS_MIDDLE: Option[] = [
-  { text: 'Someone said something hurtful', icon: '☏' },
-  { text: 'I had to wait', icon: '◷' },
-  { text: "I was left out", icon: '♧' },
-  { text: 'I made a mistake', icon: '✧' },
-  { text: 'Something changed unexpectedly', icon: '↝' },
-];
-const POSSIBILITIES_MIDDLE: Option[] = [
+const POSSIBILITIES: Option[] = [
   { text: 'Maybe it only happened this time.', icon: '✳' },
-  { text: 'Maybe they were dealing with something else.', icon: '❋' },
-  { text: 'Maybe I can try a different approach.', icon: '✦' },
-];
-
-// Older: 11+ year-olds
-const THOUGHTS_OLDER: Option[] = [
-  { text: "I can't handle this.", icon: '☁' },
-  { text: "They don't like me.", icon: '☁' },
-  { text: "It's not fair.", icon: '☁' },
-  { text: 'What if everything goes wrong?', icon: '☁' },
-  { text: "I always make things worse.", icon: '☁' },
-  { text: "Nobody understands me.", icon: '☁' },
-];
-const EVENTS_OLDER: Option[] = [
-  { text: 'Someone said something hurtful', icon: '☏' },
-  { text: 'I was excluded or left out', icon: '♧' },
-  { text: 'I made a mistake in front of others', icon: '✧' },
-  { text: 'Plans changed at the last minute', icon: '↝' },
-  { text: 'I felt pressure to perform', icon: '◷' },
-];
-const POSSIBILITIES_OLDER: Option[] = [
-  { text: 'Maybe this was a one-off, not a pattern.', icon: '✳' },
-  { text: 'Maybe they were caught up in their own stuff.', icon: '❋' },
-  { text: 'Maybe there is another explanation I have not considered.', icon: '✦' },
+  { text: 'Maybe they were busy with something else.', icon: '❋' },
+  { text: 'Maybe I can try again in a different way.', icon: '✦' },
 ];
 const SAY_IT: Option = { text: 'Say it your way', icon: 'mic', own: true };
 const SOMETHING_ELSE: Option = { text: 'Something else', icon: 'mic', own: true };
@@ -290,18 +229,51 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     child has to press a button to make true is not one. `save` is guarded by
     savedOnce, so running it here costs nothing if it has already happened.
   */
+  /*
+    THREE SECONDS IN, THE ROOM GETS OUT OF THE WAY.
+
+    The Thought panel asks the child to notice what their mind was actually
+    saying, and then surrounds the question with a lit sign, two shelves of
+    books, a boy at a desk and a note about how their thoughts matter. All of
+    it is lovely and none of it is the question. So the panel reads itself out,
+    gives the child a beat to take the room in, and then everything except the
+    clouds steps back — the child is choosing from twelve now, and they need
+    the quiet to scan them.
+
+    It only applies while the thought is unanswered: going back to the panel
+    later, with the answer already on it, should show the room as it is.
+  */
+  const hushEligible = step === 2 && !thought && !writing && !still;
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!hushEligible) return;
+    const timer = setTimeout(() => setFocused(true), 3000);
+    /* Clearing on the way out is what lets the hush start over: answering the
+       thought, opening the writing form or stepping back all make the panel
+       ineligible, and the room comes back up until it settles again. */
+    return () => { clearTimeout(timer); setFocused(false); };
+  }, [hushEligible]);
+
   const [leftComplete, setLeftComplete] = useState(false);
   useEffect(() => {
     if (step >= 6 && !savedOnce.current) save();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- save is guarded by savedOnce
   }, [step]);
 
-  const THOUGHTS = ageBand === 'young' ? THOUGHTS_YOUNGER : ageBand === 'older' ? THOUGHTS_OLDER : THOUGHTS_MIDDLE;
-  const EVENTS = ageBand === 'young' ? EVENTS_YOUNGER : ageBand === 'older' ? EVENTS_OLDER : EVENTS_MIDDLE;
-  const POSSIBILITIES = ageBand === 'young' ? POSSIBILITIES_YOUNGER : ageBand === 'older' ? POSSIBILITIES_OLDER : POSSIBILITIES_MIDDLE;
+  /*
+    THE CLOUDS COME FROM THE FEELING THEY BROUGHT IN, and the events come from
+    the thought they picked — see kit/storyLabContent. Both lists are shuffled
+    once per visit rather than on every render, so a cloud does not move house
+    under the finger going to press it.
 
-  const thoughtOptions = quiet ? [...THOUGHTS.slice(0, 3), SAY_IT] : [...THOUGHTS, SAY_IT];
-  const eventOptions = quiet ? [...EVENTS.slice(0, 3), SOMETHING_ELSE] : [...EVENTS, SOMETHING_ELSE];
+    Quiet mode still gets a short list: a dozen drifting clouds is exactly the
+    kind of busy the flag exists to turn off.
+  */
+  const [thoughtPool] = useState(() => thoughtsFor(carried.feeling));
+  const eventPool = useMemo(() => eventsFor(thought, carried.feeling), [thought, carried.feeling]);
+
+  const thoughtOptions = quiet ? [...thoughtPool.slice(0, 4), SAY_IT] : [...thoughtPool, SAY_IT];
+  const eventOptions = quiet ? [...eventPool.slice(0, 4), SOMETHING_ELSE] : [...eventPool, SOMETHING_ELSE];
   const otherOptions = [...POSSIBILITIES, MY_OWN];
 
   const chosen = (index: number) => answers[index];
@@ -318,7 +290,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button><button type="button" onClick={() => setWriting(false)}>Cancel</button></div>
   </form>;
 
-  return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''}`} style={{ fontFamily: FONT }} data-step={step}>
+  return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''} ${focused && hushEligible ? 'sl-focused' : ''}`} style={{ fontFamily: FONT }} data-step={step}>
     <header className="sl-header">
       <button className="sl-back" onClick={back} aria-label="Previous journey step">←</button>
       <button className="sl-logo" onClick={onExit} aria-label="Back to Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
@@ -360,7 +332,17 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                 <div className="sl-thought-clouds">{thoughtOptions.map((option, i) => <button
                   key={option.text}
                   className={`sl-thought-cloud ${option.own ? 'sl-cloud-own' : ''} ${cardClass(2, option.text)}`}
-                  style={{ '--drift-delay': `${i * -.7}s` } as CSSProperties}
+                  /* Each cloud drifts on its own clock and its own path, so a
+                     dozen of them read as weather rather than a grid twitching
+                     in unison. The numbers are derived from the index, not
+                     random, so they stay put across re-renders. */
+                  style={{
+                    '--drift-delay': `${(i % 7) * -.9}s`,
+                    '--drift-dur': `${5 + (i % 4) * 1.4}s`,
+                    '--drift-x': `${(i % 3) - 1}px`,
+                    '--drift-y': `${-4 - (i % 3) * 2.5}px`,
+                    '--drift-rot': `${((i % 5) - 2) * .8}deg`,
+                  } as CSSProperties}
                   disabled={step !== 2}
                   onClick={() => pick(option)}
                 >{option.own && <span className="sl-mic" aria-hidden="true"><Mic size={13} strokeWidth={2.6} /></span>}{option.text}</button>)}</div>
