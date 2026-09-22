@@ -14,32 +14,37 @@ import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
 /*
-  Boy's head sits at roughly left 55px, bottom 125px within the thought field.
-  The clouds sit ~300px above that, so particles need to travel the full distance.
-  10 bubbles with a 0.35s stagger give a near-continuous stream — at any moment
-  there are 3–4 visible in flight at once, which reads as a flow not a pulse.
+  THE BOY IS IN TWO PLACES, so the bubbles have to be too.
+
+  Under 900px `.sl-thinking-boy` sits inside the panel and the clouds are
+  directly above him, so the bubbles rise straight up. At 900px and over that
+  copy is hidden and `.sl-room-boy` takes over, sitting on the empty floor to
+  the LEFT of the filmstrip — there the bubbles have to travel up and across
+  to reach the panel, which is why the two streams below are not one component
+  with a flag. Each is only ever drawn at the width its boy exists at (see
+  .sl-panel-bubbles / .sl-room-bubbles in the stylesheet).
 */
 const BUBBLE_ORIGINS = [
-  { left: 46, bottom: 132, size: 10 },
-  { left: 60, bottom: 122, size: 8 },
-  { left: 52, bottom: 138, size: 7 },
-  { left: 66, bottom: 118, size: 11 },
-  { left: 55, bottom: 128, size: 6 },
-  { left: 42, bottom: 124, size: 9 },
-  { left: 63, bottom: 134, size: 7 },
-  { left: 50, bottom: 119, size: 8 },
-  { left: 58, bottom: 130, size: 6 },
-  { left: 44, bottom: 126, size: 10 },
+  { left: 44, bottom: 134, size: 15 },
+  { left: 61, bottom: 122, size: 12 },
+  { left: 52, bottom: 141, size: 11 },
+  { left: 68, bottom: 117, size: 16 },
+  { left: 56, bottom: 129, size: 10 },
+  { left: 41, bottom: 124, size: 14 },
+  { left: 64, bottom: 137, size: 11 },
+  { left: 49, bottom: 119, size: 13 },
+  { left: 59, bottom: 132, size: 10 },
+  { left: 45, bottom: 127, size: 15 },
 ];
 
+/** Straight up from the in-panel boy into the clouds above him (phone). */
 function ThoughtParticles({ show }: { show: boolean }) {
   const still = useReducedMotion();
   if (still || !show) return null;
 
   return (
-    <>
+    <div className="sl-panel-bubbles" aria-hidden="true">
       {BUBBLE_ORIGINS.map((o, i) => {
-        /* Alternate left/right drift so bubbles fan out naturally on the way up */
         const dir = i % 2 === 0 ? 1 : -1;
         const spread = 10 + (i % 4) * 11;
         return (
@@ -48,22 +53,60 @@ function ThoughtParticles({ show }: { show: boolean }) {
             className="sl-thought-particle"
             style={{ left: o.left, bottom: o.bottom, width: o.size, height: o.size } as CSSProperties}
             animate={{
-              opacity: [0, 0.9, 0.75, 0.45, 0.1, 0],
+              opacity: [0, 0.95, 0.8, 0.5, 0.15, 0],
               y: [0, -70, -150, -230, -300, -310],
               x: [0, dir * spread * 0.25, dir * spread * 0.55, dir * spread * 0.8, dir * spread, dir * spread * 0.9],
-              scale: [0.5, 1, 0.95, 0.8, 0.55, 0.2],
+              scale: [0.45, 1, 0.95, 0.8, 0.55, 0.2],
             }}
-            transition={{
-              duration: 2.4 + (i % 5) * 0.28,
-              ease: 'easeOut',
-              repeat: Infinity,
-              delay: i * 0.35,
-            }}
-            aria-hidden="true"
+            transition={{ duration: 2.4 + (i % 5) * 0.28, ease: 'easeOut', repeat: Infinity, delay: i * 0.35 }}
           />
         );
       })}
-    </>
+    </div>
+  );
+}
+
+/*
+  Up and ACROSS, from the boy on the floor to the panel in the middle of the
+  room. The horizontal leg is in vw rather than px because the panel is centred
+  — the gap between the boy and its left edge grows with the window, and a
+  fixed pixel distance that lands on the clouds at 1280 stops well short of
+  them at 1800.
+*/
+const ROOM_BUBBLES = [
+  { size: 17, rise: 150, lift: 0 },
+  { size: 13, rise: 205, lift: 14 },
+  { size: 20, rise: 120, lift: -10 },
+  { size: 15, rise: 245, lift: 8 },
+  { size: 12, rise: 175, lift: -16 },
+  { size: 18, rise: 135, lift: 18 },
+  { size: 14, rise: 215, lift: -6 },
+  { size: 16, rise: 165, lift: 10 },
+  { size: 11, rise: 235, lift: -14 },
+  { size: 19, rise: 145, lift: 4 },
+];
+
+function RoomThoughtParticles({ show }: { show: boolean }) {
+  const still = useReducedMotion();
+  if (still || !show) return null;
+
+  return (
+    <div className="sl-room-bubbles" aria-hidden="true">
+      {ROOM_BUBBLES.map((b, i) => (
+        <motion.span
+          key={i}
+          className="sl-thought-particle"
+          style={{ left: 0, bottom: b.lift, width: b.size, height: b.size } as CSSProperties}
+          animate={{
+            opacity: [0, 0.95, 0.85, 0.55, 0.18, 0],
+            x: ['0vw', '7vw', '15vw', '22vw', '27vw', '30vw'],
+            y: [0, -b.rise * 0.34, -b.rise * 0.64, -b.rise * 0.86, -b.rise, -b.rise * 1.06],
+            scale: [0.4, 1, 0.95, 0.82, 0.58, 0.22],
+          }}
+          transition={{ duration: 3.1 + (i % 5) * 0.32, ease: 'easeOut', repeat: Infinity, delay: i * 0.42 }}
+        />
+      ))}
+    </div>
   );
 }
 /*
@@ -162,7 +205,7 @@ function useFilmScale(count: number) {
  */
 
 /** How many of the pool stand on screen at once, per panel. */
-const THOUGHT_WINDOW = 6;
+const THOUGHT_WINDOW = 8;
 const EVENT_WINDOW = 5;
 /** How long a set stays before the next comes round. */
 const ROTATE_MS = 3000;
@@ -253,7 +296,10 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
-  const still = quiet || reduced;
+  /* Only the OS-level reduced-motion flag stops the drift. Quiet mode means
+     say nothing, not hold still — a child who arrives angry was getting a
+     frozen grid of six sentences while a happy one got eight that floated. */
+  const still = !!reduced;
   const [ageBand] = useState(() => band());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
@@ -476,9 +522,9 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     [pool.find((o) => o.text === text) ?? { text, icon }];
 
   const thoughtOptions = thought ? kept(thoughtPool, thought, '☁')
-    : quiet ? [...thoughtPool.slice(0, 4), SAY_IT] : [...thoughtRoll.items, SAY_IT];
+    : [...thoughtRoll.items, SAY_IT];
   const eventOptions = event ? kept(eventPool, event, '✧')
-    : quiet ? [...eventPool.slice(0, 4), SOMETHING_ELSE] : [...eventRoll.items, SOMETHING_ELSE];
+    : [...eventRoll.items, SOMETHING_ELSE];
   const otherOptions = [...POSSIBILITIES, MY_OWN];
 
   const chosen = (index: number) => answers[index];
@@ -546,7 +592,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                       key={option.text}
                       className="sl-cloud-mover"
                       style={{
-                        '--bx': `${14 + (i % 4) * 8}px`,
+                        '--bx': `${9 + (i % 4) * 5}px`,
                         '--bx-dur': `${6.2 + (i % 7) * 0.55}s`,
                         '--bx-del': `${-(i % 7) * 0.92}s`,
                       } as CSSProperties}
@@ -554,7 +600,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                       <button
                         className={`sl-thought-cloud ${cardClass(2, option.text)}`}
                         style={{
-                          '--by': `${10 + (i % 4) * 7}px`,
+                          '--by': `${5 + (i % 4) * 4}px`,
                           '--by-dur': `${4.7 + (i % 5) * 0.9}s`,
                           '--by-del': `${-(i % 5) * 1.1}s`,
                         } as CSSProperties}
@@ -750,6 +796,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
       draggable={false}
     />
+    <RoomThoughtParticles show={step === 2 && !thought} />
 
     <nav className="sl-rail" aria-label="Journey progress">
       <ol>{STEPS.map((label, i) => {
