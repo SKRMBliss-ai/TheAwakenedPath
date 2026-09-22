@@ -122,7 +122,21 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const note = s.monthReviews[month]?.[noteKey] ?? '';
   const open = (id: string, next: typeof mode) => {
     const practiceRoom = VIRTUE_ROOMS.find(r => r.id === id);
-    if (next === 'play' && practiceRoom && id !== 'mindheart') { onPractice(practiceRoom); return; }
+    /*
+      MIND & HEART TIME OPENS THE REFLECTION ROOM.
+
+      Its door stays on the shelf and it still earns its ten a day — this is
+      only about where it leads. The Observatory behind it was a second quiet
+      room for looking back at what you found, which is what the Reflection
+      Room on the other side of the hub is for, so the hub offered a child two
+      doors to the same idea and neither of them said so.
+    */
+    if (next === 'play') {
+      /* The prop is optional, so a caller that does not pass it keeps the old
+         behaviour — the dialog — rather than a door that does nothing. */
+      if (id === 'mindheart') { if (onReflectionPath) { onReflectionPath(); return; } }
+      else if (practiceRoom) { onPractice(practiceRoom); return; }
+    }
     setSelected(id); setMode(next); setSaved(false); sound.play('roomCard'); dialog.current?.showModal();
   };
   const close = () => { dialog.current?.close(); setSelected(null); };
@@ -208,11 +222,14 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     <dialog className="mg-room-dialog" aria-labelledby="mg-room-title" ref={dialog} onClose={() => setSelected(null)} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
       {room && behaviour && <><header><h2 id="mg-room-title">{behaviour.title}</h2><button onClick={close} aria-label="Close room">×</button></header>
         <nav aria-label="Room activities">{(['reflect', 'play', 'learn'] as const).map((item) => <button key={item} onClick={() => {
-          if (item === 'play' && room.id !== 'mindheart') { close(); onPractice(room); }
-          else setMode(item);
+          if (item !== 'play') { setMode(item); return; }
+          /* Same door, same destination, whichever way a child reaches it. */
+          const go = room.id === 'mindheart' ? onReflectionPath : () => onPractice(room);
+          if (!go) { setMode(item); return; }
+          close(); go();
         }} aria-pressed={mode === item}>{item === 'reflect' ? 'My day' : item === 'play' ? 'Play' : 'Learn'}</button>)}</nav>
         {mode === 'reflect' && <><p>{behaviour.prompt}</p><div className="mg-day-options"><button aria-pressed={!!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, true)}>Yes, I did</button><button aria-pressed={!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, false)}>Not today</button></div><label htmlFor="mg-home-note">Something to remember (if you like)</label><textarea id="mg-home-note" value={note} onChange={(e) => write(e.target.value)} rows={3} /><MicButton onText={(text) => write(note ? `${note} ${text}` : text)} /><button className="mg-save" onClick={() => setSaved(true)}>{saved ? 'Saved in your diary' : 'Save my thought'}</button><p role="status">{saved ? 'Your thought is saved on this device.' : 'You can stop whenever you like.'}</p></>}
-        {mode === 'learn' && <><h3>{room.learn.title}</h3><p>{room.learn.body}</p><button className="mg-save" onClick={() => { close(); onOpenRoom(room); }}>Explore this room →</button></>}
+        {mode === 'learn' && <><h3>{room.learn.title}</h3><p>{room.learn.body}</p><button className="mg-save" onClick={() => { close(); if (room.id === 'mindheart' && onReflectionPath) onReflectionPath(); else onOpenRoom(room); }}>{room.id === 'mindheart' && onReflectionPath ? 'Sit in the Reflection Room →' : 'Explore this room →'}</button></>}
         {mode === 'play' && (game ? <RoomGamePlayer key={game.id} game={game} accent="#ffe099" onDone={(earned) => { const marker = `home:${game.id}`; if (!(s.scenariosDone[today] ?? []).includes(marker)) { s.completeScenario(marker); s.awardPoints(earned, room.id); } setMode('reflect'); }} /> : <button className="mg-save" onClick={() => { close(); onOpenRoom(room); }}>Enter the {behaviour.title} activity →</button>)}
         <button className="mg-dialog-grownup" onClick={() => { close(); onGrownUp(); }}>Talk to a grown-up</button>
       </>}
