@@ -404,15 +404,16 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 
   /*
     A child reaching for a cloud with a mouse or a keyboard stops the clock;
-    see useRotatingWindow. Touch has no hover to read, which is why the answer
-    itself also pauses it — the set the child tapped is the set that stays.
+    see useRotatingWindow. Touch has no hover to read, which is why that also
+    pauses it — the set the child is reaching for stays while they reach. But
+    after selection, the thoughts keep rotating so they see more patterns.
   */
   const [reaching, setReaching] = useState(false);
   const hold = { onPointerEnter: () => setReaching(true), onPointerLeave: () => setReaching(false),
                  onFocus: () => setReaching(true), onBlur: () => setReaching(false) };
 
   const thoughtRoll = useRotatingWindow(thoughtPool, THOUGHT_WINDOW, ROTATE_MS,
-    still || writing || reaching || !!thought || step !== 2);
+    still || writing || reaching || step !== 2);
   const eventRoll = useRotatingWindow(eventPool, EVENT_WINDOW, ROTATE_MS,
     still || writing || reaching || !!event || step !== 3);
 
@@ -425,9 +426,10 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 
   /* "Say it your way" has its own shelf under the sky now (see sl-own-rail),
      so it is no longer appended here — in the quiet state that frees the slot
-     it used to take, and the still list shows six rather than four. */
-  const thoughtOptions = thought ? kept(thoughtPool, thought, '☁')
-    : quiet ? thoughtPool.slice(0, 6) : thoughtRoll.items;
+     it used to take, and the still list shows six rather than four. Thoughts
+     keep rotating after selection so the child sees more clouds and picks up
+     on new patterns; the CSS class .sl-chosen marks their selection. */
+  const thoughtOptions = quiet ? thoughtPool.slice(0, 6) : thoughtRoll.items;
   const eventOptions = event ? kept(eventPool, event, '✧')
     : quiet ? [...eventPool.slice(0, 4), SOMETHING_ELSE] : [...eventRoll.items, SOMETHING_ELSE];
   const otherOptions = [...POSSIBILITIES, MY_OWN];
