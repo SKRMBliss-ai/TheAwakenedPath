@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
+import {
+  useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { BEHAVIOUR_PILLARS, type BehaviourPillar } from '../../../../assets/mind-gym-180-balanced-behaviour-scenarios';
@@ -15,57 +17,24 @@ import { createPracticeSession, createScenarioPool, eligibleScenarios } from '..
 import { themeForFeeling, roomIdForTheme, type GamesTheme } from '../kit/gamesRoomThemes';
 import { todaysFeeling } from '../kit/todaysFeeling';
 import * as sound from '../kit/sound';
-import { stopSpeaking } from '../kit/chirpyVoice';
+import { stopSpeaking, speak } from '../kit/chirpyVoice';
 import { artRoomFor, type VirtueRoom } from './rooms';
 import './GamesRoom.css';
 
 /*
-  THE GAMES ROOM.
+  THE GAMES ROOM — a living magical place, not a quiz page.
 
-  One magical place that stays put while the practice inside it changes. The
-  room is always called the Games Room; the ribbon under the sign carries the
-  theme the child came in to practise, and that is the only part of the title
-  that moves.
-
-  WHAT THIS IS NOT: a new stack. Everything underneath was already here and is
-  untouched — the 180-scenario library, the shuffle bag that avoids the last
-  three, the age filter, the session state machine in kit/behaviourPractice,
-  Mind Stars, the quiet state. This file is the room those things are played
-  in. The screen it replaces (see the pack's
-  current_app_screen_before_redesign.png) had the same engine behind a prompt
-  card and three flat buttons.
-
-  THE ROOM DOES NOT REMOUNT BETWEEN SCENARIOS, which is the point of the
-  redesign and the easiest thing to break. The painting, the scenery, the boy,
-  Chirpy, the sign and the ribbon are all outside the AnimatePresence below;
-  only the board's words and the three chests are keyed on the scenario. A
-  child should never see the room blink.
+  The room stays mounted between challenges. Only the board text and chest
+  labels change. Everything else — painting, boy, Chirpy, scenery, ambient
+  animations — persists. The child can tap the rug, the books, or the plant
+  any time and find something small waiting there.
 */
 
 const ART = '/mind-gym/games-room';
-
-/** The room's own name, which never changes, and the line under it. */
 const ROOM_TITLE = 'Games Room';
 const ROOM_TAGLINE = 'Play · Practice · Grow Brighter';
-
-/** How many practices make a run, after which the reward chest opens. */
 const RUN_LENGTH = 5;
 
-/*
-  THREE CHESTS, AND WHICH ART GOES WHERE.
-
-  The pack ships three: a laughing one, a plain one, and one with a heart. The
-  obvious thing is to hand the heart to the kindest option, and it is the one
-  thing that must not happen — a child learns in two scenarios to tap the pink
-  chest and stops reading the choices at all. The library's own ordering tends
-  to put the warmest option last, so fixing art to position would leak it just
-  as badly.
-
-  So the art rotates by a number derived from the scenario's id: stable across
-  every re-render of the same scenario, different between scenarios, and
-  carrying no information about which choice is which. The chest is scenery.
-  What the child reads is the plaque.
-*/
 const CHESTS = ['chest_laugh', 'chest_continue', 'chest_kind'] as const;
 function chestArt(scenarioId: string, index: number) {
   let hash = 0;
@@ -73,28 +42,160 @@ function chestArt(scenarioId: string, index: number) {
   return CHESTS[(index + hash) % CHESTS.length];
 }
 
-/** The scenery that makes it a room rather than a background. Pure decoration:
- *  aria-hidden and untappable, so none of it is in a child's way. */
-function Scenery() {
-  return <div className="gr-scenery" aria-hidden="true">
-    <img className="gr-rug" src={`${ART}/rug.png`} alt="" />
-    <img className="gr-cushions" src={`${ART}/cushions.png`} alt="" />
-    <img className="gr-books" src={`${ART}/books_stack.png`} alt="" />
-    <img className="gr-plant" src={`${ART}/plant_sprout.png`} alt="" />
-    <img className="gr-chalkboard" src={`${ART}/chalkboard.png`} alt="" />
-    <img className="gr-goodsign" src={`${ART}/good_choices_sign.png`} alt="" />
+/* ── Room awakening ─────────────────────────────────────────────────────── */
+type AwakePhase = 'dim' | 'lighting' | 'ready';
+
+/* Chirpy's opening lines, used before the first challenge appears. */
+const INVITE_LINES = [
+  "Ooh… something's waiting for us.",
+  "Want to see what the room has today?",
+  "I heard one of the treasure chests giggle.",
+  "Something moved behind those books just now…",
+  "The rug's been saving a secret for you.",
+];
+function pickInvite() { return INVITE_LINES[Math.floor(Math.random() * INVITE_LINES.length)]; }
+
+/* ── Discovery layer ────────────────────────────────────────────────────── */
+type DiscoveryId = 'rug' | 'books' | 'plant' | 'cushions';
+
+interface DiscoveryBeat {
+  /** Lines Chirpy says, revealed one at a time with a 2.5s gap. */
+  lines: string[];
+  /** Dismiss label. */
+  close?: string;
+}
+
+function discoveryFor(id: DiscoveryId, feeling: string): DiscoveryBeat {
+  switch (id) {
+    case 'rug': return {
+      lines: ['Can you feel your feet right now?', 'Both of them. Just sitting there.', '…did you notice them before I asked?'],
+      close: 'Yep, I feel them.',
+    };
+    case 'books': return {
+      lines: ['Right now — think about hopping.', 'Really picture it. Hopping on one leg.', '…are you hopping?', 'Thinking and doing are two different things. Your brain can say anything it likes. Your legs are yours.'],
+      close: 'Got it.',
+    };
+    case 'plant': return {
+      lines: ['This plant grew all by itself. Nobody told it when to grow.', 'Feelings do that too. They show up without asking.', "You didn't choose this one. It just arrived."],
+      close: 'Hm. Yes.',
+    };
+    case 'cushions': return {
+      lines: [
+        `Say this in your head: "I am ${feeling || 'this feeling'}."\n\nNow say: "I notice I am ${feeling || 'this feeling'}."\n\nFeel any difference?`,
+        'In the second one — there are two of you. The feeling, and the one who noticed.',
+      ],
+      close: 'I felt it.',
+    };
+  }
+}
+
+function DiscoveryOverlay({ id, feeling, still, quiet, onClose }: {
+  id: DiscoveryId; feeling: string; still: boolean; quiet: boolean; onClose: () => void;
+}) {
+  const beat = discoveryFor(id, feeling);
+  const [lineIndex, setLineIndex] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (lineIndex >= beat.lines.length - 1) return;
+    timer.current = setTimeout(() => setLineIndex(i => i + 1), 2600);
+    return () => { if (timer.current) clearTimeout(timer.current); };
+  }, [lineIndex, beat.lines.length]);
+
+  useEffect(() => {
+    const line = beat.lines[lineIndex];
+    if (line && !quiet) speak(line, quiet);
+  }, [lineIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return <motion.div className="gr-discovery"
+    initial={{ opacity: 0, y: still ? 0 : 10 }} animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: still ? 0 : -8 }} transition={{ duration: still ? 0.1 : 0.3 }}
+    role="dialog" aria-label="A room secret" aria-live="polite">
+    <p className="gr-discovery-text">{beat.lines[lineIndex]}</p>
+    {lineIndex === beat.lines.length - 1 && (
+      <button className="gr-discovery-close" onClick={() => { stopSpeaking(); onClose(); }}>
+        {beat.close ?? 'Close'}
+      </button>
+    )}
+    {lineIndex < beat.lines.length - 1 && (
+      <button className="gr-discovery-skip" onClick={() => {
+        if (timer.current) clearTimeout(timer.current);
+        setLineIndex(beat.lines.length - 1);
+      }} aria-label="Skip to end">→</button>
+    )}
+  </motion.div>;
+}
+
+/* ── Ambient layer — fireflies and star motes ────────────────────────────── */
+function AmbientLayer({ still }: { still: boolean }) {
+  if (still) return null;
+  return <div className="gr-ambient" aria-hidden="true">
+    <span className="gr-firefly gr-ff-1" />
+    <span className="gr-firefly gr-ff-2" />
+    <span className="gr-firefly gr-ff-3" />
+    <span className="gr-starmote gr-sm-1">✦</span>
+    <span className="gr-starmote gr-sm-2">✦</span>
+    <span className="gr-starmote gr-sm-3">★</span>
   </div>;
+}
+
+/* ── Clickable scenery ────────────────────────────────────────────────────── */
+function Scenery({ onDiscover, discoveryActive, still }: {
+  onDiscover: (id: DiscoveryId) => void;
+  discoveryActive: boolean;
+  still: boolean;
+}) {
+  return <div className="gr-scenery" aria-label="Room decorations">
+    {/* Rug — tappable */}
+    <button className="gr-scenery-btn gr-rug-btn" disabled={discoveryActive}
+      aria-label="Tap the rug — there might be a secret"
+      onClick={() => onDiscover('rug')}>
+      <img className="gr-rug" src={`${ART}/rug.png`} alt="" />
+    </button>
+
+    {/* Books — tappable */}
+    <button className="gr-scenery-btn gr-books-btn" disabled={discoveryActive}
+      aria-label="Tap the books — see what they know"
+      onClick={() => onDiscover('books')}>
+      <img className="gr-books" src={`${ART}/books_stack.png`} alt="" />
+    </button>
+
+    {/* Plant — tappable */}
+    <button className="gr-scenery-btn gr-plant-btn" disabled={discoveryActive}
+      aria-label="Tap the plant — it has something to say"
+      onClick={() => onDiscover('plant')}>
+      <img className={`gr-plant ${still ? '' : 'gr-plant-sway'}`} src={`${ART}/plant_sprout.png`} alt="" />
+    </button>
+
+    {/* Cushions — tappable */}
+    <button className="gr-scenery-btn gr-cushions-btn" disabled={discoveryActive}
+      aria-label="Tap the cushions — try a little experiment"
+      onClick={() => onDiscover('cushions')}>
+      <img className="gr-cushions" src={`${ART}/cushions.png`} alt="" />
+    </button>
+
+    {/* Pure decoration */}
+    <img className="gr-chalkboard" src={`${ART}/chalkboard.png`} alt="" aria-hidden="true" />
+    <img className="gr-goodsign" src={`${ART}/good_choices_sign.png`} alt="" aria-hidden="true" />
+  </div>;
+}
+
+/* ── Visual micro-consequence after a chest pick ─────────────────────────── */
+function Consequence({ emoji, label, still }: { emoji?: string; label: string; still: boolean }) {
+  return <motion.div className="gr-consequence"
+    initial={{ opacity: 0, scale: still ? 1 : 0.85, y: still ? 0 : 10 }}
+    animate={{ opacity: 1, scale: 1, y: 0 }}
+    exit={{ opacity: 0, scale: still ? 1 : 0.9 }}
+    transition={{ duration: still ? 0.1 : 0.38, type: 'spring', stiffness: 240, damping: 22 }}>
+    {emoji && <span className="gr-consequence-emoji" aria-hidden="true">{emoji}</span>}
+    <p>{label}</p>
+  </motion.div>;
 }
 
 type Flight = { x: number; y: number; toX: number; toY: number; points: number };
 
 export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
   room: VirtueRoom;
-  /**
-   * The door's own theme, which always wins. Left out only when a child
-   * reaches the room without choosing one — then today's feeling tips it,
-   * see kit/gamesRoomThemes.
-   */
   pillar?: BehaviourPillar;
   onExit: () => void;
   onGrownUp: () => void;
@@ -108,18 +209,43 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
   const heading = useRef<HTMLHeadingElement>(null);
   const [flight, setFlight] = useState<Flight | null>(null);
 
-  /*
-    THE THEME IS STATE, NOT JUST A PROP, because "try another game" moves it
-    without leaving the room — which is the whole idea of a persistent place.
-    It starts as the door's theme and only consults the feeling when there
-    isn't one.
-  */
-  const [theme, setTheme] = useState<GamesTheme>(() => pillar ?? themeForFeeling(todaysFeeling()));
+  /* ── Awakening sequence ───────────────────────────────────────────────── */
+  const [awakePhase, setAwakePhase] = useState<AwakePhase>('dim');
+  const [inviteLine] = useState(pickInvite);
+  useEffect(() => {
+    if (quiet) { setAwakePhase('ready'); return; }
+    const t1 = setTimeout(() => setAwakePhase('lighting'), 600);
+    const t2 = setTimeout(() => { setAwakePhase('ready'); sound.play('enterRoom'); }, 2800);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* A fresh bag and a fresh session per theme. Keyed on `theme` rather than
-     built once, so switching genuinely starts a new run rather than dealing
-     the old room's scenarios under a new ribbon. */
+  /* ── Room discovery ───────────────────────────────────────────────────── */
+  const [discovery, setDiscovery] = useState<DiscoveryId | null>(null);
+  const openDiscovery = useCallback((id: DiscoveryId) => {
+    stopSpeaking();
+    sound.play('roomCard');
+    setDiscovery(id);
+  }, []);
+
+  /* ── Idle surprise ────────────────────────────────────────────────────── */
+  /* Every 25–40 s, if the child is idle (no discovery, not in distress),
+     give one small ambient burst — a wobble on the books, Chirpy hops once.
+     Implemented as a CSS class toggled briefly on the element. */
+  const [bookWiggle, setBookWiggle] = useState(false);
+  useEffect(() => {
+    if (still || quiet || discovery) return;
+    const interval = 25000 + Math.random() * 15000;
+    const t = setTimeout(() => {
+      setBookWiggle(true);
+      setTimeout(() => setBookWiggle(false), 800);
+    }, interval);
+    return () => clearTimeout(t);
+  });
+
+  /* ── Theme + session ──────────────────────────────────────────────────── */
+  const [theme, setTheme] = useState<GamesTheme>(() => pillar ?? themeForFeeling(todaysFeeling()));
   const [session, setSession] = useState(() => makeSession(theme));
+
   function makeSession(forTheme: GamesTheme) {
     const pool = createScenarioPool(eligibleScenarios(forTheme, childAge()));
     const creditTo = roomIdForTheme(forTheme);
@@ -132,53 +258,31 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       successSound: () => { if (!quiet) sound.play('discovery'); },
     });
   }
+
   const state = useSyncExternalStore(session.subscribe, session.getSnapshot);
 
-  /** Move to a different practice without unmounting the room. */
   const switchTheme = () => {
     const next = themeForFeeling(todaysFeeling(), theme);
-    session.stop();
-    stopSpeaking();
+    session.stop(); stopSpeaking();
     celebrated.current = 0;
-    setTheme(next);
-    setSession(makeSession(next));
-    setReward(0);
+    setTheme(next); setSession(makeSession(next)); setReward(0);
   };
 
-  /*
-    THE QUIET STATE DOES NOT PLAY. §18: an upset child needs company, not
-    curriculum, and a room of treasure chests asking them to choose well is
-    curriculum with sparkles on it. The session is never started, so no timer
-    runs and no scenario is ever put to them.
-  */
   useEffect(() => {
     if (quiet) return;
     session.start();
     return () => { session.stop(); stopSpeaking(); };
   }, [session, quiet]);
 
-  /* Focus follows the challenge, so a keyboard or screen-reader child is
-     moved to the new words rather than left where the old ones were. */
   useEffect(() => { if (!quiet) heading.current?.focus({ preventScroll: true }); }, [state.scenario.id, quiet]);
 
-  /* The room's own music, the same low bed the other painted rooms use. */
   useEffect(() => {
     if (quiet) return;
     const cancel = sound.playMusicWhenAllowed('storyTheme');
     return () => { cancel(); sound.stopMusic(); };
   }, [quiet]);
 
-  /*
-    THE REWARD IS FOR TURNING UP, NOT FOR BEING GOOD.
-
-    It opens on the count of practices, which is why the copy talks about
-    practising rather than about the child being kind. Nothing here inspects
-    which choices they made.
-
-    The session is deliberately NOT paused underneath: it carries on to the
-    next scenario behind the overlay, so dismissing this lands the child in a
-    fresh challenge rather than on the one they have already answered.
-  */
+  /* ── Reward ───────────────────────────────────────────────────────────── */
   const [reward, setReward] = useState(0);
   const celebrated = useRef(0);
   useEffect(() => {
@@ -198,32 +302,48 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
   const filled = state.practised % RUN_LENGTH === 0 && state.practised > 0 ? RUN_LENGTH : state.practised % RUN_LENGTH;
   const leave = (action: () => void) => { session.stop(); stopSpeaking(); sound.stopMusic(); action(); };
 
-  /** What Chirpy has to say right now — a reaction, a response, or nothing. */
-  const chirpyLine = successful ? picked?.response
-    : picked ? picked.response
-    : reaction ? reaction.line
-    : 'Choose a treasure and see what happens!';
+  /* Chirpy's line — invite during awakening, then reaction/feedback. */
+  const chirpyLine = awakePhase !== 'ready'
+    ? (awakePhase === 'lighting' ? inviteLine : '…')
+    : successful
+      ? picked?.response
+      : picked
+        ? picked.response
+        : reaction
+          ? reaction.line
+          : 'Choose a treasure and see what happens!';
+
+  /* Consequence emoji — shown in the board area after picking. */
+  const consequenceEmoji = picked?.points && picked.points >= 8 ? '😊'
+    : picked?.points && picked.points >= 5 ? '🤔'
+    : picked ? '💭' : undefined;
+
+  /* Today's feeling, for the "noticing" discovery. */
+  const todayFeeling = todaysFeeling() ?? 'this feeling';
 
   return <main
-    className={`gr-room ${still ? 'gr-still' : ''} ${quiet ? 'gr-quiet' : ''}`}
+    className={`gr-room ${still ? 'gr-still' : ''} ${quiet ? 'gr-quiet' : ''} gr-awake-${awakePhase}`}
     data-pillar={theme}
     data-phase={state.phase}
     style={{ fontFamily: FONT, '--gr-accent': art.palette.accent } as CSSProperties}
   >
-    {/*
-      CONTAIN, NOT COVER, and the blurred bed behind it does the rest.
+    <RoomScene room={art} dim={awakePhase === 'dim' ? 0.65 : 0.34} fit="contain" feather />
 
-      The room paintings are 820x1152 portraits. Cover on a 1512-wide window
-      scales one up by about half again and shows a slice of it — which is why
-      this arrived as a giant soft face behind the chests. Contain draws the
-      whole painting at about 0.74, so it is drawn smaller than the source rather
-      than blown up, and RoomScene fills the space either side with the same
-      image blurred out. Nothing here has to be aimed at, so there is no
-      reason to crop it, and `feather` melts its two vertical edges into the
-      blur so it does not read as a picture hung in the middle of the wall.
-    */}
-    <RoomScene room={art} dim={0.34} fit="contain" feather />
-    <Scenery />
+    <AmbientLayer still={still} />
+
+    {/* Awakening dim overlay */}
+    <AnimatePresence>
+      {awakePhase === 'dim' && !still && (
+        <motion.div className="gr-awake-veil" aria-hidden="true"
+          initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.2 }} />
+      )}
+    </AnimatePresence>
+
+    <Scenery
+      onDiscover={openDiscovery}
+      discoveryActive={discovery !== null}
+      still={still}
+    />
 
     <header className="gr-top">
       <div className="gr-top-left">
@@ -234,10 +354,6 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
         }}>{muted ? 'Sound off' : 'Sound on'}</button>
       </div>
 
-      {/* The sign is the room's name and it does not change. The theme goes
-          on the ribbon below it, never up here. */}
-      {/* The painted sign already carries both lines, so the heading beside it
-          is for screen readers only — a picture of a word is not a heading. */}
       <div className="gr-sign">
         <h1 className="sr-only">{ROOM_TITLE}. {ROOM_TAGLINE}</h1>
         <img src={`${ART}/room_title_games_room.png`} alt="" aria-hidden="true" />
@@ -253,14 +369,28 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       </div>
     </header>
 
-    {/* The theme, secondary to the room's name by design. */}
-    <p className="gr-ribbon"><span>{themeTitle}</span></p>
+    {/* Theme ribbon */}
+    <motion.p className="gr-ribbon"
+      initial={{ opacity: 0, y: still ? 0 : -8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: still ? 0 : 0.7, duration: still ? 0.1 : 0.5 }}>
+      <span>{themeTitle}</span>
+    </motion.p>
+
+    {/* Discovery overlay — teaching move experience */}
+    <AnimatePresence>
+      {discovery && (
+        <DiscoveryOverlay
+          key={discovery}
+          id={discovery}
+          feeling={todayFeeling}
+          still={still}
+          quiet={quiet}
+          onClose={() => setDiscovery(null)}
+        />
+      )}
+    </AnimatePresence>
 
     {quiet
-      /*
-        No board, no chests, no progress. A sentence and the two ways out that
-        matter. See ui/Steady for why this is the plainest thing in the app.
-      */
       ? <section className="gr-calm">
           <Steady line="Nothing to play in here today. I'll just sit with you." />
           <button className="gr-calm-grownup" onClick={() => leave(onGrownUp)}>{STEADY_GROWNUP}</button>
@@ -273,7 +403,6 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
             initial={{ opacity: 0, y: still ? 0 : 10 }} animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: still ? 0 : -8 }} transition={{ duration: still ? 0.12 : 0.32 }}>
 
-            {/* The hanging challenge board. */}
             <div className="gr-board">
               <h2 ref={heading} tabIndex={-1}>{state.scenario.title}</h2>
               <p>{state.scenario.setup}</p>
@@ -286,8 +415,6 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
               </ol>
             </div>
 
-            {/* Three treasures on the rug. Each is one button: the chest and
-                its plaque together, so the whole thing is the target. */}
             <div className="gr-chests" role="group" aria-label="Choose a treasure">
               {state.scenario.choices.map((choice, index) => <button key={index}
                 className={`gr-chest ${state.selected === index ? 'gr-chest-open' : ''} ${successful && state.selected !== index ? 'gr-chest-quiet' : ''}`}
@@ -313,8 +440,17 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
               </button>)}
             </div>
 
-            {/* The dialogue that was doing this job before — kept, moved into
-                the room beside Chirpy rather than floating above the buttons. */}
+            {/* Visual consequence after picking */}
+            <AnimatePresence>
+              {successful && picked && (
+                <Consequence
+                  emoji={consequenceEmoji}
+                  label={picked.response}
+                  still={still}
+                />
+              )}
+            </AnimatePresence>
+
             {(state.phase === 'intro' || state.phase === 'reactions') &&
               <button className="gr-ready" onClick={() => { stopSpeaking(); session.skipDialogue(); }}>Ready to choose</button>}
 
@@ -327,19 +463,21 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
           </motion.section>
         </AnimatePresence>
 
-        {/* The boy and Chirpy sit outside the AnimatePresence on purpose —
-            they are in the room, not in the challenge, and must not blink
-            when the board changes. */}
+        {/* Cast — outside AnimatePresence, never blinks between scenarios */}
         <div className="gr-cast">
           <img className="gr-boy" src={`${ART}/boy_sitting.png`} alt="" aria-hidden="true" />
-          <img className="gr-chirpy" src={`${ART}/chirpy_happy.png`} alt="" aria-hidden="true" />
+          <img className={`gr-chirpy ${still ? '' : 'gr-chirpy-float'}`}
+            src={`${ART}/chirpy_happy.png`} alt="" aria-hidden="true" />
           <div className="gr-bubble" aria-live="polite" aria-atomic="true">
             <p>{chirpyLine}</p>
           </div>
         </div>
+
+        {/* Book wiggle surprise */}
+        {bookWiggle && <div className="gr-book-sparkle" aria-hidden="true">✦</div>}
       </>}
 
-    {/* ── The reward, after a run of five ─────────────────────────────── */}
+    {/* ── The reward, after a run of five ──────────────────────────────── */}
     <AnimatePresence>
       {reward > 0 && <motion.div className="gr-reward" role="dialog" aria-modal="true" aria-label="Practice run complete"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -352,8 +490,6 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
           <p>You tried five real-life moments in the {themeTitle} room. That is what practice is — not getting them right, just having a go.</p>
           <div className="gr-reward-actions">
             <button className="gr-reward-again" autoFocus onClick={() => { if (!quiet) sound.play('tap'); setReward(0); }}>Play again</button>
-            {/* Same room, different practice — the one place the feeling
-                affinity actually shows its working. */}
             <button className="gr-reward-swap" onClick={() => { if (!quiet) sound.play('tap'); switchTheme(); }}>Try another game</button>
             <button className="gr-reward-leave" onClick={() => leave(onExit)}>Leave Room</button>
           </div>
