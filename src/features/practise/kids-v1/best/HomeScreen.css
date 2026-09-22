@@ -541,3 +541,36 @@
 .mg-reflection-path-btn:focus-visible{outline:3px solid #cbb2ff;outline-offset:3px}
 .mg-reflection-path-btn .mg-reflection-count{margin-left:auto;order:2}
 .mg-reflection-count{background:rgba(139,92,246,0.6);color:#fff;border-radius:999px;padding:0 .4rem;font-size:.68rem;font-weight:900}
+
+/* ── The six steps stop squashing each other ───────────────────────────── */
+/*
+  THE ICON COLUMN WAS RESERVING WIDTH IT NEVER DREW IN.
+
+  `.mg-steps img` was `width:22%; height:100%; object-fit:contain`. The panel
+  is 23.2% of the room, so on a 1512px window a row is about 340px and 22% of
+  it is 75px — but `contain` pins the bubble to the row's HEIGHT, which is a
+  sixth of the list, about 45px. So every step handed 30px of its width to
+  blank space beside its own icon, and the even rows, already swung 19% to the
+  right, had the least to spare. The captions wrapped, and because each row is
+  an equal share of a fixed height with nothing allowed to grow, a wrapped row
+  overflowed its box and printed on top of the row under it — and the last one
+  printed on top of Start My Journey. That is the squashing.
+
+  Sized by height with the width following, the bubble is drawn at exactly the
+  size it was being drawn at before and the row keeps the rest. The swing comes
+  in a little as well, which is the other half of the width the even rows were
+  missing; the zigzag still reads, and the lit path between the steps still
+  lands on them because it is hung off each row rather than drawn as one line.
+
+  Last block in the file on purpose. Four earlier rules already set these
+  properties (see the 24%, 16% and 19% swings above, each correcting the one
+  before) and the cascade, not specificity, is what decides between them.
+*/
+@media(min-width:761px){
+  .mg-steps li{gap:10px}
+  .mg-steps img{width:auto;height:100%;max-height:clamp(30px,3vw,50px);aspect-ratio:1}
+  /* Without this the text block refuses to shrink below its longest word's
+     line and pushes itself out of the row instead of wrapping inside it. */
+  .mg-steps li>div{min-width:0}
+  .mg-steps li:nth-child(even){margin-left:13%}
+}

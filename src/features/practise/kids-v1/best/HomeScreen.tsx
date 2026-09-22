@@ -23,7 +23,12 @@ const A = '/mind-gym/home/';
 const STEPS = [
   ['feeling', 'Feeling', 'What are you feeling?'], ['body', 'Body', 'What do you notice?'],
   ['thought', 'Thought', 'What’s going through your mind?'], ['what_happened', 'What happened?', 'Let’s look at what happened.'],
-  ['story', 'Story', 'Make sense of it.'], ['another_way', 'Another way to see it', 'Try a new perspective.'],
+  /* "Another Way", not "Another way to see it" — the panel this step opens
+     is titled "6. Another Way" (StoryLabRoom's TITLES), and the long version
+     was the one label here that would not fit a row, so it wrapped onto two
+     lines and sat on top of the Start My Journey button. The subtitle
+     already says what it means. */
+  ['story', 'Story', 'Make sense of it.'], ['another_way', 'Another Way', 'Try a new perspective.'],
 ];
 
 /** Composed from the approved two-flow home handoff; all controls are semantic. */

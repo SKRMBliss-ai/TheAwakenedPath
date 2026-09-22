@@ -7,6 +7,7 @@ import { MicButton } from '../ui/MicButton';
 import { chirpySprite } from '../ui/sprites';
 import { band } from '../kit/band';
 import { thoughtsFor, eventsFor, type Option } from '../kit/storyLabContent';
+import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
@@ -269,6 +270,28 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     Quiet mode still gets a short list: a dozen drifting clouds is exactly the
     kind of busy the flag exists to turn off.
   */
+  /*
+    THE BOY AT THE DESK IS THE CHILD'S OWN FEELING NOW.
+
+    This corner used to be thinking-boy-clean.webp — one drawing, the same
+    every visit, chin on hands, mildly pensive. A child who had just told the
+    Feelings Room they were scared walked into the Thought panel and found a
+    contented boy daydreaming at them, which quietly answers the question the
+    panel is about to ask, and answers it wrong.
+
+    The plates already existed: /feelings holds the same boy with Chirpy on
+    his shoulder wearing each of the twelve, cut for the floating companion
+    (kit/feelingCompanions). Same boy, same cap, same bird, so this reads as
+    the child's own figure having followed them in from the last room rather
+    than as a second character.
+
+    COMPANY is the fallback and claims nothing — a child can reach this panel
+    without naming a feeling at all (straight in from the hub), and the rule
+    that matters is never to put the wrong face on a real answer. No answer is
+    not a wrong answer, so the serene plate is fine there and only there.
+  */
+  const companion = companionFor(carried.feeling) ?? COMPANY;
+
   const [thoughtPool] = useState(() => thoughtsFor(carried.feeling));
   const eventPool = useMemo(() => eventsFor(thought, carried.feeling), [thought, carried.feeling]);
 
@@ -346,7 +369,15 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                   disabled={step !== 2}
                   onClick={() => pick(option)}
                 >{option.own && <span className="sl-mic" aria-hidden="true"><Mic size={13} strokeWidth={2.6} /></span>}{option.text}</button>)}</div>
-                <img className="sl-thinking-boy" src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="Your explorer thinking" />
+                <img
+                  className="sl-thinking-boy"
+                  /* Keyed on the plate so a child who steps back and changes
+                     their feeling gets a fresh <img> and a fresh landing hop,
+                     rather than the new face fading in on a bird mid-bounce. */
+                  key={companion.src}
+                  src={companion.src}
+                  alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
+                />
                 <p className="sl-desk-note" aria-hidden="true">Your<br />Thoughts<br />Matter<br /><span>♡</span></p>
               </div>}
 

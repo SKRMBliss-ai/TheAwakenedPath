@@ -179,7 +179,26 @@
 }
 .sl-cloud-own:before{display:none}
 .sl-mic{display:inline-grid;place-items:center;width:23px;height:23px;margin-right:7px;border-radius:50%;background:#2f57c4;vertical-align:-6px}
-.sl-thinking-boy{position:absolute;z-index:1;bottom:-4px;left:-12px;width:130px;height:146px;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 9px #25132799)}
+/*
+  The boy in the corner, wearing whatever the child brought in — the plate is
+  chosen in StoryLabRoom's `companion`. These are the chest-up /feelings cuts
+  (420x504) rather than the old full-length desk drawing, so the box is a
+  little taller and object-fit does the rest.
+
+  HE BOUNCES because the panel he sits in is otherwise perfectly still while a
+  dozen clouds drift above him, and a motionless figure under moving weather
+  reads as a sticker. The hop is small and lands with a slight squash, on a
+  long enough cycle that it is company rather than a demand for attention.
+  `.sl-still *` and the reduced-motion block above stop it dead, as they do
+  everything else in this room.
+*/
+.sl-thinking-boy{position:absolute;z-index:1;bottom:-4px;left:-12px;width:136px;height:162px;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 9px #25132799);transform-origin:50% 100%;animation:sl-boy-bounce 3.1s ease-in-out infinite}
+@keyframes sl-boy-bounce{
+  0%,58%,100%{transform:translateY(0) scale(1,1)}
+  16%{transform:translateY(-10px) scale(.985,1.015)}
+  40%{transform:translateY(0) scale(1.03,.955)}
+  48%{transform:translateY(0) scale(1,1)}
+}
 .sl-desk-note{
   position:absolute;z-index:2;bottom:6px;left:118px;margin:0;
   padding:7px 9px;border-radius:2px;transform:rotate(-2deg);
