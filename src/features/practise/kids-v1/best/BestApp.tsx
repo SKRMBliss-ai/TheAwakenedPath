@@ -38,7 +38,7 @@ import { OneMinute } from './OneMinute';
 import { SeasonEnd } from './SeasonEnd';
 import { FirstNight } from './FirstNight';
 import { HomeScreen } from './HomeScreen';
-import { BehaviourPracticeRoom } from './BehaviourPracticeRoom';
+import { GamesRoom } from './GamesRoom';
 import { ROOM_PILLARS } from '../kit/behaviourPractice';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
@@ -254,7 +254,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               />
             )}
 
-            {view.at === 'practice' && <BehaviourPracticeRoom key={view.room.id}
+            {view.at === 'practice' && <GamesRoom key={view.room.id}
               room={view.room} pillar={ROOM_PILLARS[view.room.id]} onExit={back}
               onGrownUp={() => setView({ at: 'grownup' })} />}
 
