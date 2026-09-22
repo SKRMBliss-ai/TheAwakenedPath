@@ -396,7 +396,10 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                 <div className="sl-story-scene" aria-label="Your feeling, body, thought and event joining together">
                   <div className="sl-scene-center">
                     <img className="sl-scene-bubble" src="/mind-gym/story-lab/story-bubble-magic.png" alt="" aria-hidden="true" />
-                    <img className="sl-scene-boy" src="/mind-gym/story-lab/story-boy-sad.png" alt="A child sitting inside a glowing bubble" />
+                    {/* Was story-boy-sad.png, hard-coded: a child who had
+                        said "excited" four panels ago watched their story
+                        assemble around a boy who was plainly miserable. */}
+                    <img className="sl-scene-boy" key={companion.src} src={companion.src} alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, inside a glowing bubble` : 'A child sitting inside a glowing bubble'} />
                     {/* Top-left: Thought */}
                     <div className="sl-badge sl-badge-thought">
                       <span className="sl-badge-label">Thought</span>
@@ -509,6 +512,27 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
         </motion.div>
       </motion.section>}
     </AnimatePresence>
+
+    {/*
+      HE SITS IN THE ROOM, NOT IN THE PANEL.
+
+      The panel is 386 by 675 before scaling and holds a question, a dozen
+      drifting clouds and a way to type your own — there was never room in it
+      for a figure as well, which is why the old desk boy was 130px in a
+      corner with clouds landing on his cap. The room around the filmstrip is
+      mostly empty floor, so that is where he goes: big enough to read, off to
+      the left where nothing is ever drawn, bouncing.
+
+      The in-panel copy below is still rendered and takes over under 900px,
+      where the panel fills the window and there is no floor to sit on.
+    */}
+    <img
+      className="sl-room-boy"
+      key={companion.src}
+      src={companion.src}
+      alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
+      draggable={false}
+    />
 
     <nav className="sl-rail" aria-label="Journey progress">
       <ol>{STEPS.map((label, i) => {

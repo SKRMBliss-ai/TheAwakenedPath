@@ -193,6 +193,38 @@
   everything else in this room.
 */
 .sl-thinking-boy{position:absolute;z-index:1;bottom:-4px;left:-12px;width:136px;height:162px;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 9px #25132799);transform-origin:50% 100%;animation:sl-boy-bounce 3.1s ease-in-out infinite}
+
+/*
+  THE BOY IN THE ROOM.
+
+  Sits on the floor to the left of the filmstrip, wearing whatever feeling the
+  child brought in from the Feelings Room (StoryLabRoom's `companion`). Held
+  clear of the foot rail by --sl-foot, so he stands on the floor rather than
+  behind the step strip.
+
+  pointer-events:none — he is company, not a control. Nothing about him is
+  tappable and nothing about him should intercept a tap meant for the panel.
+
+  The hop lands with a slight squash and runs on a long cycle: a figure that
+  never moves under a dozen drifting clouds reads as a sticker, and one that
+  moves any harder than this is demanding attention the question needs.
+  `.sl-still *` and the reduced-motion block below stop it dead.
+*/
+.sl-room-boy{
+  display:none;position:absolute;z-index:1;pointer-events:none;user-select:none;
+  left:clamp(8px,3vw,64px);bottom:calc(var(--sl-foot) - 12px);
+  height:clamp(150px,22vh,260px);width:auto;object-fit:contain;object-position:bottom;
+  filter:drop-shadow(0 12px 16px #1b0a2799);
+  transform-origin:50% 100%;animation:sl-boy-bounce 3.1s ease-in-out infinite;
+}
+/* Wide enough to have floor either side of the panel: he moves out of the
+   panel and the clouds take back the 78px that was being held for him. */
+@media(min-width:900px){
+  .sl-room-boy{display:block}
+  .sl-thinking-boy{display:none}
+  .sl-thought-clouds{padding-bottom:14px}
+  .sl-desk-note{left:8px}
+}
 @keyframes sl-boy-bounce{
   0%,58%,100%{transform:translateY(0) scale(1,1)}
   16%{transform:translateY(-10px) scale(.985,1.015)}
