@@ -5,6 +5,7 @@ import { CHROME, FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
 import { isMuted } from '../../../../lib/sfx';
 import * as sound from '../kit/sound';
+import { registerFeelingsFilm } from './feelingsFilmControl';
 
 /**
  * THE FEELINGS ROOM'S FILM — one clip, two jobs, no cut between them.
@@ -47,6 +48,9 @@ export function FeelingsIntro({
 }) {
   const m = useMotion();
   const videoRef = useRef<HTMLVideoElement>(null);
+  /** The blurred copy underneath. Silent, but it still burns a decode loop
+   *  once the room it belongs to is gone. */
+  const loopRef = useRef<HTMLVideoElement>(null);
   const [canSkip, setCanSkip] = useState(false);
   const [settled, setSettled] = useState(false);
   /**
@@ -97,8 +101,20 @@ export function FeelingsIntro({
       cleanup.push(() => window.removeEventListener('pointerdown', rescue));
     });
 
+    /* The back door above. Hard stop, not a fade: the caller is stopping this
+       because another room is already arriving over the top of it. */
+    registerFeelingsFilm(() => {
+      const el = videoRef.current;
+      if (el) {
+        el.muted = true;
+        try { el.pause(); } catch { /* ignore */ }
+      }
+      try { loopRef.current?.pause(); } catch { /* ignore */ }
+    });
+
     return () => {
       cleanup.forEach((fn) => fn());
+      registerFeelingsFilm(null);
       try { v.pause(); } catch { /* ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -136,6 +152,7 @@ export function FeelingsIntro({
         behind them competes for focus.
       */}
       <video
+        ref={loopRef}
         aria-hidden
         className="absolute inset-0 h-full w-full object-cover"
         style={{ filter: 'blur(26px) saturate(1.3) brightness(0.62)', transform: 'scale(1.2)' }}

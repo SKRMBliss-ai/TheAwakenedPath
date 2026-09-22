@@ -54,6 +54,7 @@ export function RoomScene({
   dim = DIM.content,
   art,
   objectPosition = 'center',
+  fit = 'cover',
 }: {
   room: RoomConfig;
   dim?: number;
@@ -73,6 +74,23 @@ export function RoomScene({
    * or landscape screens — the overflow goes to the bottom instead.
    */
   objectPosition?: string;
+  /**
+   * 'cover' (the default) fills the screen and crops whatever does not fit.
+   * 'contain' fits the whole painting on screen instead, and is there for the
+   * one room where the painting is also the control.
+   *
+   * The Body Detective asks the child to point at a place on a painted boy.
+   * Under cover that boy was cropped differently on every screen: a phone in
+   * portrait threw his right hand past the right edge, and a laptop in
+   * landscape cut his legs off below the fold. The tap targets went with
+   * them — they are measured against the painting, so they were correct and
+   * off-screen at the same time, which reads exactly like a broken control.
+   *
+   * Contain cannot crop, so every zone is always reachable. The letterbox it
+   * would otherwise leave is filled by a blurred, scaled copy of the same
+   * painting underneath, so the room still runs to the edges of the screen.
+   */
+  fit?: 'cover' | 'contain';
 }) {
   const mood = SCENE_MOODS[room.scene];
   const quiet = useQuiet();
@@ -112,12 +130,27 @@ export function RoomScene({
         style={{ background: `linear-gradient(165deg, ${mood.ground[0]} 0%, ${mood.ground[1]} 100%)` }}
       />
 
+      {/* The bed under a contained painting, so 'fits on screen' does not
+          also mean 'two black bars'. Same image, blurred past legibility and
+          scaled out, which is the trick the feelings film already uses. */}
+      {room.painted && fit === 'contain' && (
+        <img
+          aria-hidden
+          src={art ?? roomArt(room.id)}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ filter: 'blur(34px) saturate(1.15) brightness(0.55)', transform: 'scale(1.18)' }}
+          draggable={false}
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        />
+      )}
+
       {room.painted && (
         <img
           key={art ?? room.id}
           src={art ?? roomArt(room.id)}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className={`absolute inset-0 h-full w-full ${fit === 'contain' ? 'object-contain' : 'object-cover'}`}
           style={{ objectPosition }}
           draggable={false}
           onError={(e) => {

@@ -17,6 +17,7 @@ import { Steady } from '../ui/Steady';
 import { FeelingBalls } from './FeelingBalls';
 import { SizeBalloons } from './SizeBalloons';
 import { FeelingsIntro } from './FeelingsIntro';
+import { stopFeelingsFilm } from './feelingsFilmControl';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { setTodaysFeeling } from '../kit/todaysFeeling';
 import * as sound from '../kit/sound';
@@ -62,6 +63,34 @@ const STEPS: Step[] = [
   { id: 'eyes', room: 'thought', chirpy: 'Now the tricky bit. What did your EYES actually see?', question: 'What actually happened?', hint: 'Just the bit a camera would have caught. No guessing what it meant.' },
   { id: 'other', room: 'story', chirpy: 'Go on then — teach me a happier one.', question: 'What else could be true?', hint: 'Any of these. Or none, if none of them fit.' },
 ];
+
+/**
+ * WHERE THIS FEELING OFTEN SITS — offered, never asserted.
+ *
+ * A child who has never been asked where a feeling lives usually cannot
+ * answer, because nobody has ever suggested that feelings live anywhere at
+ * all. So the room points at one place and says other people notice it there,
+ * which turns an impossible question into one with a worked example.
+ *
+ * It stays a suggestion in every direction: the ring is dashed rather than
+ * solid, every other zone stays tappable, and the wording is "some people",
+ * never "you". A child whose anger sits in their throat rather than their
+ * hands must not be told they have it wrong — see bodyZones.ts.
+ *
+ * This logic already existed in CheckIn.tsx, which nothing mounts any more,
+ * so the live walk never had it.
+ */
+function suggestedBodyZone(feeling: string | undefined): BodyZoneId | null {
+  switch ((feeling ?? '').trim().toLowerCase()) {
+    case 'worried':
+    case 'scared':  return 'tummy';
+    case 'angry':   return 'hands';
+    case 'sad':     return 'chest';
+    case 'excited': return 'chest';
+    case 'happy':   return 'chest';
+    default:        return null;
+  }
+}
 
 const EYES_OPTIONS = [
   'Someone said something',
@@ -195,6 +224,12 @@ export function DeepDive({
   const caseComplete = !!(answers.feeling && answers.body && answers.story && answers.eyes);
   const onFeelingStep = step.id === 'feeling' && phase === 'ask';
 
+  /** Chirpy's line on the body step, when the feeling has a usual home. */
+  const bodySuggestion = step.id === 'body' ? suggestedBodyZone(answers.feeling) : null;
+  const bodyHint = bodySuggestion
+    ? `Some people notice ${(answers.feeling ?? 'it').toLowerCase()} in their ${BODY_ZONE_LABEL[bodySuggestion]}. Where do you notice yours?`
+    : null;
+
   /* No longer read anywhere — the film used to gate the ask content until
      it finished (see below), and that gate is gone. FeelingsIntro still
      needs an onDone to fade its own soundtrack out and settle into its
@@ -240,6 +275,10 @@ export function DeepDive({
   };
 
   const answer = (key: keyof DeepDiveAnswers, value: string | string[]) => {
+    /* The feelings film is the room for step one, and the walk cross-fades
+       rooms over most of a second — long enough for its soundtrack to play
+       under the Body Detective if nothing cuts it. See stopFeelingsFilm. */
+    if (key === 'feeling') stopFeelingsFilm();
     setAnswers((a) => ({ ...a, [key]: value }));
     setStepIndex((i) => i + 1);
   };
@@ -291,7 +330,10 @@ export function DeepDive({
             : <RoomScene
                 room={art}
                 dim={phase === 'ask' ? DIM.content : turned ? DIM.arrive : DIM.play}
-                objectPosition={step.id === 'body' ? 'top' : 'center'}
+                objectPosition="center"
+                /* The body room is the one painting a child has to aim at, so
+                   it is fitted rather than cropped — see RoomScene's `fit`. */
+                fit={step.id === 'body' && phase === 'ask' ? 'contain' : 'cover'}
               />}
 
           {/* The invisible tap layer for "where do you feel it?", registered
@@ -301,9 +343,9 @@ export function DeepDive({
           {step.id === 'body' && phase === 'ask' && (
             <BodyPortrait
               accent={accent}
-              suggested={null}
+              suggested={bodySuggestion}
               selected={bodyZones}
-              topAnchor
+              fit="contain"
               onToggle={(z) => {
                 setBodyZones(new Set([z]));
                 sound.play('tap');
@@ -480,7 +522,18 @@ export function DeepDive({
                 Three instructions, two of them about a choice the child had
                 already made.
               */}
-              {!bigCheck && <Chirpy pose={step.id === 'other' ? 'hopeful' : 'curious'} line={step.chirpy} align="left" />}
+              {/*
+                ON THE BODY STEP CHIRPY OFFERS A PLACE, because "where do you
+                notice it?" is unanswerable for a child who has never been
+                told feelings live anywhere. Naming one that other people
+                report turns it into a question with a worked example. It is
+                always "some people", never "you" — see suggestedBodyZone.
+              */}
+              {!bigCheck && <Chirpy
+                pose={step.id === 'other' ? 'hopeful' : 'curious'}
+                line={bodyHint ?? step.chirpy}
+                align="left"
+              />}
               {/*
                 SOMEBODY IS STILL HERE. Chirpy has already gone silent by
                 this point — he self-suppresses in the quiet state, see
