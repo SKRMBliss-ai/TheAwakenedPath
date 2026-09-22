@@ -851,3 +851,14 @@
 }
 .sl-cards > button{animation:sl-roll-in .5s ease-out}
 @keyframes sl-roll-in{from{opacity:0}}
+
+/*
+  Floating thought particles drifting from the boy's head up into the clouds.
+  Creates visual connection showing thoughts originating from the mind.
+  Only visible in step 3 before a thought is selected.
+*/
+.sl-thought-particle{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  font-size:8px;color:#b8a2ff;text-shadow:0 0 6px #7f68cc;
+  pointer-events:none;z-index:0;
+}

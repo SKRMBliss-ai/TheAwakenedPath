@@ -13,6 +13,32 @@ import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
+/**
+ * Floating thought particles that drift from the boy's head up into the clouds.
+ * Creates a visual connection showing thoughts originating from the mind.
+ */
+function ThoughtParticles({ show }: { show: boolean }) {
+  const still = useReducedMotion();
+  if (still || !show) return null;
+
+  return (
+    <AnimatePresence>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="sl-thought-particle"
+          initial={{ opacity: 0, y: 0, x: 0 }}
+          animate={{ opacity: [0, 0.6, 0.4, 0], y: -140, x: (i - 1) * 15 }}
+          transition={{ duration: 3.2 + i * 0.4, ease: 'easeInOut', repeat: Infinity, delay: i * 0.8 }}
+          aria-hidden="true"
+        >
+          ◯
+        </motion.div>
+      ))}
+    </AnimatePresence>
+  );
+}
+
 /*
   THE WALK IS A FILMSTRIP NOW, which is what approved_reference_story_lab.png
   has been showing all along.
@@ -487,6 +513,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
               chirpy={index === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(index === 5 ? 'hopeful' : 'curious')}>
 
               {index === 2 && <div className={`sl-thought-field ${!thought ? 'sl-field-railed' : ''}`}>
+                <ThoughtParticles show={!thought} />
                 <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{thoughtOptions.map((option, i) => <button
                   key={option.text}
                   className={`sl-thought-cloud ${cardClass(2, option.text)}`}
@@ -602,7 +629,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
               {index === 5 && <>
                 <div className="sl-possibility-windows">
                   <div className="sl-window sl-original"><h4>Original Story</h4><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>"{story}"</p></div>
-                  <div className="sl-window sl-another"><h4>Another Possibility</h4>{alternative ? <img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /> : <span className="sl-possibility-light" aria-hidden="true">✧</span>}<p>{alternative ? `"${alternative}"` : 'A little space for another way to see it…'}</p></div>
+                  <div className="sl-window sl-another"><h4>Another Possibility</h4><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>{alternative ? `"${alternative}"` : 'A little space for another way to see it…'}</p></div>
                 </div>
                 <div className="sl-cards sl-wide">{otherOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(5, option.text)}`} disabled={step !== 5} onClick={() => pick(option)}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
