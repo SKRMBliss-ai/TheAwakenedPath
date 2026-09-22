@@ -518,29 +518,6 @@
   }
 }
 
-/* ── My Reflection Path entry, kept from the Reflection Path work ─────── */
-/*
-  THE REFLECTION ROOM, standing under Start My Journey rather than in the
-  safety footer. It reads as the quieter sibling of the start button — same
-  width and shape, but lit rather than solid, so it never competes with the
-  one thing the section is for.
-*/
-.mg-reflection-path-btn{
-  display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
-  width:100%;margin-top:.55rem;padding:.6rem 1.05rem;
-  background:linear-gradient(135deg,rgba(139,92,246,0.22),rgba(109,40,217,0.28));
-  border:1px solid rgba(139,92,246,0.45);border-radius:14px;
-  color:#e6d9ff;font-size:.86rem;font-weight:850;text-align:left;cursor:pointer;
-  box-shadow:0 6px 18px -10px rgba(88,40,180,.9);
-  transition:background .18s,border-color .18s,transform .18s;
-}
-.mg-reflection-path-btn small{
-  flex:1 1 100%;font-size:.7rem;font-weight:600;color:#bda9e8;line-height:1.25;
-}
-.mg-reflection-path-btn:hover{background:linear-gradient(135deg,rgba(139,92,246,0.34),rgba(109,40,217,0.4));border-color:rgba(176,140,255,.7);transform:translateY(-1px)}
-.mg-reflection-path-btn:focus-visible{outline:3px solid #cbb2ff;outline-offset:3px}
-.mg-reflection-path-btn .mg-reflection-count{margin-left:auto;order:2}
-.mg-reflection-count{background:rgba(139,92,246,0.6);color:#fff;border-radius:999px;padding:0 .4rem;font-size:.68rem;font-weight:900}
 
 /* ── The six steps stop squashing each other ───────────────────────────── */
 /*

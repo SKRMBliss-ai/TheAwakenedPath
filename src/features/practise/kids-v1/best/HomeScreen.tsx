@@ -115,7 +115,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
   const game = room ? roomGamesFor(room.id)[0] : undefined;
   const points = s.points;
-  const reflectionCount = s.savedReflections?.length ?? 0;
   const month = today.slice(0, 7);
   const days = Object.entries(s.completions).filter(([date, values]) => date.startsWith(month) && Object.values(values).some(Boolean)).length;
   const noteKey = `${today}:${selected ?? ''}`;
@@ -161,30 +160,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         <h1>Funny Feeling?</h1><h2>Step into your mind.</h2><p className="mg-invitation">A guided journey to understand<br />your feelings and feel better.</p>
         <ol className="mg-steps">{STEPS.map(([icon, title, sub], i) => <li key={icon}><img src={`${A}icon_${icon}.webp`} alt="" /><div><b>{i + 1}. {title}</b><span>{sub}</span></div></li>)}</ol>
         <button className="mg-start" onClick={() => { sound.play('enterRoom'); onDeepDive(); }}>Start My Journey <span aria-hidden="true">›</span></button>
-        {/*
-          THE ROOM THE JOURNEY ENDS IN, ON THE WAY IN AS WELL.
-
-          This was a link in the safety footer, next to "Back" and "Talk to a
-          grown-up", and it only appeared once a child had finished a journey.
-          So the room you land in at the end of the walk was, on every visit
-          after, somewhere you had to already know about to find — sitting in
-          the row a child reads as "ways out of here".
-
-          It stands under Start My Journey now, because that is what it is:
-          the far end of the same walk. And it shows whether or not anything
-          has been saved, because the room is also the quiet place — you can
-          go and sit in it having never written a word, and a child who wants
-          that should not have to earn it first.
-        */}
-        {onReflectionPath && (
-          <button className="mg-reflection-path-btn" onClick={() => { sound.play('enterRoom'); onReflectionPath(); }}>
-            <span aria-hidden="true">✦</span> Reflection Room
-            <small>{reflectionCount > 0
-              ? `Sit, breathe, revisit your ${reflectionCount}`
-              : 'A quiet place to sit and breathe'}</small>
-            {reflectionCount > 0 && <span className="mg-reflection-count">{reflectionCount}</span>}
-          </button>
-        )}
       </section>
       <section className="mg-character" aria-label="Your guide">
         <div className="mg-greeting" aria-live="polite"><img src={`${A}boy_fullbody.webp`} alt="" /><div>{teaching
