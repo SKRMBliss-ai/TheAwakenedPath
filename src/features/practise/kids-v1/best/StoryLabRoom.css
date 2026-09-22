@@ -752,3 +752,36 @@
   .sl-complete-chirpy img{width:42px}
   .sl-portal img{width:60%}
 }
+
+/* ── The options coming round ──────────────────────────────────────────── */
+/*
+  A set drifts off, the next drifts on. See useRotatingWindow in
+  StoryLabRoom.tsx for when it happens and — more to the point — when it does
+  not: a child reaching for one of these stops the clock.
+
+  Opacity only on the way out. The clouds already run a drift animation on
+  their own transform, and a second rule animating the same property would
+  either fight it or stop it dead mid-float.
+
+  The pinned option is pinned. "Say it your way" and "Something else" are the
+  ones that are true whatever the list is showing, so they never fade and
+  never rotate — a child who does not recognise any of the sentences on
+  screen must not have to wait for their way out to come back round.
+*/
+.sl-rolling-out .sl-thought-cloud:not(.sl-cloud-own),
+.sl-rolling-out > button:not(.sl-card-own){
+  opacity:0;transition:opacity .43s ease;pointer-events:none;
+}
+/*
+  No fill-mode on the way in, and that is not a detail. A finished animation
+  holding its `to` state outranks a plain declaration, so `both` here would
+  pin every option at opacity 1 and the fade-out above would never be seen.
+  Without it the element falls back to its own opacity the moment the entrance
+  finishes, which is exactly what the fade-out then needs to take hold of.
+*/
+.sl-thought-clouds .sl-thought-cloud{
+  animation:sl-drift var(--drift-dur,5s) ease-in-out infinite,sl-roll-in .5s ease-out;
+  animation-delay:var(--drift-delay),0s;
+}
+.sl-cards > button{animation:sl-roll-in .5s ease-out}
+@keyframes sl-roll-in{from{opacity:0}}

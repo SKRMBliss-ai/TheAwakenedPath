@@ -93,6 +93,65 @@ function useFilmScale(count: number) {
   return { box, scale };
 }
 
+/* ── The options come round rather than all at once ────────────────────── *
+ *
+ * Both lists outgrew their panel. Twelve thoughts and a dozen situations were
+ * being drawn at the same time inside a box 386 wide and 675 tall, so on a
+ * desktop the top row was clipped, the bottom row ran under the panel's edge
+ * and "Say it your way" — the one option that is always true — was off the
+ * bottom where nobody could reach it. Making the type smaller to fit is the
+ * obvious fix and the wrong one: a child of six reads slowly, and a wall of
+ * thirteen small sentences is not scanned, it is given up on.
+ *
+ * So a handful sit there at a time and the rest come round. The child sees
+ * more of the list than they ever did, in pieces they can actually read.
+ */
+
+/** How many of the pool stand on screen at once, per panel. */
+const THOUGHT_WINDOW = 6;
+const EVENT_WINDOW = 5;
+/** How long a set stays before the next comes round. */
+const ROTATE_MS = 3000;
+/** Long enough to read as drifting off rather than blinking out. */
+const FADE_MS = 430;
+
+/**
+ * A window onto `pool` that moves along every `ms`.
+ *
+ * `paused` is doing more work than it looks. It holds the list still while a
+ * child is reaching for one of them — pointer over the field, or a keyboard
+ * focus inside it — because an option that slides away from under a finger is
+ * the single worst thing this could do. It also holds while the writing form
+ * is open, once an answer is given, on any panel that is not the current one,
+ * and in the quiet state, where motion is the thing being turned off.
+ *
+ * Indices run past the end and are taken modulo, so a pool that changes size
+ * underneath this needs no reset — which is what keeps it out of an effect.
+ */
+function useRotatingWindow<T>(pool: T[], size: number, ms: number, paused: boolean) {
+  const [start, setStart] = useState(0);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    if (paused || pool.length <= size) return;
+    let swap: number | undefined;
+    const tick = window.setInterval(() => {
+      setFading(true);
+      swap = window.setTimeout(() => { setStart((s) => s + size); setFading(false); }, FADE_MS);
+    }, ms);
+    return () => { window.clearInterval(tick); if (swap !== undefined) window.clearTimeout(swap); };
+  }, [paused, pool, size, ms]);
+
+  const items = useMemo(() => {
+    if (pool.length <= size) return pool;
+    return Array.from({ length: size }, (_, i) => pool[(start + i) % pool.length]);
+  }, [pool, size, start]);
+
+  /* Never fade while paused: pausing mid-fade would otherwise leave the set
+     sitting there at nothing, which looks like the panel has broken. */
+  return { items, fading: fading && !paused };
+}
+
 /** True while the window is too narrow to stand more than one panel side by side. */
 function useNarrow() {
   const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.innerWidth < 760);
@@ -295,8 +354,31 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const [thoughtPool] = useState(() => thoughtsFor(carried.feeling));
   const eventPool = useMemo(() => eventsFor(thought, carried.feeling), [thought, carried.feeling]);
 
-  const thoughtOptions = quiet ? [...thoughtPool.slice(0, 4), SAY_IT] : [...thoughtPool, SAY_IT];
-  const eventOptions = quiet ? [...eventPool.slice(0, 4), SOMETHING_ELSE] : [...eventPool, SOMETHING_ELSE];
+  /*
+    A child reaching for a cloud with a mouse or a keyboard stops the clock;
+    see useRotatingWindow. Touch has no hover to read, which is why the answer
+    itself also pauses it — the set the child tapped is the set that stays.
+  */
+  const [reaching, setReaching] = useState(false);
+  const hold = { onPointerEnter: () => setReaching(true), onPointerLeave: () => setReaching(false),
+                 onFocus: () => setReaching(true), onBlur: () => setReaching(false) };
+
+  const thoughtRoll = useRotatingWindow(thoughtPool, THOUGHT_WINDOW, ROTATE_MS,
+    still || writing || reaching || !!thought || step !== 2);
+  const eventRoll = useRotatingWindow(eventPool, EVENT_WINDOW, ROTATE_MS,
+    still || writing || reaching || !!event || step !== 3);
+
+  /* Once it is answered the panel shrinks into the filmstrip and its only job
+     is to show what the child said. Keeping the whole list there, one of them
+     lit, is a lot of unchosen sentences to leave a child looking at — and a
+     rotating list would eventually turn their own answer off the screen. */
+  const kept = (pool: Option[], text: string, icon: string): Option[] =>
+    [pool.find((o) => o.text === text) ?? { text, icon }];
+
+  const thoughtOptions = thought ? kept(thoughtPool, thought, '☁')
+    : quiet ? [...thoughtPool.slice(0, 4), SAY_IT] : [...thoughtRoll.items, SAY_IT];
+  const eventOptions = event ? kept(eventPool, event, '✧')
+    : quiet ? [...eventPool.slice(0, 4), SOMETHING_ELSE] : [...eventRoll.items, SOMETHING_ELSE];
   const otherOptions = [...POSSIBILITIES, MY_OWN];
 
   const chosen = (index: number) => answers[index];
@@ -352,7 +434,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
               chirpy={index === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(index === 5 ? 'hopeful' : 'curious')}>
 
               {index === 2 && <div className="sl-thought-field">
-                <div className="sl-thought-clouds">{thoughtOptions.map((option, i) => <button
+                <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{thoughtOptions.map((option, i) => <button
                   key={option.text}
                   className={`sl-thought-cloud ${option.own ? 'sl-cloud-own' : ''} ${cardClass(2, option.text)}`}
                   /* Each cloud drifts on its own clock and its own path, so a
@@ -386,7 +468,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                   <img src="/mind-gym/story-lab/memory-illustration.webp" alt="An illustrated example of a moment in a school playground" />
                   <figcaption className="sr-only">{ageBand === 'older' ? 'What happened, before deciding what it meant?' : 'What would a little camera have seen?'}</figcaption>
                 </figure>
-                <div className="sl-cards">{eventOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(3, option.text)}`} disabled={step !== 3} onClick={() => pick(option)}>
+                <div className={`sl-cards ${eventRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{eventOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(3, option.text)}`} disabled={step !== 3} onClick={() => pick(option)}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
                 </button>)}</div>
               </>}

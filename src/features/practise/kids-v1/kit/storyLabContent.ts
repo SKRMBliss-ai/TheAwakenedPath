@@ -8,9 +8,10 @@
  * fit is worse than no thought at all, because the child concludes the app
  * isn't talking to them and taps whatever is nearest.
  *
- * So the clouds are drawn from the feeling they brought in. Twelve per feeling,
- * which is enough that the child scans rather than picks the first one, and
- * shuffled on arrival so it isn't the same three every time.
+ * So the clouds are drawn from the feeling they brought in. Seventeen per
+ * feeling, shuffled on arrival, and the panel shows six of them at a time and
+ * rotates (see useRotatingWindow in StoryLabRoom) — a list this long drawn all
+ * at once is not scanned by a six-year-old, it is given up on.
  *
  * EVENTS FOLLOW THE THOUGHT, NOT THE FEELING. "What actually happened?" is a
  * different question, and the honest answer depends on what the mind was
@@ -50,6 +51,11 @@ const THOUGHTS: Record<FeelingKey, Thought[]> = {
     { text: "Everything is going wrong.", icon: CLOUD, theme: 'failure' },
     { text: "It's not fair.", icon: CLOUD, theme: 'unfairness' },
     { text: "I wish today hadn't happened.", icon: CLOUD, theme: 'loss' },
+    { text: "I don't want to talk to anyone.", icon: CLOUD, theme: 'loss' },
+    { text: "Everything feels heavy today.", icon: CLOUD, theme: 'loss' },
+    { text: "I let everyone down.", icon: CLOUD, theme: 'failure' },
+    { text: "Nobody even noticed.", icon: CLOUD, theme: 'rejection' },
+    { text: "I just want today to be over.", icon: CLOUD, theme: 'loss' },
   ],
   angry: [
     { text: "It's not fair.", icon: CLOUD, theme: 'unfairness' },
@@ -64,6 +70,11 @@ const THOUGHTS: Record<FeelingKey, Thought[]> = {
     { text: "Why does this always happen to me?", icon: CLOUD, theme: 'unfairness' },
     { text: "I hate this.", icon: CLOUD, theme: 'conflict' },
     { text: "Nobody is on my side.", icon: CLOUD, theme: 'rejection' },
+    { text: "Nobody asked me first.", icon: CLOUD, theme: 'unfairness' },
+    { text: "They never say sorry.", icon: CLOUD, theme: 'conflict' },
+    { text: "I'm sick of being told what to do.", icon: CLOUD, theme: 'unfairness' },
+    { text: "Why am I the only one who cares?", icon: CLOUD, theme: 'unfairness' },
+    { text: "I want to shout and not stop.", icon: CLOUD, theme: 'conflict' },
   ],
   scared: [
     { text: "Something bad is going to happen.", icon: CLOUD, theme: 'uncertainty' },
@@ -78,6 +89,11 @@ const THOUGHTS: Record<FeelingKey, Thought[]> = {
     { text: "I don't know what's coming.", icon: CLOUD, theme: 'uncertainty' },
     { text: "They'll laugh at me.", icon: CLOUD, theme: 'rejection' },
     { text: "I can't tell anyone.", icon: CLOUD, theme: 'uncertainty' },
+    { text: "I want somebody with me.", icon: CLOUD, theme: 'uncertainty' },
+    { text: "My heart is going too fast.", icon: CLOUD, theme: 'uncertainty' },
+    { text: "What if I can't get out of it?", icon: CLOUD, theme: 'uncertainty' },
+    { text: "I don't want to go.", icon: CLOUD, theme: 'uncertainty' },
+    { text: "I keep looking at the door.", icon: CLOUD, theme: 'uncertainty' },
   ],
   worried: [
     { text: "What if it all goes wrong?", icon: CLOUD, theme: 'uncertainty' },
@@ -92,6 +108,11 @@ const THOUGHTS: Record<FeelingKey, Thought[]> = {
     { text: "What if I let someone down?", icon: CLOUD, theme: 'pressure' },
     { text: "I can't stop my brain.", icon: CLOUD, theme: 'uncertainty' },
     { text: "What if I made it worse?", icon: CLOUD, theme: 'failure' },
+    { text: "I might have got it wrong already.", icon: CLOUD, theme: 'failure' },
+    { text: "What if nobody tells me what is happening?", icon: CLOUD, theme: 'uncertainty' },
+    { text: "I keep checking it over and over.", icon: CLOUD, theme: 'uncertainty' },
+    { text: "It has to be perfect.", icon: CLOUD, theme: 'pressure' },
+    { text: "I don't want to make a fuss.", icon: CLOUD, theme: 'rejection' },
   ],
   jealous: [
     { text: "They have what I want.", icon: CLOUD, theme: 'comparison' },
@@ -106,6 +127,11 @@ const THOUGHTS: Record<FeelingKey, Thought[]> = {
     { text: "Nobody notices what I do.", icon: CLOUD, theme: 'rejection' },
     { text: "It's not fair that they got it.", icon: CLOUD, theme: 'unfairness' },
     { text: "I wish I was more like them.", icon: CLOUD, theme: 'comparison' },
+    { text: "They make it look easy.", icon: CLOUD, theme: 'comparison' },
+    { text: "I wanted to be the one who did that.", icon: CLOUD, theme: 'comparison' },
+    { text: "Everyone was talking about them.", icon: CLOUD, theme: 'comparison' },
+    { text: "I worked harder and got nothing.", icon: CLOUD, theme: 'unfairness' },
+    { text: "I don't want to be pleased for them.", icon: CLOUD, theme: 'conflict' },
   ],
   happy: [
     { text: "Today went well.", icon: CLOUD, theme: 'bright' },
@@ -120,6 +146,11 @@ const THOUGHTS: Record<FeelingKey, Thought[]> = {
     { text: "I want to tell someone about it.", icon: CLOUD, theme: 'bright' },
     { text: "I felt properly myself today.", icon: CLOUD, theme: 'bright' },
     { text: "That was worth it.", icon: CLOUD, theme: 'bright' },
+    { text: "I want to remember this bit.", icon: CLOUD, theme: 'bright' },
+    { text: "That was a good surprise.", icon: CLOUD, theme: 'bright' },
+    { text: "Somebody chose me.", icon: CLOUD, theme: 'bright' },
+    { text: "I laughed properly today.", icon: CLOUD, theme: 'bright' },
+    { text: "I feel lighter than I did.", icon: CLOUD, theme: 'bright' },
   ],
   excited: [
     { text: "I can't wait for it.", icon: CLOUD, theme: 'bright' },
@@ -134,6 +165,11 @@ const THOUGHTS: Record<FeelingKey, Thought[]> = {
     { text: "I want to be really good at it.", icon: CLOUD, theme: 'pressure' },
     { text: "Finally something for me.", icon: CLOUD, theme: 'bright' },
     { text: "I keep thinking about it.", icon: CLOUD, theme: 'uncertainty' },
+    { text: "I keep imagining how it will go.", icon: CLOUD, theme: 'bright' },
+    { text: "I want it to be tomorrow already.", icon: CLOUD, theme: 'bright' },
+    { text: "I've got butterflies, the good kind.", icon: CLOUD, theme: 'bright' },
+    { text: "Everyone is going to be there.", icon: CLOUD, theme: 'bright' },
+    { text: "I hope I get a turn.", icon: CLOUD, theme: 'uncertainty' },
   ],
   calm: [
     { text: "Things are alright just now.", icon: CLOUD, theme: 'bright' },
@@ -148,6 +184,11 @@ const THOUGHTS: Record<FeelingKey, Thought[]> = {
     { text: "I'd like to feel like this more often.", icon: CLOUD, theme: 'bright' },
     { text: "I'm okay with not knowing yet.", icon: CLOUD, theme: 'uncertainty' },
     { text: "I can breathe properly.", icon: CLOUD, theme: 'bright' },
+    { text: "Nothing is pulling at me.", icon: CLOUD, theme: 'bright' },
+    { text: "I like it being this quiet.", icon: CLOUD, theme: 'bright' },
+    { text: "I don't have to be anywhere.", icon: CLOUD, theme: 'bright' },
+    { text: "Today was enough.", icon: CLOUD, theme: 'bright' },
+    { text: "I feel steady.", icon: CLOUD, theme: 'bright' },
   ],
   other: [
     { text: "I can't do it.", icon: CLOUD, theme: 'failure' },
@@ -162,12 +203,18 @@ const THOUGHTS: Record<FeelingKey, Thought[]> = {
     { text: "Everyone else finds it easy.", icon: CLOUD, theme: 'comparison' },
     { text: "I don't know what to do.", icon: CLOUD, theme: 'uncertainty' },
     { text: "Something good happened.", icon: CLOUD, theme: 'bright' },
+    { text: "I'm not sure what I'm feeling.", icon: CLOUD, theme: 'uncertainty' },
+    { text: "Something is on my mind.", icon: CLOUD, theme: 'uncertainty' },
+    { text: "I wish today had gone differently.", icon: CLOUD, theme: 'loss' },
+    { text: "I did my best anyway.", icon: CLOUD, theme: 'bright' },
+    { text: "I need a bit of space.", icon: CLOUD, theme: 'rejection' },
   ],
 };
 
 /**
  * What a little camera would have seen, grouped by the kind of situation the
- * thought came out of. Ten or so each, so step 4 is a real choice too.
+ * thought came out of. Sixteen each, shown five at a time and rotated, so the
+ * child meets a real spread of situations without facing all of them at once.
  */
 const EVENTS: Record<Theme, Option[]> = {
   rejection: [
@@ -182,6 +229,11 @@ const EVENTS: Record<Theme, Option[]> = {
     { text: 'My friend played with someone else', icon: '↝' },
     { text: 'Someone laughed at what I said', icon: '☏' },
     { text: 'Nobody answered my message', icon: '◷' },
+    { text: 'Somebody ignored me when I spoke', icon: '☏' },
+    { text: 'They made plans without me', icon: '♧' },
+    { text: 'I was left standing on my own', icon: '♧' },
+    { text: 'Someone moved away from where I sat', icon: '↝' },
+    { text: 'They picked someone else to partner with', icon: '♧' },
   ],
   failure: [
     { text: 'I got an answer wrong', icon: '✧' },
@@ -195,6 +247,11 @@ const EVENTS: Record<Theme, Option[]> = {
     { text: 'I had to start again', icon: '↝' },
     { text: 'I said the wrong thing', icon: '☏' },
     { text: 'I needed help and had to ask', icon: '◷' },
+    { text: 'I practised and still got it wrong', icon: '✧' },
+    { text: 'I had to hand it in unfinished', icon: '◷' },
+    { text: 'Somebody redid my work for me', icon: '☏' },
+    { text: 'I could not remember the answer', icon: '✧' },
+    { text: 'I came last', icon: '♧' },
   ],
   unfairness: [
     { text: 'Someone else got picked instead of me', icon: '♧' },
@@ -208,6 +265,11 @@ const EVENTS: Record<Theme, Option[]> = {
     { text: 'I was blamed for the whole thing', icon: '☏' },
     { text: 'Someone broke a promise to me', icon: '↝' },
     { text: 'I waited and never got my go', icon: '◷' },
+    { text: 'I was punished along with everybody else', icon: '☏' },
+    { text: 'Somebody copied me and did not say', icon: '✧' },
+    { text: 'I was not allowed to explain', icon: '♧' },
+    { text: 'They changed their mind after I agreed', icon: '↝' },
+    { text: 'Somebody else chose for me', icon: '◷' },
   ],
   uncertainty: [
     { text: 'I was told something is changing', icon: '↝' },
@@ -221,6 +283,11 @@ const EVENTS: Record<Theme, Option[]> = {
     { text: 'I am waiting to find out', icon: '◷' },
     { text: 'Someone would not tell me what was wrong', icon: '☏' },
     { text: 'I saw something that worried me', icon: '✧' },
+    { text: 'Nobody would answer my question', icon: '☏' },
+    { text: 'I was told to wait and see', icon: '◷' },
+    { text: 'Something at home was different today', icon: '↝' },
+    { text: 'I have to meet new people soon', icon: '♧' },
+    { text: 'I do not know if I am in trouble', icon: '◷' },
   ],
   loss: [
     { text: 'Somebody I like went away', icon: '↝' },
@@ -234,6 +301,11 @@ const EVENTS: Record<Theme, Option[]> = {
     { text: 'I remembered something from before', icon: '◷' },
     { text: 'Things are not the way they were', icon: '↝' },
     { text: 'I was on my own for a while', icon: '♧' },
+    { text: 'Somebody is not coming back', icon: '↝' },
+    { text: 'A thing I liked got broken', icon: '✧' },
+    { text: 'I had to give something up', icon: '♧' },
+    { text: 'A place I liked has changed', icon: '↝' },
+    { text: 'Somebody I miss was mentioned', icon: '☏' },
   ],
   conflict: [
     { text: 'Someone said something mean to me', icon: '☏' },
@@ -247,6 +319,11 @@ const EVENTS: Record<Theme, Option[]> = {
     { text: 'They said something about me to others', icon: '☏' },
     { text: 'I was interrupted again and again', icon: '◷' },
     { text: 'Someone would not let me explain', icon: '♧' },
+    { text: 'Somebody called me a name', icon: '☏' },
+    { text: 'We stopped speaking to each other', icon: '↝' },
+    { text: 'Someone laughed while I was upset', icon: '☏' },
+    { text: 'I was left out of a game on purpose', icon: '♧' },
+    { text: 'Somebody would not share', icon: '✧' },
   ],
   pressure: [
     { text: 'I have a test or a performance coming', icon: '◷' },
@@ -260,6 +337,11 @@ const EVENTS: Record<Theme, Option[]> = {
     { text: 'I was being timed or scored', icon: '◷' },
     { text: 'I had to make a decision', icon: '↝' },
     { text: 'Someone said they were counting on me', icon: '☏' },
+    { text: 'I was told I had to get it right', icon: '☏' },
+    { text: 'Somebody was waiting on me', icon: '◷' },
+    { text: 'I had two things to do at once', icon: '◷' },
+    { text: 'I was put in front of the class', icon: '♧' },
+    { text: 'I had to try something new today', icon: '✧' },
   ],
   comparison: [
     { text: 'Someone did better than me', icon: '✧' },
@@ -273,6 +355,11 @@ const EVENTS: Record<Theme, Option[]> = {
     { text: 'Somebody said I should be more like them', icon: '☏' },
     { text: 'I saw their work next to mine', icon: '✧' },
     { text: 'They got more attention', icon: '♧' },
+    { text: 'Their score was read out', icon: '☏' },
+    { text: 'Somebody showed everyone what they made', icon: '✧' },
+    { text: 'I was moved to a different group', icon: '↝' },
+    { text: 'They were asked and I was not', icon: '♧' },
+    { text: 'Everyone was talking about what they did', icon: '☏' },
   ],
   bright: [
     { text: 'Somebody was kind to me', icon: '☏' },
@@ -286,6 +373,11 @@ const EVENTS: Record<Theme, Option[]> = {
     { text: 'I had a quiet bit of the day', icon: '◷' },
     { text: 'I helped somebody out', icon: '☏' },
     { text: 'Nothing much went wrong', icon: '✳' },
+    { text: 'Somebody said well done', icon: '☏' },
+    { text: 'I was picked for something', icon: '♧' },
+    { text: 'A friend came to find me', icon: '↝' },
+    { text: 'I got something I had been saving for', icon: '✧' },
+    { text: 'Somebody shared with me', icon: '✳' },
   ],
 };
 
