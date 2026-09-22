@@ -937,3 +937,36 @@
 .rp-slot-locked{pointer-events:none}
 .rp-brick-locked{display:block;width:100%;opacity:.55}
 .rp-brick-locked .rp-brick-img{filter:saturate(.5) brightness(.85)}
+
+/*
+  ── SITTING IN THE ROOM ──────────────────────────────────────────────────
+
+  The portal used to be a door to a separate "Reflection Room" screen. That
+  screen is this one now, so the arch became the one control in here that
+  does nothing: press it and the room breathes, press it again and it stops.
+
+  Everything else steps back while it runs — the bricks, the signs, the
+  footbar — because a child who asked to sit down should not be looking at
+  ten things asking to be tapped. Nothing is hidden or disabled; it is all
+  still there, just quieter, so coming back out of it is one press and not a
+  navigation.
+*/
+.rp-arch-resting{filter:drop-shadow(0 0 34px #e0c4ffcc)}
+.rp-arch-resting img{animation:rp-sit-breathe 7s ease-in-out infinite}
+@keyframes rp-sit-breathe{
+  50%{transform:scale(1.07);filter:drop-shadow(0 0 30px #d9b6ffdd)}
+}
+
+/* The hush. Scoped to the room so it can never leak into playback. */
+.rp-pathview:has(.rp-arch-resting) :is(.rp-bricks,.rp-sign,.rp-posts,.rp-walker,.rp-footbar){
+  opacity:.26;transition:opacity 1.6s ease;
+}
+.rp-pathview:has(.rp-arch-resting) .rp-decor{opacity:.72;transition:opacity 1.6s ease}
+/* A keyboard user must still be able to see what they are on. */
+.rp-pathview:has(.rp-arch-resting) :is(.rp-bricks,.rp-footbar) :is(button,a):focus-visible{opacity:1}
+.rp-pathview :is(.rp-bricks,.rp-sign,.rp-posts,.rp-walker,.rp-footbar){transition:opacity 1.6s ease}
+
+/* Reduced motion gets the dimming without the breathing. */
+@media (prefers-reduced-motion: reduce){
+  .rp-arch-resting img{animation:none}
+}

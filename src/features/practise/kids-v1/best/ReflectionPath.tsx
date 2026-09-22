@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { useKidStore, type SavedReflection } from '../../../kids/store';
 import { FONT } from '../ui/chrome';
@@ -54,12 +54,6 @@ const TAG_LABELS: Record<string, string> = {
   other: 'Other',
 };
 
-const FILTER_TABS = ['All', 'Recent', 'Favourites', 'Brave', 'Calm', 'Kind', 'Belonging', 'Try Again'] as const;
-type FilterTab = typeof FILTER_TABS[number];
-
-/** The four words on the spines of the book stack, straight off the sheet. */
-const SPINES = ['Calmer', 'Kinder', 'Braver', 'Happier Tomorrows'];
-
 /**
  * THE ROOM IS PAINTED, NOT DESCRIBED.
  *
@@ -73,7 +67,7 @@ const SPINES = ['Calmer', 'Kinder', 'Braver', 'Happier Tomorrows'];
  * removes itself rather than leaving a broken image where a lantern should be,
  * because none of this is load-bearing for the reflection underneath it.
  */
-function Decor({ variant, still }: { variant: 'room' | 'path' | 'library' | 'playback'; still: boolean }) {
+function Decor({ variant, still }: { variant: 'room' | 'path' | 'playback'; still: boolean }) {
   const hide = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; };
   const plate = (file: string, cls: string) => (
     <img key={file + cls} src={`${A}${file}`} alt="" aria-hidden="true" className={cls} onError={hide} draggable={false} />
@@ -105,15 +99,6 @@ function Decor({ variant, still }: { variant: 'room' | 'path' | 'library' | 'pla
         {plate('magic_swirl.png', 'rp-d rp-d-swirl')}
       </>}
 
-      {variant === 'library' && <>
-        {plate('window_view.png', 'rp-d rp-d-window')}
-        {plate('bench.png', 'rp-d rp-d-bench')}
-        {plate('plant_decor.png', 'rp-d rp-d-plant-l')}
-        {plate('plant_pot.png', 'rp-d rp-d-plant-r')}
-        {plate('lantern_star.png', 'rp-d rp-d-lantern-l')}
-        {plate('sparkles_trail.png', 'rp-d rp-d-sparkles')}
-      </>}
-
       {variant === 'playback' && <>
         {plate('crystal_cluster.png', 'rp-d rp-d-crystal')}
         {plate('beanbag.png', 'rp-d rp-d-beanbag')}
@@ -126,10 +111,6 @@ function Decor({ variant, still }: { variant: 'room' | 'path' | 'library' | 'pla
   );
 }
 
-/** The four painted word-blocks that lean against the wall in every scene. */
-function Spines() {
-  return <p className="rp-spines" aria-hidden="true">{SPINES.map((s) => <span key={s}>{s}</span>)}</p>;
-}
 
 /** ── Playback screen ──────────────────────────────────────────────────── */
 
@@ -356,184 +337,7 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
   );
 }
 
-/** ── Library screen ──────────────────────────────────────────────────── */
 
-function LibraryView({ onBack, onPlay, onGrownUp, still }: {
-  onBack: () => void;
-  onPlay: (r: SavedReflection) => void;
-  onGrownUp: () => void;
-  still: boolean;
-}) {
-  const reflections = useKidStore((s) => s.savedReflections);
-  const toggleFav = useKidStore((s) => s.toggleReflectionFavourite);
-  const [tab, setTab] = useState<FilterTab>('All');
-
-  const filtered = useMemo(() => {
-    const all = [...reflections].reverse(); // newest first
-    if (tab === 'All') return all;
-    if (tab === 'Recent') return all.slice(0, 20);
-    if (tab === 'Favourites') return all.filter((r) => r.favourite);
-    if (tab === 'Brave') return all.filter((r) => r.tag === 'brave');
-    if (tab === 'Calm') return all.filter((r) => r.tag === 'calm');
-    if (tab === 'Kind') return all.filter((r) => r.tag === 'kind');
-    if (tab === 'Belonging') return all.filter((r) => r.tag === 'belonging');
-    if (tab === 'Try Again') return all.filter((r) => r.tag === 'try_again');
-    return all;
-  }, [reflections, tab]);
-
-  return (
-    <div className="rp-room rp-library" style={{ fontFamily: FONT }}>
-      <Decor variant="library" still={still} />
-      <header className="rp-header">
-        <button className="rp-back" onClick={onBack} aria-label="Back to the Reflection Room">←</button>
-        <div className="rp-title">
-          <h1>My Reflection Library</h1>
-          <p>All your reflections live here.</p>
-        </div>
-        <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp} aria-label="Talk to a grown-up">♡</button>
-      </header>
-
-      <div className="rp-chirpy-says">
-        <img src={`${A}chirpy_character.png`} alt="" aria-hidden="true"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-        <p>Look how much you’ve grown!</p>
-      </div>
-
-      <nav className="rp-filter-tabs" aria-label="Filter reflections">
-        {FILTER_TABS.map((t) => (
-          <button
-            key={t}
-            className={tab === t ? 'rp-tab-active' : ''}
-            onClick={() => { sound.play('tap'); setTab(t); }}
-            aria-pressed={tab === t}
-          >
-            {t}
-          </button>
-        ))}
-      </nav>
-
-      <p className="rp-count" role="status">{filtered.length} {filtered.length === 1 ? 'reflection' : 'reflections'}</p>
-
-      <div className="rp-library-grid">
-        {filtered.length === 0 && (
-          <p className="rp-empty">
-            {tab === 'Favourites'
-              ? 'No favourites yet — tap the heart on any reflection.'
-              : 'Nothing here yet.'}
-          </p>
-        )}
-        {filtered.map((r) => (
-          <article key={r.id} className="rp-card">
-            <button className="rp-card-open" onClick={() => onPlay(r)} aria-label={`Play reflection: ${r.pathLabel}`}>
-              <span className="rp-card-art" aria-hidden="true">
-                <img src={BRICK_DONE} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-              </span>
-              <p className="rp-card-phrase">"{r.pathLabel}"</p>
-              <span className={`rp-tag-pill rp-tag-${r.tag}`}>{TAG_LABELS[r.tag] ?? r.tag}</span>
-              {r.feeling && <small className="rp-card-feeling">You felt: {r.feeling}</small>}
-            </button>
-            <button
-              onClick={() => { sound.play('tap'); toggleFav(r.id); }}
-              className={`rp-fav-icon ${r.favourite ? 'rp-fav-active' : ''}`}
-              aria-label={r.favourite ? 'Remove from favourites' : 'Add to favourites'}
-              aria-pressed={r.favourite}
-            >
-              {r.favourite ? '♥' : '♡'}
-            </button>
-          </article>
-        ))}
-      </div>
-
-      <footer className="rp-stop">
-        <button className="chrome-fade" onClick={onBack}>← Back to the room</button>
-        <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
-      </footer>
-      <p className="rp-footer-note" aria-hidden="true">Different thoughts create brighter tomorrows. ♡</p>
-    </div>
-  );
-}
-
-/** ── The Reflection Room — the door the whole feature opens behind ────── */
-
-function RoomView({ picks, onPlayOne, onShuffle, onLibrary, onPath, onExit, onGrownUp, still, hasAny }: {
-  picks: SavedReflection[];
-  onPlayOne: () => void;
-  onShuffle: () => void;
-  onLibrary: () => void;
-  onPath: () => void;
-  onExit: () => void;
-  onGrownUp: () => void;
-  still: boolean;
-  hasAny: boolean;
-}) {
-  return (
-    <div className="rp-room rp-roomview" style={{ fontFamily: FONT }}>
-      <Decor variant="room" still={still} />
-      <header className="rp-header">
-        <button className="rp-back" onClick={onExit} aria-label="Back to Mind Gym">←</button>
-        <div className="rp-title rp-arch">
-          <h1>Reflection Room <span aria-hidden="true">♡</span></h1>
-          <p>Welcome back! Let’s take a moment.</p>
-        </div>
-        <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp} aria-label="Talk to a grown-up">♡</button>
-      </header>
-
-      <div className="rp-room-stage">
-        <img src={`${A}child_character.png`} alt="" aria-hidden="true" className="rp-child"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-        <img src={`${A}chirpy_character.png`} alt="" aria-hidden="true" className="rp-chirpy"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-
-        {hasAny ? (
-          <>
-            <p className="rp-welcome">Here are a few gentle reflections from your journey.</p>
-            {/*
-              THREE PICKS, NOT THE WHOLE ARCHIVE. The handoff asks the room to
-              open with a small, calm handful and to keep everything else one
-              tap away in the library — a child who walks in on twelve cards is
-              being given homework, not a moment.
-            */}
-            <ul className="rp-picks" aria-label="A few reflections from your journey">
-              {picks.map((r) => (
-                <li key={r.id}>
-                  <button onClick={onPlayOne} aria-label={`Play reflection: ${r.pathLabel}`}>
-                    <span className={`rp-tag-pill rp-tag-${r.tag}`}>{TAG_LABELS[r.tag] ?? r.tag}</span>
-                    <span className="rp-pick-phrase">"{r.pathLabel}"</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <div className="rp-empty-state">
-            <img src={`${A}open_magic_book.png`} alt="" className="rp-empty-book" aria-hidden="true"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            <h2>Your room is waiting.</h2>
-            <p>Finish a Story Lab journey and your first reflection will be here, ready to visit again.</p>
-          </div>
-        )}
-      </div>
-
-      <div className="rp-room-actions">
-        <button className="rp-cta rp-cta-big" onClick={onPlayOne} disabled={!hasAny}>
-          <span aria-hidden="true">▶</span> Play one for me
-        </button>
-        <div className="rp-room-secondary">
-          <button onClick={onShuffle} disabled={!hasAny}><span aria-hidden="true">⇄</span> Shuffle reflections</button>
-          <button onClick={onLibrary}><span aria-hidden="true">📖</span> Open My Reflection Library</button>
-          <button onClick={onPath} disabled={!hasAny}><span aria-hidden="true">✦</span> Walk my Reflection Path</button>
-        </div>
-      </div>
-
-      <Spines />
-      <footer className="rp-stop">
-        <button className="chrome-fade" onClick={onExit}>← Back to Mind Gym</button>
-        <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
-      </footer>
-      <p className="rp-footer-note" aria-hidden="true">Same you. Brighter views. ♡</p>
-    </div>
-  );
-}
 
 /** ── The path of bricks ──────────────────────────────────────────────── */
 
@@ -547,7 +351,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
   const allReflections = useKidStore((s) => s.savedReflections);
   const markPlayed = useKidStore((s) => s.markReflectionPlayed);
 
-  const [inner, setInner] = useState<'room' | 'path' | 'library' | 'playback'>('room');
+  const [inner, setInner] = useState<'room' | 'playback'>('room');
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [visitedIds, setVisitedIds] = useState<Set<string>>(new Set());
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -557,7 +361,35 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     to deal a fresh hand on demand, which is the one thing that button means.
   */
   const [shuffleNonce, setShuffleNonce] = useState(0);
-  const returnTo = useRef<'room' | 'path'>('room');
+  /** Sitting with the portal, breathing. The room's whole reason to exist for
+   *  a child who did not come here to do anything. */
+  const [resting, setResting] = useState(false);
+
+  /*
+    THE LULLABY, AND WHY IT STARTS BY ITSELF.
+
+    This is the room the hub's meditation door opens, so the bed is the room
+    rather than something to go and switch on: a child who arrives wanting
+    somewhere quiet should not have to find a button first. It is the same
+    forest lullaby the Different Story Room uses, low, looping.
+
+    playMusicWhenAllowed rather than playMusic because a browser that has not
+    seen a gesture yet refuses audio outright, and this room is reachable
+    directly from the hub — see kit/sound. Silent in the quiet state, like
+    everything else the app does for a distressed child, and stopped on the way
+    out so it can never follow them into another room.
+  */
+  useEffect(() => {
+    if (quiet) return;
+    sound.playMusicWhenAllowed('twoStories');
+    return () => sound.stopMusic();
+  }, [quiet]);
+
+  /** The portal pressed. Nothing happens, at length, on purpose. */
+  const sit = () => {
+    if (!quiet) sound.play('tap');
+    setResting((v) => !v);
+  };
 
   const sample = useMemo(() => {
     if (!allReflections.length) return [];
@@ -586,13 +418,12 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     the cue cannot be forgotten at a call site, and so it is silenced in one
     place for a child who has asked for quiet.
   */
-  const go = (next: 'room' | 'path' | 'library' | 'playback') => {
+  const go = (next: 'room' | 'playback') => {
     if (!quiet) sound.play(next === 'playback' ? 'enterRoom' : 'panelSlide');
     setInner(next);
   };
 
-  const playReflection = (r: SavedReflection, from: 'room' | 'path' = 'path') => {
-    returnTo.current = from;
+  const playReflection = (r: SavedReflection) => {
     if (!quiet) sound.play('roomCard');
     setPlayingId(r.id);
     setVisitedIds((v) => new Set([...v, r.id]));
@@ -600,16 +431,16 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     go('playback');
   };
 
-  const playRandom = (from: 'room' | 'path' = 'path') => {
+  const playRandom = () => {
     if (!sample.length) return;
     const unvisited = sample.filter((r) => !visitedIds.has(r.id));
     const pool = unvisited.length ? unvisited : sample;
-    playReflection(pool[Math.floor(Math.random() * pool.length)], from);
+    playReflection(pool[Math.floor(Math.random() * pool.length)]);
   };
 
   const playFavourites = () => {
     const favs = allReflections.filter((r) => r.favourite);
-    if (favs.length) playReflection(favs[Math.floor(Math.random() * favs.length)], returnTo.current);
+    if (favs.length) playReflection(favs[Math.floor(Math.random() * favs.length)]);
   };
 
   const playingReflection = allReflections.find((r) => r.id === playingId);
@@ -618,9 +449,9 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     return (
       <PlaybackView
         reflection={playingReflection}
-        onBack={() => go(returnTo.current)}
+        onBack={() => go('room')}
         onGrownUp={onGrownUp}
-        onShuffle={() => playRandom(returnTo.current)}
+        onShuffle={() => playRandom()}
         onPlayFavourites={playFavourites}
         still={still}
         quiet={quiet}
@@ -628,41 +459,31 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     );
   }
 
-  if (inner === 'library') {
-    return (
-      <LibraryView
-        onBack={() => go('room')}
-        onPlay={(r) => playReflection(r, 'room')}
-        onGrownUp={onGrownUp}
-        still={still}
-      />
-    );
-  }
-
-  if (inner === 'room') {
-    return (
-      <RoomView
-        picks={sample.slice(0, 3)}
-        hasAny={allReflections.length > 0}
-        onPlayOne={() => playRandom('room')}
-        onShuffle={() => { sound.play('tap'); setShuffleNonce((n) => n + 1); }}
-        onLibrary={() => go('library')}
-        onPath={() => go('path')}
-        onExit={onExit}
-        onGrownUp={onGrownUp}
-        still={still}
-      />
-    );
-  }
-
   /*
-    THE PATH IS A PATH.
+    ONE ROOM, AND THE PATH IS THE FLOOR OF IT.
 
-    Laid against reflection_path_magic_journey.png rather than as a grid: the
-    stones climb from the bottom left towards the Reflection Room at the top
-    right, the boy walks at the near end of them with Chirpy, the signs stand
-    where the reference stands them, and the three controls sit in a bar along
-    the foot.
+    This used to be four screens — a room with three sample cards, a path of
+    bricks, a library with eight filter tabs, and playback — and three of them
+    were the same reflections presented three ways. A child who wanted to hear
+    something they had written had to guess which of three doors it was behind,
+    and every door led to the same handful of sentences. That is not a choice,
+    it is a maze with one room in it.
+
+    So there is one room now. The bricks are laid across its floor, all of them
+    at once, and tapping one raises its reflection. The library is gone: what it
+    offered over the path was filtering ten items, and Shuffle already deals a
+    fresh hand from the whole archive.
+
+    SITTING HERE IS A THING YOU CAN DO. The room asks nothing on arrival — the
+    lullaby comes up, the lanterns breathe, and a child who came to be somewhere
+    calm rather than to do an exercise is already finished. That is why the
+    meditation door on the hub lands here: it is the same room, and it always
+    was.
+
+    Laid against reflection_path_magic_journey.png: the stones climb from the
+    bottom left towards the portal at the top right, the boy walks at the near
+    end of them with Chirpy, the signs stand where the reference stands them,
+    and the controls sit in a bar along the foot.
 
     THE PATH IS ALWAYS TEN STONES. The reference draws a full path, and the
     pack ships a `locked` plate for the ones not yet earned, so the stones the
@@ -677,10 +498,10 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     <div className="rp-room rp-pathview" style={{ fontFamily: FONT }}>
       <Decor variant="path" still={still} />
       <header className="rp-header">
-        <button className="rp-back" onClick={() => go('room')} aria-label="Back to the Reflection Room">←</button>
+        <button className="rp-back" onClick={onExit} aria-label="Back to Mind Gym">←</button>
         <div className="rp-title rp-path-title">
-          <h1>Reflection Path</h1>
-          <p>Tap a glowing brick to open a reflection from your journey.</p>
+          <h1>Reflection Room <span aria-hidden="true">♡</span></h1>
+          <p>Stay as long as you like. Tap a glowing brick to visit a reflection.</p>
         </div>
         <button className="chrome-fade rp-grownup-btn" onClick={onGrownUp} aria-label="Talk to a grown-up">♡</button>
       </header>
@@ -698,11 +519,23 @@ export function ReflectionPath({ onExit, onGrownUp }: {
             onError={(e) => { e.currentTarget.style.display = 'none'; }} />
         </div>
 
-        {/* The destination, standing at the top of the climb. */}
-        <button className="rp-arch" onClick={() => go('room')}>
+        {/*
+          THE PORTAL IS WHERE YOU SIT, not a door to another screen.
+
+          It used to lead back to a separate "room" view, which is now this
+          one. Rather than delete the arch — it is the thing the path climbs
+          towards, and a path to nothing is a worse picture — it became the
+          one control in here that does nothing useful, which is the point.
+          Press it and the room breathes with you until you press it again.
+        */}
+        <button
+          className={`rp-arch${resting ? ' rp-arch-resting' : ''}`}
+          onClick={sit}
+          aria-pressed={resting}
+        >
           <img src={`${A}reflection_portal.png`} alt="" aria-hidden="true"
             onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          <span>Reflection<br />Room <b aria-hidden="true">♡</b></span>
+          <span>{resting ? <>Breathing<br />with you <b aria-hidden="true">♡</b></> : <>Sit for<br />a moment <b aria-hidden="true">♡</b></>}</span>
         </button>
 
         <p className="rp-sign rp-sign-right" aria-hidden="true">Same You<br />Brighter Views <b>♡</b></p>
@@ -732,7 +565,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
               <li key={r.id} className="rp-slot" style={style}>
                 <button
                   className={`rp-brick${visited ? ' rp-brick-visited' : ''}${still ? '' : ' rp-brick-animated'}`}
-                  onClick={() => playReflection(r, 'path')}
+                  onClick={() => playReflection(r)}
                   onMouseEnter={() => setHoveredId(r.id)}
                   onMouseLeave={() => setHoveredId(null)}
                   onFocus={() => setHoveredId(r.id)}
@@ -755,28 +588,25 @@ export function ReflectionPath({ onExit, onGrownUp }: {
           <div className="rp-empty-state">
             <img src={`${A}open_magic_book.png`} alt="" className="rp-empty-book" aria-hidden="true"
               onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            <h2>Your path is waiting.</h2>
-            <p>Finish a Story Lab journey and your first reflection will appear here as a glowing brick.</p>
+            <h2>Your room is waiting.</h2>
+            <p>Sit here as long as you like. Finish a Story Lab journey and your first reflection will appear as a glowing brick.</p>
           </div>
         )}
       </div>
 
       {/* The bar along the foot, as the reference draws it. */}
       <div className="rp-footbar">
-        <button className="rp-cta" onClick={() => playRandom('path')} disabled={!walked.length}>
+        <button className="rp-cta" onClick={() => playRandom()} disabled={!walked.length}>
           <span aria-hidden="true">▶</span> Play one for me
         </button>
         <button className="rp-foot-link" onClick={() => { if (!quiet) sound.play('tap'); setShuffleNonce((n) => n + 1); }} disabled={!walked.length}>
           <span aria-hidden="true">⇄</span> Shuffle reflections
         </button>
-        <button className="rp-foot-link" onClick={() => go('library')}>
-          <span aria-hidden="true">📖</span> Open My<br />Reflection Library
-        </button>
         <p className="rp-foot-note"><span aria-hidden="true">★</span> All your experiences<br />make a brighter you. <b aria-hidden="true">♡</b></p>
       </div>
 
       <footer className="rp-stop rp-stop-slim">
-        <button className="chrome-fade" onClick={() => go('room')}>← Back to the room</button>
+        <button className="chrome-fade" onClick={onExit}>← Back to Mind Gym</button>
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
       </footer>
     </div>
