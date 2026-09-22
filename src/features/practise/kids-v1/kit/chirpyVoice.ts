@@ -63,7 +63,10 @@ const heard = new Map<string, string>();
 function browserVoice(text: string) {
   if (!isVoiceSupported()) return;
   try {
-    window.speechSynthesis.cancel();
+    /* No cancel() here. Every caller has already stopped whatever was
+       speaking, and Chrome is known to drop an utterance queued in the same
+       task as a cancel — so cancelling twice risked the one thing this
+       function exists to guarantee. */
     const u = new SpeechSynthesisUtterance(text);
     // Lifting the pitch gets most of the way to young without the chipmunk
     // effect the old 1.15-on-a-default-voice had — the rate matters as much as
@@ -81,6 +84,24 @@ function browserVoice(text: string) {
 export function speak(text: string, quiet: boolean) {
   if (isMuted() || quiet || !text) return;
   stopSpeaking();
+
+  /*
+    CLAIM THE LINE HERE, and this is the bug that made him mute the first
+    time he was asked for anything.
+
+    `speaking` was only ever assigned inside `play()`. On the uncached path —
+    which is every line the first time it is heard — `speak` called
+    `stopSpeaking()` (setting it to null), then `browserVoice()`, which never
+    touched it. So when the fetch came back, the guard below read
+    `null === text` and threw the audio away. The line was synthesised, paid
+    for, cached, and dropped; only a SECOND request for the same text ever
+    played it, off the cache.
+
+    Which meant the real voice never spoke on first hearing, and on any device
+    where speechSynthesis has no usable voice loaded, the first press of Play
+    was simply silent.
+  */
+  speaking = text;
 
   const cached = heard.get(text);
   if (cached) { play(cached, text); return; }
