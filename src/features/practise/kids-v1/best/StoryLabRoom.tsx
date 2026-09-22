@@ -13,6 +13,38 @@ import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
+/* Boy's head sits roughly at left 55px, bottom 120px within the thought field. */
+const BUBBLE_ORIGINS = [
+  { left: 42, bottom: 128, size: 9 },
+  { left: 62, bottom: 118, size: 12 },
+  { left: 50, bottom: 134, size: 8 },
+  { left: 68, bottom: 122, size: 10 },
+];
+
+function ThoughtParticles({ show }: { show: boolean }) {
+  const still = useReducedMotion();
+  if (still || !show) return null;
+
+  return (
+    <>
+      {BUBBLE_ORIGINS.map((o, i) => (
+        <motion.span
+          key={i}
+          className="sl-thought-particle"
+          style={{ left: o.left, bottom: o.bottom, width: o.size, height: o.size } as CSSProperties}
+          initial={{ opacity: 0 }}
+          animate={{
+            opacity: [0, 0.85, 0.55, 0.2, 0],
+            y: [0, -55, -110, -165],
+            x: [0, (i % 2 === 0 ? 9 : -9), (i % 2 === 0 ? 5 : -14), (i % 2 === 0 ? 13 : -7)],
+          }}
+          transition={{ duration: 2.6 + i * 0.5, ease: 'easeInOut', repeat: Infinity, delay: i * 0.85 }}
+          aria-hidden="true"
+        />
+      ))}
+    </>
+  );
+}
 /*
   THE WALK IS A FILMSTRIP NOW, which is what approved_reference_story_lab.png
   has been showing all along.
@@ -480,24 +512,59 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
             <Panel index={index} step={step} onBack={back} onHome={onExit}
               chirpy={index === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(index === 5 ? 'hopeful' : 'curious')}>
 
-              {index === 2 && <div className="sl-thought-field">
-                <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{thoughtOptions.map((option, i) => <button
-                  key={option.text}
-                  className={`sl-thought-cloud ${option.own ? 'sl-cloud-own' : ''} ${cardClass(2, option.text)}`}
-                  /* Each cloud drifts on its own clock and its own path, so a
-                     dozen of them read as weather rather than a grid twitching
-                     in unison. The numbers are derived from the index, not
-                     random, so they stay put across re-renders. */
-                  style={{
-                    '--drift-delay': `${(i % 7) * -.9}s`,
-                    '--drift-dur': `${5 + (i % 4) * 1.4}s`,
-                    '--drift-x': `${(i % 3) - 1}px`,
-                    '--drift-y': `${-4 - (i % 3) * 2.5}px`,
-                    '--drift-rot': `${((i % 5) - 2) * .8}deg`,
-                  } as CSSProperties}
-                  disabled={step !== 2}
-                  onClick={() => pick(option)}
-                >{option.own && <span className="sl-mic" aria-hidden="true"><Mic size={13} strokeWidth={2.6} /></span>}{option.text}</button>)}</div>
+              {index === 2 && <div className={`sl-thought-field ${!thought ? 'sl-field-railed' : ''}`}>
+                <ThoughtParticles show={!thought} />
+                <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>
+                  {thoughtOptions.map((option, i) => (
+                    /* Two wrappers give independent X and Y bounce: the span
+                       carries its own CSS animation for X, the button for Y.
+                       Both use `alternate` direction with coprime durations so
+                       each cloud traces a unique Lissajous-ish path, and
+                       negative delays spread them across the cycle. */
+                    <span
+                      key={option.text}
+                      className="sl-cloud-mover"
+                      style={{
+                        '--bx': `${14 + (i % 4) * 8}px`,
+                        '--bx-dur': `${6.2 + (i % 7) * 0.55}s`,
+                        '--bx-del': `${-(i % 7) * 0.92}s`,
+                      } as CSSProperties}
+                    >
+                      <button
+                        className={`sl-thought-cloud ${cardClass(2, option.text)}`}
+                        style={{
+                          '--by': `${10 + (i % 4) * 7}px`,
+                          '--by-dur': `${4.7 + (i % 5) * 0.9}s`,
+                          '--by-del': `${-(i % 5) * 1.1}s`,
+                        } as CSSProperties}
+                        disabled={step !== 2}
+                        onClick={() => pick(option)}
+                      >
+                        {option.text}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                {/*
+                  HIS OWN WORDS ARE NOT ONE OF THE CLOUDS.
+
+                  Mixed into the drift it was a sentence to scan past on the
+                  way to the sentences — and it is the one option that is true
+                  whatever the sky is showing, including when none of it fits.
+                  So it stands on its own shelf under the weather, still, lit,
+                  and always in the same place.
+                */}
+                {!thought && <div className="sl-own-rail">
+                  <button className="sl-say-own" onClick={showOwn} disabled={step !== 2}>
+                    <span className="sl-mic" aria-hidden="true"><Mic size={14} strokeWidth={2.6} /></span>
+                    <span className="sl-say-own-text">
+                      <b>Say it your way</b>
+                      <small>None of these? Tell me yourself.</small>
+                    </span>
+                    <span className="sl-say-own-go" aria-hidden="true">›</span>
+                  </button>
+                </div>}
                 <img
                   className="sl-thinking-boy"
                   /* Keyed on the plate so a child who steps back and changes

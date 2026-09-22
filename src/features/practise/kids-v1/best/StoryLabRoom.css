@@ -773,6 +773,20 @@
   opacity:0;transition:opacity .43s ease;pointer-events:none;
 }
 /*
+  Two-wrapper bounce: outer span carries X, inner button carries Y.
+  Coprime durations per cloud mean every cloud traces a different path.
+  animation-direction:alternate avoids the snapping reset you get from
+  a single keyframe cycle — it just reverses, smoothly, end to end.
+*/
+.sl-cloud-mover{
+  display:inline-flex;
+  animation:sl-bounce-x var(--bx-dur,7s) ease-in-out var(--bx-del,0s) infinite alternate;
+}
+@keyframes sl-bounce-x{
+  from{transform:translateX(calc(var(--bx,18px)*-1))}
+  to{transform:translateX(var(--bx,18px))}
+}
+/*
   No fill-mode on the way in, and that is not a detail. A finished animation
   holding its `to` state outranks a plain declaration, so `both` here would
   pin every option at opacity 1 and the fade-out above would never be seen.
@@ -780,8 +794,27 @@
   finishes, which is exactly what the fade-out then needs to take hold of.
 */
 .sl-thought-clouds .sl-thought-cloud{
-  animation:sl-drift var(--drift-dur,5s) ease-in-out infinite,sl-roll-in .5s ease-out;
-  animation-delay:var(--drift-delay),0s;
+  animation:sl-cloud-arrive .45s ease-out,
+            sl-bounce-y var(--by-dur,5s) ease-in-out var(--by-del,0s) infinite alternate;
 }
+@keyframes sl-bounce-y{
+  from{transform:translateY(calc(var(--by,14px)*-1))}
+  to{transform:translateY(var(--by,14px))}
+}
+@keyframes sl-cloud-arrive{from{opacity:0}}
 .sl-cards > button{animation:sl-roll-in .5s ease-out}
 @keyframes sl-roll-in{from{opacity:0}}
+
+/*
+  Bubble particles rising from the boy's head toward the thought clouds.
+  Each is a small translucent circle — border + faint fill give it that
+  soap-bubble look without needing an image.
+*/
+.sl-thought-particle{
+  position:absolute;
+  border-radius:50%;
+  border:1.5px solid rgba(180,155,255,.8);
+  background:rgba(150,130,255,.15);
+  box-shadow:inset 0 0 4px rgba(180,160,255,.3),0 0 8px rgba(160,130,255,.4);
+  pointer-events:none;z-index:3;
+}

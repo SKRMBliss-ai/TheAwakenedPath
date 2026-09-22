@@ -900,13 +900,15 @@
   /* Sized off the viewport's HEIGHT as well as its width. On a short
      window a door fixed at 300px eats half the stage and the stones have
      nowhere left to stand clear of it. */
-  width:clamp(150px,min(26%,30svh),300px);z-index:3;
+  width:clamp(180px,min(34%,40svh),360px);z-index:3;
   background:none;border:0;padding:0;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;
   transition:transform .2s,filter .2s;
 }
 .rp-arch:hover,.rp-arch:focus-visible{transform:translateX(-50%) scale(1.05);filter:drop-shadow(0 0 20px #d4b0ffaa);outline:none}
-.rp-arch img{width:100%;height:auto;display:block;filter:drop-shadow(0 0 20px #b98bff66)}
+.rp-arch img{width:100%;height:auto;display:block;filter:drop-shadow(0 0 20px #b98bff66);
+  mask-image:linear-gradient(to right,transparent 0%,#000 16%,#000 84%,transparent 100%);
+  -webkit-mask-image:linear-gradient(to right,transparent 0%,#000 16%,#000 84%,transparent 100%);}
 .rp-arch span{
   order:-1;font-size:clamp(11px,1.05vw,16px);font-weight:1000;line-height:1.05;text-align:center;
   color:#fff4d6;text-shadow:0 0 9px #ffb14d,0 0 20px #ff8a1eaa;
