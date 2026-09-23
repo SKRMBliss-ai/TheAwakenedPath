@@ -345,7 +345,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       plant all landed in those bands, floating on flat purple instead of
       standing in the room.
     */}
-    <RoomScene room={art} dim={awakePhase === 'dim' ? 0.5 : 0.16} art={`${ART}/background.png`} fit="cover" />
+    <RoomScene room={art} dim={awakePhase === 'dim' ? 0.5 : 0.16} art={`${ART}/gameroombackground.png`} fit="cover" />
 
     <div className="gr-warm-glow" aria-hidden="true" />
     <AmbientLayer still={still} />
@@ -388,12 +388,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       </div>
     </header>
 
-    {/* Theme ribbon */}
-    <motion.p className="gr-ribbon"
-      initial={{ opacity: 0, y: still ? 0 : -8 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: still ? 0 : 0.7, duration: still ? 0.1 : 0.5 }}>
-      <span>{themeTitle}</span>
-    </motion.p>
+    {/* Theme ribbon — now integrated into the headboard frame */}
 
     {/* Discovery overlay — teaching move experience */}
     <AnimatePresence>
@@ -423,8 +418,14 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
             exit={{ opacity: 0, y: still ? 0 : -8 }} transition={{ duration: still ? 0.12 : 0.32 }}>
 
             <div className="gr-board">
-              <h2 ref={heading} tabIndex={-1}>{state.scenario.title}</h2>
-              <p>{state.scenario.setup}</p>
+              <img className="gr-board-frame" src={`${ART}/gameroombackgroundHeadboard.png`} alt="" aria-hidden="true" />
+              <div className="gr-board-ribbon">
+                <span>{themeTitle}</span>
+              </div>
+              <div className="gr-board-content">
+                <h2 ref={heading} tabIndex={-1}>{state.scenario.title}</h2>
+                <p>{state.scenario.setup}</p>
+              </div>
               <SpeakButton text={`${state.scenario.title}. ${state.scenario.setup}`}
                 accent={art.palette.accent} label="Read the challenge to me" />
               <ol className="gr-progress" aria-label={`${filled} of ${RUN_LENGTH} practised in this run`}>
