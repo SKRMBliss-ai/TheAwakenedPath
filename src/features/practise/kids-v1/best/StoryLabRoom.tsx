@@ -304,9 +304,9 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
      say nothing, not hold still — a child who arrives angry was getting a
      frozen grid of six sentences while a happy one got eight that floated. */
   const still = !!reduced;
-  /* Floats on the right by default, and stays wherever a child drags him —
-     see useFloatingPosition and its twin in the Games Room. */
-  const boyFloat = useFloatingPosition('story-lab:boy', { xPct: 78, yPct: 46 });
+  /* Sits below the progress strip, between Body and Thought steps by default,
+     and stays wherever a child drags him — see useFloatingPosition. */
+  const boyFloat = useFloatingPosition('story-lab:boy', { xPct: 28, yPct: 78 });
   const [ageBand] = useState(() => band());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
