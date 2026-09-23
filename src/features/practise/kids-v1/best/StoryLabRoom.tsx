@@ -836,7 +836,11 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       <button className="chrome-fade" onClick={onExit}>Stop for now</button>
       {step >= 6 && <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved ✓' : '✧ Save This Journey'}</button>}
       {saved && onReflectionPath && <button className="sl-save sl-reflection-cta" onClick={onReflectionPath}>✦ See My Reflection Path →</button>}
-      {step < 6 && step !== 4 && <button className="chrome-fade" onClick={() => capture("I'm not sure yet.")}>{"I'm not sure — keep going"}</button>}
+      {/* Not offered on step 5 — the "Another way" possibility is the whole
+          point of the walk, so a child stays in the Story Lab, choosing
+          among the reframes, rather than skipping past the one step this
+          room exists for. Every earlier step still has its own skip. */}
+      {step < 6 && step !== 4 && step !== 5 && <button className="chrome-fade" onClick={() => capture("I'm not sure yet.")}>{"I'm not sure — keep going"}</button>}
     </footer>
   </motion.main>;
 }
