@@ -7,7 +7,7 @@ import { DoorHandle } from '../ui/DoorHandle';
 import { MicButton } from '../ui/MicButton';
 import { chirpySprite } from '../ui/sprites';
 import { band } from '../kit/band';
-import { thoughtsFor, eventsFor, type Option } from '../kit/storyLabContent';
+import { thoughtsFor, eventsFor, possibilitiesFor, type Option } from '../kit/storyLabContent';
 import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
@@ -147,11 +147,6 @@ const TITLES = ['3. Thought', '4. What Happened?', '5. Story', '6. Another Way']
 const PROMPTS = ['What was your mind saying?', 'What actually happened?', "Here's the story your mind made…", "Could anything else be true?"];
 const SUBS = ['Tap a thought, or tell me in your own words.', "Let's look at what a little camera could see.", 'Your mind connects the pieces and tries to make sense of it.', "Let's see some other possible stories."];
 
-const POSSIBILITIES: Option[] = [
-  { text: 'Maybe it only happened this time.', icon: '✳' },
-  { text: 'Maybe they were busy with something else.', icon: '❋' },
-  { text: 'Maybe I can try again in a different way.', icon: '✦' },
-];
 const SAY_IT: Option = { text: 'Say it your way', icon: 'mic', own: true };
 const SOMETHING_ELSE: Option = { text: 'Something else', icon: 'mic', own: true };
 const MY_OWN: Option = { text: 'My own idea…', icon: 'mic', own: true };
@@ -208,6 +203,7 @@ function useFilmScale(count: number) {
 /** How many of the pool stand on screen at once, per panel. */
 const THOUGHT_WINDOW = 8;
 const EVENT_WINDOW = 5;
+const POSSIBILITY_WINDOW = 3;
 /** How long a set stays before the next comes round. */
 const ROTATE_MS = 3000;
 /** Long enough to read as drifting off rather than blinking out. */
@@ -499,6 +495,10 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 
   const [thoughtPool] = useState(() => thoughtsFor(carried.feeling));
   const eventPool = useMemo(() => eventsFor(thought, carried.feeling), [thought, carried.feeling]);
+  /* Which "Another way" reframes are on offer follows the same thought/theme
+     routing as the events pool above — a rejection story gets rejection
+     reframes, a pressure story gets pressure reframes. See possibilitiesFor. */
+  const possibilityPool = useMemo(() => possibilitiesFor(thought, carried.feeling), [thought, carried.feeling]);
 
   /*
     A child reaching for a cloud with a mouse or a keyboard stops the clock;
@@ -513,6 +513,8 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     still || writing || reaching || !!thought || step !== 2);
   const eventRoll = useRotatingWindow(eventPool, EVENT_WINDOW, ROTATE_MS,
     still || writing || reaching || !!event || step !== 3);
+  const possibilityRoll = useRotatingWindow(possibilityPool, POSSIBILITY_WINDOW, ROTATE_MS,
+    still || writing || reaching || !!alternative || step !== 5);
 
   /* Once it is answered the panel shrinks into the filmstrip and its only job
      is to show what the child said. Keeping the whole list there, one of them
@@ -525,7 +527,8 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     : [...thoughtRoll.items, SAY_IT];
   const eventOptions = event ? kept(eventPool, event, '✧')
     : [...eventRoll.items, SOMETHING_ELSE];
-  const otherOptions = [...POSSIBILITIES, MY_OWN];
+  const otherOptions = alternative ? kept(possibilityPool, alternative, '✦')
+    : [...possibilityRoll.items, MY_OWN];
 
   const chosen = (index: number) => answers[index];
   const cardClass = (index: number, text: string) => {
@@ -710,7 +713,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                   <div className="sl-window sl-original"><h4>Original Story</h4><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>"{story}"</p></div>
                   <div className="sl-window sl-another"><h4>Another Possibility</h4>{alternative ? <img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /> : <span className="sl-possibility-light" aria-hidden="true">✧</span>}<p>{alternative ? `"${alternative}"` : 'A little space for another way to see it…'}</p></div>
                 </div>
-                <div className="sl-cards sl-wide">{otherOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(5, option.text)}`} disabled={step !== 5} onClick={() => pick(option)}>
+                <div className={`sl-cards sl-wide ${possibilityRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{otherOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(5, option.text)}`} disabled={step !== 5} onClick={() => pick(option)}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
                 </button>)}</div>
                 <p className="sl-truth">More than one story can be true.<br />You get to choose what to believe.</p>

@@ -185,10 +185,11 @@
 .gr-ribbon{position:relative;z-index:3;margin:2px 0 0}
 .gr-ribbon span{
   display:inline-block;padding:7px 26px;border-radius:26px;
-  background:linear-gradient(#a06be8,#6a34b6);border:2px solid #e8cfff;
+  background:linear-gradient(#a06be8b3,#6a34b6b3);border:2px solid #e8cfff8f;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   font-size:clamp(15px,1.6vw,23px);font-weight:1000;letter-spacing:.01em;
   color:#fff;text-shadow:0 2px 5px #2a1046;
-  box-shadow:0 5px 16px #18092c77,inset 0 1px 0 #ffffff55;
+  box-shadow:0 5px 16px #18092c55,inset 0 1px 0 #ffffff40;
 }
 
 /* ── The play area ─────────────────────────────────────────────────────── */
@@ -203,9 +204,10 @@
 .gr-board{
   position:relative;width:min(100%,720px);
   padding:18px 26px 14px;border-radius:22px;
-  background:linear-gradient(#fdf4dd,#efdcb4);
-  border:3px solid #a9793a;
-  box-shadow:0 14px 30px -12px #0c0418,inset 0 0 0 2px #ffffffb0;
+  background:linear-gradient(#fdf4ddc2,#efdcb4a8);
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  border:3px solid #a9793abf;
+  box-shadow:0 14px 30px -12px #0c041880,inset 0 0 0 2px #ffffff85;
   text-align:center;color:#3a2410;
 }
 .gr-board h2{margin:0;font-size:clamp(17px,1.9vw,26px);font-weight:1000;line-height:1.15;color:#54300f}

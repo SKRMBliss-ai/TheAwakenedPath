@@ -36,6 +36,11 @@ Thoughts are hardcoded and organized by feeling. Each feeling pool contains 17 t
 
 Events follow the thought, not the feeling. Each thought carries a theme, and themes carry event lists. This creates 12 distinct event scenarios rather than 81 feeling-thought combinations.
 
+### "Another Way" Possibilities
+**Source:** `src/features/practise/kids-v1/kit/storyLabContent.ts` (`POSSIBILITIES`, `possibilitiesFor`)
+
+Step 6 ("Another Way") follows the same theme routing as events: the reframe options offered are keyed by the theme of the thought the child picked (or the feeling's default theme), not a single fixed list. Each of the 9 themes (`rejection`, `failure`, `unfairness`, `uncertainty`, `loss`, `conflict`, `pressure`, `comparison`, `bright`) has its own pool of 8 alternative-perspective lines, shown 3 at a time in a rotating window plus "My own idea…". This is the single file to hand to a child psychologist for editorial review of the reframe language.
+
 ### Voice (Chirpy)
 **Primary:** Gemini TTS via `https://awakened-path-2026.web.app/api/chirpy-voice`
 **Fallback:** Browser Web Speech API (`speechSynthesis`)

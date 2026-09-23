@@ -8775,6 +8775,124 @@ const EVENTS: Record<Theme, EventOption[]> = {
   ]
 };
 
+/**
+ * "Another Way" possibilities — alternative-perspective options for step 6.
+ *
+ * Keyed by Theme, same as EVENTS: the story's theme (from the selected
+ * thought, or the feeling's default) decides which pool a child sees, so a
+ * rejection story offers rejection reframes and a pressure story offers
+ * pressure reframes, instead of every child seeing the same three generic
+ * lines regardless of what they were actually telling themselves.
+ *
+ * Editorial notes for whoever tunes this pool:
+ * - Each line is one cognitive move a child can actually make, not a platitude.
+ *   The recurring moves are: an alternative explanation that isn't about the
+ *   child, separating "this once" from "always", separating a mistake from
+ *   identity, noticing agency ("I can ask/try/tell"), and noticing that a
+ *   feeling is real without being a verdict on the facts.
+ * - Nothing here contradicts or minimises what actually happened — a child who
+ *   was genuinely excluded, genuinely lost something, or is in a genuinely
+ *   unsafe situation should never be handed a line that argues them out of
+ *   their own read of events. These are alternatives to sit next to the
+ *   original story, not replacements for it ("More than one story can be
+ *   true" is the line already printed under this step).
+ * - Keep sentences short and concrete — the same reading level as THOUGHTS —
+ *   and keep the icon set (✳ ❋ ✦ ✧ ☘ ❃ ❉ ✺) varied within a theme so the
+ *   rotating window doesn't repeat a glyph twice in one screen.
+ */
+const POSSIBILITIES: Record<Theme, Option[]> = {
+  rejection: [
+    { text: 'Maybe they were busy and it had nothing to do with me.', icon: '✳' },
+    { text: "Maybe they didn't notice me, not that they don't like me.", icon: '❋' },
+    { text: "One person saying no doesn't mean everyone would.", icon: '✦' },
+    { text: 'I can ask again another day.', icon: '✧' },
+    { text: 'There are other people who do want me around.', icon: '☘' },
+    { text: "This one time doesn't decide what always happens.", icon: '❃' },
+    { text: 'I can find someone else to play or talk with.', icon: '❉' },
+    { text: 'Being left out once still leaves room for next time.', icon: '✺' },
+  ],
+  failure: [
+    { text: "A mistake is something I did, not who I am.", icon: '✳' },
+    { text: 'I can try again and get a little better.', icon: '❋' },
+    { text: "Everyone gets things wrong while they're still learning.", icon: '✦' },
+    { text: "This one try doesn't decide how good I'll get.", icon: '✧' },
+    { text: 'I can ask for help instead of doing it alone.', icon: '☘' },
+    { text: 'My best today can still grow tomorrow.', icon: '❃' },
+    { text: "Getting it wrong is part of how brains learn.", icon: '❉' },
+    { text: "I've figured out hard things before.", icon: '✺' },
+  ],
+  unfairness: [
+    { text: "Maybe there's a reason I don't know about yet.", icon: '✳' },
+    { text: 'I can tell someone it felt unfair to me.', icon: '❋' },
+    { text: "Rules aren't always about me — sometimes they're just rules.", icon: '✦' },
+    { text: 'This one time going wrong is not proof it always will.', icon: '✧' },
+    { text: 'I can ask why, instead of guessing the worst reason.', icon: '☘' },
+    { text: "It's okay to feel upset and still be safe.", icon: '❃' },
+    { text: 'Next time might go differently.', icon: '❉' },
+    { text: 'I can say what I need without it becoming a fight.', icon: '✺' },
+  ],
+  uncertainty: [
+    { text: "Not knowing yet doesn't mean something bad is coming.", icon: '✳' },
+    { text: 'I can wait and see what actually happens.', icon: '❋' },
+    { text: "I've gotten through not-knowing before.", icon: '✦' },
+    { text: "Feeling unsure doesn't mean I'm unsafe.", icon: '✧' },
+    { text: 'I can ask a grown-up what to expect.', icon: '☘' },
+    { text: 'New things feel strange right up until they suddenly don’t.', icon: '❃' },
+    { text: "My mind is guessing right now — a guess isn't a fact.", icon: '❉' },
+    { text: 'I can take one small step and see what happens next.', icon: '✺' },
+  ],
+  loss: [
+    { text: "It's okay to miss something and still be okay.", icon: '✳' },
+    { text: "This ending doesn't erase the good parts that happened.", icon: '❋' },
+    { text: 'I can still remember it even though it changed.', icon: '✦' },
+    { text: 'Feeling sad about this makes sense — it mattered to me.', icon: '✧' },
+    { text: 'New things can still come, even after this.', icon: '☘' },
+    { text: "I don't have to feel better right away.", icon: '❃' },
+    { text: "I can talk about it with someone who'll listen.", icon: '❉' },
+    { text: 'This is hard, and I can get through hard things.', icon: '✺' },
+  ],
+  conflict: [
+    { text: 'We can both feel upset and still fix it.', icon: '✳' },
+    { text: "One argument doesn't undo a whole friendship.", icon: '❋' },
+    { text: "Maybe they were having a hard moment, not just being mean.", icon: '✦' },
+    { text: 'I can take some space and come back to talk later.', icon: '✧' },
+    { text: "Disagreeing doesn't mean the friendship is over.", icon: '☘' },
+    { text: "I can tell a grown-up if I need help sorting it out.", icon: '❃' },
+    { text: 'We can both be right about how we feel, even if the story differs.', icon: '❉' },
+    { text: 'I can say sorry, or wait for one, without rushing it.', icon: '✺' },
+  ],
+  pressure: [
+    { text: "I don't have to be perfect to be doing okay.", icon: '✳' },
+    { text: 'I can do this one step at a time.', icon: '❋' },
+    { text: "Asking for more time isn't the same as failing.", icon: '✦' },
+    { text: 'Other people feel this pressure too, not just me.', icon: '✧' },
+    { text: 'I can do my best without doing everything.', icon: '☘' },
+    { text: "It's okay to say I need help with this.", icon: '❃' },
+    { text: "One deadline doesn't decide how capable I am.", icon: '❉' },
+    { text: 'I can rest and still get where I’m going.', icon: '✺' },
+  ],
+  comparison: [
+    { text: "Someone else's good day doesn't take away from mine.", icon: '✳' },
+    { text: "I'm not behind — I'm just on my own timeline.", icon: '❋' },
+    { text: 'I can be happy for them and still like myself.', icon: '✦' },
+    { text: "Different doesn't mean less.", icon: '✧' },
+    { text: 'I have things that are just mine to be proud of.', icon: '☘' },
+    { text: "Comparing myself to them doesn't tell the whole story.", icon: '❃' },
+    { text: 'I can notice what I have instead of what I don’t.', icon: '❉' },
+    { text: "Everyone starts somewhere different — that's not a race.", icon: '✺' },
+  ],
+  bright: [
+    { text: 'This good feeling is real, and I can let it stay.', icon: '✳' },
+    { text: 'I get to enjoy this without waiting for something to go wrong.', icon: '❋' },
+    { text: 'I made this happen — I can be proud of that.', icon: '✦' },
+    { text: 'Good moments count too, not just hard ones.', icon: '✧' },
+    { text: 'I can remember this the next time things feel tough.', icon: '☘' },
+    { text: 'This is a sign more good things are possible.', icon: '❃' },
+    { text: 'I did that, and it matters.', icon: '❉' },
+    { text: 'I can share this good feeling with someone I love.', icon: '✺' },
+  ],
+};
+
 const DEFAULT_THEME_BY_FEELING: Record<FeelingKey, Theme> = {
   happy: 'bright',
   excited: 'bright',
@@ -8904,6 +9022,30 @@ export function eventsFor(
 
   const pool = forAge(EVENTS[theme], age);
   return shuffled(uniqueByText(pool)).map(({ text, icon }) => ({ text, icon }));
+}
+
+/**
+ * "Another Way" reframes for step 6 — same theme routing as eventsFor, so
+ * the alternative perspectives on offer match the story the child actually
+ * told, not a fixed generic three.
+ *
+ * Existing call:
+ *   possibilitiesFor(thought, feeling)
+ *
+ * Age-aware: possibilitiesFor is theme-only (POSSIBILITIES carries no age
+ * band), so the `age` parameter is accepted for call-site symmetry with
+ * thoughtsFor/eventsFor but does not currently filter the pool.
+ */
+export function possibilitiesFor(
+  thought: string,
+  feeling: string | undefined,
+  age?: AgeInput,
+): Option[] {
+  const key = toKey(feeling);
+  const match = findThought(thought, feeling, age);
+  const theme = match?.theme ?? DEFAULT_THEME_BY_FEELING[key];
+
+  return shuffled(uniqueByText(POSSIBILITIES[theme]));
 }
 
 /** Metadata for a tapped library thought, for safety routing / analytics. */
