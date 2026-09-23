@@ -93,7 +93,7 @@ export function HelpChirpy({ onExit, onGrownUp }: { onExit: () => void; onGrownU
         )}
       </AnimatePresence>
 
-      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent}  scale={0.7} />
 
       <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-[74px] pb-10 pt-4 sm:px-20">
         <div className="flex items-center justify-end gap-3">
@@ -168,7 +168,7 @@ export function HelpChirpy({ onExit, onGrownUp }: { onExit: () => void; onGrownU
               <SceneLine>
                 You did the thing you do when something’s stuck. On somebody else.
               </SceneLine>
-              <DoorHandle side="right" label="Go on" onClick={onExit} accent={accent} />
+              <DoorHandle side="right" label="Go on" onClick={onExit} accent={accent}  scale={0.7} />
             </motion.div>
           )}
         </div>

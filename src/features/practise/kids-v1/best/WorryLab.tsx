@@ -98,7 +98,7 @@ export function WorryLab({
       ) : (
         <>
           <RoomScene room={art} dim={phase === 'end' ? DIM.arrive : DIM.content} />
-          <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
+          <DoorHandle side="left" label="Back" onClick={onExit} accent={accent}  scale={0.7} />
 
           <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-[74px] pb-10 pt-4 sm:px-20">
             <div className="flex items-center justify-end gap-3">
@@ -146,7 +146,7 @@ export function WorryLab({
                 >
                   {action && <SceneLine>{action}. Good plan.</SceneLine>}
                   <Question room={art}>Your worry got smaller, and you got braver.</Question>
-                  <DoorHandle side="right" label="Go on" onClick={onExit} accent={accent} />
+                  <DoorHandle side="right" label="Go on" onClick={onExit} accent={accent}  scale={0.7} />
                 </motion.div>
               )}
             </div>
