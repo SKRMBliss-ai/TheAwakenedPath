@@ -127,13 +127,28 @@ export function speak(text: string, quiet: boolean) {
   const cached = heard.get(text);
   if (cached) { play(cached, text); return; }
 
+  const token = voiceToken;
+
   /*
-    The browser starts immediately and Gemini takes over when it arrives.
-    Waiting silently for a network round trip before a six-year-old hears
-    anything is worse than a plainer voice starting on time — and on the
-    common path (a line he has said before) the cache hits and this never runs.
+    GEMINI GETS FIRST REFUSAL, NOT THE BROWSER.
+
+    This used to fire the browser voice immediately and let Gemini "take
+    over when it arrives" — but Gemini rarely arrives before a short line
+    has already finished playing in the browser's own (very different
+    sounding) voice, so in practice a child heard the browser voice for
+    almost every line and Gemini's calmer, slower narration only for the
+    rare long one. That reads as "two different voices, one at random."
+    One character should sound like one person every time he speaks.
+
+    So the browser is now a true fallback: it only speaks if Gemini hasn't
+    answered within FALLBACK_MS, or errors out. On the common case (a
+    working connection) the child hears only Gemini, every time.
   */
-  browserVoice(text);
+  const FALLBACK_MS = 1100;
+  const fallback = setTimeout(() => {
+    if (token !== voiceToken || speaking !== text) return;
+    browserVoice(text);
+  }, FALLBACK_MS);
 
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
@@ -142,14 +157,18 @@ export function speak(text: string, quiet: boolean) {
   })
     .then((r) => (r.ok ? r.blob() : null))
     .then((blob) => {
-      if (!blob) return;
+      clearTimeout(fallback);
+      if (!blob) { if (token === voiceToken && speaking === text) browserVoice(text); return; }
       const url = URL.createObjectURL(blob);
       heard.set(text, url);
       /* Only if this is still the line on screen. A child who has moved on
          must not be caught up by the previous screen's audio. */
-      if (!isMuted() && speaking === text) { stopSpeaking(); play(url, text); }
+      if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text); }
     })
-    .catch(() => { /* the browser voice already said it */ });
+    .catch(() => {
+      clearTimeout(fallback);
+      if (token === voiceToken && speaking === text) browserVoice(text);
+    });
 }
 
 function play(url: string, text: string) {

@@ -167,7 +167,11 @@
 .gr-chip:hover{background:#4a2c79ea}
 
 .gr-sign{display:grid;place-items:center;position:relative;z-index:3}
-.gr-sign img{width:clamp(120px,min(20vw,12svh),220px);height:auto;display:block;filter:drop-shadow(0 6px 14px #10061d88)}
+.gr-sign img{
+  width:clamp(150px,min(27vw,15svh),290px);height:auto;display:block;
+  opacity:.86;
+  filter:drop-shadow(0 6px 14px #10061d88) drop-shadow(0 0 22px #ffcf6e44);
+}
 
 .sr-only{
   position:absolute;width:1px;height:1px;padding:0;margin:-1px;
@@ -207,7 +211,7 @@
      locked aspect-ratio now (it didn't before), so an unconstrained width
      made it tall enough to push the rest of the room's content out of the
      flex column's budget and get shoved up behind the header. */
-  position:relative;width:min(100%,660px,46svh);aspect-ratio:1774/887;
+  position:relative;width:min(84%,540px,38svh);aspect-ratio:1774/887;
   margin:0 auto;flex-shrink:0;text-align:center;color:#3a2410;
 }
 .gr-board-frame{
@@ -337,13 +341,29 @@
 .gr-prompt > span{color:#c9881f}
 
 /* ── The boy, Chirpy and the bubble ────────────────────────────────────── */
-/* Sitting a touch right of the cushions/books stack, with the ground in
-   front of him — center and right of the room — kept clear of other
-   scenery so he reads as the room's one settled corner, not a pile-up. */
-.gr-cast{position:absolute;left:12%;bottom:0.5%;z-index:2;width:min(24%,300px);pointer-events:none}
-.gr-boy{width:78%;height:auto;display:block;filter:drop-shadow(0 10px 18px #0b0418aa)}
+/* He floats, and he's draggable — left/top come from useFloatingPosition as
+   an inline style, not from here. Wherever a child leaves him is where he
+   comes back, every session, so there is no fixed "home" position in CSS
+   any more beyond the very first default. */
+.gr-cast{
+  /* Above .gr-play (z-index:3) — that section has no background where the
+     boy floats over it, but being higher-stacked it still won a hit-test
+     against .gr-cast underneath, so every drag attempt landed on it
+     instead and never reached the boy at all. */
+  position:absolute;z-index:5;width:min(24%,300px);
+  pointer-events:auto;cursor:grab;touch-action:none;
+  transform:translate(-8%,-12%);
+}
+.gr-cast.gr-floating-drag{cursor:grabbing;transition:none!important}
+.gr-cast:not(.gr-floating-drag){transition:left .18s ease-out,top .18s ease-out}
+.gr-boy{
+  width:78%;height:auto;display:block;pointer-events:none;
+  filter:drop-shadow(0 14px 16px #0b0418aa);
+  animation:gr-boy-float 5s ease-in-out infinite;
+}
+@keyframes gr-boy-float{50%{transform:translateY(-8px)}}
 
-.gr-chirpy{position:absolute;left:58%;bottom:1%;width:42%;height:auto}
+.gr-chirpy{position:absolute;left:58%;bottom:1%;width:42%;height:auto;pointer-events:none}
 .gr-chirpy-float{animation:gr-float 4s ease-in-out infinite}
 @keyframes gr-float{50%{transform:translateY(-6px)}}
 
@@ -368,7 +388,7 @@
 }
 
 .gr-bubble{
-  position:absolute;left:26%;bottom:80%;width:min(250px,28vw);
+  position:absolute;left:26%;bottom:80%;width:min(250px,28vw);pointer-events:none;
   background:linear-gradient(#ffffff,#f1e9ff);border-radius:18px;
   box-shadow:0 6px 16px #0b041866;
 }
@@ -397,7 +417,14 @@
 .gr-theme-badge img{
   width:clamp(100px,13vw,162px);height:auto;display:block;
   filter:drop-shadow(0 3px 8px #0a051866);
+  animation:gr-badge-bounce 2.6s ease-in-out infinite;
 }
+.gr-theme-badge:nth-child(2) img{animation-delay:-.4s}
+.gr-theme-badge:nth-child(3) img{animation-delay:-.8s}
+.gr-theme-badge:nth-child(4) img{animation-delay:-1.2s}
+.gr-theme-badge:nth-child(5) img{animation-delay:-1.6s}
+.gr-theme-badge:nth-child(6) img{animation-delay:-2s}
+@keyframes gr-badge-bounce{50%{transform:translateY(-4px)}}
 .gr-theme-badge:hover{opacity:.9;transform:scale(1.06)}
 .gr-theme-active{opacity:1;transform:scale(1.08)}
 .gr-theme-active img{

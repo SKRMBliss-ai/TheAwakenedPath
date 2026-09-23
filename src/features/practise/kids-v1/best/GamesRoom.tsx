@@ -19,6 +19,8 @@ import { todaysFeeling } from '../kit/todaysFeeling';
 import * as sound from '../kit/sound';
 import { stopSpeaking, speak } from '../kit/chirpyVoice';
 import { artRoomFor, type VirtueRoom } from './rooms';
+import { useFloatingPosition } from '../ui/useFloatingPosition';
+import { DoorHandle } from '../ui/DoorHandle';
 import './GamesRoom.css';
 
 /*
@@ -220,6 +222,10 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
   const heading = useRef<HTMLHeadingElement>(null);
   const [flight, setFlight] = useState<Flight | null>(null);
 
+  /* Where the boy floats by default — right beside the question board —
+     until a child drags him somewhere else, which then sticks for good. */
+  const boyFloat = useFloatingPosition('games-room:boy', { xPct: 4, yPct: 24 });
+
   /* ── Awakening sequence ───────────────────────────────────────────────── */
   const [awakePhase, setAwakePhase] = useState<AwakePhase>('dim');
   const [inviteLine] = useState(pickInvite);
@@ -336,6 +342,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
     className={`gr-room ${still ? 'gr-still' : ''} ${quiet ? 'gr-quiet' : ''} gr-awake-${awakePhase}`}
     data-pillar={theme}
     data-phase={state.phase}
+    data-floating-room
     style={{ fontFamily: FONT, '--gr-accent': art.palette.accent } as CSSProperties}
   >
     {/*
@@ -364,9 +371,10 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       still={still}
     />
 
+    <DoorHandle side="left" label="Leave Room" onClick={() => leave(onExit)} accent={art.palette.accent} bottomVh={8} />
+
     <header className="gr-top">
       <div className="gr-top-left">
-        <button className="gr-chip" onClick={() => leave(onExit)}>← Leave Room</button>
         <button className="gr-chip" aria-pressed={muted} onClick={() => {
           const next = !isMuted(); setMuted(next); setMutedState(next);
           if (next) { sound.stopAll(); sound.stopMusic(); stopSpeaking(); }
@@ -408,7 +416,6 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       ? <section className="gr-calm">
           <Steady line="Nothing to play in here today. I'll just sit with you." />
           <button className="gr-calm-grownup" onClick={() => leave(onGrownUp)}>{STEADY_GROWNUP}</button>
-          <button className="gr-calm-leave" onClick={() => leave(onExit)}>← Leave Room</button>
         </section>
 
       : <>
@@ -483,8 +490,10 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
           </motion.section>
         </AnimatePresence>
 
-        {/* Cast — outside AnimatePresence, never blinks between scenarios */}
-        <div className="gr-cast">
+        {/* Cast — outside AnimatePresence, never blinks between scenarios.
+            Draggable: a child can leave him anywhere in the room and he
+            stays there for every future visit (see useFloatingPosition). */}
+        <div className="gr-cast" aria-label="Drag to move" {...boyFloat.dragHandlers}>
           <img className="gr-boy" src={`${ART}/boy_sitting.png`} alt="" aria-hidden="true" />
           <div className="gr-thought-trail" aria-hidden="true">
             <span className="gr-thought-dot gr-thought-dot-1" />
