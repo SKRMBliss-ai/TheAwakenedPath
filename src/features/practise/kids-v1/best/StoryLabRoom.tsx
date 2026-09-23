@@ -5,6 +5,7 @@ import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
 import { DoorHandle } from '../ui/DoorHandle';
 import { MicButton } from '../ui/MicButton';
+import { useFloatingPosition } from '../ui/useFloatingPosition';
 import { chirpySprite } from '../ui/sprites';
 import { band } from '../kit/band';
 import { thoughtsFor, eventsFor, possibilitiesFor, type Option } from '../kit/storyLabContent';
@@ -296,6 +297,9 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
      say nothing, not hold still — a child who arrives angry was getting a
      frozen grid of six sentences while a happy one got eight that floated. */
   const still = !!reduced;
+  /* Floats on the right by default, and stays wherever a child drags him —
+     see useFloatingPosition and its twin in the Games Room. */
+  const boyFloat = useFloatingPosition('story-lab:boy', { xPct: 78, yPct: 46 });
   const [ageBand] = useState(() => band());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
@@ -544,7 +548,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button><button type="button" onClick={() => setWriting(false)}>Cancel</button></div>
   </form>;
 
-  return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''} ${focused && hushEligible ? 'sl-focused' : ''}`} style={{ fontFamily: FONT }} data-step={step}>
+  return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''} ${focused && hushEligible ? 'sl-focused' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
     <DoorHandle side="left" label="Back" onClick={back} accent="#c490ff" />
     <header className="sl-header">
       <button className="sl-logo" onClick={onExit} aria-label="Back to Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
@@ -793,11 +797,12 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       where the panel fills the window and there is no floor to sit on.
     */}
     <img
-      className="sl-room-boy"
+      className="sl-room-boy sl-room-boy-floating"
       key={companion.src}
       src={companion.src}
       alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
       draggable={false}
+      {...boyFloat.dragHandlers}
     />
     <RoomThoughtParticles show={step === 2 && !thought} />
 

@@ -201,8 +201,10 @@
   clear of the foot rail by --sl-foot, so he stands on the floor rather than
   behind the step strip.
 
-  pointer-events:none — he is company, not a control. Nothing about him is
-  tappable and nothing about him should intercept a tap meant for the panel.
+  DRAGGABLE — left/top come from useFloatingPosition as inline style, not
+  from here, and wherever a child leaves him is where he comes back, every
+  session. He used to be pointer-events:none ("company, not a control");
+  that's now only true of the bounce animation, not of him as a whole.
 
   The hop lands with a slight squash and runs on a long cycle: a figure that
   never moves under a dozen drifting clouds reads as a sticker, and one that
@@ -210,12 +212,19 @@
   `.sl-still *` and the reduced-motion block below stop it dead.
 */
 .sl-room-boy{
-  display:none;position:absolute;z-index:1;pointer-events:none;user-select:none;
-  left:clamp(8px,3vw,64px);bottom:calc(var(--sl-foot) - 12px);
+  display:none;position:absolute;z-index:1;user-select:none;
   height:clamp(150px,22vh,260px);width:auto;object-fit:contain;object-position:bottom;
   filter:drop-shadow(0 12px 16px #1b0a2799);
   transform-origin:50% 100%;animation:sl-boy-bounce 3.1s ease-in-out infinite;
 }
+.sl-room-boy-floating{
+  /* Above the filmstrip panel and rail so a drag always reaches him first. */
+  z-index:8;pointer-events:auto;cursor:grab;touch-action:none;
+  transform:translate(-50%,-50%);
+}
+.sl-room-boy-floating:active{cursor:grabbing}
+.sl-room-boy.gr-floating-drag{transition:none!important}
+.sl-room-boy:not(.gr-floating-drag){transition:left .18s ease-out,top .18s ease-out}
 /* Wide enough to have floor either side of the panel: he moves out of the
    panel and the clouds take back the 78px that was being held for him. */
 @media(min-width:900px){

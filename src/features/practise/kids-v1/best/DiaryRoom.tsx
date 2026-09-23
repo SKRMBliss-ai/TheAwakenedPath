@@ -6,6 +6,7 @@ import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
 import { MicButton } from '../ui/MicButton';
 import { HearYourself } from '../ui/HearYourself';
+import { DoorHandle } from '../ui/DoorHandle';
 import { allLinks, linkClip } from '../kit/voiceStore';
 import * as sound from '../kit/sound';
 import { band } from '../kit/band';
@@ -150,10 +151,9 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
     initial={still ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .6 }}
     className={`dy-room ${still ? 'dy-still' : ''}`} style={{ fontFamily: FONT }}
   >
+    <DoorHandle side="left" label="Back to Mind Gym" onClick={onExit} accent="#ff5f8f" />
     <div className="dy-page">
       <header className="dy-top">
-        <button className="dy-back" onClick={onExit}><span aria-hidden="true">←</span><span>Back<small>to Mind Gym</small></span></button>
-
         {/* The friend leaning on her books, from the sheet's own art. */}
         <div className="dy-friend" aria-hidden="true">
           <img className="dy-bust" src="/mind-gym/diary/character-bust.webp" alt="" />
