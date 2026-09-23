@@ -486,6 +486,11 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
         {/* Cast — outside AnimatePresence, never blinks between scenarios */}
         <div className="gr-cast">
           <img className="gr-boy" src={`${ART}/boy_sitting.png`} alt="" aria-hidden="true" />
+          <div className="gr-thought-trail" aria-hidden="true">
+            <span className="gr-thought-dot gr-thought-dot-1" />
+            <span className="gr-thought-dot gr-thought-dot-2" />
+            <span className="gr-thought-dot gr-thought-dot-3" />
+          </div>
           <img className={`gr-chirpy ${still ? '' : 'gr-chirpy-float'}`}
             src={`${ART}/chirpy_happy.png`} alt="" aria-hidden="true" />
           <div className="gr-bubble" aria-live="polite" aria-atomic="true">
