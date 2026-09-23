@@ -527,15 +527,25 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const possibilityRoll = useRotatingWindow(possibilityPool, POSSIBILITY_WINDOW, ROTATE_MS,
     still || writing || reaching || !!alternative || step !== 5);
 
-  /* Once it is answered the panel shrinks into the filmstrip and its only job
-     is to show what the child said. Keeping the whole list there, one of them
-     lit, is a lot of unchosen sentences to leave a child looking at — and a
-     rotating list would eventually turn their own answer off the screen. */
+  /* Once it is answered the panel shrinks into the filmstrip and shows what
+     the child said. The thought list stays as it was, though: it used to
+     collapse to just the one chosen card, and a child who wanted to change
+     their mind — or just look back at what else was there — found every
+     other cloud gone. The rotation is already frozen the moment an answer
+     is picked (see the `!!thought` flag below), so the window simply stays
+     on screen with the chosen one lit; if the answer came from outside that
+     window (typed, or from an earlier roll), it's added in rather than
+     dropped. */
   const kept = (pool: Option[], text: string, icon: string): Option[] =>
     [pool.find((o) => o.text === text) ?? { text, icon }];
 
-  const thoughtOptions = thought ? kept(thoughtPool, thought, '☁')
-    : [...thoughtRoll.items, SAY_IT];
+  const stillVisible = (items: Option[], pool: Option[], text: string, icon: string, trailing: Option): Option[] => {
+    if (!text) return [...items, trailing];
+    if (items.some((o) => o.text === text)) return [...items, trailing];
+    return [...kept(pool, text, icon), ...items, trailing];
+  };
+
+  const thoughtOptions = stillVisible(thoughtRoll.items, thoughtPool, thought, '☁', SAY_IT);
   const eventOptions = event ? kept(eventPool, event, '✧')
     : [...eventRoll.items, SOMETHING_ELSE];
   const otherOptions = alternative ? kept(possibilityPool, alternative, '✦')
@@ -556,7 +566,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   </form>;
 
   return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''} ${focused && hushEligible ? 'sl-focused' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
-    <DoorHandle side="left" label="Back" onClick={back} accent="#c490ff"  scale={0.5} />
+    <DoorHandle side="left" label="Back" onClick={back} accent="#c490ff" scale={0.35} bottomVh={40} />
     <header className="sl-header">
       <button className="sl-logo" onClick={onExit} aria-label="Back to Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
       <p className="sl-header-books" aria-hidden="true"><span>THOUGHTS</span><span>STORIES</span><span>POSSIBILITIES</span></p>

@@ -86,11 +86,14 @@
   box-shadow:0 12px 30px -10px #0b0418;
   transform:scale(var(--sl-scale));transform-origin:center center;
   margin:calc((675px * var(--sl-scale) - 675px) / 2) calc((386px * var(--sl-scale) - 386px) / 2);
-  transition:border-color .4s,box-shadow .4s;
+  transition:border-color .4s,box-shadow .4s,opacity .6s ease;
 }
-/* The one being answered is lit; the ones already answered stand quietly. */
-.sl-panel-now{border-color:#ecd7ff;box-shadow:0 0 30px -2px #b784ff,0 12px 30px -10px #0b0418}
-.sl-panel-done{border-color:#6f5aa4}
+/* The one being answered is lit; the ones already answered stand quietly —
+   and fade, so the strip reads at a glance as "done → done → HERE" rather
+   than four equally bright boxes competing for the eye. */
+.sl-panel-now{border-color:#ecd7ff;box-shadow:0 0 30px -2px #b784ff,0 12px 30px -10px #0b0418;opacity:1}
+.sl-panel-done{border-color:#6f5aa4;opacity:.58}
+.sl-panel-done:hover,.sl-panel-done:focus-within{opacity:.92}
 .sl-panel-done .sl-ask-chirpy{opacity:.5}
 
 .sl-panel-bar{display:flex;align-items:center;gap:8px;height:40px;flex:0 0 auto}
