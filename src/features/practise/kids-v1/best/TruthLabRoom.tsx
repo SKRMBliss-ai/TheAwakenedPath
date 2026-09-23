@@ -187,7 +187,7 @@ export function TruthLabRoom({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
-      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} big />
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} big  scale={0.7} />
       {/*
         NO DIM IN HERE. Every other room drops a scrim over its painting so
         the question on top of it can be read; this one does not need to,

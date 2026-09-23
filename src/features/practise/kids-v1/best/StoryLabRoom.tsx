@@ -556,7 +556,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   </form>;
 
   return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''} ${focused && hushEligible ? 'sl-focused' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
-    <DoorHandle side="left" label="Back" onClick={back} accent="#c490ff" />
+    <DoorHandle side="left" label="Back" onClick={back} accent="#c490ff"  scale={0.7} />
     <header className="sl-header">
       <button className="sl-logo" onClick={onExit} aria-label="Back to Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
       <p className="sl-header-books" aria-hidden="true"><span>THOUGHTS</span><span>STORIES</span><span>POSSIBILITIES</span></p>
