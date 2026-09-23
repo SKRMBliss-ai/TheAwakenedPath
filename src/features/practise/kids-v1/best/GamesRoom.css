@@ -9,7 +9,7 @@
 .gr-room{
   position:relative;height:100svh;overflow:hidden;color:#fff;
   display:flex;flex-direction:column;align-items:center;
-  padding:8px 16px 4px;gap:2px;
+  padding:min(1svh,8px) 16px min(0.5svh,4px);gap:0;
   background:#1d1030;
 }
 .gr-room :is(h1,h2){font-family:inherit}
@@ -167,7 +167,7 @@
 .gr-chip:hover{background:#4a2c79ea}
 
 .gr-sign{display:grid;place-items:center;position:relative;z-index:3}
-.gr-sign img{width:clamp(170px,20vw,280px);height:auto;display:block;filter:drop-shadow(0 6px 14px #10061d88)}
+.gr-sign img{width:clamp(120px,min(20vw,12svh),220px);height:auto;display:block;filter:drop-shadow(0 6px 14px #10061d88)}
 
 .sr-only{
   position:absolute;width:1px;height:1px;padding:0;margin:-1px;
@@ -184,7 +184,7 @@
 /* ── The theme ribbon ───────────────────────────────────────────────────── */
 .gr-ribbon{position:relative;z-index:3;margin:0}
 .gr-ribbon span{
-  display:inline-block;padding:7px 26px;border-radius:26px;
+  display:inline-block;padding:min(7px,0.7svh) 26px;border-radius:26px;
   background:linear-gradient(#a06be866,#6a34b666);border:2px solid #e8cfff55;
   backdrop-filter:blur(10px) saturate(1.3);-webkit-backdrop-filter:blur(10px) saturate(1.3);
   font-size:clamp(15px,1.6vw,23px);font-weight:1000;letter-spacing:.01em;
@@ -196,7 +196,7 @@
 .gr-play{
   position:relative;z-index:3;width:100%;max-width:1100px;
   padding-inline:clamp(0px,12vw - 110px,160px);
-  display:flex;flex-direction:column;align-items:center;gap:6px;
+  display:flex;flex-direction:column;align-items:center;gap:min(0.6svh,6px);
   flex:1 1 auto;min-height:0;justify-content:center;
   overflow:hidden;
 }
@@ -204,17 +204,18 @@
 /* ── The hanging challenge board ─────────────────────────────────────── */
 .gr-board{
   position:relative;width:min(100%,720px);
-  padding:12px 22px 10px;border-radius:22px;
+  padding:min(1.2svh,12px) 22px min(1svh,10px);border-radius:22px;
+  flex-shrink:1;
   background:linear-gradient(#fdf4dd66,#efdcb452);
   backdrop-filter:blur(10px) saturate(1.15);-webkit-backdrop-filter:blur(10px) saturate(1.15);
   border:3px solid #a9793a75;
   box-shadow:0 14px 30px -12px #0c041850,inset 0 0 0 2px #ffffff40;
   text-align:center;color:#3a2410;
 }
-.gr-board h2{margin:0;font-size:clamp(17px,1.9vw,26px);font-weight:1000;line-height:1.15;color:#54300f;text-shadow:0 1px 4px #fff9ec99}
+.gr-board h2{margin:0;font-size:clamp(15px,min(1.9vw,2.4svh),24px);font-weight:1000;line-height:1.15;color:#54300f;text-shadow:0 1px 4px #fff9ec99}
 .gr-board h2:focus{outline:none}
 .gr-board h2:focus-visible{outline:3px solid #a9793a;outline-offset:3px;border-radius:8px}
-.gr-board p{margin:6px 0 0;font-size:clamp(13px,1.35vw,18px);font-weight:750;line-height:1.3;text-shadow:0 1px 4px #fff9ec99}
+.gr-board p{margin:4px 0 0;font-size:clamp(12px,min(1.35vw,1.7svh),16px);font-weight:750;line-height:1.25;text-shadow:0 1px 4px #fff9ec99}
 .gr-board button{position:relative;z-index:2}
 .gr-board > button{
   margin-top:8px;background:#5a3a14!important;border:1px solid #d9b36a!important;
@@ -235,7 +236,7 @@
 
 /* ── The treasures ──────────────────────────────────────────────────────── */
 .gr-chests{
-  display:flex;justify-content:center;align-items:flex-end;gap:clamp(14px,3vw,44px);
+  display:flex;justify-content:center;align-items:flex-end;gap:clamp(10px,2vw,30px);
   width:100%;flex-wrap:wrap;
 }
 .gr-chest{
@@ -246,7 +247,7 @@
 }
 .gr-chest-art{position:relative;display:block;line-height:0}
 .gr-chest-art > img:first-child{
-  width:clamp(90px,11vw,145px);height:auto;display:block;
+  width:clamp(70px,min(11vw,12svh),130px);height:auto;display:block;
   filter:drop-shadow(0 8px 18px #10061dbb);
   animation:gr-bob 3.4s ease-in-out infinite;
   transition:filter .2s ease;
@@ -284,7 +285,7 @@
 /* The wooden plaque */
 .gr-plaque{
   display:flex;align-items:center;justify-content:center;
-  width:100%;min-height:44px;padding:8px 12px;border-radius:10px;
+  width:100%;min-height:min(44px,5svh);padding:min(8px,0.8svh) 12px;border-radius:10px;
   background:linear-gradient(#f3dfb4,#d9bb85);
   border:2px solid #9b6f34;box-shadow:0 5px 11px -4px #0e0418;
   color:#40270d;font-size:clamp(12px,1.2vw,15.5px);font-weight:900;line-height:1.16;
@@ -297,7 +298,7 @@
 }
 
 .gr-prompt{
-  display:flex;align-items:center;gap:8px;margin:0;padding:8px 22px;border-radius:12px;
+  display:flex;align-items:center;gap:8px;margin:0;padding:min(8px,0.8svh) 22px;border-radius:12px;
   background:linear-gradient(#f0dcae,#d6b783);border:2px solid #9b6f34;
   box-shadow:0 5px 12px -5px #0e0418;
   color:#43290f;font-size:clamp(11.5px,1.2vw,15.5px);font-weight:900;
@@ -340,7 +341,7 @@
   cursor:pointer;min-height:0;
 }
 .gr-theme-badge img{
-  width:clamp(70px,9vw,115px);height:auto;display:block;
+  width:clamp(50px,min(9vw,9svh),100px);height:auto;display:block;
   filter:drop-shadow(0 3px 8px #0a051866);
 }
 .gr-theme-badge:hover{opacity:.9;transform:scale(1.06)}
@@ -367,11 +368,10 @@
 }
 
 @media(max-width:1100px){
-  .gr-cast{position:relative;left:auto;bottom:auto;width:min(360px,92%);display:flex;align-items:flex-end;gap:8px;margin:2px auto 0}
-  .gr-boy{width:32%}
-  .gr-chirpy{position:relative;left:auto;bottom:auto;width:20%}
-  .gr-bubble{position:relative;left:auto;bottom:auto;flex:1 1 auto;width:auto;align-self:center}
-  .gr-bubble:after{display:none}
+  .gr-cast{width:min(14%,160px)}
+  .gr-boy{width:62%}
+  .gr-chirpy{width:38%}
+  .gr-bubble{width:min(200px,24vw)}
 }
 
 /* ── The reward after a run ─────────────────────────────────────────────── */
@@ -412,17 +412,22 @@
 
 /* ── Phone ───────────────────────────────────────────────────────────────── */
 @media(max-width:560px){
-  .gr-room{padding:8px 10px 10px}
-  .gr-chip{padding:7px 11px;font-size:11.5px;white-space:nowrap}
-  .gr-top{gap:6px}
-  .gr-sign img{width:clamp(130px,38vw,190px)}
-  .gr-stars-count{padding:5px 9px;font-size:15px}
-  .gr-stars-count img{width:18px}
+  .gr-room{padding:4px 10px 4px}
+  .gr-chip{padding:5px 9px;font-size:10.5px;white-space:nowrap}
+  .gr-top{gap:4px}
+  .gr-sign img{width:clamp(100px,28vw,150px)}
+  .gr-stars-count{padding:4px 8px;font-size:14px}
+  .gr-stars-count img{width:16px}
   .gr-stars-count small{display:none}
-  .gr-board{padding:12px 14px 10px}
-  .gr-chests{gap:8px}
-  .gr-chest{min-width:104px}
-  .gr-chest-art > img:first-child{width:80px}
-  .gr-theme-badge img{width:58px}
+  .gr-board{padding:8px 12px 6px}
+  .gr-board h2{font-size:clamp(14px,1.6vw,20px)}
+  .gr-board p{font-size:clamp(11px,1.2vw,15px);margin-top:3px}
+  .gr-chests{gap:6px}
+  .gr-chest{min-width:80px}
+  .gr-chest-art > img:first-child{width:clamp(55px,8svh,75px)}
+  .gr-plaque{min-height:36px;padding:5px 8px;font-size:11px}
+  .gr-theme-badge img{width:clamp(40px,6svh,55px)}
   .gr-themes-note{display:none}
+  .gr-cast{width:min(11%,90px)}
+  .gr-bubble{display:none}
 }
