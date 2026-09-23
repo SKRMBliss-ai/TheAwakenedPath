@@ -654,16 +654,18 @@
    footer, which is where they were stopping.
    ══════════════════════════════════════════════════════════════════════ */
 
+/* NOT A POPUP. This used to be a fixed, full-screen modal that threw itself
+   over the room the moment step 6 was reached and put "Enter Reflection
+   Room" in front of a child who hadn't asked to leave yet. It is a normal
+   card in the page now — it appears where the panel it replaces was, the
+   room stays visible around it, and going to the Reflection Room is still
+   there as a button whenever the child actually wants it. */
 .sl-complete{
-  position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
-  padding:18px;overflow-y:auto;
-  background:
-    radial-gradient(60% 45% at 50% 42%, #7a4bd655 0%, transparent 70%),
-    rgba(14,7,28,.86);
-  backdrop-filter:blur(7px);
+  display:flex;align-items:center;justify-content:center;
+  padding:18px 0;
 }
 .sl-complete-card{
-  position:relative;width:min(520px,100%);max-height:100%;overflow-y:auto;
+  position:relative;width:min(520px,100%);
   display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;
   padding:22px 22px 18px;
   background:linear-gradient(165deg,#43266fee,#241145ee 60%,#1a0d35ee);
