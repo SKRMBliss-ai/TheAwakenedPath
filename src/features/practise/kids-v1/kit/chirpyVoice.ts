@@ -127,22 +127,16 @@ export function speak(text: string, quiet: boolean) {
   const cached = heard.get(text);
   if (cached) { play(cached, text); return; }
 
-  const token = voiceToken;
-
   /*
-    GEMINI GETS FIRST REFUSAL, NOT THE BROWSER.
+    GEMINI ONLY — no browser fallback.
 
-    This used to fire the browser voice immediately and let Gemini "take
-    over when it arrives" — but Gemini rarely arrives before a short line
-    has already finished playing in the browser's own (very different
-    sounding) voice, so in practice a child heard the browser voice for
-    almost every line and Gemini's calmer, slower narration only for the
-    rare long one. That reads as "two different voices, one at random."
-    One character should sound like one person every time he speaks.
-
-    So the browser is now a true fallback: it only speaks if Gemini hasn't
-    answered within FALLBACK_MS, or errors out. On the common case (a
-    working connection) the child hears only Gemini, every time.
+    This used to race Gemini against a browser-voice timeout, so a child
+    who heard Chirpy at all often heard the browser's own (very different
+    sounding) voice for short lines and Gemini's calmer narration only for
+    the rare long one — two different voices, one at random. One character
+    should sound like one person every time he speaks, so the browser voice
+    is gone: if Gemini doesn't answer, the line stays silent rather than
+    switching narrators.
   */
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
