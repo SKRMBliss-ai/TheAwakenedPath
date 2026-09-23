@@ -20,7 +20,6 @@
 /* ── The header band ───────────────────────────────────────────────────── */
 
 .sl-header{display:flex;align-items:center;gap:14px;max-width:1600px;margin:auto;flex:0 0 auto;width:100%}
-.sl-back{width:46px;height:46px;flex:0 0 auto;border:1px solid #c6b2ff;background:linear-gradient(#a776ee,#452684);border-radius:50%;font-size:28px;box-shadow:0 0 15px #a98bff}
 .sl-logo{flex:0 0 auto;font-size:26px;font-weight:1000;line-height:.9;text-align:left;text-shadow:0 2px 5px #10081c}
 .sl-logo span{display:block;color:#ffe371}
 .sl-logo small{display:block;font-size:8px;line-height:1.35;letter-spacing:1.3px;margin-top:6px;color:#f0e2ff}
@@ -96,12 +95,12 @@
 
 .sl-panel-bar{display:flex;align-items:center;gap:8px;height:40px;flex:0 0 auto}
 .sl-panel-bar h2{flex:1;text-align:center;font-size:19px;font-weight:900;text-shadow:0 2px 5px #150a2c}
-.sl-panel-back,.sl-panel-home{
+.sl-panel-home{
   width:36px;height:36px;min-height:36px;flex:0 0 auto;
   border-radius:50%;border:1px solid #c6b2ff;background:linear-gradient(#a776ee,#452684);
   font-size:18px;line-height:1;box-shadow:0 0 10px #a98bff88;
 }
-.sl-panel-done .sl-panel-back,.sl-panel-done .sl-panel-home{opacity:.55}
+.sl-panel-done .sl-panel-home{opacity:.55}
 
 .sl-dots{display:flex;justify-content:center;gap:7px;margin:0;flex:0 0 auto;height:14px;align-items:center}
 .sl-dots span{width:9px;height:9px;border-radius:50%;background:#6d5a99}
@@ -474,7 +473,6 @@
 }
 @media(max-width:700px){
   .sl-room{--sl-foot:150px;padding:10px 10px var(--sl-foot);background-position:52% center}
-  .sl-back{width:40px;height:40px;min-height:40px!important;font-size:24px}
   .sl-logo{font-size:20px}
   .sl-logo small{display:none}
   .sl-grownup{font-size:11px;padding:7px 11px}

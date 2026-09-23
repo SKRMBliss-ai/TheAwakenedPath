@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Mic } from 'lucide-react';
 import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
+import { DoorHandle } from '../ui/DoorHandle';
 import { MicButton } from '../ui/MicButton';
 import { chirpySprite } from '../ui/sprites';
 import { band } from '../kit/band';
@@ -263,15 +264,14 @@ function useNarrow() {
 }
 
 /** The panel frame every step shares — the sheet's rounded window on the room. */
-function Panel({ index, step, chirpy, children, onBack, onHome }: {
+function Panel({ index, step, chirpy, children, onHome }: {
   index: number; step: number; chirpy: string;
-  children: ReactNode; onBack: () => void; onHome: () => void;
+  children: ReactNode; onHome: () => void;
 }) {
   const current = index === step;
   const done = index < step;
   return <div className={`sl-panel ${current ? 'sl-panel-now' : ''} ${done ? 'sl-panel-done' : ''}`}>
     <div className="sl-panel-bar">
-      <button className="sl-panel-back" onClick={onBack} aria-label={`Back from ${TITLES[index - 2]}`}>←</button>
       <h2>{TITLES[index - 2]}</h2>
       <button className="sl-panel-home" onClick={onHome} aria-label="Back to Mind Gym">⌂</button>
     </div>
@@ -542,8 +542,8 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   </form>;
 
   return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''} ${focused && hushEligible ? 'sl-focused' : ''}`} style={{ fontFamily: FONT }} data-step={step}>
+    <DoorHandle side="left" label="Back" onClick={back} accent="#c490ff" />
     <header className="sl-header">
-      <button className="sl-back" onClick={back} aria-label="Previous journey step">←</button>
       <button className="sl-logo" onClick={onExit} aria-label="Back to Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
       <p className="sl-header-books" aria-hidden="true"><span>THOUGHTS</span><span>STORIES</span><span>POSSIBILITIES</span></p>
       <div className="sl-title chrome-fade"><h1>Story Lab</h1><p>Explore your mind. Find new perspectives.</p></div>
@@ -576,7 +576,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
             transition={still ? { duration: 0 } : { type: 'spring', stiffness: 170, damping: 20, mass: .9 }}
           >
             {position > 0 && <span className="sl-film-arrow" aria-hidden="true">›</span>}
-            <Panel index={index} step={step} onBack={back} onHome={onExit}
+            <Panel index={index} step={step} onHome={onExit}
               chirpy={index === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(index === 5 ? 'hopeful' : 'curious')}>
 
               {index === 2 && <div className={`sl-thought-field ${!thought ? 'sl-field-railed' : ''}`}>
