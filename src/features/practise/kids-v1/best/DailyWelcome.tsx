@@ -29,15 +29,29 @@ export function DailyWelcome() {
     rememberDailyWelcome();
     dialog.current?.showModal();
     const player = video.current;
+    const cleanup: (() => void)[] = [];
     if (!reduced && !quiet) {
       player?.play().catch(() => {
         /* Autoplay with sound was refused. Mute and try once more, so the
            film still runs — rather than a still frame and no explanation. */
         setMuted(true);
         void player.play().catch(() => { /* Native play control remains available. */ });
+
+        /* The very first tap anywhere on the dialog is a real gesture, so
+           sound can come straight back without the child having to find and
+           press "Enable sound" themselves. */
+        const rescue = () => {
+          const el = video.current;
+          if (!el) return;
+          setMuted(false);
+          el.muted = false;
+          void el.play().catch(() => { /* native controls remain available */ });
+        };
+        dialog.current?.addEventListener('pointerdown', rescue, { once: true });
+        cleanup.push(() => dialog.current?.removeEventListener('pointerdown', rescue));
       });
     }
-    return () => { player?.pause(); };
+    return () => { player?.pause(); cleanup.forEach((fn) => fn()); };
   }, [visible, reduced, quiet]);
 
   const finish = () => {
