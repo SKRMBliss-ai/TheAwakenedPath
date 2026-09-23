@@ -523,7 +523,6 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
               <img src={`${ART}/${img}.png`} alt={BEHAVIOUR_PILLARS[pillar].title} />
             </button>
           ))}
-          <span className="gr-themes-note">Same fun room. Different scenarios. A kinder you!</span>
         </nav>
 
         {/* Book wiggle surprise */}

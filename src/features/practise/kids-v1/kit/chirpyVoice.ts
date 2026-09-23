@@ -144,12 +144,6 @@ export function speak(text: string, quiet: boolean) {
     answered within FALLBACK_MS, or errors out. On the common case (a
     working connection) the child hears only Gemini, every time.
   */
-  const FALLBACK_MS = 1100;
-  const fallback = setTimeout(() => {
-    if (token !== voiceToken || speaking !== text) return;
-    browserVoice(text);
-  }, FALLBACK_MS);
-
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -157,8 +151,7 @@ export function speak(text: string, quiet: boolean) {
   })
     .then((r) => (r.ok ? r.blob() : null))
     .then((blob) => {
-      clearTimeout(fallback);
-      if (!blob) { if (token === voiceToken && speaking === text) browserVoice(text); return; }
+      if (!blob) return;
       const url = URL.createObjectURL(blob);
       heard.set(text, url);
       /* Only if this is still the line on screen. A child who has moved on
@@ -166,8 +159,7 @@ export function speak(text: string, quiet: boolean) {
       if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text); }
     })
     .catch(() => {
-      clearTimeout(fallback);
-      if (token === voiceToken && speaking === text) browserVoice(text);
+      /* Gemini TTS only — no browser voice fallback. */
     });
 }
 
