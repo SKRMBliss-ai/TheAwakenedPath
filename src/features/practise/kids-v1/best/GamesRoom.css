@@ -341,7 +341,7 @@
   cursor:pointer;min-height:0;
 }
 .gr-theme-badge img{
-  width:clamp(50px,min(9vw,9svh),100px);height:auto;display:block;
+  width:clamp(90px,12vw,145px);height:auto;display:block;
   filter:drop-shadow(0 3px 8px #0a051866);
 }
 .gr-theme-badge:hover{opacity:.9;transform:scale(1.06)}
@@ -426,7 +426,7 @@
   .gr-chest{min-width:80px}
   .gr-chest-art > img:first-child{width:clamp(55px,8svh,75px)}
   .gr-plaque{min-height:36px;padding:5px 8px;font-size:11px}
-  .gr-theme-badge img{width:clamp(40px,6svh,55px)}
+  .gr-theme-badge img{width:clamp(52px,14vw,70px)}
   .gr-themes-note{display:none}
   .gr-cast{width:min(11%,90px)}
   .gr-bubble{display:none}
