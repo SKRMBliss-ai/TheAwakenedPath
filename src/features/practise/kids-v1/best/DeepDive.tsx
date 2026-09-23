@@ -480,7 +480,7 @@ export function DeepDive({
 
       {/* The way back out, as a fitting on the left wall rather than a
           chevron in the corner. Present the whole time, asking nothing. */}
-      <DoorHandle side="left" label="Leave" onClick={leave} accent={accent}  scale={0.7} />
+      <DoorHandle side="left" label="Leave" onClick={leave} accent={accent}  scale={0.5} />
 
       {/* Padded clear of both handles so nothing ever sits under them. */}
       <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-[68px] pb-10 pt-4 sm:px-20">
@@ -828,7 +828,7 @@ export function DeepDive({
                 label="Go on"
                 onClick={() => { sound.play('resolve'); leave(); }}
                 accent={accent}
-                scale={0.7}
+                scale={0.5}
               />
             </motion.div>
           )}

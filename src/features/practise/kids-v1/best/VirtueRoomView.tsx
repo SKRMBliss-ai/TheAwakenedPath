@@ -115,7 +115,7 @@ export function VirtueRoomView({
       {/* The way out is a fitting on the left wall, the same one on every
           screen in the app. No chevron in the corner any more: a child who
           learns one door learns them all. */}
-      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent}  scale={0.7} />
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent}  scale={0.5} />
 
       <RoomScene room={art} dim={playing ? DIM.play : DIM.content} />
 
