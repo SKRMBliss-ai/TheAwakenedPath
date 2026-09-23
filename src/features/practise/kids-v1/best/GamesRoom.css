@@ -7,9 +7,9 @@
 */
 
 .gr-room{
-  position:relative;min-height:100svh;overflow:hidden;color:#fff;
+  position:relative;height:100svh;overflow:hidden;color:#fff;
   display:flex;flex-direction:column;align-items:center;
-  padding:12px 16px 8px;gap:4px;
+  padding:8px 16px 4px;gap:2px;
   background:#1d1030;
 }
 .gr-room :is(h1,h2){font-family:inherit}
@@ -167,7 +167,7 @@
 .gr-chip:hover{background:#4a2c79ea}
 
 .gr-sign{display:grid;place-items:center;position:relative;z-index:3}
-.gr-sign img{width:clamp(210px,24vw,330px);height:auto;display:block;filter:drop-shadow(0 6px 14px #10061d88)}
+.gr-sign img{width:clamp(170px,20vw,280px);height:auto;display:block;filter:drop-shadow(0 6px 14px #10061d88)}
 
 .sr-only{
   position:absolute;width:1px;height:1px;padding:0;margin:-1px;
@@ -182,7 +182,7 @@
 .gr-stars-count small{font-size:10px;font-weight:800;opacity:.85;margin-left:2px}
 
 /* ── The theme ribbon ───────────────────────────────────────────────────── */
-.gr-ribbon{position:relative;z-index:3;margin:2px 0 0}
+.gr-ribbon{position:relative;z-index:3;margin:0}
 .gr-ribbon span{
   display:inline-block;padding:7px 26px;border-radius:26px;
   background:linear-gradient(#a06be866,#6a34b666);border:2px solid #e8cfff55;
@@ -196,14 +196,15 @@
 .gr-play{
   position:relative;z-index:3;width:100%;max-width:1100px;
   padding-inline:clamp(0px,12vw - 110px,160px);
-  display:flex;flex-direction:column;align-items:center;gap:10px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
   flex:1 1 auto;min-height:0;justify-content:center;
+  overflow:hidden;
 }
 
 /* ── The hanging challenge board ─────────────────────────────────────── */
 .gr-board{
   position:relative;width:min(100%,720px);
-  padding:18px 26px 14px;border-radius:22px;
+  padding:12px 22px 10px;border-radius:22px;
   background:linear-gradient(#fdf4dd66,#efdcb452);
   backdrop-filter:blur(10px) saturate(1.15);-webkit-backdrop-filter:blur(10px) saturate(1.15);
   border:3px solid #a9793a75;
@@ -219,7 +220,7 @@
   margin-top:8px;background:#5a3a14!important;border:1px solid #d9b36a!important;
   color:#ffeccb!important;border-radius:22px;
 }
-.gr-progress{display:flex;justify-content:center;gap:7px;list-style:none;margin:10px 0 0;padding:0}
+.gr-progress{display:flex;justify-content:center;gap:5px;list-style:none;margin:6px 0 0;padding:0}
 .gr-progress img{width:clamp(17px,1.8vw,25px);height:auto;display:block}
 
 /* ── Visual consequence after picking ──────────────────────────────────── */
@@ -238,14 +239,14 @@
   width:100%;flex-wrap:wrap;
 }
 .gr-chest{
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;
-  background:none;border:0;padding:4px;
-  flex:1 1 0;min-width:clamp(130px,16vw,200px);max-width:250px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;
+  background:none;border:0;padding:2px;
+  flex:1 1 0;min-width:clamp(110px,14vw,180px);max-width:220px;
   transition:transform .2s ease,filter .2s ease,opacity .3s ease;
 }
 .gr-chest-art{position:relative;display:block;line-height:0}
 .gr-chest-art > img:first-child{
-  width:clamp(110px,13vw,170px);height:auto;display:block;
+  width:clamp(90px,11vw,145px);height:auto;display:block;
   filter:drop-shadow(0 8px 18px #10061dbb);
   animation:gr-bob 3.4s ease-in-out infinite;
   transition:filter .2s ease;
@@ -304,7 +305,7 @@
 .gr-prompt > span{color:#c9881f}
 
 /* ── The boy, Chirpy and the bubble ────────────────────────────────────── */
-.gr-cast{position:absolute;left:0.5%;bottom:1%;z-index:2;width:min(22%,270px);pointer-events:none}
+.gr-cast{position:absolute;left:0.5%;bottom:1%;z-index:2;width:min(18%,220px);pointer-events:none}
 .gr-boy{width:68%;height:auto;display:block;filter:drop-shadow(0 10px 18px #0b0418aa)}
 
 .gr-chirpy{position:absolute;left:56%;bottom:2%;width:44%;height:auto}
@@ -329,9 +330,9 @@
 /* ── Theme badges — the six pillars at the bottom ──────────────────────── */
 .gr-themes{
   position:relative;z-index:3;
-  display:flex;align-items:center;justify-content:center;gap:clamp(6px,1.2vw,14px);
+  display:flex;align-items:center;justify-content:center;gap:clamp(4px,1vw,10px);
   flex-wrap:wrap;
-  padding:6px 12px;margin-top:4px;
+  padding:2px 12px;margin-top:0;
 }
 .gr-theme-badge{
   background:none;border:0;padding:3px;border-radius:14px;
@@ -339,7 +340,7 @@
   cursor:pointer;min-height:0;
 }
 .gr-theme-badge img{
-  width:clamp(80px,10vw,130px);height:auto;display:block;
+  width:clamp(70px,9vw,115px);height:auto;display:block;
   filter:drop-shadow(0 3px 8px #0a051866);
 }
 .gr-theme-badge:hover{opacity:.9;transform:scale(1.06)}
@@ -421,7 +422,7 @@
   .gr-board{padding:12px 14px 10px}
   .gr-chests{gap:8px}
   .gr-chest{min-width:104px}
-  .gr-chest-art > img:first-child{width:96px}
-  .gr-theme-badge img{width:72px}
+  .gr-chest-art > img:first-child{width:80px}
+  .gr-theme-badge img{width:58px}
   .gr-themes-note{display:none}
 }
