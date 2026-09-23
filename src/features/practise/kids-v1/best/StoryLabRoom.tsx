@@ -88,12 +88,19 @@ const ROOM_BUBBLES = [
   { size: 19, rise: 145, lift: 4 },
 ];
 
-function RoomThoughtParticles({ show }: { show: boolean }) {
+function RoomThoughtParticles({ show, boyPos }: { show: boolean; boyPos?: { xPct: number; yPct: number } }) {
   const still = useReducedMotion();
   if (still || !show) return null;
 
   return (
-    <div className="sl-room-bubbles" aria-hidden="true">
+    <div
+      className="sl-room-bubbles"
+      aria-hidden="true"
+      style={boyPos ? {
+        left: `${boyPos.xPct}%`,
+        bottom: `${100 - boyPos.yPct}%`,
+      } as CSSProperties : undefined}
+    >
       {ROOM_BUBBLES.map((b, i) => (
         <motion.span
           key={i}
@@ -804,7 +811,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       draggable={false}
       {...boyFloat.dragHandlers}
     />
-    <RoomThoughtParticles show={step === 2 && !thought} />
+    <RoomThoughtParticles show={step === 2 && !thought} boyPos={boyFloat.pos} />
 
     <nav className="sl-rail" aria-label="Journey progress">
       <ol>{STEPS.map((label, i) => {
