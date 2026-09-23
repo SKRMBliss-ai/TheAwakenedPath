@@ -4756,10 +4756,10 @@ exports.notifyAdminOnKidsRegistration = onDocumentCreated({
  * =========================================================================== */
 
 const CHIRPY_DIRECTION =
-    'Read this like a gentle bedtime story, to a six-year-old friend, at a slow and relaxing pace. ' +
-    'Warm, soft and soothing, never instructive and never sing-song. ' +
-    'Take your time between sentences. Let questions lift only a little at the end. ' +
-    'Let the pauses breathe, the way a calm storyteller would:';
+    'Read this as a warm, friendly bird talking to a six-year-old friend, at a natural, ' +
+    'easy conversational pace — not rushed, but not dragging either. ' +
+    'Soft and soothing, never instructive and never sing-song. ' +
+    'Let questions lift gently at the end:';
 
 /** Gemini returns headerless signed 16-bit LE PCM; nothing plays that. */
 function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
