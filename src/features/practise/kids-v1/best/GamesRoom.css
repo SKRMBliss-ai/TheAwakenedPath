@@ -1,32 +1,34 @@
 /*
   THE GAMES ROOM — a living magical place.
 
-  One room, three bands: sign + controls at the top, challenge board in the
-  middle with the run's five stars, three treasures on the rug below. The boy
-  and Chirpy sit at the left of the rug and never move between scenarios.
-
-  New in this version: room awakening sequence, discovery hotspots on scenery
-  objects, ambient fireflies and star motes, visual consequence micro-panel,
-  and teaching-move overlay.
+  Redesigned to match the warmly lit mockup: reduced dim, warm golden glow,
+  bigger characters, theme badge row at the bottom, and scenery items that
+  feel like they belong in a room rather than floating in space.
 */
 
 .gr-room{
   position:relative;min-height:100svh;overflow:hidden;color:#fff;
   display:flex;flex-direction:column;align-items:center;
-  padding:12px 16px 20px;gap:6px;
+  padding:12px 16px 8px;gap:4px;
   background:#1d1030;
 }
 .gr-room :is(h1,h2){font-family:inherit}
 .gr-room button{cursor:pointer;min-height:44px}
 .gr-room button:focus-visible{outline:3px solid #ffe9a6;outline-offset:3px;border-radius:14px}
 
+/* ── Warm golden glow — the mockup's defining look ──────────────────────── */
+.gr-warm-glow{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 30%, rgba(255,200,80,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 60%, rgba(255,180,60,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 35% at 80% 50%, rgba(200,160,255,0.06) 0%, transparent 60%);
+}
+
 /* ── Room awakening veil ────────────────────────────────────────────────── */
-/* Framer Motion AnimatePresence handles the opacity; we just need it
-   positioned over everything else but under the UI chrome. */
 .gr-awake-veil{
   position:fixed;inset:0;z-index:20;background:#0a051a;pointer-events:none;
 }
-/* When still dim, lower the cast brightness so the "room waking up" reads */
 .gr-awake-dim .gr-cast,.gr-awake-dim .gr-board,.gr-awake-dim .gr-chests{
   opacity:.35;transition:opacity 1s ease;
 }
@@ -35,35 +37,30 @@
 .gr-scenery{position:absolute;inset:0;z-index:1}
 .gr-scenery img{position:absolute;filter:drop-shadow(0 8px 14px #1107208c)}
 
-/* Scenery buttons — invisible tap targets that happen to contain images */
 .gr-scenery-btn{
   position:absolute;background:none;border:0;padding:0;cursor:pointer;
-  /* min-height floor still satisfied: the images themselves exceed 44px */
   min-height:0;
 }
 .gr-scenery-btn:focus-visible{outline:3px solid #ffe9a6;outline-offset:4px;border-radius:8px}
 .gr-scenery-btn:disabled{cursor:default;opacity:.7}
 
-/* Rug — large target centred at the bottom */
-/* Capped well under the old 560px: the source sprite is only 127px across,
-   and past about twice that it stops reading as a rug and starts reading as
-   a smear. */
-.gr-rug-btn{left:50%;bottom:3%;transform:translateX(-50%);width:min(30%,300px)}
+/* Rug */
+.gr-rug-btn{left:50%;bottom:3%;transform:translateX(-50%);width:min(34%,340px)}
 .gr-rug-btn img{width:100%;height:auto;opacity:.92}
 .gr-rug-btn:not(:disabled):hover img,.gr-rug-btn:focus-visible img{
   opacity:1;filter:drop-shadow(0 8px 18px #c9aef899) drop-shadow(0 0 12px #8b5cf655);
 }
 
-/* Books */
-.gr-books-btn{left:1%;bottom:26%;width:min(10%,130px)}
+/* Books — larger, better positioned */
+.gr-books-btn{left:1%;bottom:30%;width:min(12%,150px)}
 .gr-books-btn img.gr-books{position:relative;width:100%;height:auto}
 .gr-books-btn:not(:disabled):hover img,.gr-books-btn:focus-visible img{
   filter:drop-shadow(0 8px 14px #1107208c) drop-shadow(0 0 8px #ffe9a644);
   transform:translateX(4px);transition:transform .2s,filter .2s;
 }
 
-/* Plant */
-.gr-plant-btn{right:3%;bottom:8%;width:min(8%,110px)}
+/* Plant — larger */
+.gr-plant-btn{right:2%;bottom:6%;width:min(10%,130px)}
 .gr-plant-btn img.gr-plant{position:relative;width:100%;height:auto}
 .gr-plant-sway{animation:gr-leaf-sway 4s ease-in-out infinite}
 @keyframes gr-leaf-sway{0%,100%{transform:rotate(0deg)}50%{transform:rotate(3deg)}}
@@ -71,26 +68,31 @@
   filter:drop-shadow(0 8px 14px #1107208c) drop-shadow(0 0 8px #88ff9955);
 }
 
-/* Cushions */
-.gr-cushions-btn{left:2%;bottom:6%;width:min(15%,190px)}
+/* Cushions — larger */
+.gr-cushions-btn{left:1.5%;bottom:5%;width:min(16%,200px)}
 .gr-cushions-btn img.gr-cushions{position:relative;width:100%;height:auto}
 .gr-cushions-btn:not(:disabled):hover img,.gr-cushions-btn:focus-visible img{
   transform:scaleY(.94);transition:transform .18s;
 }
 
-/* Static decoration only */
-.gr-chalkboard{position:absolute;right:2%;top:24%;width:min(8%,105px);opacity:.9;pointer-events:none}
-.gr-goodsign{position:absolute;right:6%;bottom:26%;width:min(11%,150px);opacity:.92;pointer-events:none}
+/* Chalkboard — larger and better positioned */
+.gr-chalkboard{position:absolute;right:1%;top:16%;width:min(11%,150px);opacity:.92;pointer-events:none}
+/* Good choices sign — larger */
+.gr-goodsign{position:absolute;right:3%;bottom:24%;width:min(14%,180px);opacity:.92;pointer-events:none}
+/* Lanterns */
+.gr-lamp{position:absolute;width:min(5%,70px);opacity:.85;pointer-events:none;
+  filter:drop-shadow(0 4px 16px #ffc83066) drop-shadow(0 8px 14px #1107208c)}
+.gr-lamp-left{left:0%;top:12%}
+.gr-lamp-right{right:14%;top:10%}
 
 @media(max-width:900px){
-  .gr-books-btn,.gr-chalkboard,.gr-goodsign,.gr-cushions-btn{display:none}
+  .gr-books-btn,.gr-chalkboard,.gr-goodsign,.gr-cushions-btn,.gr-lamp{display:none}
   .gr-rug-btn{width:78%}
 }
 
 /* ── Ambient layer — fireflies and star motes ─────────────────────────────── */
 .gr-ambient{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
 
-/* Fireflies: soft glowing dots that drift lazily */
 .gr-firefly{
   position:absolute;width:6px;height:6px;border-radius:50%;
   background:radial-gradient(circle,#fff9a0,#a0e870 40%,transparent 70%);
@@ -110,7 +112,6 @@
   100%{opacity:0;transform:translate(0,0)}
 }
 
-/* Star motes: tiny symbols that float up and fade */
 .gr-starmote{
   position:absolute;font-size:10px;color:#ffe8a0;opacity:0;
   animation:gr-mote-rise var(--dur,9s) var(--delay,0s) ease-out infinite;
@@ -126,7 +127,7 @@
   100%{opacity:0;transform:translateY(-62px)}
 }
 
-/* ── Discovery overlay — teaching move experience ─────────────────────────── */
+/* ── Discovery overlay ───────────────────────────────────────────────────── */
 .gr-discovery{
   position:relative;z-index:10;width:min(500px,90%);
   padding:18px 22px 14px;border-radius:20px;
@@ -192,16 +193,16 @@
 
 /* ── The play area ─────────────────────────────────────────────────────── */
 .gr-play{
-  position:relative;z-index:3;width:100%;max-width:1050px;
-  padding-inline:clamp(0px,14vw - 130px,190px);
+  position:relative;z-index:3;width:100%;max-width:1100px;
+  padding-inline:clamp(0px,12vw - 110px,160px);
   display:flex;flex-direction:column;align-items:center;gap:10px;
   flex:1 1 auto;min-height:0;justify-content:center;
 }
 
 /* ── The hanging challenge board ─────────────────────────────────────── */
 .gr-board{
-  position:relative;width:min(100%,660px);
-  padding:16px 22px 12px;border-radius:22px;
+  position:relative;width:min(100%,720px);
+  padding:18px 26px 14px;border-radius:22px;
   background:linear-gradient(#fdf4dd,#efdcb4);
   border:3px solid #a9793a;
   box-shadow:0 14px 30px -12px #0c0418,inset 0 0 0 2px #ffffffb0;
@@ -221,7 +222,7 @@
 
 /* ── Visual consequence after picking ──────────────────────────────────── */
 .gr-consequence{
-  width:min(100%,520px);padding:12px 18px;border-radius:16px;
+  width:min(100%,560px);padding:12px 18px;border-radius:16px;
   background:linear-gradient(135deg,#312058,#1e1036);
   border:1.5px solid #8b5cf655;
   text-align:center;
@@ -231,42 +232,40 @@
 
 /* ── The treasures ──────────────────────────────────────────────────────── */
 .gr-chests{
-  display:flex;justify-content:center;align-items:flex-end;gap:clamp(10px,2.4vw,34px);
+  display:flex;justify-content:center;align-items:flex-end;gap:clamp(14px,3vw,44px);
   width:100%;flex-wrap:wrap;
 }
 .gr-chest{
   display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;
   background:none;border:0;padding:4px;
-  flex:1 1 0;min-width:clamp(118px,15vw,180px);max-width:230px;
+  flex:1 1 0;min-width:clamp(130px,16vw,200px);max-width:250px;
   transition:transform .2s ease,filter .2s ease,opacity .3s ease;
 }
 .gr-chest-art{position:relative;display:block;line-height:0}
 .gr-chest-art > img:first-child{
-  width:clamp(94px,11vw,140px);height:auto;display:block;
-  filter:drop-shadow(0 8px 14px #10061d99);
+  width:clamp(110px,13vw,170px);height:auto;display:block;
+  filter:drop-shadow(0 8px 18px #10061dbb);
   animation:gr-bob 3.4s ease-in-out infinite;
   transition:filter .2s ease;
 }
 .gr-chest:nth-child(2) .gr-chest-art > img:first-child{animation-delay:-1.1s}
 .gr-chest:nth-child(3) .gr-chest-art > img:first-child{animation-delay:-2.2s}
-@keyframes gr-bob{50%{transform:translateY(-4px)}}
+@keyframes gr-bob{50%{transform:translateY(-5px)}}
 
 .gr-chest-emoji{
-  position:absolute;right:-2px;top:-6px;font-size:clamp(19px,2.1vw,27px);line-height:1;
+  position:absolute;right:-2px;top:-6px;font-size:clamp(21px,2.4vw,30px);line-height:1;
   filter:drop-shadow(0 2px 4px #1d0b2fcc);
 }
 
-/* Sparkles image behind the chest lid */
 .gr-chest-sparkle{
   position:absolute;inset:-14% -10%;width:120%;height:auto;opacity:0;
   transition:opacity .25s ease;pointer-events:none;
 }
 
-/* Hover / focus: scale up, lid tilts, sparkles bloom, glow brightens */
 .gr-chest:hover:not(:disabled),.gr-chest:focus-visible{transform:scale(1.06)}
 .gr-chest:hover:not(:disabled) .gr-chest-art > img:first-child,
 .gr-chest:focus-visible .gr-chest-art > img:first-child{
-  filter:drop-shadow(0 8px 14px #10061d99) drop-shadow(0 0 12px #c9aef8aa);
+  filter:drop-shadow(0 8px 18px #10061dbb) drop-shadow(0 0 14px #c9aef8bb);
   animation:gr-bob 3.4s ease-in-out infinite, gr-lid-tilt .25s ease-out;
 }
 @keyframes gr-lid-tilt{0%{transform:translateY(0) rotate(0)}40%{transform:translateY(-6px) rotate(-2deg)}100%{transform:translateY(-4px) rotate(0)}}
@@ -282,10 +281,10 @@
 /* The wooden plaque */
 .gr-plaque{
   display:flex;align-items:center;justify-content:center;
-  width:100%;min-height:42px;padding:7px 11px;border-radius:9px;
+  width:100%;min-height:44px;padding:8px 12px;border-radius:10px;
   background:linear-gradient(#f3dfb4,#d9bb85);
   border:2px solid #9b6f34;box-shadow:0 5px 11px -4px #0e0418;
-  color:#40270d;font-size:clamp(11.5px,1.15vw,15px);font-weight:900;line-height:1.16;
+  color:#40270d;font-size:clamp(12px,1.2vw,15.5px);font-weight:900;line-height:1.16;
   text-align:center;
 }
 
@@ -295,24 +294,23 @@
 }
 
 .gr-prompt{
-  display:flex;align-items:center;gap:8px;margin:0;padding:7px 20px;border-radius:12px;
+  display:flex;align-items:center;gap:8px;margin:0;padding:8px 22px;border-radius:12px;
   background:linear-gradient(#f0dcae,#d6b783);border:2px solid #9b6f34;
   box-shadow:0 5px 12px -5px #0e0418;
-  color:#43290f;font-size:clamp(11px,1.15vw,15px);font-weight:900;
+  color:#43290f;font-size:clamp(11.5px,1.2vw,15.5px);font-weight:900;
 }
 .gr-prompt > span{color:#c9881f}
 
 /* ── The boy, Chirpy and the bubble ────────────────────────────────────── */
-.gr-cast{position:absolute;left:0.5%;bottom:1%;z-index:2;width:min(20%,238px);pointer-events:none}
-.gr-boy{width:66%;height:auto;display:block;filter:drop-shadow(0 10px 18px #0b0418aa)}
+.gr-cast{position:absolute;left:0.5%;bottom:1%;z-index:2;width:min(22%,270px);pointer-events:none}
+.gr-boy{width:68%;height:auto;display:block;filter:drop-shadow(0 10px 18px #0b0418aa)}
 
-/* Chirpy floats when not in still mode */
-.gr-chirpy{position:absolute;left:56%;bottom:2%;width:42%;height:auto}
+.gr-chirpy{position:absolute;left:56%;bottom:2%;width:44%;height:auto}
 .gr-chirpy-float{animation:gr-float 4s ease-in-out infinite}
 @keyframes gr-float{50%{transform:translateY(-6px)}}
 
 .gr-bubble{
-  position:absolute;left:30%;bottom:78%;width:min(230px,26vw);
+  position:absolute;left:26%;bottom:80%;width:min(250px,28vw);
   background:linear-gradient(#ffffff,#f1e9ff);border-radius:18px;
   box-shadow:0 6px 16px #0b041866;
 }
@@ -321,14 +319,41 @@
   border:10px solid transparent;border-top-color:#f1e9ff;border-right-color:#f1e9ff;
 }
 .gr-bubble p{
-  margin:0;padding:11px 13px;
-  font-size:clamp(10.5px,1.05vw,14px);font-weight:850;line-height:1.24;
+  margin:0;padding:11px 14px;
+  font-size:clamp(11px,1.1vw,14.5px);font-weight:850;line-height:1.24;
   color:#2b1750;text-align:center;
+}
+
+/* ── Theme badges — the six pillars at the bottom ──────────────────────── */
+.gr-themes{
+  position:relative;z-index:3;
+  display:flex;align-items:center;justify-content:center;gap:clamp(6px,1.2vw,14px);
+  flex-wrap:wrap;
+  padding:6px 12px;margin-top:4px;
+}
+.gr-theme-badge{
+  background:none;border:0;padding:3px;border-radius:14px;
+  opacity:.7;transition:opacity .2s,transform .2s;
+  cursor:pointer;min-height:0;
+}
+.gr-theme-badge img{
+  width:clamp(80px,10vw,130px);height:auto;display:block;
+  filter:drop-shadow(0 3px 8px #0a051866);
+}
+.gr-theme-badge:hover{opacity:.9;transform:scale(1.06)}
+.gr-theme-active{opacity:1;transform:scale(1.08)}
+.gr-theme-active img{
+  filter:drop-shadow(0 3px 8px #0a051866) drop-shadow(0 0 10px #ffe9a688);
+}
+.gr-themes-note{
+  font-size:clamp(10px,1vw,13px);font-weight:800;color:#ffe9c0;
+  opacity:.8;text-align:center;white-space:nowrap;
+  padding:4px 12px;
 }
 
 /* ── Book sparkle surprise ──────────────────────────────────────────────── */
 .gr-book-sparkle{
-  position:absolute;left:calc(1% + 40px);bottom:30%;z-index:4;
+  position:absolute;left:calc(1% + 40px);bottom:34%;z-index:4;
   font-size:22px;color:#ffe9a0;pointer-events:none;
   animation:gr-sparkle-pop .8s ease-out forwards;
 }
@@ -384,7 +409,7 @@
 
 /* ── Phone ───────────────────────────────────────────────────────────────── */
 @media(max-width:560px){
-  .gr-room{padding:8px 10px 16px}
+  .gr-room{padding:8px 10px 10px}
   .gr-chip{padding:7px 11px;font-size:11.5px;white-space:nowrap}
   .gr-top{gap:6px}
   .gr-sign img{width:clamp(130px,38vw,190px)}
@@ -394,5 +419,7 @@
   .gr-board{padding:12px 14px 10px}
   .gr-chests{gap:8px}
   .gr-chest{min-width:104px}
-  .gr-chest-art > img:first-child{width:86px}
+  .gr-chest-art > img:first-child{width:96px}
+  .gr-theme-badge img{width:72px}
+  .gr-themes-note{display:none}
 }

@@ -35,6 +35,15 @@ const ROOM_TITLE = 'Games Room';
 const ROOM_TAGLINE = 'Play · Practice · Grow Brighter';
 const RUN_LENGTH = 5;
 
+const THEME_BADGES: { pillar: BehaviourPillar; img: string }[] = [
+  { pillar: 'BeKind', img: 'subtitle_be_kind' },
+  { pillar: 'TellTheTruth', img: 'subtitle_be_honest' },
+  { pillar: 'MakeGoodChoices', img: 'subtitle_say_good_things' },
+  { pillar: 'IncludeEveryone', img: 'subtitle_include_everyone' },
+  { pillar: 'TakeCareOfMyBody', img: 'subtitle_take_care_my_body' },
+  { pillar: 'HelpOthers', img: 'subtitle_help_others' },
+];
+
 const CHESTS = ['chest_laugh', 'chest_continue', 'chest_kind'] as const;
 function chestArt(scenarioId: string, index: number) {
   let hash = 0;
@@ -177,6 +186,8 @@ function Scenery({ onDiscover, discoveryActive, still }: {
     {/* Pure decoration */}
     <img className="gr-chalkboard" src={`${ART}/chalkboard.png`} alt="" aria-hidden="true" />
     <img className="gr-goodsign" src={`${ART}/good_choices_sign.png`} alt="" aria-hidden="true" />
+    <img className="gr-lamp gr-lamp-left" src={`${ART}/lamp.png`} alt="" aria-hidden="true" />
+    <img className="gr-lamp gr-lamp-right" src={`${ART}/lamp.png`} alt="" aria-hidden="true" />
   </div>;
 }
 
@@ -334,8 +345,9 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       plant all landed in those bands, floating on flat purple instead of
       standing in the room.
     */}
-    <RoomScene room={art} dim={awakePhase === 'dim' ? 0.6 : 0.34} fit="cover" />
+    <RoomScene room={art} dim={awakePhase === 'dim' ? 0.5 : 0.16} art={`${ART}/background.png`} fit="cover" />
 
+    <div className="gr-warm-glow" aria-hidden="true" />
     <AmbientLayer still={still} />
 
     {/* Awakening dim overlay */}
@@ -479,6 +491,25 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
             <p>{chirpyLine}</p>
           </div>
         </div>
+
+        {/* Theme badges — the six pillars, switchable */}
+        <nav className="gr-themes" aria-label="Practice themes">
+          {THEME_BADGES.map(({ pillar, img }) => (
+            <button key={pillar}
+              className={`gr-theme-badge ${pillar === theme ? 'gr-theme-active' : ''}`}
+              aria-pressed={pillar === theme}
+              onClick={() => {
+                if (pillar === theme) return;
+                session.stop(); stopSpeaking();
+                celebrated.current = 0;
+                setTheme(pillar); setSession(makeSession(pillar)); setReward(0);
+                if (!quiet) sound.play('tap');
+              }}>
+              <img src={`${ART}/${img}.png`} alt={BEHAVIOUR_PILLARS[pillar].title} />
+            </button>
+          ))}
+          <span className="gr-themes-note">Same fun room. Different scenarios. A kinder you!</span>
+        </nav>
 
         {/* Book wiggle surprise */}
         {bookWiggle && <div className="gr-book-sparkle" aria-hidden="true">✦</div>}
