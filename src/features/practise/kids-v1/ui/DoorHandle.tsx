@@ -231,7 +231,7 @@ export function DoorHandle({
         onBlur={() => setAwake(false)}
         aria-label={label}
         className="pointer-events-auto relative grid place-items-center border-0 bg-transparent p-0"
-        style={{ minWidth: m.target, minHeight: m.target, transform: `scale(${scale})`, transformOrigin: 'center bottom' } as React.CSSProperties}
+        style={{ minWidth: m.target, minHeight: m.target, transform: `scale(${scale})`, transformOrigin: side === 'left' ? 'left bottom' : 'right bottom' } as React.CSSProperties}
         animate={
           m.quiet
             ? { opacity: 0.9, x: 0 }

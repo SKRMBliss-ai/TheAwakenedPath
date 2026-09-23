@@ -141,7 +141,7 @@ export function DifferentStoryRoom({
 
   return (
     <div className="relative min-h-[100svh] w-full overflow-hidden" style={{ fontFamily: FONT }}>
-      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent}  scale={0.7} />
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent}  scale={0.5} />
       <RoomScene room={art} dim={DIM.content} />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-end p-3 sm:p-4">

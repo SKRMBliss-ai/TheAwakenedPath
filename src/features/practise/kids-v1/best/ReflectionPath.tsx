@@ -510,7 +510,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
 
   return (
     <div className="rp-room rp-pathview" style={{ fontFamily: FONT }}>
-      <DoorHandle side="left" label="Back to Mind Gym" onClick={onExit} accent="#c9aef8"  scale={0.7} />
+      <DoorHandle side="left" label="Back to Mind Gym" onClick={onExit} accent="#c9aef8"  scale={0.5} />
       <Decor variant="path" still={still} />
       <header className="rp-header">
         <div className="rp-title rp-path-title">

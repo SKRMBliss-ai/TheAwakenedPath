@@ -371,7 +371,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       still={still}
     />
 
-    <DoorHandle side="left" label="Leave Room" onClick={() => leave(onExit)} accent={art.palette.accent} bottomVh={4} scale={0.7} />
+    <DoorHandle side="left" label="Leave Room" onClick={() => leave(onExit)} accent={art.palette.accent} bottomVh={4} scale={0.5} />
 
     <header className="gr-top">
       <div className="gr-top-left">
