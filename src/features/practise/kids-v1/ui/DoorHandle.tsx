@@ -244,7 +244,7 @@ export function DoorHandle({
                 // would be hunting for a control that is hiding from them.
                 // Waking is still a clear event: full opacity, a warm bloom
                 // and motes, none of which the resting state has.
-                opacity: live ? 1 : [0.85, 0.66, 0.85],
+                opacity: live ? 1 : [0.45, 0.3, 0.45],
                 x: live ? (forward ? -5 : 5) : 0,
               }
         }
