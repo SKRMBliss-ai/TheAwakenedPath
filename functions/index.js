@@ -4765,8 +4765,9 @@ const CHIRPY_DIRECTION =
    back. Younger and slower than the narrator, so the two never blur. */
 const MIND_DIRECTION =
     'Read this as the inner voice of a young child of about six, thinking out loud to themselves. ' +
-    'High, light and childlike, slow and a little wondering, with small pauses between phrases. ' +
-    'Gentle and honest, never performed or cute:';
+    'Young, light and a little breathy, with a small smile in the voice. Casual and natural, ' +
+    'nothing stiff or grown-up. Slow and wondering, with little pauses between phrases. ' +
+    'Honest and gentle, never performed or cute:';
 
 /** Gemini returns headerless signed 16-bit LE PCM; nothing plays that. */
 function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
