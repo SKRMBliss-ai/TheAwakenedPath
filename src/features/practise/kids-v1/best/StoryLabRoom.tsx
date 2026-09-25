@@ -88,33 +88,67 @@ const ROOM_BUBBLES = [
   { size: 19, rise: 145, lift: 4 },
 ];
 
-function RoomThoughtParticles({ show, boyPos }: { show: boolean; boyPos?: { xPct: number; yPct: number } }) {
+/**
+ * Aims the bubbles from wherever the boy is standing (he can be dragged) to
+ * the Thought panel. Both are re-measured a few times a second, which also
+ * covers window resizes and the filmstrip rescaling.
+ */
+function useBubblePath(show: boolean) {
+  const [path, setPath] = useState<{ x: number; y: number; dx: number; dy: number } | null>(null);
+  useEffect(() => {
+    if (!show) return;
+    const measure = () => {
+      const boy = document.querySelector('.sl-room-boy-floating');
+      const panel = document.querySelector('[data-sl-panel="2"]');
+      const room = boy?.closest('.sl-room');
+      if (!boy || !panel || !room) return;
+      const r = room.getBoundingClientRect();
+      const bb = boy.getBoundingClientRect();
+      const pb = panel.getBoundingClientRect();
+      if (!bb.width || !pb.width) return;
+      const x = bb.left + bb.width / 2 - r.left;
+      const y = bb.top + bb.height * 0.2 - r.top;
+      const tx = Math.min(Math.max(bb.left + bb.width / 2, pb.left + 30), pb.right - 30) - r.left;
+      const ty = pb.top + pb.height * 0.45 - r.top;
+      setPath((p) => {
+        const next = { x, y, dx: tx - x, dy: ty - y };
+        return p && Math.abs(p.x - next.x) + Math.abs(p.y - next.y) + Math.abs(p.dx - next.dx) + Math.abs(p.dy - next.dy) < 40 ? p : next;
+      });
+    };
+    measure();
+    const id = window.setInterval(measure, 250);
+    return () => window.clearInterval(id);
+  }, [show]);
+  return show ? path : null;
+}
+
+function RoomThoughtParticles({ show }: { show: boolean }) {
   const still = useReducedMotion();
-  if (still || !show) return null;
+  const path = useBubblePath(show && !still);
+  if (still || !show || !path) return null;
+  const { dx, dy } = path;
+  /* A gentle arc: the bubbles lift off his head first, then drift across. */
+  const arc = -Math.max(40, Math.abs(dx) * 0.18);
 
   return (
-    <div
-      className="sl-room-bubbles"
-      aria-hidden="true"
-      style={boyPos ? {
-        left: `${boyPos.xPct}%`,
-        bottom: `${100 - boyPos.yPct}%`,
-      } as CSSProperties : undefined}
-    >
-      {ROOM_BUBBLES.map((b, i) => (
-        <motion.span
-          key={i}
-          className="sl-thought-particle"
-          style={{ left: 0, bottom: b.lift, width: b.size, height: b.size } as CSSProperties}
-          animate={{
-            opacity: [0, 0.95, 0.85, 0.55, 0.18, 0],
-            x: ['0vw', '7vw', '15vw', '22vw', '27vw', '30vw'],
-            y: [0, -b.rise * 0.34, -b.rise * 0.64, -b.rise * 0.86, -b.rise, -b.rise * 1.06],
-            scale: [0.4, 1, 0.95, 0.82, 0.58, 0.22],
-          }}
-          transition={{ duration: 3.1 + (i % 5) * 0.32, ease: 'easeOut', repeat: Infinity, delay: i * 0.42 }}
-        />
-      ))}
+    <div className="sl-room-bubbles" aria-hidden="true" style={{ left: path.x, top: path.y, bottom: 'auto' }}>
+      {ROOM_BUBBLES.map((b, i) => {
+        const wob = b.lift * 1.5;
+        return (
+          <motion.span
+            key={i}
+            className="sl-thought-particle"
+            style={{ left: 0, top: 0, width: b.size, height: b.size } as CSSProperties}
+            animate={{
+              opacity: [0, 0.95, 0.95, 0.9, 0.8, 0],
+              x: [0, dx * 0.12 + wob * 0.3, dx * 0.35 + wob, dx * 0.6, dx * 0.85 + wob * 0.5, dx],
+              y: [0, arc * 0.8, dy * 0.3 + arc, dy * 0.6 + arc * 0.6, dy * 0.85 + arc * 0.2, dy],
+              scale: [0.4, 1, 0.95, 0.85, 0.65, 0.3],
+            }}
+            transition={{ duration: 3.1 + (i % 5) * 0.32, ease: 'easeInOut', repeat: Infinity, delay: i * 0.42 }}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -274,7 +308,7 @@ function Panel({ index, step, chirpy, children, onHome }: {
 }) {
   const current = index === step;
   const done = index < step;
-  return <div className={`sl-panel ${current ? 'sl-panel-now' : ''} ${done ? 'sl-panel-done' : ''}`}>
+  return <div data-sl-panel={index} className={`sl-panel ${current ? 'sl-panel-now' : ''} ${done ? 'sl-panel-done' : ''}`}>
     <div className="sl-panel-bar">
       <h2>{TITLES[index - 2]}</h2>
       <button className="sl-panel-home" onClick={onHome} aria-label="Back to Mind Gym">⌂</button>
@@ -555,8 +589,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   };
 
   const thoughtOptions = stillVisible(thoughtRoll.items, thoughtPool, thought, '☁', SAY_IT);
-  const eventOptions = event ? kept(eventPool, event, '✧')
-    : [...eventRoll.items, SOMETHING_ELSE];
+  const eventOptions = stillVisible(eventRoll.items, eventPool, event, '✧', SOMETHING_ELSE);
   const otherOptions = alternative ? kept(possibilityPool, alternative, '✦')
     : [...possibilityRoll.items, MY_OWN];
 
@@ -780,7 +813,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       draggable={false}
       {...boyFloat.dragHandlers}
     />
-    <RoomThoughtParticles show={step === 2 && !thought} boyPos={boyFloat.pos} />
+    <RoomThoughtParticles show={step === 2 && !thought} />
 
     <nav className="sl-rail" aria-label="Journey progress">
       <ol>{STEPS.map((label, i) => {
