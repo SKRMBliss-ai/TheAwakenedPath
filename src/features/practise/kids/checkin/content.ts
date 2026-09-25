@@ -13,6 +13,8 @@ export interface FeelingDef {
   ok: boolean;
   hue: number;
   face: 'happy' | 'excited' | 'sad' | 'angry' | 'scared' | 'worried';
+  /** Only offered from this age up. Hidden while the age is unknown. */
+  minAge?: number;
 }
 
 export const FEELINGS: FeelingDef[] = [
@@ -22,7 +24,18 @@ export const FEELINGS: FeelingDef[] = [
   { id: 'angry', label: 'Angry', ok: false, hue: 8, face: 'angry' },
   { id: 'scared', label: 'Scared', ok: false, hue: 268, face: 'scared' },
   { id: 'worried', label: 'Worried', ok: false, hue: 180, face: 'worried' },
+  { id: 'bored', label: 'Bored', ok: false, hue: 150, face: 'sad', minAge: 6 },
+  { id: 'jealous', label: 'Jealous', ok: false, hue: 110, face: 'angry', minAge: 7 },
+  { id: 'ashamed', label: 'Ashamed', ok: false, hue: 330, face: 'sad', minAge: 8 },
+  { id: 'embarrassed', label: 'Embarrassed', ok: false, hue: 350, face: 'worried', minAge: 8 },
+  { id: 'anxious', label: 'Anxious', ok: false, hue: 195, face: 'worried', minAge: 12 },
+  { id: 'grief', label: 'Grief', ok: false, hue: 235, face: 'sad', minAge: 13 },
 ];
+
+/** The feelings a child of this age is offered. Unknown age gets the first six. */
+export function feelingsForAge(age: number | undefined): FeelingDef[] {
+  return FEELINGS.filter((f) => f.minAge === undefined || (age !== undefined && age >= f.minAge));
+}
 
 export type IntensityId = 'bit' | 'quite' | 'really';
 

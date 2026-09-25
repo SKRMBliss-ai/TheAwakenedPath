@@ -8907,7 +8907,8 @@ const DEFAULT_THEME_BY_FEELING: Record<FeelingKey, Theme> = {
 
 /** Normalise whatever the check-in stored ("Worried", "worried") to a key. */
 function toKey(feeling: string | undefined): FeelingKey {
-  const k = (feeling ?? '').trim().toLowerCase();
+  const raw = (feeling ?? '').trim().toLowerCase();
+  const k = ({ anxious: 'worried', grief: 'sad' } as Record<string, string>)[raw] ?? raw;
   return k in THOUGHTS ? (k as FeelingKey) : 'other';
 }
 

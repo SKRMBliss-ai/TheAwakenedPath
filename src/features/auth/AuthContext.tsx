@@ -63,6 +63,8 @@ export interface UserProfile {
   trialDays?: number;
   entryEmail?: string;
   isAnonymousUser?: boolean;
+  /** The child using Mind Gym on this account, so every device greets them the same way. */
+  kid?: { name?: string; age?: number };
 }
 
 // ─── Context type ─────────────────────────────────────────────────────────────

@@ -14,6 +14,7 @@
 
 export {
   FEELINGS,
+  feelingsForAge,
   SIZES,
   GOODBITS,
   THOUGHTS,

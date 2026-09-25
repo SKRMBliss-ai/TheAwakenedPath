@@ -10,7 +10,7 @@ import { roomGamesFor } from './roomGames';
 import { RoomGamePlayer } from './RoomGamePlayer';
 import { GoodChoicesShelf } from './GoodChoicesShelf';
 import { DailyWelcome } from './DailyWelcome';
-import { HowOld } from './HowOld';
+import { AgePopup } from './AgePopup';
 import { bandUnknown } from '../kit/band';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
@@ -89,8 +89,13 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const [askAge, setAskAge] = useState(false);
   useEffect(() => {
     if (!bandUnknown()) return;
-    const timer = setTimeout(() => setAskAge(bandUnknown()), 2600);
-    return () => clearTimeout(timer);
+    /* Waits for the welcome film (a modal dialog) to close first. */
+    const timer = setInterval(() => {
+      if (document.querySelector('dialog[open]')) return;
+      clearInterval(timer);
+      setAskAge(bandUnknown());
+    }, 900);
+    return () => clearInterval(timer);
   }, []);
   const [teaching, setTeaching] = useState<string | null>(null);
   const lastTeaching = useRef('');
@@ -143,7 +148,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
 
   return <main className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
     <DailyWelcome />
-    {askAge && <HowOld onDone={() => setAskAge(false)} />}
+    {askAge && <AgePopup onDone={() => setAskAge(false)} />}
     <div className="mg-world">
       <header className="mg-top">
         <button className="mg-logo" onClick={onExitGym} aria-label="Leave Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>

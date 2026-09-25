@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FEELINGS } from '../kit/checkinContent';
+import { feelingsForAge } from '../kit/checkinContent';
+import { childAge } from '../kit/band';
 import * as sound from '../kit/sound';
 
 /**
@@ -31,6 +32,23 @@ const SIDES = [
 
 const SIZE = 86;
 
+/** Older children get more feelings. Past six, the balls shrink a little and
+    zigzag down each side so they still stay clear of the child in the middle. */
+function layout(count: number) {
+  if (count <= 6) return { size: SIZE, height: 340, spots: SIDES };
+  const size = 70;
+  const height = 470;
+  const perSide = Math.ceil(count / 2);
+  const step = (height - size) / Math.max(perSide - 1, 1);
+  const spots = Array.from({ length: count }, (_, i) => {
+    const right = i >= perSide;
+    const j = right ? i - perSide : i;
+    const zig = j % 2 === 1;
+    return { left: right ? (zig ? '64%' : '76%') : (zig ? '12%' : '0%'), top: `${j * step}px` };
+  });
+  return { size, height, spots };
+}
+
 export function FeelingBalls({
   onPick,
   onBurst,
@@ -40,6 +58,8 @@ export function FeelingBalls({
   onBurst?: () => void;
 }) {
   const [popped, setPopped] = useState<string | null>(null);
+  const feelings = feelingsForAge(childAge());
+  const { size, height, spots } = layout(feelings.length);
 
   const burst = (id: string, label: string) => {
     if (popped) return;
@@ -50,9 +70,9 @@ export function FeelingBalls({
   };
 
   return (
-    <div className="relative w-full" style={{ height: 340 }}>
-      {FEELINGS.map((f, i) => {
-        const pos = SIDES[i % SIDES.length];
+    <div className="relative w-full" style={{ height }}>
+      {feelings.map((f, i) => {
+        const pos = spots[i];
         const isPopped = popped === f.id;
         // When one goes, they all go. The tapped one leads by a beat and the
         // rest follow in a quick ripple outwards, so the child's ball is
@@ -65,13 +85,14 @@ export function FeelingBalls({
             onClick={() => burst(f.id, f.label)}
             disabled={popped !== null}
             aria-label={f.label}
-            className="absolute grid place-items-center rounded-full text-center text-[13.5px] font-extrabold leading-tight"
+            className="absolute grid place-items-center rounded-full text-center font-extrabold leading-tight"
             style={{
               left: pos.left,
               top: pos.top,
-              width: SIZE,
-              height: SIZE,
+              width: size,
+              height: size,
               color: '#FFFFFF',
+              fontSize: f.label.length > 9 ? 10 : size < SIZE ? 11.5 : 13.5,
               textShadow: '0 1px 6px rgba(0,0,0,0.5)',
               background: `radial-gradient(circle at 34% 26%, hsl(${f.hue} 92% 76%), hsl(${f.hue} 76% 46%) 72%)`,
               border: '1px solid rgba(255,255,255,0.42)',

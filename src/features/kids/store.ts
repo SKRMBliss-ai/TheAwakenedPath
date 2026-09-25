@@ -51,6 +51,7 @@ interface KidState {
   rewards: string[];
 
   completeOnboarding: (name: string, avatarId: string) => void;
+  setName: (name: string) => void;
   toggleBehaviour: (behaviourId: string) => void;
   setBehaviourOn: (dateKey: string, behaviourId: string, done: boolean) => void;
   awardPoints: (points: number, behaviourId?: string) => void;
@@ -120,6 +121,7 @@ export const useKidStore = create<KidState>()(
       rewards: [],
 
       completeOnboarding: (name, avatarId) => set({ onboarded: true, name: name.trim() || 'Explorer', avatarId }),
+      setName: (name) => { if (name.trim()) set({ name: name.trim() }); },
 
       toggleBehaviour: (behaviourId) => set((s) => {
         const key = todayKey();

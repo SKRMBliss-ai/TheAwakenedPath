@@ -29,7 +29,6 @@ import { ChirpyArc } from './ChirpyArc';
 import { GuessWhat } from './GuessWhat';
 import { TeachingMoment } from './TeachingMoment';
 import { SecretGameBack, SecretGameGiven } from './SecretGame';
-import { HowOld } from './HowOld';
 import { ReleasedSky } from './LetThemGo';
 import { TheVisitor } from './TheVisitor';
 import { NoteFound } from './NoteFound';
@@ -37,6 +36,7 @@ import { LeaveANote } from './LeaveANote';
 import { OneMinute } from './OneMinute';
 import { SeasonEnd } from './SeasonEnd';
 import { FirstNight } from './FirstNight';
+import { useKidAccountSync } from '../kit/kidAccount';
 import { HomeScreen } from './HomeScreen';
 import { GamesRoom } from './GamesRoom';
 import { ROOM_PILLARS } from '../kit/behaviourPractice';
@@ -144,6 +144,7 @@ function archWipe(plain: boolean) {
 }
 
 export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
+  useKidAccountSync();
   const onboarded = useKidStore((s) => s.onboarded);
   const name = useKidStore((s) => s.name);
   const completions = useKidStore((s) => s.completions);
@@ -818,11 +819,6 @@ export function LegacyRoomMap({
                 teaching={said.teaching}
                 onDone={() => setMoment(null)}
               />
-            )}
-            {/* Asked once, ever, and it unlocks two-thirds of the teaching
-                library — see kit/band. */}
-            {said?.kind === 'age' && (
-              <HowOld key="age" onDone={() => setMoment(null)} />
             )}
 
             {/* The two halves of a secret game — handing one over, and
