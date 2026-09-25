@@ -11,11 +11,10 @@ import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
 import { BodyPortrait } from '../ui/BodyPortrait';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { DrawingCanvas, type DrawingCanvasHandle } from '../ui/DrawingCanvas';
-import { THOUGHTS, MAYBES, FEELINGS } from '../kit/checkinContent';
+import { THOUGHTS, MAYBES } from '../kit/checkinContent';
 import { STEADY, STEADY_GROWNUP } from '../kit/steady';
 import { Steady } from '../ui/Steady';
 import { FeelingBalls } from './FeelingBalls';
-import { SizeBalloons } from './SizeBalloons';
 import { FeelingsIntro } from './FeelingsIntro';
 import { stopFeelingsFilm } from './feelingsFilmControl';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
@@ -206,25 +205,6 @@ export function DeepDive({
   /** Set the instant a feeling ball is tapped, so the room blooms with it. */
   const [orbFlash, setOrbFlash] = useState(false);
   /**
-   * AN UNPLEASANT FEELING PICKED, WAITING ON "HOW BIG".
-   *
-   * §18's quiet state has no trigger anywhere in the live app — CheckIn.tsx
-   * has one but CheckIn.tsx is a dead shell nothing mounts any more, so a
-   * distressed child was never actually asked, and the app never actually
-   * went quiet. This is the live trigger.
-   *
-   * ONLY UNPLEASANT FEELINGS ASK. A child who picked Happy or Excited has
-   * nothing here to check the size of — the intensity question exists to
-   * catch a child in real distress, not to interrogate every feeling.
-   *
-   * Held here rather than folded into `answer('feeling', …)` because the
-   * feeling isn't recorded yet — the room needs one more tap first, and a
-   * child who is asked "how big" before their feeling has visibly landed
-   * would be answering a question about something the app hasn't
-   * acknowledged yet.
-   */
-  const [bigCheck, setBigCheck] = useState<{ id: string; label: string } | null>(null);
-  /**
    * The opening film. It used to be a per-device flag: the cinematic played
    * once ever, and every visit after got a separate, deliberately silent
    * loop instead. Which meant the sound worked exactly once and then looked
@@ -304,29 +284,9 @@ export function DeepDive({
    */
   const leave = () => { onQuiet(false); onFinish(answers); };
 
-  /**
-   * The feeling ball was tapped. Pleasant feelings answer immediately, same
-   * as before. An unpleasant one pauses on the intensity check — see
-   * `bigCheck` above.
-   */
-  const pickFeeling = (id: string, label: string) => {
+  /** The feeling ball was tapped; every feeling answers straight away. */
+  const pickFeeling = (_id: string, label: string) => {
     setTodaysFeeling(label);
-    const def = FEELINGS.find((f) => f.id === id);
-    if (def && !def.ok) { setBigCheck({ id, label }); return; }
-    answer('feeling', label);
-  };
-
-  /**
-   * How big it is, answered. "Really" is the quiet-state trigger — see
-   * kit/steady for what changes once it fires. Every size still records the
-   * feeling and moves the walk on; the size itself is never stored, only
-   * used once, right here.
-   */
-  const sizeFeeling = (sizeId: string) => {
-    if (!bigCheck) return;
-    if (sizeId === 'really') onQuiet(true);
-    const { label } = bigCheck;
-    setBigCheck(null);
     answer('feeling', label);
   };
 
@@ -627,11 +587,11 @@ export function DeepDive({
                 report turns it into a question with a worked example. It is
                 always "some people", never "you" — see suggestedBodyZone.
               */}
-              {!bigCheck && <Chirpy
+              <Chirpy
                 pose={step.id === 'other' ? 'hopeful' : 'curious'}
                 line={bodyHint ?? step.chirpy}
                 align="left"
-              />}
+              />
               {/*
                 SOMEBODY IS STILL HERE. Chirpy has already gone silent by
                 this point — he self-suppresses in the quiet state, see
@@ -645,46 +605,16 @@ export function DeepDive({
                 : step.id === 'eyes' ? STEADY.situation
                 : null
               } />
-              {!bigCheck && <Question room={art}>{step.question}</Question>}
-              {step.hint && !bigCheck && <SceneLine>{step.hint}</SceneLine>}
+              <Question room={art}>{step.question}</Question>
+              {step.hint && <SceneLine>{step.hint}</SceneLine>}
 
-              {step.id === 'feeling' && !bigCheck && (
+              {step.id === 'feeling' && (
                 <FeelingBalls
                   onPick={pickFeeling}
                   onBurst={() => setOrbFlash(true)}
                 />
               )}
 
-              {/*
-                §18's TRIGGER, LIVE. The one screen in the walk that decides
-                whether the rest of it stays clever or goes quiet.
-
-                Chirpy still speaks here — the quiet state hasn't started
-                yet, this IS the question that starts it — so this keeps his
-                voice rather than Steady's, which only speaks once quiet is
-                already on.
-              */}
-              {step.id === 'feeling' && bigCheck && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35 }}
-                  className="flex flex-col gap-3.5"
-                >
-                  <Chirpy pose="worried" line="Okay. How big is it?" align="left" />
-                  <Question room={art}>How big does {bigCheck.label.toLowerCase()} feel right now?</Question>
-                  {/*
-                    Popped, not picked from a list. The question one step
-                    earlier is answered by bursting a balloon, and answering
-                    this one off a menu made the walk change its grammar
-                    halfway through — see SizeBalloons.
-                  */}
-                  <SizeBalloons
-                    hue={FEELINGS.find((f) => f.id === bigCheck.id)?.hue ?? 280}
-                    onPick={sizeFeeling}
-                  />
-                </motion.div>
-              )}
 
               {/*
                 POINTING IS THE ANSWER. There is no confirm button under the
