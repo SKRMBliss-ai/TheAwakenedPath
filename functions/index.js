@@ -4781,6 +4781,11 @@ function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
     return Buffer.concat([header, pcm]);
 }
 
+/** Hash text+voice for cache key — deterministic across runs. */
+function chirpyCacheKey(text, voice) {
+    return crypto.createHash('sha256').update(`${text}|${voice}`).digest('hex').slice(0, 16);
+}
+
 exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
     const text = String((req.body && req.body.text) || '').trim();
     /* Chirpy's lines are one or two sentences. A long body is either a bug or
@@ -4788,21 +4793,35 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     if (!text) return res.status(400).send('No line to say.');
     if (text.length > 400) return res.status(413).send('That line is too long for Chirpy.');
 
-    if (aiRateLimited('chirpyVoice', callerKey(req))) {
-        return res.status(429).send('Too many requests — please wait a moment.');
-    }
-    if (!(await reserveAiBudget('chirpyVoice'))) {
-        return res.status(503).send('Chirpy is resting his voice.');
-    }
-
-    /* Auditioned in scripts/chirpy-voice-audition.mjs. Overridable so the
-       audition's winner can be switched without a redeploy of the client.
-       Was 'Puck' (Gemini's own listing calls it "Upbeat") — too quick and
-       bright for a bedtime-story companion. 'Sulafat' reads warm and calm,
-       which is what "slow speaking story tone" actually asked for. */
     const voiceName = String((req.body && req.body.voice) || 'Sulafat');
+    const cacheKey = chirpyCacheKey(text, voiceName);
 
     try {
+        /* CHECK CACHE FIRST — Firestore + Firebase Storage */
+        const cacheRef = db.collection('chirpyVoiceCache').doc(cacheKey);
+        const cacheSnap = await cacheRef.get();
+        if (cacheSnap.exists) {
+            const cached = cacheSnap.data();
+            if (cached.storageUrl) {
+                console.log(`[chirpyVoice] Cache hit: ${cacheKey} (${voiceName})`);
+                res.set('Content-Type', 'audio/wav');
+                res.set('Cache-Control', 'public, max-age=2592000, immutable');
+                res.set('X-Chirpy-Cache', 'HIT');
+                const audioBuffer = await admin.storage().bucket().file(cached.storagePath).download();
+                return res.send(audioBuffer[0]);
+            }
+        }
+
+        /* CACHE MISS — synthesize new audio */
+        console.log(`[chirpyVoice] Cache miss: ${cacheKey} (${voiceName})`);
+
+        if (aiRateLimited('chirpyVoice', callerKey(req))) {
+            return res.status(429).send('Too many requests — please wait a moment.');
+        }
+        if (!(await reserveAiBudget('chirpyVoice'))) {
+            return res.status(503).send('Chirpy is resting his voice.');
+        }
+
         const response = await fetch(
             'https://generativelanguage.googleapis.com/v1beta/models/'
             + 'gemini-2.5-flash-preview-tts:generateContent',
@@ -4829,22 +4848,31 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
         const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
         if (!part?.data) throw new Error('Gemini TTS returned no audio');
 
-        /* The sample rate comes off the response's own mimeType rather than a
-           constant: a hardcoded header would silently pitch-shift Chirpy if the
-           model ever returned something other than 24 kHz, which is the one
-           failure that would be heard but not noticed. */
         const rate = Number(/rate=(\d+)/.exec(part.mimeType || '')?.[1]) || 24000;
         const wav = chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
 
-        /* His lines repeat all evening and across children, and they never
-           change for a given text — so let the CDN carry the second one. */
+        /* STORE IN FIREBASE — audio file + cache record */
+        const storagePath = `chirpy-voice-cache/${voiceName}/${cacheKey}.wav`;
+        const bucket = admin.storage().bucket();
+        const file = bucket.file(storagePath);
+        await file.save(wav, { metadata: { contentType: 'audio/wav', cacheControl: 'public, max-age=2592000, immutable' } });
+
+        await cacheRef.set({
+            text,
+            voice: voiceName,
+            storagePath,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            usageCount: 0,
+        }, { merge: true });
+
+        console.log(`[chirpyVoice] Cached new: ${cacheKey} → gs://bucket/${storagePath}`);
+
         res.set('Content-Type', 'audio/wav');
-        res.set('Cache-Control', 'public, max-age=86400, s-maxage=604800, immutable');
+        res.set('Cache-Control', 'public, max-age=2592000, immutable');
+        res.set('X-Chirpy-Cache', 'MISS');
         return res.send(wav);
     } catch (error) {
         console.error('Chirpy voice failure:', error.message);
-        /* 502 rather than a silent empty body: the client falls back to the
-           browser's own voice on any non-OK, and a child hears SOMETHING. */
         return res.status(502).send('Chirpy lost his voice for a moment.');
     }
 });
