@@ -345,6 +345,11 @@ export default function Policies() {
             Your name, email address, optional phone/WhatsApp number for updates, and basic platform usage data. Payments are processed securely via PCI-DSS compliant gateways (Razorpay &amp; PayPal); we never view or store your full card details.
           </p>
 
+          <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 20, marginBottom: 8, color: ink }}>Mind Gym for Kids</h3>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: inkSub, margin: '0 0 16px' }}>
+            When a child uses Mind Gym for Kids while a grown-up is signed in, we save the child's first name, age and their activity (the feelings they pick, their Story Lab answers, reflections and progress) to that grown-up's account. This lets the app greet the child by name on any device and lets the grown-up look back at how things have gone over time. It is only visible to the signed-in account holder and our administrators, it is never used for advertising, and it is never sold or shared. You can ask us to delete it at any time by emailing <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: goldAccent, fontWeight: 600, textDecoration: 'underline' }}>{CONTACT_EMAIL}</a>.
+          </p>
+
           <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 20, marginBottom: 8, color: ink }}>How We Use Your Data</h3>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: inkSub, margin: '0 0 16px' }}>
             To grant your course access, send guided episode notifications, respond to support inquiries, and continuously improve Mind Gym. We <strong>never</strong> sell or rent your personal information to third parties.

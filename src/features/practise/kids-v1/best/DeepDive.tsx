@@ -19,6 +19,7 @@ import { FeelingsIntro } from './FeelingsIntro';
 import { stopFeelingsFilm } from './feelingsFilmControl';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { setTodaysFeeling } from '../kit/todaysFeeling';
+import { logKidEvent } from '../kit/kidAccount';
 import * as sound from '../kit/sound';
 import { StoryLabRoom } from './StoryLabRoom';
 import { saveCase } from '../kit/cases';
@@ -287,6 +288,7 @@ export function DeepDive({
   /** The feeling ball was tapped; every feeling answers straight away. */
   const pickFeeling = (_id: string, label: string) => {
     setTodaysFeeling(label);
+    logKidEvent('feeling', { feeling: label });
     answer('feeling', label);
   };
 
@@ -321,6 +323,7 @@ export function DeepDive({
     onSave={(a) => {
       const ok = saveCase(a);
       if (ok) useKidStore.getState().addSavedReflection(buildSavedReflection(a));
+      logKidEvent('storyLab', { ...a });
       return ok;
     }} />;
 
