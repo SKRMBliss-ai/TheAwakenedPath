@@ -4756,10 +4756,17 @@ exports.notifyAdminOnKidsRegistration = onDocumentCreated({
  * =========================================================================== */
 
 const CHIRPY_DIRECTION =
-    'Read this as a warm, friendly bird talking to a six-year-old friend, at a natural, ' +
+    'Read this as a warm, kind grown-up talking to a six-year-old, at a natural, ' +
     'easy conversational pace — not rushed, but not dragging either. ' +
     'Soft and soothing, never instructive and never sing-song. ' +
     'Let questions lift gently at the end:';
+
+/* The child's own mind, heard in the Story Lab when their thoughts are read
+   back. Younger and slower than the narrator, so the two never blur. */
+const MIND_DIRECTION =
+    'Read this as the inner voice of a young child of about six, thinking out loud to themselves. ' +
+    'High, light and childlike, slow and a little wondering, with small pauses between phrases. ' +
+    'Gentle and honest, never performed or cute:';
 
 /** Gemini returns headerless signed 16-bit LE PCM; nothing plays that. */
 function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
@@ -4794,7 +4801,9 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     if (text.length > 400) return res.status(413).send('That line is too long for Chirpy.');
 
     const voiceName = String((req.body && req.body.voice) || 'Sulafat');
-    const cacheKey = chirpyCacheKey(text, voiceName);
+    const character = req.body && req.body.character === 'mind' ? 'mind' : 'grownup';
+    const direction = character === 'mind' ? MIND_DIRECTION : CHIRPY_DIRECTION;
+    const cacheKey = chirpyCacheKey(text, `${voiceName}|${character}`);
 
     try {
         /* CHECK CACHE FIRST — Firestore + Firebase Storage */
@@ -4832,7 +4841,7 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
                     'x-goog-api-key': geminiKey.value(),
                 },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `${CHIRPY_DIRECTION}\n\n${text}` }] }],
+                    contents: [{ parts: [{ text: `${direction}\n\n${text}` }] }],
                     generationConfig: {
                         responseModalities: ['AUDIO'],
                         speechConfig: {

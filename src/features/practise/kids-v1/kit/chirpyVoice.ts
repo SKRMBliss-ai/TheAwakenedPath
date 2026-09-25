@@ -66,9 +66,12 @@ const heard = new Map<string, string>();
  */
 let voiceToken = 0;
 
-/** Track voice alternation: Enceladus and Sami alternate with each new line. */
-let voiceCallCount = 0;
-const VOICE_NAMES = ['Enceladus', 'Sami'] as const;
+/**
+ * Two speakers. The grown-up narrates the app; Chirpy is the child's own mind,
+ * heard only when the child's thoughts are being said out loud.
+ */
+export type Speaker = 'grownup' | 'mind';
+const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Leda' };
 
 function browserVoice(text: string) {
   if (!isVoiceSupported()) return;
@@ -106,7 +109,7 @@ function browserVoice(text: string) {
  * ever says one thing at a time, so a new line always wins over the old one
  * rather than queueing behind it.
  */
-export function speak(text: string, quiet: boolean) {
+export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', onEnd?: () => void) {
   if (isMuted() || quiet || !text) return;
   stopSpeaking();
 
@@ -128,11 +131,9 @@ export function speak(text: string, quiet: boolean) {
   */
   speaking = text;
 
-  const currentVoice = VOICE_NAMES[voiceCallCount % VOICE_NAMES.length];
-  voiceCallCount++;
-
-  const cached = heard.get(text);
-  if (cached) { play(cached, text); return; }
+  const key = `${who}|${text}`;
+  const cached = heard.get(key);
+  if (cached) { play(cached, text, onEnd); return; }
 
   /*
     GEMINI ONLY — no browser fallback.
@@ -148,25 +149,26 @@ export function speak(text: string, quiet: boolean) {
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, voice: currentVoice }),
+    body: JSON.stringify({ text, voice: VOICES[who], character: who }),
   })
     .then((r) => (r.ok ? r.blob() : null))
     .then((blob) => {
       if (!blob) return;
       const url = URL.createObjectURL(blob);
-      heard.set(text, url);
+      heard.set(key, url);
       /* Only if this is still the line on screen. A child who has moved on
          must not be caught up by the previous screen's audio. */
-      if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text); }
+      if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text, onEnd); }
     })
     .catch(() => {
       /* Gemini TTS only — no browser voice fallback. */
     });
 }
 
-function play(url: string, text: string) {
+function play(url: string, text: string, onEnd?: () => void) {
   try {
     const audio = new Audio(url);
+    if (onEnd) audio.onended = () => { if (current === audio) onEnd(); };
     current = audio;
     speaking = text;
     void audio.play().catch(() => browserVoice(text));

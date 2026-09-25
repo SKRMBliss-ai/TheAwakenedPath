@@ -402,12 +402,21 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     a child who moves on quickly is not talked over by the question they have
     already answered.
   */
+  /* The child's own mind (Chirpy) asks for the thought and reads back what
+     the mind said: the thought, the story it made, and the other way. The
+     grown-up voice only asks what actually happened. */
   useEffect(() => {
     const line = PROMPTS[step - 2];
-    if (!line) return;
     const sub = SUBS[step - 2];
-    speak(sub ? `${line} ${sub}` : line, quiet);
+    const prompt = line ? (sub ? `${line} ${sub}` : line) : '';
+    const who = step === 3 ? 'grownup' : 'mind';
+    const heard = step === 3 ? thought : step === 5 ? story : step === 6 ? alternative : '';
+    const ask = () => { if (prompt) speak(prompt, quiet, who); };
+    if (step === 4) speak(`${prompt} ${story}`, quiet, 'mind');
+    else if (heard && !heard.startsWith("I'm not sure")) speak(heard, quiet, 'mind', ask);
+    else ask();
     return () => stopSpeaking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- answers are read once, on arrival
   }, [step, quiet]);
 
   /*
@@ -467,7 +476,6 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     return () => { clearTimeout(timer); setFocused(false); };
   }, [hushEligible]);
 
-  const [leftComplete, setLeftComplete] = useState(false);
   useEffect(() => {
     if (step >= 6 && !savedOnce.current) save();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- save is guarded by savedOnce
@@ -749,56 +757,6 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 
     {saveError && <p role="alert" className="sl-save-error">This device couldn't save your journey. Your words are still here; you can try again.</p>}
 
-    <AnimatePresence>
-      {step >= 6 && !leftComplete && <motion.section
-        className="sl-complete"
-        aria-labelledby="sl-complete-title"
-        initial={still ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: still ? 0 : .5 }}
-      >
-        <motion.div
-          className="sl-complete-card"
-          initial={still ? false : { opacity: 0, y: 34, scale: .94 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={still ? { duration: 0 } : { type: 'spring', stiffness: 150, damping: 19, delay: .12 }}
-        >
-          <p className="sl-complete-kicker" id="sl-complete-title">Story Lab Complete!</p>
-          <h2 className="sl-complete-big">You did it!</h2>
-          <p className="sl-complete-said">You explored a new perspective and found another way.</p>
-          <p className="sl-complete-grow">Your brighter stories are ready to keep growing.</p>
-
-          <div className="sl-complete-chirpy">
-            <img src={chirpySprite('hopeful')} alt="" aria-hidden="true" />
-            <p role="status">{saved
-              ? 'Your reflections are saved and waiting for you!'
-              : 'Your words are safe here with me.'}</p>
-          </div>
-
-          <div className="sl-portal">
-            <img src="/mind-gym/reflection/reflection_portal.png" alt="" aria-hidden="true"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            <span className="sl-portal-label">Reflection<br />Room <b aria-hidden="true">♡</b></span>
-          </div>
-
-          <ol className="sl-complete-steps" aria-label="What you did">
-            <li>Feel</li><li>Explore</li><li>Find Another Way</li><li>Keep Growing</li>
-          </ol>
-
-          {onReflectionPath && <button className="sl-enter-reflection" onClick={() => { if (!quiet) sound.play('enterRoom'); onReflectionPath(); }}>
-            <span aria-hidden="true">⌸</span> Enter Reflection Room <span aria-hidden="true">›</span>
-          </button>}
-          <p className="sl-continues">Your journey continues…</p>
-
-          <p className="sl-complete-signs" aria-hidden="true">
-            <span>Same You, Brighter Views</span><span>Kinder Thoughts</span><span>Bigger Tomorrows</span>
-          </p>
-
-          <button className="chrome-fade sl-look-again" onClick={() => setLeftComplete(true)}>Look at my stories again</button>
-        </motion.div>
-      </motion.section>}
-    </AnimatePresence>
 
     {/*
       HE SITS IN THE ROOM, NOT IN THE PANEL.
