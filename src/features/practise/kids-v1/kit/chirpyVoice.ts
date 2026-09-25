@@ -66,6 +66,10 @@ const heard = new Map<string, string>();
  */
 let voiceToken = 0;
 
+/** Track voice alternation: Enceladus and Sami alternate with each new line. */
+let voiceCallCount = 0;
+const VOICE_NAMES = ['Enceladus', 'Sami'] as const;
+
 function browserVoice(text: string) {
   if (!isVoiceSupported()) return;
   /*
@@ -124,6 +128,9 @@ export function speak(text: string, quiet: boolean) {
   */
   speaking = text;
 
+  const currentVoice = VOICE_NAMES[voiceCallCount % VOICE_NAMES.length];
+  voiceCallCount++;
+
   const cached = heard.get(text);
   if (cached) { play(cached, text); return; }
 
@@ -141,7 +148,7 @@ export function speak(text: string, quiet: boolean) {
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, voice: currentVoice }),
   })
     .then((r) => (r.ok ? r.blob() : null))
     .then((blob) => {
