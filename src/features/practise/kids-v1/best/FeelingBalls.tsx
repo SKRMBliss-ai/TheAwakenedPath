@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { feelingsForAge } from '../kit/checkinContent';
 import { childAge } from '../kit/band';
@@ -20,31 +20,78 @@ import * as sound from '../kit/sound';
  * to fit two more buttons would be a poor trade.
  */
 
-/** Three down the left, three down the right. Percentages of the layer. */
-const SIDES = [
-  { left: '2%', top: '4%' },
-  { left: '0%', top: '38%' },
-  { left: '4%', top: '71%' },
-  { left: '72%', top: '2%' },
-  { left: '76%', top: '36%' },
-  { left: '70%', top: '70%' },
+/*
+  Three down the left, three down the right, and each column anchored to its
+  OWN edge rather than both being measured from the left. That is what lets
+  the balls grow: from the left, the right-hand column's x had to be small
+  enough that x + diameter still cleared the column's right edge, so every
+  pixel a ball gained had to be paid for twice. Anchored to the edge it is
+  standing against, a ball only has to clear the middle — which is where the
+  child in the room art is sitting, and which is meant to stay clear anyway.
+*/
+type Spot = { left?: string; right?: string; top: string };
+
+const SIDES: Spot[] = [
+  { left: '0%', top: '1%' },
+  { left: '4%', top: '36%' },
+  { left: '0%', top: '71%' },
+  { right: '0%', top: '0%' },
+  { right: '4%', top: '35%' },
+  { right: '0%', top: '70%' },
 ];
 
-const SIZE = 86;
+/*
+  HOW BIG A BALL IS, and why it is not one number any more.
 
-/** Older children get more feelings. Past six, the balls shrink a little and
+  86px was a dot. The label inside had to come down to 10px to fit, which is
+  the wrong way round — the words are the thing being chosen, and a six-year-old
+  reads them slowly. So a ball is a fraction of the layer it sits in, clamped at
+  both ends: big enough to aim a whole hand at, and never so big that the two
+  columns close over the middle of the picture.
+*/
+const BALL_MAX = 132;
+const BALL_MIN = 84;
+const MANY_MAX = 106;
+const MANY_MIN = 68;
+
+const clamp = (min: number, value: number, max: number) => Math.round(Math.min(max, Math.max(min, value)));
+
+/** The layer's own width, so the balls can be sized against it. */
+function useLayerWidth() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const measure = () => setWidth(node.clientWidth);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  return { ref, width };
+}
+
+/** Older children get more feelings. Past six the balls come down a little and
     zigzag down each side so they still stay clear of the child in the middle. */
-function layout(count: number) {
-  if (count <= 6) return { size: SIZE, height: 340, spots: SIDES };
-  const size = 70;
-  const height = 470;
+function layout(count: number, width: number) {
+  /* Before the first measurement lands, size against a typical column rather
+     than against zero — otherwise the balls spend a frame at their smallest. */
+  const w = width || 430;
+  if (count <= 6) {
+    const size = clamp(BALL_MIN, w * 0.29, BALL_MAX);
+    return { size, height: Math.round(size * 3.6), spots: SIDES };
+  }
+  const size = clamp(MANY_MIN, w * 0.22, MANY_MAX);
+  const height = Math.round(size * 5.6);
   const perSide = Math.ceil(count / 2);
   const step = (height - size) / Math.max(perSide - 1, 1);
-  const spots = Array.from({ length: count }, (_, i) => {
+  const spots: Spot[] = Array.from({ length: count }, (_, i) => {
     const right = i >= perSide;
     const j = right ? i - perSide : i;
-    const zig = j % 2 === 1;
-    return { left: right ? (zig ? '64%' : '76%') : (zig ? '12%' : '0%'), top: `${j * step}px` };
+    const inset = j % 2 === 1 ? '13%' : '0%';
+    return right ? { right: inset, top: `${j * step}px` } : { left: inset, top: `${j * step}px` };
   });
   return { size, height, spots };
 }
@@ -59,7 +106,8 @@ export function FeelingBalls({
 }) {
   const [popped, setPopped] = useState<string | null>(null);
   const feelings = feelingsForAge(childAge());
-  const { size, height, spots } = layout(feelings.length);
+  const { ref, width } = useLayerWidth();
+  const { size, height, spots } = layout(feelings.length, width);
 
   const burst = (id: string, label: string) => {
     if (popped) return;
@@ -70,7 +118,7 @@ export function FeelingBalls({
   };
 
   return (
-    <div className="relative w-full" style={{ height }}>
+    <div ref={ref} className="relative w-full" style={{ height }}>
       {feelings.map((f, i) => {
         const pos = spots[i];
         const isPopped = popped === f.id;
@@ -88,11 +136,12 @@ export function FeelingBalls({
             className="absolute grid place-items-center rounded-full text-center font-extrabold leading-tight"
             style={{
               left: pos.left,
+              right: pos.right,
               top: pos.top,
               width: size,
               height: size,
               color: '#FFFFFF',
-              fontSize: f.label.length > 9 ? 10 : size < SIZE ? 11.5 : 13.5,
+              fontSize: Math.round(size * (f.label.length > 9 ? 0.125 : 0.16)),
               textShadow: '0 1px 6px rgba(0,0,0,0.5)',
               background: `radial-gradient(circle at 34% 26%, hsl(${f.hue} 92% 76%), hsl(${f.hue} 76% 46%) 72%)`,
               border: '1px solid rgba(255,255,255,0.42)',
@@ -128,7 +177,7 @@ export function FeelingBalls({
             whileTap={{ scale: 0.94 }}
           >
             {f.label}
-            {(isPopped || alsoPopping) && <Burst />}
+            {(isPopped || alsoPopping) && <Burst reach={size * 0.6} />}
           </motion.button>
         );
       })}
@@ -137,7 +186,7 @@ export function FeelingBalls({
 }
 
 /** The bits of a popped ball, flying outwards. Purely decorative. */
-function Burst() {
+function Burst({ reach }: { reach: number }) {
   return (
     <span className="pointer-events-none absolute inset-0">
       {Array.from({ length: 9 }).map((_, i) => {
@@ -147,7 +196,7 @@ function Burst() {
             key={i}
             className="absolute left-1/2 top-1/2 block h-2 w-2 rounded-full bg-white"
             initial={{ x: 0, y: 0, opacity: 0.95, scale: 1 }}
-            animate={{ x: Math.cos(a) * 52, y: Math.sin(a) * 52, opacity: 0, scale: 0.4 }}
+            animate={{ x: Math.cos(a) * reach, y: Math.sin(a) * reach, opacity: 0, scale: 0.4 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           />
         );

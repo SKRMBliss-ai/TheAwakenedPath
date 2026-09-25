@@ -127,31 +127,6 @@
   100%{opacity:0;transform:translateY(-62px)}
 }
 
-/* ── Discovery overlay ───────────────────────────────────────────────────── */
-.gr-discovery{
-  position:relative;z-index:10;width:min(500px,90%);
-  padding:18px 22px 14px;border-radius:20px;
-  background:linear-gradient(135deg,#2a1750,#1a0d38);
-  border:2px solid #a07de8;
-  box-shadow:0 14px 40px -8px #0a051888,inset 0 1px 0 #ffffff22;
-  text-align:center;
-  align-self:center;
-}
-.gr-discovery-text{
-  margin:0;font-size:clamp(14px,1.55vw,19px);font-weight:800;
-  line-height:1.4;color:#f0e8ff;white-space:pre-line;
-}
-.gr-discovery-close{
-  margin-top:14px;border:1px solid #c9aef8;border-radius:24px;
-  padding:9px 22px;background:#4a2c79;color:#fff;font-weight:850;font-size:14px;
-}
-.gr-discovery-close:hover{background:#5c38a0}
-.gr-discovery-skip{
-  position:absolute;top:10px;right:12px;background:none;border:0;
-  color:#c9aef8;font-size:20px;padding:4px 8px;min-height:0;opacity:.7;
-}
-.gr-discovery-skip:hover{opacity:1}
-
 /* ── The top band ───────────────────────────────────────────────────────── */
 .gr-top{
   position:relative;z-index:3;width:100%;max-width:1500px;
@@ -167,10 +142,22 @@
 .gr-chip:hover{background:#4a2c79ea}
 
 .gr-sign{display:grid;place-items:center;position:relative;z-index:3}
+/*
+  BIGGER, AND LESS OF A STICKER.
+
+  At 290px the board read as a small label pasted over the painting; the room
+  it names is the whole screen. So it grows by about half again — and because a
+  bigger opaque rectangle would only look more pasted on, its edges are feathered
+  into the wall behind it and it sits a touch further back. The glow does the
+  work the hard edge used to: you read it as carved light in the room rather
+  than as a graphic on top of one.
+*/
 .gr-sign img{
-  width:clamp(150px,min(27vw,15svh),290px);height:auto;display:block;
-  opacity:.86;
-  filter:drop-shadow(0 6px 14px #10061d88) drop-shadow(0 0 22px #ffcf6e44);
+  width:clamp(210px,min(38vw,22svh),440px);height:auto;display:block;
+  opacity:.66;
+  filter:drop-shadow(0 6px 16px #10061d66) drop-shadow(0 0 34px #ffcf6e3d) saturate(.92);
+  -webkit-mask-image:radial-gradient(ellipse 74% 62% at 50% 50%,#000 58%,transparent 96%);
+  mask-image:radial-gradient(ellipse 74% 62% at 50% 50%,#000 58%,transparent 96%);
 }
 
 .sr-only{
@@ -211,7 +198,9 @@
      locked aspect-ratio now (it didn't before), so an unconstrained width
      made it tall enough to push the rest of the room's content out of the
      flex column's budget and get shoved up behind the header. */
-  position:relative;width:min(84%,540px,38svh);aspect-ratio:1774/887;
+  /* 38svh was too small for a two-line question: the setup text ran out of
+     the frame and straight over the stars. */
+  position:relative;width:min(88%,600px,47svh);aspect-ratio:1774/887;
   margin:0 auto;flex-shrink:0;text-align:center;color:#3a2410;
 }
 .gr-board-frame{
@@ -259,16 +248,41 @@
 .gr-board h2:focus-visible{outline:3px solid #a9793a;outline-offset:3px;border-radius:8px}
 .gr-board p{margin:3px 0 0;font-size:clamp(10.5px,min(1.2vw,1.55svh),14.5px);font-weight:750;line-height:1.22;text-shadow:0 1px 4px #fff9ec99}
 .gr-board button{position:relative;z-index:2}
-.gr-board > button{
-  position:absolute;z-index:2;top:33%;right:4%;
-  background:#5a3a14!important;border:1px solid #d9b36a!important;
-  color:#ffeccb!important;border-radius:22px;
+/*
+  THE SPEAKER AND THE STARS RIDE THE FRAME'S OWN PAINTED CONTROLS.
+
+  gameroombackgroundHeadboard.png is 1774x887 and has both drawn into it: a
+  blue speaker disc on the right, five star sockets along the bottom rail. The
+  board element carries that exact aspect ratio and the frame fills it, so a
+  percentage here IS a coordinate in the artwork — which is why these numbers
+  look so specific. They were measured off the file.
+
+  The live speaker is a hit area over the painted disc rather than a second
+  button beside it: its own icon is hidden, because the disc already has one,
+  and the press shows as the disc taking the press.
+*/
+.gr-board-speaker{
+  position:absolute;z-index:2;
+  left:84.7%;top:41.7%;width:8.9%;height:17.9%;
+  display:grid;place-items:center;
 }
+.gr-board-speaker > button{
+  width:100%;height:100%;min-height:0;padding:0;border-radius:50%;
+  background:transparent!important;border:0!important;
+  transition:transform .15s ease,box-shadow .2s ease;
+}
+.gr-board-speaker > button svg{display:none}
+.gr-board-speaker > button:hover{box-shadow:0 0 0 3px #ffffff4d,0 0 20px #7fc8ffaa}
+.gr-board-speaker > button:active{transform:scale(.92)}
+
 .gr-progress{
-  position:absolute;z-index:1;left:50%;bottom:5%;transform:translateX(-50%);
-  display:flex;justify-content:center;gap:clamp(3px,0.6vw,6px);list-style:none;margin:0;padding:0;
+  position:absolute;z-index:2;
+  left:25%;width:49.9%;top:66%;height:19.4%;
+  display:flex;align-items:center;list-style:none;margin:0;padding:0;
 }
-.gr-progress img{width:clamp(13px,min(1.7vw,2.1svh),22px);height:auto;display:block}
+/* Five equal cells, one per painted socket. */
+.gr-progress li{flex:1 1 0;min-width:0;display:grid;place-items:center}
+.gr-progress img{width:78%;height:auto;display:block}
 
 /* ── Visual consequence after picking ──────────────────────────────────── */
 .gr-consequence{
@@ -286,17 +300,34 @@
   width:100%;flex-wrap:wrap;
 }
 .gr-chest{
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:0;
   background:none;border:0;padding:2px;
   flex:1 1 0;min-width:clamp(120px,15vw,200px);max-width:240px;
   transition:transform .2s ease,filter .2s ease,opacity .3s ease;
 }
+/*
+  The chest plates are drawn on a tall canvas with a good deal of empty space
+  under the chest itself, so a label placed after the image landed about fifty
+  pixels below the wood with nothing in between — which is exactly the gap that
+  made the answer read as a separate object. The tail is a fixed share of the
+  art's width (the crops all have the same aspect), so pulling it back by a
+  percentage of that width closes it at every size.
+*/
 .gr-chest-art{position:relative;display:block;line-height:0}
 .gr-chest-art > img:first-child{
   width:clamp(78px,min(12.5vw,13.5svh),148px);height:auto;display:block;
   filter:drop-shadow(0 8px 18px #10061dbb);
   animation:gr-bob 3.4s ease-in-out infinite;
   transition:filter .2s ease;
+  /* The three crops carry 52–59% of their own width as empty space under the
+     chest, so the label that follows them started about sixty pixels below the
+     wood with nothing in between — which is the gap that made the answer read
+     as a separate object sitting on the floor. Pulled back by a share of the
+     image's width, because the width is what scales and the crops all hold the
+     same aspect. On the image rather than its wrapper: a percentage margin
+     resolves against the containing block's width, and the wrapper's is the
+     whole chest column, which is twice as wide. */
+  margin-bottom:-54%;
 }
 .gr-chest:nth-child(2) .gr-chest-art > img:first-child{animation-delay:-1.1s}
 .gr-chest:nth-child(3) .gr-chest-art > img:first-child{animation-delay:-2.2s}
@@ -328,18 +359,39 @@
 .gr-chest-quiet{opacity:.42;filter:saturate(.6)}
 .gr-chest:disabled{cursor:default}
 
-/* The plaque — a soft glass chip so the answers sit in the room's own
-   purple-and-gold light rather than a flat wooden label pasted on top. */
+/*
+  THE ANSWER IS PART OF THE CHEST NOW.
+
+  It was a purple glass chip floating a few pixels below a brown wooden chest —
+  two objects, different materials, a visible gap between them, and the child
+  had to work out that the one belonged to the other. So it is cut from the same
+  wood as the chest it names, with the chest's own brass edging, and it overlaps
+  the front of the chest instead of sitting under it. One object with a label on
+  it, which is what a treasure chest looks like.
+*/
 .gr-plaque{
+  position:relative;z-index:2;
   display:flex;align-items:center;justify-content:center;
-  width:100%;min-height:min(44px,5svh);padding:min(8px,0.8svh) 12px;border-radius:16px;
-  background:linear-gradient(135deg,rgba(154,102,224,0.4),rgba(74,32,130,0.5));
-  border:1.5px solid rgba(255,222,158,0.5);
-  backdrop-filter:blur(7px) saturate(1.25);-webkit-backdrop-filter:blur(7px) saturate(1.25);
-  box-shadow:0 6px 14px -4px #0e041866,inset 0 1px 0 #ffffff30;
-  color:#fff8ec;font-size:clamp(12px,1.2vw,15.5px);font-weight:900;line-height:1.16;
-  text-shadow:0 1px 4px #1c0d35b3;
+  width:88%;min-height:min(42px,4.8svh);
+  /* And a few more, so the plate's top edge tucks behind the chest rather
+     than stopping cleanly beneath it. */
+  margin-top:clamp(-8px,-0.55vw,-4px);
+  padding:min(8px,0.8svh) 11px;
+  border-radius:11px;
+  background:linear-gradient(#b07e37,#79501f 58%,#5c3a14);
+  border:2px solid #e7c07a;
+  box-shadow:
+    0 7px 15px -7px #0e0418cc,
+    inset 0 1px 0 #ffe6ae66,
+    inset 0 -7px 11px -8px #2b1405;
+  color:#fff6e2;font-size:clamp(12px,1.2vw,15.5px);font-weight:900;line-height:1.16;
+  text-shadow:0 1px 3px #3b1f07,0 0 8px #00000055;
   text-align:center;
+}
+/* The chosen chest's plate lights with it; the ones not taken go quiet with
+   the chest they belong to, which the shared opacity on .gr-chest already does. */
+.gr-chest-open .gr-plaque{
+  border-color:#ffe6ae;box-shadow:0 0 16px -2px #ffd98a99,inset 0 1px 0 #ffe6ae88;
 }
 
 .gr-ready{
@@ -414,8 +466,19 @@
 .gr-bubble p{
   margin:0;padding:11px 14px;
   font-size:clamp(11px,1.1vw,14.5px);font-weight:850;line-height:1.24;
-  color:#2b1750;text-align:center;
+  color:#2b1750;text-align:center;white-space:pre-line;
 }
+/*
+  A room secret is a sentence or two rather than Chirpy's half-line about the
+  game, so the bubble opens out while one is being told and warms slightly —
+  enough that the child can see this is the room talking, not the game.
+*/
+.gr-bubble-secret{
+  background:linear-gradient(#fffdf4,#f6ecff);
+  box-shadow:0 8px 22px #0b041877,0 0 26px -6px #ffd98a88;
+}
+.gr-bubble-secret:after{border-top-color:#f6ecff;border-right-color:#f6ecff}
+.gr-bubble-secret p{font-size:clamp(12px,1.2vw,16px);padding:13px 16px}
 
 /* ── Theme badges — the six pillars at the bottom ──────────────────────── */
 .gr-themes{
@@ -424,9 +487,18 @@
   flex-wrap:wrap;
   padding:2px 12px;margin-top:0;
 }
+/*
+  SIX BADGES BOUNCING AT FULL STRENGTH is six things asking to be pressed, all
+  the time, under a room that is already busy — and only one of them is the game
+  being played. So they rest well back and hold still, and the one under the
+  pointer wakes up: full colour, up in size, lit, and bouncing again. The active
+  one stays awake on its own, because a child needs to see which game they are in
+  without hunting for it.
+*/
 .gr-theme-badge{
   background:none;border:0;padding:3px;border-radius:14px;
-  opacity:.7;transition:opacity .2s,transform .2s;
+  opacity:.34;filter:saturate(.5);
+  transition:opacity .25s ease,transform .25s ease,filter .25s ease;
   cursor:pointer;min-height:0;
 }
 .gr-theme-badge img{
@@ -440,9 +512,19 @@
 .gr-theme-badge:nth-child(5) img{animation-delay:-1.6s}
 .gr-theme-badge:nth-child(6) img{animation-delay:-2s}
 @keyframes gr-badge-bounce{50%{transform:translateY(-4px)}}
-.gr-theme-badge:hover{opacity:.9;transform:scale(1.06)}
-.gr-theme-active{opacity:1;transform:scale(1.08)}
+/* Held still at rest — the bounce is what "alive" means here, so it is kept
+   for the woken badge and the one being played. */
+.gr-theme-badge img{animation-play-state:paused}
+.gr-theme-badge:hover,.gr-theme-badge:focus-visible{
+  opacity:1;transform:scale(1.14);filter:saturate(1.1);
+}
+.gr-theme-badge:hover img,.gr-theme-badge:focus-visible img{
+  animation-play-state:running;
+  filter:drop-shadow(0 3px 8px #0a051866) drop-shadow(0 0 14px #ffe9a6bb);
+}
+.gr-theme-active{opacity:.95;transform:scale(1.08);filter:none}
 .gr-theme-active img{
+  animation-play-state:running;
   filter:drop-shadow(0 3px 8px #0a051866) drop-shadow(0 0 10px #ffe9a688);
 }
 .gr-themes-note{
@@ -535,4 +617,44 @@
   .gr-themes-note{display:none}
   .gr-cast{width:min(11%,90px)}
   .gr-bubble{display:none}
+}
+
+
+/* ── How much bubble a room secret gets ──────────────────────────────────── *
+ *
+ * Down here rather than beside the rest of the bubble's rules, because the
+ * narrow-screen blocks above reset .gr-bubble's width and a secret has to
+ * outlast them. Two or three sentences at a readable size, at every width.
+ */
+.gr-bubble-secret{width:min(360px,36vw)}
+@media(max-width:1100px){.gr-bubble-secret{width:min(300px,42vw)}}
+@media(max-width:560px){
+  /*
+    The bubble is switched off on a phone — the boy is 90px wide there and
+    there is no wall left to hang one on. A secret is the one thing in the room
+    with something to say, though, so it comes back and lies across the floor
+    instead of over his head, with no tail pointing at anybody.
+  */
+  .gr-bubble.gr-bubble-secret{
+    display:block;position:fixed;z-index:9;
+    left:50%;bottom:14%;transform:translateX(-50%);
+    width:min(340px,88vw);
+  }
+  .gr-bubble.gr-bubble-secret:after{display:none}
+}
+
+
+/* ── The board's own content box ────────────────────────────────────────── *
+ *
+ * Back to being positioned against the frame rather than flowing inside it.
+ * In flow the question simply ran on past the bottom of the painted board and
+ * over the stars beneath it — an aspect-ratio box does not grow for text. Held
+ * inside the frame it is clipped at worst, which is the right failure: the
+ * child can still press the speaker and hear the whole thing.
+ */
+.gr-board-content{
+  position:absolute;z-index:1;
+  top:31%;left:8%;right:8%;bottom:27%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;padding:0;overflow:hidden;
 }

@@ -1,5 +1,5 @@
 import {
-  useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties,
+  useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
@@ -70,72 +70,34 @@ function pickInvite() { return INVITE_LINES[Math.floor(Math.random() * INVITE_LI
 type DiscoveryId = 'rug' | 'books' | 'plant' | 'cushions';
 
 interface DiscoveryBeat {
-  /** Lines Chirpy says, revealed one at a time with a 2.5s gap. */
+  /** Lines the grown-up voice says, one at a time, through the boy's bubble. */
   lines: string[];
-  /** Dismiss label. */
-  close?: string;
 }
 
 function discoveryFor(id: DiscoveryId, feeling: string): DiscoveryBeat {
   switch (id) {
     case 'rug': return {
       lines: ['Can you feel your feet right now?', 'Both of them. Just sitting there.', '…did you notice them before I asked?'],
-      close: 'Yep, I feel them.',
     };
     case 'books': return {
       lines: ['Right now — think about hopping.', 'Really picture it. Hopping on one leg.', '…are you hopping?', 'Thinking and doing are two different things. Your brain can say anything it likes. Your legs are yours.'],
-      close: 'Got it.',
     };
     case 'plant': return {
       lines: ['This plant grew all by itself. Nobody told it when to grow.', 'Feelings do that too. They show up without asking.', "You didn't choose this one. It just arrived."],
-      close: 'Hm. Yes.',
     };
     case 'cushions': return {
       lines: [
-        `Say this in your head: "I am ${feeling || 'this feeling'}."\n\nNow say: "I notice I am ${feeling || 'this feeling'}."\n\nFeel any difference?`,
+        `Say this in your head: "I am ${feeling || 'this feeling'}."`,
+        `Now say: "I notice I am ${feeling || 'this feeling'}." Feel any difference?`,
         'In the second one — there are two of you. The feeling, and the one who noticed.',
       ],
-      close: 'I felt it.',
     };
   }
 }
 
-function DiscoveryOverlay({ id, feeling, still, quiet, onClose }: {
-  id: DiscoveryId; feeling: string; still: boolean; quiet: boolean; onClose: () => void;
-}) {
-  const beat = discoveryFor(id, feeling);
-  const [lineIndex, setLineIndex] = useState(0);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (lineIndex >= beat.lines.length - 1) return;
-    timer.current = setTimeout(() => setLineIndex(i => i + 1), 2600);
-    return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [lineIndex, beat.lines.length]);
-
-  useEffect(() => {
-    const line = beat.lines[lineIndex];
-    if (line && !quiet) speak(line, quiet);
-  }, [lineIndex]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return <motion.div className="gr-discovery"
-    initial={{ opacity: 0, y: still ? 0 : 10 }} animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: still ? 0 : -8 }} transition={{ duration: still ? 0.1 : 0.3 }}
-    role="dialog" aria-label="A room secret" aria-live="polite">
-    <p className="gr-discovery-text">{beat.lines[lineIndex]}</p>
-    {lineIndex === beat.lines.length - 1 && (
-      <button className="gr-discovery-close" onClick={() => { stopSpeaking(); onClose(); }}>
-        {beat.close ?? 'Close'}
-      </button>
-    )}
-    {lineIndex < beat.lines.length - 1 && (
-      <button className="gr-discovery-skip" onClick={() => {
-        if (timer.current) clearTimeout(timer.current);
-        setLineIndex(beat.lines.length - 1);
-      }} aria-label="Skip to end">→</button>
-    )}
-  </motion.div>;
-}
+/** How long each line of a room secret stays up before the next one, and how
+    long the last one hangs there before the boy goes back to the game. */
+const TELL_MS = 3000;
 
 /* ── Ambient layer — fireflies and star motes ────────────────────────────── */
 function AmbientLayer({ still }: { still: boolean }) {
@@ -151,35 +113,41 @@ function AmbientLayer({ still }: { still: boolean }) {
 }
 
 /* ── Clickable scenery ────────────────────────────────────────────────────── */
-function Scenery({ onDiscover, discoveryActive, still }: {
+/*
+  The secrets speak through the boy's bubble, and in the quiet state there is
+  no boy — the room puts the game away and Steady sits with the child instead.
+  So the scenery is not tappable there. A room that answers a tap with nothing
+  at all is worse than one that plainly isn't taking taps.
+*/
+function Scenery({ onDiscover, still, quiet }: {
   onDiscover: (id: DiscoveryId) => void;
-  discoveryActive: boolean;
   still: boolean;
+  quiet: boolean;
 }) {
   return <div className="gr-scenery" aria-label="Room decorations">
     {/* Rug — tappable */}
-    <button className="gr-scenery-btn gr-rug-btn" disabled={discoveryActive}
+    <button className="gr-scenery-btn gr-rug-btn" disabled={quiet}
       aria-label="Tap the rug — there might be a secret"
       onClick={() => onDiscover('rug')}>
       <img className="gr-rug" src={`${ART}/rug.png`} alt="" />
     </button>
 
     {/* Books — tappable */}
-    <button className="gr-scenery-btn gr-books-btn" disabled={discoveryActive}
+    <button className="gr-scenery-btn gr-books-btn" disabled={quiet}
       aria-label="Tap the books — see what they know"
       onClick={() => onDiscover('books')}>
       <img className="gr-books" src={`${ART}/books_stack.png`} alt="" />
     </button>
 
     {/* Plant — tappable */}
-    <button className="gr-scenery-btn gr-plant-btn" disabled={discoveryActive}
+    <button className="gr-scenery-btn gr-plant-btn" disabled={quiet}
       aria-label="Tap the plant — it has something to say"
       onClick={() => onDiscover('plant')}>
       <img className={`gr-plant ${still ? '' : 'gr-plant-sway'}`} src={`${ART}/plant_sprout.png`} alt="" />
     </button>
 
     {/* Cushions — tappable */}
-    <button className="gr-scenery-btn gr-cushions-btn" disabled={discoveryActive}
+    <button className="gr-scenery-btn gr-cushions-btn" disabled={quiet}
       aria-label="Tap the cushions — try a little experiment"
       onClick={() => onDiscover('cushions')}>
       <img className="gr-cushions" src={`${ART}/cushions.png`} alt="" />
@@ -236,13 +204,57 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ── Room discovery ───────────────────────────────────────────────────── */
-  const [discovery, setDiscovery] = useState<DiscoveryId | null>(null);
+  /*
+    ── Room secrets ──────────────────────────────────────────────────────────
+
+    THE SECRETS LOST THEIR BOX.
+
+    Tapping the rug used to open a bordered purple dialog in the middle of the
+    room with a "Got it" button on it — a modal, over a room whose whole point
+    is that it is a place rather than a page, so the child had to dismiss the
+    room's own magic before they could carry on playing.
+
+    The words go through the bubble the boy already has above his head instead.
+    Same lines, same grown-up voice, no box and nothing to press: each line
+    sits for three seconds, the last one goes, and the bubble drops back to
+    whatever Chirpy was saying about the game. Tapping something else cuts in,
+    which is what a child poking at a room expects.
+
+    The line number lives in the same piece of state as the object, so tapping
+    the rug again while it is talking starts it over — a new object every tap,
+    which is what re-runs the beat below.
+  */
+  /* Today's feeling, for the "noticing" secret under the cushions. */
+  const todayFeeling = todaysFeeling() ?? 'this feeling';
+  const [secret, setSecret] = useState<{ id: DiscoveryId; line: number } | null>(null);
   const openDiscovery = useCallback((id: DiscoveryId) => {
     stopSpeaking();
     sound.play('roomCard');
-    setDiscovery(id);
+    setSecret({ id, line: 0 });
   }, []);
+
+  const secretLines = useMemo(
+    () => (secret ? discoveryFor(secret.id, todayFeeling).lines : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only the object matters; the feeling is fixed for the visit
+    [secret?.id, todayFeeling],
+  );
+  const secretLine = secret && secretLines
+    ? secretLines[Math.min(secret.line, secretLines.length - 1)]
+    : null;
+
+  useEffect(() => {
+    if (!secret || !secretLines) return;
+    if (secretLine) speak(secretLine, quiet, 'grownup');
+    const last = secret.line >= secretLines.length - 1;
+    const timer = setTimeout(() => {
+      if (last) { stopSpeaking(); setSecret(null); return; }
+      setSecret(current => (current && current.id === secret.id
+        ? { id: current.id, line: current.line + 1 }
+        : current));
+    }, TELL_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the beat restarts on a fresh secret object
+  }, [secret, quiet]);
 
   /* ── Idle surprise ────────────────────────────────────────────────────── */
   /* Every 25–40 s, if the child is idle (no discovery, not in distress),
@@ -250,7 +262,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
      Implemented as a CSS class toggled briefly on the element. */
   const [bookWiggle, setBookWiggle] = useState(false);
   useEffect(() => {
-    if (still || quiet || discovery) return;
+    if (still || quiet || secret) return;
     const interval = 25000 + Math.random() * 15000;
     const t = setTimeout(() => {
       setBookWiggle(true);
@@ -335,9 +347,6 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
     : picked?.points && picked.points >= 5 ? '🤔'
     : picked ? '💭' : undefined;
 
-  /* Today's feeling, for the "noticing" discovery. */
-  const todayFeeling = todaysFeeling() ?? 'this feeling';
-
   return <main
     className={`gr-room ${still ? 'gr-still' : ''} ${quiet ? 'gr-quiet' : ''} gr-awake-${awakePhase}`}
     data-pillar={theme}
@@ -365,13 +374,12 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       )}
     </AnimatePresence>
 
-    <Scenery
-      onDiscover={openDiscovery}
-      discoveryActive={discovery !== null}
-      still={still}
-    />
+    <Scenery onDiscover={openDiscovery} still={still} quiet={quiet} />
 
-    <DoorHandle side="left" label="Leave Room" onClick={() => leave(onExit)} accent={art.palette.accent} bottomVh={4} scale={0.5} />
+    {/* High on the left wall rather than down by the skirting board — at 4vh
+        it sat under the cushions and the rug, both of which are tappable, so
+        the way out was competing with the scenery for the same corner. */}
+    <DoorHandle side="left" label="Leave Room" onClick={() => leave(onExit)} accent={art.palette.accent} bottomVh={68} scale={0.5} />
 
     <header className="gr-top">
       <div className="gr-top-left">
@@ -398,20 +406,6 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
 
     {/* Theme ribbon — now integrated into the headboard frame */}
 
-    {/* Discovery overlay — teaching move experience */}
-    <AnimatePresence>
-      {discovery && (
-        <DiscoveryOverlay
-          key={discovery}
-          id={discovery}
-          feeling={todayFeeling}
-          still={still}
-          quiet={quiet}
-          onClose={() => setDiscovery(null)}
-        />
-      )}
-    </AnimatePresence>
-
     {quiet
       ? <section className="gr-calm">
           <Steady line="Nothing to play in here today. I'll just sit with you." />
@@ -433,8 +427,24 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
                 <h2 ref={heading} tabIndex={-1}>{state.scenario.title}</h2>
                 <p>{state.scenario.setup}</p>
               </div>
-              <SpeakButton text={`${state.scenario.title}. ${state.scenario.setup}`}
-                accent={art.palette.accent} label="Read the challenge to me" />
+              {/*
+                BOTH OF THESE ARE ALREADY DRAWN ON THE BOARD.
+
+                gameroombackgroundHeadboard.png has a blue speaker disc on its
+                right-hand side and five star sockets along the bottom rail —
+                the frame was designed with its controls in it. The live button
+                and the live stars are meant to sit exactly on top of them, and
+                they had drifted: a brown pill floating near the painted disc,
+                and a row of stars centred on the board rather than on their
+                sockets, so the board showed two speakers and two sets of stars
+                slightly out of step. Both are now placed as percentages of the
+                frame (measured off the artwork), which holds at every size
+                because the board carries the art's own aspect ratio.
+              */}
+              <div className="gr-board-speaker">
+                <SpeakButton text={`${state.scenario.title}. ${state.scenario.setup}`}
+                  accent={art.palette.accent} label="Read the challenge to me" />
+              </div>
               <ol className="gr-progress" aria-label={`${filled} of ${RUN_LENGTH} practised in this run`}>
                 {Array.from({ length: RUN_LENGTH }, (_, i) => <li key={i}>
                   <img src={`${ART}/${i < filled ? 'star_filled' : 'star_empty'}.png`} alt="" aria-hidden="true" />
@@ -502,8 +512,8 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
           </div>
           <img className={`gr-chirpy ${still ? '' : 'gr-chirpy-float'}`}
             src={`${ART}/chirpy_happy.png`} alt="" aria-hidden="true" />
-          <div className="gr-bubble" aria-live="polite" aria-atomic="true">
-            <p>{chirpyLine}</p>
+          <div className={`gr-bubble ${secretLine ? 'gr-bubble-secret' : ''}`} aria-live="polite" aria-atomic="true">
+            <p>{secretLine ?? chirpyLine}</p>
           </div>
         </div>
 

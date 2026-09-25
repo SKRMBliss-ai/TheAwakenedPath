@@ -214,24 +214,51 @@
   moves any harder than this is demanding attention the question needs.
   `.sl-still *` and the reduced-motion block below stop it dead.
 */
+/*
+  HE AND THE BIRD TRAVEL TOGETHER, so they are one draggable box now rather
+  than a loose image — the bubble has to come with him wherever a child leaves
+  him, and a bubble positioned against the room would not.
+*/
+.sl-room-cast{
+  display:none;position:absolute;z-index:8;
+  /* Above the filmstrip panel and rail so a drag always reaches him first. */
+  pointer-events:auto;cursor:grab;touch-action:none;user-select:none;
+  transform:translate(-50%,-50%);
+}
+.sl-room-cast:active{cursor:grabbing}
+.sl-room-cast.gr-floating-drag{transition:none!important}
+.sl-room-cast:not(.gr-floating-drag){transition:left .18s ease-out,top .18s ease-out}
 .sl-room-boy{
-  display:none;position:absolute;z-index:1;user-select:none;
+  display:block;position:relative;z-index:1;
   height:clamp(150px,22vh,260px);width:auto;object-fit:contain;object-position:bottom;
   filter:drop-shadow(0 12px 16px #1b0a2799);
   transform-origin:50% 100%;animation:sl-boy-bounce 3.1s ease-in-out infinite;
 }
-.sl-room-boy-floating{
-  /* Above the filmstrip panel and rail so a drag always reaches him first. */
-  z-index:8;pointer-events:auto;cursor:grab;touch-action:none;
-  transform:translate(-50%,-50%);
+
+/*
+  CHIRPY'S BUBBLE. Same white rounded box the Games Room gives the pair, so
+  the bird reads as the same character across the app — and so this corner of
+  the room stops looking like two people standing in silence.
+*/
+.sl-room-bubble{
+  position:absolute;z-index:2;left:64%;bottom:72%;
+  width:max-content;max-width:min(240px,22vw);
+  background:linear-gradient(#ffffff,#f1e9ff);border-radius:18px;
+  box-shadow:0 6px 16px #0b041866;pointer-events:none;
 }
-.sl-room-boy-floating:active{cursor:grabbing}
-.sl-room-boy.gr-floating-drag{transition:none!important}
-.sl-room-boy:not(.gr-floating-drag){transition:left .18s ease-out,top .18s ease-out}
+.sl-room-bubble:after{
+  content:'';position:absolute;left:13%;top:100%;
+  border:10px solid transparent;border-top-color:#f1e9ff;border-right-color:#f1e9ff;
+}
+.sl-room-bubble p{
+  margin:0;padding:10px 13px;
+  font-size:clamp(11px,1.05vw,14px);font-weight:850;line-height:1.24;
+  color:#2b1750;text-align:center;
+}
 /* Wide enough to have floor either side of the panel: he moves out of the
    panel and the clouds take back the 78px that was being held for him. */
 @media(min-width:900px){
-  .sl-room-boy{display:block}
+  .sl-room-cast{display:block}
   .sl-thinking-boy{display:none}
   .sl-thought-clouds{padding-bottom:14px}
   .sl-desk-note{left:8px}
@@ -374,7 +401,6 @@
   overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;
   -webkit-box-orient:vertical;overflow:hidden;
 }
-.sl-confirm-ask{flex:0 0 auto;margin:0;padding:4px 10px;border-radius:11px;background:#2b1a4bc4;text-align:center;font-weight:800;font-size:11px}
 
 /* ── Step 6 · Another way ──────────────────────────────────────────────── */
 
@@ -458,7 +484,7 @@
   not display, so nothing reflows and the clouds do not jump when it happens;
   pointer-events go with it so a faded control cannot be pressed by accident.
 */
-.sl-focused :is(.sl-header-books,.sl-header-notes,.sl-title,.sl-grownup,.sl-desk-note){
+.sl-focused :is(.sl-header-books,.sl-header-notes,.sl-title,.sl-grownup,.sl-desk-note,.sl-room-bubble){
   opacity:0;pointer-events:none;transition:opacity .9s ease;
 }
 .sl-focused .sl-thinking-boy{opacity:.16;transition:opacity .9s ease}
@@ -881,10 +907,8 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .sl-story-scene .sl-badge-label{font-size:13.5px}
 .sl-story-scene .sl-badge-val{font-size:13.5px;line-height:1.25;-webkit-line-clamp:4}
 .sl-story-scene .sl-scene-center{min-height:230px;padding-top:70px}
-.sl-story-scene .sl-badge{cursor:default;transition:transform .2s}
-.sl-story-scene .sl-badge:hover{transform:scale(1.05)}
-.sl-story-book{cursor:default;transition:transform .25s}
-.sl-story-book:hover{transform:scale(1.03)}
+.sl-story-scene .sl-badge{cursor:default}
+.sl-story-book{cursor:default}
 .sl-book-text{top:18%;bottom:26%;left:16%;right:16%}
 .sl-book-heading{font-size:12px}
 .sl-book-quote{font-size:19px;line-height:1.28;-webkit-line-clamp:4}
@@ -914,3 +938,85 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
   .sl-panel-now .sl-thought-cloud::after,.sl-panel-now .sl-cloud-mover::after{display:none}
   .sl-book-quote span,.sl-door-ready .sl-step-symbol,.sl-door-next{animation:none}
 }
+
+
+/* ── HOVER BRINGS IT FORWARD ──────────────────────────────────────────── *
+ *
+ * A panel is drawn at 386x675 and then scaled to fit four of them across the
+ * room, which on most screens lands somewhere near half size — so a card's
+ * 11.5px type is being read at about 6px. Making the type bigger is not
+ * available: the panel's proportions are the reference sheet's proportions,
+ * and every number in here is measured against them.
+ *
+ * So whatever is under the pointer comes to full size for as long as it is
+ * under the pointer. It lifts above its neighbours, it takes a warm rim so it
+ * is obvious which one is forward, and the panel stops clipping while one of
+ * its children is out — otherwise anything near an edge grows into the border
+ * and is cut in half.
+ *
+ * `scale` rather than a transform, throughout. The clouds and the boy are
+ * mid-animation on `transform`, and a transform here would silently replace
+ * theirs; the separate property composes with it instead.
+ *
+ * Pointer-only. On a touch screen there is no hover, the first tap would be
+ * spent on the growing rather than on the answer, and the answer is the point.
+ */
+@media (hover:hover) and (pointer:fine){
+  .sl-room :is(
+    .sl-cards button,.sl-say-own,.sl-window,.sl-story-book,.sl-truth,
+    .sl-panel-answer,.sl-ask-bubble,.sl-screen,
+    .sl-rail .sl-step-inner
+  ):hover{
+    scale:1.16;
+    opacity:1;
+    filter:none;
+    z-index:20;
+    box-shadow:0 0 0 2px #ffe9a6cc,0 16px 34px -10px #0b0418e0;
+    transition:scale .2s cubic-bezier(.2,1.25,.4,1),box-shadow .2s ease,
+               opacity .2s ease,filter .2s ease;
+  }
+  /* Stacking needs a position, and these are all static by default. The
+     badges are left out on purpose — they are already absolutely placed
+     around the bubble and giving them a new one moves them. */
+  .sl-room :is(.sl-cards button,.sl-say-own,.sl-window,.sl-story-book,
+               .sl-truth,.sl-panel-answer,.sl-screen):hover{
+    position:relative;
+  }
+  .sl-story-scene .sl-badge:hover{scale:1.2;z-index:20;opacity:1}
+  /* The clouds had their own smaller lift; same idea, further. */
+  .sl-thought-cloud:hover:not(:disabled){
+    scale:1.22;z-index:20;opacity:1;
+    filter:drop-shadow(0 0 8px #fff) drop-shadow(0 0 20px #a9d4ffdd);
+  }
+  /*
+    And the panel lets go while something is out. Its own background stays
+    inside the rounded corners — that is painted on the panel itself — so all
+    this frees is the children.
+  */
+  .sl-panel:has(:is(
+    .sl-cards button,.sl-say-own,.sl-window,.sl-story-book,.sl-truth,
+    .sl-panel-answer,.sl-screen,.sl-badge,.sl-ask-bubble
+  ):hover){
+    overflow:visible;
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  .sl-room :is(.sl-cards button,.sl-thought-cloud,.sl-window,.sl-story-book,
+               .sl-badge,.sl-say-own,.sl-rail .sl-step-inner):hover{
+    transition:none;
+  }
+}
+
+/* ── The Story panel's Chirpy runs small ──────────────────────────────── *
+ *
+ * He is back on panel 4 (the walk's fifth step), where he used to be left out
+ * altogether to save room. The room he costs is real — the assembly below him
+ * is a scene, a book and four buttons in one 675px column — so he is a size
+ * down from the other panels' Chirpy and his bubble is tighter. The confirm
+ * question moved into that bubble, so the panel gives up a box to get him.
+ */
+[data-sl-panel="4"] .sl-ask{gap:6px}
+[data-sl-panel="4"] .sl-ask-chirpy{width:48px;height:54px}
+[data-sl-panel="4"] .sl-ask-bubble{padding:6px 10px;border-radius:14px}
+[data-sl-panel="4"] .sl-ask-bubble h3{font-size:13px}
+[data-sl-panel="4"] .sl-ask-bubble p{font-size:10.5px;margin-top:2px}
