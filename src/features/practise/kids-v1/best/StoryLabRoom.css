@@ -849,3 +849,68 @@
     bottom:calc(var(--sl-foot) - 12px + clamp(104px,15vh,180px));
   }
 }
+
+/* ── Step 7 becomes the way on once the walk is done ─────────────────── */
+.sl-step-inner{display:contents}
+button.sl-step-inner{
+  all:unset;display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;
+  cursor:pointer;border-radius:16px;padding:4px 2px;
+}
+button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.sl-door-ready{z-index:3}
+.sl-door-ready .sl-step-symbol{
+  animation:sl-door-pop .9s cubic-bezier(.3,1.6,.5,1) both, sl-door-glow 1.6s ease-in-out .9s infinite alternate;
+}
+.sl-door-ready .sl-step-label{color:#4b1c96}
+.sl-door-next{
+  position:absolute;top:-34px;left:50%;translate:-50% 0;white-space:nowrap;
+  padding:5px 11px;border-radius:999px;font-size:12px;font-weight:900;color:#3b1f00;
+  background:linear-gradient(#ffe38a,#ffc23d);box-shadow:0 4px 14px #0006;
+  animation:sl-door-hint 1.2s ease-in-out infinite alternate;
+}
+.sl-door-next:after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#ffc23d}
+@keyframes sl-door-pop{0%{transform:scale(1)}45%{transform:scale(1.9) translateY(-10px)}100%{transform:scale(1.35) translateY(-4px)}}
+@keyframes sl-door-glow{from{filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px #ffd35a)}to{filter:drop-shadow(0 0 12px #fff) drop-shadow(0 0 28px #ffb627)}}
+@keyframes sl-door-hint{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+
+/* ── Step 5: two big boxes, a big living story ───────────────────────── */
+.sl-story-scene .sl-badge{max-width:49%;padding:11px 12px;gap:4px}
+.sl-story-scene .sl-badge-thought,.sl-story-scene .sl-badge-event{top:0;width:49%;min-height:74px}
+.sl-story-scene .sl-badge-thought{left:0}
+.sl-story-scene .sl-badge-event{right:0}
+.sl-story-scene .sl-badge-label{font-size:13.5px}
+.sl-story-scene .sl-badge-val{font-size:13.5px;line-height:1.25;-webkit-line-clamp:4}
+.sl-story-scene .sl-scene-center{min-height:230px;padding-top:70px}
+.sl-story-scene .sl-badge{cursor:default;transition:transform .2s}
+.sl-story-scene .sl-badge:hover{transform:scale(1.05)}
+.sl-story-book{cursor:default;transition:transform .25s}
+.sl-story-book:hover{transform:scale(1.03)}
+.sl-book-text{top:18%;bottom:26%;left:16%;right:16%}
+.sl-book-heading{font-size:12px}
+.sl-book-quote{font-size:19px;line-height:1.28;-webkit-line-clamp:4}
+.sl-book-quote span{display:inline-block;white-space:pre;animation:sl-word-in .5s ease-out both}
+@keyframes sl-word-in{from{opacity:0;transform:translateY(8px) scale(.85)}to{opacity:1;transform:none}}
+
+/* ── Step 3: little bubbles float up out of the thought clouds ───────── */
+.sl-panel-now .sl-thought-cloud:not(.sl-not-chosen)::after,
+.sl-panel-now .sl-cloud-mover::after{
+  content:'';position:absolute;z-index:2;pointer-events:none;
+  width:9px;height:9px;border-radius:50%;
+  border:1.5px solid rgba(214,198,255,.95);
+  background:radial-gradient(circle at 34% 32%,#fffc,#cdb9ff66 50%,#9678fa22);
+  box-shadow:0 0 10px #bea5ffcc;
+  animation:sl-cloud-bubble 3.4s ease-out infinite;animation-delay:var(--by-del,0s);
+}
+.sl-panel-now .sl-thought-cloud:not(.sl-not-chosen)::after{left:62%;top:6px}
+.sl-panel-now .sl-cloud-mover{position:relative}
+.sl-panel-now .sl-cloud-mover::after{left:28%;top:4px;width:6px;height:6px;animation-duration:4.1s;animation-delay:var(--bx-del,0s)}
+@keyframes sl-cloud-bubble{
+  0%{opacity:0;transform:translate(0,0) scale(.4)}
+  15%{opacity:1}
+  60%{opacity:.8;transform:translate(6px,-34px) scale(1)}
+  100%{opacity:0;transform:translate(-4px,-62px) scale(.5)}
+}
+@media (prefers-reduced-motion: reduce){
+  .sl-panel-now .sl-thought-cloud::after,.sl-panel-now .sl-cloud-mover::after{display:none}
+  .sl-book-quote span,.sl-door-ready .sl-step-symbol,.sl-door-next{animation:none}
+}
