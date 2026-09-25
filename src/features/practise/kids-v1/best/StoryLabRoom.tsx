@@ -411,9 +411,10 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     const prompt = line ? (sub ? `${line} ${sub}` : line) : '';
     const who = step === 3 ? 'grownup' : 'mind';
     const heard = step === 3 ? thought : step === 5 ? story : step === 6 ? alternative : '';
-    const ask = () => { if (prompt) speak(prompt, quiet, who); };
-    if (step === 4) speak(`${prompt} ${story}`, quiet, 'mind');
-    else if (heard && !heard.startsWith("I'm not sure")) speak(heard, quiet, 'mind', ask);
+    const feeling = carried.feeling || '';
+    const ask = () => { if (prompt) speak(prompt, quiet, who, undefined, who === 'mind' ? feeling : ''); };
+    if (step === 4) speak(`${prompt} ${story}`, quiet, 'mind', undefined, feeling);
+    else if (heard && !heard.startsWith("I'm not sure")) speak(heard, quiet, 'mind', ask, feeling);
     else ask();
     return () => stopSpeaking();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- answers are read once, on arrival

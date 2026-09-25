@@ -109,7 +109,7 @@ function browserVoice(text: string) {
  * ever says one thing at a time, so a new line always wins over the old one
  * rather than queueing behind it.
  */
-export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', onEnd?: () => void) {
+export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', onEnd?: () => void, feeling = '') {
   if (isMuted() || quiet || !text) return;
   stopSpeaking();
 
@@ -131,7 +131,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   */
   speaking = text;
 
-  const key = `${who}|${text}`;
+  const key = `${who}|${feeling}|${text}`;
   const cached = heard.get(key);
   if (cached) { play(cached, text, onEnd); return; }
 
@@ -149,7 +149,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, voice: VOICES[who], character: who }),
+    body: JSON.stringify({ text, voice: VOICES[who], character: who, feeling }),
   })
     .then((r) => (r.ok ? r.blob() : null))
     .then((blob) => {

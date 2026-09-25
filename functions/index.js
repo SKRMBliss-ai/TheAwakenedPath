@@ -4769,6 +4769,33 @@ const MIND_DIRECTION =
     'nothing stiff or grown-up. Slow and wondering, with little pauses between phrases. ' +
     'Honest and gentle, never performed or cute:';
 
+/* Chirpy is the child's own mind, so he sounds the way the child said they
+   feel. Matched loosely on the feeling's name; only the matched tone reaches
+   the cache key, so a free-typed feeling can't multiply cache entries. */
+const MIND_TONES = [
+    [/sad|grief|lonely|hurt|disappoint|miss|cry|down|left out/i, 'sad',
+        'The child feels sad. Let the voice be quiet, soft and a little heavy, slower still, with a small sigh in it.'],
+    [/excit|happy|joy|proud|glad|great|fun/i, 'happy',
+        'The child feels happy and excited. Let the voice be bright and bouncy, and let a small, warm laugh come through at the end.'],
+    [/angry|mad|cross|frustrat|annoy|unfair/i, 'angry',
+        'The child feels angry. Let the voice be tight and a bit huffy, short breaths, but never shouting.'],
+    [/scar|worr|nervous|afraid|anxious|fear/i, 'worried',
+        'The child feels worried. Let the voice be small and unsure, a little shaky, hesitating before words.'],
+    [/asham|embarrass|shy/i, 'shy',
+        'The child feels embarrassed. Let the voice be small and quiet, almost a mumble, looking down.'],
+    [/jealous|envy/i, 'jealous',
+        'The child feels jealous. Let the voice be a little sulky and grumbly, with a pout in it.'],
+    [/bored/i, 'bored',
+        'The child feels bored. Let the voice be flat and drawn out, with a long slow sigh.'],
+    [/calm|peace|okay|fine|relax/i, 'calm',
+        'The child feels calm. Let the voice be easy and settled, warm and unhurried.'],
+];
+function mindTone(feeling) {
+    const f = String(feeling || '').slice(0, 40);
+    const hit = MIND_TONES.find(([re]) => re.test(f));
+    return hit ? { name: hit[1], line: hit[2] } : { name: 'plain', line: '' };
+}
+
 /** Gemini returns headerless signed 16-bit LE PCM; nothing plays that. */
 function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
     const blockAlign = (channels * bits) / 8;
@@ -4803,8 +4830,11 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
 
     const voiceName = String((req.body && req.body.voice) || 'Sulafat');
     const character = req.body && req.body.character === 'mind' ? 'mind' : 'grownup';
-    const direction = character === 'mind' ? MIND_DIRECTION : CHIRPY_DIRECTION;
-    const cacheKey = chirpyCacheKey(text, `${voiceName}|${character}`);
+    const tone = character === 'mind' ? mindTone(req.body && req.body.feeling) : { name: 'plain', line: '' };
+    const direction = character === 'mind'
+        ? (tone.line ? MIND_DIRECTION.replace(/:$/, `. ${tone.line}:`) : MIND_DIRECTION)
+        : CHIRPY_DIRECTION;
+    const cacheKey = chirpyCacheKey(text, `${voiceName}|${character}|${tone.name}`);
 
     try {
         /* CHECK CACHE FIRST — Firestore + Firebase Storage */
