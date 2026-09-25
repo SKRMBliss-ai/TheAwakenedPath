@@ -4756,10 +4756,10 @@ exports.notifyAdminOnKidsRegistration = onDocumentCreated({
  * =========================================================================== */
 
 const CHIRPY_DIRECTION =
-    'Read this as a small friendly bird talking to a six-year-old friend. ' +
-    'Light, warm and curious, never instructive and never sing-song. ' +
-    'Slightly quicker and higher than an adult reading voice, but calm. ' +
-    'Let questions lift gently at the end. Let the pauses breathe:';
+    'Read this as a warm, friendly bird talking to a six-year-old friend, at a natural, ' +
+    'easy conversational pace — not rushed, but not dragging either. ' +
+    'Soft and soothing, never instructive and never sing-song. ' +
+    'Let questions lift gently at the end:';
 
 /** Gemini returns headerless signed 16-bit LE PCM; nothing plays that. */
 function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
@@ -4796,8 +4796,11 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     }
 
     /* Auditioned in scripts/chirpy-voice-audition.mjs. Overridable so the
-       audition's winner can be switched without a redeploy of the client. */
-    const voiceName = String((req.body && req.body.voice) || 'Puck');
+       audition's winner can be switched without a redeploy of the client.
+       Was 'Puck' (Gemini's own listing calls it "Upbeat") — too quick and
+       bright for a bedtime-story companion. 'Sulafat' reads warm and calm,
+       which is what "slow speaking story tone" actually asked for. */
+    const voiceName = String((req.body && req.body.voice) || 'Sulafat');
 
     try {
         const response = await fetch(

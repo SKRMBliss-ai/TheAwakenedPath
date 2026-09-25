@@ -51,8 +51,8 @@
   opacity:1;filter:drop-shadow(0 8px 18px #c9aef899) drop-shadow(0 0 12px #8b5cf655);
 }
 
-/* Books — larger, better positioned */
-.gr-books-btn{left:1%;bottom:30%;width:min(12%,150px)}
+/* Books — stacked just behind the boy's reading nook */
+.gr-books-btn{left:0.5%;bottom:36%;width:min(12%,150px)}
 .gr-books-btn img.gr-books{position:relative;width:100%;height:auto}
 .gr-books-btn:not(:disabled):hover img,.gr-books-btn:focus-visible img{
   filter:drop-shadow(0 8px 14px #1107208c) drop-shadow(0 0 8px #ffe9a644);
@@ -68,8 +68,8 @@
   filter:drop-shadow(0 8px 14px #1107208c) drop-shadow(0 0 8px #88ff9955);
 }
 
-/* Cushions — larger */
-.gr-cushions-btn{left:1.5%;bottom:5%;width:min(16%,200px)}
+/* Cushions — a seat for the boy, larger, tucked under where he now sits */
+.gr-cushions-btn{left:0%;bottom:0%;width:min(19%,235px)}
 .gr-cushions-btn img.gr-cushions{position:relative;width:100%;height:auto}
 .gr-cushions-btn:not(:disabled):hover img,.gr-cushions-btn:focus-visible img{
   transform:scaleY(.94);transition:transform .18s;
@@ -167,7 +167,11 @@
 .gr-chip:hover{background:#4a2c79ea}
 
 .gr-sign{display:grid;place-items:center;position:relative;z-index:3}
-.gr-sign img{width:clamp(120px,min(20vw,12svh),220px);height:auto;display:block;filter:drop-shadow(0 6px 14px #10061d88)}
+.gr-sign img{
+  width:clamp(150px,min(27vw,15svh),290px);height:auto;display:block;
+  opacity:.86;
+  filter:drop-shadow(0 6px 14px #10061d88) drop-shadow(0 0 22px #ffcf6e44);
+}
 
 .sr-only{
   position:absolute;width:1px;height:1px;padding:0;margin:-1px;
@@ -194,7 +198,7 @@
 
 /* ── The play area ─────────────────────────────────────────────────────── */
 .gr-play{
-  position:relative;z-index:3;width:100%;max-width:1100px;
+  position:relative;z-index:3;width:100%;max-width:1180px;
   padding-inline:clamp(0px,12vw - 110px,160px);
   display:flex;flex-direction:column;align-items:center;gap:min(0.6svh,6px);
   flex:1 1 auto;min-height:0;justify-content:center;
@@ -203,10 +207,37 @@
 
 /* ── The hanging challenge board ─────────────────────────────────────── */
 .gr-board{
-  position:relative;width:min(100%,720px);
-  padding:0;border-radius:0;border:0;background:none;
-  flex-shrink:1;
-  text-align:center;color:#3a2410;
+  /* Width is capped by viewport height as well as px/percent — the box has a
+     locked aspect-ratio now (it didn't before), so an unconstrained width
+     made it tall enough to push the rest of the room's content out of the
+     flex column's budget and get shoved up behind the header. */
+  position:relative;width:min(84%,540px,38svh);aspect-ratio:1774/887;
+  margin:0 auto;flex-shrink:0;text-align:center;color:#3a2410;
+}
+.gr-board-frame{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:fill;pointer-events:none;z-index:0;
+}
+/* Small translucent pill riding the frame's own ribbon shape — not a full
+   text bar, so it never collides with the question underneath it. */
+.gr-board-ribbon{
+  position:absolute;z-index:2;top:3%;left:0;right:0;
+  display:flex;justify-content:center;
+}
+.gr-board-ribbon span{
+  display:inline-block;white-space:nowrap;
+  padding:clamp(2px,0.55svh,6px) clamp(12px,2.6vw,24px);
+  border-radius:999px;
+  background:linear-gradient(135deg,rgba(178,128,240,0.78),rgba(110,54,184,0.82));
+  border:1.5px solid rgba(232,207,255,0.6);
+  font-size:clamp(10px,min(1.15vw,1.5svh),15px);font-weight:1000;letter-spacing:.01em;
+  color:#fff;text-shadow:0 1px 4px #2a1046cc;
+  box-shadow:0 4px 12px #18092c40,inset 0 1px 0 #ffffff26;
+}
+.gr-board-content{
+  position:absolute;z-index:1;top:29%;left:7%;right:19%;bottom:16%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  overflow:hidden;
 }
 .gr-board-frame{
   position:absolute;inset:0;width:100%;height:100%;
@@ -223,16 +254,21 @@
   padding:min(0.6svh,6px) clamp(30px,6%,60px) min(0.4svh,4px);
 }
 .gr-board h2{margin:0;font-size:clamp(15px,min(1.9vw,2.4svh),24px);font-weight:1000;line-height:1.15;color:#54300f;text-shadow:0 1px 4px #fff9ec99}
+.gr-board h2{margin:0;font-size:clamp(13px,min(1.75vw,2.2svh),22px);font-weight:1000;line-height:1.14;color:#54300f;text-shadow:0 1px 4px #fff9ec99}
 .gr-board h2:focus{outline:none}
 .gr-board h2:focus-visible{outline:3px solid #a9793a;outline-offset:3px;border-radius:8px}
-.gr-board p{margin:4px 0 0;font-size:clamp(12px,min(1.35vw,1.7svh),16px);font-weight:750;line-height:1.25;text-shadow:0 1px 4px #fff9ec99}
+.gr-board p{margin:3px 0 0;font-size:clamp(10.5px,min(1.2vw,1.55svh),14.5px);font-weight:750;line-height:1.22;text-shadow:0 1px 4px #fff9ec99}
 .gr-board button{position:relative;z-index:2}
 .gr-board > button{
-  margin-top:4px;background:#5a3a14!important;border:1px solid #d9b36a!important;
+  position:absolute;z-index:2;top:33%;right:4%;
+  background:#5a3a14!important;border:1px solid #d9b36a!important;
   color:#ffeccb!important;border-radius:22px;
 }
-.gr-progress{display:flex;justify-content:center;gap:5px;list-style:none;margin:6px 0 0;padding:0}
-.gr-progress img{width:clamp(17px,1.8vw,25px);height:auto;display:block}
+.gr-progress{
+  position:absolute;z-index:1;left:50%;bottom:5%;transform:translateX(-50%);
+  display:flex;justify-content:center;gap:clamp(3px,0.6vw,6px);list-style:none;margin:0;padding:0;
+}
+.gr-progress img{width:clamp(13px,min(1.7vw,2.1svh),22px);height:auto;display:block}
 
 /* ── Visual consequence after picking ──────────────────────────────────── */
 .gr-consequence{
@@ -252,12 +288,12 @@
 .gr-chest{
   display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;
   background:none;border:0;padding:2px;
-  flex:1 1 0;min-width:clamp(110px,14vw,180px);max-width:220px;
+  flex:1 1 0;min-width:clamp(120px,15vw,200px);max-width:240px;
   transition:transform .2s ease,filter .2s ease,opacity .3s ease;
 }
 .gr-chest-art{position:relative;display:block;line-height:0}
 .gr-chest-art > img:first-child{
-  width:clamp(70px,min(11vw,12svh),130px);height:auto;display:block;
+  width:clamp(78px,min(12.5vw,13.5svh),148px);height:auto;display:block;
   filter:drop-shadow(0 8px 18px #10061dbb);
   animation:gr-bob 3.4s ease-in-out infinite;
   transition:filter .2s ease;
@@ -292,13 +328,17 @@
 .gr-chest-quiet{opacity:.42;filter:saturate(.6)}
 .gr-chest:disabled{cursor:default}
 
-/* The wooden plaque */
+/* The plaque — a soft glass chip so the answers sit in the room's own
+   purple-and-gold light rather than a flat wooden label pasted on top. */
 .gr-plaque{
   display:flex;align-items:center;justify-content:center;
-  width:100%;min-height:min(44px,5svh);padding:min(8px,0.8svh) 12px;border-radius:10px;
-  background:linear-gradient(#f3dfb4,#d9bb85);
-  border:2px solid #9b6f34;box-shadow:0 5px 11px -4px #0e0418;
-  color:#40270d;font-size:clamp(12px,1.2vw,15.5px);font-weight:900;line-height:1.16;
+  width:100%;min-height:min(44px,5svh);padding:min(8px,0.8svh) 12px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(154,102,224,0.4),rgba(74,32,130,0.5));
+  border:1.5px solid rgba(255,222,158,0.5);
+  backdrop-filter:blur(7px) saturate(1.25);-webkit-backdrop-filter:blur(7px) saturate(1.25);
+  box-shadow:0 6px 14px -4px #0e041866,inset 0 1px 0 #ffffff30;
+  color:#fff8ec;font-size:clamp(12px,1.2vw,15.5px);font-weight:900;line-height:1.16;
+  text-shadow:0 1px 4px #1c0d35b3;
   text-align:center;
 }
 
@@ -316,15 +356,54 @@
 .gr-prompt > span{color:#c9881f}
 
 /* ── The boy, Chirpy and the bubble ────────────────────────────────────── */
-.gr-cast{position:absolute;left:0.5%;bottom:1%;z-index:2;width:min(18%,220px);pointer-events:none}
-.gr-boy{width:68%;height:auto;display:block;filter:drop-shadow(0 10px 18px #0b0418aa)}
+/* He floats, and he's draggable — left/top come from useFloatingPosition as
+   an inline style, not from here. Wherever a child leaves him is where he
+   comes back, every session, so there is no fixed "home" position in CSS
+   any more beyond the very first default. */
+.gr-cast{
+  /* Above .gr-play (z-index:3) — that section has no background where the
+     boy floats over it, but being higher-stacked it still won a hit-test
+     against .gr-cast underneath, so every drag attempt landed on it
+     instead and never reached the boy at all. */
+  position:absolute;z-index:5;width:min(24%,300px);
+  pointer-events:auto;cursor:grab;touch-action:none;
+  transform:translate(-8%,-12%);
+}
+.gr-cast.gr-floating-drag{cursor:grabbing;transition:none!important}
+.gr-cast:not(.gr-floating-drag){transition:left .18s ease-out,top .18s ease-out}
+.gr-boy{
+  width:78%;height:auto;display:block;pointer-events:none;
+  filter:drop-shadow(0 14px 16px #0b0418aa);
+  animation:gr-boy-float 5s ease-in-out infinite;
+}
+@keyframes gr-boy-float{50%{transform:translateY(-8px)}}
 
-.gr-chirpy{position:absolute;left:56%;bottom:2%;width:44%;height:auto}
+.gr-chirpy{position:absolute;left:58%;bottom:1%;width:42%;height:auto;pointer-events:none}
 .gr-chirpy-float{animation:gr-float 4s ease-in-out infinite}
 @keyframes gr-float{50%{transform:translateY(-6px)}}
 
+/* Thinking bubbles — three dots rising from the boy's head toward the
+   challenge board, as if his thoughts are drifting up to the question.
+   Clear of Chirpy's speech bubble (which starts at left:58%), and outlined
+   so they read against light or dark parts of the room alike. */
+.gr-thought-trail{position:absolute;left:16%;top:2%;z-index:3;pointer-events:none}
+.gr-thought-dot{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 32% 30%,#ffffff,#e7d9ff 60%,#b992f0 100%);
+  border:1px solid rgba(255,255,255,0.9);
+  box-shadow:0 2px 8px #1c0d3570,0 0 8px #c9aef899,inset 0 1px 2px #ffffffdd;
+  opacity:.92;animation:gr-thought-rise 3.4s ease-in-out infinite;
+}
+.gr-thought-dot-1{width:10px;height:10px;left:6px;top:-10px;animation-delay:0s}
+.gr-thought-dot-2{width:17px;height:17px;left:14px;top:-31px;animation-delay:.35s}
+.gr-thought-dot-3{width:27px;height:27px;left:24px;top:-63px;animation-delay:.7s}
+@keyframes gr-thought-rise{
+  0%,100%{opacity:.5;transform:translateY(0) scale(.9)}
+  50%{opacity:1;transform:translateY(-5px) scale(1.06)}
+}
+
 .gr-bubble{
-  position:absolute;left:26%;bottom:80%;width:min(250px,28vw);
+  position:absolute;left:26%;bottom:80%;width:min(250px,28vw);pointer-events:none;
   background:linear-gradient(#ffffff,#f1e9ff);border-radius:18px;
   box-shadow:0 6px 16px #0b041866;
 }
@@ -351,9 +430,16 @@
   cursor:pointer;min-height:0;
 }
 .gr-theme-badge img{
-  width:clamp(90px,12vw,145px);height:auto;display:block;
+  width:clamp(100px,13vw,162px);height:auto;display:block;
   filter:drop-shadow(0 3px 8px #0a051866);
+  animation:gr-badge-bounce 2.6s ease-in-out infinite;
 }
+.gr-theme-badge:nth-child(2) img{animation-delay:-.4s}
+.gr-theme-badge:nth-child(3) img{animation-delay:-.8s}
+.gr-theme-badge:nth-child(4) img{animation-delay:-1.2s}
+.gr-theme-badge:nth-child(5) img{animation-delay:-1.6s}
+.gr-theme-badge:nth-child(6) img{animation-delay:-2s}
+@keyframes gr-badge-bounce{50%{transform:translateY(-4px)}}
 .gr-theme-badge:hover{opacity:.9;transform:scale(1.06)}
 .gr-theme-active{opacity:1;transform:scale(1.08)}
 .gr-theme-active img{
@@ -378,6 +464,10 @@
 }
 
 @media(max-width:1100px){
+  .gr-cast{width:min(18%,190px)}
+  .gr-boy{width:72%}
+  .gr-chirpy{width:38%}
+  .gr-bubble{width:min(200px,24vw)}
   .gr-cast{width:min(14%,160px)}
   .gr-boy{width:62%}
   .gr-chirpy{width:38%}
@@ -428,8 +518,13 @@
   .gr-sign img{width:clamp(100px,28vw,150px)}
   .gr-stars-count{padding:4px 8px;font-size:14px}
   .gr-stars-count img{width:16px}
+  .gr-room{padding:4px 10px 4px}
+  .gr-chip{padding:5px 9px;font-size:10.5px;white-space:nowrap}
+  .gr-top{gap:4px}
+  .gr-sign img{width:clamp(100px,28vw,150px)}
+  .gr-stars-count{padding:4px 8px;font-size:14px}
+  .gr-stars-count img{width:16px}
   .gr-stars-count small{display:none}
-  .gr-board{padding:8px 12px 6px}
   .gr-board h2{font-size:clamp(14px,1.6vw,20px)}
   .gr-board p{font-size:clamp(11px,1.2vw,15px);margin-top:3px}
   .gr-chests{gap:6px}

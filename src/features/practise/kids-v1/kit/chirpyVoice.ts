@@ -128,13 +128,16 @@ export function speak(text: string, quiet: boolean) {
   if (cached) { play(cached, text); return; }
 
   /*
-    The browser starts immediately and Gemini takes over when it arrives.
-    Waiting silently for a network round trip before a six-year-old hears
-    anything is worse than a plainer voice starting on time — and on the
-    common path (a line he has said before) the cache hits and this never runs.
-  */
-  browserVoice(text);
+    GEMINI ONLY — no browser fallback.
 
+    This used to race Gemini against a browser-voice timeout, so a child
+    who heard Chirpy at all often heard the browser's own (very different
+    sounding) voice for short lines and Gemini's calmer narration only for
+    the rare long one — two different voices, one at random. One character
+    should sound like one person every time he speaks, so the browser voice
+    is gone: if Gemini doesn't answer, the line stays silent rather than
+    switching narrators.
+  */
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -147,9 +150,11 @@ export function speak(text: string, quiet: boolean) {
       heard.set(text, url);
       /* Only if this is still the line on screen. A child who has moved on
          must not be caught up by the previous screen's audio. */
-      if (!isMuted() && speaking === text) { stopSpeaking(); play(url, text); }
+      if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text); }
     })
-    .catch(() => { /* the browser voice already said it */ });
+    .catch(() => {
+      /* Gemini TTS only — no browser voice fallback. */
+    });
 }
 
 function play(url: string, text: string) {

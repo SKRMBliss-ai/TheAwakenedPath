@@ -4,6 +4,7 @@ import { useKidStore, type SavedReflection } from '../../../kids/store';
 import { FONT } from '../ui/chrome';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import { useQuiet } from '../ui/quiet';
+import { DoorHandle } from '../ui/DoorHandle';
 import * as sound from '../kit/sound';
 import { pickThreeAffirmations } from '../kit/affirmations';
 import './ReflectionPath.css';
@@ -509,9 +510,9 @@ export function ReflectionPath({ onExit, onGrownUp }: {
 
   return (
     <div className="rp-room rp-pathview" style={{ fontFamily: FONT }}>
+      <DoorHandle side="left" label="Back to Mind Gym" onClick={onExit} accent="#c9aef8"  scale={0.5} />
       <Decor variant="path" still={still} />
       <header className="rp-header">
-        <button className="rp-back" onClick={onExit} aria-label="Back to Mind Gym">←</button>
         <div className="rp-title rp-path-title">
           <h1>Reflection Room <span aria-hidden="true">♡</span></h1>
           <p>Stay as long as you like. Tap a glowing brick to visit a reflection.</p>
@@ -619,7 +620,6 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       </div>
 
       <footer className="rp-stop rp-stop-slim">
-        <button className="chrome-fade" onClick={onExit}>← Back to Mind Gym</button>
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
       </footer>
     </div>

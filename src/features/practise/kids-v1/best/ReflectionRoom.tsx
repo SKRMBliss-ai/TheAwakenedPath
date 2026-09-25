@@ -23,6 +23,7 @@ import { allHung, hangIn, takeDown } from '../kit/hung';
 import { pastSeasons } from '../kit/seasons';
 import { VIRTUE_ROOMS } from './rooms';
 import { CARD_INK, LitCard } from '../ui/trail';
+import { Meditate } from './Meditate';
 
 /**
  * THE REFLECTION OBSERVATORY — where the day's journey ends.
@@ -64,6 +65,7 @@ export function ReflectionRoom({
    * reading to update in one place, or the wall could clear a picture the
    * shelf still thinks is there.
    */
+  const [meditating, setMeditating] = useState(false);
   const [cases, setCases] = useState(() => loadCases());
   const deleteDrawing = (index: number) => setCases(deleteDrawingAt(index));
   const deleteCase = (index: number) => setCases(deleteCaseAt(index));
@@ -136,7 +138,7 @@ export function ReflectionRoom({
       {/* The way out is a fitting on the left wall, the same one on every
           screen in the app. No chevron in the corner any more: a child who
           learns one door learns them all. */}
-      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} scale={0.35} bottomVh={40} />
 
       <RoomScene room={art} dim={DIM.content} art="/mind-gym/diary/room.webp" />
 
@@ -172,6 +174,19 @@ export function ReflectionRoom({
           <p className="max-w-md text-[13.5px] font-semibold" style={{ color: CHROME.textSoft }}>
             {stars === 1 ? 'One night in the gym' : `${stars} nights in the gym`}
           </p>
+
+          {/* THE ONE THING IN HERE THAT ISN'T A RECORD. Everything below asks
+              the child to mark, write or remember something; this asks for
+              nothing at all — just a few quiet breaths before the journal
+              starts. It sits right under the room's own title because it is
+              as much what this room is for as the grid is. */}
+          <button
+            onClick={() => setMeditating(true)}
+            className="mt-1 flex items-center gap-2 rounded-full px-5 py-2.5 text-[14px] font-extrabold text-white transition-transform hover:scale-[1.03]"
+            style={{ background: `linear-gradient(100deg, ${accent}, #7f42dc)`, boxShadow: '0 6px 0 rgba(0,0,0,0.3)' }}
+          >
+            <span aria-hidden="true">🌙</span> Meditate for a moment
+          </button>
         </div>
 
         {/* THE ONE SENTENCE. Everything else in this room is a record a child
@@ -444,6 +459,10 @@ export function ReflectionRoom({
           For a grown-up · leave a note
         </button>
       </div>
+
+      <AnimatePresence>
+        {meditating && <Meditate accent={accent} onClose={() => setMeditating(false)} />}
+      </AnimatePresence>
     </div>
   );
 }

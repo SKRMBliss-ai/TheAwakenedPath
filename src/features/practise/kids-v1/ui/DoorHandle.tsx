@@ -95,6 +95,7 @@ export function DoorHandle({
   bottomVh = 26,
   nudge = null,
   big = false,
+  scale = 1,
 }: {
   side: 'left' | 'right';
   /** Both the accessible name and the words on the tooltip. */
@@ -120,6 +121,10 @@ export function DoorHandle({
    * each other.
    */
   bottomVh?: number;
+  /**
+   * Scale the entire fitting up or down proportionally (default 1).
+   */
+  scale?: number;
   /**
    * A different way of saying what's behind this door, shown during the
    * attention beat instead of `label`. Picked by the caller (see
@@ -226,7 +231,7 @@ export function DoorHandle({
         onBlur={() => setAwake(false)}
         aria-label={label}
         className="pointer-events-auto relative grid place-items-center border-0 bg-transparent p-0"
-        style={{ minWidth: m.target, minHeight: m.target }}
+        style={{ minWidth: m.target, minHeight: m.target, transform: `scale(${scale})`, transformOrigin: side === 'left' ? 'left bottom' : 'right bottom' } as React.CSSProperties}
         animate={
           m.quiet
             ? { opacity: 0.9, x: 0 }
@@ -239,7 +244,7 @@ export function DoorHandle({
                 // would be hunting for a control that is hiding from them.
                 // Waking is still a clear event: full opacity, a warm bloom
                 // and motes, none of which the resting state has.
-                opacity: live ? 1 : [0.85, 0.66, 0.85],
+                opacity: live ? 1 : [0.45, 0.3, 0.45],
                 x: live ? (forward ? -5 : 5) : 0,
               }
         }

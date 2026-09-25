@@ -74,10 +74,12 @@ const TABLE: Record<Cue, CueDef> = {
   breatheIn:      { src: breatheIn,  volume: 0.5 },
   breatheOut:     { src: breatheOut, volume: 0.5 },
 
-  // Different Story Room's background bed while the story is on screen —
-  // the same calm piano used for `resolve`, looped low under the text
-  // rather than played once as a chime. See playMusic().
-  storyTheme:     { src: calmPiano, volume: 0.22 },
+  // Story Lab and Games Room's background bed — a continuous loop, not a
+  // short piano sting repeating itself. Was `calmPiano`, a clip literally
+  // named "...logo-short-version", which is over and restarting every few
+  // seconds under a room a child sits in for minutes; the same magical
+  // forest lullaby used for `twoStories` below actually loops as a bed.
+  storyTheme:     { src: forestLullaby, volume: 0.22 },
 
   // A feeling balloon bursting on the check-in screen. Louder than `tapHit`
   // (same clip) because this one IS the interaction, not a background beat —
