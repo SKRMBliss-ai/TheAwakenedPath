@@ -113,41 +113,34 @@ function AmbientLayer({ still }: { still: boolean }) {
 }
 
 /* ── Clickable scenery ────────────────────────────────────────────────────── */
-/*
-  The secrets speak through the boy's bubble, and in the quiet state there is
-  no boy — the room puts the game away and Steady sits with the child instead.
-  So the scenery is not tappable there. A room that answers a tap with nothing
-  at all is worse than one that plainly isn't taking taps.
-*/
-function Scenery({ onDiscover, still, quiet }: {
+function Scenery({ onDiscover, still }: {
   onDiscover: (id: DiscoveryId) => void;
   still: boolean;
-  quiet: boolean;
 }) {
   return <div className="gr-scenery" aria-label="Room decorations">
     {/* Rug — tappable */}
-    <button className="gr-scenery-btn gr-rug-btn" disabled={quiet}
+    <button className="gr-scenery-btn gr-rug-btn"
       aria-label="Tap the rug — there might be a secret"
       onClick={() => onDiscover('rug')}>
       <img className="gr-rug" src={`${ART}/rug.png`} alt="" />
     </button>
 
     {/* Books — tappable */}
-    <button className="gr-scenery-btn gr-books-btn" disabled={quiet}
+    <button className="gr-scenery-btn gr-books-btn"
       aria-label="Tap the books — see what they know"
       onClick={() => onDiscover('books')}>
       <img className="gr-books" src={`${ART}/books_stack.png`} alt="" />
     </button>
 
     {/* Plant — tappable */}
-    <button className="gr-scenery-btn gr-plant-btn" disabled={quiet}
+    <button className="gr-scenery-btn gr-plant-btn"
       aria-label="Tap the plant — it has something to say"
       onClick={() => onDiscover('plant')}>
       <img className={`gr-plant ${still ? '' : 'gr-plant-sway'}`} src={`${ART}/plant_sprout.png`} alt="" />
     </button>
 
     {/* Cushions — tappable */}
-    <button className="gr-scenery-btn gr-cushions-btn" disabled={quiet}
+    <button className="gr-scenery-btn gr-cushions-btn"
       aria-label="Tap the cushions — try a little experiment"
       onClick={() => onDiscover('cushions')}>
       <img className="gr-cushions" src={`${ART}/cushions.png`} alt="" />
@@ -374,7 +367,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       )}
     </AnimatePresence>
 
-    <Scenery onDiscover={openDiscovery} still={still} quiet={quiet} />
+    <Scenery onDiscover={openDiscovery} still={still} />
 
     {/* High on the left wall rather than down by the skirting board — at 4vh
         it sat under the cushions and the rug, both of which are tappable, so
