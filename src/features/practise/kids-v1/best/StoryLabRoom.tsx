@@ -523,31 +523,6 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     child has to press a button to make true is not one. `save` is guarded by
     savedOnce, so running it here costs nothing if it has already happened.
   */
-  /*
-    THREE SECONDS IN, THE ROOM GETS OUT OF THE WAY.
-
-    The Thought panel asks the child to notice what their mind was actually
-    saying, and then surrounds the question with a lit sign, two shelves of
-    books, a boy at a desk and a note about how their thoughts matter. All of
-    it is lovely and none of it is the question. So the panel reads itself out,
-    gives the child a beat to take the room in, and then everything except the
-    clouds steps back — the child is choosing from twelve now, and they need
-    the quiet to scan them.
-
-    It only applies while the thought is unanswered: going back to the panel
-    later, with the answer already on it, should show the room as it is.
-  */
-  const hushEligible = step === 2 && !thought && !writing && !still;
-  const [focused, setFocused] = useState(false);
-  useEffect(() => {
-    if (!hushEligible) return;
-    const timer = setTimeout(() => setFocused(true), 3000);
-    /* Clearing on the way out is what lets the hush start over: answering the
-       thought, opening the writing form or stepping back all make the panel
-       ineligible, and the room comes back up until it settles again. */
-    return () => { clearTimeout(timer); setFocused(false); };
-  }, [hushEligible]);
-
   useEffect(() => {
     if (step >= 6 && !savedOnce.current) save();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- save is guarded by savedOnce
@@ -683,7 +658,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button><button type="button" onClick={() => setWriting(false)}>Cancel</button></div>
   </form>;
 
-  return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''} ${focused && hushEligible ? 'sl-focused' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
+  return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
     {/* The handle leaves the room altogether. Stepping back through the four
         panels is a small thing and belongs in the footer; the door on the
         wall is what a child reaches for when they want out. */}

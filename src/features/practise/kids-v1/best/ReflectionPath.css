@@ -66,23 +66,14 @@
   50% { opacity: .55; transform: translate(-50%, -50%) scale(1.14); }
 }
 
-/* Foreground decor from the pack. Inert: scenery, never controls. */
-.rr-lantern, .rr-crystals {
+/* Foreground decor from the pack. Inert: scenery, never a control. The
+   lantern that used to stand here was a second light source duplicating the
+   one already painted into room.webp — removed along with its <img>, so only
+   the crystals remain as a rendered overlay. */
+.rr-crystals {
   position: absolute; z-index: 2;
   pointer-events: none; user-select: none;
   filter: drop-shadow(0 12px 26px #0c041c99);
-}
-.rr-lantern {
-  left: 1%; bottom: 2%;
-  width: min(13%, 190px); height: auto;
-  animation: rr-lantern-flicker 6.5s ease-in-out infinite;
-}
-@keyframes rr-lantern-flicker {
-  0%, 100% { filter: drop-shadow(0 12px 26px #0c041c99) drop-shadow(0 0 20px #ffcf7e55); }
-  38%      { filter: drop-shadow(0 12px 26px #0c041c99) drop-shadow(0 0 34px #ffd98a99); }
-  62%      { filter: drop-shadow(0 12px 26px #0c041c99) drop-shadow(0 0 22px #ffcf7e66); }
-}
-.rr-crystals {
   right: 0; bottom: 0;
   width: min(21%, 320px); height: auto;
   opacity: .95;
@@ -746,7 +737,7 @@
   brick small enough for eight across a phone is a brick with no words on it.
 */
 @media (max-width: 899px) {
-  .rr-lantern, .rr-crystals, .rr-shimmer { display: none; }
+  .rr-crystals, .rr-shimmer { display: none; }
   .rr-head { max-width: 62%; }
   .rr-charms { gap: 7px; }
   .rr-charm { min-width: 62px; min-height: 62px; padding: 7px 9px; }

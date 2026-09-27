@@ -301,6 +301,16 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     return () => { cancel(); sound.stopMusic(); };
   }, [quiet]);
 
+  /* The lullaby bed stops for breathing — the orb and the counted breath are
+     the only thing that should be heard while a child is doing them — and
+     comes back once the exercise ends, whether it ran to the end or was
+     stopped early. */
+  useEffect(() => {
+    if (quiet || calmMode !== 'breathing') return;
+    sound.stopMusic();
+    return () => { sound.playMusicWhenAllowed('twoStories'); };
+  }, [calmMode, quiet]);
+
   /* ── Dealt bricks ────────────────────────────────────────────────────────── */
   const dealt = useMemo(() => {
     if (!all.length) return [];

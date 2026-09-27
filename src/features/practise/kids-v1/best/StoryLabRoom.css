@@ -139,7 +139,7 @@
 /* ── Step 3 · Thought ──────────────────────────────────────────────────── */
 
 .sl-thought-field{position:relative;flex:1 1 auto;min-height:0}
-/* The clouds finish above the boy's head — he is drawn into the bottom-left
+/* The clouds start clear of the boy's head — he is drawn into the top-left
    of this panel, and a cloud landing on his cap is the one thing the sheet
    never does. */
 /* A dozen clouds need the room the boy was taking, so they use the full
@@ -148,8 +148,8 @@
 .sl-thought-clouds{
   position:relative;z-index:2;display:flex;flex-wrap:wrap;
   align-content:center;justify-content:center;gap:5px;
-  padding-bottom:78px;height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;
-  transition:padding-bottom .6s ease;
+  padding-top:78px;height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;
+  transition:padding-top .6s ease;
 }
 .sl-thought-clouds::-webkit-scrollbar{display:none}
 .sl-thought-cloud{
@@ -194,7 +194,7 @@
   `.sl-still *` and the reduced-motion block above stop it dead, as they do
   everything else in this room.
 */
-.sl-thinking-boy{position:absolute;z-index:1;bottom:-4px;left:-12px;width:136px;height:162px;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 9px #25132799);transform-origin:50% 100%;animation:sl-boy-bounce 3.1s ease-in-out infinite}
+.sl-thinking-boy{position:absolute;z-index:1;top:-4px;left:-12px;width:136px;height:162px;object-fit:contain;object-position:top;filter:drop-shadow(0 8px 9px #25132799);transform-origin:50% 0%;animation:sl-boy-bounce 3.1s ease-in-out infinite}
 
 /*
   THE BOY IN THE ROOM.
@@ -260,7 +260,7 @@
 @media(min-width:900px){
   .sl-room-cast{display:block}
   .sl-thinking-boy{display:none}
-  .sl-thought-clouds{padding-bottom:14px}
+  .sl-thought-clouds{padding-top:14px}
   .sl-desk-note{left:8px}
 }
 @keyframes sl-boy-bounce{
@@ -476,25 +476,6 @@
   66%{translate:calc(var(--drift-x,0px) * -1) calc(var(--drift-y,-5px) * .45);rotate:calc(var(--drift-rot,0deg) * -.6)}
 }
 
-/*
-  ── The three-second hush ───────────────────────────────────────────────────
-
-  Everything that is not a thought cloud steps back once the child has had a
-  look at the room (see the `focused` timer in StoryLabRoom.tsx). Opacity and
-  not display, so nothing reflows and the clouds do not jump when it happens;
-  pointer-events go with it so a faded control cannot be pressed by accident.
-*/
-.sl-focused :is(.sl-header-books,.sl-header-notes,.sl-title,.sl-grownup,.sl-desk-note,.sl-room-bubble){
-  opacity:0;pointer-events:none;transition:opacity .9s ease;
-}
-.sl-focused .sl-thinking-boy{opacity:.16;transition:opacity .9s ease}
-.sl-focused .sl-panel-now .sl-ask{opacity:.4;transition:opacity .9s ease}
-.sl-focused .sl-panel-now .sl-thought-clouds{padding-bottom:16px}
-/* The clouds themselves come up a touch as the room goes down. */
-.sl-focused .sl-thought-cloud{filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 15px #9fcbffaa)}
-/* Anything focus-visible inside the hush comes straight back — a child
-   arriving by keyboard must be able to see where they are. */
-.sl-focused :is(.sl-grownup,.sl-desk-note):focus-visible{opacity:1;pointer-events:auto}
 @keyframes sl-breathe{50%{scale:1.035;filter:drop-shadow(0 0 22px #b7eeffaa)}}
 .sl-still *{animation:none!important;transition:none!important}
 .sl-quiet .sl-grownup{border:3px solid #fff0ae}
