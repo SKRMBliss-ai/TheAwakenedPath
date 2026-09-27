@@ -183,9 +183,9 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
   const heading = useRef<HTMLHeadingElement>(null);
   const [flight, setFlight] = useState<Flight | null>(null);
 
-  /* Where the boy floats by default — right beside the question board —
+  /* Where the boy floats by default — sitting on the cushions at the bottom left —
      until a child drags him somewhere else, which then sticks for good. */
-  const boyFloat = useFloatingPosition('games-room:boy', { xPct: 4, yPct: 24 });
+  const boyFloat = useFloatingPosition('games-room:boy', { xPct: 9, yPct: 70 });
 
   /*
     IDLE BLUR — after 3 seconds without interaction the scenery, cast, themes

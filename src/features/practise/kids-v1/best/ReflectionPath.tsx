@@ -30,7 +30,7 @@ import './ReflectionPath.css';
   ══════════════════════════════════════════════════════════════════════════
 */
 
-/** v3 room art stays — the background, lantern, crystals. */
+/** v3 room art stays — the background, crystals. */
 const V3 = '/mind-gym/reflection/v3/';
 /** v4 interactive elements — bricks, orbs, star, bar. */
 const V4 = '/mind-gym/reflection/v4/';
@@ -65,7 +65,7 @@ const TAG_LABELS: Record<string, string> = {
 const WELCOME = [
   'You can stay as long as you like. Nothing to do in here.',
   'Everything you wrote is still here. Nothing got lost.',
-  "I kept the lanterns on. Sit wherever you want.",
+  'Your bricks are waiting. Sit wherever you want.',
   'This is your room. I just come and sit in it.',
 ];
 
@@ -479,7 +479,6 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       <div className="rr-portal-glow" aria-hidden="true" />
       <Ambience still={still || inCalm} />
 
-      <img className="rr-lantern" src={`${V3}lantern.webp`} alt="" aria-hidden="true" draggable={false} />
       <img className="rr-crystals" src={`${V3}crystals.webp`} alt="" aria-hidden="true" draggable={false} />
 
       <DoorHandle side="left" label="Back to Mind Gym" onClick={() => { stopSpeaking(); sound.stopMusic(); onExit(); }}
