@@ -648,7 +648,8 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const say = (text: string) => ({
     onPointerEnter: () => {
       window.clearTimeout(hoverTimer.current);
-      hoverTimer.current = window.setTimeout(() => speak(text, quiet, 'mind', undefined, carried.feeling || ''), 350);
+      const who = step === 3 ? 'grownup' : 'mind';
+      hoverTimer.current = window.setTimeout(() => speak(text, quiet, who, undefined, who === 'mind' ? carried.feeling || '' : ''), 350);
     },
     onPointerLeave: () => window.clearTimeout(hoverTimer.current),
   });
