@@ -645,10 +645,26 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
      in the mind voice. A short pause first, so sweeping the pointer across
      the panel doesn't set off every card on the way. */
   const hoverTimer = useRef<number | undefined>(undefined);
-  const say = (text: string) => ({
+  /*
+    THE VOICE BELONGS TO THE CARD, NOT TO WHATEVER STEP THE ROOM HAPPENS TO
+    BE ON.
+
+    This used to read the room's current `step` to decide grownup vs. mind —
+    which meant a card kept its meaning only while its own panel was the
+    active one. The Thought clouds stay on screen (in the filmstrip) after
+    the child moves on to "What happened?", and once `step` became 3 hovering
+    that same already-answered cloud started asking for the GROWN-UP voice
+    on a line that had only ever been cached under the mind voice. That's a
+    cache miss into a cold Gemini TTS call, which is the minute-long silence
+    it looked like a hang.
+
+    So each call site says which voice it wants, and only the "What
+    happened?" cards (the grown-up's question) pass 'grownup'; everything
+    else defaults to the mind, matching the line's real, stable cache key.
+  */
+  const say = (text: string, who: 'grownup' | 'mind' = 'mind') => ({
     onPointerEnter: () => {
       window.clearTimeout(hoverTimer.current);
-      const who = step === 3 ? 'grownup' : 'mind';
       hoverTimer.current = window.setTimeout(() => speak(text, quiet, who, undefined, who === 'mind' ? carried.feeling || '' : ''), 350);
     },
     onPointerLeave: () => window.clearTimeout(hoverTimer.current),
@@ -775,7 +791,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                   <img src="/mind-gym/story-lab/memory-illustration.webp" alt="An illustrated example of a moment in a school playground" />
                   <figcaption className="sr-only">{ageBand === 'older' ? 'What happened, before deciding what it meant?' : 'What would a little camera have seen?'}</figcaption>
                 </figure>
-                <div className={`sl-cards ${eventRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{eventOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(3, option.text)}`} disabled={step !== 3} onClick={() => pick(option)} {...say(option.own ? 'Something else? Tell me.' : option.text)}>
+                <div className={`sl-cards ${eventRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{eventOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(3, option.text)}`} disabled={step !== 3} onClick={() => pick(option)} {...say(option.own ? 'Something else? Tell me.' : option.text, 'grownup')}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
                 </button>)}</div>
               </>}
