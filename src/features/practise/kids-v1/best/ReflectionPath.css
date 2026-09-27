@@ -438,7 +438,8 @@
 }
 .rr-actions button:disabled { opacity: .4; cursor: default; }
 .rr-actions .rr-on { border-color: #ffe9b8; background: linear-gradient(#6b4aa8d9, #3a2164e0); }
-.rr-action-soft { opacity: .72; }
+.rr-action-soft { opacity: .25; transition: opacity .2s ease; }
+.rr-action-soft:hover { opacity: 1; }
 
 .rr-empty {
   position: absolute; z-index: 6; left: 50%; top: 44%;

@@ -71,6 +71,15 @@ const WELCOME = [
 
 const FIRST_AFFIRMATION = 'I am learning something new about myself.';
 
+function shuffled<T>(list: T[]): T[] {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 const BREATH_IN_MS = 4000;
 const BREATH_OUT_MS = 6000;
 const BREATH_DURATION_MS = 60000;
@@ -196,16 +205,17 @@ export function ReflectionPath({ onExit, onGrownUp }: {
   const all = useKidStore((s) => s.savedReflections);
   const markPlayed = useKidStore((s) => s.markReflectionPlayed);
   const toggleFav = useKidStore((s) => s.toggleReflectionFavourite);
-  const setAffirmation = useKidStore((s) => s.setReflectionAffirmation);
 
   const [focusId, setFocusId] = useState<string | null>(null);
   const [popup, setPopup] = useState<Popup>(null);
   const [speaking, setSpeaking] = useState(false);
   const [calmMode, setCalmMode] = useState<CalmMode>('none');
   const [breathPhase, setBreathPhase] = useState<'idle' | 'in' | 'out'>('idle');
-  const [withMe, setWithMe] = useState(false);
   const [starId, setStarId] = useState<string | null>(null);
-  const [shuffleNonce, setShuffleNonce] = useState(0);
+  /* The line the room is saying right now, shown in the affirmation bar, and
+     the affirmation being read inside an open popup. */
+  const [roomLine, setRoomLine] = useState<string | null>(null);
+  const [popupLine, setPopupLine] = useState<string | null>(null);
   const [lit, setLit] = useState(false);
   const [meditationDots, setMeditationDots] = useState(12);
 
@@ -223,13 +233,65 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     if (!quiet) sound.play(c);
   }, [quiet]);
 
+  /*
+    One list of lines, read one after another. `onEnd` only fires for the
+    Gemini audio, never the browser fallback, so every line also gets a timer
+    sized to its length and whichever comes first moves on. Starting a new
+    list, or calling cancelLines, abandons the old one.
+  */
+  const lineToken = useRef(0);
+  const cancelLines = useCallback(() => { lineToken.current += 1; setSpeaking(false); }, []);
+  const playLines = useCallback((
+    lines: Array<{ text: string; who: 'grownup' | 'mind' }>,
+    onStep: (i: number) => void,
+    onDone: () => void,
+  ) => {
+    const token = ++lineToken.current;
+    setSpeaking(true);
+    const next = (i: number) => {
+      if (token !== lineToken.current) return;
+      if (i >= lines.length) { setSpeaking(false); onDone(); return; }
+      onStep(i);
+      let moved = false;
+      let timer = 0;
+      const advance = () => {
+        if (moved || token !== lineToken.current) return;
+        moved = true;
+        window.clearTimeout(timer);
+        window.setTimeout(() => next(i + 1), 700);
+      };
+      timer = window.setTimeout(advance, Math.max(3500, lines[i].text.length * 110) + 1500);
+      speak(lines[i].text, quiet, lines[i].who, advance);
+    };
+    next(0);
+  }, [quiet]);
+
   /* ── Room arrival ────────────────────────────────────────────────────────── */
+  /* Every affirmation the child has, shuffled once per visit. */
+  const [roomAffirmations] = useState(() => {
+    const own = [...new Set(all.map((r) => r.affirmation).filter((a): a is string => !!a))];
+    const list = own.length ? own : [FIRST_AFFIRMATION, ...pickThreeAffirmations('other')];
+    return shuffled(list);
+  });
+  /* How far the room has got, so a popup can interrupt and the room picks up
+     where it left off afterwards. */
+  const roomAt = useRef(0);
+  const playRoom = useCallback(() => {
+    const rest = roomAffirmations.slice(roomAt.current);
+    if (!rest.length) { setRoomLine(null); return; }
+    playLines(
+      rest.map((text) => ({ text, who: 'mind' as const })),
+      (i) => { roomAt.current = roomAffirmations.length - rest.length + i + 1; setRoomLine(rest[i]); },
+      () => setRoomLine(null),
+    );
+  }, [roomAffirmations, playLines]);
+
   useEffect(() => {
     const t1 = window.setTimeout(() => { setLit(true); cue('enterRoom'); }, still ? 0 : 420);
     const t2 = window.setTimeout(() => {
-      say(WELCOME[Math.floor(Math.random() * WELCOME.length)]);
+      playLines([{ text: WELCOME[Math.floor(Math.random() * WELCOME.length)], who: 'mind' }], () => {}, playRoom);
     }, still ? 300 : 1500);
-    return () => { window.clearTimeout(t1); window.clearTimeout(t2); stopSpeaking(); };
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2); lineToken.current += 1; stopSpeaking(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
   }, []);
 
@@ -244,7 +306,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     if (!all.length) return [];
     const pool: SavedReflection[] = [];
     for (const r of all) { pool.push(r); if (r.favourite) pool.push(r); }
-    let s = daySeed + shuffleNonce * 7919;
+    let s = daySeed;
     const rand = () => { s = ((s * 1664525 + 1013904223) | 0) >>> 0; return s / 0x100000000; };
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));
@@ -257,7 +319,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       if (out.length >= BRICKS) break;
     }
     return out;
-  }, [all, shuffleNonce, daySeed]);
+  }, [all, daySeed]);
 
   /* ── Active affirmation ──────────────────────────────────────────────────── */
   const focused = all.find((r) => r.id === focusId) ?? summary.recentReflections[0] ?? null;
@@ -265,33 +327,9 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     ?? summary.favouriteAffirmations[0]?.text
     ?? FIRST_AFFIRMATION;
 
-  const choices = useMemo(() => {
-    const three = pickThreeAffirmations(focused?.tag ?? 'other');
-    if (focused?.affirmation && !three.includes(focused.affirmation)) three[2] = focused.affirmation;
-    return three;
-  }, [focused?.id, focused?.tag, focused?.affirmation]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => () => { stopSpeaking(); }, []);
-
-  /* ── Affirmation playback ────────────────────────────────────────────────── */
-  const stopSaying = useCallback(() => {
-    stopSpeaking();
-    setSpeaking(false);
-    setWithMe(false);
-  }, []);
-
-  const sayAffirmation = useCallback((repeat = false) => {
-    cue('tap');
-    if (speaking && !repeat) { stopSaying(); return; }
-    stopSpeaking();
-    setSpeaking(true);
-    setWithMe(repeat);
-    say(affirmation, 'mind', () => {
-      if (!repeat) { setSpeaking(false); return; }
-      window.setTimeout(() => say(affirmation, 'mind', () => { setSpeaking(false); setWithMe(false); }), 1400);
-    });
-    window.setTimeout(() => setSpeaking(false), Math.max(3000, affirmation.length * 95) * (repeat ? 2.4 : 1));
-  }, [affirmation, speaking, say, cue, stopSaying]);
+  /* The popup's affirmations, fixed when it opens so the list it is reading
+     from doesn't reshuffle under it. */
+  const [choices, setChoices] = useState<string[]>([]);
 
   /* ── Breathing ───────────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -348,10 +386,18 @@ export function ReflectionPath({ onExit, onGrownUp }: {
   }, [calmMode, cue, say, affirmation]);
 
   /* ── Opening things ──────────────────────────────────────────────────────── */
+  /* Opening a brick reads the reflection, then every affirmation in a
+     shuffled order, then closes itself and the room carries on. */
   const openReflection = (r: SavedReflection) => {
+    cancelLines();
     cue('roomCard');
     setFocusId(r.id);
     markPlayed(r.id);
+    const three = pickThreeAffirmations(r.tag ?? 'other');
+    if (r.affirmation && !three.includes(r.affirmation)) three[2] = r.affirmation;
+    const list = shuffled(three);
+    setChoices(list);
+    setPopupLine(null);
     setPopup({ kind: 'reflection', id: r.id });
     const parts = [
       r.feeling ? `You were feeling ${r.feeling.toLowerCase()}.` : '',
@@ -359,7 +405,16 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       r.originalStory ? `Your mind said: ${r.originalStory}` : '',
       r.anotherWay && r.anotherWay !== r.originalStory ? `And then you found: ${r.anotherWay}` : '',
     ].filter(Boolean).join(' ');
-    window.setTimeout(() => say(parts, 'grownup'), still ? 200 : 620);
+    const lines = [
+      ...(parts ? [{ text: parts, who: 'grownup' as const }] : []),
+      ...list.map((text) => ({ text, who: 'mind' as const })),
+    ];
+    const offset = parts ? 1 : 0;
+    window.setTimeout(() => playLines(
+      lines,
+      (i) => setPopupLine(i >= offset ? list[i - offset] : null),
+      () => closePopup(),
+    ), still ? 200 : 620);
   };
 
   const openMonth = () => {
@@ -385,16 +440,12 @@ export function ReflectionPath({ onExit, onGrownUp }: {
 
   const closePopup = () => {
     cue('exitRoom');
+    cancelLines();
     stopSpeaking();
     setPopup(null);
+    setPopupLine(null);
     setStarId(null);
-  };
-
-  const shuffle = () => {
-    cue('miniWin');
-    setShuffleNonce((n) => n + 1);
-    setFocusId(null);
-    say('Here are some others.', 'mind');
+    window.setTimeout(playRoom, 900);
   };
 
   const favourite = (r: SavedReflection) => {
@@ -404,11 +455,6 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     if (next) say('Kept.', 'mind');
   };
 
-  const chooseAffirmation = (r: SavedReflection, text: string) => {
-    cue('discovery');
-    setAffirmation(r.id, text);
-    say(text, 'mind');
-  };
 
   const startBreathing = () => {
     if (calmMode === 'breathing') {
@@ -417,6 +463,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       stopSpeaking();
       return;
     }
+    cancelLines();
     cue('tap');
     setCalmMode('breathing');
   };
@@ -428,6 +475,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       stopSpeaking();
       return;
     }
+    cancelLines();
     cue('tap');
     setCalmMode('meditation');
   };
@@ -553,14 +601,10 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       </div>
 
       {/* ── Compact affirmation bar ─────────────────────────────────────────── */}
-      <div className={`rr-affirm ${speaking ? 'rr-affirm-live' : ''} ${withMe ? 'rr-affirm-withme' : ''}`}>
+      <div className={`rr-affirm ${speaking ? 'rr-affirm-live' : ''}`}>
         <img className="rr-affirm-art" src={`${V4}affirmation_bar_blank.webp`} alt="" aria-hidden="true" draggable={false} />
-        <p className="rr-affirm-text">{affirmation}</p>
+        <p className="rr-affirm-text" aria-live="polite">{roomLine ?? affirmation}</p>
         <div className="rr-affirm-tools">
-          <button onClick={() => sayAffirmation(false)} aria-pressed={speaking}
-            aria-label={speaking ? 'Stop saying my affirmation' : 'Say my affirmation out loud'}>
-            {speaking ? '❚❚' : '🔊'}
-          </button>
           <button
             className={focused?.favourite ? 'rr-on' : ''}
             onClick={() => focused && favourite(focused)}
@@ -568,7 +612,6 @@ export function ReflectionPath({ onExit, onGrownUp }: {
             aria-pressed={!!focused?.favourite}
             aria-label={focused?.favourite ? 'Remove from favourites' : 'Keep as favourite'}
           >{focused?.favourite ? '♥' : '♡'}</button>
-          <button onClick={() => sayAffirmation(true)} aria-label="Say it with me, twice">↻</button>
         </div>
         {speaking && !still && (
           <span className="rr-affirm-sparks" aria-hidden="true">
@@ -577,7 +620,6 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         )}
       </div>
 
-      {withMe && <p className="rr-with-me" role="status">Say it with me — out loud, as many times as you like.</p>}
 
       {/* ── Breathing — room transformation ────────────────────────────────── */}
       {calmMode === 'breathing' && (
@@ -619,9 +661,6 @@ export function ReflectionPath({ onExit, onGrownUp }: {
 
       {/* ── Action buttons ─────────────────────────────────────────────────── */}
       <nav className="rr-actions" aria-label="Things you can do here">
-        <button onClick={shuffle} disabled={all.length < 2}>
-          <span aria-hidden="true">♡</span> Shuffle
-        </button>
         <button className={calmMode === 'breathing' ? 'rr-on' : ''} aria-pressed={calmMode === 'breathing'}
           onClick={startBreathing}>
           <span aria-hidden="true">☾</span> Breathe &amp; relax
@@ -630,10 +669,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
           onClick={startMeditation}>
           <span aria-hidden="true">✧</span> 2 min quiet
         </button>
-        <button className={withMe ? 'rr-on' : ''} aria-pressed={withMe} onClick={() => sayAffirmation(true)}>
-          <span aria-hidden="true">★</span> Say it with me
-        </button>
-        <button className="rr-action-soft" onClick={() => { stopSpeaking(); sound.stopMusic(); onGrownUp(); }}>
+        <button className="rr-action-soft" onClick={() => { cancelLines(); stopSpeaking(); sound.stopMusic(); onGrownUp(); }}>
           <span aria-hidden="true">♡</span> Talk to a grown-up
         </button>
       </nav>
@@ -652,9 +688,8 @@ export function ReflectionPath({ onExit, onGrownUp }: {
             <ReflectionDetail
               r={openReflectionRecord}
               choices={choices}
-              onSay={(t, who) => { cue('tap'); say(t, who); }}
+              now={popupLine}
               onFavourite={() => favourite(openReflectionRecord)}
-              onChoose={(t) => chooseAffirmation(openReflectionRecord, t)}
             />
           </Panel>
         )}
@@ -684,12 +719,11 @@ export function ReflectionPath({ onExit, onGrownUp }: {
 
 /* ── Popup 1 · reflection detail ──────────────────────────────────────────── */
 
-function ReflectionDetail({ r, choices, onSay, onFavourite, onChoose }: {
+function ReflectionDetail({ r, choices, now, onFavourite }: {
   r: SavedReflection;
   choices: string[];
-  onSay: (text: string, who: 'grownup' | 'mind') => void;
+  now: string | null;
   onFavourite: () => void;
-  onChoose: (text: string) => void;
 }) {
   return (
     <>
@@ -712,24 +746,13 @@ function ReflectionDetail({ r, choices, onSay, onFavourite, onChoose }: {
         )}
       </ol>
 
-      <div className="rr-detail-affirm">
-        <b>My affirmation</b>
-        <p>{r.affirmation ? `"${r.affirmation}"` : 'Pick one to carry with you.'}</p>
-        <button className="rr-icon-btn" onClick={() => onSay(r.affirmation || r.pathLabel, 'mind')}
-          aria-label="Listen to this">🔊</button>
-      </div>
-
-      <p className="rr-pick-hint">{r.affirmation ? 'Pick again, or keep this one.' : 'Choose an affirmation.'}</p>
-      <div className="rr-picks">
+      <div className="rr-picks" aria-live="polite">
         {choices.map((c) => (
-          <button key={c} className={r.affirmation === c ? 'rr-pick-on' : ''} onClick={() => onChoose(c)}>{c}</button>
+          <p key={c} className={now === c ? 'rr-pick-on' : ''}>{c}</p>
         ))}
       </div>
 
       <div className="rr-detail-foot">
-        <button onClick={() => onSay(
-          [r.whatHappened, r.originalStory, r.anotherWay].filter(Boolean).join('. '), 'grownup',
-        )}>🔊 Read it to me</button>
         <button className={r.favourite ? 'rr-on' : ''} onClick={onFavourite} aria-pressed={r.favourite}>
           {r.favourite ? '♥ Kept' : '♡ Keep this'}
         </button>
