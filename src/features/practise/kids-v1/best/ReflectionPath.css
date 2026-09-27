@@ -6,7 +6,7 @@
   the layout assumes that framing: the portal sits centre-top, the steps climb
   to it, the rug is centre-bottom, and the two lower corners are foreground
   decor. Percentages rather than pixels because the room has to hold its
-  composition from a phone to a 27-inch screen — and because the stones, the
+  composition from a phone to a 27-inch screen — and because the bricks, the
   child and the affirmation all have to stay out of each other's way at every
   size in between.
 
@@ -39,7 +39,7 @@
 /*
   Cover, not contain. Contained, the room sat as a letterboxed strip with dead
   bands above and below it — and every percentage in this file is measured
-  against the viewport, so the stones, the child and the lanterns all landed in
+  against the viewport, so the bricks, the child and the lanterns all landed in
   those bands, floating on flat purple instead of standing on a floor.
 */
 .rr-bg {
@@ -170,41 +170,41 @@
 .rr-charm-sky   { animation: rr-bob 6.4s ease-in-out infinite .8s; }
 @keyframes rr-bob { 50% { transform: translateY(-5px); } }
 
-/* ── The stones ─────────────────────────────────────────────────────────── */
+/* ── The bricks ────────────────────────────────────────────────────────── */
 
-.rr-stones { position: absolute; inset: 0; z-index: 4; margin: 0; padding: 0; list-style: none; }
-.rr-stone-slot { position: absolute; }
+.rr-bricks { position: absolute; inset: 0; z-index: 4; margin: 0; padding: 0; list-style: none; }
+.rr-brick-slot { position: absolute; }
 
-.rr-stone-empty {
+.rr-brick-empty {
   width: 11%;
   opacity: .22; filter: grayscale(.7) brightness(.72);
   pointer-events: none;
 }
-.rr-stone-empty img { width: 100%; height: auto; display: block; }
+.rr-brick-empty img { width: 100%; height: auto; display: block; }
 
-.rr-stone {
+.rr-brick {
   position: relative; display: block; width: 100%;
   padding: 0; border: 0; background: none;
   transition: transform .24s cubic-bezier(.2, 1.2, .4, 1), filter .24s ease;
-  animation: rr-stone-drift 7s ease-in-out infinite;
+  animation: rr-brick-drift 7s ease-in-out infinite;
   animation-delay: calc(var(--i) * -0.9s);
 }
-@keyframes rr-stone-drift { 50% { transform: translateY(-4px); } }
-.rr-stone-art {
+@keyframes rr-brick-drift { 50% { transform: translateY(-4px); } }
+.rr-brick-art {
   width: 100%; height: auto; display: block;
   filter: drop-shadow(0 10px 20px #0c041cb3);
   transition: filter .24s ease;
 }
 /*
-  THE WORDS ARE NEVER IN THE PICTURE. Every stone carries a sentence the child
-  wrote, rendered here in HTML over the blank glass plate from the pack — so
+  THE WORDS ARE NEVER IN THE PICTURE. Every brick carries a sentence the child
+  wrote, rendered here in HTML over the blank plate from the pack — so
   the art is one file for every reflection there will ever be, and the text is
   selectable, translatable and readable by a screen reader.
 
-  Held to the stone's lit face rather than its whole box: the plate's lower
+  Held to the brick's lit face rather than its whole box: the plate's lower
   third is the rounded underside and type sitting on it reads as falling off.
 */
-.rr-stone-text {
+.rr-brick-text {
   position: absolute; left: 9%; right: 9%; top: 16%; bottom: 30%;
   display: flex; align-items: center; justify-content: center; gap: 4px;
   font-size: clamp(9px, .82vw, 13.5px); font-weight: 850; line-height: 1.16;
@@ -212,17 +212,17 @@
   text-shadow: 0 1px 2px #fff7e0aa;
   overflow: hidden;
 }
-.rr-stone-mark { flex: 0 0 auto; font-size: 1.1em; color: #b8541f; }
-.rr-stone:hover, .rr-stone:focus-visible { transform: translateY(-6px) scale(1.07); }
-.rr-stone:hover .rr-stone-art, .rr-stone:focus-visible .rr-stone-art {
+.rr-brick-mark { flex: 0 0 auto; font-size: 1.1em; color: #b8541f; }
+.rr-brick:hover, .rr-brick:focus-visible { transform: translateY(-6px) scale(1.07); }
+.rr-brick:hover .rr-brick-art, .rr-brick:focus-visible .rr-brick-art {
   filter: drop-shadow(0 10px 20px #0c041cb3) drop-shadow(0 0 20px #ffe1a0cc);
 }
 /* The selected one keeps its halo after the finger leaves — touch has no
    hover, and "which one am I looking at" must survive letting go. */
-.rr-stone-here .rr-stone-art {
+.rr-brick-here .rr-brick-art {
   filter: drop-shadow(0 10px 20px #0c041cb3) drop-shadow(0 0 26px #ffe9b8ee);
 }
-.rr-stone-here .rr-stone { transform: translateY(-4px) scale(1.04); }
+.rr-brick-here .rr-brick { transform: translateY(-4px) scale(1.04); }
 
 /* ── The child and the bird ─────────────────────────────────────────────── */
 
@@ -256,15 +256,18 @@
   transform: translateX(-50%);
   transition: transform .3s ease, filter .3s ease;
 }
-.rr-affirm-art { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 24px #0c041cb3); }
+.rr-affirm-art {
+  width: 100%; height: auto; display: block;
+  filter: drop-shadow(0 10px 24px #0c041cb3);
+}
 .rr-affirm-text {
-  position: absolute; left: 8%; right: 20%; top: 26%; bottom: 22%;
+  position: absolute; left: 8%; right: 20%; top: 22%; bottom: 18%;
   display: flex; align-items: center; justify-content: center;
   margin: 0;
-  font-size: clamp(12px, 1.35vw, 20px); font-weight: 900; line-height: 1.18;
+  font-size: clamp(11px, 1.2vw, 17px); font-weight: 900; line-height: 1.18;
   text-align: center; color: #4a2c0c; text-shadow: 0 1px 2px #fff7e0cc;
 }
-/* Three icons ON the bubble. No transport strip — see the note in the TSX. */
+/* Three icons ON the bar. No transport strip. */
 .rr-affirm-tools {
   position: absolute; right: 5%; top: 50%; transform: translateY(-50%);
   display: flex; flex-direction: column; gap: 3px;
@@ -326,17 +329,83 @@
   font-size: clamp(16px, 2vw, 26px); font-weight: 900;
   text-shadow: 0 2px 12px #0d0420;
 }
+/* v4: the orb is an <img> cycling through three art states, not a gradient div */
 .rr-breath-orb {
-  width: clamp(90px, 13vw, 180px); aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle at 38% 32%, #fff6d6, #ffcf7e 44%, #b07ae8 100%);
-  box-shadow: 0 0 60px -6px #ffd98abb;
+  width: clamp(90px, 13vw, 180px); height: auto;
+  filter: drop-shadow(0 0 40px #ffd98abb) drop-shadow(0 0 80px #b07ae855);
+  transition: filter .6s ease;
 }
 .rr-breath-in  { animation: rr-breathe-in 4s ease-in-out forwards; }
-.rr-breath-out { animation: rr-breathe-out 5s ease-in-out forwards; }
-@keyframes rr-breathe-in  { from { transform: scale(.66); } to { transform: scale(1.12); } }
-@keyframes rr-breathe-out { from { transform: scale(1.12); } to { transform: scale(.66); } }
+.rr-breath-out { animation: rr-breathe-out 6s ease-in-out forwards; }
+.rr-breath-idle { animation: rr-breathe-idle 5s ease-in-out infinite; }
+@keyframes rr-breathe-in  { from { transform: scale(.78); } to { transform: scale(1.0); } }
+@keyframes rr-breathe-out { from { transform: scale(1.0); } to { transform: scale(.70); } }
+@keyframes rr-breathe-idle { 0%, 100% { transform: scale(.88); } 50% { transform: scale(.94); } }
 
-/* ── The four stones along the foot ─────────────────────────────────────── */
+.rr-breath-stop {
+  pointer-events: auto;
+  margin-top: 8px; padding: 8px 20px; border-radius: 24px;
+  border: 1px solid #ffd98a66; background: #2a1750cc;
+  color: #ffeece; font-size: clamp(11px, 1.1vw, 14px); font-weight: 800;
+  transition: transform .18s ease, background .18s ease;
+}
+.rr-breath-stop:hover { transform: scale(1.06); background: #3d2470cc; }
+
+/* ── Meditation — quiet star ──────────────────────────────────────────── */
+
+.rr-meditation {
+  position: absolute; z-index: 9; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding-bottom: 20vh;
+  background: radial-gradient(circle at 50% 38%, #0d072244, #0d0722ee 75%);
+}
+
+.rr-meditation-star {
+  width: clamp(80px, 11vw, 160px); height: auto;
+  filter: drop-shadow(0 0 30px #ffe9b8aa) drop-shadow(0 0 60px #c89bff66);
+  animation: rr-meditation-glow 6s ease-in-out infinite;
+}
+@keyframes rr-meditation-glow {
+  0%, 100% { filter: drop-shadow(0 0 30px #ffe9b8aa) drop-shadow(0 0 60px #c89bff66); transform: scale(1); }
+  50%      { filter: drop-shadow(0 0 40px #ffe9b8cc) drop-shadow(0 0 70px #c89bff88); transform: scale(1.02); }
+}
+
+.rr-meditation-dots {
+  position: absolute;
+  width: clamp(180px, 24vw, 340px); aspect-ratio: 1;
+  left: 50%; top: 50%; transform: translate(-50%, -60%);
+  pointer-events: none;
+}
+.rr-meditation-dot {
+  position: absolute;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #fff3c9; box-shadow: 0 0 10px #ffe08a;
+  /* Each dot sits on a ring, positioned by its angle */
+  left: calc(50% + cos(var(--angle)) * 48% - 3px);
+  top: calc(50% + sin(var(--angle)) * 48% - 3px);
+  transition: opacity 1.2s ease-out;
+}
+.rr-meditation-dot-gone {
+  opacity: 0;
+}
+
+.rr-meditation-stop {
+  margin-top: 6px; padding: 8px 20px; border-radius: 24px;
+  border: 1px solid #c9aef855; background: #1d1038cc;
+  color: #e8dcff; font-size: clamp(11px, 1.1vw, 14px); font-weight: 800;
+  transition: transform .18s ease, background .18s ease;
+}
+.rr-meditation-stop:hover { transform: scale(1.06); background: #2a1750cc; }
+
+/* ── Calm mode — room dims ──────────────────────────────────────────────── */
+
+.rr-calm-mode :is(.rr-bricks, .rr-charms, .rr-head, .rr-actions, .rr-cast, .rr-affirm) {
+  opacity: .2;
+  pointer-events: none;
+  transition: opacity .8s ease;
+}
+
+/* ── The four actions along the foot ───────────────────────────────────── */
 
 /*
   Glowing plaques, not buttons. The whole screen is a place and the only thing
@@ -388,7 +457,7 @@
   every one of these into a page, which is the exact thing this rebuild
   removed.
 */
-.rr-hushed :is(.rr-stones, .rr-cast, .rr-affirm, .rr-actions, .rr-charms, .rr-head) {
+.rr-hushed :is(.rr-bricks, .rr-cast, .rr-affirm, .rr-actions, .rr-charms, .rr-head) {
   filter: blur(1.5px) brightness(.78);
   transition: filter .4s ease;
 }
@@ -670,10 +739,10 @@
 /* ── Narrow screens ─────────────────────────────────────────────────────── */
 
 /*
-  The child and the affirmation stay. The decor goes first, then the stones
-  leave the floor and become a rail of magical stones along the bottom that
+  The child and the affirmation stay. The decor goes first, then the bricks
+  leave the floor and become a rail of magical bricks along the bottom that
   still reads as being in the room — scrolled rather than shrunk, because a
-  stone small enough for eight across a phone is a stone with no words on it.
+  brick small enough for eight across a phone is a brick with no words on it.
 */
 @media (max-width: 899px) {
   .rr-lantern, .rr-crystals, .rr-shimmer { display: none; }
@@ -688,7 +757,7 @@
   .rr-affirm-text { font-size: clamp(12px, 3.4vw, 16px); }
   .rr-with-me { bottom: 35%; white-space: normal; text-align: center; width: 86%; }
 
-  .rr-stones-rail {
+  .rr-bricks-rail {
     /* Clear of the actions, which wrap to two rows at this width. */
     inset: auto 0 clamp(112px, 16vh, 150px) 0;
     display: flex; gap: 10px;
@@ -697,13 +766,13 @@
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
   }
-  .rr-stones-rail::-webkit-scrollbar { display: none; }
-  .rr-stones-rail .rr-stone-slot {
+  .rr-bricks-rail::-webkit-scrollbar { display: none; }
+  .rr-bricks-rail .rr-brick-slot {
     position: relative; flex: 0 0 auto;
     width: clamp(150px, 44vw, 210px);
     scroll-snap-align: center;
   }
-  .rr-stone-text { font-size: 11px; }
+  .rr-brick-text { font-size: 11px; }
 
   .rr-actions { width: 100%; max-width: 100vw; padding: 0 8px; }
   .rr-actions button { padding: 8px 13px; font-size: 11.5px; }
@@ -734,7 +803,7 @@
 
 /*
   The quiet state and the OS flag both land here. Everything holds still; the
-  room is still lit, the stones are still there, and nothing moves at a child
+  room is still lit, the bricks are still there, and nothing moves at a child
   who has asked for it to stop.
 */
 .rr-still *, .rr-still .rr-bg { animation: none !important; }

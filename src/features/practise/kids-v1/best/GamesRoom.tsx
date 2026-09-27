@@ -187,6 +187,29 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
      until a child drags him somewhere else, which then sticks for good. */
   const boyFloat = useFloatingPosition('games-room:boy', { xPct: 4, yPct: 24 });
 
+  /*
+    IDLE BLUR — after 3 seconds without interaction the scenery, cast, themes
+    and ambient elements soften so the question board and answer chests stay
+    in sharp focus. Any pointer move, tap or key press brings everything back.
+    The background itself is never blurred.
+  */
+  const [idle, setIdle] = useState(false);
+  const idleTimer = useRef<number>();
+  const resetIdle = useCallback(() => {
+    setIdle(false);
+    window.clearTimeout(idleTimer.current);
+    idleTimer.current = window.setTimeout(() => setIdle(true), 3000);
+  }, []);
+  useEffect(() => {
+    resetIdle();
+    const events = ['pointermove', 'pointerdown', 'keydown', 'touchstart'] as const;
+    for (const e of events) window.addEventListener(e, resetIdle, { passive: true });
+    return () => {
+      window.clearTimeout(idleTimer.current);
+      for (const e of events) window.removeEventListener(e, resetIdle);
+    };
+  }, [resetIdle]);
+
   /* ── Awakening sequence ───────────────────────────────────────────────── */
   const [awakePhase, setAwakePhase] = useState<AwakePhase>('dim');
   const [inviteLine] = useState(pickInvite);
@@ -341,7 +364,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
     : picked ? '💭' : undefined;
 
   return <main
-    className={`gr-room ${still ? 'gr-still' : ''} ${quiet ? 'gr-quiet' : ''} gr-awake-${awakePhase}`}
+    className={`gr-room ${still ? 'gr-still' : ''} ${quiet ? 'gr-quiet' : ''} ${idle && !still ? 'gr-idle' : ''} gr-awake-${awakePhase}`}
     data-pillar={theme}
     data-phase={state.phase}
     data-floating-room

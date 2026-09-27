@@ -588,6 +588,20 @@
 .gr-calm-grownup{border:1px solid #ffe9a6;background:#3b2263e8;color:#fff}
 .gr-calm-leave{border:1px solid #c9aef8;background:transparent;color:#e9dcff}
 
+/* ── Idle blur — scenery fades, questions and answers stay sharp ────────── */
+.gr-idle :is(.gr-scenery, .gr-cast, .gr-themes, .gr-ambient, .gr-top, .gr-warm-glow, .gr-prompt, .gr-book-sparkle){
+  filter:blur(2.5px) brightness(.7);
+  opacity:.55;
+  transition:filter .6s ease,opacity .6s ease;
+  pointer-events:none;
+}
+/* Board and chests stay in full focus during idle */
+.gr-idle .gr-board,
+.gr-idle .gr-chests{
+  filter:none;opacity:1;
+  transition:filter .3s ease,opacity .3s ease;
+}
+
 /* ── Motion off ──────────────────────────────────────────────────────────── */
 .gr-still *{animation:none!important;transition:none!important}
 @media(prefers-reduced-motion:reduce){.gr-room *{animation:none!important;transition:none!important}}

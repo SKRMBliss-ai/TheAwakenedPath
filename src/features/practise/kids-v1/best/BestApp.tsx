@@ -39,6 +39,7 @@ import { FirstNight } from './FirstNight';
 import { useKidAccountSync } from '../kit/kidAccount';
 import { HomeScreen } from './HomeScreen';
 import { GamesRoom } from './GamesRoom';
+import { ChildBadge } from './ChildBadge';
 import { ROOM_PILLARS } from '../kit/behaviourPractice';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
@@ -366,6 +367,8 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
           RewardPerch. Friends moved behind the blue door with the rooms; it is
           somewhere you go and look, not something you practise.
         */}
+
+        <ChildBadge />
       </div>
     </QuietProvider>
   );

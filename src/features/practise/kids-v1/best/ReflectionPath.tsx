@@ -12,57 +12,36 @@ import './ReflectionPath.css';
 
 /*
   ══════════════════════════════════════════════════════════════════════════
-  THE REFLECTION ROOM — one place, not a stack of screens.
+  THE REFLECTION ROOM — v4.
 
-  This used to be two: a path of bricks, and a "Play & Relax Mode" the child
-  was thrown into when they touched one. The second screen took the room away
-  — the lanterns, the portal, the rug, the bird — and replaced it with a
-  transport bar, a scrubber and a card, at exactly the moment the child was
-  being asked to sit with something they had written about themselves. It was
-  a media player wearing a room's name.
+  One room. Everything opens INSIDE it. The child never leaves.
 
-  So there is one room. Everything opens INSIDE it, as a panel that floats up
-  while the room softens behind it, and closes in a few sparkles that fall
-  back into the floor. The child never leaves the place they came to be in.
+  v4 replaces the generic stone plates with hand-painted reflection bricks
+  (four states: empty, hover, selected, completed), adds a breathing orb
+  that cycles through three art states instead of a CSS gradient circle,
+  a two-minute "quiet star" meditation that transforms the room rather than
+  opening a new screen, and a compact affirmation bar that replaces the
+  heart.webp bubble.
 
-  THREE THINGS THIS ROOM WILL NOT DO, and they are the reason it exists:
-
-    1. It never scores a child. No streaks, no grades, no "emotional health",
-       no ranking a feeling against another feeling. See kit/reflectionSummary
-       — the rule lives with the data so it cannot drift.
-    2. It never says a thought was wrong. The mind's story and the other
-       possibility hang in the same sky as two stars, and the one that turns
-       up more often is not drawn as the true one.
-    3. It never nags. A child who opens the door, sits on the rug and closes
-       it again has used this room exactly as intended.
-
-  VOICE AND SOUND CARRY MOST OF IT, because the children this is for are six
-  and cannot all read yet. The bird speaks on arrival, the child's own
-  affirmation is read back in their own mind's voice, the month is narrated,
-  every star in the sky says its thought out loud, and the breathing is
-  counted in a grown-up voice over two real breath cues. Every one of those
-  goes silent in the quiet state and under the app's mute, in one place: see
-  `say` below.
+  THREE THINGS THIS ROOM WILL NOT DO:
+    1. It never scores a child.
+    2. It never says a thought was wrong.
+    3. It never nags.
   ══════════════════════════════════════════════════════════════════════════
 */
 
-/** v3 art pack — reflection_room_assets_v3_no_boy, cropped to its own pixels. */
+/** v3 room art stays — the background, lantern, crystals. */
 const V3 = '/mind-gym/reflection/v3/';
-/** The locked child + bird, already in the project. No new child asset. */
+/** v4 interactive elements — bricks, orbs, star, bar. */
+const V4 = '/mind-gym/reflection/v4/';
+/** The locked child + bird. */
 const CAST = '/mind-gym/reflection/';
 
-/** How many stones the floor holds. The rest of the archive comes round on a
- *  shuffle rather than filling the room until it is a wall of sentences. */
-const STONES = 8;
+const BRICKS = 8;
 
 /*
-  WHERE THE STONES LIE, read off 10_full_scene_reference.png.
-
-  Not a grid and not a path: they are scattered up the steps and across the
-  floor, four to a side, mirrored about the middle. The middle column stays
-  empty on purpose — that is where the child sits, and the affirmation floats
-  in front of them. Percentages of the stage, so the arrangement survives
-  every window width.
+  WHERE THE BRICKS LIE — same positions as the old stones, scattered up
+  the steps. Percentages of the stage so they hold at every viewport.
 */
 const SLOTS = [
   { left: 36.5, top: 39.5, w: 13.5 },
@@ -83,7 +62,6 @@ const TAG_LABELS: Record<string, string> = {
   belonging: 'Belonging', try_again: 'Try Again', other: 'Reflection',
 };
 
-/** What Chirpy says on the way in. One at random, so the room is not a script. */
 const WELCOME = [
   'You can stay as long as you like. Nothing to do in here.',
   'Everything you wrote is still here. Nothing got lost.',
@@ -91,11 +69,12 @@ const WELCOME = [
   'This is your room. I just come and sit in it.',
 ];
 
-/** The affirmation a child sees before they have saved anything of their own. */
 const FIRST_AFFIRMATION = 'I am learning something new about myself.';
 
 const BREATH_IN_MS = 4000;
-const BREATH_OUT_MS = 5000;
+const BREATH_OUT_MS = 6000;
+const BREATH_DURATION_MS = 60000;
+const MEDITATION_MS = 120000;
 
 function formatDay(iso: string) {
   const d = new Date(iso);
@@ -103,7 +82,6 @@ function formatDay(iso: string) {
   return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
-/** True while the window is too narrow to lay the stones across a floor. */
 function useNarrow() {
   const [narrow, setNarrow] = useState(
     () => typeof window !== 'undefined' && window.innerWidth < 900,
@@ -118,12 +96,7 @@ function useNarrow() {
   return narrow;
 }
 
-/*
-  ── The room's own weather ───────────────────────────────────────────────
-  Fireflies over the floor and a shimmer on the crystals. Deterministic
-  positions: random ones would redraw the sky on every render, which reads as
-  flicker rather than as life. Gone entirely when motion is off.
-*/
+/* ── Ambience ─────────────────────────────────────────────────────────────── */
 const FIREFLIES = Array.from({ length: 14 }, (_, i) => ({
   left: 6 + ((i * 37) % 88),
   top: 34 + ((i * 53) % 58),
@@ -153,25 +126,12 @@ function Ambience({ still }: { still: boolean }) {
   );
 }
 
-/*
-  ── A panel that floats up out of the room ───────────────────────────────
-
-  Every extra thing in here is one of these: it scales from .96, the room
-  behind it softens rather than disappearing, and on the way out a handful of
-  sparkles drop back into the floor. That closing beat is the difference
-  between "a dialog went away" and "the room took it back".
-*/
+/* ── Panel ────────────────────────────────────────────────────────────────── */
 function Panel({ title, icon, onClose, children, wide }: {
   title: string; icon: string; onClose: () => void; children: ReactNode; wide?: boolean;
 }) {
   const box = useRef<HTMLDivElement>(null);
 
-  /*
-    Escape closes, focus starts inside so a keyboard is not stranded on the
-    room behind — and on the way out it goes back to whatever opened this.
-    Without that last part a child tabbing the room loses their place every
-    time they look at a reflection, and lands back at the top.
-  */
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     box.current?.focus({ preventScroll: true });
@@ -216,6 +176,8 @@ function Panel({ title, icon, onClose, children, wide }: {
   );
 }
 
+type CalmMode = 'none' | 'breathing' | 'meditation';
+
 type Popup =
   | { kind: 'reflection'; id: string }
   | { kind: 'month' }
@@ -239,28 +201,19 @@ export function ReflectionPath({ onExit, onGrownUp }: {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [popup, setPopup] = useState<Popup>(null);
   const [speaking, setSpeaking] = useState(false);
-  const [breathing, setBreathing] = useState(false);
-  const [breathPhase, setBreathPhase] = useState<'in' | 'out'>('in');
+  const [calmMode, setCalmMode] = useState<CalmMode>('none');
+  const [breathPhase, setBreathPhase] = useState<'idle' | 'in' | 'out'>('idle');
   const [withMe, setWithMe] = useState(false);
   const [starId, setStarId] = useState<string | null>(null);
   const [shuffleNonce, setShuffleNonce] = useState(0);
   const [lit, setLit] = useState(false);
+  const [meditationDots, setMeditationDots] = useState(12);
 
-  /* Both of these read the clock, and the clock is not allowed in a render:
-     a seed that changes between two renders reshuffles the floor under the
-     child's finger. Taken once, on arrival, and held for the visit. */
   const [visitStart] = useState(() => new Date());
   const [daySeed] = useState(() => Math.floor(Date.now() / 86_400_000));
 
   const summary = useMemo(() => summariseReflections(all, visitStart), [all, visitStart]);
 
-  /*
-    ONE DOOR FOR EVERY SPOKEN LINE.
-
-    Scattering `speak(...)` through a screen this size is how half of it ends
-    up still talking in the quiet state eighteen months from now. Everything
-    that says anything goes through here, and the mute lives in one place.
-  */
   const say = useCallback((text: string, who: 'grownup' | 'mind' = 'mind', onEnd?: () => void) => {
     if (!text) return;
     speak(text, quiet, who, onEnd);
@@ -270,14 +223,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     if (!quiet) sound.play(c);
   }, [quiet]);
 
-  /*
-    THE ROOM COMES UP, THEN THE BIRD SPEAKS.
-
-    Both on a delay, and the delay is the point: a line that starts while the
-    screen is still arriving is a line nobody hears. The welcome is one of
-    four, at random, so a child who comes here every evening is not read the
-    same sentence every evening.
-  */
+  /* ── Room arrival ────────────────────────────────────────────────────────── */
   useEffect(() => {
     const t1 = window.setTimeout(() => { setLit(true); cue('enterRoom'); }, still ? 0 : 420);
     const t2 = window.setTimeout(() => {
@@ -287,22 +233,13 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
   }, []);
 
-  /*
-    THE LULLABY IS THE ROOM, not something to go and switch on. This is where
-    the hub's meditation door lands, so a child who came here to be somewhere
-    quiet should not have to find a button first. `playMusicWhenAllowed`
-    because the room is reachable directly and the tab may not have been
-    touched yet — see kit/sound.
-  */
   useEffect(() => {
     if (quiet) return;
     const cancel = sound.playMusicWhenAllowed('twoStories');
     return () => { cancel(); sound.stopMusic(); };
   }, [quiet]);
 
-  /* The stones on the floor: a seeded hand from the whole archive, favourites
-     weighted so the ones the child kept come round more often. Re-dealt only
-     when they ask for it, so a stone never moves under a finger. */
+  /* ── Dealt bricks ────────────────────────────────────────────────────────── */
   const dealt = useMemo(() => {
     if (!all.length) return [];
     const pool: SavedReflection[] = [];
@@ -317,35 +254,26 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     const out: SavedReflection[] = [];
     for (const r of pool) {
       if (!seen.has(r.id)) { seen.add(r.id); out.push(r); }
-      if (out.length >= STONES) break;
+      if (out.length >= BRICKS) break;
     }
     return out;
   }, [all, shuffleNonce, daySeed]);
 
-  /*
-    WHOSE AFFIRMATION IS FLOATING IN FRONT OF THE CHILD.
-
-    The one on the stone they touched, or the newest thing they saved, or —
-    for a child who has walked in here before finishing anything — a line that
-    is true of a child standing in a room they have never been in.
-  */
+  /* ── Active affirmation ──────────────────────────────────────────────────── */
   const focused = all.find((r) => r.id === focusId) ?? summary.recentReflections[0] ?? null;
   const affirmation = focused?.affirmation
     ?? summary.favouriteAffirmations[0]?.text
     ?? FIRST_AFFIRMATION;
 
-  /* Three to choose from, re-dealt only when the child moves to another
-     reflection — a picker that reshuffles under the finger is unusable. */
   const choices = useMemo(() => {
     const three = pickThreeAffirmations(focused?.tag ?? 'other');
     if (focused?.affirmation && !three.includes(focused.affirmation)) three[2] = focused.affirmation;
     return three;
   }, [focused?.id, focused?.tag, focused?.affirmation]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* Nothing may still be talking after the room closes. */
   useEffect(() => () => { stopSpeaking(); }, []);
 
-  /* ── The affirmation, out loud ────────────────────────────────────────── */
+  /* ── Affirmation playback ────────────────────────────────────────────────── */
   const stopSaying = useCallback(() => {
     stopSpeaking();
     setSpeaking(false);
@@ -358,45 +286,73 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     stopSpeaking();
     setSpeaking(true);
     setWithMe(repeat);
-    /* The mind's own voice, because these are words the child says about
-       themselves — a grown-up reading them back turns it into being told. */
     say(affirmation, 'mind', () => {
-      if (!repeat) { setSpeaking(false); return;}
-      /* "Say it with me" is the line twice, with a gap to say it into. */
+      if (!repeat) { setSpeaking(false); return; }
       window.setTimeout(() => say(affirmation, 'mind', () => { setSpeaking(false); setWithMe(false); }), 1400);
     });
-    /* speechSynthesis has no dependable end event on every platform, so the
-       pulse also stands down on a timer scaled to the line. Being a little
-       out is harmless; a bubble pulsing forever is not. */
     window.setTimeout(() => setSpeaking(false), Math.max(3000, affirmation.length * 95) * (repeat ? 2.4 : 1));
   }, [affirmation, speaking, say, cue, stopSaying]);
 
-  /* ── Breathing ────────────────────────────────────────────────────────── */
+  /* ── Breathing ───────────────────────────────────────────────────────────── */
   useEffect(() => {
-    if (!breathing) return;
+    if (calmMode !== 'breathing') return;
     let phase: 'in' | 'out' = 'in';
-    let rounds = 0;
+    const startTime = Date.now();
     const beat = () => {
+      if (Date.now() - startTime > BREATH_DURATION_MS) {
+        setCalmMode('none');
+        setBreathPhase('idle');
+        cue('breathComplete');
+        say('Stay here as long as you like.', 'grownup');
+        return;
+      }
       setBreathPhase(phase);
       if (phase === 'in') { cue('breatheIn'); say('Breathe in…', 'grownup'); }
       else { cue('breatheOut'); say('And out.', 'grownup'); }
       const wait = phase === 'in' ? BREATH_IN_MS : BREATH_OUT_MS;
       phase = phase === 'in' ? 'out' : 'in';
-      if (phase === 'in') { rounds += 1; if (rounds % 3 === 0) cue('breathComplete'); }
       timer = window.setTimeout(beat, wait);
     };
     let timer = window.setTimeout(beat, 300);
     return () => { window.clearTimeout(timer); stopSpeaking(); };
-  }, [breathing, cue, say]);
+  }, [calmMode, cue, say]);
 
-  /* ── Opening things ───────────────────────────────────────────────────── */
+  /* ── Meditation ──────────────────────────────────────────────────────────── */
+  useEffect(() => {
+    if (calmMode !== 'meditation') return;
+    setMeditationDots(12);
+    const t0 = window.setTimeout(() => {
+      say('Watch the little star, or just rest here.', 'grownup');
+    }, 600);
+    // One dot fades every 10s
+    const dotInterval = window.setInterval(() => {
+      setMeditationDots((d) => {
+        if (d <= 1) return 0;
+        return d - 1;
+      });
+    }, 10000);
+    const endTimer = window.setTimeout(() => {
+      cue('breathComplete');
+      setCalmMode('none');
+      setMeditationDots(12);
+      window.setTimeout(() => {
+        say(affirmation, 'mind');
+      }, 800);
+    }, MEDITATION_MS);
+    return () => {
+      window.clearTimeout(t0);
+      window.clearInterval(dotInterval);
+      window.clearTimeout(endTimer);
+      stopSpeaking();
+    };
+  }, [calmMode, cue, say, affirmation]);
+
+  /* ── Opening things ──────────────────────────────────────────────────────── */
   const openReflection = (r: SavedReflection) => {
     cue('roomCard');
     setFocusId(r.id);
     markPlayed(r.id);
     setPopup({ kind: 'reflection', id: r.id });
-    /* Read it back on arrival. A six-year-old who cannot yet read their own
-       saved sentence would otherwise be looking at a picture of it. */
     const parts = [
       r.feeling ? `You were feeling ${r.feeling.toLowerCase()}.` : '',
       r.whatHappened ? `What happened: ${r.whatHappened}` : '',
@@ -454,13 +410,33 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     say(text, 'mind');
   };
 
-  /* ── The sky ──────────────────────────────────────────────────────────── */
+  const startBreathing = () => {
+    if (calmMode === 'breathing') {
+      setCalmMode('none');
+      setBreathPhase('idle');
+      stopSpeaking();
+      return;
+    }
+    cue('tap');
+    setCalmMode('breathing');
+  };
+
+  const startMeditation = () => {
+    if (calmMode === 'meditation') {
+      setCalmMode('none');
+      setMeditationDots(12);
+      stopSpeaking();
+      return;
+    }
+    cue('tap');
+    setCalmMode('meditation');
+  };
+
+  /* ── Sky ─────────────────────────────────────────────────────────────────── */
   const sky = useMemo(
     () => constellationLayout(summary.commonThoughts.slice(0, 12)),
     [summary.commonThoughts],
   );
-  /* Two stars are joined when the same journey produced both — which is, in
-     practice, every old story and the possibility the child found instead. */
   const links = useMemo(() => {
     const out: Array<[number, number]> = [];
     for (let a = 0; a < sky.length; a++) {
@@ -480,23 +456,29 @@ export function ReflectionPath({ onExit, onGrownUp }: {
   const starExamples = (label: string) =>
     all.filter((r) => sky.find((s) => s.label === label)?.reflectionIds.includes(r.id));
 
-  const stones = SLOTS.map((slot, i) => ({ slot, i, r: dealt[i] ?? null }));
+  const bricks = SLOTS.map((slot, i) => ({ slot, i, r: dealt[i] ?? null }));
   const openReflectionRecord = popup?.kind === 'reflection'
     ? all.find((r) => r.id === popup.id) ?? null
     : null;
 
+  const inCalm = calmMode !== 'none';
+
   return (
     <main
-      className={`rr-room ${still ? 'rr-still' : ''} ${lit ? 'rr-lit' : ''} ${popup ? 'rr-hushed' : ''}`}
+      className={[
+        'rr-room',
+        still ? 'rr-still' : '',
+        lit ? 'rr-lit' : '',
+        popup ? 'rr-hushed' : '',
+        inCalm ? 'rr-calm-mode' : '',
+      ].filter(Boolean).join(' ')}
       style={{ fontFamily: FONT }}
       data-floating-room
     >
-      {/* The place itself. Everything else in here stands in front of it. */}
       <img className="rr-bg" src={`${V3}room.webp`} alt="" aria-hidden="true" draggable={false} />
       <div className="rr-portal-glow" aria-hidden="true" />
-      <Ambience still={still} />
+      <Ambience still={still || inCalm} />
 
-      {/* Foreground decor, inert to the pointer — it is scenery, not controls. */}
       <img className="rr-lantern" src={`${V3}lantern.webp`} alt="" aria-hidden="true" draggable={false} />
       <img className="rr-crystals" src={`${V3}crystals.webp`} alt="" aria-hidden="true" draggable={false} />
 
@@ -506,18 +488,9 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       <header className="rr-head">
         <h1>Reflection Room <span aria-hidden="true">♡</span></h1>
         <p className="rr-head-sub">Stay as long as you like.</p>
-        {/* Only once there is something to tap. A room with nothing in it
-            telling a child to tap a glowing reflection is a room setting them
-            a task they cannot do. */}
-        {all.length > 0 && <p className="rr-head-hint">Tap a glowing reflection to revisit it.</p>}
+        {all.length > 0 && <p className="rr-head-hint">Tap a glowing brick to revisit it.</p>}
       </header>
 
-      {/*
-        TWO SMALL OBJECTS IN THE ROOM, rather than a dashboard bolted to the
-        corner. The hanging star is the month; the little sky-glass is the
-        constellation. Both are things in the world that happen to open
-        something, which is the whole rule this screen is built on.
-      */}
       <div className="rr-charms">
         <button className="rr-charm rr-charm-month" onClick={openMonth}
           aria-label={`My journey this month: ${summary.journeysThisMonth} ${summary.journeysThisMonth === 1 ? 'journey' : 'journeys'}`}>
@@ -530,36 +503,40 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         </button>
       </div>
 
-      {/* ── The floor of reflections ─────────────────────────────────────── */}
-      <ul className={`rr-stones ${narrow ? 'rr-stones-rail' : ''}`} aria-label="Your saved reflections">
-        {stones.map(({ slot, i, r }) => {
+      {/* ── The floor of reflection bricks ──────────────────────────────────── */}
+      <ul className={`rr-bricks ${narrow ? 'rr-bricks-rail' : ''}`} aria-label="Your saved reflections">
+        {bricks.map(({ slot, i, r }) => {
           const style = narrow
             ? ({ '--i': i } as CSSProperties)
             : ({ left: `${slot.left}%`, top: `${slot.top}%`, width: `${slot.w}%`, '--i': i } as CSSProperties);
 
           if (!r) {
-            /* An unlit stone. Scenery that shows the room has room, never a
-               control that does nothing — so it is out of the tab order. */
             return narrow ? null : (
-              <li key={`empty-${i}`} className="rr-stone-slot rr-stone-empty" style={style} aria-hidden="true">
-                <img src={`${V3}stone.webp`} alt="" draggable={false} />
+              <li key={`empty-${i}`} className="rr-brick-slot rr-brick-empty" style={style} aria-hidden="true">
+                <img src={`${V4}reflection_brick_empty.webp`} alt="" draggable={false} />
               </li>
             );
           }
 
           const isFocus = focusId === r.id;
+          const brickImg = r.favourite
+            ? `${V4}reflection_brick_completed.webp`
+            : isFocus
+              ? `${V4}reflection_brick_selected.webp`
+              : `${V4}reflection_brick_empty.webp`;
+
           return (
-            <li key={r.id} className={`rr-stone-slot ${isFocus ? 'rr-stone-here' : ''}`} style={style}>
+            <li key={r.id} className={`rr-brick-slot ${isFocus ? 'rr-brick-here' : ''}`} style={style}>
               <button
-                className="rr-stone"
+                className="rr-brick"
                 onClick={() => openReflection(r)}
                 onPointerEnter={() => setFocusId(r.id)}
                 onFocus={() => setFocusId(r.id)}
                 aria-label={`Reflection from ${formatDay(r.createdAt)}: ${r.pathLabel}`}
               >
-                <img className="rr-stone-art" src={`${V3}stone.webp`} alt="" aria-hidden="true" draggable={false} />
-                <span className="rr-stone-text">
-                  <span className="rr-stone-mark" aria-hidden="true">{r.favourite ? '♥' : TAG_ICON[r.tag] ?? '✦'}</span>
+                <img className="rr-brick-art" src={brickImg} alt="" aria-hidden="true" draggable={false} />
+                <span className="rr-brick-text">
+                  <span className="rr-brick-mark" aria-hidden="true">{r.favourite ? '♥' : TAG_ICON[r.tag] ?? '✦'}</span>
                   {r.pathLabel}
                 </span>
               </button>
@@ -568,7 +545,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         })}
       </ul>
 
-      {/* ── The child, and the bird who lives here ───────────────────────── */}
+      {/* ── The child and Chirpy ────────────────────────────────────────────── */}
       <div className={`rr-cast ${speaking && !still ? 'rr-cast-listening' : ''}`} aria-hidden="true">
         <img className="rr-child" src={`${CAST}child_character.png`} alt="" draggable={false}
           onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -576,34 +553,21 @@ export function ReflectionPath({ onExit, onGrownUp }: {
           onError={(e) => { e.currentTarget.style.display = 'none'; }} />
       </div>
 
-      {/*
-        ── The affirmation ───────────────────────────────────────────────
-
-        The one thing in the room that is about right now rather than about
-        something that already happened, so it sits closest to the child and
-        gets the brightest surface in the pack.
-
-        ITS CONTROLS ARE THREE ICONS ON THE BUBBLE ITSELF. There is no
-        transport bar, no scrubber and no timeline, and there was: a strip
-        with ❚❚ and a progress track counting against a duration nobody knew,
-        because the line is spoken live and has no length until it is over.
-        A bar that fills while the voice has already stopped is a lie a child
-        catches in about four seconds.
-      */}
+      {/* ── Compact affirmation bar ─────────────────────────────────────────── */}
       <div className={`rr-affirm ${speaking ? 'rr-affirm-live' : ''} ${withMe ? 'rr-affirm-withme' : ''}`}>
-        <img className="rr-affirm-art" src={`${V3}heart.webp`} alt="" aria-hidden="true" draggable={false} />
+        <img className="rr-affirm-art" src={`${V4}affirmation_bar_blank.webp`} alt="" aria-hidden="true" draggable={false} />
         <p className="rr-affirm-text">{affirmation}</p>
         <div className="rr-affirm-tools">
           <button onClick={() => sayAffirmation(false)} aria-pressed={speaking}
             aria-label={speaking ? 'Stop saying my affirmation' : 'Say my affirmation out loud'}>
-            {speaking ? '❚❚' : '▶'}
+            {speaking ? '❚❚' : '🔊'}
           </button>
           <button
             className={focused?.favourite ? 'rr-on' : ''}
             onClick={() => focused && favourite(focused)}
             disabled={!focused}
             aria-pressed={!!focused?.favourite}
-            aria-label={focused?.favourite ? 'Remove this reflection from my favourites' : 'Keep this reflection as a favourite'}
+            aria-label={focused?.favourite ? 'Remove from favourites' : 'Keep as favourite'}
           >{focused?.favourite ? '♥' : '♡'}</button>
           <button onClick={() => sayAffirmation(true)} aria-label="Say it with me, twice">↻</button>
         </div>
@@ -616,23 +580,56 @@ export function ReflectionPath({ onExit, onGrownUp }: {
 
       {withMe && <p className="rr-with-me" role="status">Say it with me — out loud, as many times as you like.</p>}
 
-      {/* Breathing takes the room over rather than opening a panel: it is the
-          one thing in here that is better with nothing else on screen. */}
-      {breathing && (
-        <div className="rr-breath" role="status">
-          <span className={`rr-breath-orb rr-breath-${breathPhase}`} aria-hidden="true" />
-          <p>{breathPhase === 'in' ? 'Breathe in…' : 'And out…'}</p>
+      {/* ── Breathing — room transformation ────────────────────────────────── */}
+      {calmMode === 'breathing' && (
+        <div className="rr-breath" role="status" aria-label="Breathing exercise">
+          <img
+            className={`rr-breath-orb rr-breath-${breathPhase}`}
+            src={`${V4}breathing_orb_${breathPhase === 'in' ? 'inhale' : breathPhase === 'out' ? 'exhale' : 'idle'}.webp`}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+          />
+          <p aria-live="polite">{breathPhase === 'in' ? 'Breathe in…' : breathPhase === 'out' ? 'And out…' : ''}</p>
+          <button className="rr-breath-stop" onClick={startBreathing}>Stop whenever you like</button>
         </div>
       )}
 
-      {/* ── Four glowing stones along the foot ───────────────────────────── */}
+      {/* ── Meditation — quiet star ────────────────────────────────────────── */}
+      {calmMode === 'meditation' && (
+        <div className="rr-meditation" role="status" aria-label="Two minute quiet time">
+          <img
+            className="rr-meditation-star"
+            src={`${V4}meditation_focus_star.webp`}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+          />
+          <div className="rr-meditation-dots" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, i) => (
+              <span
+                key={i}
+                className={`rr-meditation-dot ${i >= meditationDots ? 'rr-meditation-dot-gone' : ''}`}
+                style={{ '--angle': `${i * 30}deg` } as CSSProperties}
+              />
+            ))}
+          </div>
+          <button className="rr-meditation-stop" onClick={startMeditation}>Finish for now</button>
+        </div>
+      )}
+
+      {/* ── Action buttons ─────────────────────────────────────────────────── */}
       <nav className="rr-actions" aria-label="Things you can do here">
         <button onClick={shuffle} disabled={all.length < 2}>
-          <span aria-hidden="true">♡</span> Shuffle a reflection
+          <span aria-hidden="true">♡</span> Shuffle
         </button>
-        <button className={breathing ? 'rr-on' : ''} aria-pressed={breathing}
-          onClick={() => { cue('tap'); setBreathing((v) => { if (v) stopSpeaking(); return !v; }); }}>
-          <span aria-hidden="true">☾</span> {breathing ? 'Stop breathing' : 'Breathe and relax'}
+        <button className={calmMode === 'breathing' ? 'rr-on' : ''} aria-pressed={calmMode === 'breathing'}
+          onClick={startBreathing}>
+          <span aria-hidden="true">☾</span> Breathe &amp; relax
+        </button>
+        <button className={calmMode === 'meditation' ? 'rr-on' : ''} aria-pressed={calmMode === 'meditation'}
+          onClick={startMeditation}>
+          <span aria-hidden="true">✧</span> 2 min quiet
         </button>
         <button className={withMe ? 'rr-on' : ''} aria-pressed={withMe} onClick={() => sayAffirmation(true)}>
           <span aria-hidden="true">★</span> Say it with me
@@ -645,11 +642,11 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       {!all.length && (
         <p className="rr-empty">
           Your room is ready and there is nothing in it yet.<br />
-          Finish a Story Lab journey and it turns up here, lit, as a stone on the floor.
+          Finish a Story Lab journey and it turns up here, lit, as a brick on the floor.
         </p>
       )}
 
-      {/* ══ Popups, all in the same room ═══════════════════════════════════ */}
+      {/* ══ Popups ════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {openReflectionRecord && (
           <Panel key="reflection" icon="✦" title={formatDay(openReflectionRecord.createdAt) || 'A reflection'} onClose={closePopup}>
@@ -686,7 +683,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
   );
 }
 
-/* ── Popup 1 · one reflection, read back ─────────────────────────────────── */
+/* ── Popup 1 · reflection detail ──────────────────────────────────────────── */
 
 function ReflectionDetail({ r, choices, onSay, onFavourite, onChoose }: {
   r: SavedReflection;
@@ -695,13 +692,6 @@ function ReflectionDetail({ r, choices, onSay, onFavourite, onChoose }: {
   onFavourite: () => void;
   onChoose: (text: string) => void;
 }) {
-  /*
-    SHORT LABELS, AND NOTHING THE CHILD DID NOT SAY.
-
-    Each link renders only if that step was answered, so a reflection saved
-    from a shorter walk shows a shorter chain rather than a row of empty
-    boxes with internal field names in them.
-  */
   return (
     <>
       <div className="rr-detail-top">
@@ -709,23 +699,23 @@ function ReflectionDetail({ r, choices, onSay, onFavourite, onChoose }: {
         <span className="rr-chip rr-chip-soft">{TAG_LABELS[r.tag] ?? 'Reflection'}</span>
       </div>
 
-      <p className="rr-detail-lead">“{r.pathLabel}”</p>
+      <p className="rr-detail-lead">"{r.pathLabel}"</p>
 
       <ol className="rr-chain">
         {r.whatHappened && (
           <li><b>What happened</b><span>{r.whatHappened}</span></li>
         )}
         {r.originalStory && (
-          <li className="rr-chain-old"><b>Old story</b><span>“{r.originalStory}”</span></li>
+          <li className="rr-chain-old"><b>Old story</b><span>"{r.originalStory}"</span></li>
         )}
         {r.anotherWay && r.anotherWay !== r.originalStory && (
-          <li className="rr-chain-new"><b>Another way</b><span>“{r.anotherWay}”</span></li>
+          <li className="rr-chain-new"><b>Another way</b><span>"{r.anotherWay}"</span></li>
         )}
       </ol>
 
       <div className="rr-detail-affirm">
         <b>My affirmation</b>
-        <p>{r.affirmation ? `“${r.affirmation}”` : 'Pick one to carry with you.'}</p>
+        <p>{r.affirmation ? `"${r.affirmation}"` : 'Pick one to carry with you.'}</p>
         <button className="rr-icon-btn" onClick={() => onSay(r.affirmation || r.pathLabel, 'mind')}
           aria-label="Listen to this">🔊</button>
       </div>
@@ -749,7 +739,7 @@ function ReflectionDetail({ r, choices, onSay, onFavourite, onChoose }: {
   );
 }
 
-/* ── Popup 2 · the month, described and never graded ─────────────────────── */
+/* ── Popup 2 · the month ──────────────────────────────────────────────────── */
 
 function MonthPanel({ summary }: { summary: ReturnType<typeof summariseReflections> }) {
   if (!summary.reflectionCount) {
@@ -788,20 +778,18 @@ function MonthPanel({ summary }: { summary: ReturnType<typeof summariseReflectio
           <h3>Lines you keep coming back to</h3>
           <ul className="rr-keep-list">
             {summary.favouriteAffirmations.slice(0, 3).map((a) => (
-              <li key={a.text}>“{a.text}”</li>
+              <li key={a.text}>"{a.text}"</li>
             ))}
           </ul>
         </section>
       )}
 
-      {/* The one sentence in the room that describes the child, and it
-          describes what they have been DOING. See kit/reflectionSummary. */}
       {summary.practiceLine && <p className="rr-month-line">{summary.practiceLine}</p>}
     </>
   );
 }
 
-/* ── Popup 3 · the sky ───────────────────────────────────────────────────── */
+/* ── Popup 3 · the sky ────────────────────────────────────────────────────── */
 
 function SkyPanel({ sky, links, still, selected, onTouch, examples }: {
   sky: ReturnType<typeof constellationLayout>;
@@ -863,8 +851,6 @@ function SkyPanel({ sky, links, still, selected, onTouch, examples }: {
           <p className="rr-sky-hint">Touch a star to hear it, and to see where it came from.</p>
         )}
 
-        {/* Said plainly, because the sky itself cannot say it: the biggest
-            star is the one written down most, and that is all it is. */}
         <p className="rr-sky-note">Gold stars are stories your mind made. Green ones are other ways you found. A bigger star just means you wrote it down more often — not that it is the true one.</p>
       </div>
     </div>
