@@ -195,7 +195,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       <p className="mg-blocks mg-blocks-right" aria-hidden="true"><span>KINDER</span><span>BRAVER</span><span>CALMER</span><span>HAPPIER YOU ♡</span></p>
 
       <footer className="mg-safety">
-        <button className="chrome-fade" onClick={onExitGym}>‹ Back</button>
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
       </footer>
     </div>
