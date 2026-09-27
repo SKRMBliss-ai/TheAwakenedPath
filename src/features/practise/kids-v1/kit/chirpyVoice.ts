@@ -160,7 +160,18 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       if (resolved) return;
       clearTimeout(timeoutId);
       resolved = true;
-      if (!blob) return;
+      /*
+        A NON-OK RESPONSE IS NOT A REASON TO GO SILENT.
+        This used to just `return` here, on the assumption that a failed
+        fetch always throws and lands in `.catch` below. It doesn't: the
+        Function can come back 4xx/5xx (a feeling/voice combination it
+        rejects, a cold start erroring, quota) and `fetch` resolves normally
+        with `r.ok === false` — which this branch turned into `blob === null`
+        and then dropped on the floor. That is exactly what "happy" hit:
+        every other feeling's line played from the fallback that "should"
+        have caught it, and happy's silently never did.
+      */
+      if (!blob) { browserVoice(text); return; }
       const url = URL.createObjectURL(blob);
       heard.set(key, url);
       /* Only if this is still the line on screen. A child who has moved on

@@ -111,6 +111,41 @@ let current: HTMLAudioElement | null = null;
  *  one-shot taps and discovery chimes rather than being replaced by them. */
 let music: HTMLAudioElement | null = null;
 
+/*
+  THE BED STOPS WHEN NOBODY'S THERE.
+
+  `storyTheme`/`twoStories` loop for as long as the room is mounted, which
+  used to mean forever — a tab left open on the Story Lab looped the same
+  forest lullaby for the rest of the afternoon. Any pointer, touch or key
+  activity resets a two-minute clock; once it runs out with no activity the
+  bed just stops, the same way the room's own idle-blur backs off after a
+  few seconds of nothing. It starts back up the moment a room asks for it
+  again (playMusic/playMusicWhenAllowed both re-arm it).
+
+  The listeners attach once, lazily, on the first bed that ever plays —
+  there is no point paying for a global pointermove listener on screens
+  that never touch music at all.
+*/
+const IDLE_STOP_MS = 120_000;
+let idleTimer: number | undefined;
+let idleListenersAttached = false;
+
+function armIdleStop() {
+  if (typeof window === 'undefined') return;
+  window.clearTimeout(idleTimer);
+  idleTimer = window.setTimeout(() => stopMusic(), IDLE_STOP_MS);
+  if (!idleListenersAttached) {
+    idleListenersAttached = true;
+    const events = ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel'] as const;
+    const onActivity = () => {
+      if (!music) return;
+      window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(() => stopMusic(), IDLE_STOP_MS);
+    };
+    events.forEach((e) => window.addEventListener(e, onActivity, { passive: true }));
+  }
+}
+
 /** Play a cue. Honours the same device mute toggle as the rest of the app. */
 export function play(cue: Cue, opts?: { stopOthers?: boolean }) {
   if (isMuted() || typeof window === 'undefined') return;
@@ -143,6 +178,7 @@ export function playMusic(cue: Cue) {
     a.loop = true;
     void a.play().catch(() => { /* autoplay policy — stay silent */ });
     music = a;
+    armIdleStop();
   } catch { /* ignore */ }
 }
 
@@ -184,7 +220,7 @@ export function playMusicWhenAllowed(cue: Cue): () => void {
     a.volume = def.volume;
     a.loop = true;
     void a.play().then(
-      () => { disarm(); stopMusic(); music = a; },
+      () => { disarm(); stopMusic(); music = a; armIdleStop(); },
       () => { try { a.pause(); } catch { /* ignore */ } events.forEach((e) => window.addEventListener(e, retry, { once: true })); },
     );
   } catch {
@@ -198,6 +234,7 @@ export function playMusicWhenAllowed(cue: Cue): () => void {
 export function stopMusic() {
   try { music?.pause(); } catch { /* ignore */ }
   music = null;
+  if (typeof window !== 'undefined') window.clearTimeout(idleTimer);
 }
 
 /** Stop whatever long cue is playing (used when leaving a room mid-sound). */
