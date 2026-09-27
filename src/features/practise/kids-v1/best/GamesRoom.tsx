@@ -339,6 +339,18 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
     }
   }, [state.practised, quiet]);
 
+  /* "Choose a treasure and see what happens!" (and the answer labels on the
+     chests) are hints, not permanent labels — they fade 3s after each new
+     question, and 3s after each "X practised" update, so they don't sit
+     there competing with the chests once the child already knows what to
+     do. The chest labels come back on hover — see .gr-plaque-hidden. */
+  const [showPrompt, setShowPrompt] = useState(true);
+  useEffect(() => {
+    setShowPrompt(true);
+    const t = window.setTimeout(() => setShowPrompt(false), 3000);
+    return () => window.clearTimeout(t);
+  }, [state.scenario.id, state.practised]);
+
   const art = artRoomFor(room);
   const themeTitle = BEHAVIOUR_PILLARS[theme].title;
   const picked = state.selected === null ? null : state.scenario.choices[state.selected];
@@ -469,8 +481,10 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
             </div>
 
             <div className="gr-chests" role="group" aria-label="Choose a treasure">
-              {state.scenario.choices.map((choice, index) => <button key={index}
-                className={`gr-chest ${state.selected === index ? 'gr-chest-open' : ''} ${successful && state.selected !== index ? 'gr-chest-quiet' : ''}`}
+              {state.scenario.choices.map((choice, index) => {
+                const kind = chestArt(state.scenario.id, index).replace('chest_', '');
+                return <button key={index}
+                className={`gr-chest gr-chest-${kind} ${state.selected === index ? 'gr-chest-open' : ''} ${successful && state.selected !== index ? 'gr-chest-quiet' : ''}`}
                 disabled={successful || state.phase !== 'choices'}
                 aria-label={choice.label}
                 onClick={event => {
@@ -489,8 +503,9 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
                   <img className="gr-chest-sparkle" src={`${ART}/sparkles.png`} alt="" aria-hidden="true" />
                   <span className="gr-chest-emoji" aria-hidden="true">{choice.emoji}</span>
                 </span>
-                <span className="gr-plaque">{choice.label}</span>
-              </button>)}
+                <span className={`gr-plaque ${!showPrompt ? 'gr-plaque-hidden' : ''}`}>{choice.label}</span>
+              </button>;
+              })}
             </div>
 
             {/* Visual consequence after picking */}
@@ -507,11 +522,19 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
             {(state.phase === 'intro' || state.phase === 'reactions') &&
               <button className="gr-ready" onClick={() => { stopSpeaking(); session.skipDialogue(); }}>Ready to choose</button>}
 
-            <p className="gr-prompt">
+            <p className={`gr-prompt ${!showPrompt ? 'gr-prompt-hidden' : ''}`}>
               <span aria-hidden="true">★</span>
               {state.practised
                 ? `${state.practised} ${state.practised === 1 ? 'choice' : 'choices'} practised`
                 : 'Choose a treasure and see what happens!'}
+              {state.practised > 0 && (
+                <span key={state.practised} className="gr-prompt-burst" aria-hidden="true">
+                  <span className="gr-prompt-star gr-prompt-star-1">★</span>
+                  <span className="gr-prompt-star gr-prompt-star-2">★</span>
+                  <span className="gr-prompt-star gr-prompt-star-3">★</span>
+                  <span className="gr-prompt-star gr-prompt-star-4">★</span>
+                </span>
+              )}
             </p>
           </motion.section>
         </AnimatePresence>

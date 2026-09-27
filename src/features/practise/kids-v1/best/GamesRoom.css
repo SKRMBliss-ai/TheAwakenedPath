@@ -51,8 +51,9 @@
   opacity:1;filter:drop-shadow(0 8px 18px #c9aef899) drop-shadow(0 0 12px #8b5cf655);
 }
 
-/* Books — stacked just behind the boy's reading nook */
-.gr-books-btn{left:0.5%;bottom:36%;width:min(12%,150px)}
+/* Books — stacked just behind the boy's reading nook, above where he now
+   sits on the cushions */
+.gr-books-btn{left:0.5%;bottom:42%;width:clamp(72px,12vw,150px)}
 .gr-books-btn img.gr-books{position:relative;width:100%;height:auto}
 .gr-books-btn:not(:disabled):hover img,.gr-books-btn:focus-visible img{
   filter:drop-shadow(0 8px 14px #1107208c) drop-shadow(0 0 8px #ffe9a644);
@@ -86,8 +87,12 @@
 .gr-lamp-right{right:14%;top:10%}
 
 @media(max-width:900px){
-  .gr-books-btn,.gr-chalkboard,.gr-goodsign,.gr-cushions-btn,.gr-lamp{display:none}
+  .gr-chalkboard,.gr-goodsign,.gr-cushions-btn,.gr-lamp{display:none}
+  .gr-books-btn{width:clamp(56px,10vw,110px);bottom:40%}
   .gr-rug-btn{width:78%}
+}
+@media(max-width:520px){
+  .gr-books-btn{display:none}
 }
 
 /* ── Ambient layer — fireflies and star motes ─────────────────────────────── */
@@ -152,12 +157,16 @@
   work the hard edge used to: you read it as carved light in the room rather
   than as a graphic on top of one.
 */
+.gr-sign::before{
+  content:"";position:absolute;inset:-24% -12%;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 60% 55% at 50% 50%,#ffcf6e26 0%,transparent 72%);
+}
 .gr-sign img{
-  width:clamp(210px,min(38vw,22svh),440px);height:auto;display:block;
-  opacity:.66;
-  filter:drop-shadow(0 6px 16px #10061d66) drop-shadow(0 0 34px #ffcf6e3d) saturate(.92);
-  -webkit-mask-image:radial-gradient(ellipse 74% 62% at 50% 50%,#000 58%,transparent 96%);
-  mask-image:radial-gradient(ellipse 74% 62% at 50% 50%,#000 58%,transparent 96%);
+  width:clamp(250px,min(44vw,25svh),480px);height:auto;display:block;
+  opacity:.72;
+  filter:drop-shadow(0 6px 16px #10061d66) drop-shadow(0 0 38px #ffcf6e45) saturate(.9);
+  -webkit-mask-image:radial-gradient(ellipse 80% 68% at 50% 50%,#000 50%,transparent 96%);
+  mask-image:radial-gradient(ellipse 80% 68% at 50% 50%,#000 50%,transparent 96%);
 }
 
 .sr-only{
@@ -296,7 +305,7 @@
 
 /* ── The treasures ──────────────────────────────────────────────────────── */
 .gr-chests{
-  display:flex;justify-content:center;align-items:flex-end;gap:clamp(10px,2vw,30px);
+  display:flex;justify-content:center;align-items:flex-end;gap:clamp(4px,0.8vw,14px);
   width:100%;flex-wrap:wrap;
 }
 .gr-chest{
@@ -394,18 +403,74 @@
   border-color:#ffe6ae;box-shadow:0 0 16px -2px #ffd98a99,inset 0 1px 0 #ffe6ae88;
 }
 
+/*
+  EACH PLATE IN ITS OWN CHEST'S METAL.
+  The three chest crops come in different finishes — gold, silver-blue,
+  rose-gold — and one brown/gold plate on all three made two of them read as
+  a mismatched sticker. Each kind now takes its plate colour from its own
+  chest art.
+*/
+.gr-chest-continue .gr-plaque{
+  background:linear-gradient(#7ec6ec,#3f84b8 58%,#245a82);
+  border-color:#bfe8ff;
+}
+.gr-chest-continue.gr-chest-open .gr-plaque{
+  border-color:#e3f6ff;box-shadow:0 0 16px -2px #9fddff99,inset 0 1px 0 #e3f6ff88;
+}
+.gr-chest-kind .gr-plaque{
+  background:linear-gradient(#e8659f,#b8306f 58%,#7a1c4a);
+  border-color:#ffb8d9;
+}
+.gr-chest-kind.gr-chest-open .gr-plaque{
+  border-color:#ffe0ef;box-shadow:0 0 16px -2px #ff9fc899,inset 0 1px 0 #ffe0ef88;
+}
+
+/* The answer only needs to be read for the first few seconds of a new
+   question, or the count that just landed — after that it fades so the
+   chest art can breathe, and comes straight back the moment it's hovered
+   or focused, since that's exactly when a child wants to re-read it. */
+.gr-plaque-hidden{opacity:0;transition:opacity .4s ease}
+.gr-chest:hover .gr-plaque-hidden,
+.gr-chest:focus-visible .gr-plaque-hidden,
+.gr-chest:focus-within .gr-plaque-hidden{opacity:1}
+
 .gr-ready{
   border:1px solid #ffe6a8;border-radius:28px;padding:8px 20px;
   background:#4a2c79e8;color:#fff;font-weight:850;font-size:14px;
 }
 
 .gr-prompt{
+  position:relative;
   display:flex;align-items:center;gap:8px;margin:0;padding:min(8px,0.8svh) 22px;border-radius:12px;
   background:linear-gradient(#f0dcae,#d6b783);border:2px solid #9b6f34;
   box-shadow:0 5px 12px -5px #0e0418;
   color:#43290f;font-size:clamp(11.5px,1.2vw,15.5px);font-weight:900;
+  opacity:1;transition:opacity .5s ease,transform .5s ease;
 }
 .gr-prompt > span{color:#c9881f}
+/* The hint fades out 3s after each new question — and again 3s after each
+   "X practised" update — rather than sitting there forever once the child
+   already knows what to do. */
+.gr-prompt-hidden{opacity:0;transform:translateY(4px);pointer-events:none}
+
+/* A little star burst the moment the practised count lands, so the number
+   feels like a reward rather than a quiet re-label. */
+.gr-prompt-burst{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.gr-prompt-star{
+  position:absolute;left:50%;top:50%;color:#ffcf5e;font-size:14px;
+  text-shadow:0 0 6px #ffcf5eaa;
+  opacity:0;
+  animation:gr-prompt-star-burst .8s ease-out forwards;
+}
+.gr-prompt-star-1{animation-delay:0s;--bx:-46px;--by:-26px}
+.gr-prompt-star-2{animation-delay:.05s;--bx:44px;--by:-30px}
+.gr-prompt-star-3{animation-delay:.1s;--bx:-30px;--by:20px}
+.gr-prompt-star-4{animation-delay:.08s;--bx:36px;--by:24px}
+@keyframes gr-prompt-star-burst{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}
+  25%{opacity:1}
+  100%{opacity:0;transform:translate(calc(-50% + var(--bx)),calc(-50% + var(--by))) scale(1.1)}
+}
 
 /* ── The boy, Chirpy and the bubble ────────────────────────────────────── */
 /* He floats, and he's draggable — left/top come from useFloatingPosition as
