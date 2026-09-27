@@ -4764,31 +4764,31 @@ const CHIRPY_DIRECTION =
 /* The child's own mind, heard in the Story Lab when their thoughts are read
    back. Younger and slower than the narrator, so the two never blur. */
 const MIND_DIRECTION =
-    'Read this as the inner voice of a young child of about six, thinking out loud to themselves. ' +
-    'Young, light and a little breathy, with a small smile in the voice. Casual and natural, ' +
-    'nothing stiff or grown-up. Slow and wondering, with little pauses between phrases. ' +
-    'Honest and gentle, never performed or cute:';
+    'Whisper this as the inner voice of a young girl of about six, thinking quietly to herself. ' +
+    'A soft, close, breathy whisper throughout, as if the words are inside her head. ' +
+    'Young and natural, nothing stiff or grown-up, with little pauses between phrases. ' +
+    'Let the feeling come through clearly in the whisper, honest rather than performed:';
 
 /* Chirpy is the child's own mind, so he sounds the way the child said they
    feel. Matched loosely on the feeling's name; only the matched tone reaches
    the cache key, so a free-typed feeling can't multiply cache entries. */
 const MIND_TONES = [
     [/sad|grief|lonely|hurt|disappoint|miss|cry|down|left out/i, 'sad',
-        'The child feels sad. Let the voice be quiet, soft and a little heavy, slower still, with a small sigh in it.'],
+        'She feels sad. A heavy, slow whisper that wobbles a little, with a small sigh, close to tears.'],
     [/excit|happy|joy|proud|glad|great|fun/i, 'happy',
-        'The child feels happy and excited. Let the voice be bright and bouncy, and let a small, warm laugh come through at the end.'],
+        'She feels happy and excited. A bright, quick, smiling whisper, bubbling over, with a tiny giggle at the end.'],
     [/angry|mad|cross|frustrat|annoy|unfair/i, 'angry',
-        'The child feels angry. Let the voice be tight and a bit huffy, short breaths, but never shouting.'],
+        'She feels angry. A tight, huffy whisper through clenched teeth, sharp short breaths, never shouting.'],
     [/scar|worr|nervous|afraid|anxious|fear/i, 'worried',
-        'The child feels worried. Let the voice be small and unsure, a little shaky, hesitating before words.'],
+        'She feels worried. A tiny, shaky whisper, unsure, hesitating and catching her breath before words.'],
     [/asham|embarrass|shy/i, 'shy',
-        'The child feels embarrassed. Let the voice be small and quiet, almost a mumble, looking down.'],
+        'She feels embarrassed. A very small whisper, almost a mumble, trailing off, looking down.'],
     [/jealous|envy/i, 'jealous',
-        'The child feels jealous. Let the voice be a little sulky and grumbly, with a pout in it.'],
+        'She feels jealous. A sulky, grumbly whisper with a pout in it.'],
     [/bored/i, 'bored',
-        'The child feels bored. Let the voice be flat and drawn out, with a long slow sigh.'],
+        'She feels bored. A flat, drawn-out whisper with a long slow sigh.'],
     [/calm|peace|okay|fine|relax/i, 'calm',
-        'The child feels calm. Let the voice be easy and settled, warm and unhurried.'],
+        'She feels calm. An easy, settled, warm whisper, slow and unhurried.'],
 ];
 function mindTone(feeling) {
     const f = String(feeling || '').slice(0, 40);

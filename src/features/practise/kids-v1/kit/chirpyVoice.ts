@@ -71,7 +71,7 @@ let voiceToken = 0;
  * heard only when the child's thoughts are being said out loud.
  */
 export type Speaker = 'grownup' | 'mind';
-const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Puck' };
+const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Leda' };
 
 function browserVoice(text: string) {
   if (!isVoiceSupported()) return;
