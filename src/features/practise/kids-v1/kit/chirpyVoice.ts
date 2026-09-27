@@ -136,16 +136,20 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   if (cached) { play(cached, text, onEnd); return; }
 
   /*
-    GEMINI ONLY — no browser fallback.
+    GEMINI WITH BROWSER FALLBACK.
 
-    This used to race Gemini against a browser-voice timeout, so a child
-    who heard Chirpy at all often heard the browser's own (very different
-    sounding) voice for short lines and Gemini's calmer narration only for
-    the rare long one — two different voices, one at random. One character
-    should sound like one person every time he speaks, so the browser voice
-    is gone: if Gemini doesn't answer, the line stays silent rather than
-    switching narrators.
+    If Gemini is slow or offline, fall back to browser voice after 1.5s so
+    the child always hears something. The browser voice may be different but
+    it beats silence when Gemini is delayed or unavailable.
   */
+  let resolved = false;
+  const timeoutId = setTimeout(() => {
+    if (!resolved && speaking === text) {
+      resolved = true;
+      browserVoice(text);
+    }
+  }, 1500);
+
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -153,6 +157,9 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   })
     .then((r) => (r.ok ? r.blob() : null))
     .then((blob) => {
+      if (resolved) return;
+      clearTimeout(timeoutId);
+      resolved = true;
       if (!blob) return;
       const url = URL.createObjectURL(blob);
       heard.set(key, url);
@@ -161,7 +168,12 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text, onEnd); }
     })
     .catch(() => {
-      /* Gemini TTS only — no browser voice fallback. */
+      /* Fall back to browser voice if not already triggered by timeout. */
+      if (!resolved && speaking === text) {
+        resolved = true;
+        clearTimeout(timeoutId);
+        browserVoice(text);
+      }
     });
 }
 
