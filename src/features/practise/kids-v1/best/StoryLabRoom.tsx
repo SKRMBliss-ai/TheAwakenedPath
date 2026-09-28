@@ -790,7 +790,6 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                   src={companion.src}
                   alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
                 />
-                <p className="sl-desk-note" aria-hidden="true">Your<br />Thoughts<br />Matter<br /><span>♡</span></p>
               </div>}
 
               {index === 3 && <>

@@ -156,14 +156,17 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       fellBack = true;
       browserVoice(text);
     }
-  }, 4000);
+  }, 6000);
 
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text, voice: VOICES[who], character: who, feeling }),
   })
-    .then((r) => (r.ok ? r.blob() : null))
+    .then((r) => {
+      if (!r.ok) console.warn(`[chirpy-voice] ${r.status}: ${key.slice(0, 30)}`);
+      return r.ok ? r.blob() : null;
+    })
     .then((blob) => {
       if (resolved) return;
       clearTimeout(timeoutId);

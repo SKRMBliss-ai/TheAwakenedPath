@@ -997,6 +997,11 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
  * question moved into that bubble, so the panel gives up a box to get him.
  */
 [data-sl-panel="4"] .sl-ask{gap:6px}
+
+/* ── Step 3: Make cards wider on larger screens ─────────────────────────── */
+@media(min-width:1400px){
+  .sl-cards:not(.sl-confirm):not(.sl-wide){grid-template-columns:repeat(4,1fr)}
+}
 [data-sl-panel="4"] .sl-ask-chirpy{width:48px;height:54px}
 [data-sl-panel="4"] .sl-ask-bubble{padding:6px 10px;border-radius:14px}
 [data-sl-panel="4"] .sl-ask-bubble h3{font-size:13px}

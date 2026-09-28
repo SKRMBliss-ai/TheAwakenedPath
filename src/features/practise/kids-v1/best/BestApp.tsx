@@ -372,7 +372,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 
         <ChildBadge />
 
-        {!['reflection', 'observatory', 'leavenote', 'grownup'].includes(view.at) && (
+        {!['reflection', 'observatory', 'leavenote', 'grownup', 'story-lab'].includes(view.at) && (
           <DiaryNudge
             key={view.at + (view.at === 'room' || view.at === 'practice' ? view.room.id : '')}
             speakAloud={view.at === 'map'}
