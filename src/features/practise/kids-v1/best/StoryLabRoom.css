@@ -405,10 +405,10 @@
 /* ── Step 6 · Another way ──────────────────────────────────────────────── */
 
 .sl-possibility-windows{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.sl-window{min-width:0;min-height:0;display:flex;flex-direction:column;border:4px solid #6b5a4e;border-radius:15px;padding:7px 7px 9px;background:linear-gradient(#2c2441cc,#544660cc);text-align:center;box-shadow:0 5px 14px #170b2599}
-.sl-window h4{flex:0 0 auto;font-size:13px;font-weight:900;margin:0 0 4px;text-shadow:0 2px 4px #281333}
+.sl-window{min-width:0;min-height:0;display:flex;flex-direction:column;border:4px solid #6b5a4e;border-radius:15px;padding:4px 4px 5px;background:linear-gradient(#2c2441cc,#544660cc);text-align:center;box-shadow:0 5px 14px #170b2599}
+.sl-window h4{flex:0 0 auto;font-size:16px;font-weight:900;margin:0 0 2px;text-shadow:0 2px 4px #281333}
 .sl-window>img{flex:1 1 auto;min-height:0;width:100%;object-fit:contain;filter:grayscale(1)}
-.sl-window p{flex:0 0 auto;font-size:11.5px;font-weight:800;line-height:1.22;overflow-wrap:anywhere;background:#fff4dcf2;color:#311d58;padding:7px 5px;border-radius:8px;margin:5px 0 0}
+.sl-window p{flex:0 0 auto;font-size:15px;font-weight:800;line-height:1.22;overflow-wrap:anywhere;background:#fff4dcf2;color:#311d58;padding:5px 3px;border-radius:8px;margin:3px 0 0}
 .sl-another{border-color:#ffd071;background:linear-gradient(#7d5ab84a,#e0a84a33);box-shadow:0 0 20px #ffce6f99}
 .sl-another>img{filter:none}
 .sl-possibility-light{flex:1 1 auto;display:grid;place-items:center;font-size:54px;color:#fff5a9;text-shadow:0 0 22px #fff5a9}
@@ -891,8 +891,8 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .sl-story-scene .sl-badge{cursor:default}
 .sl-story-book{cursor:default}
 .sl-book-text{top:18%;bottom:26%;left:16%;right:16%}
-.sl-book-heading{font-size:12px}
-.sl-book-quote{font-size:19px;line-height:1.28;-webkit-line-clamp:4}
+.sl-book-heading{font-size:14px}
+.sl-book-quote{font-size:22px;line-height:1.28;-webkit-line-clamp:4}
 .sl-book-quote span{display:inline-block;white-space:pre;animation:sl-word-in .5s ease-out both}
 @keyframes sl-word-in{from{opacity:0;transform:translateY(8px) scale(.85)}to{opacity:1;transform:none}}
 
