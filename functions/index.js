@@ -4843,6 +4843,84 @@ function chirpyCacheKey(text, voice) {
     return crypto.createHash('sha256').update(`${text}|${voice}`).digest('hex').slice(0, 16);
 }
 
+/*
+  Works out the written direction and the cache key for one line, the same way
+  whether the line is asked for live or warmed ahead of time on a schedule.
+  Both paths MUST land on the same key or the warmed copy never gets found.
+*/
+function chirpyResolve({ text, voiceName, character, feeling, toneField }) {
+    let tone;
+    if (toneField === 'whisper') {
+        const emotion = mindTone(feeling);
+        tone = emotion.name === 'plain'
+            ? { name: 'thought-whisper', line: 'A soft, hissed whisper, like thinking out loud.' }
+            : { name: `thought-whisper-${emotion.name}`, line: `${emotion.line} Keep it as a soft, hissed whisper throughout, like thinking out loud rather than speaking aloud.` };
+    } else {
+        tone = character === 'mind' ? mindTone(feeling) : { name: 'plain', line: '' };
+    }
+    const direction = character === 'mind'
+        ? (tone.line ? MIND_DIRECTION.replace(/:$/, `. ${tone.line}:`) : MIND_DIRECTION)
+        : CHIRPY_DIRECTION;
+    return { direction, cacheKey: chirpyCacheKey(text, `${voiceName}|${character}|${tone.name}`) };
+}
+
+/* Returns the cached WAV buffer for a key, or null if nothing usable is stored.
+   Checks `storagePath` — the field the cache actually writes. It used to check
+   `storageUrl`, which is never written, so every request fell through to a
+   fresh synthesis and the stored audio was never once served. */
+async function chirpyCached(cacheKey) {
+    const snap = await db.collection('chirpyVoiceCache').doc(cacheKey).get();
+    if (snap.exists && snap.data().storagePath) {
+        try {
+            const buf = await admin.storage().bucket().file(snap.data().storagePath).download();
+            return buf[0];
+        } catch (e) {
+            console.warn(`[chirpyVoice] cache doc but file gone: ${cacheKey} (${e.message})`);
+        }
+    }
+    return null;
+}
+
+/* Synthesises one line with Gemini TTS and stores it in Storage + Firestore.
+   Throws on any TTS failure; callers decide what to do about that. */
+async function chirpySynthAndStore({ text, voiceName, direction, cacheKey }) {
+    const response = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/'
+        + 'gemini-2.5-flash-preview-tts:generateContent',
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey.value() },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: `${direction}\n\n${text}` }] }],
+                generationConfig: {
+                    responseModalities: ['AUDIO'],
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
+                },
+            }),
+        },
+    );
+    if (!response.ok) throw new Error(`Gemini TTS ${response.status}`);
+    const data = await response.json();
+    const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+    if (!part?.data) throw new Error('Gemini TTS returned no audio');
+
+    const rate = Number(/rate=(\d+)/.exec(part.mimeType || '')?.[1]) || 24000;
+    const wav = chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
+
+    const storagePath = `chirpy-voice-cache/${voiceName}/${cacheKey}.wav`;
+    await admin.storage().bucket().file(storagePath).save(wav, {
+        metadata: { contentType: 'audio/wav', cacheControl: 'public, max-age=2592000, immutable' },
+    });
+    await db.collection('chirpyVoiceCache').doc(cacheKey).set({
+        text,
+        voice: voiceName,
+        storagePath,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        usageCount: 0,
+    }, { merge: true });
+    return wav;
+}
+
 exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
     const text = String((req.body && req.body.text) || '').trim();
     /* Chirpy's lines are one or two sentences. A long body is either a bug or
@@ -4857,39 +4935,23 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
        feeling — Story Lab thoughts are read as whichever feeling was picked
        (scared, excited, angry...), just always as a whisper rather than the
        feeling's normal volume/pace. */
-    let tone;
-    if (req.body && req.body.tone === 'whisper') {
-        const emotion = mindTone(req.body && req.body.feeling);
-        tone = emotion.name === 'plain'
-            ? { name: 'thought-whisper', line: 'A soft, hissed whisper, like thinking out loud.' }
-            : { name: `thought-whisper-${emotion.name}`, line: `${emotion.line} Keep it as a soft, hissed whisper throughout, like thinking out loud rather than speaking aloud.` };
-    } else {
-        tone = character === 'mind' ? mindTone(req.body && req.body.feeling) : { name: 'plain', line: '' };
-    }
-    const direction = character === 'mind'
-        ? (tone.line ? MIND_DIRECTION.replace(/:$/, `. ${tone.line}:`) : MIND_DIRECTION)
-        : CHIRPY_DIRECTION;
-    const cacheKey = chirpyCacheKey(text, `${voiceName}|${character}|${tone.name}`);
+    const { direction, cacheKey } = chirpyResolve({
+        text, voiceName, character,
+        feeling: req.body && req.body.feeling,
+        toneField: req.body && req.body.tone,
+    });
 
     try {
-        /* CHECK CACHE FIRST — Firestore + Firebase Storage */
-        const cacheRef = db.collection('chirpyVoiceCache').doc(cacheKey);
-        const cacheSnap = await cacheRef.get();
-        if (cacheSnap.exists) {
-            const cached = cacheSnap.data();
-            if (cached.storageUrl) {
-                console.log(`[chirpyVoice] Cache hit: ${cacheKey} (${voiceName})`);
-                res.set('Content-Type', 'audio/wav');
-                res.set('Cache-Control', 'public, max-age=2592000, immutable');
-                res.set('X-Chirpy-Cache', 'HIT');
-                const audioBuffer = await admin.storage().bucket().file(cached.storagePath).download();
-                return res.send(audioBuffer[0]);
-            }
+        const cachedWav = await chirpyCached(cacheKey);
+        if (cachedWav) {
+            console.log(`[chirpyVoice] Cache hit: ${cacheKey} (${voiceName})`);
+            res.set('Content-Type', 'audio/wav');
+            res.set('Cache-Control', 'public, max-age=2592000, immutable');
+            res.set('X-Chirpy-Cache', 'HIT');
+            return res.send(cachedWav);
         }
 
-        /* CACHE MISS — synthesize new audio */
         console.log(`[chirpyVoice] Cache miss: ${cacheKey} (${voiceName})`);
-
         if (aiRateLimited('chirpyVoice', callerKey(req))) {
             return res.status(429).send('Too many requests — please wait a moment.');
         }
@@ -4897,51 +4959,8 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
             return res.status(503).send('Chirpy is resting his voice.');
         }
 
-        const response = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/'
-            + 'gemini-2.5-flash-preview-tts:generateContent',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': geminiKey.value(),
-                },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: `${direction}\n\n${text}` }] }],
-                    generationConfig: {
-                        responseModalities: ['AUDIO'],
-                        speechConfig: {
-                            voiceConfig: { prebuiltVoiceConfig: { voiceName } },
-                        },
-                    },
-                }),
-            },
-        );
-
-        if (!response.ok) throw new Error(`Gemini TTS ${response.status}`);
-        const data = await response.json();
-        const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-        if (!part?.data) throw new Error('Gemini TTS returned no audio');
-
-        const rate = Number(/rate=(\d+)/.exec(part.mimeType || '')?.[1]) || 24000;
-        const wav = chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
-
-        /* STORE IN FIREBASE — audio file + cache record */
-        const storagePath = `chirpy-voice-cache/${voiceName}/${cacheKey}.wav`;
-        const bucket = admin.storage().bucket();
-        const file = bucket.file(storagePath);
-        await file.save(wav, { metadata: { contentType: 'audio/wav', cacheControl: 'public, max-age=2592000, immutable' } });
-
-        await cacheRef.set({
-            text,
-            voice: voiceName,
-            storagePath,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            usageCount: 0,
-        }, { merge: true });
-
-        console.log(`[chirpyVoice] Cached new: ${cacheKey} → gs://bucket/${storagePath}`);
-
+        const wav = await chirpySynthAndStore({ text, voiceName, direction, cacheKey });
+        console.log(`[chirpyVoice] Cached new: ${cacheKey}`);
         res.set('Content-Type', 'audio/wav');
         res.set('Cache-Control', 'public, max-age=2592000, immutable');
         res.set('X-Chirpy-Cache', 'MISS');
@@ -4951,3 +4970,52 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
         return res.status(502).send('Chirpy lost his voice for a moment.');
     }
 });
+
+/*
+  WARM THE CACHE AHEAD OF THE CHILDREN.
+
+  Every Story Lab thought, for every feeling, synthesised once and stored so
+  the first child to reach any of them hears it instantly rather than waiting
+  on a fresh synthesis. chirpyWarmList.json is generated from the Story Lab
+  content (the thoughtsFor lists across all nine feelings) — regenerate it when
+  those change. Requested exactly as the room requests them: the 'mind' voice
+  (Puck), in each line's feeling, so the warmed key matches the live key.
+
+  Already-cached lines are skipped for free, so after the first full pass this
+  costs almost nothing and just tops up whatever is new. It stops the moment
+  the daily budget is spent and picks up the rest on the next run, so one quiet
+  daily pass converges without ever blowing the cap.
+*/
+const CHIRPY_WARM_LIST = require('./chirpyWarmList.json');
+const CHIRPY_MIND_VOICE = 'Puck';
+
+exports.warmChirpyVoiceCache = onSchedule(
+    { schedule: '17 3 * * *', timeZone: 'Etc/UTC', secrets: [geminiKey], timeoutSeconds: 540, memory: '512MiB' },
+    async () => {
+        let synthesised = 0;
+        let skipped = 0;
+        let failed = 0;
+        let stoppedForBudget = false;
+
+        for (const { feeling, text } of CHIRPY_WARM_LIST) {
+            const { direction, cacheKey } = chirpyResolve({
+                text, voiceName: CHIRPY_MIND_VOICE, character: 'mind', feeling,
+            });
+            if (await chirpyCached(cacheKey)) { skipped++; continue; }
+            if (!(await reserveAiBudget('chirpyVoice'))) { stoppedForBudget = true; break; }
+            try {
+                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey });
+                synthesised++;
+                /* Gentle on Gemini — this is a background job, not a race. */
+                await new Promise((r) => setTimeout(r, 400));
+            } catch (e) {
+                failed++;
+                console.warn(`[warmChirpyVoiceCache] failed "${text.slice(0, 40)}": ${e.message}`);
+            }
+        }
+
+        console.log(`[warmChirpyVoiceCache] done — synthesised ${synthesised}, `
+            + `already cached ${skipped}, failed ${failed}`
+            + `${stoppedForBudget ? ', stopped on daily budget (resumes next run)' : ''}`);
+    },
+);
