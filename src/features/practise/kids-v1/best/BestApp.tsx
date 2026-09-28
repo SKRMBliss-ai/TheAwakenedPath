@@ -40,7 +40,6 @@ import { useKidAccountSync } from '../kit/kidAccount';
 import { HomeScreen } from './HomeScreen';
 import { GamesRoom } from './GamesRoom';
 import { ChildBadge } from './ChildBadge';
-import { DiaryNudge } from './DiaryNudge';
 import { ROOM_PILLARS } from '../kit/behaviourPractice';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
@@ -372,13 +371,6 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 
         <ChildBadge />
 
-        {!['reflection', 'observatory', 'leavenote', 'grownup', 'story-lab'].includes(view.at) && (
-          <DiaryNudge
-            key={view.at + (view.at === 'room' || view.at === 'practice' ? view.room.id : '')}
-            speakAloud={view.at === 'map'}
-            onOpen={() => setView({ at: 'reflection', today: true })}
-          />
-        )}
       </div>
     </QuietProvider>
   );

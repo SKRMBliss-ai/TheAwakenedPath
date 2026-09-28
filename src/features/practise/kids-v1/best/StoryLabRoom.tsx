@@ -507,7 +507,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   */
   useEffect(() => {
     if (quiet) return;
-    const cancel = sound.playMusicWhenAllowed('storyTheme');
+    const cancel = sound.playMusicWhenAllowed('storyLabBed');
     return () => { cancel(); sound.stopMusic(); };
   }, [quiet]);
 

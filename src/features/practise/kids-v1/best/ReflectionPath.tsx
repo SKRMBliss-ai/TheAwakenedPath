@@ -297,7 +297,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
 
   useEffect(() => {
     if (quiet) return;
-    const cancel = sound.playMusicWhenAllowed('twoStories');
+    const cancel = sound.playMusicWhenAllowed('reflectionBed');
     return () => { cancel(); sound.stopMusic(); };
   }, [quiet]);
 
@@ -340,7 +340,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
   useEffect(() => {
     if (quiet || calmMode !== 'breathing') return;
     sound.stopMusic();
-    return () => { sound.playMusicWhenAllowed('twoStories'); };
+    return () => { sound.playMusicWhenAllowed('reflectionBed'); };
   }, [calmMode, quiet]);
 
   /* ── Dealt bricks ────────────────────────────────────────────────────────── */

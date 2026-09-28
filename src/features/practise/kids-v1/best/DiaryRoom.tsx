@@ -81,6 +81,11 @@ export function DiaryRoom({ onExit, onOlder, openToday = false }: { onExit: () =
   const s = useKidStore();
   const filledToday = useDiaryFilledToday();
   const quiet = useQuiet();
+  useEffect(() => {
+    if (quiet) { sound.stopMusic(); return; }
+    const cancel = sound.playMusicWhenAllowed('diaryBed');
+    return () => { cancel(); sound.stopMusic(); };
+  }, [quiet]);
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;
   const today = new Date();

@@ -551,3 +551,7 @@
   .mg-steps li>div{min-width:0}
   .mg-steps li:nth-child(even){margin-left:13%}
 }
+
+/* Greeting bubble blends into the scene instead of sitting on it like a card. */
+.mg-greeting{background:linear-gradient(#ffffff2e,#c9d8ff1f);backdrop-filter:blur(3px);border:1px solid #ffffff40;color:#fff;box-shadow:none;text-shadow:0 2px 6px #1a0f4a}
+.mg-greeting:after{border-top-color:#ffffff2e;border-left-color:#ffffff2e}

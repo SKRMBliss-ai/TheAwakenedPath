@@ -18,6 +18,9 @@ import levelPassed from '../../../assets/universfield-level-passed-143039.mp3';
 import arcadeUi from '../../../assets/floraphonic-arcade-ui-6229503.mp3';
 import bonusPointsClip from '../../../assets/cartoon-music-video-game-bonus-points-512990.mp3';
 import cuteLevelUp from '../../../assets/floraphonic-cute-level-up-3189853.mp3';
+import forestNature from '../../../assets/rooms/soundreality-nature-forest-sound-537925.mp3';
+import fairyGarden from '../../../assets/rooms/darren_hirst-fairies-in-the-garden-115-bpm-f-minor-399126.mp3';
+import fairySecrets from '../../../assets/rooms/juliush-little-secrets-fairy-tale-sound-8395.mp3';
 import eightBitPoints from '../../../assets/make-more-sound-8bit-video-game-points-1145826.mp3';
 
 /**
@@ -37,6 +40,7 @@ export type Cue =
   | 'tap' | 'roomCard' | 'enterRoom' | 'exitRoom' | 'discovery' | 'resolve'
   | 'breathComplete' | 'tapHit' | 'breatheIn' | 'breatheOut' | 'storyTheme'
   | 'balloonPop' | 'twoStories' | 'panelSlide'
+  | 'reflectionBed' | 'storyLabBed' | 'diaryBed'
   | 'levelUp' | 'bonusPoints' | 'arcadeBlip' | 'miniWin' | 'pointTick';
 
 interface CueDef { src: string; volume: number; interruptible?: boolean }
@@ -90,6 +94,11 @@ const TABLE: Record<Cue, CueDef> = {
   // by side and decides which to carry. A real bed rather than a looped
   // sting, so the room can be sat in for as long as that takes.
   twoStories:     { src: forestLullaby, volume: 0.3 },
+
+  // Room beds: one track per room.
+  reflectionBed:  { src: forestNature, volume: 0.3 },
+  storyLabBed:    { src: fairyGarden,  volume: 0.22 },
+  diaryBed:       { src: fairySecrets, volume: 0.25 },
 
   // ── Game feedback ─────────────────────────────────────────────────────
   // A whole game finished — GameShell's win moment, every one of the 67.
