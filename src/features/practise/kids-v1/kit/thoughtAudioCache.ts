@@ -1,6 +1,6 @@
 import { db } from '../../../../firebase';
-import { collection, doc, getDoc, setDoc, query, where, getDocs, serverTimestamp, DocumentData } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getBytes } from 'firebase/storage';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes } from 'firebase/storage';
 import { thoughtsFor, type FeelingKey } from './storyLabContent';
 import { isMuted } from '../../../../lib/sfx';
 

@@ -194,7 +194,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
     The background itself is never blurred.
   */
   const [idle, setIdle] = useState(false);
-  const idleTimer = useRef<number>();
+  const idleTimer = useRef<number | undefined>(undefined);
   const resetIdle = useCallback(() => {
     setIdle(false);
     window.clearTimeout(idleTimer.current);
