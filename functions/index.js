@@ -4830,7 +4830,13 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
 
     const voiceName = String((req.body && req.body.voice) || 'Sulafat');
     const character = req.body && req.body.character === 'mind' ? 'mind' : 'grownup';
-    const tone = character === 'mind' ? mindTone(req.body && req.body.feeling) : { name: 'plain', line: '' };
+    /* Allow explicit tone override for special cases like thought audio caching */
+    let tone;
+    if (req.body && req.body.tone === 'whisper') {
+        tone = { name: 'thought-whisper', line: 'A soft, hissed whisper, like thinking out loud.' };
+    } else {
+        tone = character === 'mind' ? mindTone(req.body && req.body.feeling) : { name: 'plain', line: '' };
+    }
     const direction = character === 'mind'
         ? (tone.line ? MIND_DIRECTION.replace(/:$/, `. ${tone.line}:`) : MIND_DIRECTION)
         : CHIRPY_DIRECTION;

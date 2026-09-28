@@ -8,10 +8,11 @@ import { MicButton } from '../ui/MicButton';
 import { useFloatingPosition } from '../ui/useFloatingPosition';
 import { chirpySprite } from '../ui/sprites';
 import { band } from '../kit/band';
-import { thoughtsFor, eventsFor, possibilitiesFor, type Option } from '../kit/storyLabContent';
+import { thoughtsFor, eventsFor, possibilitiesFor, type Option, type FeelingKey } from '../kit/storyLabContent';
 import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
+import { preloadThoughtAudios, playThoughtAudios, stopThoughtAudio } from '../kit/thoughtAudioCache';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
@@ -507,6 +508,47 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     const cancel = sound.playMusicWhenAllowed('storyTheme');
     return () => { cancel(); sound.stopMusic(); };
   }, [quiet]);
+
+  /*
+    AUTO-PLAY THOUGHT AUDIO ON THE THOUGHT PANEL.
+
+    When the child enters the Thought panel (step === 2), we preload all
+    thought audio files for their feeling and play them one by one in a
+    hissed whisper tone. The playback stops when they move to the next panel
+    (step 3) or if they select a thought themselves.
+  */
+  useEffect(() => {
+    if (step !== 2 || quiet) {
+      stopThoughtAudio();
+      return;
+    }
+
+    let isMounted = true;
+
+    const startAutoPlay = async () => {
+      const feeling = carried.feeling as FeelingKey;
+      if (!feeling) return;
+
+      try {
+        const audioMap = await preloadThoughtAudios(feeling);
+        if (!isMounted) return;
+
+        const audioUrls = Array.from(audioMap.values());
+        if (audioUrls.length > 0) {
+          playThoughtAudios(audioUrls);
+        }
+      } catch (error) {
+        console.error('Failed to load thought audio:', error);
+      }
+    };
+
+    startAutoPlay();
+
+    return () => {
+      isMounted = false;
+      stopThoughtAudio();
+    };
+  }, [step, quiet, carried.feeling]);
 
   /*
     THE END OF THE WALK IS A DOOR, NOT A BUTTON IN THE FOOTER.
