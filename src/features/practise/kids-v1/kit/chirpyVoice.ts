@@ -142,13 +142,21 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
     the child always hears something. The browser voice may be different but
     it beats silence when Gemini is delayed or unavailable.
   */
+  /*
+    A LATE CHIRPY STILL WINS. The fallback used to fire at 1.5s and then throw
+    the real audio away when it landed, so after every deploy (cold server)
+    the plain browser voice read everything, and kept doing so because nothing
+    was ever cached. Now it waits longer, always keeps the audio, and if it
+    arrives while the fallback is still reading the line, Chirpy takes over.
+  */
+  let fellBack = false;
   let resolved = false;
   const timeoutId = setTimeout(() => {
     if (!resolved && speaking === text) {
-      resolved = true;
+      fellBack = true;
       browserVoice(text);
     }
-  }, 1500);
+  }, 4000);
 
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
@@ -160,6 +168,14 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       if (resolved) return;
       clearTimeout(timeoutId);
       resolved = true;
+      if (fellBack) {
+        if (blob) heard.set(key, URL.createObjectURL(blob));
+        const stillReading = typeof window !== 'undefined' && window.speechSynthesis?.speaking;
+        if (blob && stillReading && !isMuted() && speaking === text) {
+          stopSpeaking(); speaking = text; play(heard.get(key)!, text, onEnd, who);
+        }
+        return;
+      }
       /*
         A NON-OK RESPONSE IS NOT A REASON TO GO SILENT.
         This used to just `return` here, on the assumption that a failed
@@ -179,12 +195,10 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text, onEnd, who); }
     })
     .catch(() => {
-      /* Fall back to browser voice if not already triggered by timeout. */
-      if (!resolved && speaking === text) {
-        resolved = true;
-        clearTimeout(timeoutId);
-        browserVoice(text);
-      }
+      if (resolved) return;
+      resolved = true;
+      clearTimeout(timeoutId);
+      if (!fellBack && speaking === text) browserVoice(text);
     });
 }
 

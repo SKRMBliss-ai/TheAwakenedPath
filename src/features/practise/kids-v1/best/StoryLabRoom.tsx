@@ -390,6 +390,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const [sessionId] = useState(() => `story-${Date.now()}`);
   const heading = useRef<HTMLDivElement>(null);
   const moved = useRef(false);
+  const promptDone = useRef<(() => void) | null>(null);
 
   /*
     ON A PHONE THERE IS ROOM FOR ONE PANEL.
@@ -484,7 +485,8 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     const who = step === 3 ? 'grownup' : 'mind';
     const heard = step === 3 ? thought : step === 5 ? story : step === 6 ? alternative : '';
     const feeling = carried.feeling || '';
-    const ask = () => { if (prompt) speak(prompt, quiet, who, undefined, who === 'mind' ? feeling : ''); };
+    const afterPrompt = step === 2 ? () => promptDone.current?.() : undefined;
+    const ask = () => { if (prompt) speak(prompt, quiet, who, afterPrompt, who === 'mind' ? feeling : ''); };
     if (step === 4) speak(`${prompt} ${story}`, quiet, 'mind', undefined, feeling);
     else if (heard && !heard.startsWith("I'm not sure")) speak(heard, quiet, 'mind', ask, feeling);
     else ask();
@@ -518,34 +520,22 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     (step 3) or if they select a thought themselves.
   */
   useEffect(() => {
-    if (step !== 2 || quiet) {
-      stopThoughtAudio();
-      return;
-    }
-
-    let isMounted = true;
-
-    const startAutoPlay = async () => {
-      const feeling = carried.feeling as FeelingKey;
-      if (!feeling) return;
-
-      try {
-        const audioMap = await preloadThoughtAudios(feeling);
-        if (!isMounted) return;
-
-        const audioUrls = Array.from(audioMap.values());
-        if (audioUrls.length > 0) {
-          playThoughtAudios(audioUrls);
-        }
-      } catch (error) {
-        console.error('Failed to load thought audio:', error);
-      }
-    };
-
-    startAutoPlay();
-
+    if (step !== 2 || quiet || !carried.feeling) return;
+    const feeling = carried.feeling as FeelingKey;
+    let alive = true;
+    /* Chirpy asks the question first; the thoughts follow when it ends, or
+       after a few seconds if the question was read by the fallback voice
+       (which never reports that it has finished). */
+    const asked = new Promise<void>((resolve) => {
+      promptDone.current = resolve;
+      window.setTimeout(resolve, 9000);
+    });
+    void Promise.all([preloadThoughtAudios(feeling), asked]).then(([texts]) => {
+      if (alive) playThoughtAudios(texts, feeling);
+    });
     return () => {
-      isMounted = false;
+      alive = false;
+      promptDone.current = null;
       stopThoughtAudio();
     };
   }, [step, quiet, carried.feeling]);

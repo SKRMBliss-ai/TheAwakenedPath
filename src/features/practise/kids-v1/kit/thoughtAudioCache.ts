@@ -1,188 +1,36 @@
-import { db } from '../../../../firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes } from 'firebase/storage';
 import { thoughtsFor, type FeelingKey } from './storyLabContent';
-import { isMuted } from '../../../../lib/sfx';
+import { preload, speak, stopSpeaking } from './chirpyVoice';
 
-const THOUGHTS_COLLECTION = 'thought-audio-cache';
-const CACHE_VERSION = 2;
+/*
+  The voice Function keeps the permanent copy of every line (Firestore +
+  Storage, written with admin rights). A child's browser is not allowed to
+  write there, so all this does is warm the in-memory cache and then read the
+  thoughts out one after another in the mind's voice, in the child's feeling.
+*/
 
-interface CachedThoughtAudio {
-  id: string;
-  feeling: FeelingKey;
-  text: string;
-  audioUrl: string;
-  timestamp: any;
-  version: number;
-}
+let token = 0;
 
-let currentPlayingToken = 0;
-let currentAudio: HTMLAudioElement | null = null;
-
-/**
- * Generates audio blob for a thought text using the chirpy voice endpoint with whisper tone.
- */
-async function generateThoughtAudio(text: string, feeling: FeelingKey): Promise<Blob> {
-  const endpoint = 'https://awakened-path-2026.web.app/api/chirpy-voice';
-
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text,
-        character: 'mind',
-        voice: 'Leda',
-        tone: 'whisper',
-        feeling,
-      }),
-    });
-
-    if (!response.ok) throw new Error(`Voice endpoint returned ${response.status}`);
-
-    return await response.blob();
-  } catch (error) {
-    console.error('Failed to generate thought audio:', error);
-    throw error;
+export async function preloadThoughtAudios(feeling: FeelingKey): Promise<string[]> {
+  const texts = thoughtsFor(feeling).map((t) => t.text);
+  for (let i = 0; i < texts.length; i += 4) {
+    await Promise.all(texts.slice(i, i + 4).map((text) => preload(text, 'mind', feeling)));
   }
+  return texts;
 }
 
-/**
- * Caches a thought's audio in Firestore if not already cached.
- */
-export async function cacheThoughtAudio(feeling: FeelingKey, text: string): Promise<string | null> {
-  const cacheId = `${feeling}:${text}`.replace(/\s+/g, '_').toLowerCase().slice(0, 100);
-
-  try {
-    const docRef = doc(db, THOUGHTS_COLLECTION, cacheId);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      const cached = docSnap.data() as CachedThoughtAudio;
-      if (cached.version === CACHE_VERSION) {
-        return cached.audioUrl;
-      }
-    }
-
-    // Generate audio blob for this thought
-    const blob = await generateThoughtAudio(text, feeling);
-
-    // Store blob in Firebase Storage
-    const storage = getStorage();
-    const storageRef = ref(storage, `thought-audio/${feeling}/${cacheId}.wav`);
-    await uploadBytes(storageRef, blob, { contentType: 'audio/wav' });
-
-    // Get the download URL
-    const audioUrl = `https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/${encodeURIComponent(`thought-audio/${feeling}/${cacheId}.wav`)}?alt=media`;
-
-    // Store metadata in Firestore
-    await setDoc(docRef, {
-      id: cacheId,
-      feeling,
-      text,
-      audioUrl,
-      timestamp: serverTimestamp(),
-      version: CACHE_VERSION,
-    } as CachedThoughtAudio);
-
-    return audioUrl;
-  } catch (error) {
-    console.error('Error caching thought audio:', error);
-    return null;
-  }
+export function playThoughtAudios(texts: string[], feeling: string, onComplete?: () => void) {
+  const mine = ++token;
+  let i = 0;
+  const next = () => {
+    if (mine !== token) return;
+    if (i >= texts.length) { onComplete?.(); return; }
+    const text = texts[i++];
+    speak(text, false, 'mind', () => window.setTimeout(next, 700), feeling);
+  };
+  next();
 }
 
-/**
- * Preloads all thought audio for a given feeling.
- */
-export async function preloadThoughtAudios(feeling: FeelingKey): Promise<Map<string, string>> {
-  const audioMap = new Map<string, string>();
-  const thoughts = thoughtsFor(feeling);
-
-  for (const thought of thoughts) {
-    const url = await cacheThoughtAudio(feeling, thought.text);
-    if (url) {
-      audioMap.set(thought.text, url);
-    }
-  }
-
-  return audioMap;
-}
-
-/**
- * Stops the current playing audio.
- */
 export function stopThoughtAudio() {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
-    currentAudio = null;
-  }
-  currentPlayingToken++;
-}
-
-/**
- * Plays thought audio files one at a time.
- * Returns a token that can be used to cancel playback.
- */
-export function playThoughtAudios(
-  audioUrls: string[],
-  onComplete?: () => void
-): number {
-  stopThoughtAudio();
-
-  if (audioUrls.length === 0 || isMuted()) {
-    return ++currentPlayingToken;
-  }
-
-  const token = ++currentPlayingToken;
-  let currentIndex = 0;
-
-  const playNext = () => {
-    if (token !== currentPlayingToken) return;
-    if (currentIndex >= audioUrls.length) {
-      currentAudio = null;
-      onComplete?.();
-      return;
-    }
-
-    currentAudio = new Audio(audioUrls[currentIndex]);
-    /* These are always the child's own thoughts — same pitch-lift trick as
-       the 'mind' speaker elsewhere, since Gemini TTS has no real child voice. */
-    currentAudio.playbackRate = 1.18;
-    type PitchPreserving = { preservesPitch?: boolean; mozPreservesPitch?: boolean; webkitPreservesPitch?: boolean };
-    const a = currentAudio as unknown as PitchPreserving;
-    try { a.preservesPitch = false; } catch { /* not supported */ }
-    try { a.mozPreservesPitch = false; } catch { /* not supported */ }
-    try { a.webkitPreservesPitch = false; } catch { /* not supported */ }
-    currentAudio.onended = () => {
-      currentIndex++;
-      playNext();
-    };
-
-    currentAudio.onerror = () => {
-      console.error('Error playing thought audio:', audioUrls[currentIndex]);
-      currentIndex++;
-      playNext();
-    };
-
-    currentAudio.play().catch(err => {
-      console.error('Failed to play audio:', err);
-      currentIndex++;
-      playNext();
-    });
-  };
-
-  playNext();
-  return token;
-}
-
-/**
- * Hook-friendly cancel function for thought audio playback.
- */
-export function createThoughtAudioController() {
-  return {
-    play: playThoughtAudios,
-    stop: stopThoughtAudio,
-  };
+  token += 1;
+  stopSpeaking();
 }
