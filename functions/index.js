@@ -4830,10 +4830,17 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
 
     const voiceName = String((req.body && req.body.voice) || 'Sulafat');
     const character = req.body && req.body.character === 'mind' ? 'mind' : 'grownup';
-    /* Allow explicit tone override for special cases like thought audio caching */
+    /* Allow explicit tone override for special cases like thought audio caching.
+       The whisper request is a delivery style, not a replacement for the child's
+       feeling — Story Lab thoughts are read as whichever feeling was picked
+       (scared, excited, angry...), just always as a whisper rather than the
+       feeling's normal volume/pace. */
     let tone;
     if (req.body && req.body.tone === 'whisper') {
-        tone = { name: 'thought-whisper', line: 'A soft, hissed whisper, like thinking out loud.' };
+        const emotion = mindTone(req.body && req.body.feeling);
+        tone = emotion.name === 'plain'
+            ? { name: 'thought-whisper', line: 'A soft, hissed whisper, like thinking out loud.' }
+            : { name: `thought-whisper-${emotion.name}`, line: `${emotion.line} Keep it as a soft, hissed whisper throughout, like thinking out loud rather than speaking aloud.` };
     } else {
         tone = character === 'mind' ? mindTone(req.body && req.body.feeling) : { name: 'plain', line: '' };
     }

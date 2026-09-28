@@ -5,7 +5,7 @@ import { thoughtsFor, type FeelingKey } from './storyLabContent';
 import { isMuted } from '../../../../lib/sfx';
 
 const THOUGHTS_COLLECTION = 'thought-audio-cache';
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 
 interface CachedThoughtAudio {
   id: string;
@@ -22,7 +22,7 @@ let currentAudio: HTMLAudioElement | null = null;
 /**
  * Generates audio blob for a thought text using the chirpy voice endpoint with whisper tone.
  */
-async function generateThoughtAudio(text: string): Promise<Blob> {
+async function generateThoughtAudio(text: string, feeling: FeelingKey): Promise<Blob> {
   const endpoint = 'https://awakened-path-2026.web.app/api/chirpy-voice';
 
   try {
@@ -34,6 +34,7 @@ async function generateThoughtAudio(text: string): Promise<Blob> {
         character: 'mind',
         voice: 'Leda',
         tone: 'whisper',
+        feeling,
       }),
     });
 
@@ -64,7 +65,7 @@ export async function cacheThoughtAudio(feeling: FeelingKey, text: string): Prom
     }
 
     // Generate audio blob for this thought
-    const blob = await generateThoughtAudio(text);
+    const blob = await generateThoughtAudio(text, feeling);
 
     // Store blob in Firebase Storage
     const storage = getStorage();
