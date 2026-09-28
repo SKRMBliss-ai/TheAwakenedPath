@@ -136,27 +136,30 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   if (cached) { play(cached, text, onEnd, who); return; }
 
   /*
-    GEMINI WITH BROWSER FALLBACK.
+    THE FEELING VOICE ALWAYS WINS, THE WAY IT DID BEFORE.
 
-    If Gemini is slow or offline, fall back to browser voice after 1.5s so
-    the child always hears something. The browser voice may be different but
-    it beats silence when Gemini is delayed or unavailable.
+    Chirpy's real voice is Gemini — for the child's own mind (`who === 'mind'`)
+    it also carries the feeling (scared, excited, sad...). A browser-voice
+    fallback was added to cover a slow or cold server, but a Cloud Function
+    cold-start plus a fresh TTS synthesis routinely takes well over the few
+    seconds the fallback waited, so the browser's flat adult voice pre-empted
+    Chirpy on nearly every uncached line — the "mature lady everywhere, no
+    feeling" the room had regressed into.
+
+    So the mind voice waits for Gemini, however long it takes, and never lets
+    the browser speak over it. A short line of silence before the real,
+    feeling-matched voice is the right trade; the wrong grown-up voice is not.
+    The grown-up narrator keeps a patient fallback, since a silent narrator on
+    a broken server is worse than a plain one.
   */
-  /*
-    A LATE CHIRPY STILL WINS. The fallback used to fire at 1.5s and then throw
-    the real audio away when it landed, so after every deploy (cold server)
-    the plain browser voice read everything, and kept doing so because nothing
-    was ever cached. Now it waits longer, always keeps the audio, and if it
-    arrives while the fallback is still reading the line, Chirpy takes over.
-  */
+  const allowBrowserFallback = who !== 'mind';
   let fellBack = false;
   let resolved = false;
-  const timeoutId = setTimeout(() => {
-    if (!resolved && speaking === text) {
-      fellBack = true;
-      browserVoice(text);
-    }
-  }, 6000);
+  const timeoutId = allowBrowserFallback
+    ? setTimeout(() => {
+        if (!resolved && speaking === text) { fellBack = true; browserVoice(text); }
+      }, 8000)
+    : undefined;
 
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
@@ -169,9 +172,11 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
     })
     .then((blob) => {
       if (resolved) return;
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       resolved = true;
       if (fellBack) {
+        /* The browser was reading (grown-up only). Swap in the real voice if
+           it is still the line on screen and the browser hasn't finished. */
         if (blob) heard.set(key, URL.createObjectURL(blob));
         const stillReading = typeof window !== 'undefined' && window.speechSynthesis?.speaking;
         if (blob && stillReading && !isMuted() && speaking === text) {
@@ -179,18 +184,11 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
         }
         return;
       }
-      /*
-        A NON-OK RESPONSE IS NOT A REASON TO GO SILENT.
-        This used to just `return` here, on the assumption that a failed
-        fetch always throws and lands in `.catch` below. It doesn't: the
-        Function can come back 4xx/5xx (a feeling/voice combination it
-        rejects, a cold start erroring, quota) and `fetch` resolves normally
-        with `r.ok === false` — which this branch turned into `blob === null`
-        and then dropped on the floor. That is exactly what "happy" hit:
-        every other feeling's line played from the fallback that "should"
-        have caught it, and happy's silently never did.
-      */
-      if (!blob) { browserVoice(text); return; }
+      /* A non-OK response (429/503 budget or rate limit, a cold-start error)
+         resolves normally with blob === null. For the grown-up narrator that
+         means fall back to the browser; for the mind voice, stay silent
+         rather than break character with the wrong voice. */
+      if (!blob) { if (allowBrowserFallback) browserVoice(text); return; }
       const url = URL.createObjectURL(blob);
       heard.set(key, url);
       /* Only if this is still the line on screen. A child who has moved on
@@ -200,8 +198,8 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
     .catch(() => {
       if (resolved) return;
       resolved = true;
-      clearTimeout(timeoutId);
-      if (!fellBack && speaking === text) browserVoice(text);
+      if (timeoutId) clearTimeout(timeoutId);
+      if (allowBrowserFallback && !fellBack && speaking === text) browserVoice(text);
     });
 }
 
