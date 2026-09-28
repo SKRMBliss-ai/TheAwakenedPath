@@ -17,7 +17,9 @@ import * as sound from '../kit/sound';
 import { TEACHINGS } from '../kit/teachings';
 import { speak } from '../kit/chirpyVoice';
 import { isMuted, setMuted } from '../../../../lib/sfx';
+import { useDiaryFilledToday } from '../kit/diaryToday';
 import './HomeScreen.css';
+import './DiaryNudge.css';
 
 const A = '/mind-gym/home/';
 const STEPS = [
@@ -40,6 +42,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
 }) {
   const s = useKidStore();
   const quiet = useQuiet();
+  const diaryDone = useDiaryFilledToday();
   const reduced = useReducedMotion();
   const dialog = useRef<HTMLDialogElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -158,7 +161,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
             aria-pressed={!mutedState}
             aria-label={mutedState ? 'Sounds are off. Turn sounds on.' : 'Sounds are on. Turn sounds off.'}
           ><span aria-hidden="true">{mutedState ? '🔇' : '🔊'}</span></button><span className="mg-points"><span aria-hidden="true">⭐</span><span><b>{points}</b><small>Mind Stars</small></span></span>
-          <button className="mg-month" onClick={onReflection} aria-label="Open My Inner Diary and browse months"><b>{new Date().toLocaleString('en', { month: 'short' }).toUpperCase()}</b><span>This month<small>{days} {days === 1 ? 'day' : 'days'} remembered</small><span aria-hidden="true">● ● ● ● ✦</span></span></button></div>
+          <button className={`mg-month ${diaryDone ? '' : 'mg-diary-waiting'}`} onClick={onReflection} aria-label={diaryDone ? 'Open My Inner Diary and browse months' : 'Today’s diary page is still empty. Open My Inner Diary'}><b>{new Date().toLocaleString('en', { month: 'short' }).toUpperCase()}</b><span>This month<small>{days} {days === 1 ? 'day' : 'days'} remembered</small><span aria-hidden="true">● ● ● ● ✦</span><span className={`mg-diary-flag ${diaryDone ? 'is-done' : ''}`}>{diaryDone ? '✓ Today is in your diary' : '✨ Today’s page is waiting'}</span></span></button></div>
       </header>
       <div className="mg-mobile-doors"><button onClick={() => setMobile(mobile === 'feelings' ? null : 'feelings')} aria-expanded={mobile === 'feelings'}>Funny Feeling?<small>Step into your mind →</small></button><button onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button></div>
       <section className={`mg-feelings ${mobile === 'feelings' ? 'mg-mobile-open' : ''}`} aria-label="Funny Feeling journey">
@@ -169,7 +172,9 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       <section className="mg-character" aria-label="Your guide">
         <div className="mg-greeting" aria-live="polite"><img src={`${A}boy_fullbody.webp`} alt="" /><div>{teaching
           ? <><b>{teaching}</b><p>Tap me again for another one.</p></>
-          : <><b>Hello{name ? `, ${name}` : ''}!<br />How would you like<br />to begin today?</b><p>You can explore your feelings<br />or make good choices!</p></>}</div></div>
+          : diaryDone
+            ? <><b>Hello{name ? `, ${name}` : ''}!<br />How would you like<br />to begin today?</b><p>You can explore your feelings<br />or make good choices!</p></>
+            : <><b>Hello{name ? `, ${name}` : ''}!<br />How did today go?</b><p>Your Inner Diary is keeping<br />a page for today.</p><button className="mg-greet-diary" onClick={onReflection}>📖 Write in my diary</button></>}</div></div>
         <button className={`mg-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
           <img className="mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" />
           <img className="mg-chirpy" src={chirpySprite(teaching ? 'excited' : 'curious')} alt="Chirpy" />
@@ -179,7 +184,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       </section>
       <section className={`mg-choices ${mobile === 'choices' ? 'mg-mobile-open' : ''}`} aria-label="My Good Choices">
         <header className="mg-shelf-title"><span aria-hidden="true">☀</span><h2>My Good Choices</h2><p>Small choices. Big growth. A brighter you.</p></header>
-        <GoodChoicesShelf onAction={open} onDiary={onReflection} />
+        <GoodChoicesShelf onAction={open} onDiary={onReflection} diaryWaiting={!diaryDone} />
       </section>
       {/*
         THE PAINTED LETTERING IN THE CORNERS.

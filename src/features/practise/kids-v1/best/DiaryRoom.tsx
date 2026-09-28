@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useDiaryFilledToday } from '../kit/diaryToday';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useKidStore } from '../../../kids/store';
 import { BEHAVIOURS } from '../../../kids/data';
@@ -11,6 +12,7 @@ import { allLinks, linkClip } from '../kit/voiceStore';
 import * as sound from '../kit/sound';
 import { band } from '../kit/band';
 import './DiaryRoom.css';
+import './DiaryNudge.css';
 
 /*
   MY INNER DIARY, drawn against approved_reference_diary.png.
@@ -75,8 +77,9 @@ const dayKey = (d: Date, day: number) => `${monthKey(d)}-${String(day).padStart(
 const daysIn = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
 const shift = (d: Date, by: number) => new Date(d.getFullYear(), d.getMonth() + by, 1);
 
-export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: () => void }) {
+export function DiaryRoom({ onExit, onOlder, openToday = false }: { onExit: () => void; onOlder: () => void; openToday?: boolean }) {
   const s = useKidStore();
+  const filledToday = useDiaryFilledToday();
   const quiet = useQuiet();
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;
@@ -144,6 +147,22 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
     }
   };
 
+  /* A child who followed a reminder here came to write today, so the page
+     they came for is already open. Once today is written, the diary just opens. */
+  useEffect(() => {
+    if (!openToday || filledToday) return;
+    setSelectedDay({ day: today.getDate(), behaviour: 'kind' });
+    dayDialog.current?.showModal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const openTodayPage = () => {
+    setMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    setSelectedDay({ day: today.getDate(), behaviour: 'kind' });
+    dayDialog.current?.showModal();
+    if (!quiet) sound.play('discovery');
+  };
+  const isTodayOpen = !!selectedDay && thisMonth && selectedDay.day === today.getDate();
+
   /* The three months behind this one, as the spines on the shelf. */
   const behind = [1, 2, 3].map(n => shift(month, -n));
 
@@ -175,6 +194,12 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
           <p className="dy-tagline" aria-hidden="true">Small steps<br />make a brighter you <span>♡</span></p>
         </div>
       </header>
+
+      {!filledToday && <button className="dy-today-invite" onClick={openTodayPage}>
+        <span aria-hidden="true">✨</span>
+        <span><b>Today’s page is still empty</b><small>Tap here and tell your diary how today went.</small></span>
+        <span aria-hidden="true">→</span>
+      </button>}
 
       <section className={`dy-grid-panel ${bookOpen ? 'dy-book-open' : 'dy-book-shut'}`} aria-label={`Good choices in ${MONTHS[month.getMonth()]} ${month.getFullYear()}`}>
         {/*
@@ -270,7 +295,9 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
     <dialog ref={dayDialog} className="dy-day-dialog" aria-labelledby="dy-day-heading" onClose={() => setSelectedDay(null)}>
       {selectedDay && <>
         <header><h2 id="dy-day-heading">{FULL[month.getMonth()]} {selectedDay.day}, {month.getFullYear()}</h2><button autoFocus aria-label="Close diary day" onClick={() => dayDialog.current?.close()}>×</button></header>
-        <p>Remember a small choice. You can change your mind.</p>
+        <p>{isTodayOpen
+          ? 'How did today go? Tap any good choice you made, and write a little about your day if you like.'
+          : 'Remember a small choice. You can change your mind.'}</p>
         <div className="dy-day-choices">{BEHAVIOURS.map(b => <button key={b.id} aria-pressed={done(selectedDay.day, b.id)} onClick={() => toggle(selectedDay.day, b.id)}>
           {b.icon} {b.title} {done(selectedDay.day, b.id) ? '✓' : ''}
         </button>)}</div>
@@ -280,6 +307,7 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
         </select>
         <label htmlFor="dy-day-words">My words</label>
         <textarea id="dy-day-words" rows={4} value={review[`${dayKey(month, selectedDay.day)}:${selectedDay.behaviour}`] ?? ''} onChange={e => write(`${dayKey(month, selectedDay.day)}:${selectedDay.behaviour}`, e.target.value)} />
+        {isTodayOpen && filledToday && <p className="dy-today-done" role="status">⭐ Today is in your diary. Well done!</p>}
         <button onClick={() => dayDialog.current?.close()}>Back to my diary</button>
       </>}
     </dialog>

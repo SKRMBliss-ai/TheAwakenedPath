@@ -40,6 +40,7 @@ import { useKidAccountSync } from '../kit/kidAccount';
 import { HomeScreen } from './HomeScreen';
 import { GamesRoom } from './GamesRoom';
 import { ChildBadge } from './ChildBadge';
+import { DiaryNudge } from './DiaryNudge';
 import { ROOM_PILLARS } from '../kit/behaviourPractice';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
@@ -91,7 +92,8 @@ type View =
   | { at: 'reflectionpath' }
   /** The room the painting's Different Story dome has always pointed at. */
   | { at: 'story' }
-  | { at: 'reflection' }
+  /** `today` opens straight onto today's page, for a child who came to fill it in. */
+  | { at: 'reflection'; today?: boolean }
   | { at: 'friends' }
   | { at: 'rewards' }
   | { at: 'grownup' }
@@ -246,7 +248,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
             {view.at === 'map' && (
               <HomeScreen
                 name={name}
-                onReflection={() => setView({ at: 'reflection' })}
+                onReflection={() => setView({ at: 'reflection', today: true })}
                 onReflectionPath={() => setView({ at: 'reflectionpath' })}
                 onOpenRoom={(r) => setView({ at: 'room', room: r, step: null })}
                 onPractice={(room) => setView({ at: 'practice', room })}
@@ -331,7 +333,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               none of that is on the diary's own page.
             */}
             {view.at === 'reflection' && (
-              <DiaryRoom onExit={back} onOlder={() => setView({ at: 'observatory' })} />
+              <DiaryRoom openToday={view.today} onExit={back} onOlder={() => setView({ at: 'observatory' })} />
             )}
             {view.at === 'observatory' && (
               <ReflectionRoom
@@ -369,6 +371,14 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
         */}
 
         <ChildBadge />
+
+        {!['reflection', 'observatory', 'leavenote', 'grownup'].includes(view.at) && (
+          <DiaryNudge
+            key={view.at + (view.at === 'room' || view.at === 'practice' ? view.room.id : '')}
+            speakAloud={view.at === 'map'}
+            onOpen={() => setView({ at: 'reflection', today: true })}
+          />
+        )}
       </div>
     </QuietProvider>
   );
