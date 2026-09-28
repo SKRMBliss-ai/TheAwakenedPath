@@ -146,6 +146,14 @@ export function playThoughtAudios(
     }
 
     currentAudio = new Audio(audioUrls[currentIndex]);
+    /* These are always the child's own thoughts — same pitch-lift trick as
+       the 'mind' speaker elsewhere, since Gemini TTS has no real child voice. */
+    currentAudio.playbackRate = 1.18;
+    type PitchPreserving = { preservesPitch?: boolean; mozPreservesPitch?: boolean; webkitPreservesPitch?: boolean };
+    const a = currentAudio as unknown as PitchPreserving;
+    try { a.preservesPitch = false; } catch { /* not supported */ }
+    try { a.mozPreservesPitch = false; } catch { /* not supported */ }
+    try { a.webkitPreservesPitch = false; } catch { /* not supported */ }
     currentAudio.onended = () => {
       currentIndex++;
       playNext();

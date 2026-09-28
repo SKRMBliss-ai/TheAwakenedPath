@@ -133,7 +133,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
 
   const key = `${who}|${feeling}|${text}`;
   const cached = heard.get(key);
-  if (cached) { play(cached, text, onEnd); return; }
+  if (cached) { play(cached, text, onEnd, who); return; }
 
   /*
     GEMINI WITH BROWSER FALLBACK.
@@ -176,7 +176,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       heard.set(key, url);
       /* Only if this is still the line on screen. A child who has moved on
          must not be caught up by the previous screen's audio. */
-      if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text, onEnd); }
+      if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text, onEnd, who); }
     })
     .catch(() => {
       /* Fall back to browser voice if not already triggered by timeout. */
@@ -212,9 +212,29 @@ export function preload(text: string, who: Speaker = 'grownup', feeling = ''): P
     .catch(() => { /* a preload miss just means speak() falls back as usual */ });
 }
 
-function play(url: string, text: string, onEnd?: () => void) {
+/*
+  MIND GETS A PITCH LIFT.
+  Gemini TTS has no child voice model — every "young girl of about six"
+  direction is still performed by an adult voice, so it can read as a woman
+  doing a young voice rather than an actual child. Raising playbackRate
+  while disabling pitch preservation shifts the pitch up along with it
+  (the standard trick for getting a younger voice out of adult audio),
+  instead of the usual behaviour where the browser corrects pitch back
+  down to keep the rate change transparent.
+*/
+function applyChildPitch(audio: HTMLAudioElement) {
+  audio.playbackRate = 1.18;
+  type PitchPreserving = { preservesPitch?: boolean; mozPreservesPitch?: boolean; webkitPreservesPitch?: boolean };
+  const a = audio as unknown as PitchPreserving;
+  try { a.preservesPitch = false; } catch { /* not supported */ }
+  try { a.mozPreservesPitch = false; } catch { /* not supported */ }
+  try { a.webkitPreservesPitch = false; } catch { /* not supported */ }
+}
+
+function play(url: string, text: string, onEnd?: () => void, who: Speaker = 'grownup') {
   try {
     const audio = new Audio(url);
+    if (who === 'mind') applyChildPitch(audio);
     if (onEnd) audio.onended = () => { if (current === audio) onEnd(); };
     current = audio;
     speaking = text;
