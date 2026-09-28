@@ -136,30 +136,30 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   if (cached) { play(cached, text, onEnd, who); return; }
 
   /*
-    THE FEELING VOICE ALWAYS WINS, THE WAY IT DID BEFORE.
+    GEMINI FIRST, BROWSER ONLY AS A LAST RESORT — AND LATE ENOUGH NEVER TO
+    PRE-EMPT IT.
 
-    Chirpy's real voice is Gemini — for the child's own mind (`who === 'mind'`)
-    it also carries the feeling (scared, excited, sad...). A browser-voice
-    fallback was added to cover a slow or cold server, but a Cloud Function
-    cold-start plus a fresh TTS synthesis routinely takes well over the few
-    seconds the fallback waited, so the browser's flat adult voice pre-empted
-    Chirpy on nearly every uncached line — the "mature lady everywhere, no
-    feeling" the room had regressed into.
+    Chirpy's real voice is Gemini; for the child's own mind (`who === 'mind'`)
+    it also carries the feeling (scared, excited, sad...). Two failures have to
+    be avoided at once:
 
-    So the mind voice waits for Gemini, however long it takes, and never lets
-    the browser speak over it. A short line of silence before the real,
-    feeling-matched voice is the right trade; the wrong grown-up voice is not.
-    The grown-up narrator keeps a patient fallback, since a silent narrator on
-    a broken server is worse than a plain one.
+      - the browser's flat adult voice jumping in and reading over Chirpy on
+        every slow line (the "mature lady everywhere, no feeling" regression), and
+      - total silence when the server is genuinely down or out of budget.
+
+    Now that a line is cached after its first hearing and served straight back,
+    the real voice returns in well under a second for anything heard before —
+    so a long fallback delay almost never fires. The browser voice only speaks
+    when the server truly does not answer, where a childish-pitched voice beats
+    nothing. The mind voice is given the longer leash, since its feeling is the
+    whole point and it is worth waiting for.
   */
-  const allowBrowserFallback = who !== 'mind';
+  const fallbackDelay = who === 'mind' ? 10000 : 8000;
   let fellBack = false;
   let resolved = false;
-  const timeoutId = allowBrowserFallback
-    ? setTimeout(() => {
-        if (!resolved && speaking === text) { fellBack = true; browserVoice(text); }
-      }, 8000)
-    : undefined;
+  const timeoutId: number | undefined = setTimeout(() => {
+    if (!resolved && speaking === text) { fellBack = true; browserVoice(text); }
+  }, fallbackDelay) as unknown as number;
 
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
@@ -175,7 +175,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       if (timeoutId) clearTimeout(timeoutId);
       resolved = true;
       if (fellBack) {
-        /* The browser was reading (grown-up only). Swap in the real voice if
+        /* The browser had already started reading. Swap in the real voice if
            it is still the line on screen and the browser hasn't finished. */
         if (blob) heard.set(key, URL.createObjectURL(blob));
         const stillReading = typeof window !== 'undefined' && window.speechSynthesis?.speaking;
@@ -185,10 +185,9 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
         return;
       }
       /* A non-OK response (429/503 budget or rate limit, a cold-start error)
-         resolves normally with blob === null. For the grown-up narrator that
-         means fall back to the browser; for the mind voice, stay silent
-         rather than break character with the wrong voice. */
-      if (!blob) { if (allowBrowserFallback) browserVoice(text); return; }
+         resolves normally with blob === null — the server gave us nothing, so
+         fall back to the browser rather than leave the child in silence. */
+      if (!blob) { browserVoice(text); return; }
       const url = URL.createObjectURL(blob);
       heard.set(key, url);
       /* Only if this is still the line on screen. A child who has moved on
@@ -199,7 +198,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       if (resolved) return;
       resolved = true;
       if (timeoutId) clearTimeout(timeoutId);
-      if (allowBrowserFallback && !fellBack && speaking === text) browserVoice(text);
+      if (!fellBack && speaking === text) browserVoice(text);
     });
 }
 
