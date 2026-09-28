@@ -2,11 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useKidStore, type SavedReflection } from '../../../kids/store';
 import { FONT } from '../ui/chrome';
-import { speak, stopSpeaking } from '../kit/chirpyVoice';
+import { speak, stopSpeaking, preload } from '../kit/chirpyVoice';
 import { useQuiet } from '../ui/quiet';
 import { DoorHandle } from '../ui/DoorHandle';
 import * as sound from '../kit/sound';
-import { pickThreeAffirmations } from '../kit/affirmations';
+import { pickThreeAffirmations, allAffirmations } from '../kit/affirmations';
 import { summariseReflections, constellationLayout, type ThoughtStar } from '../kit/reflectionSummary';
 import './ReflectionPath.css';
 
@@ -299,6 +299,38 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     if (quiet) return;
     const cancel = sound.playMusicWhenAllowed('twoStories');
     return () => { cancel(); sound.stopMusic(); };
+  }, [quiet]);
+
+  /*
+    EVERY AFFIRMATION, WARMED BEFORE A HAND EVER REACHES FOR A BRICK.
+
+    Tapping a brick used to mean a wait — speak() had never seen that line
+    before, so it went out to the Function and only then started talking.
+    A stone's tag decides which three of the sixty-odd lines get read, and a
+    child can tap any brick in any order, so there's no way to know in
+    advance which three matter. The whole set is small enough to just fetch
+    it all: a few dozen short lines, most of them already sitting in the
+    Function's own Storage cache from every other child who has heard them,
+    so this is mostly a handful of quick downloads rather than new
+    synthesis.
+
+    Four at a time, quietly, in the background — this must never compete
+    with the welcome line above for the one voice slot, and must never make
+    a room that's about to speak wait on a fetch that doesn't matter yet.
+  */
+  useEffect(() => {
+    if (quiet) return;
+    let cancelled = false;
+    const lines = allAffirmations();
+    const run = async () => {
+      const batch = 4;
+      for (let i = 0; i < lines.length; i += batch) {
+        if (cancelled) return;
+        await Promise.all(lines.slice(i, i + batch).map((line) => preload(line, 'mind')));
+      }
+    };
+    void run();
+    return () => { cancelled = true; };
   }, [quiet]);
 
   /* The lullaby bed stops for breathing — the orb and the counted breath are

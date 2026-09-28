@@ -188,6 +188,30 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
     });
 }
 
+/**
+ * Fetches a line into the `heard` cache WITHOUT speaking it — so a later
+ * `speak()` call for the same text plays instantly off the in-memory blob
+ * instead of waiting on a network round trip.
+ *
+ * Used to warm the cache for lines a child is likely to hear soon but
+ * hasn't asked for yet (every affirmation, before they tap a stone). Silent
+ * failures are fine here: a line that didn't preload just falls back to the
+ * normal fetch-then-browser-voice path inside `speak()`.
+ */
+export function preload(text: string, who: Speaker = 'grownup', feeling = ''): Promise<void> {
+  if (!text || isMuted()) return Promise.resolve();
+  const key = `${who}|${feeling}|${text}`;
+  if (heard.has(key)) return Promise.resolve();
+  return fetch(VOICE_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, voice: VOICES[who], character: who, feeling }),
+  })
+    .then((r) => (r.ok ? r.blob() : null))
+    .then((blob) => { if (blob) heard.set(key, URL.createObjectURL(blob)); })
+    .catch(() => { /* a preload miss just means speak() falls back as usual */ });
+}
+
 function play(url: string, text: string, onEnd?: () => void) {
   try {
     const audio = new Audio(url);

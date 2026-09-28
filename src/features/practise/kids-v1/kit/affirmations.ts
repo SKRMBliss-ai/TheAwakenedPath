@@ -88,3 +88,9 @@ export function pickThreeAffirmations(tag: ReflectionTag): string[] {
   const shuffled = [...all].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, 3);
 }
+
+/** Every affirmation across every tag — a stone can carry any tag, so the
+    whole set is what needs to be ready before a child taps one. */
+export function allAffirmations(): string[] {
+  return [...new Set(Object.values(AFFIRMATIONS).flat())];
+}
