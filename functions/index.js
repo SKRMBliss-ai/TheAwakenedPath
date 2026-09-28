@@ -1676,13 +1676,35 @@ exports.razorpayWebhook = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret
  * =========================================================================== */
 const AI_RATE_WINDOW_MS = 60_000;
 const AI_RATE_MAX = 12;         // per caller, per endpoint, per minute, per instance
+/*
+  Some endpoints legitimately burst. Entering the Story Lab preloads every
+  thought for the child's feeling at once (a dozen short lines) so they can
+  play back instantly, and the Reflection Room warms every affirmation the
+  same way — both well over 12/min. chirpyVoice lines are short and, once
+  synthesised, are served from the Firestore/Storage cache BEFORE this limit
+  is even checked, so a burst only ever bills for the first hearing of each
+  line. A tight burst cap here is what stopped the cache from ever filling:
+  the preload tripped it, the lines 429'd, nothing cached, and every visit
+  started from the same empty cache. Give the cached endpoints room to warm.
+*/
+const AI_RATE_MAX_BY_ENDPOINT = {
+    chirpyVoice: 90,
+};
 const AI_DAILY_CAPS = {
     textToSpeech: 150,       // sharpest cost: Gemini script + neural TTS synthesis
     witnessPresence: 300,
     getGrounding: 300,
     getDailyMeditation: 150, // one call can be reused by every visitor that day — see below
     analyzeEmotion: 500,     // cheapest per call (one word out), used most often
-    chirpyVoice: 400,        // short lines, heavily cached at the edge — see below
+    /*
+      Raised from 400. The Story Lab thoughts alone are hundreds of unique
+      lines across the nine feelings, and at 400/day the cache could never
+      finish warming — a child kept hitting un-synthesised lines that came
+      back silent. Every line is billed only ONCE (then it is a permanent
+      cache hit for every child), so this ceiling is really "new lines that
+      may be synthesised in a day", not per-visit cost.
+    */
+    chirpyVoice: 3000,
 };
 const aiHits = new Map(); // "endpoint:key" -> number[] of request timestamps
 
@@ -1697,7 +1719,7 @@ function aiRateLimited(endpoint, key) {
             if (!v.length || now - v[v.length - 1] > AI_RATE_WINDOW_MS) aiHits.delete(k);
         }
     }
-    return hits.length > AI_RATE_MAX;
+    return hits.length > (AI_RATE_MAX_BY_ENDPOINT[endpoint] || AI_RATE_MAX);
 }
 
 /**
