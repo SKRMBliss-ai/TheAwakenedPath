@@ -9,12 +9,23 @@ interface CacheStats {
   newestEntry: string | null;
 }
 
+interface CacheEntry {
+  id: string;
+  text: string;
+  voice: string;
+  character: string;
+  emotion: string;
+  createdAt: string;
+}
+
 export function CacheAdmin() {
   const [stats, setStats] = useState<CacheStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState(getAdminToken());
   const [draft, setDraft] = useState('');
+  const [entries, setEntries] = useState<CacheEntry[]>([]);
+  const [filter, setFilter] = useState('');
 
   useEffect(() => {
     if (token) fetchCacheStats();
@@ -38,6 +49,7 @@ export function CacheAdmin() {
 
       const data = await response.json();
       setStats(data.stats);
+      setEntries(data.entries || []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -191,6 +203,32 @@ export function CacheAdmin() {
               <button onClick={() => clearOldEntries(90)} className="admin-action-btn">
                 Clear entries older than 90 days
               </button>
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <h2>Cached lines ({entries.length})</h2>
+            <input
+              type="search"
+              placeholder="Search text, speaker or emotion"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              style={{ width: '100%', padding: 10, marginBottom: 12 }}
+            />
+            <div className="admin-breakdown">
+              {entries
+                .filter((e) => {
+                  const q = filter.trim().toLowerCase();
+                  return !q || `${e.text} ${e.character} ${e.emotion}`.toLowerCase().includes(q);
+                })
+                .map((e) => (
+                  <div key={e.id} className="admin-breakdown-item" style={{ display: 'block' }}>
+                    <div>{e.text || <em>(no text saved)</em>}</div>
+                    <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                      {e.character} · {e.emotion} · {e.voice} · {new Date(e.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
 

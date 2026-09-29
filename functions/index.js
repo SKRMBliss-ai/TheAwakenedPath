@@ -5079,13 +5079,14 @@ exports.cacheStats = onRequest({ cors: true, secrets: [adminToken] }, async (req
             if (!oldest || time < oldest.time) oldest = { cacheKey, time, date: createdAt };
             if (!newest || time > newest.time) newest = { cacheKey, time, date: createdAt };
 
-            entries.push({ id: cacheKey, character, emotion, storagePath: data.storagePath, createdAt });
+            entries.push({ id: cacheKey, text: data.text || '', voice: data.voice || '', character, emotion, createdAt });
         });
 
         stats.oldestEntry = oldest?.date || null;
         stats.newestEntry = newest?.date || null;
 
-        res.json({ stats, entries: entries.slice(0, 50) });
+        entries.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+        res.json({ stats, entries });
     } catch (error) {
         console.error('[cacheStats] error:', error);
         res.status(500).json({ error: error.message });
