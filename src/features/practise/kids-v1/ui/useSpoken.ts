@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { speak, stopSpeaking } from '../kit/chirpyVoice';
+import { speak, stopSpeaking, type Speaker } from '../kit/chirpyVoice';
 import { useQuiet } from './quiet';
 
 /**
@@ -20,10 +20,10 @@ import { useQuiet } from './quiet';
  * Both silences are honoured inside `speak` itself — the device mute and the
  * quiet state — so a caller never has to check.
  */
-export function useSpoken(text: string | null | undefined) {
+export function useSpoken(text: string | null | undefined, who: Speaker = 'grownup', feeling?: string) {
   const quiet = useQuiet();
   useEffect(() => {
-    if (text) speak(text, quiet);
+    if (text) speak(text, quiet, who, undefined, feeling || '');
     return () => stopSpeaking();
-  }, [text, quiet]);
+  }, [text, quiet, who, feeling]);
 }
