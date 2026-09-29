@@ -13,10 +13,12 @@ export function CacheAdmin() {
   const [stats, setStats] = useState<CacheStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState(getAdminToken());
+  const [draft, setDraft] = useState('');
 
   useEffect(() => {
-    fetchCacheStats();
-  }, []);
+    if (token) fetchCacheStats();
+  }, [token]);
 
   const fetchCacheStats = async () => {
     try {
@@ -25,6 +27,11 @@ export function CacheAdmin() {
         headers: { 'X-Admin-Token': getAdminToken() },
       });
 
+      if (response.status === 401) {
+        try { localStorage.removeItem('admin_token'); } catch { /* ignore */ }
+        setToken('');
+        throw new Error('That token was not accepted.');
+      }
       if (!response.ok) {
         throw new Error(`Failed to fetch cache stats: ${response.status}`);
       }
@@ -85,10 +92,24 @@ export function CacheAdmin() {
     }
   };
 
-  if (!isAdminAuthorized()) {
+  if (!token) {
     return (
-      <div className="admin-unauthorized">
-        <p>⛔ Unauthorized access</p>
+      <div className="admin-cache">
+        <form
+          className="admin-section"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const t = draft.trim();
+            if (!t) return;
+            try { localStorage.setItem('admin_token', t); } catch { /* ignore */ }
+            setToken(t);
+          }}
+        >
+          <h2>Admin token</h2>
+          {error && <div className="admin-error">{error}</div>}
+          <input type="password" value={draft} onChange={(e) => setDraft(e.target.value)} style={{ width: '100%', padding: 10 }} />
+          <button type="submit" className="admin-action-btn">Open</button>
+        </form>
       </div>
     );
   }
@@ -188,14 +209,7 @@ export function CacheAdmin() {
 }
 
 function getAdminToken(): string {
-  // Get token from URL param or localStorage
-  const params = new URLSearchParams(window.location.search);
-  return params.get('admin') || localStorage.getItem('admin_token') || '';
-}
-
-function isAdminAuthorized(): boolean {
-  const token = getAdminToken();
-  // Check against environment variable (set in Firebase config)
-  const envToken = import.meta.env.REACT_APP_ADMIN_TOKEN;
-  return token === envToken && !!envToken;
+  const fromUrl = new URLSearchParams(window.location.search).get('admin');
+  if (fromUrl && fromUrl !== '1') return fromUrl;
+  try { return localStorage.getItem('admin_token') || ''; } catch { return ''; }
 }

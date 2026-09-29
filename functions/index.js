@@ -43,6 +43,7 @@ const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
 const razorpayKeyId = defineSecret("RAZORPAY_KEY_ID");
 const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
 const emailUser = defineSecret("EMAIL_USER");
+const adminToken = defineSecret("ADMIN_TOKEN");
 const emailPass = defineSecret("EMAIL_PASS");
 const youtubeApiKey = defineSecret("YOUTUBE_API_KEY");
 // Razorpay webhook signing secret — was hard-coded as "YOUR_WEBHOOK_SECRET" before, breaking all webhook signature checks
@@ -5035,11 +5036,11 @@ exports.warmChirpyVoiceCache = onSchedule(
 
 function verifyAdminToken(request) {
     const token = (request.headers['x-admin-token'] || '').trim();
-    const adminToken = process.env.REACT_APP_ADMIN_TOKEN || process.env.ADMIN_TOKEN;
-    return adminToken && token === adminToken;
+    const expected = (adminToken.value() || '').trim();
+    return !!expected && token === expected;
 }
 
-exports.cacheStats = onRequest({ cors: true }, async (req, res) => {
+exports.cacheStats = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
     if (!verifyAdminToken(req)) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -5091,7 +5092,7 @@ exports.cacheStats = onRequest({ cors: true }, async (req, res) => {
     }
 });
 
-exports.cacheClear = onRequest({ cors: true }, async (req, res) => {
+exports.cacheClear = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
     if (req.method !== 'POST' || !verifyAdminToken(req)) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -5127,7 +5128,7 @@ exports.cacheClear = onRequest({ cors: true }, async (req, res) => {
     }
 });
 
-exports.cacheByEmotion = onRequest({ cors: true }, async (req, res) => {
+exports.cacheByEmotion = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
     if (req.method !== 'POST' || !verifyAdminToken(req)) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
