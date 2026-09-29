@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Mic } from 'lucide-react';
+import { useKidStore } from '../../../kids/store';
 import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
 import { DoorHandle } from '../ui/DoorHandle';
 import { MicButton } from '../ui/MicButton';
 import { useFloatingPosition } from '../ui/useFloatingPosition';
 import { chirpySprite } from '../ui/sprites';
-import { band } from '../kit/band';
+import { band, childAge } from '../kit/band';
 import { thoughtsFor, eventsFor, possibilitiesFor, type Option } from '../kit/storyLabContent';
 import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
@@ -370,7 +371,9 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
      nowhere to go. Wherever a child drags him is where he stays, for good;
      see useFloatingPosition. */
   const boyFloat = useFloatingPosition('story-lab:boy', { xPct: 8, yPct: 31 });
+  const name = useKidStore((s) => s.name);
   const [ageBand] = useState(() => band());
+  const [age] = useState(() => childAge());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
   const [event, setEvent] = useState('');
@@ -865,6 +868,13 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
         draggable={false}
       />
       <div className="sl-room-bubble" aria-live="polite"><p>{boyLine}</p></div>
+      {(name || age !== undefined) && (
+        <div className="sl-child-label">
+          {name && name !== 'Explorer' && <span className="sl-child-name">{name}</span>}
+          {name && name !== 'Explorer' && age !== undefined && <span className="sl-child-age-sep">, </span>}
+          {age !== undefined && <span className="sl-child-age">age {age}</span>}
+        </div>
+      )}
     </div>
     <RoomThoughtParticles show={step === 2 && !thought} />
 
