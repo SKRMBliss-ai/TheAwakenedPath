@@ -116,6 +116,21 @@ export function CacheAdmin() {
     }
   };
 
+  const reRecord = async (entry: CacheEntry) => {
+    if (!confirm(`Delete the stored take of "${entry.text}"? It gets recorded again the next time it plays.`)) return;
+    try {
+      const response = await fetch('/api/admin/cache-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': getAdminToken() },
+        body: JSON.stringify({ id: entry.id }),
+      });
+      if (!response.ok) throw new Error(`Delete failed: ${response.status}`);
+      setEntries((list) => list.filter((e) => e.id !== entry.id));
+    } catch (err) {
+      alert(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
   if (!token) {
     return (
       <div className="admin-cache">
@@ -251,11 +266,16 @@ export function CacheAdmin() {
                 <summary style={{ cursor: 'pointer', fontWeight: 600 }}>{day} ({list.length})</summary>
                 <div className="admin-breakdown" style={{ marginTop: 8 }}>
                   {list.map((e) => (
-                    <div key={e.id} className="admin-breakdown-item" style={{ display: 'block' }}>
-                      <div>{e.text || <em>(no text saved)</em>}</div>
-                      <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
-                        {e.character} · {e.emotion} · {e.voice} · {new Date(e.createdAt).toLocaleTimeString()}
+                    <div key={e.id} className="admin-breakdown-item">
+                      <div style={{ display: 'block' }}>
+                        <div>{e.text || <em>(no text saved)</em>}</div>
+                        <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                          {e.character} · {e.emotion} · {e.voice} · {new Date(e.createdAt).toLocaleTimeString()}
+                        </div>
                       </div>
+                      <button className="admin-delete-btn" onClick={() => reRecord(e)} title="Delete this take so it is recorded again">
+                        Re-record
+                      </button>
                     </div>
                   ))}
                 </div>

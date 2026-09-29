@@ -5027,7 +5027,7 @@ exports.warmChirpyVoiceCache = onSchedule(
             if (await chirpyCached(cacheKey)) { skipped++; continue; }
             if (!(await reserveAiBudget('chirpyVoice'))) { stoppedForBudget = true; break; }
             try {
-                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: feeling });
+                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: mindTone(feeling).name });
                 synthesised++;
                 /* Gentle on Gemini — this is a background job, not a race. */
                 await new Promise((r) => setTimeout(r, 400));
@@ -5078,9 +5078,15 @@ exports.cacheStats = onRequest({ cors: true, secrets: [adminToken] }, async (req
             const data = doc.data();
             const cacheKey = doc.id;
 
-            // Extract emotion from cache key if stored in Firestore metadata
-            const emotion = data.emotion || 'plain';
-            const character = data.character || 'grownup';
+            /* Lines cached before character/emotion were recorded have neither
+               field. Guessing 'grownup · plain' for those mislabelled every old
+               Puck thought, so the speaker comes from the voice and the emotion
+               is shown as unknown. Raw feelings from older warm runs ('scared')
+               are folded into the tone the voice was actually directed with. */
+            const character = data.character
+                || (data.voice === CHIRPY_MIND_VOICE ? 'mind' : data.voice === 'Orion' ? 'guide' : 'grownup');
+            const emotion = !data.emotion ? 'not recorded'
+                : character === 'mind' ? mindTone(data.emotion).name : data.emotion;
             const createdAt = data.createdAt?.toDate?.().toISOString() || data.createdAt || new Date().toISOString();
 
             // Track by character and emotion
@@ -5147,6 +5153,29 @@ exports.cacheClear = onRequest({ cors: true, secrets: [adminToken] }, async (req
         res.json({ deletedCount });
     } catch (error) {
         console.error('[cacheClear] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/* Gemini performs the same direction differently from take to take, and a flat
+   take stays cached for good. Deleting one line lets the next play record it
+   again. */
+exports.cacheDeleteOne = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (req.method !== 'POST' || !verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const id = String((req.body && req.body.id) || '');
+    if (!/^[0-9a-f]{16}$/.test(id)) return res.status(400).json({ error: 'Invalid id' });
+    try {
+        const ref = db.collection('chirpyVoiceCache').doc(id);
+        const snap = await ref.get();
+        if (!snap.exists) return res.json({ deleted: false });
+        const path = snap.data().storagePath;
+        if (path) await admin.storage().bucket().file(path).delete({ ignoreNotFound: true });
+        await ref.delete();
+        res.json({ deleted: true });
+    } catch (error) {
+        console.error('[cacheDeleteOne] error:', error);
         res.status(500).json({ error: error.message });
     }
 });

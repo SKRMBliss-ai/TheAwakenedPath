@@ -123,6 +123,13 @@
         }
       },
       {
+        "source": "/api/admin/cache-delete",
+        "function": {
+          "functionId": "cacheDeleteOne",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/admin/cache-by-emotion",
         "function": {
           "functionId": "cacheByEmotion",
