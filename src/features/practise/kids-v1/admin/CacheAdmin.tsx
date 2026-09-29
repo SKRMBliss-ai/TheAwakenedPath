@@ -9,6 +9,16 @@ interface CacheStats {
   newestEntry: string | null;
 }
 
+interface CacheMiss {
+  id: string;
+  text: string;
+  character: string;
+  emotion: string;
+  reason: string;
+  count: number;
+  lastAt: string;
+}
+
 interface CacheEntry {
   id: string;
   text: string;
@@ -26,6 +36,7 @@ export function CacheAdmin() {
   const [draft, setDraft] = useState('');
   const [entries, setEntries] = useState<CacheEntry[]>([]);
   const [filter, setFilter] = useState('');
+  const [misses, setMisses] = useState<CacheMiss[]>([]);
 
   useEffect(() => {
     if (token) fetchCacheStats();
@@ -50,6 +61,7 @@ export function CacheAdmin() {
       const data = await response.json();
       setStats(data.stats);
       setEntries(data.entries || []);
+      setMisses(data.misses || []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -207,6 +219,25 @@ export function CacheAdmin() {
           </div>
 
           <div className="admin-section">
+            <h2>Failed, not cached ({misses.length})</h2>
+            {misses.length === 0 ? (
+              <div style={{ color: '#666' }}>No failures recorded since this logging was added.</div>
+            ) : (
+              <div className="admin-breakdown">
+                {misses.filter((m) => matches(filter, `${m.text} ${m.character} ${m.emotion} ${m.reason}`)).map((m) => (
+                  <div key={m.id} className="admin-breakdown-item" style={{ display: 'block', borderLeftColor: '#ff6b6b' }}>
+                    <div>{m.text}</div>
+                    <div style={{ fontSize: 12, color: '#c62828', marginTop: 4 }}>{m.reason}</div>
+                    <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+                      {m.character} · {m.emotion} · failed {m.count}× · last {m.lastAt ? new Date(m.lastAt).toLocaleString() : '?'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="admin-section">
             <h2>Cached lines ({entries.length})</h2>
             <input
               type="search"
@@ -215,21 +246,21 @@ export function CacheAdmin() {
               onChange={(e) => setFilter(e.target.value)}
               style={{ width: '100%', padding: 10, marginBottom: 12 }}
             />
-            <div className="admin-breakdown">
-              {entries
-                .filter((e) => {
-                  const q = filter.trim().toLowerCase();
-                  return !q || `${e.text} ${e.character} ${e.emotion}`.toLowerCase().includes(q);
-                })
-                .map((e) => (
-                  <div key={e.id} className="admin-breakdown-item" style={{ display: 'block' }}>
-                    <div>{e.text || <em>(no text saved)</em>}</div>
-                    <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
-                      {e.character} · {e.emotion} · {e.voice} · {new Date(e.createdAt).toLocaleString()}
+            {groupByDay(entries.filter((e) => matches(filter, `${e.text} ${e.character} ${e.emotion}`))).map(([day, list]) => (
+              <details key={day} open={day === groupByDay(entries)[0]?.[0]} style={{ marginBottom: 10 }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 600 }}>{day} ({list.length})</summary>
+                <div className="admin-breakdown" style={{ marginTop: 8 }}>
+                  {list.map((e) => (
+                    <div key={e.id} className="admin-breakdown-item" style={{ display: 'block' }}>
+                      <div>{e.text || <em>(no text saved)</em>}</div>
+                      <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                        {e.character} · {e.emotion} · {e.voice} · {new Date(e.createdAt).toLocaleTimeString()}
+                      </div>
                     </div>
-                  </div>
-                ))}
-            </div>
+                  ))}
+                </div>
+              </details>
+            ))}
           </div>
 
           {stats.oldestEntry && (
@@ -244,6 +275,21 @@ export function CacheAdmin() {
       )}
     </div>
   );
+}
+
+function matches(filter: string, haystack: string): boolean {
+  const q = filter.trim().toLowerCase();
+  return !q || haystack.toLowerCase().includes(q);
+}
+
+function groupByDay(list: CacheEntry[]): [string, CacheEntry[]][] {
+  const days = new Map<string, CacheEntry[]>();
+  for (const e of list) {
+    const day = new Date(e.createdAt).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    if (!days.has(day)) days.set(day, []);
+    days.get(day)!.push(e);
+  }
+  return [...days.entries()];
 }
 
 function getAdminToken(): string {

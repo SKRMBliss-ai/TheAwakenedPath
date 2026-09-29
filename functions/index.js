@@ -4932,6 +4932,15 @@ async function chirpySynthAndStore({ text, voiceName, direction, cacheKey, chara
     return wav;
 }
 
+function chirpyLogMiss(cacheKey, fields, reason) {
+    db.collection('chirpyVoiceMisses').doc(cacheKey).set({
+        ...fields,
+        reason,
+        count: admin.firestore.FieldValue.increment(1),
+        lastAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true }).catch(() => { /* logging must never break the voice */ });
+}
+
 exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
     const text = String((req.body && req.body.text) || '').trim();
     /* Chirpy's lines are one or two sentences. A long body is either a bug or
@@ -4963,20 +4972,24 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
 
         console.log(`[chirpyVoice] Cache miss: ${cacheKey} (${voiceName})`);
         if (aiRateLimited('chirpyVoice', callerKey(req))) {
+            chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: tone.name }, 'rate limited (429)');
             return res.status(429).send('Too many requests — please wait a moment.');
         }
         if (!(await reserveAiBudget('chirpyVoice'))) {
+            chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: tone.name }, 'daily budget spent (503)');
             return res.status(503).send('Chirpy is resting his voice.');
         }
 
         const wav = await chirpySynthAndStore({ text, voiceName, direction, cacheKey, character, emotion: tone.name });
         console.log(`[chirpyVoice] Cached new: ${cacheKey}`);
+        db.collection('chirpyVoiceMisses').doc(cacheKey).delete().catch(() => {});
         res.set('Content-Type', 'audio/wav');
         res.set('Cache-Control', 'public, max-age=2592000, immutable');
         res.set('X-Chirpy-Cache', 'MISS');
         return res.send(wav);
     } catch (error) {
         console.error('Chirpy voice failure:', error.message);
+        chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: tone.name }, `synthesis failed (502): ${String(error.message).slice(0, 200)}`);
         return res.status(502).send('Chirpy lost his voice for a moment.');
     }
 });
@@ -5086,7 +5099,16 @@ exports.cacheStats = onRequest({ cors: true, secrets: [adminToken] }, async (req
         stats.newestEntry = newest?.date || null;
 
         entries.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-        res.json({ stats, entries });
+        const missSnap = await db.collection('chirpyVoiceMisses').get();
+        const misses = missSnap.docs.map((d) => {
+            const m = d.data();
+            return {
+                id: d.id, text: m.text || '', character: m.character || '', emotion: m.emotion || '',
+                reason: m.reason || '', count: m.count || 1,
+                lastAt: m.lastAt?.toDate?.().toISOString() || '',
+            };
+        }).sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
+        res.json({ stats, entries, misses });
     } catch (error) {
         console.error('[cacheStats] error:', error);
         res.status(500).json({ error: error.message });
