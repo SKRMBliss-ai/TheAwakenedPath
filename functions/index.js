@@ -4891,7 +4891,7 @@ async function chirpyCached(cacheKey) {
 
 /* Synthesises one line with Gemini TTS and stores it in Storage + Firestore.
    Throws on any TTS failure; callers decide what to do about that. */
-async function chirpySynthAndStore({ text, voiceName, direction, cacheKey }) {
+async function chirpySynthAndStore({ text, voiceName, direction, cacheKey, character = 'grownup', emotion = 'plain' }) {
     const response = await fetch(
         'https://generativelanguage.googleapis.com/v1beta/models/'
         + 'gemini-2.5-flash-preview-tts:generateContent',
@@ -4922,6 +4922,8 @@ async function chirpySynthAndStore({ text, voiceName, direction, cacheKey }) {
     await db.collection('chirpyVoiceCache').doc(cacheKey).set({
         text,
         voice: voiceName,
+        character,
+        emotion,
         storagePath,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         usageCount: 0,
@@ -4966,7 +4968,7 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
             return res.status(503).send('Chirpy is resting his voice.');
         }
 
-        const wav = await chirpySynthAndStore({ text, voiceName, direction, cacheKey });
+        const wav = await chirpySynthAndStore({ text, voiceName, direction, cacheKey, character, emotion: tone.name });
         console.log(`[chirpyVoice] Cached new: ${cacheKey}`);
         res.set('Content-Type', 'audio/wav');
         res.set('Cache-Control', 'public, max-age=2592000, immutable');
@@ -5011,7 +5013,7 @@ exports.warmChirpyVoiceCache = onSchedule(
             if (await chirpyCached(cacheKey)) { skipped++; continue; }
             if (!(await reserveAiBudget('chirpyVoice'))) { stoppedForBudget = true; break; }
             try {
-                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey });
+                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: feeling });
                 synthesised++;
                 /* Gentle on Gemini — this is a background job, not a race. */
                 await new Promise((r) => setTimeout(r, 400));
@@ -5026,3 +5028,134 @@ exports.warmChirpyVoiceCache = onSchedule(
             + `${stoppedForBudget ? ', stopped on daily budget (resumes next run)' : ''}`);
     },
 );
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ADMIN CACHE ENDPOINTS — inspect and manage voice cache
+   ───────────────────────────────────────────────────────────────────────── */
+
+function verifyAdminToken(request) {
+    const token = (request.headers['x-admin-token'] || '').trim();
+    const adminToken = process.env.REACT_APP_ADMIN_TOKEN || process.env.ADMIN_TOKEN;
+    return adminToken && token === adminToken;
+}
+
+exports.cacheStats = onRequest({ cors: true }, async (req, res) => {
+    if (!verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const cacheCol = db.collection('chirpyVoiceCache');
+        const snapshot = await cacheCol.get();
+
+        const stats = {
+            totalEntries: snapshot.size,
+            byCharacter: {},
+            byEmotion: {},
+            oldestEntry: null,
+            newestEntry: null,
+        };
+
+        const entries = [];
+        let oldest = null;
+        let newest = null;
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const cacheKey = doc.id;
+
+            // Extract emotion from cache key if stored in Firestore metadata
+            const emotion = data.emotion || 'plain';
+            const character = data.character || 'grownup';
+            const createdAt = data.createdAt?.toDate?.().toISOString() || data.createdAt || new Date().toISOString();
+
+            // Track by character and emotion
+            stats.byCharacter[character] = (stats.byCharacter[character] || 0) + 1;
+            stats.byEmotion[emotion] = (stats.byEmotion[emotion] || 0) + 1;
+
+            // Track oldest/newest
+            const time = new Date(createdAt).getTime();
+            if (!oldest || time < oldest.time) oldest = { cacheKey, time, date: createdAt };
+            if (!newest || time > newest.time) newest = { cacheKey, time, date: createdAt };
+
+            entries.push({ id: cacheKey, character, emotion, storagePath: data.storagePath, createdAt });
+        });
+
+        stats.oldestEntry = oldest?.date || null;
+        stats.newestEntry = newest?.date || null;
+
+        res.json({ stats, entries: entries.slice(0, 50) });
+    } catch (error) {
+        console.error('[cacheStats] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+exports.cacheClear = onRequest({ cors: true }, async (req, res) => {
+    if (req.method !== 'POST' || !verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const { daysOld } = req.body;
+        if (!daysOld || daysOld < 0) {
+            return res.status(400).json({ error: 'Invalid daysOld' });
+        }
+
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+        const batch = db.batch();
+        const cacheCol = db.collection('chirpyVoiceCache');
+        const snapshot = await cacheCol.where('createdAt', '<', admin.firestore.Timestamp.fromDate(cutoffDate)).get();
+
+        let deletedCount = 0;
+        snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+            deletedCount++;
+        });
+
+        if (deletedCount > 0) {
+            await batch.commit();
+        }
+
+        console.log(`[cacheClear] deleted ${deletedCount} entries older than ${daysOld} days`);
+        res.json({ deletedCount });
+    } catch (error) {
+        console.error('[cacheClear] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+exports.cacheByEmotion = onRequest({ cors: true }, async (req, res) => {
+    if (req.method !== 'POST' || !verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const { emotion } = req.body;
+        if (!emotion) {
+            return res.status(400).json({ error: 'Missing emotion' });
+        }
+
+        const batch = db.batch();
+        const cacheCol = db.collection('chirpyVoiceCache');
+        const snapshot = await cacheCol.where('emotion', '==', emotion).get();
+
+        let deletedCount = 0;
+        snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+            deletedCount++;
+        });
+
+        if (deletedCount > 0) {
+            await batch.commit();
+        }
+
+        console.log(`[cacheByEmotion] deleted ${deletedCount} entries for emotion: ${emotion}`);
+        res.json({ deletedCount });
+    } catch (error) {
+        console.error('[cacheByEmotion] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
