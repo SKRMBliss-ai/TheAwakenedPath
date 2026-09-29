@@ -5084,7 +5084,7 @@ exports.cacheStats = onRequest({ cors: true, secrets: [adminToken] }, async (req
                is shown as unknown. Raw feelings from older warm runs ('scared')
                are folded into the tone the voice was actually directed with. */
             const character = data.character
-                || (data.voice === CHIRPY_MIND_VOICE ? 'mind' : data.voice === 'Orion' ? 'guide' : 'grownup');
+                || (data.voice === CHIRPY_MIND_VOICE || data.voice === 'Leda' ? 'mind' : data.voice === 'Orion' ? 'guide' : 'grownup');
             const emotion = !data.emotion ? 'not recorded'
                 : character === 'mind' ? mindTone(data.emotion).name : data.emotion;
             const createdAt = data.createdAt?.toDate?.().toISOString() || data.createdAt || new Date().toISOString();
