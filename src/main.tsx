@@ -26,6 +26,7 @@ import { AchievementsProvider } from './features/achievements/useAchievements'
 import { Component, type ReactNode, lazy, Suspense } from 'react'
 import { track } from './lib/analytics'
 import { installGlobalErrorReporting } from './lib/errorReporter'
+import { CacheAdmin } from './features/practise/kids-v1/admin/CacheAdmin'
 
 // Silence non-critical speech synthesis errors in development/unsupported environments
 VoiceService.init();
@@ -237,6 +238,13 @@ const gymRoute = (() => {
   return matchGymRoute(window.location.pathname);
 })();
 
+// Admin cache panel access via ?admin=<token> query parameter
+const isAdminRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return !!params.get('admin');
+})();
+
 // Track /mindgym (main app) visits
 if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute && !isPoliciesRoute && !isAboutUsRoute && !isHomeRoute && typeof window !== 'undefined') {
   const p = window.location.pathname.toLowerCase();
@@ -256,7 +264,15 @@ const isPracticePreviewRoute = import.meta.env.DEV
   && typeof window !== 'undefined'
   && window.location.pathname.replace(/\/+$/, '').toLowerCase() === '/__practice-preview';
 
-if (isPracticePreviewRoute) {
+if (isAdminRoute) {
+  root.render(
+    <ErrorBoundary featureName="CacheAdmin">
+      <ThemeProvider>
+        <CacheAdmin />
+      </ThemeProvider>
+    </ErrorBoundary>,
+  );
+} else if (isPracticePreviewRoute) {
   const PracticePathPreview = lazy(() => import('./features/practice-path/__preview'));
   root.render(
     <Suspense fallback={<div style={{ padding: 40, color: '#888' }}>Loading preview…</div>}>
