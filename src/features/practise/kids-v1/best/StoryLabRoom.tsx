@@ -392,6 +392,9 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const [sessionId] = useState(() => `story-${Date.now()}`);
   const heading = useRef<HTMLDivElement>(null);
   const moved = useRef(false);
+  /* Limit hover speak calls to avoid 502 errors accumulating in console —
+     after 10 thoughts have been read aloud on hover, disable further speaking. */
+  const hoverSpeakCount = useRef(0);
 
   /*
     ON A PHONE THERE IS ROOM FOR ONE PANEL.
@@ -646,12 +649,18 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const boyLine = BOY_LINES[Math.min(Math.max(step - 2, 0), BOY_LINES.length - 1)];
   /* Hovering (or focusing) anything with words on it has Chirpy read it out
      in the mind voice. A short pause first, so sweeping the pointer across
-     the panel doesn't set off every card on the way. */
+     the panel doesn't set off every card on the way. Limited to 10 to avoid
+     console spam from 502 errors on the voice endpoint. */
   const hoverTimer = useRef<number | undefined>(undefined);
   const say = (text: string) => ({
     onPointerEnter: () => {
       window.clearTimeout(hoverTimer.current);
-      hoverTimer.current = window.setTimeout(() => speak(text, quiet, 'mind', undefined, carried.feeling || ''), 350);
+      if (hoverSpeakCount.current < 10) {
+        hoverTimer.current = window.setTimeout(() => {
+          hoverSpeakCount.current++;
+          speak(text, quiet, 'mind', undefined, carried.feeling || '');
+        }, 350);
+      }
     },
     onPointerLeave: () => window.clearTimeout(hoverTimer.current),
   });
