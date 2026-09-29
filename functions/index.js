@@ -4756,10 +4756,10 @@ exports.notifyAdminOnKidsRegistration = onDocumentCreated({
  * =========================================================================== */
 
 const CHIRPY_DIRECTION =
-    'Read this as a warm, kind grown-up talking to a six-year-old, at a natural, ' +
-    'easy conversational pace — not rushed, but not dragging either. ' +
-    'Soft and soothing, never instructive and never sing-song. ' +
-    'Let questions lift gently at the end:';
+    'Read this as a warm, kind grown-up talking to a six-year-old. ' +
+    'Deep, calm and unhurried — slower than normal conversation, with natural pauses between thoughts. ' +
+    'Soft and soothing, never instructive or sing-song. Let it settle gently. ' +
+    'Let questions lift softly at the end:';
 
 /* The child's own mind, heard in the Story Lab when their thoughts are read
    back. Younger and slower than the narrator, so the two never blur. */
