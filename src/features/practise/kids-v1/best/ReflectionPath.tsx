@@ -224,7 +224,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
 
   const summary = useMemo(() => summariseReflections(all, visitStart), [all, visitStart]);
 
-  const say = useCallback((text: string, who: 'grownup' | 'mind' = 'mind', onEnd?: () => void) => {
+  const say = useCallback((text: string, who: 'grownup' | 'mind' | 'guide' = 'mind', onEnd?: () => void) => {
     if (!text) return;
     speak(text, quiet, who, onEnd);
   }, [quiet]);

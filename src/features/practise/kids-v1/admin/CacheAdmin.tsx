@@ -1,14 +1,6 @@
 import { useEffect, useState } from 'react';
 import './CacheAdmin.css';
 
-interface CacheEntry {
-  id: string;
-  character: string;
-  emotion: string;
-  storagePath: string;
-  createdAt: string;
-}
-
 interface CacheStats {
   totalEntries: number;
   byCharacter: Record<string, number>;
@@ -19,11 +11,8 @@ interface CacheStats {
 
 export function CacheAdmin() {
   const [stats, setStats] = useState<CacheStats | null>(null);
-  const [entries, setEntries] = useState<CacheEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleteMode, setDeleteMode] = useState(false);
-  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCacheStats();
@@ -42,7 +31,6 @@ export function CacheAdmin() {
 
       const data = await response.json();
       setStats(data.stats);
-      setEntries(data.entries);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -208,5 +196,6 @@ function getAdminToken(): string {
 function isAdminAuthorized(): boolean {
   const token = getAdminToken();
   // Check against environment variable (set in Firebase config)
-  return token === process.env.REACT_APP_ADMIN_TOKEN;
+  const envToken = import.meta.env.REACT_APP_ADMIN_TOKEN;
+  return token === envToken && !!envToken;
 }

@@ -393,13 +393,10 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const [sessionId] = useState(() => `story-${Date.now()}`);
   const heading = useRef<HTMLDivElement>(null);
   const moved = useRef(false);
-<<<<<<< HEAD
   const promptDone = useRef<(() => void) | null>(null);
-=======
   /* Limit hover speak calls to avoid 502 errors accumulating in console —
      after 10 thoughts have been read aloud on hover, disable further speaking. */
   const hoverSpeakCount = useRef(0);
->>>>>>> claude/wonderful-clarke-jnd71v
 
   /*
     ON A PHONE THERE IS ROOM FOR ONE PANEL.
@@ -679,19 +676,15 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     happened?" cards (the grown-up's question) pass 'grownup'; everything
     else defaults to the mind, matching the line's real, stable cache key.
   */
-  const say = (text: string, who: 'grownup' | 'mind' = 'mind') => ({
+  const say = (text: string) => ({
     onPointerEnter: () => {
       window.clearTimeout(hoverTimer.current);
-<<<<<<< HEAD
-      hoverTimer.current = window.setTimeout(() => speak(text, quiet, who, undefined, who === 'mind' ? carried.feeling || '' : ''), 350);
-=======
       if (hoverSpeakCount.current < 10) {
         hoverTimer.current = window.setTimeout(() => {
           hoverSpeakCount.current++;
           speak(text, quiet, 'mind', undefined, carried.feeling || '');
         }, 350);
       }
->>>>>>> claude/wonderful-clarke-jnd71v
     },
     onPointerLeave: () => window.clearTimeout(hoverTimer.current),
   });
@@ -816,7 +809,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                   <img src="/mind-gym/story-lab/memory-illustration.webp" alt="An illustrated example of a moment in a school playground" />
                   <figcaption className="sr-only">{ageBand === 'older' ? 'What happened, before deciding what it meant?' : 'What would a little camera have seen?'}</figcaption>
                 </figure>
-                <div className={`sl-cards ${eventRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{eventOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(3, option.text)}`} disabled={step !== 3} onClick={() => pick(option)} {...say(option.own ? 'Something else? Tell me.' : option.text, 'grownup')}>
+                <div className={`sl-cards ${eventRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{eventOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(3, option.text)}`} disabled={step !== 3} onClick={() => pick(option)} {...say(option.own ? 'Something else? Tell me.' : option.text)}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
                 </button>)}</div>
               </>}
