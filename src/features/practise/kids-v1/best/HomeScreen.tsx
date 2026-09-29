@@ -14,7 +14,7 @@ import { AgePopup } from './AgePopup';
 import { bandUnknown } from '../kit/band';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
-import { TEACHINGS } from '../kit/teachings';
+import { AFFIRMATIONS } from '../kit/affirmations';
 import { speak } from '../kit/chirpyVoice';
 import { isMuted, setMuted } from '../../../../lib/sfx';
 import './HomeScreen.css';
@@ -100,7 +100,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const [teaching, setTeaching] = useState<string | null>(null);
   const lastTeaching = useRef('');
   const sayTeaching = () => {
-    const pool = TEACHINGS.flatMap(t => t.open).filter(line => line.length > 14 && line.length < 140);
+    const pool = Object.values(AFFIRMATIONS).flat();
     if (!pool.length) return;
     let line = pool[Math.floor(Math.random() * pool.length)];
     /* Never the same one twice running — a repeat reads as the tap not
