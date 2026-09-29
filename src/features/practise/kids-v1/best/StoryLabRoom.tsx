@@ -269,7 +269,7 @@ const THOUGHT_WINDOW = 8;
 const EVENT_WINDOW = 5;
 const POSSIBILITY_WINDOW = 3;
 /** How long a set stays before the next comes round. */
-const ROTATE_MS = 3000;
+const ROTATE_MS = 30000;
 /** Long enough to read as drifting off rather than blinking out. */
 const FADE_MS = 430;
 
