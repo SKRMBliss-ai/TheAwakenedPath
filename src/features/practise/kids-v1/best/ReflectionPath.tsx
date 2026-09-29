@@ -341,12 +341,12 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         setCalmMode('none');
         setBreathPhase('idle');
         cue('breathComplete');
-        say('Stay here as long as you like.', 'grownup');
+        say('Stay here as long as you like.', 'guide');
         return;
       }
       setBreathPhase(phase);
-      if (phase === 'in') { cue('breatheIn'); say('Breathe in…', 'grownup'); }
-      else { cue('breatheOut'); say('And out.', 'grownup'); }
+      if (phase === 'in') { cue('breatheIn'); say('Breathe in…', 'guide'); }
+      else { cue('breatheOut'); say('And out.', 'guide'); }
       const wait = phase === 'in' ? BREATH_IN_MS : BREATH_OUT_MS;
       phase = phase === 'in' ? 'out' : 'in';
       timer = window.setTimeout(beat, wait);
@@ -360,7 +360,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     if (calmMode !== 'meditation') return;
     setMeditationDots(12);
     const t0 = window.setTimeout(() => {
-      say('Watch the little star, or just rest here.', 'grownup');
+      say('Watch the little star, or just rest here.', 'guide');
     }, 600);
     // One dot fades every 10s
     const dotInterval = window.setInterval(() => {

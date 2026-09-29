@@ -67,11 +67,12 @@ const heard = new Map<string, string>();
 let voiceToken = 0;
 
 /**
- * Two speakers. The grown-up narrates the app; Chirpy is the child's own mind,
- * heard only when the child's thoughts are being said out loud.
+ * Three speakers. The grown-up narrates the app; Chirpy is the child's own mind,
+ * heard only when the child's thoughts are being said out loud; the guide is a
+ * deeper, slower voice for breathing and meditation in the reflection room.
  */
-export type Speaker = 'grownup' | 'mind';
-const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Puck' };
+export type Speaker = 'grownup' | 'mind' | 'guide';
+const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Puck', guide: 'Orion' };
 
 function browserVoice(text: string) {
   if (!isVoiceSupported()) return;

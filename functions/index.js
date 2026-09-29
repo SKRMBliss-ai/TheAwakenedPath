@@ -4769,6 +4769,14 @@ const MIND_DIRECTION =
     'nothing stiff or grown-up. Slow and wondering, with little pauses between phrases. ' +
     'Honest and gentle, never performed or cute:';
 
+/* A calm guide for breathing and meditation in the reflection room. Deep,
+   slow, and soothing. Deliberately paced with meaningful pauses. */
+const GUIDE_DIRECTION =
+    'Read this as a calm, wise guide leading breathing and meditation for a child. ' +
+    'Deep, warm and very slow. Deliberate pacing with natural pauses between words. ' +
+    'Peaceful and grounding, like someone gently inviting stillness. ' +
+    'Never rushed or rushed; let each word settle:';
+
 /* Chirpy is the child's own mind, so he sounds the way the child said they
    feel. Matched loosely on the feeling's name; only the matched tone reaches
    the cache key, so a free-typed feeling can't multiply cache entries. */
@@ -4829,10 +4837,14 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     if (text.length > 400) return res.status(413).send('That line is too long for Chirpy.');
 
     const voiceName = String((req.body && req.body.voice) || 'Sulafat');
-    const character = req.body && req.body.character === 'mind' ? 'mind' : 'grownup';
+    const character = req.body && req.body.character === 'mind' ? 'mind'
+        : req.body && req.body.character === 'guide' ? 'guide'
+        : 'grownup';
     const tone = character === 'mind' ? mindTone(req.body && req.body.feeling) : { name: 'plain', line: '' };
     const direction = character === 'mind'
         ? (tone.line ? MIND_DIRECTION.replace(/:$/, `. ${tone.line}:`) : MIND_DIRECTION)
+        : character === 'guide'
+        ? GUIDE_DIRECTION
         : CHIRPY_DIRECTION;
     const cacheKey = chirpyCacheKey(text, `${voiceName}|${character}|${tone.name}`);
 
