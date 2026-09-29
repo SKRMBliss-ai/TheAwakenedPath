@@ -1036,8 +1036,25 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .sl-look-again{font-size:15px}
 .sl-stop button{font-size:15px}
 .sl-panel-bar h2{font-size:22px}
+
+/* ── Child's name and age label under the boy ────────────────────────────── */
+.sl-child-label{
+  display:none;position:absolute;z-index:1;bottom:-28px;left:50%;translate:-50% 0;
+  white-space:nowrap;font-size:clamp(10px,1.2vw,13px);font-weight:700;
+  color:#e6d8ff;opacity:0.55;pointer-events:none;
+  text-align:center;letter-spacing:0.3px;
+}
+.sl-child-name{display:inline}
+.sl-child-age-sep{opacity:0.4;margin:0 2px}
+.sl-child-age{color:#ffd98a;opacity:0.7}
+
 @media(max-width:760px){
   .sl-rail li{font-size:12.5px}
   .sl-step-answer{font-size:11px}
   .sl-stop button{font-size:13.5px}
+}
+
+/* Only show the label when the boy is on the room floor (wide screens) */
+@media(min-width:900px){
+  .sl-child-label{display:block}
 }

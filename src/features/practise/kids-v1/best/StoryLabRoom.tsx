@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Mic } from 'lucide-react';
+import { useKidStore } from '../../../kids/store';
 import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
 import { DoorHandle } from '../ui/DoorHandle';
 import { MicButton } from '../ui/MicButton';
 import { useFloatingPosition } from '../ui/useFloatingPosition';
 import { chirpySprite } from '../ui/sprites';
-import { band } from '../kit/band';
+import { band, childAge } from '../kit/band';
 import { thoughtsFor, eventsFor, possibilitiesFor, type Option, type FeelingKey } from '../kit/storyLabContent';
 import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
@@ -270,7 +271,7 @@ const THOUGHT_WINDOW = 8;
 const EVENT_WINDOW = 5;
 const POSSIBILITY_WINDOW = 3;
 /** How long a set stays before the next comes round. */
-const ROTATE_MS = 3000;
+const ROTATE_MS = 30000;
 /** Long enough to read as drifting off rather than blinking out. */
 const FADE_MS = 430;
 
@@ -371,7 +372,9 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
      nowhere to go. Wherever a child drags him is where he stays, for good;
      see useFloatingPosition. */
   const boyFloat = useFloatingPosition('story-lab:boy', { xPct: 8, yPct: 31 });
+  const name = useKidStore((s) => s.name);
   const [ageBand] = useState(() => band());
+  const [age] = useState(() => childAge());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
   const [event, setEvent] = useState('');
@@ -390,7 +393,13 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const [sessionId] = useState(() => `story-${Date.now()}`);
   const heading = useRef<HTMLDivElement>(null);
   const moved = useRef(false);
+<<<<<<< HEAD
   const promptDone = useRef<(() => void) | null>(null);
+=======
+  /* Limit hover speak calls to avoid 502 errors accumulating in console —
+     after 10 thoughts have been read aloud on hover, disable further speaking. */
+  const hoverSpeakCount = useRef(0);
+>>>>>>> claude/wonderful-clarke-jnd71v
 
   /*
     ON A PHONE THERE IS ROOM FOR ONE PANEL.
@@ -650,7 +659,8 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const boyLine = BOY_LINES[Math.min(Math.max(step - 2, 0), BOY_LINES.length - 1)];
   /* Hovering (or focusing) anything with words on it has Chirpy read it out
      in the mind voice. A short pause first, so sweeping the pointer across
-     the panel doesn't set off every card on the way. */
+     the panel doesn't set off every card on the way. Limited to 10 to avoid
+     console spam from 502 errors on the voice endpoint. */
   const hoverTimer = useRef<number | undefined>(undefined);
   /*
     THE VOICE BELONGS TO THE CARD, NOT TO WHATEVER STEP THE ROOM HAPPENS TO
@@ -672,7 +682,16 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const say = (text: string, who: 'grownup' | 'mind' = 'mind') => ({
     onPointerEnter: () => {
       window.clearTimeout(hoverTimer.current);
+<<<<<<< HEAD
       hoverTimer.current = window.setTimeout(() => speak(text, quiet, who, undefined, who === 'mind' ? carried.feeling || '' : ''), 350);
+=======
+      if (hoverSpeakCount.current < 10) {
+        hoverTimer.current = window.setTimeout(() => {
+          hoverSpeakCount.current++;
+          speak(text, quiet, 'mind', undefined, carried.feeling || '');
+        }, 350);
+      }
+>>>>>>> claude/wonderful-clarke-jnd71v
     },
     onPointerLeave: () => window.clearTimeout(hoverTimer.current),
   });
@@ -888,6 +907,13 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
         draggable={false}
       />
       <div className="sl-room-bubble" aria-live="polite"><p>{boyLine}</p></div>
+      {(name || age !== undefined) && (
+        <div className="sl-child-label">
+          {name && name !== 'Explorer' && <span className="sl-child-name">{name}</span>}
+          {name && name !== 'Explorer' && age !== undefined && <span className="sl-child-age-sep">, </span>}
+          {age !== undefined && <span className="sl-child-age">age {age}</span>}
+        </div>
+      )}
     </div>
     <RoomThoughtParticles show={step === 2 && !thought} />
 

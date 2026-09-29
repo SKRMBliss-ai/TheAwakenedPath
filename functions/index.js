@@ -4778,10 +4778,10 @@ exports.notifyAdminOnKidsRegistration = onDocumentCreated({
  * =========================================================================== */
 
 const CHIRPY_DIRECTION =
-    'Read this as a warm, kind grown-up talking to a six-year-old, at a natural, ' +
-    'easy conversational pace — not rushed, but not dragging either. ' +
-    'Soft and soothing, never instructive and never sing-song. ' +
-    'Let questions lift gently at the end:';
+    'Read this as a warm, kind grown-up talking to a six-year-old. ' +
+    'Deep, calm and unhurried — slower than normal conversation, with natural pauses between thoughts. ' +
+    'Soft and soothing, never instructive or sing-song. Let it settle gently. ' +
+    'Let questions lift softly at the end:';
 
 /* The child's own mind, heard in the Story Lab when their thoughts are read
    back. Younger and slower than the narrator, so the two never blur. */
@@ -4790,6 +4790,14 @@ const MIND_DIRECTION =
     'A soft, close, breathy whisper throughout, as if the words are inside her head. ' +
     'Young and natural, nothing stiff or grown-up, with little pauses between phrases. ' +
     'Let the feeling come through clearly in the whisper, honest rather than performed:';
+
+/* A calm guide for breathing and meditation in the reflection room. Deep,
+   slow, and soothing. Deliberately paced with meaningful pauses. */
+const GUIDE_DIRECTION =
+    'Read this as a calm, wise guide leading breathing and meditation for a child. ' +
+    'Deep, warm and very slow. Deliberate pacing with natural pauses between words. ' +
+    'Peaceful and grounding, like someone gently inviting stillness. ' +
+    'Never rushed or rushed; let each word settle:';
 
 /* Chirpy is the child's own mind, so he sounds the way the child said they
    feel. Matched loosely on the feeling's name; only the matched tone reaches
@@ -4929,17 +4937,16 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     if (text.length > 400) return res.status(413).send('That line is too long for Chirpy.');
 
     const voiceName = String((req.body && req.body.voice) || 'Sulafat');
-    const character = req.body && req.body.character === 'mind' ? 'mind' : 'grownup';
-    /* Allow explicit tone override for special cases like thought audio caching.
-       The whisper request is a delivery style, not a replacement for the child's
-       feeling — Story Lab thoughts are read as whichever feeling was picked
-       (scared, excited, angry...), just always as a whisper rather than the
-       feeling's normal volume/pace. */
-    const { direction, cacheKey } = chirpyResolve({
-        text, voiceName, character,
-        feeling: req.body && req.body.feeling,
-        toneField: req.body && req.body.tone,
-    });
+    const character = req.body && req.body.character === 'mind' ? 'mind'
+        : req.body && req.body.character === 'guide' ? 'guide'
+        : 'grownup';
+    const tone = character === 'mind' ? mindTone(req.body && req.body.feeling) : { name: 'plain', line: '' };
+    const direction = character === 'mind'
+        ? (tone.line ? MIND_DIRECTION.replace(/:$/, `. ${tone.line}:`) : MIND_DIRECTION)
+        : character === 'guide'
+        ? GUIDE_DIRECTION
+        : CHIRPY_DIRECTION;
+    const cacheKey = chirpyCacheKey(text, `${voiceName}|${character}|${tone.name}`);
 
     try {
         const cachedWav = await chirpyCached(cacheKey);

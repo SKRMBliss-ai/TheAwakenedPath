@@ -369,8 +369,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
           somewhere you go and look, not something you practise.
         */}
 
-        <ChildBadge />
-
+        {view.at !== 'story' && <ChildBadge />}
       </div>
     </QuietProvider>
   );
