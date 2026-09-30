@@ -4822,7 +4822,7 @@ const MIND_TONES = [
         'She feels calm. An easy, settled, warm whisper, slow and unhurried.'],
 ];
 function mindTone(feeling) {
-    const f = String(feeling || '').slice(0, 40);
+    const f = String(feeling || '').slice(0, 40).toLowerCase();
     const hit = MIND_TONES.find(([re]) => re.test(f));
     return hit ? { name: hit[1], line: hit[2] } : { name: 'plain', line: '' };
 }
@@ -5013,7 +5013,7 @@ const CHIRPY_WARM_LIST = require('./chirpyWarmList.json');
 const CHIRPY_MIND_VOICE = 'Puck';
 
 exports.warmChirpyVoiceCache = onSchedule(
-    { schedule: '17 3 * * *', timeZone: 'Etc/UTC', secrets: [geminiKey], timeoutSeconds: 540, memory: '512MiB' },
+    { schedule: '0 */3 * * *', timeZone: 'Etc/UTC', secrets: [geminiKey], timeoutSeconds: 540, memory: '512MiB' },
     async () => {
         let synthesised = 0;
         let skipped = 0;
@@ -5027,14 +5027,16 @@ exports.warmChirpyVoiceCache = onSchedule(
             if (await chirpyCached(cacheKey)) { skipped++; continue; }
             if (!(await reserveAiBudget('chirpyVoice'))) { stoppedForBudget = true; break; }
             try {
-                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: mindTone(feeling).name });
+                const tone = mindTone(feeling);
+                const emotion = tone.name || 'plain';
+                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion });
                 synthesised++;
-                /* Gentle on Gemini — this is a background job, not a race. */
-                await new Promise((r) => setTimeout(r, 400));
             } catch (e) {
                 failed++;
                 console.warn(`[warmChirpyVoiceCache] failed "${text.slice(0, 40)}": ${e.message}`);
             }
+            /* Respect Gemini rate limits — 60s between every attempt (success or failure). */
+            await new Promise((r) => setTimeout(r, 60000));
         }
 
         console.log(`[warmChirpyVoiceCache] done — synthesised ${synthesised}, `
