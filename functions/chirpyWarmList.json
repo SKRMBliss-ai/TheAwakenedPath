@@ -1,0 +1,10 @@
+[
+  { "feeling": "sad", "text": "I feel sad." },
+  { "feeling": "happy", "text": "I feel happy." },
+  { "feeling": "angry", "text": "I feel angry." },
+  { "feeling": "worried", "text": "I feel worried." },
+  { "feeling": "tired", "text": "I feel tired." },
+  { "feeling": "confused", "text": "I'm confused." },
+  { "feeling": "bored", "text": "I'm bored." },
+  { "feeling": "calm", "text": "I feel calm." }
+]
