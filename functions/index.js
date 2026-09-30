@@ -43,6 +43,7 @@ const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
 const razorpayKeyId = defineSecret("RAZORPAY_KEY_ID");
 const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
 const emailUser = defineSecret("EMAIL_USER");
+const adminToken = defineSecret("ADMIN_TOKEN");
 const emailPass = defineSecret("EMAIL_PASS");
 const youtubeApiKey = defineSecret("YOUTUBE_API_KEY");
 // Razorpay webhook signing secret — was hard-coded as "YOUR_WEBHOOK_SECRET" before, breaking all webhook signature checks
@@ -1676,13 +1677,35 @@ exports.razorpayWebhook = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret
  * =========================================================================== */
 const AI_RATE_WINDOW_MS = 60_000;
 const AI_RATE_MAX = 12;         // per caller, per endpoint, per minute, per instance
+/*
+  Some endpoints legitimately burst. Entering the Story Lab preloads every
+  thought for the child's feeling at once (a dozen short lines) so they can
+  play back instantly, and the Reflection Room warms every affirmation the
+  same way — both well over 12/min. chirpyVoice lines are short and, once
+  synthesised, are served from the Firestore/Storage cache BEFORE this limit
+  is even checked, so a burst only ever bills for the first hearing of each
+  line. A tight burst cap here is what stopped the cache from ever filling:
+  the preload tripped it, the lines 429'd, nothing cached, and every visit
+  started from the same empty cache. Give the cached endpoints room to warm.
+*/
+const AI_RATE_MAX_BY_ENDPOINT = {
+    chirpyVoice: 90,
+};
 const AI_DAILY_CAPS = {
     textToSpeech: 150,       // sharpest cost: Gemini script + neural TTS synthesis
     witnessPresence: 300,
     getGrounding: 300,
     getDailyMeditation: 150, // one call can be reused by every visitor that day — see below
     analyzeEmotion: 500,     // cheapest per call (one word out), used most often
-    chirpyVoice: 400,        // short lines, heavily cached at the edge — see below
+    /*
+      Raised from 400. The Story Lab thoughts alone are hundreds of unique
+      lines across the nine feelings, and at 400/day the cache could never
+      finish warming — a child kept hitting un-synthesised lines that came
+      back silent. Every line is billed only ONCE (then it is a permanent
+      cache hit for every child), so this ceiling is really "new lines that
+      may be synthesised in a day", not per-visit cost.
+    */
+    chirpyVoice: 3000,
 };
 const aiHits = new Map(); // "endpoint:key" -> number[] of request timestamps
 
@@ -1697,7 +1720,7 @@ function aiRateLimited(endpoint, key) {
             if (!v.length || now - v[v.length - 1] > AI_RATE_WINDOW_MS) aiHits.delete(k);
         }
     }
-    return hits.length > AI_RATE_MAX;
+    return hits.length > (AI_RATE_MAX_BY_ENDPOINT[endpoint] || AI_RATE_MAX);
 }
 
 /**
@@ -4764,10 +4787,10 @@ const CHIRPY_DIRECTION =
 /* The child's own mind, heard in the Story Lab when their thoughts are read
    back. Younger and slower than the narrator, so the two never blur. */
 const MIND_DIRECTION =
-    'Read this as the inner voice of a young child of about six, thinking out loud to themselves. ' +
-    'Young, light and a little breathy, with a small smile in the voice. Casual and natural, ' +
-    'nothing stiff or grown-up. Slow and wondering, with little pauses between phrases. ' +
-    'Honest and gentle, never performed or cute:';
+    'Whisper this as the inner voice of a young girl of about six, thinking quietly to herself. ' +
+    'A soft, close, breathy whisper throughout, as if the words are inside her head. ' +
+    'Young and natural, nothing stiff or grown-up, with little pauses between phrases. ' +
+    'Let the feeling come through clearly in the whisper, honest rather than performed:';
 
 /* A calm guide for breathing and meditation in the reflection room. Deep,
    slow, and soothing. Deliberately paced with meaningful pauses. */
@@ -4782,21 +4805,21 @@ const GUIDE_DIRECTION =
    the cache key, so a free-typed feeling can't multiply cache entries. */
 const MIND_TONES = [
     [/sad|grief|lonely|hurt|disappoint|miss|cry|down|left out/i, 'sad',
-        'The child feels sad. Let the voice be quiet, soft and a little heavy, slower still, with a small sigh in it.'],
+        'She feels sad. A heavy, slow whisper that wobbles a little, with a small sigh, close to tears.'],
     [/excit|happy|joy|proud|glad|great|fun/i, 'happy',
-        'The child feels happy and excited. Let the voice be bright and bouncy, and let a small, warm laugh come through at the end.'],
+        'She feels happy and excited. A bright, quick, smiling whisper, bubbling over, with a tiny giggle at the end.'],
     [/angry|mad|cross|frustrat|annoy|unfair/i, 'angry',
-        'The child feels angry. Let the voice be tight and a bit huffy, short breaths, but never shouting.'],
+        'She feels angry. A tight, huffy whisper through clenched teeth, sharp short breaths, never shouting.'],
     [/scar|worr|nervous|afraid|anxious|fear/i, 'worried',
-        'The child feels worried. Let the voice be small and unsure, a little shaky, hesitating before words.'],
+        'She feels worried. A tiny, shaky whisper, unsure, hesitating and catching her breath before words.'],
     [/asham|embarrass|shy/i, 'shy',
-        'The child feels embarrassed. Let the voice be small and quiet, almost a mumble, looking down.'],
+        'She feels embarrassed. A very small whisper, almost a mumble, trailing off, looking down.'],
     [/jealous|envy/i, 'jealous',
-        'The child feels jealous. Let the voice be a little sulky and grumbly, with a pout in it.'],
+        'She feels jealous. A sulky, grumbly whisper with a pout in it.'],
     [/bored/i, 'bored',
-        'The child feels bored. Let the voice be flat and drawn out, with a long slow sigh.'],
+        'She feels bored. A flat, drawn-out whisper with a long slow sigh.'],
     [/calm|peace|okay|fine|relax/i, 'calm',
-        'The child feels calm. Let the voice be easy and settled, warm and unhurried.'],
+        'She feels calm. An easy, settled, warm whisper, slow and unhurried.'],
 ];
 function mindTone(feeling) {
     const f = String(feeling || '').slice(0, 40);
@@ -4829,6 +4852,95 @@ function chirpyCacheKey(text, voice) {
     return crypto.createHash('sha256').update(`${text}|${voice}`).digest('hex').slice(0, 16);
 }
 
+/*
+  Works out the written direction and the cache key for one line, the same way
+  whether the line is asked for live or warmed ahead of time on a schedule.
+  Both paths MUST land on the same key or the warmed copy never gets found.
+*/
+function chirpyResolve({ text, voiceName, character, feeling, toneField }) {
+    let tone;
+    if (toneField === 'whisper') {
+        const emotion = mindTone(feeling);
+        tone = emotion.name === 'plain'
+            ? { name: 'thought-whisper', line: 'A soft, hissed whisper, like thinking out loud.' }
+            : { name: `thought-whisper-${emotion.name}`, line: `${emotion.line} Keep it as a soft, hissed whisper throughout, like thinking out loud rather than speaking aloud.` };
+    } else {
+        tone = character === 'mind' ? mindTone(feeling) : { name: 'plain', line: '' };
+    }
+    const direction = character === 'mind'
+        ? (tone.line ? MIND_DIRECTION.replace(/:$/, `. ${tone.line}:`) : MIND_DIRECTION)
+        : CHIRPY_DIRECTION;
+    return { direction, cacheKey: chirpyCacheKey(text, `${voiceName}|${character}|${tone.name}`) };
+}
+
+/* Returns the cached WAV buffer for a key, or null if nothing usable is stored.
+   Checks `storagePath` — the field the cache actually writes. It used to check
+   `storageUrl`, which is never written, so every request fell through to a
+   fresh synthesis and the stored audio was never once served. */
+async function chirpyCached(cacheKey) {
+    const snap = await db.collection('chirpyVoiceCache').doc(cacheKey).get();
+    if (snap.exists && snap.data().storagePath) {
+        try {
+            const buf = await admin.storage().bucket().file(snap.data().storagePath).download();
+            return buf[0];
+        } catch (e) {
+            console.warn(`[chirpyVoice] cache doc but file gone: ${cacheKey} (${e.message})`);
+        }
+    }
+    return null;
+}
+
+/* Synthesises one line with Gemini TTS and stores it in Storage + Firestore.
+   Throws on any TTS failure; callers decide what to do about that. */
+async function chirpySynthAndStore({ text, voiceName, direction, cacheKey, character = 'grownup', emotion = 'plain' }) {
+    const response = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/'
+        + 'gemini-2.5-flash-preview-tts:generateContent',
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey.value() },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: `${direction}\n\n${text}` }] }],
+                generationConfig: {
+                    responseModalities: ['AUDIO'],
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
+                },
+            }),
+        },
+    );
+    if (!response.ok) throw new Error(`Gemini TTS ${response.status}`);
+    const data = await response.json();
+    const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+    if (!part?.data) throw new Error('Gemini TTS returned no audio');
+
+    const rate = Number(/rate=(\d+)/.exec(part.mimeType || '')?.[1]) || 24000;
+    const wav = chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
+
+    const storagePath = `chirpy-voice-cache/${voiceName}/${cacheKey}.wav`;
+    await admin.storage().bucket().file(storagePath).save(wav, {
+        metadata: { contentType: 'audio/wav', cacheControl: 'public, max-age=2592000, immutable' },
+    });
+    await db.collection('chirpyVoiceCache').doc(cacheKey).set({
+        text,
+        voice: voiceName,
+        character,
+        emotion,
+        storagePath,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        usageCount: 0,
+    }, { merge: true });
+    return wav;
+}
+
+function chirpyLogMiss(cacheKey, fields, reason) {
+    db.collection('chirpyVoiceMisses').doc(cacheKey).set({
+        ...fields,
+        reason,
+        count: admin.firestore.FieldValue.increment(1),
+        lastAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true }).catch(() => { /* logging must never break the voice */ });
+}
+
 exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
     const text = String((req.body && req.body.text) || '').trim();
     /* Chirpy's lines are one or two sentences. A long body is either a bug or
@@ -4849,82 +4961,254 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     const cacheKey = chirpyCacheKey(text, `${voiceName}|${character}|${tone.name}`);
 
     try {
-        /* CHECK CACHE FIRST — Firestore + Firebase Storage */
-        const cacheRef = db.collection('chirpyVoiceCache').doc(cacheKey);
-        const cacheSnap = await cacheRef.get();
-        if (cacheSnap.exists) {
-            const cached = cacheSnap.data();
-            if (cached.storageUrl) {
-                console.log(`[chirpyVoice] Cache hit: ${cacheKey} (${voiceName})`);
-                res.set('Content-Type', 'audio/wav');
-                res.set('Cache-Control', 'public, max-age=2592000, immutable');
-                res.set('X-Chirpy-Cache', 'HIT');
-                const audioBuffer = await admin.storage().bucket().file(cached.storagePath).download();
-                return res.send(audioBuffer[0]);
-            }
+        const cachedWav = await chirpyCached(cacheKey);
+        if (cachedWav) {
+            console.log(`[chirpyVoice] Cache hit: ${cacheKey} (${voiceName})`);
+            res.set('Content-Type', 'audio/wav');
+            res.set('Cache-Control', 'public, max-age=2592000, immutable');
+            res.set('X-Chirpy-Cache', 'HIT');
+            return res.send(cachedWav);
         }
 
-        /* CACHE MISS — synthesize new audio */
         console.log(`[chirpyVoice] Cache miss: ${cacheKey} (${voiceName})`);
-
         if (aiRateLimited('chirpyVoice', callerKey(req))) {
+            chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: tone.name }, 'rate limited (429)');
             return res.status(429).send('Too many requests — please wait a moment.');
         }
         if (!(await reserveAiBudget('chirpyVoice'))) {
+            chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: tone.name }, 'daily budget spent (503)');
             return res.status(503).send('Chirpy is resting his voice.');
         }
 
-        const response = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/'
-            + 'gemini-2.5-flash-preview-tts:generateContent',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': geminiKey.value(),
-                },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: `${direction}\n\n${text}` }] }],
-                    generationConfig: {
-                        responseModalities: ['AUDIO'],
-                        speechConfig: {
-                            voiceConfig: { prebuiltVoiceConfig: { voiceName } },
-                        },
-                    },
-                }),
-            },
-        );
-
-        if (!response.ok) throw new Error(`Gemini TTS ${response.status}`);
-        const data = await response.json();
-        const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-        if (!part?.data) throw new Error('Gemini TTS returned no audio');
-
-        const rate = Number(/rate=(\d+)/.exec(part.mimeType || '')?.[1]) || 24000;
-        const wav = chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
-
-        /* STORE IN FIREBASE — audio file + cache record */
-        const storagePath = `chirpy-voice-cache/${voiceName}/${cacheKey}.wav`;
-        const bucket = admin.storage().bucket();
-        const file = bucket.file(storagePath);
-        await file.save(wav, { metadata: { contentType: 'audio/wav', cacheControl: 'public, max-age=2592000, immutable' } });
-
-        await cacheRef.set({
-            text,
-            voice: voiceName,
-            storagePath,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            usageCount: 0,
-        }, { merge: true });
-
-        console.log(`[chirpyVoice] Cached new: ${cacheKey} → gs://bucket/${storagePath}`);
-
+        const wav = await chirpySynthAndStore({ text, voiceName, direction, cacheKey, character, emotion: tone.name });
+        console.log(`[chirpyVoice] Cached new: ${cacheKey}`);
+        db.collection('chirpyVoiceMisses').doc(cacheKey).delete().catch(() => {});
         res.set('Content-Type', 'audio/wav');
         res.set('Cache-Control', 'public, max-age=2592000, immutable');
         res.set('X-Chirpy-Cache', 'MISS');
         return res.send(wav);
     } catch (error) {
         console.error('Chirpy voice failure:', error.message);
+        chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: tone.name }, `synthesis failed (502): ${String(error.message).slice(0, 200)}`);
         return res.status(502).send('Chirpy lost his voice for a moment.');
+    }
+});
+
+/*
+  WARM THE CACHE AHEAD OF THE CHILDREN.
+
+  Every Story Lab thought, for every feeling, synthesised once and stored so
+  the first child to reach any of them hears it instantly rather than waiting
+  on a fresh synthesis. chirpyWarmList.json is generated from the Story Lab
+  content (the thoughtsFor lists across all nine feelings) — regenerate it when
+  those change. Requested exactly as the room requests them: the 'mind' voice
+  (Puck), in each line's feeling, so the warmed key matches the live key.
+
+  Already-cached lines are skipped for free, so after the first full pass this
+  costs almost nothing and just tops up whatever is new. It stops the moment
+  the daily budget is spent and picks up the rest on the next run, so one quiet
+  daily pass converges without ever blowing the cap.
+*/
+const CHIRPY_WARM_LIST = require('./chirpyWarmList.json');
+const CHIRPY_MIND_VOICE = 'Puck';
+
+exports.warmChirpyVoiceCache = onSchedule(
+    { schedule: '17 3 * * *', timeZone: 'Etc/UTC', secrets: [geminiKey], timeoutSeconds: 540, memory: '512MiB' },
+    async () => {
+        let synthesised = 0;
+        let skipped = 0;
+        let failed = 0;
+        let stoppedForBudget = false;
+
+        for (const { feeling, text } of CHIRPY_WARM_LIST) {
+            const { direction, cacheKey } = chirpyResolve({
+                text, voiceName: CHIRPY_MIND_VOICE, character: 'mind', feeling,
+            });
+            if (await chirpyCached(cacheKey)) { skipped++; continue; }
+            if (!(await reserveAiBudget('chirpyVoice'))) { stoppedForBudget = true; break; }
+            try {
+                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: mindTone(feeling).name });
+                synthesised++;
+                /* Gentle on Gemini — this is a background job, not a race. */
+                await new Promise((r) => setTimeout(r, 400));
+            } catch (e) {
+                failed++;
+                console.warn(`[warmChirpyVoiceCache] failed "${text.slice(0, 40)}": ${e.message}`);
+            }
+        }
+
+        console.log(`[warmChirpyVoiceCache] done — synthesised ${synthesised}, `
+            + `already cached ${skipped}, failed ${failed}`
+            + `${stoppedForBudget ? ', stopped on daily budget (resumes next run)' : ''}`);
+    },
+);
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ADMIN CACHE ENDPOINTS — inspect and manage voice cache
+   ───────────────────────────────────────────────────────────────────────── */
+
+function verifyAdminToken(request) {
+    const token = (request.headers['x-admin-token'] || '').trim();
+    const expected = (adminToken.value() || '').trim();
+    return !!expected && token === expected;
+}
+
+exports.cacheStats = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (!verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const cacheCol = db.collection('chirpyVoiceCache');
+        const snapshot = await cacheCol.get();
+
+        const stats = {
+            totalEntries: snapshot.size,
+            byCharacter: {},
+            byEmotion: {},
+            oldestEntry: null,
+            newestEntry: null,
+        };
+
+        const entries = [];
+        let oldest = null;
+        let newest = null;
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const cacheKey = doc.id;
+
+            /* Lines cached before character/emotion were recorded have neither
+               field. Guessing 'grownup · plain' for those mislabelled every old
+               Puck thought, so the speaker comes from the voice and the emotion
+               is shown as unknown. Raw feelings from older warm runs ('scared')
+               are folded into the tone the voice was actually directed with. */
+            const character = data.character
+                || (data.voice === CHIRPY_MIND_VOICE || data.voice === 'Leda' ? 'mind' : data.voice === 'Orion' ? 'guide' : 'grownup');
+            const emotion = !data.emotion ? 'not recorded'
+                : character === 'mind' ? mindTone(data.emotion).name : data.emotion;
+            const createdAt = data.createdAt?.toDate?.().toISOString() || data.createdAt || new Date().toISOString();
+
+            // Track by character and emotion
+            stats.byCharacter[character] = (stats.byCharacter[character] || 0) + 1;
+            stats.byEmotion[emotion] = (stats.byEmotion[emotion] || 0) + 1;
+
+            // Track oldest/newest
+            const time = new Date(createdAt).getTime();
+            if (!oldest || time < oldest.time) oldest = { cacheKey, time, date: createdAt };
+            if (!newest || time > newest.time) newest = { cacheKey, time, date: createdAt };
+
+            entries.push({ id: cacheKey, text: data.text || '', voice: data.voice || '', character, emotion, createdAt });
+        });
+
+        stats.oldestEntry = oldest?.date || null;
+        stats.newestEntry = newest?.date || null;
+
+        entries.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+        const missSnap = await db.collection('chirpyVoiceMisses').get();
+        const misses = missSnap.docs.map((d) => {
+            const m = d.data();
+            return {
+                id: d.id, text: m.text || '', character: m.character || '', emotion: m.emotion || '',
+                reason: m.reason || '', count: m.count || 1,
+                lastAt: m.lastAt?.toDate?.().toISOString() || '',
+            };
+        }).sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
+        res.json({ stats, entries, misses });
+    } catch (error) {
+        console.error('[cacheStats] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+exports.cacheClear = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (req.method !== 'POST' || !verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const { daysOld } = req.body;
+        if (!daysOld || daysOld < 0) {
+            return res.status(400).json({ error: 'Invalid daysOld' });
+        }
+
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+        const batch = db.batch();
+        const cacheCol = db.collection('chirpyVoiceCache');
+        const snapshot = await cacheCol.where('createdAt', '<', admin.firestore.Timestamp.fromDate(cutoffDate)).get();
+
+        let deletedCount = 0;
+        snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+            deletedCount++;
+        });
+
+        if (deletedCount > 0) {
+            await batch.commit();
+        }
+
+        console.log(`[cacheClear] deleted ${deletedCount} entries older than ${daysOld} days`);
+        res.json({ deletedCount });
+    } catch (error) {
+        console.error('[cacheClear] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/* Gemini performs the same direction differently from take to take, and a flat
+   take stays cached for good. Deleting one line lets the next play record it
+   again. */
+exports.cacheDeleteOne = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (req.method !== 'POST' || !verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const id = String((req.body && req.body.id) || '');
+    if (!/^[0-9a-f]{16}$/.test(id)) return res.status(400).json({ error: 'Invalid id' });
+    try {
+        const ref = db.collection('chirpyVoiceCache').doc(id);
+        const snap = await ref.get();
+        if (!snap.exists) return res.json({ deleted: false });
+        const path = snap.data().storagePath;
+        if (path) await admin.storage().bucket().file(path).delete({ ignoreNotFound: true });
+        await ref.delete();
+        res.json({ deleted: true });
+    } catch (error) {
+        console.error('[cacheDeleteOne] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+exports.cacheByEmotion = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (req.method !== 'POST' || !verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const { emotion } = req.body;
+        if (!emotion) {
+            return res.status(400).json({ error: 'Missing emotion' });
+        }
+
+        const batch = db.batch();
+        const cacheCol = db.collection('chirpyVoiceCache');
+        const snapshot = await cacheCol.where('emotion', '==', emotion).get();
+
+        let deletedCount = 0;
+        snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+            deletedCount++;
+        });
+
+        if (deletedCount > 0) {
+            await batch.commit();
+        }
+
+        console.log(`[cacheByEmotion] deleted ${deletedCount} entries for emotion: ${emotion}`);
+        res.json({ deletedCount });
+    } catch (error) {
+        console.error('[cacheByEmotion] error:', error);
+        res.status(500).json({ error: error.message });
     }
 });
