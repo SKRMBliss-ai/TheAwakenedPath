@@ -5013,7 +5013,7 @@ const CHIRPY_WARM_LIST = require('./chirpyWarmList.json');
 const CHIRPY_MIND_VOICE = 'Puck';
 
 exports.warmChirpyVoiceCache = onSchedule(
-    { schedule: '17 3 * * *', timeZone: 'Etc/UTC', secrets: [geminiKey], timeoutSeconds: 540, memory: '512MiB' },
+    { schedule: '0 */3 * * *', timeZone: 'Etc/UTC', secrets: [geminiKey], timeoutSeconds: 540, memory: '512MiB' },
     async () => {
         let synthesised = 0;
         let skipped = 0;
