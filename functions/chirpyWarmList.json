@@ -1,26 +1,10 @@
 [
   { "feeling": "sad", "text": "I feel sad." },
-  { "feeling": "sad", "text": "I miss someone." },
-  { "feeling": "sad", "text": "I feel left out." },
   { "feeling": "happy", "text": "I feel happy." },
-  { "feeling": "happy", "text": "I'm excited." },
-  { "feeling": "happy", "text": "I feel proud." },
   { "feeling": "angry", "text": "I feel angry." },
-  { "feeling": "angry", "text": "I'm frustrated." },
-  { "feeling": "angry", "text": "That's unfair." },
   { "feeling": "worried", "text": "I feel worried." },
-  { "feeling": "worried", "text": "I'm scared." },
-  { "feeling": "worried", "text": "What if something bad happens?" },
   { "feeling": "tired", "text": "I feel tired." },
-  { "feeling": "tired", "text": "I'm exhausted." },
-  { "feeling": "tired", "text": "I need a rest." },
-  { "feeling": "confused", "text": "I don't understand." },
   { "feeling": "confused", "text": "I'm confused." },
-  { "feeling": "confused", "text": "What's going on?" },
   { "feeling": "bored", "text": "I'm bored." },
-  { "feeling": "bored", "text": "This is boring." },
-  { "feeling": "bored", "text": "There's nothing to do." },
-  { "feeling": "calm", "text": "I feel calm." },
-  { "feeling": "calm", "text": "I'm relaxed." },
-  { "feeling": "calm", "text": "Everything is okay." }
+  { "feeling": "calm", "text": "I feel calm." }
 ]
