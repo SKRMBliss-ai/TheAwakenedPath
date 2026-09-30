@@ -4822,7 +4822,7 @@ const MIND_TONES = [
         'She feels calm. An easy, settled, warm whisper, slow and unhurried.'],
 ];
 function mindTone(feeling) {
-    const f = String(feeling || '').slice(0, 40);
+    const f = String(feeling || '').slice(0, 40).toLowerCase();
     const hit = MIND_TONES.find(([re]) => re.test(f));
     return hit ? { name: hit[1], line: hit[2] } : { name: 'plain', line: '' };
 }
@@ -5027,7 +5027,9 @@ exports.warmChirpyVoiceCache = onSchedule(
             if (await chirpyCached(cacheKey)) { skipped++; continue; }
             if (!(await reserveAiBudget('chirpyVoice'))) { stoppedForBudget = true; break; }
             try {
-                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: mindTone(feeling).name });
+                const tone = mindTone(feeling);
+                const emotion = tone.name || 'plain';
+                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion });
                 synthesised++;
             } catch (e) {
                 failed++;
