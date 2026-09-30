@@ -5029,8 +5029,8 @@ exports.warmChirpyVoiceCache = onSchedule(
             try {
                 await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: mindTone(feeling).name });
                 synthesised++;
-                /* Respect Gemini rate limits — 1.5s between requests to stay under quota. */
-                await new Promise((r) => setTimeout(r, 1500));
+                /* Respect Gemini rate limits — 60s between requests to stay under quota. */
+                await new Promise((r) => setTimeout(r, 60000));
             } catch (e) {
                 failed++;
                 console.warn(`[warmChirpyVoiceCache] failed "${text.slice(0, 40)}": ${e.message}`);
