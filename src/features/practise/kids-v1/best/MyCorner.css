@@ -1,0 +1,142 @@
+/* My Corner of the treehouse — see MyCorner.tsx. */
+
+.cn-room {
+  /* One unit for every size in the room: big enough to hold on a phone, a little smaller per pixel on a wide screen. */
+  --u: max(6.5px, min(1vw, 1.75vh));
+  /* The room stops where the tray starts, so nothing can be put down underneath it. */
+  --tray: 196px;
+  position: relative; height: 100svh; min-height: 520px; overflow: hidden; background: #1b1030; color: #fff;
+  user-select: none; -webkit-user-select: none; touch-action: none;
+}
+.cn-room.is-folded { --tray: 64px; }
+.cn-backdrop { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% - var(--tray)); object-fit: cover; object-position: 50% 70%; transition: filter .6s ease; }
+.cn-glow { position: absolute; inset: 0 0 var(--tray) 0; pointer-events: none; background: radial-gradient(ellipse at 50% 30%, transparent 55%, #0d062099 100%); }
+
+.cn-head { position: absolute; z-index: 6; top: clamp(12px, 2.4vh, 26px); left: clamp(16px, 2.2vw, 34px); max-width: min(560px, 56vw); }
+.cn-head h1 {
+  margin: 0; font-family: inherit; font-size: clamp(26px, 3.4vw, 50px); font-weight: 900; line-height: 1;
+  color: #fff6e0; text-shadow: 0 3px 0 #2a1450, 0 0 24px #ffd98a88;
+}
+.cn-head h1 span { color: #ffb9d8; }
+.cn-head p {
+  display: inline-block; margin: 8px 0 0; padding: 6px 12px; border-radius: 14px;
+  background: #1d1446cc; border: 1px solid #ffd98a55;
+  font-size: clamp(12px, 1.15vw, 16px); font-weight: 800; color: #ffeec7;
+}
+.cn-top { position: absolute; z-index: 6; top: clamp(12px, 2.4vh, 26px); right: clamp(14px, 2vw, 30px); display: flex; align-items: center; gap: 10px; }
+.cn-count { padding: 7px 13px; border-radius: 16px; background: #1d1446d9; border: 1px solid #ffd98a55; font-size: 13px; font-weight: 900; color: #ffe6a2; }
+.cn-grownup { min-height: 44px; padding: 8px 16px; border: 0; border-radius: 24px; background: #32205de8; color: #fff; font-family: inherit; font-size: 13px; font-weight: 900; cursor: pointer; }
+
+/* ── Things in the room ───────────────────────────────────────────────────── */
+
+.cn-stage { position: absolute; inset: 0 0 var(--tray) 0; z-index: 2; }
+.cn-thing {
+  position: absolute; display: block; padding: 0; border: 0; background: none; cursor: grab; touch-action: none;
+  width: calc(var(--w) * var(--u) * var(--k, 1));
+  translate: -50% -100%;
+  -webkit-tap-highlight-color: transparent;
+}
+.cn-thing.is-floor { translate: -50% -50%; }
+.cn-thing img { display: block; width: 100%; height: auto; pointer-events: none; filter: drop-shadow(0 calc(var(--u) * .8) calc(var(--u) * .7) #0b041899); }
+.cn-thing.is-floor img { filter: drop-shadow(0 2px 3px #0b041866); }
+.cn-thing.is-selected img, .cn-thing.is-selected .cn-pet-face, .cn-thing:focus-visible img {
+  filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 12px #ffe9a6) drop-shadow(0 calc(var(--u) * .8) calc(var(--u) * .7) #0b041899);
+}
+.cn-thing:focus-visible { outline: none; }
+.cn-thing.is-dragging { cursor: grabbing; }
+.cn-thing.is-dragging img, .cn-thing.is-dragging .cn-pet-face { scale: 1.06; }
+
+.cn-pet-face {
+  display: grid; place-items: center; width: 100%; aspect-ratio: 1; line-height: 1;
+  font-size: calc(var(--w) * var(--u) * var(--k, 1) * .78); pointer-events: none;
+  filter: drop-shadow(0 calc(var(--u) * .7) calc(var(--u) * .5) #0b041899);
+  animation: cn-pet 2.8s ease-in-out infinite;
+}
+@keyframes cn-pet { 0%, 100% { translate: 0 0; } 45% { translate: 0 -8%; } 55% { translate: 0 -8%; } }
+.cn-thing:nth-child(2n) .cn-pet-face { animation-duration: 3.3s; }
+
+/* ── Changing the selected thing ──────────────────────────────────────────── */
+
+.cn-tools {
+  position: absolute; z-index: 30; left: 50%; translate: -50% 0; top: clamp(70px, 12vh, 110px);
+  display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 16px; border-radius: 26px;
+  background: linear-gradient(#45297af2, #2a1656f5); border: 2px solid #ffd98a; box-shadow: 0 12px 30px -10px #000;
+}
+.cn-tools b { margin-right: 6px; font-size: 15px; font-weight: 1000; color: #fff3cf; white-space: nowrap; }
+.cn-tools button {
+  min-width: 44px; height: 44px; padding: 0 12px; border-radius: 22px; border: 1px solid #c9aef8;
+  background: #4a2c79; color: #fff; font-family: inherit; font-size: 20px; font-weight: 1000; cursor: pointer;
+}
+.cn-tools .cn-away, .cn-tools .cn-done { font-size: 14px; }
+.cn-tools .cn-done { background: linear-gradient(#ffe08a, #f0a12c); color: #4a2600; border: 0; }
+.cn-tools button:focus-visible, .cn-card:focus-visible, .cn-tabs button:focus-visible { outline: 3px solid #ffe9a6; outline-offset: 2px; }
+
+/* ── The tray ─────────────────────────────────────────────────────────────── */
+
+.cn-tray {
+  position: absolute; z-index: 20; left: 0; right: 0; bottom: 0; height: var(--tray);
+  padding: 8px max(14px, calc((100% - 1180px) / 2)) 12px;
+  background: linear-gradient(#2d1a58, #150a30); border-top: 2px solid #ffd98a88;
+  box-shadow: 0 -14px 34px -12px #000c;
+}
+.cn-tabs { display: flex; align-items: center; gap: 6px; }
+.cn-tabs button {
+  position: relative; min-height: 40px; padding: 6px 16px; border-radius: 20px; border: 1px solid #ffffff2e;
+  background: #ffffff12; color: #e8dcff; font-family: inherit; font-size: 14px; font-weight: 900; cursor: pointer;
+}
+.cn-tabs button.is-on { background: linear-gradient(#ffe08a, #f0a12c); color: #4a2600; border-color: transparent; }
+.cn-tabs .cn-fold { margin-left: auto; width: 44px; padding: 0; font-size: 18px; }
+.cn-dot { position: absolute; top: 2px; right: 4px; width: 10px; height: 10px; border-radius: 50%; background: #ff7fb5; border: 2px solid #fff; }
+
+.cn-items {
+  display: flex; gap: 10px; margin: 10px 0 0; padding: 4px 2px 6px; list-style: none;
+  overflow-x: auto; scrollbar-width: thin; scrollbar-color: #ffd98a55 transparent; touch-action: pan-x;
+}
+.cn-card {
+  position: relative; display: grid; justify-items: center; align-content: start; gap: 4px;
+  width: 112px; min-height: 128px; padding: 8px 6px; border-radius: 18px; cursor: pointer;
+  border: 1px solid #ffd98a40; background: linear-gradient(#ffffff1c, #ffffff08); color: #fff; font-family: inherit;
+  transition: transform .2s ease, background .2s ease;
+}
+.cn-card:hover { transform: translateY(-3px); background: linear-gradient(#ffffff2a, #ffffff10); }
+.cn-card img { width: 84px; height: 68px; object-fit: contain; filter: drop-shadow(0 4px 4px #0008); }
+.cn-card b { font-size: 12.5px; font-weight: 900; line-height: 1.15; text-align: center; }
+.cn-card small { font-size: 11px; font-weight: 800; line-height: 1.2; color: #d9ccf5; text-align: center; }
+.cn-card.is-locked { border-style: dashed; border-color: #ffffff33; background: #ffffff08; }
+.cn-card.is-locked img { filter: brightness(0) invert(1); opacity: .22; }
+.cn-card.is-locked b { color: #c9b8f0; }
+.cn-card-face {
+  display: grid; place-items: center; width: 68px; height: 68px; border-radius: 50%; font-size: 42px; line-height: 1;
+  background: radial-gradient(circle at 40% 35%, #ffffff, var(--c) 72%);
+}
+.cn-card-pet.is-locked .cn-card-face { background: #ffffff14; color: #ffffff66; font-size: 34px; font-weight: 1000; }
+.cn-swatch {
+  display: grid; place-items: center; width: 68px; height: 68px; border-radius: 18px; border: 2px solid #ffffffaa;
+  font-size: 26px; font-weight: 1000; color: #fff; text-shadow: 0 2px 4px #0008; box-shadow: 0 4px 10px #0007;
+}
+.cn-card-wall.is-locked .cn-swatch { filter: grayscale(.7) brightness(.6); }
+.cn-card-wall.is-on { border-color: #ffe08a; box-shadow: 0 0 0 2px #ffe08a, 0 0 18px -4px #ffe08a; }
+.cn-new {
+  position: absolute; z-index: 1; top: -7px; right: -4px; rotate: 8deg;
+  padding: 2px 8px; border-radius: 10px; background: #ff7fb5; border: 1.5px solid #fff;
+  font-size: 11px; font-weight: 1000; color: #fff; box-shadow: 0 3px 8px #0006;
+}
+
+@media (max-width: 700px) {
+  .cn-head p { font-size: 12px; }
+  .cn-top { top: 10px; right: 10px; }
+  .cn-grownup, .cn-count { display: none; }
+  .cn-room { --tray: 182px; }
+  .cn-tools { top: auto; bottom: calc(var(--tray) + 12px); flex-wrap: wrap; justify-content: center; width: max-content; max-width: 94vw; }
+  .cn-tools b { width: 100%; text-align: center; margin: 0; }
+  .cn-tray { padding: 6px 8px 10px; border-radius: 20px 20px 0 0; }
+  .cn-tabs button { padding: 6px 11px; font-size: 13px; }
+  .cn-card { width: 96px; min-height: 118px; }
+  .cn-card img { width: 72px; height: 58px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-pet-face { animation: none; }
+  .cn-backdrop, .cn-card { transition: none; }
+}
+.cn-still .cn-pet-face { animation: none; }

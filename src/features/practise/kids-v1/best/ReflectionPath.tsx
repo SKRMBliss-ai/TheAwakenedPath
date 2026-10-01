@@ -413,6 +413,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         setCalmMode('none');
         setBreathPhase('idle');
         cue('breathComplete');
+        useKidStore.getState().noteActivity({ kind: 'calm', detail: 'breathing' });
         say('Stay here as long as you like.', 'guide');
         return;
       }
@@ -443,6 +444,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     }, 10000);
     const endTimer = window.setTimeout(() => {
       cue('breathComplete');
+      useKidStore.getState().noteActivity({ kind: 'calm', detail: 'quiet' });
       setCalmMode('none');
       setMeditationDots(12);
       window.setTimeout(() => {

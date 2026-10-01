@@ -289,6 +289,7 @@ export function DeepDive({
   const pickFeeling = (_id: string, label: string) => {
     setTodaysFeeling(label);
     logKidEvent('feeling', { feeling: label });
+    useKidStore.getState().noteActivity({ kind: 'feeling', detail: label });
     answer('feeling', label);
   };
 
@@ -323,6 +324,7 @@ export function DeepDive({
     onSave={(a) => {
       const ok = saveCase(a);
       if (ok) useKidStore.getState().addSavedReflection(buildSavedReflection(a));
+      useKidStore.getState().noteActivity({ kind: 'story', detail: a.feeling });
       logKidEvent('storyLab', { ...a });
       return ok;
     }} />;

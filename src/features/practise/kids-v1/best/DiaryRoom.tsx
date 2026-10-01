@@ -145,6 +145,7 @@ export function DiaryRoom({ onExit, onOlder, openToday = false }: { onExit: () =
         throw new Error('Diary could not be persisted');
       }
       setSaved(true); setSaveError('');
+      useKidStore.getState().noteActivity({ kind: 'diary' });
       if (!quiet) sound.play('resolve');
     } catch {
       setSaved(false);

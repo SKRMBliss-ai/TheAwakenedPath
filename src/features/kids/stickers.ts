@@ -15,7 +15,7 @@
 
 export type StickerGroup =
   | 'ladder' | 'kind' | 'truth' | 'choices' | 'include' | 'body' | 'help'
-  | 'runs' | 'explore' | 'stars';
+  | 'runs' | 'explore' | 'stars' | 'egg';
 
 export type StickerShape = 'circle' | 'squircle' | 'star' | 'heart' | 'shield' | 'flower' | 'cloud' | 'badge';
 
@@ -26,6 +26,8 @@ export interface StickerStats {
   byRoom: Record<string, number>;
   runs: number;
   days: number;
+  /** Rare stickers found inside surprise eggs. */
+  eggStickers: readonly string[];
 }
 
 export interface StickerDef {
@@ -37,7 +39,7 @@ export interface StickerDef {
   /** Top and bottom of the sticker's colour. */
   colors: [string, string];
   need: number;
-  unit: 'choice' | 'star' | 'run' | 'day' | 'theme';
+  unit: 'choice' | 'star' | 'run' | 'day' | 'theme' | 'egg';
   /** What to do to get it, in words a six-year-old can read. */
   how: string;
   have: (s: StickerStats) => number;
@@ -58,6 +60,7 @@ export const STICKER_GROUPS: StickerGroupInfo[] = [
   { id: 'runs', title: 'Runs of five', colors: ['#ff9a8a', '#e0504a'] },
   { id: 'explore', title: 'Explorer', colors: ['#e9f58a', '#a9c424'] },
   { id: 'stars', title: 'Mind Stars', colors: ['#a7a0ff', '#5a4fd6'] },
+  { id: 'egg', title: 'Surprise Eggs', colors: ['#fff3b8', '#f2b52c'] },
 ];
 
 const colorsOf = (group: StickerGroup) => STICKER_GROUPS.find((g) => g.id === group)!.colors;
@@ -110,6 +113,18 @@ const STARS: Array<[number, string, string, StickerShape]> = [
   [1000, '👑', 'Star Crown', 'star'],
 ];
 
+/** Only ever found inside Chirpy's surprise eggs (see delight.ts), never counted towards. */
+const EGGS: Array<[string, string, string, StickerShape, [string, string]]> = [
+  ['egg-golden', '🥚', 'Golden Egg', 'badge', ['#fff3b8', '#f2b52c']],
+  ['egg-rainbow', '🌈', 'Rainbow Shell', 'cloud', ['#ffd1f0', '#8ec8ff']],
+  ['egg-moon', '🌙', 'Moon Hatchling', 'circle', ['#d9ccff', '#5a4fd6']],
+  ['egg-dragon', '🐉', 'Tiny Dragon', 'shield', ['#b6f5c8', '#2f9c6a']],
+  ['egg-crystal', '💎', 'Crystal Egg', 'star', ['#c7f4ff', '#3aa8d8']],
+  ['egg-unicorn', '🦄', 'Unicorn Wish', 'heart', ['#ffd6f2', '#c04fd9']],
+];
+
+export const EGG_STICKER_IDS: string[] = EGGS.map(([id]) => id);
+
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 export const STICKERS: StickerDef[] = [
@@ -156,6 +171,12 @@ export const STICKERS: StickerDef[] = [
     how: `Collect ${need} Mind Stars.`,
     have: (s) => s.points,
     rare: need >= 300,
+  })),
+
+  ...EGGS.map(([id, glyph, name, shape, colors]): StickerDef => ({
+    id, group: 'egg', name, glyph, shape, colors, need: 1, unit: 'egg', rare: true,
+    how: 'Found inside a surprise egg.',
+    have: (s) => (s.eggStickers.includes(id) ? 1 : 0),
   })),
 ];
 
@@ -223,5 +244,6 @@ export function leftLabel(next: NextSticker): string {
     case 'run': return `${left} more ${plural(left, 'run', 'runs')}`;
     case 'day': return `${left} more ${plural(left, 'day', 'days')}`;
     case 'theme': return `${left} more ${plural(left, 'theme', 'themes')}`;
+    case 'egg': return 'One lucky egg';
   }
 }

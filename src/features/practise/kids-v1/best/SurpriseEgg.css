@@ -1,0 +1,121 @@
+/* Chirpy's surprise egg — see SurpriseEgg.tsx. */
+
+.egg-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.egg-shine { animation: egg-shine 3s ease-in-out infinite; }
+@keyframes egg-shine { 0%, 45% { transform: translateX(0) skewX(-18deg); } 100% { transform: translateX(160px) skewX(-18deg); } }
+.egg-peek { filter: drop-shadow(0 2px 3px #0006); }
+
+/* ── In the nest, on the home-page floor ──────────────────────────────────── */
+
+.egg-home {
+  --w: var(--egg-w, 130px);
+  position: relative; display: block; width: var(--w); height: calc(var(--w) * .92);
+  padding: 0; border: 0; background: none; cursor: pointer; font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.egg-nest { position: absolute; left: 0; width: 100%; height: auto; pointer-events: none; }
+.egg-nest-back { bottom: 4%; }
+.egg-nest-front { bottom: 0; z-index: 2; filter: drop-shadow(0 6px 6px #0b041888); }
+.egg-home-egg {
+  position: absolute; z-index: 1; left: 50%; bottom: 18%; width: 50%; margin-left: -25%;
+  transform-origin: 50% 92%; filter: drop-shadow(0 4px 6px #0b041866);
+}
+.egg-home::before {
+  content: ''; position: absolute; left: 50%; bottom: 20%; width: 90%; aspect-ratio: 1; translate: -50% 0;
+  border-radius: 50%; background: radial-gradient(circle, #fff3c444, transparent 66%); pointer-events: none;
+  animation: egg-warm 3.2s ease-in-out infinite;
+}
+@keyframes egg-warm { 50% { opacity: .45; scale: .92; } }
+.egg-home.is-ready::before { background: radial-gradient(circle, #ffe9a6aa, #ffb3dc44 45%, transparent 68%); animation-duration: 1.4s; }
+.egg-home.is-ready .egg-home-egg { animation: egg-wobble 2.6s ease-in-out infinite; }
+@keyframes egg-wobble {
+  0%, 62%, 100% { rotate: 0deg; }
+  68% { rotate: -11deg; } 74% { rotate: 9deg; } 80% { rotate: -7deg; } 86% { rotate: 4deg; }
+}
+.egg-home.is-golden::before { background: radial-gradient(circle, #ffe58acc, #ffc24a55 45%, transparent 68%); }
+.egg-home:hover .egg-home-egg, .egg-home:focus-visible .egg-home-egg { scale: 1.06; }
+.egg-home:focus-visible { outline: 3px solid #ffe9a6; outline-offset: 4px; border-radius: 24px; }
+.egg-home.is-hatched .egg-home-egg { bottom: 14%; width: 62%; margin-left: -31%; }
+
+.egg-tag {
+  position: absolute; z-index: 3; left: 50%; bottom: -14%; translate: -50% 0;
+  padding: 3px 12px; border-radius: 12px; white-space: nowrap;
+  background: #fff6c8; color: #5a3200; border: 1.5px solid #ffd98a;
+  font-size: clamp(10.5px, .85vw, 13px); font-weight: 1000; box-shadow: 0 4px 10px #0b041866;
+}
+.egg-home.is-ready .egg-tag { background: #ff7fb5; color: #fff; border-color: #fff; animation: egg-tag 1.4s ease-in-out infinite; }
+@keyframes egg-tag { 50% { scale: 1.08; } }
+.egg-home:not(.is-ready):not(.is-hatched) .egg-tag { background: #2b1d55e6; color: #ffe6a2; border-color: #ffd98a66; }
+
+.egg-tip {
+  position: absolute; z-index: 12; bottom: calc(100% + 6px); left: 50%; translate: -50% 0;
+  width: max-content; max-width: 230px; margin: 0; padding: 9px 13px; border-radius: 16px;
+  background: linear-gradient(#ffffff, #f1e9ff); color: #2b1750;
+  font-size: 13px; font-weight: 850; line-height: 1.28; box-shadow: 0 8px 22px -8px #0b0418cc;
+}
+
+/* ── Cracking it open ─────────────────────────────────────────────────────── */
+
+.egg-veil {
+  position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px;
+  background: radial-gradient(circle at 50% 45%, #2a1856e0, #0d0620f2 70%);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: #fff;
+}
+.egg-stage { position: relative; display: grid; justify-items: center; gap: 12px; width: min(520px, 100%); }
+.egg-close {
+  position: absolute; top: -6px; right: 0; z-index: 2; width: 46px; height: 46px; border-radius: 50%;
+  border: 1px solid #c9aef8; background: #4a2c79; color: #fff; font-size: 16px; cursor: pointer;
+}
+.egg-close:focus-visible, .egg-big:focus-visible, .egg-go:focus-visible, .egg-ok:focus-visible { outline: 3px solid #ffe9a6; outline-offset: 4px; }
+.egg-title { margin: 0; font-size: clamp(22px, 3vw, 34px); font-weight: 1000; color: #fff3cf; text-shadow: 0 0 20px #ffd98a88; }
+.egg-hint { margin: 0; font-size: clamp(15px, 1.6vw, 19px); font-weight: 850; color: #e8dcff; }
+.egg-big {
+  width: clamp(170px, 30vh, 290px); padding: 0; border: 0; background: none; cursor: pointer;
+  filter: drop-shadow(0 0 40px #ffe9a666) drop-shadow(0 18px 18px #0008);
+}
+.egg-big.is-golden { filter: drop-shadow(0 0 50px #ffd24acc) drop-shadow(0 18px 18px #0008); }
+
+.egg-reveal {
+  position: relative; display: grid; justify-items: center; gap: 8px; width: 100%;
+  padding: 20px 22px 18px; border-radius: 30px; text-align: center;
+  border: 2px solid #ffd98a; background: linear-gradient(#45297af5, #22134af8);
+  box-shadow: 0 26px 60px -16px #000, 0 0 50px -10px #ffd98aaa;
+}
+.egg-reveal h2 { margin: 2px 0 0; font-family: inherit; font-size: clamp(21px, 2.6vw, 28px); font-weight: 1000; line-height: 1.1; color: #fff3cf; }
+.egg-reveal p { margin: 0; font-size: clamp(14px, 1.4vw, 17px); font-weight: 750; line-height: 1.35; color: #eadfff; }
+.egg-reveal .egg-note { color: #ffe08a; font-weight: 900; }
+.egg-shells { width: 92px; margin-top: -64px; filter: drop-shadow(0 8px 10px #0009); }
+.egg-friend {
+  display: grid; place-items: center; width: 132px; height: 132px; border-radius: 50%; font-size: 76px; line-height: 1;
+  background: radial-gradient(circle at 40% 35%, #ffffff, var(--c) 70%); box-shadow: 0 0 40px -6px var(--c), inset 0 -8px 16px #0002;
+  animation: egg-bounce 1.6s ease-in-out infinite;
+}
+@keyframes egg-bounce { 0%, 100% { transform: translateY(0) scale(1); } 45% { transform: translateY(-10px) scale(1.04, .97); } }
+.egg-chirpy { width: 110px; height: auto; filter: drop-shadow(0 8px 10px #0008); }
+.egg-joke { font-size: clamp(17px, 1.8vw, 21px) !important; font-weight: 900 !important; color: #fff !important; }
+.egg-punch { font-size: clamp(22px, 2.6vw, 30px) !important; font-weight: 1000 !important; color: #ffe08a !important; text-shadow: 0 0 18px #ffd98a88; }
+.egg-sticker { display: block; margin: 4px 0; animation: egg-bounce 1.8s ease-in-out infinite; }
+.egg-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 6px; }
+.egg-go, .egg-ok {
+  min-height: 48px; padding: 10px 22px; border-radius: 26px; border: 0; cursor: pointer;
+  font-family: inherit; font-size: 16px; font-weight: 1000;
+}
+.egg-go { background: linear-gradient(#ffe08a, #f0a12c); color: #4a2600; box-shadow: 0 6px 0 #b4700f, 0 10px 20px -6px #000; }
+.egg-ok { background: #ffffff1f; color: #fff; border: 1.5px solid #ffffff55; }
+.egg-tomorrow { margin-top: 6px !important; font-size: 13px !important; color: #c9b8f0 !important; }
+
+.egg-burst { position: absolute; left: 50%; top: 4px; width: 0; height: 0; pointer-events: none; }
+.egg-burst i {
+  position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%;
+  background: #fff3c4; box-shadow: 0 0 12px #ffd86b; opacity: 0;
+  animation: egg-spark 1.2s ease-out forwards; animation-delay: var(--d);
+}
+@keyframes egg-spark {
+  0% { opacity: 0; transform: rotate(var(--a)) translateX(10px) scale(.4); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateX(160px) scale(.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .egg-home *, .egg-home::before, .egg-veil * { animation: none !important; }
+}

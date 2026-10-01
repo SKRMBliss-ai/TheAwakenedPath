@@ -207,7 +207,8 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
   const scenariosDone = useKidStore(s => s.scenariosDone);
   const owned = useKidStore(s => s.stickers);
   const stickerQueue = useKidStore(s => s.stickerQueue);
-  const stats = useMemo(() => stickerStatsOf({ points, gameStats, scenariosDone }), [points, gameStats, scenariosDone]);
+  const eggStickers = useKidStore(s => s.eggStickers);
+  const stats = useMemo(() => stickerStatsOf({ points, gameStats, scenariosDone, eggStickers }), [points, gameStats, scenariosDone, eggStickers]);
   const next = useMemo(() => nextSticker(stats, owned), [stats, owned]);
   const shownPoints = useCountUp(points, still);
   const [book, setBook] = useState(false);

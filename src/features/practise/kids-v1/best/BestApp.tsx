@@ -39,6 +39,9 @@ import { FirstNight } from './FirstNight';
 import { useKidAccountSync } from '../kit/kidAccount';
 import { HomeScreen } from './HomeScreen';
 import { GamesRoom } from './GamesRoom';
+import { Garden } from './Garden';
+import { MyCorner } from './MyCorner';
+import { AdventureMap } from './AdventureMap';
 import { ChildBadge } from './ChildBadge';
 import { ROOM_PILLARS } from '../kit/behaviourPractice';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
@@ -101,7 +104,11 @@ type View =
    *  safety screen — see LeaveANote's note on why they must not be conflated. */
   | { at: 'leavenote' }
   /** The short way in, for an evening with nothing in the tank. */
-  | { at: 'oneminute' };
+  | { at: 'oneminute' }
+  /* The three places off the home-page floor — see kids/delight. */
+  | { at: 'garden' }
+  | { at: 'corner' }
+  | { at: 'adventure' };
 
 /**
  * WALKING THROUGH, NOT FADING THROUGH.
@@ -254,8 +261,15 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onDeepDive={() => setView({ at: 'deep' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
+                onGarden={() => setView({ at: 'garden' })}
+                onAdventure={() => setView({ at: 'adventure' })}
+                onCorner={() => setView({ at: 'corner' })}
               />
             )}
+
+            {view.at === 'garden' && <Garden onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
+            {view.at === 'corner' && <MyCorner onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
+            {view.at === 'adventure' && <AdventureMap onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })} />}
 
             {view.at === 'practice' && <GamesRoom key={view.room.id}
               room={view.room} pillar={ROOM_PILLARS[view.room.id]} onExit={back}
@@ -316,6 +330,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                   setStoryAnswers(answers);
                   const ok = saveCase(answers);
                   if (ok) useKidStore.getState().addSavedReflection(buildSavedReflection(answers));
+                  useKidStore.getState().noteActivity({ kind: 'story', detail: answers.feeling });
                   return ok;
                 }}
               />

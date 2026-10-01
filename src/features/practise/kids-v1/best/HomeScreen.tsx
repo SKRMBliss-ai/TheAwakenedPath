@@ -19,6 +19,8 @@ import { AFFIRMATIONS } from '../kit/affirmations';
 import { speak } from '../kit/chirpyVoice';
 import { isMuted, setMuted } from '../../../../lib/sfx';
 import { useDiaryFilledToday } from '../kit/diaryToday';
+import { grewBetween, rememberedGreeting } from '../../../kids/delight';
+import { HomeTreasures } from './HomeTreasures';
 import './HomeScreen.css';
 import './DiaryNudge.css';
 
@@ -35,11 +37,12 @@ const STEPS = [
 ];
 
 /** Composed from the approved two-flow home handoff; all controls are semantic. */
-export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onReflectionPath }: {
+export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onReflectionPath, onGarden, onAdventure, onCorner }: {
   name: string; onDeepDive: () => void; onOpenRoom: (room: VirtueRoom) => void;
   onPractice: (room: VirtueRoom) => void;
   onGrownUp: () => void; onExitGym: () => void; onReflection: () => void;
   onReflectionPath?: () => void;
+  onGarden: () => void; onAdventure: () => void; onCorner: () => void;
 }) {
   const s = useKidStore();
   const quiet = useQuiet();
@@ -120,6 +123,19 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     speak(line, quiet);
   };
   const today = todayKey();
+  useEffect(() => { useKidStore.getState().noteVisit(); }, []);
+  /*
+    CHIRPY REMEMBERS — in the card he is already standing under, as words on
+    the page rather than as speech. This home page does not talk until it is
+    spoken to; see delight.rememberedGreeting for what he will and will not
+    say about a child coming back.
+  */
+  const lastVisit = [...s.visitDays].reverse().find((d) => d < today) ?? '';
+  const greeting = rememberedGreeting({
+    name, today, memories: s.memories,
+    grew: grewBetween(s.plants, lastVisit, today),
+    eggReady: s.eggHatchedOn !== today && s.activeDays.includes(today),
+  });
   const room = VIRTUE_ROOMS.find((r) => r.id === selected);
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
   const game = room ? roomGamesFor(room.id)[0] : undefined;
@@ -176,6 +192,8 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       <section className="mg-character" aria-label="Your guide">
         <div className="mg-greeting" aria-live="polite"><img src={`${A}boy_fullbody.webp`} alt="" /><div>{teaching
           ? <><b>{teaching}</b><p>Tap me again for another one.</p></>
+          : greeting
+            ? <><b>{greeting.title}</b><p>{greeting.line}</p>{!diaryDone && <button className="mg-greet-diary" onClick={onReflection}>📖 Write in my diary</button>}</>
           : diaryDone
             ? <><b>Hello{name ? `, ${name}` : ''}!<br />How would you like<br />to begin today?</b><p>You can explore your feelings<br />or make good choices!</p></>
             : <><b>Hello{name ? `, ${name}` : ''}!<br />How did today go?</b><p>Your Inner Diary is keeping<br />a page for today.</p><button className="mg-greet-diary" onClick={onReflection}>📖 Write in my diary</button></>}</div></div>
@@ -190,6 +208,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         <header className="mg-shelf-title"><span aria-hidden="true">☀</span><h2>My Good Choices</h2><p>Small choices. Big growth. A brighter you.</p></header>
         <GoodChoicesShelf onAction={open} onDiary={onReflection} diaryWaiting={!diaryDone} />
       </section>
+      <HomeTreasures onGarden={onGarden} onAdventure={onAdventure} onCorner={onCorner} />
       {/*
         THE PAINTED LETTERING IN THE CORNERS.
 
