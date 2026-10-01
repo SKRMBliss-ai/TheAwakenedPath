@@ -4800,15 +4800,6 @@ const GUIDE_DIRECTION =
     'Peaceful and grounding, like someone gently inviting stillness. ' +
     'Never rushed or rushed; let each word settle:';
 
-/* The Story Map narrator. A grandfather by the fire, not the app's guide:
-   low, slow and full of the story, so bedtime chapters feel like being read to. */
-const STORYTELLER_DIRECTION =
-    'Read this aloud as a seasoned storyteller reading a bedtime story to a child. ' +
-    'A deep, rich, resonant male voice, warm and a little husky, coming from low in the chest. ' +
-    'Slow and unhurried, much slower than normal speech, savouring each phrase, with long natural pauses at commas and full stops. ' +
-    'Let wonder and gentle suspense colour the words, and soften to almost a hush at quiet moments. ' +
-    'Never rushed, never sing-song, never reading like an announcer:';
-
 /* Chirpy is the child's own mind, so he sounds the way the child said they
    feel. Matched loosely on the feeling's name; only the matched tone reaches
    the cache key, so a free-typed feeling can't multiply cache entries. */
@@ -4960,15 +4951,12 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     const voiceName = String((req.body && req.body.voice) || 'Sulafat');
     const character = req.body && req.body.character === 'mind' ? 'mind'
         : req.body && req.body.character === 'guide' ? 'guide'
-        : req.body && req.body.character === 'storyteller' ? 'storyteller'
         : 'grownup';
     const tone = character === 'mind' ? mindTone(req.body && req.body.feeling) : { name: 'plain', line: '' };
     const direction = character === 'mind'
         ? (tone.line ? MIND_DIRECTION.replace(/:$/, `. ${tone.line}:`) : MIND_DIRECTION)
         : character === 'guide'
         ? GUIDE_DIRECTION
-        : character === 'storyteller'
-        ? STORYTELLER_DIRECTION
         : CHIRPY_DIRECTION;
     const cacheKey = chirpyCacheKey(text, `${voiceName}|${character}|${tone.name}`);
 
@@ -5102,7 +5090,7 @@ exports.cacheStats = onRequest({ cors: true, secrets: [adminToken] }, async (req
                is shown as unknown. Raw feelings from older warm runs ('scared')
                are folded into the tone the voice was actually directed with. */
             const character = data.character
-                || (data.voice === CHIRPY_MIND_VOICE || data.voice === 'Leda' ? 'mind' : data.voice === 'Orion' ? 'guide' : data.voice === 'Charon' ? 'storyteller' : 'grownup');
+                || (data.voice === CHIRPY_MIND_VOICE || data.voice === 'Leda' ? 'mind' : data.voice === 'Orion' ? 'guide' : 'grownup');
             const emotion = !data.emotion ? 'not recorded'
                 : character === 'mind' ? mindTone(data.emotion).name : data.emotion;
             const createdAt = data.createdAt?.toDate?.().toISOString() || data.createdAt || new Date().toISOString();
