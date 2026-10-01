@@ -750,6 +750,7 @@ export function LegacyRoomMap({
                 cover but sky.
               */
               bottomVh={80}
+              remind={false}
               onClick={sp.onClick}
             />
           ))}

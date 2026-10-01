@@ -86,6 +86,10 @@ const PIVOT = '24% 50%';
 /** How long the name hangs there on arrival before it fades back. */
 const TIP_MS = 2800;
 
+/** A back handle reminds the child where it is this often, for this long. */
+const REMIND_EVERY_MS = 60000;
+const REMIND_FOR_MS = 5000;
+
 export function DoorHandle({
   side,
   label,
@@ -96,6 +100,7 @@ export function DoorHandle({
   nudge = null,
   big = false,
   scale = 1,
+  remind = side === 'left',
 }: {
   side: 'left' | 'right';
   /** Both the accessible name and the words on the tooltip. */
@@ -133,6 +138,9 @@ export function DoorHandle({
    * words come in already chosen.
    */
   nudge?: string | null;
+  /** Every minute, wave and say "go back from here" for a few seconds. On by
+      default for the left (back) handle; the hub turns it off for its doors. */
+  remind?: boolean;
 }) {
   const m = useMotion();
   const [awake, setAwake] = useState(false);
@@ -153,6 +161,19 @@ export function DoorHandle({
     return () => clearTimeout(t);
   }, []);
 
+  /* Children forget where the way out is, so a back handle waves and shows
+     its tip for a few seconds once a minute. */
+  const [reminding, setReminding] = useState(false);
+  useEffect(() => {
+    if (!remind) return;
+    let hide = 0;
+    const every = window.setInterval(() => {
+      setReminding(true);
+      hide = window.setTimeout(() => setReminding(false), REMIND_FOR_MS);
+    }, REMIND_EVERY_MS);
+    return () => { window.clearInterval(every); window.clearTimeout(hide); };
+  }, [remind]);
+
   // THE ATTENTION BEAT.
   //
   // The handles rest at the very edge of the screen on purpose, and the
@@ -166,9 +187,9 @@ export function DoorHandle({
   // lever sweeps inward, into the room. The right-hand fitting is the same
   // file mirrored, so both levers point into the room the child is in.
   const forward = side === 'right';
-  const live = awake || pressed;
-  const tip = introTip || awake || pressed || nudge !== null;
-  const tipText = awake || pressed ? label : (nudge ?? label);
+  const live = awake || pressed || reminding;
+  const tip = introTip || awake || pressed || reminding || nudge !== null;
+  const tipText = awake || pressed ? label : reminding ? '👋 Tap here to go back' : (nudge ?? label);
 
   function press() {
     if (pressed) return;
@@ -345,8 +366,10 @@ export function DoorHandle({
                 ? 'h-auto w-[124px] max-w-none select-none sm:w-[210px] lg:w-[300px]'
                 : 'h-auto w-[124px] max-w-none select-none sm:w-[210px]'
             }
-            animate={{ rotate: pressed ? PRESS_DEG : 0 }}
-            transition={{ type: 'spring', stiffness: 240, damping: 15 }}
+            animate={{ rotate: pressed ? PRESS_DEG : reminding && !m.quiet ? [0, 12, -6, 10, 0] : 0 }}
+            transition={reminding && !pressed && !m.quiet
+              ? { duration: 1.2, repeat: 2, repeatDelay: 0.6 }
+              : { type: 'spring', stiffness: 240, damping: 15 }}
             style={{
               transformOrigin: PIVOT,
               // The awake state, from the same pixels: brighter, and throwing
