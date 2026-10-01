@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useKidStore, type SavedReflection } from '../../../kids/store';
 import { FONT } from '../ui/chrome';
-import { speak, stopSpeaking, preload } from '../kit/chirpyVoice';
+import { speak, stopSpeaking } from '../kit/chirpyVoice';
 import { useQuiet } from '../ui/quiet';
 import { DoorHandle } from '../ui/DoorHandle';
 import { BadgeSlot } from './ChildBadge';
 import * as sound from '../kit/sound';
-import { pickThreeAffirmations, allAffirmations } from '../kit/affirmations';
+import { pickThreeAffirmations } from '../kit/affirmations';
 import { summariseReflections, constellationLayout, type ThoughtStar } from '../kit/reflectionSummary';
 import './ReflectionPath.css';
 
@@ -71,6 +71,9 @@ const WELCOME = [
 ];
 
 const FIRST_AFFIRMATION = 'I am learning something new about myself.';
+
+/** Affirmations the room reads on its own in one visit (see playRoom). */
+const ROOM_LINES_PER_VISIT = 10;
 
 function shuffled<T>(list: T[]): T[] {
   const out = [...list];
@@ -278,25 +281,27 @@ export function ReflectionPath({ onExit, onGrownUp }: {
      where it left off afterwards. */
   const roomAt = useRef(0);
   /*
-    THE ROOM KEEPS SAYING THEM, for as long as a child sits in it.
+    THE ROOM SAYS TEN, THEN RESTS.
 
-    It already started on its own when they arrived — a welcome line, then
-    every affirmation they have, in a shuffled order. But it said them once and
-    then went quiet for good, which on a screen a child is meant to be able to
-    sit in for ten minutes meant the room fell silent about forty seconds in
-    and never spoke again. A room that affirms you once is a notification.
+    It starts on its own when they arrive — a welcome line, then their
+    affirmations in a shuffled order, going round again after a breath if they
+    have fewer than ten. It used to go round for as long as a child sat there,
+    and every line it says is a live recording on a small daily voice
+    allowance, so one child sitting quietly could spend the day's voice alone.
 
-    So when the list runs out it waits a breath and goes round again from the
-    top. Anything the child starts — a brick, a breathing exercise, the quiet
-    star — interrupts it, and it picks up afterwards, which is what roomAt was
-    always for.
+    Anything the child starts — a brick, a breathing exercise, the quiet star —
+    interrupts it, and it picks up afterwards, which is what roomAt is for.
+    Lines the child asks for by tapping are not counted.
   */
+  const roomSaid = useRef(0);
   const loopTimer = useRef<number | undefined>(undefined);
   /* Each time this ticks the room starts the list again. A counter rather than
      a function calling itself: the self-reference needed a ref written during
      render, which React does not allow. */
   const [roomPass, setRoomPass] = useState(0);
   const playRoom = useCallback(() => {
+    const left = ROOM_LINES_PER_VISIT - roomSaid.current;
+    if (left <= 0) { setRoomLine(null); return; }
     const rest = roomAffirmations.slice(roomAt.current);
     if (!rest.length) {
       setRoomLine(null);
@@ -305,9 +310,11 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       loopTimer.current = window.setTimeout(() => setRoomPass((n) => n + 1), 14000);
       return;
     }
+    const from = roomAt.current;
+    const now = rest.slice(0, left);
     playLines(
-      rest.map((text) => ({ text, who: 'mind' as const })),
-      (i) => { roomAt.current = roomAffirmations.length - rest.length + i + 1; setRoomLine(rest[i]); },
+      now.map((text) => ({ text, who: 'mind' as const })),
+      (i) => { roomAt.current = from + i + 1; roomSaid.current += 1; setRoomLine(now[i]); },
       () => setRoomPass((n) => n + 1),
     );
   }, [roomAffirmations, playLines]);
@@ -329,38 +336,6 @@ export function ReflectionPath({ onExit, onGrownUp }: {
     if (quiet) return;
     const cancel = sound.playMusicWhenAllowed('reflectionBed');
     return () => { cancel(); sound.stopMusic(); };
-  }, [quiet]);
-
-  /*
-    EVERY AFFIRMATION, WARMED BEFORE A HAND EVER REACHES FOR A BRICK.
-
-    Tapping a brick used to mean a wait — speak() had never seen that line
-    before, so it went out to the Function and only then started talking.
-    A stone's tag decides which three of the sixty-odd lines get read, and a
-    child can tap any brick in any order, so there's no way to know in
-    advance which three matter. The whole set is small enough to just fetch
-    it all: a few dozen short lines, most of them already sitting in the
-    Function's own Storage cache from every other child who has heard them,
-    so this is mostly a handful of quick downloads rather than new
-    synthesis.
-
-    Four at a time, quietly, in the background — this must never compete
-    with the welcome line above for the one voice slot, and must never make
-    a room that's about to speak wait on a fetch that doesn't matter yet.
-  */
-  useEffect(() => {
-    if (quiet) return;
-    let cancelled = false;
-    const lines = allAffirmations();
-    const run = async () => {
-      const batch = 4;
-      for (let i = 0; i < lines.length; i += batch) {
-        if (cancelled) return;
-        await Promise.all(lines.slice(i, i + batch).map((line) => preload(line, 'mind')));
-      }
-    };
-    void run();
-    return () => { cancelled = true; };
   }, [quiet]);
 
   /* The lullaby bed stops for breathing — the orb and the counted breath are

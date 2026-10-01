@@ -48,6 +48,10 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 /** Pause between one affirmation finishing and the next, so it stays a quiet
     background voice while the child arranges things. */
 const AFFIRM_GAP_MS = 9000;
+/** Read on their own in one visit. Each is a live recording on a small daily
+    voice allowance, so the corner stops after these; the speaker button reads
+    this many more. */
+const AFFIRM_PER_VISIT = 10;
 
 function shuffled<T>(list: T[]): T[] {
   const out = [...list];
@@ -83,9 +87,16 @@ export function MyCorner({ onExit, onGrownUp }: { onExit: () => void; onGrownUp:
   });
   const [affirmOn, setAffirmOn] = useState(true);
   const [affirmAt, setAffirmAt] = useState(0);
+  const [affirmUntil, setAffirmUntil] = useState(AFFIRM_PER_VISIT);
   const [affirmShown, setAffirmShown] = useState<string | null>(null);
+  const affirmPlaying = affirmOn && affirmAt < affirmUntil;
+  const toggleAffirm = () => {
+    if (affirmPlaying) { setAffirmOn(false); return; }
+    setAffirmUntil(affirmAt + AFFIRM_PER_VISIT);
+    setAffirmOn(true);
+  };
   useEffect(() => {
-    if (!affirmOn) return;
+    if (!affirmPlaying) return;
     const line = affirmations[affirmAt % affirmations.length];
     let next = 0;
     const start = window.setTimeout(() => {
@@ -96,7 +107,7 @@ export function MyCorner({ onExit, onGrownUp }: { onExit: () => void; onGrownUp:
       speak(line, quiet, 'grownup', advance);
     }, affirmAt === 0 ? 1800 : 0);
     return () => { window.clearTimeout(start); window.clearTimeout(next); stopSpeaking(); };
-  }, [affirmOn, affirmAt, affirmations, quiet]);
+  }, [affirmPlaying, affirmAt, affirmations, quiet]);
 
   const open = (unlock: Parameters<typeof isUnlocked>[0]) => isUnlocked(unlock, progress);
   const unlockedNow = [
@@ -205,7 +216,7 @@ export function MyCorner({ onExit, onGrownUp }: { onExit: () => void; onGrownUp:
       </header>
       <div className="cn-affirm">
         <AnimatePresence mode="wait">
-          {affirmOn && affirmShown && (
+          {affirmPlaying && affirmShown && (
             <motion.p key={affirmShown} aria-live="polite"
               initial={still ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               transition={{ duration: still ? 0.1 : 0.6 }}>
@@ -213,8 +224,8 @@ export function MyCorner({ onExit, onGrownUp }: { onExit: () => void; onGrownUp:
             </motion.p>
           )}
         </AnimatePresence>
-        <button onClick={() => setAffirmOn((on) => !on)} aria-pressed={affirmOn}
-          aria-label={affirmOn ? 'Stop the kind words' : 'Play kind words'}>{affirmOn ? '🔊' : '🔈'}</button>
+        <button onClick={toggleAffirm} aria-pressed={affirmPlaying}
+          aria-label={affirmPlaying ? 'Stop the kind words' : 'Play kind words'}>{affirmPlaying ? '🔊' : '🔈'}</button>
       </div>
       <div className="cn-top">
         <BadgeSlot />

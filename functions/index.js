@@ -4901,9 +4901,18 @@ async function chirpyCached(cacheKey) {
     return null;
 }
 
-/* Synthesises one line with Gemini TTS and stores it in Storage + Firestore.
-   Throws on any TTS failure; callers decide what to do about that. */
-async function chirpySynthAndStore({ text, voiceName, direction, cacheKey, character = 'grownup', emotion = 'plain' }) {
+/*
+  THE VOICE STORE IS SWITCHED OFF FOR NOW. The chirpyVoiceCache collection and
+  the warm-up schedule were removed, so every line is recorded live when a child
+  hears it and nothing is read from or written to the store. The code stays: set
+  this to true to keep each recording in Storage + Firestore and replay it.
+*/
+const CHIRPY_CACHE_ENABLED = false;
+
+/* Records one line with Gemini TTS. Throws on any TTS failure; callers decide
+   what to do about that. A refusal keeps Gemini's reply on the error so the
+   caller can tell a spent day from a busy minute. */
+async function chirpySynth({ text, voiceName, direction }) {
     const response = await fetch(
         'https://generativelanguage.googleapis.com/v1beta/models/'
         + 'gemini-2.5-flash-preview-tts:generateContent',
@@ -4919,14 +4928,22 @@ async function chirpySynthAndStore({ text, voiceName, direction, cacheKey, chara
             }),
         },
     );
-    if (!response.ok) throw new Error(`Gemini TTS ${response.status}`);
+    if (!response.ok) {
+        const error = new Error(`Gemini TTS ${response.status}`);
+        error.status = response.status;
+        error.body = (await response.text().catch(() => '')).slice(0, 4000);
+        throw error;
+    }
     const data = await response.json();
     const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
     if (!part?.data) throw new Error('Gemini TTS returned no audio');
 
     const rate = Number(/rate=(\d+)/.exec(part.mimeType || '')?.[1]) || 24000;
-    const wav = chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
+    return chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
+}
 
+/* Keeps one recording in Storage + Firestore so the next ask replays it. */
+async function chirpyStore({ text, voiceName, cacheKey, character = 'grownup', emotion = 'plain' }, wav) {
     const storagePath = `chirpy-voice-cache/${voiceName}/${cacheKey}.wav`;
     await admin.storage().bucket().file(storagePath).save(wav, {
         metadata: { contentType: 'audio/wav', cacheControl: 'public, max-age=2592000, immutable' },
@@ -4940,6 +4957,11 @@ async function chirpySynthAndStore({ text, voiceName, direction, cacheKey, chara
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         usageCount: 0,
     }, { merge: true });
+}
+
+async function chirpySynthAndStore(line) {
+    const wav = await chirpySynth(line);
+    await chirpyStore(line, wav);
     return wav;
 }
 
@@ -4950,6 +4972,20 @@ function chirpyLogMiss(cacheKey, fields, reason) {
         count: admin.firestore.FieldValue.increment(1),
         lastAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true }).catch(() => { /* logging must never break the voice */ });
+}
+
+/* Two requests for the same new line at once share one recording instead of
+   paying for two. */
+const chirpyInflight = new Map(); // cacheKey -> Promise<Buffer>
+/* After Gemini refuses for quota, stop asking for a while: every attempt until
+   then would only fail. A spent day earns a long pause; a per-minute limit only
+   the wait Gemini names. Per instance, which is enough. */
+let chirpyQuotaPausedUntil = 0;
+function chirpyQuotaPause(body) {
+    if (/PerDay/i.test(body)) return { ms: 30 * 60 * 1000, why: 'Gemini daily allowance spent (429)' };
+    const secs = Number(/"retryDelay":\s*"(\d+(?:\.\d+)?)s"/.exec(body)?.[1]);
+    if (!(secs > 0)) return { ms: 60 * 1000, why: 'Gemini limit reached (429)' };
+    return { ms: Math.min(secs, 300) * 1000, why: 'Gemini per-minute limit (429)' };
 }
 
 exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
@@ -4968,7 +5004,7 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     });
 
     try {
-        const cachedWav = await chirpyCached(cacheKey);
+        const cachedWav = CHIRPY_CACHE_ENABLED ? await chirpyCached(cacheKey) : null;
         if (cachedWav) {
             console.log(`[chirpyVoice] Cache hit: ${cacheKey} (${voiceName})`);
             res.set('Content-Type', 'audio/wav');
@@ -4977,23 +5013,54 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
             return res.send(cachedWav);
         }
 
-        console.log(`[chirpyVoice] Cache miss: ${cacheKey} (${voiceName})`);
+        if (CHIRPY_CACHE_ENABLED) console.log(`[chirpyVoice] Cache miss: ${cacheKey} (${voiceName})`);
+        const fields = { text, voice: voiceName, character, emotion: toneName };
+        const sendWav = (wav) => {
+            res.set('Content-Type', 'audio/wav');
+            res.set('Cache-Control', CHIRPY_CACHE_ENABLED ? 'public, max-age=2592000, immutable' : 'no-store');
+            res.set('X-Chirpy-Cache', CHIRPY_CACHE_ENABLED ? 'MISS' : 'LIVE');
+            return res.send(wav);
+        };
+        const refuse = (status, message, reason) => {
+            chirpyLogMiss(cacheKey, fields, reason);
+            return res.status(status).send(message);
+        };
+
+        const inflight = chirpyInflight.get(cacheKey);
+        if (inflight) {
+            try { return sendWav(await inflight); }
+            catch { return refuse(502, 'Chirpy lost his voice for a moment.', 'shared synthesis failed (502)'); }
+        }
         if (aiRateLimited('chirpyVoice', callerKey(req))) {
-            chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, 'rate limited (429)');
-            return res.status(429).send('Too many requests — please wait a moment.');
+            return refuse(429, 'Too many requests — please wait a moment.', 'rate limited (429)');
+        }
+        if (Date.now() < chirpyQuotaPausedUntil) {
+            return refuse(503, 'Chirpy is resting his voice.', 'waiting out a Gemini limit (paused)');
         }
         if (!(await reserveAiBudget('chirpyVoice'))) {
-            chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, 'daily budget spent (503)');
-            return res.status(503).send('Chirpy is resting his voice.');
+            return refuse(503, 'Chirpy is resting his voice.', 'daily budget spent (503)');
         }
 
-        const wav = await chirpySynthAndStore({ text, voiceName, direction, cacheKey, character, emotion: toneName });
-        console.log(`[chirpyVoice] Cached new: ${cacheKey}`);
+        const line = { text, voiceName, direction, cacheKey, character, emotion: toneName };
+        const job = CHIRPY_CACHE_ENABLED ? chirpySynthAndStore(line) : chirpySynth(line);
+        chirpyInflight.set(cacheKey, job);
+        let wav;
+        try {
+            wav = await job;
+        } catch (error) {
+            console.error('Chirpy voice failure:', error.message);
+            if (error.status === 429) {
+                const pause = chirpyQuotaPause(error.body || '');
+                chirpyQuotaPausedUntil = Date.now() + pause.ms;
+                return refuse(503, 'Chirpy is resting his voice.', pause.why);
+            }
+            return refuse(502, 'Chirpy lost his voice for a moment.', `synthesis failed (502): ${String(error.message).slice(0, 200)}`);
+        } finally {
+            chirpyInflight.delete(cacheKey);
+        }
+        console.log(`[chirpyVoice] ${CHIRPY_CACHE_ENABLED ? 'Cached new' : 'Recorded live'}: ${cacheKey}`);
         db.collection('chirpyVoiceMisses').doc(cacheKey).delete().catch(() => {});
-        res.set('Content-Type', 'audio/wav');
-        res.set('Cache-Control', 'public, max-age=2592000, immutable');
-        res.set('X-Chirpy-Cache', 'MISS');
-        return res.send(wav);
+        return sendWav(wav);
     } catch (error) {
         console.error('Chirpy voice failure:', error.message);
         chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, `synthesis failed (502): ${String(error.message).slice(0, 200)}`);
@@ -5018,41 +5085,57 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
 */
 const CHIRPY_WARM_LIST = [{"feeling":"happy","text":"Today went well."},{"feeling":"happy","text":"Someone was kind to me."},{"feeling":"happy","text":"I did something I was proud of."},{"feeling":"happy","text":"I felt like I belonged."},{"feeling":"happy","text":"I made someone else smile."},{"feeling":"happy","text":"I'm lucky to have my people."},{"feeling":"happy","text":"Something good happened for once."},{"feeling":"happy","text":"I hope it stays like this."},{"feeling":"happy","text":"I wonder if it will last."},{"feeling":"happy","text":"I want to tell someone about it."},{"feeling":"happy","text":"I felt properly myself today."},{"feeling":"happy","text":"That was worth it."},{"feeling":"happy","text":"I want to remember this bit."},{"feeling":"happy","text":"That was a good surprise."},{"feeling":"happy","text":"Somebody chose me."},{"feeling":"happy","text":"I laughed properly today."},{"feeling":"happy","text":"I feel lighter than I did."},{"feeling":"happy","text":"They asked me to play."},{"feeling":"happy","text":"I did it by myself."},{"feeling":"happy","text":"My grown-up came back."},{"feeling":"happy","text":"Someone shared with me."},{"feeling":"happy","text":"I made something I like."},{"feeling":"happy","text":"We laughed together."},{"feeling":"happy","text":"I finally learned how to do it."},{"feeling":"happy","text":"Someone saved me a place."},{"feeling":"happy","text":"My friend came looking for me."},{"feeling":"happy","text":"I helped and it made a difference."},{"feeling":"happy","text":"I was brave enough to try."},{"feeling":"happy","text":"Today felt easy to be myself."},{"feeling":"happy","text":"I handled something that used to be hard for me."},{"feeling":"happy","text":"I felt included without having to try so hard."},{"feeling":"happy","text":"Someone trusted me with something important."},{"feeling":"happy","text":"I am proud of how I treated someone."},{"feeling":"happy","text":"I did better because I kept practising."},{"feeling":"happy","text":"I had a day where I wasn't comparing myself."},{"feeling":"happy","text":"I felt accepted without having to change myself."},{"feeling":"happy","text":"I did something difficult and stayed true to myself."},{"feeling":"happy","text":"A friendship felt easy and mutual today."},{"feeling":"happy","text":"I noticed that I have actually improved."},{"feeling":"happy","text":"I enjoyed something without worrying how I looked doing it."},{"feeling":"happy","text":"I handled a disagreement better than I used to."},{"feeling":"excited","text":"I can't wait for it."},{"feeling":"excited","text":"Something great is coming."},{"feeling":"excited","text":"I want to tell everyone."},{"feeling":"excited","text":"I hope it's as good as I imagine."},{"feeling":"excited","text":"What if it doesn't happen?"},{"feeling":"excited","text":"I've been waiting ages for this."},{"feeling":"excited","text":"I can't sit still."},{"feeling":"excited","text":"This is going to be brilliant."},{"feeling":"excited","text":"What if I mess it up?"},{"feeling":"excited","text":"I want to be really good at it."},{"feeling":"excited","text":"Finally something for me."},{"feeling":"excited","text":"I keep thinking about it."},{"feeling":"excited","text":"I keep imagining how it will go."},{"feeling":"excited","text":"I want it to be tomorrow already."},{"feeling":"excited","text":"I've got butterflies, the good kind."},{"feeling":"excited","text":"Everyone is going to be there."},{"feeling":"excited","text":"I hope I get a turn."},{"feeling":"excited","text":"Is it time yet?"},{"feeling":"excited","text":"I want to go now!"},{"feeling":"excited","text":"I get to try something new."},{"feeling":"excited","text":"I hope I get a turn."},{"feeling":"excited","text":"I want to show everyone."},{"feeling":"excited","text":"I have happy butterflies."},{"feeling":"excited","text":"I keep imagining what it will be like."},{"feeling":"excited","text":"I want to tell my friend straight away."},{"feeling":"excited","text":"I hope I get chosen."},{"feeling":"excited","text":"I have so much energy I can't sit still."},{"feeling":"excited","text":"This could be really fun."},{"feeling":"excited","text":"What if it is even better than I think?"},{"feeling":"excited","text":"This feels like a chance to do something new."},{"feeling":"excited","text":"I keep thinking about who will be there."},{"feeling":"excited","text":"I really want this to go well."},{"feeling":"excited","text":"I can't stop planning what I might do."},{"feeling":"excited","text":"I hope I get the part or place I want."},{"feeling":"excited","text":"I feel nervous and excited at the same time."},{"feeling":"excited","text":"This feels like a real opportunity for me."},{"feeling":"excited","text":"I'm excited, but I also really want it to go well."},{"feeling":"excited","text":"I keep imagining all the ways this could unfold."},{"feeling":"excited","text":"I want to share this with people who will get why it matters."},{"feeling":"excited","text":"I hope I can enjoy it without overthinking it."},{"feeling":"excited","text":"I feel nervous because I care about this."},{"feeling":"calm","text":"Things are alright just now."},{"feeling":"calm","text":"I don't need to rush."},{"feeling":"calm","text":"I can handle what comes."},{"feeling":"calm","text":"It's quiet in my head."},{"feeling":"calm","text":"I feel safe here."},{"feeling":"calm","text":"I'm glad I have this moment."},{"feeling":"calm","text":"Nothing needs fixing right now."},{"feeling":"calm","text":"I did what I could today."},{"feeling":"calm","text":"I wonder how long this will last."},{"feeling":"calm","text":"I'd like to feel like this more often."},{"feeling":"calm","text":"I'm okay with not knowing yet."},{"feeling":"calm","text":"I can breathe properly."},{"feeling":"calm","text":"Nothing is pulling at me."},{"feeling":"calm","text":"I like it being this quiet."},{"feeling":"calm","text":"I don't have to be anywhere."},{"feeling":"calm","text":"Today was enough."},{"feeling":"calm","text":"I feel steady."},{"feeling":"calm","text":"I feel cosy here."},{"feeling":"calm","text":"I like this quiet bit."},{"feeling":"calm","text":"I can take my time."},{"feeling":"calm","text":"My body feels soft and slow."},{"feeling":"calm","text":"I know what happens next."},{"feeling":"calm","text":"I am okay right now."},{"feeling":"calm","text":"I know I don't have to hurry."},{"feeling":"calm","text":"I can hear myself think."},{"feeling":"calm","text":"I feel safe with these people."},{"feeling":"calm","text":"I finished what I needed to do."},{"feeling":"calm","text":"I can wait and see."},{"feeling":"calm","text":"Nothing needs fixing this minute."},{"feeling":"calm","text":"I can leave some things unfinished for tomorrow."},{"feeling":"calm","text":"I don't need everyone to agree with me right now."},{"feeling":"calm","text":"My brain feels less crowded."},{"feeling":"calm","text":"I know what I can control today."},{"feeling":"calm","text":"I can wait for more information."},{"feeling":"calm","text":"I feel settled even though everything isn't perfect."},{"feeling":"calm","text":"I don't have to solve everything tonight."},{"feeling":"calm","text":"I can let someone else's opinion be theirs."},{"feeling":"calm","text":"I know what matters to me in this moment."},{"feeling":"calm","text":"I can wait before deciding what something means."},{"feeling":"calm","text":"I feel steady enough to choose instead of react."},{"feeling":"calm","text":"I am okay with not having every answer yet."},{"feeling":"sad","text":"Nobody wants me around."},{"feeling":"sad","text":"I don't belong here."},{"feeling":"sad","text":"Nobody understands me."},{"feeling":"sad","text":"I'm all on my own."},{"feeling":"sad","text":"I miss how things used to be."},{"feeling":"sad","text":"It's never going to get better."},{"feeling":"sad","text":"I'm not good enough."},{"feeling":"sad","text":"I can't do anything right."},{"feeling":"sad","text":"I ruined everything."},{"feeling":"sad","text":"Everything is going wrong."},{"feeling":"sad","text":"It's not fair."},{"feeling":"sad","text":"I wish today hadn't happened."},{"feeling":"sad","text":"I don't want to talk to anyone."},{"feeling":"sad","text":"Everything feels heavy today."},{"feeling":"sad","text":"I let everyone down."},{"feeling":"sad","text":"Nobody even noticed."},{"feeling":"sad","text":"I just want today to be over."},{"feeling":"sad","text":"They didn't play with me."},{"feeling":"sad","text":"I wanted them to stay."},{"feeling":"sad","text":"My picture didn't work."},{"feeling":"sad","text":"I miss my grown-up."},{"feeling":"sad","text":"Nobody picked my game."},{"feeling":"sad","text":"I wanted today to be different."},{"feeling":"sad","text":"They played without me."},{"feeling":"sad","text":"I tried hard and it still went wrong."},{"feeling":"sad","text":"My friend didn't sit with me today."},{"feeling":"sad","text":"Something I was looking forward to got cancelled."},{"feeling":"sad","text":"I feel like nobody noticed I was upset."},{"feeling":"sad","text":"I wish I could start the day again."},{"feeling":"sad","text":"It feels like my group has moved on without me."},{"feeling":"sad","text":"I worked hard and I'm still disappointed."},{"feeling":"sad","text":"I miss how close we used to be."},{"feeling":"sad","text":"I feel invisible when everyone is together."},{"feeling":"sad","text":"I wish I hadn't said that."},{"feeling":"sad","text":"I thought today would matter more than it did."},{"feeling":"sad","text":"I feel like I'm drifting away from people I used to be close to."},{"feeling":"sad","text":"I keep wondering whether I matter to this group."},{"feeling":"sad","text":"I put a lot into this and it still wasn't enough."},{"feeling":"sad","text":"I miss how uncomplicated things used to feel."},{"feeling":"sad","text":"I feel left out even when I'm technically there."},{"feeling":"sad","text":"I wish I could undo that conversation."},{"feeling":"angry","text":"It's not fair."},{"feeling":"angry","text":"They did that on purpose."},{"feeling":"angry","text":"Nobody ever listens to me."},{"feeling":"angry","text":"They started it."},{"feeling":"angry","text":"I always get the blame."},{"feeling":"angry","text":"They should have known better."},{"feeling":"angry","text":"I want to shout at someone."},{"feeling":"angry","text":"Everyone else gets what they want."},{"feeling":"angry","text":"They're being mean to me."},{"feeling":"angry","text":"Why does this always happen to me?"},{"feeling":"angry","text":"I hate this."},{"feeling":"angry","text":"Nobody is on my side."},{"feeling":"angry","text":"Nobody asked me first."},{"feeling":"angry","text":"They never say sorry."},{"feeling":"angry","text":"I'm sick of being told what to do."},{"feeling":"angry","text":"Why am I the only one who cares?"},{"feeling":"angry","text":"I want to shout and not stop."},{"feeling":"angry","text":"They took my turn."},{"feeling":"angry","text":"They grabbed my toy."},{"feeling":"angry","text":"I said stop and they didn't."},{"feeling":"angry","text":"I wanted to choose."},{"feeling":"angry","text":"They knocked it down."},{"feeling":"angry","text":"I don't want to wait."},{"feeling":"angry","text":"They changed the rules when I was winning."},{"feeling":"angry","text":"I got blamed before anyone asked me."},{"feeling":"angry","text":"They kept interrupting me."},{"feeling":"angry","text":"My sibling used my thing without asking."},{"feeling":"angry","text":"I did the work and they got the praise."},{"feeling":"angry","text":"They laughed when I was being serious."},{"feeling":"angry","text":"They decided what happened without hearing me."},{"feeling":"angry","text":"They shared my business with other people."},{"feeling":"angry","text":"I was told to calm down before anyone listened."},{"feeling":"angry","text":"They got credit for something I helped with."},{"feeling":"angry","text":"They keep making the same joke after I asked them to stop."},{"feeling":"angry","text":"I feel like the rules are different for me."},{"feeling":"angry","text":"They made a decision about me without including me."},{"feeling":"angry","text":"Someone shared something private that wasn't theirs to share."},{"feeling":"angry","text":"I feel controlled when nobody explains the reason."},{"feeling":"angry","text":"They keep pushing the same boundary after I said no."},{"feeling":"angry","text":"I was expected to take responsibility for everyone else's part."},{"feeling":"angry","text":"People are judging my reaction instead of what happened."},{"feeling":"scared","text":"Something bad is going to happen."},{"feeling":"scared","text":"I'm going to get in trouble."},{"feeling":"scared","text":"I can't do it."},{"feeling":"scared","text":"Everyone will be looking at me."},{"feeling":"scared","text":"I'll get it wrong in front of everyone."},{"feeling":"scared","text":"I want to run away from this."},{"feeling":"scared","text":"I don't feel safe."},{"feeling":"scared","text":"What if nobody helps me?"},{"feeling":"scared","text":"It's too big for me."},{"feeling":"scared","text":"I don't know what's coming."},{"feeling":"scared","text":"They'll laugh at me."},{"feeling":"scared","text":"I can't tell anyone."},{"feeling":"scared","text":"I want somebody with me."},{"feeling":"scared","text":"My heart is going too fast."},{"feeling":"scared","text":"What if I can't get out of it?"},{"feeling":"scared","text":"I don't want to go."},{"feeling":"scared","text":"I keep looking at the door."},{"feeling":"scared","text":"I don't want to be by myself."},{"feeling":"scared","text":"That noise was too big."},{"feeling":"scared","text":"What if my grown-up doesn't come back yet?"},{"feeling":"scared","text":"I don't know this place."},{"feeling":"scared","text":"I think I might get told off."},{"feeling":"scared","text":"I want someone to stay with me."},{"feeling":"scared","text":"What if I have to do it in front of everyone?"},{"feeling":"scared","text":"What if I can't find my grown-up?"},{"feeling":"scared","text":"I don't know anyone there."},{"feeling":"scared","text":"What if I get the answer wrong?"},{"feeling":"scared","text":"What if they laugh at me?"},{"feeling":"scared","text":"I don't know what the teacher is going to say."},{"feeling":"scared","text":"What if I freeze when everyone is watching?"},{"feeling":"scared","text":"What if I don't fit in with this group?"},{"feeling":"scared","text":"What if I mess up something people are counting on me for?"},{"feeling":"scared","text":"I don't know what that message means."},{"feeling":"scared","text":"What if I ask for help and people think I'm silly?"},{"feeling":"scared","text":"What if things at home are changing?"},{"feeling":"scared","text":"What if I don't belong in this new group?"},{"feeling":"scared","text":"What if one mistake follows me around?"},{"feeling":"scared","text":"I don't know what people will think if I say what I really think."},{"feeling":"scared","text":"What if I let everyone down when it matters?"},{"feeling":"scared","text":"I don't know what this change means for me."},{"feeling":"scared","text":"What if I ask for help and it becomes a big deal?"},{"feeling":"worried","text":"What if it all goes wrong?"},{"feeling":"worried","text":"I keep thinking about it."},{"feeling":"worried","text":"I'm going to forget something important."},{"feeling":"worried","text":"I should have done it differently."},{"feeling":"worried","text":"Everyone is expecting a lot from me."},{"feeling":"worried","text":"What if they're upset with me?"},{"feeling":"worried","text":"There isn't enough time."},{"feeling":"worried","text":"I'm not ready."},{"feeling":"worried","text":"Something feels off and I don't know why."},{"feeling":"worried","text":"What if I let someone down?"},{"feeling":"worried","text":"I can't stop my brain."},{"feeling":"worried","text":"What if I made it worse?"},{"feeling":"worried","text":"I might have got it wrong already."},{"feeling":"worried","text":"What if nobody tells me what is happening?"},{"feeling":"worried","text":"I keep checking it over and over."},{"feeling":"worried","text":"It has to be perfect."},{"feeling":"worried","text":"I don't want to make a fuss."},{"feeling":"worried","text":"What if I forget what to do?"},{"feeling":"worried","text":"What if they say no?"},{"feeling":"worried","text":"What if I can't do it?"},{"feeling":"worried","text":"What if we are late?"},{"feeling":"worried","text":"What if my toy is lost?"},{"feeling":"worried","text":"I keep thinking about it."},{"feeling":"worried","text":"What if I forgot my homework?"},{"feeling":"worried","text":"What if my friend is cross with me?"},{"feeling":"worried","text":"What if I don't finish in time?"},{"feeling":"worried","text":"I keep wondering if I did it wrong."},{"feeling":"worried","text":"What if the plan changes again?"},{"feeling":"worried","text":"I want to check one more time."},{"feeling":"worried","text":"What if I missed something everyone else understood?"},{"feeling":"worried","text":"I keep replaying what I said."},{"feeling":"worried","text":"What if they are talking about me?"},{"feeling":"worried","text":"There are too many things to remember."},{"feeling":"worried","text":"I don't know how this is going to turn out."},{"feeling":"worried","text":"What if I disappoint someone who trusts me?"},{"feeling":"worried","text":"I keep checking for a reply because I don't know where I stand."},{"feeling":"worried","text":"What if I'm falling behind and everyone else can tell?"},{"feeling":"worried","text":"There is always something else I should be doing."},{"feeling":"worried","text":"I keep analysing whether I said the wrong thing."},{"feeling":"worried","text":"What if this friendship is changing?"},{"feeling":"worried","text":"I don't know which choice I'll regret less."},{"feeling":"jealous","text":"They have what I want."},{"feeling":"jealous","text":"Why not me?"},{"feeling":"jealous","text":"Everyone likes them more."},{"feeling":"jealous","text":"They're better at it than me."},{"feeling":"jealous","text":"I got left out again."},{"feeling":"jealous","text":"It should have been my turn."},{"feeling":"jealous","text":"They didn't even have to try."},{"feeling":"jealous","text":"I'll never catch up."},{"feeling":"jealous","text":"They took my friend away."},{"feeling":"jealous","text":"Nobody notices what I do."},{"feeling":"jealous","text":"It's not fair that they got it."},{"feeling":"jealous","text":"I wish I was more like them."},{"feeling":"jealous","text":"They make it look easy."},{"feeling":"jealous","text":"I wanted to be the one who did that."},{"feeling":"jealous","text":"Everyone was talking about them."},{"feeling":"jealous","text":"I worked harder and got nothing."},{"feeling":"jealous","text":"I don't want to be pleased for them."},{"feeling":"jealous","text":"I wanted that toy too."},{"feeling":"jealous","text":"Why did they get the first turn?"},{"feeling":"jealous","text":"I wanted the grown-up to watch me."},{"feeling":"jealous","text":"They got the bigger piece."},{"feeling":"jealous","text":"My friend is playing with them."},{"feeling":"jealous","text":"I wanted to win."},{"feeling":"jealous","text":"They got picked for the job I wanted."},{"feeling":"jealous","text":"Everyone keeps talking about what they did."},{"feeling":"jealous","text":"My friend chose someone else as their partner."},{"feeling":"jealous","text":"They got a reward and I didn't."},{"feeling":"jealous","text":"I wanted that turn to be mine."},{"feeling":"jealous","text":"They seem to get attention without even trying."},{"feeling":"jealous","text":"I feel replaced when my friend is with them."},{"feeling":"jealous","text":"Their work looks better than mine."},{"feeling":"jealous","text":"They got the opportunity I wanted."},{"feeling":"jealous","text":"I hate that I care so much about their score."},{"feeling":"jealous","text":"I wish people noticed my effort too."},{"feeling":"jealous","text":"Their life looks easier from where I'm standing."},{"feeling":"jealous","text":"I feel pushed aside when my friend is closer to someone else."},{"feeling":"jealous","text":"They got recognised for something I wanted to be known for."},{"feeling":"jealous","text":"I keep comparing my progress to theirs."},{"feeling":"jealous","text":"I wish I could be happy for them without feeling bad about myself."},{"feeling":"jealous","text":"It feels unfair that we worked differently and got the same result."},{"feeling":"other","text":"I can't do it."},{"feeling":"other","text":"They don't like me."},{"feeling":"other","text":"It's not fair."},{"feeling":"other","text":"What if something goes wrong?"},{"feeling":"other","text":"I'm going to get in trouble."},{"feeling":"other","text":"I always mess things up."},{"feeling":"other","text":"Nobody understands me."},{"feeling":"other","text":"I got left out."},{"feeling":"other","text":"I should have done better."},{"feeling":"other","text":"Everyone else finds it easy."},{"feeling":"other","text":"I don't know what to do."},{"feeling":"other","text":"Something good happened."},{"feeling":"other","text":"I'm not sure what I'm feeling."},{"feeling":"other","text":"Something is on my mind."},{"feeling":"other","text":"I wish today had gone differently."},{"feeling":"other","text":"I did my best anyway."},{"feeling":"other","text":"I need a bit of space."},{"feeling":"other","text":"I don't know what this feeling is."},{"feeling":"other","text":"I want a little space."},{"feeling":"other","text":"Something feels different."},{"feeling":"other","text":"I want my grown-up."},{"feeling":"other","text":"I did something hard."},{"feeling":"other","text":"I don't know what to do next."},{"feeling":"other","text":"Part of me wants to go and part of me doesn't."},{"feeling":"other","text":"I feel funny but I can't name it."},{"feeling":"other","text":"I want to be left alone for a bit."},{"feeling":"other","text":"Something from earlier is still in my head."},{"feeling":"other","text":"I think I handled that better than before."},{"feeling":"other","text":"I need help figuring out what happened."},{"feeling":"other","text":"I have two feelings at once."},{"feeling":"other","text":"Something feels off but I don't know what part."},{"feeling":"other","text":"I need time before I talk about it."},{"feeling":"other","text":"I keep switching between caring and not caring."},{"feeling":"other","text":"I think I learned something about myself."},{"feeling":"other","text":"I need to work out what is fact and what I'm guessing."},{"feeling":"other","text":"I can't tell whether I'm upset, tired, or just overwhelmed."},{"feeling":"other","text":"I feel different around different people."},{"feeling":"other","text":"I need some space before I know what I think."},{"feeling":"other","text":"Part of me cares a lot and part of me wants to switch off."},{"feeling":"other","text":"I think this matters to me more than I expected."},{"feeling":"other","text":"I want to understand my reaction before I act on it."}];
 const CHIRPY_MIND_VOICE = 'Enceladus';
+/* Switched off, and not deployed: on a free Gemini allowance, recording ahead
+   used most of the day's allowance before a child had asked for anything, and
+   the schedule and the stored recordings have been removed. The code stays for
+   when the store comes back. To bring it back: set CHIRPY_CACHE_ENABLED and
+   CHIRPY_WARM_ENABLED to true and export it again with
 
-exports.warmChirpyVoiceCache = onSchedule(
-    { schedule: '0 */3 * * *', timeZone: 'Etc/UTC', secrets: [geminiKey], timeoutSeconds: 540, memory: '512MiB' },
-    async () => {
-        let synthesised = 0;
-        let skipped = 0;
-        let failed = 0;
-        let stoppedForBudget = false;
+     exports.warmChirpyVoiceCache = onSchedule(
+         { schedule: '30 2 * * *', timeZone: 'Etc/UTC', secrets: [geminiKey], timeoutSeconds: 540, memory: '512MiB' },
+         warmChirpyVoiceCache,
+     );
 
-        for (const { feeling, text } of CHIRPY_WARM_LIST) {
-            const { direction, toneName, cacheKey } = chirpyResolve({
-                text, voiceName: CHIRPY_MIND_VOICE, character: 'mind', feeling,
-            });
-            if (await chirpyCached(cacheKey)) { skipped++; continue; }
-            if (!(await reserveAiBudget('chirpyVoice'))) { stoppedForBudget = true; break; }
-            try {
-                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: toneName });
-                synthesised++;
-            } catch (e) {
-                if (e.message?.includes('429')) {
-                    console.log(`[warmChirpyVoiceCache] hit rate limit (429). Stopping to preserve budget. Resumes next run.`);
-                    break;
-                }
-                failed++;
-                console.warn(`[warmChirpyVoiceCache] failed "${text.slice(0, 40)}": ${e.message}`);
+   It records at most CHIRPY_WARM_PER_RUN lines a run. */
+const CHIRPY_WARM_ENABLED = false;
+const CHIRPY_WARM_PER_RUN = 8;
+
+async function warmChirpyVoiceCache() {
+    if (!CHIRPY_WARM_ENABLED || !CHIRPY_CACHE_ENABLED) {
+        console.log('[warmChirpyVoiceCache] switched off; nothing recorded ahead.');
+        return;
+    }
+    let synthesised = 0;
+    let skipped = 0;
+    let failed = 0;
+    let stoppedForBudget = false;
+
+    for (const { feeling, text } of CHIRPY_WARM_LIST) {
+        if (synthesised >= CHIRPY_WARM_PER_RUN) break;
+        const { direction, toneName, cacheKey } = chirpyResolve({
+            text, voiceName: CHIRPY_MIND_VOICE, character: 'mind', feeling,
+        });
+        if (await chirpyCached(cacheKey)) { skipped++; continue; }
+        if (!(await reserveAiBudget('chirpyVoice'))) { stoppedForBudget = true; break; }
+        try {
+            await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: toneName });
+            synthesised++;
+        } catch (e) {
+            if (e.message?.includes('429')) {
+                console.log(`[warmChirpyVoiceCache] hit rate limit (429). Stopping to preserve budget. Resumes next run.`);
+                break;
             }
-            /* Respect Gemini rate limits — 60s between every attempt (success or failure). */
-            await new Promise((r) => setTimeout(r, 60000));
+            failed++;
+            console.warn(`[warmChirpyVoiceCache] failed "${text.slice(0, 40)}": ${e.message}`);
         }
+        /* Respect Gemini rate limits — 60s between every attempt (success or failure). */
+        await new Promise((r) => setTimeout(r, 60000));
+    }
 
-        console.log(`[warmChirpyVoiceCache] done — synthesised ${synthesised}, `
-            + `already cached ${skipped}, failed ${failed}`
-            + `${stoppedForBudget ? ', stopped on daily budget (resumes next run)' : ''}`);
-    },
-);
+    console.log(`[warmChirpyVoiceCache] done — synthesised ${synthesised}, `
+        + `already cached ${skipped}, failed ${failed}`
+        + `${stoppedForBudget ? ', stopped on daily budget (resumes next run)' : ''}`);
+}
 
 /* ─────────────────────────────────────────────────────────────────────────
    ADMIN CACHE ENDPOINTS — inspect and manage voice cache

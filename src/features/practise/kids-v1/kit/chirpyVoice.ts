@@ -167,69 +167,60 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
     if (!resolved && speaking === text) { fellBack = true; browserVoice(text); }
   }, fallbackDelay) as unknown as number;
 
-  void fetch(VOICE_ENDPOINT, {
+  void fetchLine(key, { text, voice: VOICES[who], character: who, feeling, context }).then((url) => {
+    if (resolved) return;
+    if (timeoutId) clearTimeout(timeoutId);
+    resolved = true;
+    if (fellBack) {
+      /* The browser had already started reading. Swap in the real voice if
+         it is still the line on screen and the browser hasn't finished. */
+      const stillReading = typeof window !== 'undefined' && window.speechSynthesis?.speaking;
+      if (url && stillReading && !isMuted() && speaking === text) {
+        stopSpeaking(); speaking = text; play(url, text, onEnd);
+      }
+      return;
+    }
+    /* A non-OK response (429/503 budget or rate limit, a cold-start error) or
+       no network at all — the server gave us nothing, so fall back to the
+       browser rather than leave the child in silence. */
+    if (!url) { browserVoice(text); return; }
+    /* Only if this is still the line on screen. A child who has moved on
+       must not be caught up by the previous screen's audio. */
+    if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text, onEnd); }
+  });
+}
+
+/*
+  NOTHING IS FETCHED AHEAD ANY MORE. Lines used to be pre-fetched in bulk (every
+  thought for a feeling, every affirmation), which on a free Gemini allowance
+  spent most of the day recording lines nobody heard. A line is fetched only
+  when it is about to be spoken, and two asks for the same line at once share
+  one request.
+*/
+const pending = new Map<string, Promise<string | null>>();
+
+function fetchLine(key: string, body: Record<string, unknown>): Promise<string | null> {
+  const waiting = pending.get(key);
+  if (waiting) return waiting;
+  const job = fetch(VOICE_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, voice: VOICES[who], character: who, feeling, context }),
+    body: JSON.stringify(body),
   })
     .then((r) => {
       if (!r.ok) console.warn(`[chirpy-voice] ${r.status}: ${key.slice(0, 30)}`);
       return r.ok ? r.blob() : null;
     })
     .then((blob) => {
-      if (resolved) return;
-      if (timeoutId) clearTimeout(timeoutId);
-      resolved = true;
-      if (fellBack) {
-        /* The browser had already started reading. Swap in the real voice if
-           it is still the line on screen and the browser hasn't finished. */
-        if (blob) heard.set(key, URL.createObjectURL(blob));
-        const stillReading = typeof window !== 'undefined' && window.speechSynthesis?.speaking;
-        if (blob && stillReading && !isMuted() && speaking === text) {
-          stopSpeaking(); speaking = text; play(heard.get(key)!, text, onEnd);
-        }
-        return;
-      }
-      /* A non-OK response (429/503 budget or rate limit, a cold-start error)
-         resolves normally with blob === null — the server gave us nothing, so
-         fall back to the browser rather than leave the child in silence. */
-      if (!blob) { browserVoice(text); return; }
+      if (!blob) return null;
       const url = URL.createObjectURL(blob);
       heard.set(key, url);
-      /* Only if this is still the line on screen. A child who has moved on
-         must not be caught up by the previous screen's audio. */
-      if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text, onEnd); }
+      return url;
     })
-    .catch(() => {
-      if (resolved) return;
-      resolved = true;
-      if (timeoutId) clearTimeout(timeoutId);
-      if (!fellBack && speaking === text) browserVoice(text);
-    });
-}
-
-/**
- * Fetches a line into the `heard` cache WITHOUT speaking it — so a later
- * `speak()` call for the same text plays instantly off the in-memory blob
- * instead of waiting on a network round trip.
- *
- * Used to warm the cache for lines a child is likely to hear soon but
- * hasn't asked for yet (every affirmation, before they tap a stone). Silent
- * failures are fine here: a line that didn't preload just falls back to the
- * normal fetch-then-browser-voice path inside `speak()`.
- */
-export function preload(text: string, who: Speaker = 'grownup', feeling = ''): Promise<void> {
-  if (!text || isMuted()) return Promise.resolve();
-  const key = `${who}|${feeling}|${text}`;
-  if (heard.has(key)) return Promise.resolve();
-  return fetch(VOICE_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, voice: VOICES[who], character: who, feeling }),
-  })
-    .then((r) => (r.ok ? r.blob() : null))
-    .then((blob) => { if (blob) heard.set(key, URL.createObjectURL(blob)); })
-    .catch(() => { /* a preload miss just means speak() falls back as usual */ });
+    .catch(() => null)
+    .finally(() => pending.delete(key));
+  pending.set(key, job);
+  return job;
 }
 
 function play(url: string, text: string, onEnd?: () => void) {

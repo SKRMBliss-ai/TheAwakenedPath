@@ -9,11 +9,11 @@ import { MicButton } from '../ui/MicButton';
 import { useFloatingPosition } from '../ui/useFloatingPosition';
 import { chirpySprite } from '../ui/sprites';
 import { band } from '../kit/band';
-import { thoughtsFor, eventsFor, possibilitiesFor, type Option, type FeelingKey } from '../kit/storyLabContent';
+import { thoughtsFor, eventsFor, possibilitiesFor, type Option } from '../kit/storyLabContent';
 import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
 import { speak, stopSpeaking } from '../kit/chirpyVoice';
-import { preloadThoughtAudios, playThoughtAudios, stopThoughtAudio } from '../kit/thoughtAudioCache';
+import { playThoughtAudios, stopThoughtAudio } from '../kit/thoughtAudioCache';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
@@ -585,35 +585,6 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   }, [quiet]);
 
   /*
-    AUTO-PLAY THOUGHT AUDIO ON THE THOUGHT PANEL.
-
-    When the child enters the Thought panel (step === 2), we preload all
-    thought audio files for their feeling and play them one by one in a
-    hissed whisper tone. The playback stops when they move to the next panel
-    (step 3) or if they select a thought themselves.
-  */
-  useEffect(() => {
-    if (step !== 2 || quiet || !carried.feeling) return;
-    const feeling = carried.feeling as FeelingKey;
-    let alive = true;
-    /* Chirpy asks the question first; the thoughts follow when it ends, or
-       after a few seconds if the question was read by the fallback voice
-       (which never reports that it has finished). */
-    const asked = new Promise<void>((resolve) => {
-      promptDone.current = resolve;
-      window.setTimeout(resolve, 9000);
-    });
-    void Promise.all([preloadThoughtAudios(feeling), asked]).then(([texts]) => {
-      if (alive) playThoughtAudios(texts, feeling);
-    });
-    return () => {
-      alive = false;
-      promptDone.current = null;
-      stopThoughtAudio();
-    };
-  }, [step, quiet, carried.feeling]);
-
-  /*
     THE END OF THE WALK IS A DOOR, NOT A BUTTON IN THE FOOTER.
 
     The Reflection Path handoff draws this beat
@@ -712,6 +683,35 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   };
 
   const thoughtOptions = stillVisible(thoughtRoll.items, thoughtPool, thought, '☁', SAY_IT);
+
+  /*
+    TEN THOUGHTS, READ ALOUD AS THE THOUGHT PANEL OPENS.
+
+    Chirpy asks the question first; then the clouds are read one by one in the
+    child's feeling, the ones on screen first, ten at most. Nothing is fetched
+    ahead: each line is asked for when its turn comes. It stops when they move
+    on or pick one. The clouds are read as they stood when the panel opened.
+  */
+  useEffect(() => {
+    if (step !== 2 || quiet || !carried.feeling) return;
+    const feeling = carried.feeling;
+    const shown = thoughtRoll.items.map((o) => o.text);
+    const texts = [...shown, ...thoughtPool.map((o) => o.text).filter((t) => !shown.includes(t))];
+    let alive = true;
+    /* The thoughts follow when the question ends, or after a few seconds if it
+       was read by the fallback voice (which never reports that it finished). */
+    const asked = new Promise<void>((resolve) => {
+      promptDone.current = resolve;
+      window.setTimeout(resolve, 9000);
+    });
+    void asked.then(() => { if (alive) playThoughtAudios(texts, feeling); });
+    return () => {
+      alive = false;
+      promptDone.current = null;
+      stopThoughtAudio();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- read once, as the panel opens
+  }, [step, quiet, carried.feeling]);
   const eventOptions = stillVisible(eventRoll.items, eventPool, event, '✧', SOMETHING_ELSE);
   /* Once a possibility is chosen it is sitting in the "Another Possibility"
      window a few pixels above, in bigger type. Leaving a button with the same
