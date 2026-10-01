@@ -10,6 +10,8 @@ import { useQuiet } from '../ui/quiet';
 import { FONT } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import * as sound from '../kit/sound';
+import { speak, stopSpeaking } from '../kit/chirpyVoice';
+import { allAffirmations } from '../kit/affirmations';
 import { BadgeSlot } from './ChildBadge';
 import './MyCorner.css';
 
@@ -43,6 +45,19 @@ function writeSeen(ids: string[]) {
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
+/** Pause between one affirmation finishing and the next, so it stays a quiet
+    background voice while the child arranges things. */
+const AFFIRM_GAP_MS = 9000;
+
+function shuffled<T>(list: T[]): T[] {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 function nameOf(id: string): string {
   if (id.startsWith(PET)) return EGG_FRIEND_BY_ID[id.slice(PET.length)]?.name ?? 'Friend';
   return CORNER_ITEM_BY_ID[id]?.name ?? 'Thing';
@@ -60,6 +75,28 @@ export function MyCorner({ onExit, onGrownUp }: { onExit: () => void; onGrownUp:
   const plants = useKidStore((s) => s.plants);
   const stories = useKidStore((s) => s.storiesFinished);
   const progress: CornerProgress = { stickers, stars, blooms: bloomsOf(plants, todayKey()), stories };
+
+  /* ── Affirmations, read by the narrator while the child plays ── */
+  const [affirmations] = useState(() => {
+    const own = useKidStore.getState().savedReflections.map((r) => r.affirmation).filter((a): a is string => !!a);
+    return shuffled([...new Set([...own, ...allAffirmations()])]);
+  });
+  const [affirmOn, setAffirmOn] = useState(true);
+  const [affirmAt, setAffirmAt] = useState(0);
+  const [affirmShown, setAffirmShown] = useState<string | null>(null);
+  useEffect(() => {
+    if (!affirmOn) return;
+    const line = affirmations[affirmAt % affirmations.length];
+    let next = 0;
+    const start = window.setTimeout(() => {
+      setAffirmShown(line);
+      const advance = () => { window.clearTimeout(next); next = window.setTimeout(() => setAffirmAt((n) => n + 1), AFFIRM_GAP_MS); };
+      /* Moves on even if the voice never reports finishing (muted, offline). */
+      next = window.setTimeout(() => setAffirmAt((n) => n + 1), Math.max(4000, line.length * 110) + AFFIRM_GAP_MS);
+      speak(line, quiet, 'grownup', advance);
+    }, affirmAt === 0 ? 1800 : 0);
+    return () => { window.clearTimeout(start); window.clearTimeout(next); stopSpeaking(); };
+  }, [affirmOn, affirmAt, affirmations, quiet]);
 
   const open = (unlock: Parameters<typeof isUnlocked>[0]) => isUnlocked(unlock, progress);
   const unlockedNow = [
@@ -166,6 +203,19 @@ export function MyCorner({ onExit, onGrownUp }: { onExit: () => void; onGrownUp:
         <h1>My Corner <span aria-hidden="true">♡</span></h1>
         <p aria-live="polite">{hint}</p>
       </header>
+      <div className="cn-affirm">
+        <AnimatePresence mode="wait">
+          {affirmOn && affirmShown && (
+            <motion.p key={affirmShown} aria-live="polite"
+              initial={still ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              transition={{ duration: still ? 0.1 : 0.6 }}>
+              ✨ {affirmShown}
+            </motion.p>
+          )}
+        </AnimatePresence>
+        <button onClick={() => setAffirmOn((on) => !on)} aria-pressed={affirmOn}
+          aria-label={affirmOn ? 'Stop the kind words' : 'Play kind words'}>{affirmOn ? '🔊' : '🔈'}</button>
+      </div>
       <div className="cn-top">
         <BadgeSlot />
         <span className="cn-count">{placed.length} {placed.length === 1 ? 'thing' : 'things'}</span>
