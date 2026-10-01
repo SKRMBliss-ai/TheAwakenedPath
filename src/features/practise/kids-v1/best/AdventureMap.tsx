@@ -12,7 +12,7 @@ import { useQuiet } from '../ui/quiet';
 import { FONT } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import { chirpySprite } from '../ui/sprites';
-import { speak, stopSpeaking } from '../kit/chirpyVoice';
+import { speak, stopSpeaking, type NarrationContext } from '../kit/chirpyVoice';
 import * as sound from '../kit/sound';
 import { BadgeSlot } from './ChildBadge';
 import './AdventureMap.css';
@@ -110,7 +110,14 @@ export function Reader({ story, chapter, name, onClose, onNext, onCorner, still,
   const nextTitle = story.chapters[chapter + 1]?.title;
   const keepsake = CORNER_ITEM_BY_ID[story.keepsake];
 
-  useEffect(() => { if (!done) speak(text, quiet, 'grownup'); }, [text, done, quiet]);
+  /* The pages either side, so each page is read as part of the chapter rather
+     than as a fresh start. */
+  const prevText = page > 0 ? withName(ch.pages[page - 1].text, name) : undefined;
+  const nextText = !last ? withName(ch.pages[page + 1].text, name) : undefined;
+  const narration: NarrationContext = { title: `${story.title}, chapter ${chapter + 1}: ${ch.title}`, previous: prevText, next: nextText };
+  const narrate = () => speak(text, quiet, 'grownup', undefined, '', narration);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- narration is derived from text
+  useEffect(() => { if (!done) narrate(); }, [text, done, quiet]);
   useEffect(() => () => stopSpeaking(), []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -131,7 +138,8 @@ export function Reader({ story, chapter, name, onClose, onNext, onCorner, still,
     if (!quiet) sound.play(result.finished ? 'levelUp' : 'resolve');
     speak(result.finished
       ? `You finished the whole story!${keepsake ? ` ${keepsake.name} is waiting in your corner.` : ''}`
-      : nextTitle ? `The end of chapter ${chapter + 1}. Next time: ${nextTitle}.` : `The end of chapter ${chapter + 1}.`, quiet, 'grownup');
+      : nextTitle ? `The end of chapter ${chapter + 1}. Next time: ${nextTitle}.` : `The end of chapter ${chapter + 1}.`, quiet, 'grownup', undefined, '',
+      { title: story.title, previous: text, mode: result.finished ? 'bedtime' : 'warm' });
   };
 
   return (
@@ -161,7 +169,7 @@ export function Reader({ story, chapter, name, onClose, onNext, onCorner, still,
                 initial={still ? false : { opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}>{text}</motion.p>
             </AnimatePresence>
             <div className="am-turns">
-              <button className="am-again" onClick={() => speak(text, quiet, 'grownup')} aria-label="Read this page to me again">🔊</button>
+              <button className="am-again" onClick={narrate} aria-label="Read this page to me again">🔊</button>
               <span className="am-dots" aria-label={`Page ${page + 1} of ${ch.pages.length}`}>
                 {ch.pages.map((_, i) => <i key={i} className={i === page ? 'is-on' : ''} />)}
               </span>

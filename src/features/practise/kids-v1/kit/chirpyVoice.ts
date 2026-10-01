@@ -72,6 +72,13 @@ let voiceToken = 0;
  * deeper, slower voice for breathing and meditation in the reflection room.
  */
 export type Speaker = 'grownup' | 'mind' | 'guide';
+
+/**
+ * Where a line sits in a story, so the server's narration director can carry
+ * the mood over from the page before instead of starting each page cold.
+ * `mode` forces a reading (e.g. 'bedtime' for a story's last line).
+ */
+export interface NarrationContext { title?: string; previous?: string; next?: string; mode?: string }
 const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Enceladus', guide: 'Enceladus' };
 
 function browserVoice(text: string) {
@@ -96,8 +103,8 @@ function browserVoice(text: string) {
     if (token !== voiceToken || isMuted() || speaking !== text) return;
     try {
       const u = new SpeechSynthesisUtterance(text);
-      // Low and slow, to stay close to the deep narrator it stands in for.
-      speakCalmly(u, { rate: 0.85, pitch: 0.8 });
+      // Unhurried and natural, close to the narrator it stands in for.
+      speakCalmly(u, { rate: 0.92, pitch: 0.95 });
       window.speechSynthesis.speak(u);
     } catch { /* ignore — the line is still on screen */ }
   }, 60);
@@ -108,7 +115,7 @@ function browserVoice(text: string) {
  * ever says one thing at a time, so a new line always wins over the old one
  * rather than queueing behind it.
  */
-export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', onEnd?: () => void, feeling = '') {
+export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', onEnd?: () => void, feeling = '', context?: NarrationContext) {
   if (isMuted() || quiet || !text) return;
   stopSpeaking();
 
@@ -130,7 +137,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   */
   speaking = text;
 
-  const key = `${who}|${feeling}|${text}`;
+  const key = `${who}|${feeling}|${context ? JSON.stringify(context) : ''}|${text}`;
   const cached = heard.get(key);
   if (cached) { play(cached, text, onEnd); return; }
 
@@ -163,7 +170,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   void fetch(VOICE_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, voice: VOICES[who], character: who, feeling }),
+    body: JSON.stringify({ text, voice: VOICES[who], character: who, feeling, context }),
   })
     .then((r) => {
       if (!r.ok) console.warn(`[chirpy-voice] ${r.status}: ${key.slice(0, 30)}`);
@@ -225,51 +232,9 @@ export function preload(text: string, who: Speaker = 'grownup', feeling = ''): P
     .catch(() => { /* a preload miss just means speak() falls back as usual */ });
 }
 
-/*
-  EVERY LINE GETS A LITTLE MORE DEPTH.
-  Slowing playback slightly with pitch preservation turned off lowers the
-  voice along with it, which adds weight without another synthesis.
-*/
-function applyDepth(audio: HTMLAudioElement) {
-  audio.playbackRate = 0.88;
-  type PitchPreserving = { preservesPitch?: boolean; mozPreservesPitch?: boolean; webkitPreservesPitch?: boolean };
-  const a = audio as unknown as PitchPreserving;
-  try { a.preservesPitch = false; } catch { /* not supported */ }
-  try { a.mozPreservesPitch = false; } catch { /* not supported */ }
-  try { a.webkitPreservesPitch = false; } catch { /* not supported */ }
-}
-
-/*
-  A BASS BOOST ON THE WAY TO THE SPEAKER.
-  Lowering the pitch only goes so far before it sounds slowed down; most of
-  what reads as "depth" is the chest resonance under 250Hz, which small
-  speakers lose. So the low end is lifted and the hiss at the top is eased
-  off. Only used once the audio context is running (it needs a tap first):
-  an element wired into a suspended context would play silently.
-*/
-let depthCtx: AudioContext | null = null;
-function withBass(audio: HTMLAudioElement) {
-  try {
-    depthCtx ??= new AudioContext();
-    if (depthCtx.state !== 'running') { void depthCtx.resume(); return; }
-    const low = depthCtx.createBiquadFilter();
-    low.type = 'lowshelf'; low.frequency.value = 220; low.gain.value = 7;
-    const warmth = depthCtx.createBiquadFilter();
-    warmth.type = 'peaking'; warmth.frequency.value = 130; warmth.Q.value = 0.9; warmth.gain.value = 3;
-    const high = depthCtx.createBiquadFilter();
-    high.type = 'highshelf'; high.frequency.value = 5000; high.gain.value = -4;
-    const level = depthCtx.createGain();
-    level.gain.value = 0.8;
-    depthCtx.createMediaElementSource(audio).connect(low);
-    low.connect(warmth).connect(high).connect(level).connect(depthCtx.destination);
-  } catch { /* plays without the boost */ }
-}
-
 function play(url: string, text: string, onEnd?: () => void) {
   try {
     const audio = new Audio(url);
-    applyDepth(audio);
-    withBass(audio);
     if (onEnd) audio.onended = () => { if (current === audio) onEnd(); };
     current = audio;
     speaking = text;

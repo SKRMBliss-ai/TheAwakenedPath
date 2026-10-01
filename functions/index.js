@@ -7,6 +7,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const textToSpeech = require("@google-cloud/text-to-speech");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const { buildNarrationDirection } = require("./narration");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 
@@ -4780,48 +4781,42 @@ exports.notifyAdminOnKidsRegistration = onDocumentCreated({
  * one place it must never drift is the one thing children recognise him by.
  * =========================================================================== */
 
-const CHIRPY_DIRECTION =
-    'Read this as a warm, kind grown-up talking to a six-year-old. ' +
-    'A deep, rich, resonant voice with real depth, coming from low in the chest, warm and a little husky. ' +
-    'Slow and unhurried, noticeably slower than normal conversation, with natural pauses between thoughts. ' +
-    'Soft and soothing, never instructive, bright or sing-song. Let each sentence settle gently. ' +
-    'Let questions lift softly at the end:';
-
-/* The child's own mind, heard in the Story Lab when their thoughts are read
-   back. Younger and slower than the narrator, so the two never blur. */
+/* The narrator's own lines get their direction from the narration director
+   (functions/narration.js), which reads the scene. The child's thoughts and
+   the breathing guide keep fixed directions below, in the same voice. */
 const MIND_DIRECTION =
-    'Say this softly as a child\'s private thought, spoken by a warm, deep, gentle grown-up voice that is on the child\'s side. ' +
-    'Low, close and quiet, almost a murmur, as if the words are being thought rather than said aloud. ' +
-    'Slow, with little pauses between phrases. Never a child impression and never sing-song. ' +
-    'Let the feeling come through clearly, honest rather than performed:';
+    'These are a child\'s own private thoughts, told by the same warm, confident storyteller, fully voiced at a normal, clear speaking volume. ' +
+    'Gentle and close, a little slower than usual, as if gently putting the child\'s feeling into words for them. ' +
+    'Never a child impression or sing-song; always kind and reassuring. ' +
+    'Let the feeling come through honestly in the pace and emphasis rather than by dropping the voice';
 
 /* A calm guide for breathing and meditation in the reflection room. Deep,
    slow, and soothing. Deliberately paced with meaningful pauses. */
 const GUIDE_DIRECTION =
-    'Read this as a calm, wise guide leading breathing and meditation for a child. ' +
-    'A very deep, warm, resonant voice from low in the chest. Very slow, with long pauses between phrases. ' +
-    'Peaceful and grounding, like someone gently inviting stillness. Never rushed; let each word settle:';
+    'Read this as a calm, warm guide leading breathing and meditation for a child, fully voiced at a normal, clear speaking volume. ' +
+    'Slow and steady, with natural pauses between phrases. ' +
+    'Grounded and reassuring, like someone kindly inviting stillness. Never rushed; let each phrase settle:';
 
 /* Chirpy is the child's own mind, so he sounds the way the child said they
    feel. Matched loosely on the feeling's name; only the matched tone reaches
    the cache key, so a free-typed feeling can't multiply cache entries. */
 const MIND_TONES = [
     [/sad|grief|lonely|hurt|disappoint|miss|cry|down|left out/i, 'sad',
-        'The child feels sad. A heavy, slow whisper that wobbles a little, with a small sigh, close to tears.'],
+        'The child feels sad: slower and heavier, with a small catch of feeling, still warm and clearly spoken.'],
     [/excit|happy|joy|proud|glad|great|fun/i, 'happy',
-        'The child feels happy and excited. A bright, quick, smiling whisper, bubbling over, with a tiny giggle at the end.'],
+        'The child feels happy and excited: brighter and quicker, with a smile in the voice.'],
     [/angry|mad|cross|frustrat|annoy|unfair/i, 'angry',
-        'The child feels angry. A tight, huffy whisper through clenched teeth, sharp short breaths, never shouting.'],
+        'The child feels angry: firmer and clipped, with strong emphasis on the unfair part, never shouting.'],
     [/scar|worr|nervous|afraid|anxious|fear/i, 'worried',
-        'The child feels worried. A tiny, shaky whisper, unsure, hesitating and catching a breath before words.'],
+        'The child feels worried: unsure and hesitant, with small pauses, while the voice itself stays steady and reassuring.'],
     [/asham|embarrass|shy/i, 'shy',
-        'The child feels embarrassed. A very small whisper, almost a mumble, trailing off, looking down.'],
+        'The child feels embarrassed: gentle and a little hesitant, trailing off kindly at the end.'],
     [/jealous|envy/i, 'jealous',
-        'The child feels jealous. A sulky, grumbly whisper with a pout in it.'],
+        'The child feels jealous: a little sulky and grumbly, in a light, understanding way.'],
     [/bored/i, 'bored',
-        'The child feels bored. A flat, drawn-out whisper with a long slow sigh.'],
+        'The child feels bored: flatter and drawn out, with a long, easy sigh in the pacing.'],
     [/calm|peace|okay|fine|relax/i, 'calm',
-        'The child feels calm. An easy, settled, warm whisper, slow and unhurried.'],
+        'The child feels calm: easy, settled and unhurried.'],
 ];
 function mindTone(feeling) {
     const f = String(feeling || '').slice(0, 40).toLowerCase();
@@ -4852,7 +4847,7 @@ function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
 /** Hash text+voice for cache key — deterministic across runs. */
 /* Bumped whenever the directions change, so lines cached under the old
    performance are synthesised again rather than served forever. */
-const CHIRPY_VOICE_VERSION = 'deep1';
+const CHIRPY_VOICE_VERSION = 'director1';
 function chirpyCacheKey(text, voice) {
     return crypto.createHash('sha256').update(`${text}|${voice}|${CHIRPY_VOICE_VERSION}`).digest('hex').slice(0, 16);
 }
@@ -4862,20 +4857,31 @@ function chirpyCacheKey(text, voice) {
   whether the line is asked for live or warmed ahead of time on a schedule.
   Both paths MUST land on the same key or the warmed copy never gets found.
 */
-function chirpyResolve({ text, voiceName, character, feeling, toneField }) {
-    let tone;
-    if (toneField === 'whisper') {
-        const emotion = mindTone(feeling);
-        tone = emotion.name === 'plain'
-            ? { name: 'thought-whisper', line: 'A soft, hissed whisper, like thinking out loud.' }
-            : { name: `thought-whisper-${emotion.name}`, line: `${emotion.line} Keep it as a soft, hissed whisper throughout, like thinking out loud rather than speaking aloud.` };
+function chirpyResolve({ text, voiceName, character, feeling, context }) {
+    let direction;
+    let toneName = 'plain';
+    if (character === 'mind') {
+        const tone = mindTone(feeling);
+        toneName = tone.name;
+        direction = `${MIND_DIRECTION}${tone.line ? `. ${tone.line}` : ''}:`;
+    } else if (character === 'guide') {
+        direction = GUIDE_DIRECTION;
     } else {
-        tone = character === 'mind' ? mindTone(feeling) : { name: 'plain', line: '' };
+        const narration = buildNarrationDirection(context, text);
+        toneName = narration.mode;
+        direction = narration.direction;
     }
-    const direction = character === 'mind'
-        ? (tone.line ? MIND_DIRECTION.replace(/:$/, `. ${tone.line}:`) : MIND_DIRECTION)
-        : CHIRPY_DIRECTION;
-    return { direction, cacheKey: chirpyCacheKey(text, `${voiceName}|${character}|${tone.name}`) };
+    /* The direction itself is part of the key: the same words read after a
+       different page are a different performance. */
+    const directionHash = crypto.createHash('sha256').update(direction).digest('hex').slice(0, 10);
+    return { direction, toneName, cacheKey: chirpyCacheKey(text, `${voiceName}|${character}|${toneName}|${directionHash}`) };
+}
+
+/** Story context from the client, trimmed: it only steers the performance. */
+function chirpyContext(raw) {
+    if (!raw || typeof raw !== 'object') return {};
+    const str = (v, n) => (typeof v === 'string' ? v.slice(0, n) : undefined);
+    return { title: str(raw.title, 120), previous: str(raw.previous, 400), next: str(raw.next, 400), mode: str(raw.mode, 20) };
 }
 
 /* Returns the cached WAV buffer for a key, or null if nothing usable is stored.
@@ -4957,13 +4963,9 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     const character = req.body && req.body.character === 'mind' ? 'mind'
         : req.body && req.body.character === 'guide' ? 'guide'
         : 'grownup';
-    const tone = character === 'mind' ? mindTone(req.body && req.body.feeling) : { name: 'plain', line: '' };
-    const direction = character === 'mind'
-        ? (tone.line ? MIND_DIRECTION.replace(/:$/, `. ${tone.line}:`) : MIND_DIRECTION)
-        : character === 'guide'
-        ? GUIDE_DIRECTION
-        : CHIRPY_DIRECTION;
-    const cacheKey = chirpyCacheKey(text, `${voiceName}|${character}|${tone.name}`);
+    const { direction, toneName, cacheKey } = chirpyResolve({
+        text, voiceName, character, feeling: req.body && req.body.feeling, context: chirpyContext(req.body && req.body.context),
+    });
 
     try {
         const cachedWav = await chirpyCached(cacheKey);
@@ -4977,15 +4979,15 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
 
         console.log(`[chirpyVoice] Cache miss: ${cacheKey} (${voiceName})`);
         if (aiRateLimited('chirpyVoice', callerKey(req))) {
-            chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: tone.name }, 'rate limited (429)');
+            chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, 'rate limited (429)');
             return res.status(429).send('Too many requests — please wait a moment.');
         }
         if (!(await reserveAiBudget('chirpyVoice'))) {
-            chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: tone.name }, 'daily budget spent (503)');
+            chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, 'daily budget spent (503)');
             return res.status(503).send('Chirpy is resting his voice.');
         }
 
-        const wav = await chirpySynthAndStore({ text, voiceName, direction, cacheKey, character, emotion: tone.name });
+        const wav = await chirpySynthAndStore({ text, voiceName, direction, cacheKey, character, emotion: toneName });
         console.log(`[chirpyVoice] Cached new: ${cacheKey}`);
         db.collection('chirpyVoiceMisses').doc(cacheKey).delete().catch(() => {});
         res.set('Content-Type', 'audio/wav');
@@ -4994,7 +4996,7 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
         return res.send(wav);
     } catch (error) {
         console.error('Chirpy voice failure:', error.message);
-        chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: tone.name }, `synthesis failed (502): ${String(error.message).slice(0, 200)}`);
+        chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, `synthesis failed (502): ${String(error.message).slice(0, 200)}`);
         return res.status(502).send('Chirpy lost his voice for a moment.');
     }
 });
@@ -5026,15 +5028,13 @@ exports.warmChirpyVoiceCache = onSchedule(
         let stoppedForBudget = false;
 
         for (const { feeling, text } of CHIRPY_WARM_LIST) {
-            const { direction, cacheKey } = chirpyResolve({
+            const { direction, toneName, cacheKey } = chirpyResolve({
                 text, voiceName: CHIRPY_MIND_VOICE, character: 'mind', feeling,
             });
             if (await chirpyCached(cacheKey)) { skipped++; continue; }
             if (!(await reserveAiBudget('chirpyVoice'))) { stoppedForBudget = true; break; }
             try {
-                const tone = mindTone(feeling);
-                const emotion = tone.name || 'plain';
-                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion });
+                await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: toneName });
                 synthesised++;
             } catch (e) {
                 if (e.message?.includes('429')) {
