@@ -72,7 +72,7 @@ let voiceToken = 0;
  * deeper, slower voice for breathing and meditation in the reflection room.
  */
 export type Speaker = 'grownup' | 'mind' | 'guide';
-const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Puck', guide: 'Orion' };
+const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Enceladus', guide: 'Enceladus' };
 
 function browserVoice(text: string) {
   if (!isVoiceSupported()) return;
@@ -96,10 +96,8 @@ function browserVoice(text: string) {
     if (token !== voiceToken || isMuted() || speaking !== text) return;
     try {
       const u = new SpeechSynthesisUtterance(text);
-      // Lifting the pitch gets most of the way to young without the chipmunk
-      // effect the old 1.15-on-a-default-voice had — the rate matters as much as
-      // the pitch, so he stays slow.
-      speakCalmly(u, { rate: 0.9, pitch: 1.25 });
+      // Low and slow, to stay close to the deep narrator it stands in for.
+      speakCalmly(u, { rate: 0.85, pitch: 0.8 });
       window.speechSynthesis.speak(u);
     } catch { /* ignore — the line is still on screen */ }
   }, 60);
@@ -134,7 +132,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
 
   const key = `${who}|${feeling}|${text}`;
   const cached = heard.get(key);
-  if (cached) { play(cached, text, onEnd, who); return; }
+  if (cached) { play(cached, text, onEnd); return; }
 
   /*
     GEMINI FIRST, BROWSER ONLY AS A LAST RESORT — AND LATE ENOUGH NEVER TO
@@ -151,7 +149,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
     Now that a line is cached after its first hearing and served straight back,
     the real voice returns in well under a second for anything heard before —
     so a long fallback delay almost never fires. The browser voice only speaks
-    when the server truly does not answer, where a childish-pitched voice beats
+    when the server truly does not answer, where a low, slow browser voice beats
     nothing. The mind voice is given the longer leash, since its feeling is the
     whole point and it is worth waiting for.
   */
@@ -181,7 +179,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
         if (blob) heard.set(key, URL.createObjectURL(blob));
         const stillReading = typeof window !== 'undefined' && window.speechSynthesis?.speaking;
         if (blob && stillReading && !isMuted() && speaking === text) {
-          stopSpeaking(); speaking = text; play(heard.get(key)!, text, onEnd, who);
+          stopSpeaking(); speaking = text; play(heard.get(key)!, text, onEnd);
         }
         return;
       }
@@ -193,7 +191,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       heard.set(key, url);
       /* Only if this is still the line on screen. A child who has moved on
          must not be caught up by the previous screen's audio. */
-      if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text, onEnd, who); }
+      if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text, onEnd); }
     })
     .catch(() => {
       if (resolved) return;
@@ -228,17 +226,12 @@ export function preload(text: string, who: Speaker = 'grownup', feeling = ''): P
 }
 
 /*
-  MIND GETS A PITCH LIFT.
-  Gemini TTS has no child voice model — every "young girl of about six"
-  direction is still performed by an adult voice, so it can read as a woman
-  doing a young voice rather than an actual child. Raising playbackRate
-  while disabling pitch preservation shifts the pitch up along with it
-  (the standard trick for getting a younger voice out of adult audio),
-  instead of the usual behaviour where the browser corrects pitch back
-  down to keep the rate change transparent.
+  EVERY LINE GETS A LITTLE MORE DEPTH.
+  Slowing playback slightly with pitch preservation turned off lowers the
+  voice along with it, which adds weight without another synthesis.
 */
-function applyChildPitch(audio: HTMLAudioElement) {
-  audio.playbackRate = 1.18;
+function applyDepth(audio: HTMLAudioElement) {
+  audio.playbackRate = 0.93;
   type PitchPreserving = { preservesPitch?: boolean; mozPreservesPitch?: boolean; webkitPreservesPitch?: boolean };
   const a = audio as unknown as PitchPreserving;
   try { a.preservesPitch = false; } catch { /* not supported */ }
@@ -246,10 +239,10 @@ function applyChildPitch(audio: HTMLAudioElement) {
   try { a.webkitPreservesPitch = false; } catch { /* not supported */ }
 }
 
-function play(url: string, text: string, onEnd?: () => void, who: Speaker = 'grownup') {
+function play(url: string, text: string, onEnd?: () => void) {
   try {
     const audio = new Audio(url);
-    if (who === 'mind') applyChildPitch(audio);
+    applyDepth(audio);
     if (onEnd) audio.onended = () => { if (current === audio) onEnd(); };
     current = audio;
     speaking = text;
