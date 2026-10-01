@@ -231,7 +231,7 @@ export function preload(text: string, who: Speaker = 'grownup', feeling = ''): P
   voice along with it, which adds weight without another synthesis.
 */
 function applyDepth(audio: HTMLAudioElement) {
-  audio.playbackRate = 0.93;
+  audio.playbackRate = 0.88;
   type PitchPreserving = { preservesPitch?: boolean; mozPreservesPitch?: boolean; webkitPreservesPitch?: boolean };
   const a = audio as unknown as PitchPreserving;
   try { a.preservesPitch = false; } catch { /* not supported */ }
@@ -239,10 +239,37 @@ function applyDepth(audio: HTMLAudioElement) {
   try { a.webkitPreservesPitch = false; } catch { /* not supported */ }
 }
 
+/*
+  A BASS BOOST ON THE WAY TO THE SPEAKER.
+  Lowering the pitch only goes so far before it sounds slowed down; most of
+  what reads as "depth" is the chest resonance under 250Hz, which small
+  speakers lose. So the low end is lifted and the hiss at the top is eased
+  off. Only used once the audio context is running (it needs a tap first):
+  an element wired into a suspended context would play silently.
+*/
+let depthCtx: AudioContext | null = null;
+function withBass(audio: HTMLAudioElement) {
+  try {
+    depthCtx ??= new AudioContext();
+    if (depthCtx.state !== 'running') { void depthCtx.resume(); return; }
+    const low = depthCtx.createBiquadFilter();
+    low.type = 'lowshelf'; low.frequency.value = 220; low.gain.value = 7;
+    const warmth = depthCtx.createBiquadFilter();
+    warmth.type = 'peaking'; warmth.frequency.value = 130; warmth.Q.value = 0.9; warmth.gain.value = 3;
+    const high = depthCtx.createBiquadFilter();
+    high.type = 'highshelf'; high.frequency.value = 5000; high.gain.value = -4;
+    const level = depthCtx.createGain();
+    level.gain.value = 0.8;
+    depthCtx.createMediaElementSource(audio).connect(low);
+    low.connect(warmth).connect(high).connect(level).connect(depthCtx.destination);
+  } catch { /* plays without the boost */ }
+}
+
 function play(url: string, text: string, onEnd?: () => void) {
   try {
     const audio = new Audio(url);
     applyDepth(audio);
+    withBass(audio);
     if (onEnd) audio.onended = () => { if (current === audio) onEnd(); };
     current = audio;
     speaking = text;
