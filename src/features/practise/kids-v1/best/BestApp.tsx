@@ -42,6 +42,7 @@ import { GamesRoom } from './GamesRoom';
 import { Garden } from './Garden';
 import { MyCorner } from './MyCorner';
 import { AdventureMap } from './AdventureMap';
+import { StoryStudio } from './StoryStudio';
 import { ChildBadge } from './ChildBadge';
 import { ROOM_PILLARS } from '../kit/behaviourPractice';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
@@ -108,7 +109,9 @@ type View =
   /* The three places off the home-page floor — see kids/delight. */
   | { at: 'garden' }
   | { at: 'corner' }
-  | { at: 'adventure' };
+  | { at: 'adventure' }
+  /** Where a grown-up writes a story for the map, behind a times-table sum like the note composer. */
+  | { at: 'storystudio' };
 
 /**
  * WALKING THROUGH, NOT FADING THROUGH.
@@ -269,7 +272,9 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
 
             {view.at === 'garden' && <Garden onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
             {view.at === 'corner' && <MyCorner onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
-            {view.at === 'adventure' && <AdventureMap onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })} />}
+            {view.at === 'adventure' && <AdventureMap onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })}
+              onStudio={() => setView({ at: 'storystudio' })} />}
+            {view.at === 'storystudio' && <StoryStudio onBack={() => setView({ at: 'adventure' })} />}
 
             {view.at === 'practice' && <GamesRoom key={view.room.id}
               room={view.room} pillar={ROOM_PILLARS[view.room.id]} onExit={back}

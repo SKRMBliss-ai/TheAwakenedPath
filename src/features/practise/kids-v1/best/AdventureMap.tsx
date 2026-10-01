@@ -94,8 +94,10 @@ function Land({ tall }: { tall: boolean }) {
 
 type Finish = { firstTime: boolean; finished: boolean; seed: boolean };
 
-function Reader({ story, chapter, name, onClose, onNext, onCorner, still }: {
+export function Reader({ story, chapter, name, onClose, onNext, onCorner, still, preview = false }: {
   story: Adventure; chapter: number; name: string; onClose: () => void; onNext: (() => void) | null; onCorner: () => void; still: boolean;
+  /** A grown-up trying their story out: the child's progress is left alone. */
+  preview?: boolean;
 }) {
   const quiet = useQuiet();
   const ch = story.chapters[chapter];
@@ -116,13 +118,17 @@ function Reader({ story, chapter, name, onClose, onNext, onCorner, still }: {
 
   const turn = (by: number) => { if (!quiet) sound.play('panelSlide'); setPage((p) => p + by); };
   const finish = () => {
-    const before = useKidStore.getState().plants.length;
-    const result = useKidStore.getState().readChapter(weekStartKey(todayKey()), chapter, story.id, ch.title);
-    const seed = useKidStore.getState().plants.length > before;
+    let result = { firstTime: false, finished: chapter === story.chapters.length - 1 };
+    let seed = false;
+    if (!preview) {
+      const before = useKidStore.getState().plants.length;
+      result = useKidStore.getState().readChapter(weekStartKey(todayKey()), chapter, story.id, ch.title);
+      seed = useKidStore.getState().plants.length > before;
+    }
     setDone({ ...result, seed });
     if (!quiet) sound.play(result.finished ? 'levelUp' : 'resolve');
     speak(result.finished
-      ? `You finished the whole story! ${keepsake?.name ?? 'A keepsake'} is waiting in your corner.`
+      ? `You finished the whole story!${keepsake ? ` ${keepsake.name} is waiting in your corner.` : ''}`
       : nextTitle ? `The end of chapter ${chapter + 1}. Next time: ${nextTitle}.` : `The end of chapter ${chapter + 1}.`, quiet, 'grownup');
   };
 
@@ -133,12 +139,13 @@ function Reader({ story, chapter, name, onClose, onNext, onCorner, still }: {
         style={{ '--story': story.color } as CSSProperties}
         initial={still ? false : { scale: .92, y: 20 }} animate={{ scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 22 }}>
         <button className="am-close" onClick={onClose} aria-label="Close the book">✕</button>
+        {preview && <span className="am-preview-tag">Preview</span>}
         {!done ? <>
           <div className="am-page am-page-art">
             <AnimatePresence mode="wait">
               <motion.div key={page} className="am-scene" aria-hidden="true"
                 initial={still ? false : { opacity: 0, scale: .9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
-                <span>{ch.pages[page].scene}</span>
+                <span>{ch.pages[page].scene || story.cover}</span>
               </motion.div>
             </AnimatePresence>
             <span className="am-sparkle am-sparkle-a" aria-hidden="true">✦</span>
@@ -164,10 +171,12 @@ function Reader({ story, chapter, name, onClose, onNext, onCorner, still }: {
           </div>
         </> : (
           <div className="am-end">
-            {done.finished && keepsake ? <>
-              <img className="am-keepsake" src={keepsake.src} alt="" />
+            {done.finished ? <>
+              {keepsake
+                ? <img className="am-keepsake" src={keepsake.src} alt="" />
+                : <span className="am-end-cover" aria-hidden="true">{story.cover}</span>}
               <h2>You finished the whole story!</h2>
-              <p><b>{keepsake.name}</b> is waiting for you in your corner of the treehouse.</p>
+              {keepsake && <p><b>{keepsake.name}</b> is waiting for you in your corner of the treehouse.</p>}
             </> : <>
               <span className="am-end-cover" aria-hidden="true">{story.cover}</span>
               <h2>The end of Chapter {chapter + 1}!</h2>
@@ -178,12 +187,12 @@ function Reader({ story, chapter, name, onClose, onNext, onCorner, still }: {
               {done.seed && <span>🌱 A seed for your garden</span>}
             </p>}
             <div className="am-end-actions">
-              {done.finished
+              {done.finished && keepsake
                 ? <button className="am-turn am-turn-go" onClick={onCorner}>Visit My Corner →</button>
                 : onNext
                   ? <button className="am-turn am-turn-go" onClick={onNext}>Read Chapter {chapter + 2} ▶</button>
                   : nextTitle && <span className="am-tomorrow">It opens tomorrow. See you then!</span>}
-              <button className="am-turn" onClick={onClose}>Back to the map</button>
+              <button className="am-turn" onClick={onClose}>{preview ? 'Back to the studio' : 'Back to the map'}</button>
             </div>
           </div>
         )}
@@ -194,13 +203,16 @@ function Reader({ story, chapter, name, onClose, onNext, onCorner, still }: {
 
 /* ── The map ──────────────────────────────────────────────────────────────── */
 
-export function AdventureMap({ onExit, onGrownUp, onCorner }: { onExit: () => void; onGrownUp: () => void; onCorner: () => void }) {
+export function AdventureMap({ onExit, onGrownUp, onCorner, onStudio }: {
+  onExit: () => void; onGrownUp: () => void; onCorner: () => void; onStudio: () => void;
+}) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;
   const today = todayKey();
   const week = weekStartKey(today);
-  const story = adventureForWeek(week);
+  const parentStories = useKidStore((s) => s.parentStories);
+  const story = adventureForWeek(week, parentStories);
   const read = useKidStore((s) => s.chaptersRead[week] ?? EMPTY);
   const name = useKidStore((s) => s.name);
   const kid = name && name !== 'Explorer' ? name : '';
@@ -296,6 +308,9 @@ export function AdventureMap({ onExit, onGrownUp, onCorner }: { onExit: () => vo
             <span>Read all 7 chapters to win <b>{keepsake.name}</b> for your corner</span>
           </p>
         )}
+        {/* Dull on purpose, like "leave a note" in the Reflection Room: an adult
+            looking for it finds it, a child has already tapped a stone. */}
+        <button className="am-studio" onClick={onStudio}>For a grown-up · write a story</button>
       </div>
 
       {typeof document !== 'undefined' && createPortal(

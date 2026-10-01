@@ -524,9 +524,40 @@ export const ADVENTURES: Adventure[] = [
 /** Weeks since a Monday long ago, so the four stories take turns forever. */
 const EPOCH_MONDAY = '2024-01-01';
 
-export function adventureForWeek(weekKey: string): Adventure {
+/**
+ * A grown-up's story takes the one week it is booked for; every other week
+ * keeps the built-in rotation, which never shifts to make room — so writing a
+ * new story can't swap the one a child is halfway through.
+ */
+export function adventureForWeek(weekKey: string, parentStories: readonly ParentStory[] = []): Adventure {
+  const own = parentStories.find((s) => s.week === weekKey && storyProblems(s).length === 0);
+  if (own) return own;
   const weeks = Math.floor(daysBetween(EPOCH_MONDAY, weekKey) / 7);
   return ADVENTURES[((weeks % ADVENTURES.length) + ADVENTURES.length) % ADVENTURES.length];
+}
+
+/* ── Stories a grown-up writes ───────────────────────────────────────────── */
+
+/** Written in the Story Studio. `week` is the Monday it is told; without one it is a draft. */
+export interface ParentStory extends Adventure { week?: string }
+
+export const MAX_PAGES = 6;
+/** About as much as the book's page holds at a size a child can read. */
+export const MAX_PAGE_TEXT = 240;
+
+/** What still stands between a story and the map, first thing first. */
+export function storyProblems(story: Adventure): string[] {
+  const problems: string[] = [];
+  if (!story.title.trim()) problems.push('Give the story a title.');
+  if (story.chapters.length !== 7) problems.push('A story needs seven chapters, one for each day.');
+  story.chapters.forEach((ch, i) => {
+    if (!ch.title.trim()) problems.push(`Chapter ${i + 1} needs a title.`);
+    if (!ch.pages.length) problems.push(`Chapter ${i + 1} needs at least one page.`);
+    ch.pages.forEach((pg, j) => {
+      if (!pg.text.trim()) problems.push(`Chapter ${i + 1}, page ${j + 1} has no words yet.`);
+    });
+  });
+  return problems;
 }
 
 /** Chapter n (0-based) opens on day n of the week, and stays open all week once it has. */
