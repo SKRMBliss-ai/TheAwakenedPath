@@ -134,7 +134,7 @@
 .rr-charms {
   position: absolute; z-index: 6;
   right: clamp(12px, 2.6vw, 34px); top: clamp(10px, 2.4vh, 26px);
-  display: flex; gap: 10px;
+  display: flex; align-items: flex-start; gap: 10px;
 }
 .rr-charm {
   display: flex; flex-direction: column; align-items: center; gap: 2px;

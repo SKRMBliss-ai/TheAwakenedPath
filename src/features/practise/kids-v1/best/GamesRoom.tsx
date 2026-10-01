@@ -4,7 +4,8 @@ import {
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { BEHAVIOUR_PILLARS, type BehaviourPillar } from '../../../../assets/mind-gym-180-balanced-behaviour-scenarios';
-import { useKidStore } from '../../../kids/store';
+import { useKidStore, stickerStatsOf } from '../../../kids/store';
+import { STICKER_BY_ID, nextSticker } from '../../../kids/stickers';
 import { isMuted, setMuted } from '../../../../lib/sfx';
 import { RoomScene } from '../ui/scene';
 import { useQuiet } from '../ui/quiet';
@@ -21,6 +22,8 @@ import { stopSpeaking, speak } from '../kit/chirpyVoice';
 import { artRoomFor, type VirtueRoom } from './rooms';
 import { useFloatingPosition } from '../ui/useFloatingPosition';
 import { DoorHandle } from '../ui/DoorHandle';
+import { BadgeSlot } from './ChildBadge';
+import { StickerBook, StickerHud, StickerPop, StickerRow } from './Stickers';
 import './GamesRoom.css';
 
 /*
@@ -166,6 +169,27 @@ function Consequence({ emoji, label, still }: { emoji?: string; label: string; s
   </motion.div>;
 }
 
+/* ── The Mind Stars count rolls up instead of jumping ────────────────────── */
+function useCountUp(value: number, still: boolean): number {
+  const [shown, setShown] = useState(value);
+  const current = useRef(value);
+  useEffect(() => {
+    if (still || value === current.current) { current.current = value; setShown(value); return; }
+    const from = current.current;
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const k = Math.min(1, (now - start) / 850);
+      current.current = Math.round(from + (value - from) * (1 - Math.pow(1 - k, 3)));
+      setShown(current.current);
+      if (k < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value, still]);
+  return shown;
+}
+
 type Flight = { x: number; y: number; toX: number; toY: number; points: number };
 
 export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
@@ -179,6 +203,16 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
   const still = quiet || !!reduced;
   const [muted, setMutedState] = useState(isMuted);
   const points = useKidStore(s => s.points);
+  const gameStats = useKidStore(s => s.gameStats);
+  const scenariosDone = useKidStore(s => s.scenariosDone);
+  const owned = useKidStore(s => s.stickers);
+  const stickerQueue = useKidStore(s => s.stickerQueue);
+  const stats = useMemo(() => stickerStatsOf({ points, gameStats, scenariosDone }), [points, gameStats, scenariosDone]);
+  const next = useMemo(() => nextSticker(stats, owned), [stats, owned]);
+  const shownPoints = useCountUp(points, still);
+  const [book, setBook] = useState(false);
+  /** Everything waiting to be celebrated when a run of five ends, shown on the run's own card. */
+  const [runStickers, setRunStickers] = useState<string[]>([]);
   const counter = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const [flight, setFlight] = useState<Flight | null>(null);
@@ -299,6 +333,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       award: (value, scenario) => {
         useKidStore.getState().awardPoints(value, creditTo);
         useKidStore.getState().completeScenario(scenario.id);
+        useKidStore.getState().recordPractice(creditTo);
       },
       successSound: () => { if (!quiet) sound.play('discovery'); },
     });
@@ -334,10 +369,38 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
     const done = state.practised;
     if (done > 0 && done % RUN_LENGTH === 0 && done !== celebrated.current) {
       celebrated.current = done;
+      useKidStore.getState().recordRun();
+      setRunStickers(useKidStore.getState().stickerQueue);
       setReward(done);
       if (!quiet) sound.play('miniWin');
     }
   }, [state.practised, quiet]);
+
+  /*
+    ── Stickers ──────────────────────────────────────────────────────────────
+
+    Anything earned somewhere else since the last visit (Mind Stars from the
+    home games, say) is picked up on the way in and celebrated like the rest.
+
+    One sticker pops at a time, a moment after the points land. Nothing pops
+    over a run's own card, which lists them itself, or over the book, and never
+    in the quiet state. A long backlog — a child coming back after weeks — is
+    one pop with a count rather than twenty in a row.
+  */
+  useEffect(() => { useKidStore.getState().syncStickers(); }, []);
+  const popping = awakePhase === 'ready' && !reward && !book && !quiet;
+  const popStickers = popping
+    ? stickerQueue.slice(0, 3).map((id) => STICKER_BY_ID[id]).filter(Boolean)
+    : [];
+  const popKey = popStickers.map((s) => s.id).join(',');
+  const dismissPop = useCallback(() => {
+    useKidStore.getState().clearStickerQueue(useKidStore.getState().stickerQueue);
+  }, []);
+  useEffect(() => { if (popKey) sound.play('miniWin'); }, [popKey]);
+
+  const openBook = () => { sound.play('roomCard'); setBook(true); };
+  const closeBook = useCallback(() => { sound.play('tap'); setBook(false); }, []);
+  const settleRunStickers = () => { useKidStore.getState().clearStickerQueue(runStickers); setRunStickers([]); };
 
   /* "Choose a treasure and see what happens!" (and the answer labels on the
      chests) are hints, not permanent labels — they fade 3s after each new
@@ -415,6 +478,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
           const next = !isMuted(); setMuted(next); setMutedState(next);
           if (next) { sound.stopAll(); sound.stopMusic(); stopSpeaking(); }
         }}>{muted ? 'Sound off' : 'Sound on'}</button>
+        <BadgeSlot />
       </div>
 
       <div className="gr-sign">
@@ -423,12 +487,34 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       </div>
 
       <div className="gr-top-right">
-        <motion.div ref={counter} className="gr-stars-count" aria-label={`Mind Stars: ${points}`}
-          animate={!still && state.rewardArrived ? { scale: [1, 1.13, 1] } : { scale: 1 }}>
-          <img src={`${ART}/star_filled.png`} alt="" aria-hidden="true" />
-          <span>{points}</span><small>Mind Stars</small>
+        {/*
+          THE POINTS ARE THE THING THIS ROOM IS ABOUT, so they get to look it.
+
+          They were a small purple pill the same size as the "Talk to a
+          grown-up" chip under them, the name tag was pinned over the top of
+          them, and the room's idle blur dimmed the whole top band after three
+          seconds of nothing — which is exactly when a child is looking for
+          them. Now the star is the medal: big, lit, turning slowly, and the
+          number rolls up as each choice's stars land.
+        */}
+        <motion.div ref={counter} className="gr-stars" role="img" aria-label={`Mind Stars: ${points}`}
+          animate={!still && state.rewardArrived ? { scale: [1, 1.12, 1] } : { scale: 1 }}>
+          <span className="gr-stars-medal" aria-hidden="true">
+            <img src={`${ART}/star_filled.png`} alt="" />
+            <i className="gr-twinkle gr-twinkle-1" /><i className="gr-twinkle gr-twinkle-2" /><i className="gr-twinkle gr-twinkle-3" />
+          </span>
+          <span className="gr-stars-body" aria-hidden="true">
+            <b className="gr-stars-num">{shownPoints}</b>
+            <small>Mind Stars</small>
+          </span>
+          {state.rewardArrived && flight && <span key={state.practised} className="gr-stars-gain" aria-hidden="true">+{flight.points}</span>}
         </motion.div>
+        <StickerHud next={next} count={owned.length} bump={owned.length} onOpen={openBook} />
         <button className="gr-chip" onClick={() => leave(onGrownUp)}>♡ Talk to a grown-up</button>
+        <AnimatePresence>
+          {popStickers.length > 0 && <StickerPop key="sticker-pop" stickers={popStickers}
+            more={stickerQueue.length - popStickers.length} still={still} onDone={dismissPop} />}
+        </AnimatePresence>
       </div>
     </header>
 
@@ -589,13 +675,18 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
           <img className="gr-reward-chest" src={`${ART}/reward_chest_open.png`} alt="" aria-hidden="true" />
           <h2>{RUN_LENGTH} practised!</h2>
           <p>You tried five real-life moments in the {themeTitle} room. That is what practice is — not getting them right, just having a go.</p>
+          <StickerRow ids={runStickers.slice(0, 6)} total={runStickers.length} />
           <div className="gr-reward-actions">
-            <button className="gr-reward-again" autoFocus onClick={() => { if (!quiet) sound.play('tap'); setReward(0); }}>Play again</button>
-            <button className="gr-reward-swap" onClick={() => { if (!quiet) sound.play('tap'); switchTheme(); }}>Try another game</button>
-            <button className="gr-reward-leave" onClick={() => leave(onExit)}>Leave Room</button>
+            <button className="gr-reward-again" autoFocus onClick={() => { if (!quiet) sound.play('tap'); settleRunStickers(); setReward(0); }}>Play again</button>
+            <button className="gr-reward-swap" onClick={() => { if (!quiet) sound.play('tap'); settleRunStickers(); switchTheme(); }}>Try another game</button>
+            <button className="gr-reward-leave" onClick={() => { settleRunStickers(); leave(onExit); }}>Leave Room</button>
           </div>
         </motion.div>
       </motion.div>}
+    </AnimatePresence>
+
+    <AnimatePresence>
+      {book && <StickerBook key="sticker-book" owned={owned} stats={stats} still={still} onClose={closeBook} />}
     </AnimatePresence>
 
     {state.phase === 'success' && flight && createPortal(<motion.div className="gr-points-flight" aria-hidden

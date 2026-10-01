@@ -1,0 +1,38 @@
+/* The child's name and age, as a small tag. See ChildBadge.tsx. */
+
+.child-badge {
+  display: flex; align-items: center; gap: 6px;
+  min-height: 34px; padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #ffd98a73;
+  background: linear-gradient(#3a2260d9, #22133fe6);
+  backdrop-filter: blur(7px) saturate(1.2);
+  -webkit-backdrop-filter: blur(7px) saturate(1.2);
+  box-shadow: 0 6px 18px -6px #0b041899, inset 0 1px 0 #ffffff26;
+  color: #fff3dc;
+  font-size: clamp(11px, 1.1vw, 14px); font-weight: 850; white-space: nowrap;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.child-badge:hover, .child-badge:focus-visible { transform: translateY(-2px) scale(1.04); }
+.child-badge:focus-visible { outline: 3px solid #ffe9a6; outline-offset: 3px; }
+.child-badge-icon { font-size: 1.1em; }
+.child-badge-comma { opacity: .6; }
+.child-badge-age { color: #ffd98a; }
+
+/* No room has claimed a slot: pinned to the corner of the screen. */
+.child-badge-pinned {
+  position: fixed; z-index: 50;
+  top: clamp(10px, 2.4vh, 22px); right: clamp(10px, 2.4vw, 26px);
+}
+
+/* Down to an icon and an age on a phone, where a room's corner is small. */
+@media (max-width: 560px) {
+  .child-badge-inline { padding: 5px 10px; min-height: 30px; }
+  .child-badge-inline .child-badge-name,
+  .child-badge-inline .child-badge-comma { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .child-badge { transition: none; }
+}

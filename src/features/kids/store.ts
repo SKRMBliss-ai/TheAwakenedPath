@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { BEHAVIOURS, BADGES, REWARDS, todayKey } from './data';
+import { earnedStickers, type StickerStats } from './stickers';
 
 /**
  * Kid progress lives on THIS DEVICE only (localStorage), never on a server —
@@ -33,6 +34,36 @@ export interface SavedReflection {
   affirmation?: string;
 }
 
+/** What the Games Room has counted, so the sticker book can be worked out from it. */
+export interface GameStats {
+  practised: number;
+  /** Choices practised per room id (kind, truth, choices, include, body, help). */
+  byRoom: Record<string, number>;
+  /** Runs of five finished. */
+  runs: number;
+  /** The days the Games Room was played on. */
+  days: string[];
+}
+
+const NO_GAME_STATS: GameStats = { practised: 0, byRoom: {}, runs: 0, days: [] };
+
+/**
+ * The numbers the sticker book is worked out from. Choices practised before
+ * the counters existed are still in `scenariosDone`, so a child who has been
+ * playing for weeks does not start the book from nothing.
+ */
+export function stickerStatsOf(s: { points: number; gameStats: GameStats; scenariosDone: Record<string, string[]> }): StickerStats {
+  const earlier = Object.values(s.scenariosDone)
+    .reduce((n, day) => n + day.filter((id) => !id.startsWith('home:')).length, 0);
+  return {
+    points: s.points,
+    practised: Math.max(s.gameStats.practised, earlier),
+    byRoom: s.gameStats.byRoom,
+    runs: s.gameStats.runs,
+    days: s.gameStats.days.length,
+  };
+}
+
 interface KidState {
   onboarded: boolean;
   name: string;
@@ -49,6 +80,11 @@ interface KidState {
   streak: number;
   badges: string[];
   rewards: string[];
+  gameStats: GameStats;
+  /** Sticker ids, in the order they were earned. */
+  stickers: string[];
+  /** Earned but not yet celebrated on screen — a child who leaves mid-way sees them next time. */
+  stickerQueue: string[];
 
   completeOnboarding: (name: string, avatarId: string) => void;
   setName: (name: string) => void;
@@ -63,6 +99,14 @@ interface KidState {
   toggleReflectionFavourite: (id: string) => void;
   markReflectionPlayed: (id: string) => void;
   setReflectionAffirmation: (id: string, affirmation: string) => void;
+  /** A good choice practised in a Games Room theme. Returns the stickers it earned. */
+  recordPractice: (roomId: string) => string[];
+  /** A run of five finished. Returns the stickers it earned. */
+  recordRun: () => string[];
+  /** Picks up stickers earned some other way (Mind Stars won elsewhere, say). */
+  syncStickers: () => string[];
+  /** These have been celebrated; take them off the queue. */
+  clearStickerQueue: (ids: string[]) => void;
   reset: () => void;
 }
 
@@ -104,7 +148,21 @@ function recomputeRewards(points: number, current: string[]): string[] {
 
 export const useKidStore = create<KidState>()(
   persist(
-    (set) => ({
+    (set) => {
+      /** Applies a change to the counters, then hands back whatever it newly earned. */
+      const earn = (change: (s: KidState) => Partial<KidState>): string[] => {
+        const fresh: string[] = [];
+        set((s) => {
+          const patch = change(s);
+          const ids = earnedStickers(stickerStatsOf({ ...s, ...patch })).filter((id) => !s.stickers.includes(id));
+          fresh.push(...ids);
+          if (!ids.length) return patch;
+          return { ...patch, stickers: [...s.stickers, ...ids], stickerQueue: [...s.stickerQueue, ...ids] };
+        });
+        return fresh;
+      };
+
+      return {
       onboarded: false,
       name: '',
       avatarId: 'sunny',
@@ -119,6 +177,9 @@ export const useKidStore = create<KidState>()(
       streak: 0,
       badges: [],
       rewards: [],
+      gameStats: NO_GAME_STATS,
+      stickers: [],
+      stickerQueue: [],
 
       completeOnboarding: (name, avatarId) => set({ onboarded: true, name: name.trim() || 'Explorer', avatarId }),
       setName: (name) => { if (name.trim()) set({ name: name.trim() }); },
@@ -218,12 +279,31 @@ export const useKidStore = create<KidState>()(
         savedReflections: s.savedReflections.map((r) => r.id === id ? { ...r, affirmation } : r),
       })),
 
+      recordPractice: (roomId) => earn((s) => {
+        const today = todayKey();
+        return {
+          gameStats: {
+            ...s.gameStats,
+            practised: s.gameStats.practised + 1,
+            byRoom: { ...s.gameStats.byRoom, [roomId]: (s.gameStats.byRoom[roomId] ?? 0) + 1 },
+            days: s.gameStats.days.includes(today) ? s.gameStats.days : [...s.gameStats.days, today],
+          },
+        };
+      }),
+
+      recordRun: () => earn((s) => ({ gameStats: { ...s.gameStats, runs: s.gameStats.runs + 1 } })),
+
+      syncStickers: () => earn(() => ({})),
+
+      clearStickerQueue: (ids) => set((s) => ({ stickerQueue: s.stickerQueue.filter((id) => !ids.includes(id)) })),
+
       reset: () => set({
         onboarded: false, name: '', avatarId: 'sunny', points: 0, pointsByBehaviour: {},
         completions: {}, missionsDone: {}, reflections: {}, savedReflections: [], monthReviews: {}, scenariosDone: {},
-        streak: 0, badges: [], rewards: [],
+        streak: 0, badges: [], rewards: [], gameStats: NO_GAME_STATS, stickers: [], stickerQueue: [],
       }),
-    }),
+      };
+    },
     { name: 'my-best-every-day' },
   ),
 );

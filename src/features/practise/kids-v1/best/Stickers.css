@@ -1,0 +1,198 @@
+/* The sticker book — see Stickers.tsx and kids/stickers.ts. */
+
+/* ── One sticker ─────────────────────────────────────────────────────────── */
+
+.stk {
+  position: relative; display: inline-block; flex: 0 0 auto;
+  width: var(--stk); height: var(--stk);
+  filter: drop-shadow(0 4px 5px #0b04186b);
+}
+.stk-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.stk-glyph {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: calc(var(--stk) * .45); line-height: 1;
+  filter: drop-shadow(0 1px 1px #0b041859);
+}
+.stk-locked { filter: none; }
+.stk-locked .stk-glyph { font-size: calc(var(--stk) * .42); font-weight: 1000; color: #ffffff8c; filter: none; }
+
+/* The later stickers in a set catch the light, once in a while. */
+.stk-shine { animation: stk-shine 4.2s ease-in-out infinite; }
+@keyframes stk-shine {
+  0%, 52% { transform: translateX(-20px) skewX(-20deg); }
+  100%    { transform: translateX(150px) skewX(-20deg); }
+}
+
+/* ── The sticker that has just arrived ───────────────────────────────────── */
+
+.stk-pop {
+  position: absolute; z-index: 30; top: calc(100% + 10px); right: 0;
+  display: flex; align-items: center; gap: 12px;
+  width: max-content; max-width: min(380px, 90vw);
+  padding: 10px 18px 10px 12px; border-radius: 26px;
+  border: 2px solid #ffe08a;
+  background: linear-gradient(#5a3592f2, #2c1658f7);
+  box-shadow: 0 14px 34px -10px #07020f, 0 0 34px -4px #ffd86bb3, inset 0 1px 0 #ffffff33;
+  color: #fff; cursor: pointer; text-align: left;
+}
+.stk-pop-glow {
+  position: absolute; left: 6px; top: 50%; width: 112px; height: 112px; translate: 0 -50%;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, #ffe08acc, #ffb03a55 45%, transparent 70%);
+  animation: stk-glow 1.8s ease-in-out infinite;
+}
+@keyframes stk-glow { 50% { opacity: .55; scale: 1.14; } }
+.stk-pop-art { position: relative; display: flex; align-items: center; flex: 0 0 auto; }
+.stk-pop-one { position: relative; display: block; }
+.stk-pop-text { position: relative; display: grid; gap: 2px; min-width: 0; }
+.stk-pop-text small { font-size: 11px; font-weight: 850; letter-spacing: .02em; color: #ffe9a6; }
+.stk-pop-text b { font-size: 21px; font-weight: 1000; line-height: 1.05; color: #fff; text-shadow: 0 2px 8px #1a0a2e; }
+.stk-pop-text b.stk-pop-names { font-size: 16px; line-height: 1.15; }
+.stk-pop-text em { font-size: 12px; font-style: normal; font-weight: 750; color: #e6d9ff; line-height: 1.25; }
+.stk-pop-text i { font-size: 11.5px; font-style: normal; font-weight: 850; color: #ffd98a; }
+
+.stk-pop-sparks { position: absolute; left: 62px; top: 50%; width: 0; height: 0; pointer-events: none; }
+.stk-pop-sparks i {
+  position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%;
+  background: #fff3c4; box-shadow: 0 0 9px #ffd86b;
+  opacity: 0; animation: stk-spark 1.15s ease-out forwards; animation-delay: calc(.5s + var(--d));
+}
+@keyframes stk-spark {
+  0%   { opacity: 0; transform: rotate(var(--a)) translateX(14px) scale(.4); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateX(78px) scale(.9); }
+}
+
+/* ── The teaser under the points ─────────────────────────────────────────── */
+
+.stk-hud {
+  display: flex; align-items: center; gap: 10px;
+  width: clamp(190px, 17vw, 250px); padding: 7px 14px 7px 8px;
+  border-radius: 22px; border: 1.5px solid #ffd98a80;
+  background: linear-gradient(#4a2c79e6, #2a1650ee);
+  box-shadow: 0 8px 22px -8px #07020f, inset 0 1px 0 #ffffff26;
+  color: #fff; text-align: left;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.stk-hud:hover, .stk-hud:focus-visible {
+  transform: translateY(-3px) scale(1.03); border-color: #ffe9b8;
+  box-shadow: 0 12px 26px -8px #07020f, 0 0 24px -4px #ffd86b99;
+}
+.stk-hud-next { flex: 0 0 auto; animation: stk-hud-wiggle 5.5s ease-in-out infinite; }
+@keyframes stk-hud-wiggle {
+  0%, 84%, 100% { rotate: 0deg; }
+  88% { rotate: -9deg; } 92% { rotate: 8deg; } 96% { rotate: -4deg; }
+}
+.stk-hud-body { display: grid; gap: 3px; min-width: 0; flex: 1 1 auto; }
+.stk-hud-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.stk-hud-head b { font-size: 14px; font-weight: 1000; color: #fff3cf; }
+.stk-hud-count { font-size: 12px; font-weight: 900; color: #ffd98a; animation: stk-bump .6s ease-out; }
+@keyframes stk-bump { 0% { scale: 1; } 40% { scale: 1.5; color: #fff; } 100% { scale: 1; } }
+.stk-hud-meter { height: 8px; border-radius: 6px; background: #ffffff26; overflow: hidden; box-shadow: inset 0 1px 2px #0006; }
+.stk-hud-meter i {
+  display: block; height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, #ffd371, #ff9ccf);
+  box-shadow: 0 0 10px #ffd86b99;
+  transition: width .8s cubic-bezier(.2, 1, .3, 1);
+}
+.stk-hud-note { font-size: 11.5px; font-weight: 800; line-height: 1.2; color: #f1e6ff; }
+
+/* ── Stickers on a run's own card ────────────────────────────────────────── */
+
+.stk-row { margin-top: 14px; padding-top: 12px; border-top: 1px dashed #ffd98a55; }
+.stk-row p { margin: 0 0 8px; font-size: 13px; font-weight: 900; color: #ffe6a2; }
+.stk-row ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 16px; margin: 0; padding: 0; list-style: none; }
+.stk-row li { display: grid; justify-items: center; gap: 4px; width: 84px; }
+.stk-row-name { font-size: 11.5px; font-weight: 850; line-height: 1.15; color: #fff; text-align: center; }
+
+/* ── The book ─────────────────────────────────────────────────────────────── */
+
+.stk-veil {
+  position: fixed; inset: 0; z-index: 42; display: grid; place-items: center;
+  padding: clamp(8px, 2.5vh, 28px) clamp(8px, 2.5vw, 28px);
+  background: radial-gradient(circle at 50% 40%, #12082466, #0f0620d9 78%);
+  backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+}
+.stk-book {
+  position: relative; display: flex; flex-direction: column;
+  width: min(940px, 100%); max-height: min(92svh, 880px);
+  border-radius: 28px; border: 2px solid #e8c471; overflow: hidden;
+  background:
+    radial-gradient(circle at 16% 6%, #6b3aa84d, transparent 52%),
+    linear-gradient(#3a2064, #1d1038);
+  box-shadow: 0 26px 70px -14px #07020f, 0 0 44px -14px #c89bffaa, inset 0 1px 0 #ffffff26;
+  color: #fff;
+}
+.stk-book-head {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 16px;
+  padding: 16px 18px 14px 24px; border-bottom: 1px solid #ffd98a33;
+}
+.stk-book-title h2 { margin: 0; font-family: inherit; font-size: clamp(20px, 2.4vw, 28px); font-weight: 1000; color: #ffe6a2; }
+.stk-book-title p { margin: 2px 0 0; font-size: 13px; font-weight: 800; color: #e8dcff; }
+.stk-book-meter { flex: 1 1 80px; height: 12px; border-radius: 8px; background: #ffffff1f; overflow: hidden; box-shadow: inset 0 1px 3px #0007; }
+.stk-book-meter i { display: block; height: 100%; border-radius: 8px; background: linear-gradient(90deg, #ffd371, #ff9ccf, #a7a0ff); box-shadow: 0 0 12px #ffd86b99; }
+.stk-book-close {
+  flex: 0 0 auto; width: 44px; height: 44px; display: grid; place-items: center;
+  border-radius: 50%; border: 1px solid #c9aef8; background: #4a2c79; color: #fff; font-size: 16px; cursor: pointer;
+}
+.stk-book-close:hover { background: #5f3a99; }
+.stk-book-close:focus-visible { outline: 3px solid #ffe9a6; outline-offset: 3px; }
+
+.stk-book-body {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 8px 22px 24px;
+  scrollbar-width: thin; scrollbar-color: #ffd98a55 transparent;
+  background:
+    radial-gradient(1.4px 1.4px at 12% 18%, #ffffff55, transparent),
+    radial-gradient(1.2px 1.2px at 70% 40%, #ffffff40, transparent),
+    radial-gradient(1.6px 1.6px at 38% 72%, #ffffff4d, transparent),
+    radial-gradient(1.2px 1.2px at 88% 86%, #ffffff40, transparent);
+}
+.stk-sec { padding-top: 16px; }
+.stk-sec h3 {
+  display: flex; align-items: center; gap: 9px; margin: 0 0 10px;
+  font-family: inherit; font-size: 14px; font-weight: 1000; letter-spacing: .04em; text-transform: uppercase; color: #ffd98a;
+}
+.stk-sec h3 small { margin-left: auto; font-size: 12px; font-weight: 900; letter-spacing: 0; color: #e8dcff; }
+.stk-sec-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 4px #0006; }
+
+.stk-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 14px 10px; margin: 0; padding: 0; list-style: none;
+}
+.stk-cell {
+  position: relative; display: grid; justify-items: center; align-content: start; gap: 5px;
+  padding: 10px 6px 10px; border-radius: 18px; text-align: center;
+  background: #ffffff0d; border: 1px solid #ffffff1a;
+}
+.stk-cell.is-earned { background: linear-gradient(#ffffff1c, #ffffff0a); border-color: #ffd98a40; }
+.stk-cell.is-locked { opacity: .9; }
+.stk-cell b { font-size: 13px; font-weight: 900; line-height: 1.15; color: #fff; }
+.stk-cell small { font-size: 11.5px; font-weight: 750; line-height: 1.22; color: #d9ccf5; }
+.stk-cell-count { font-size: 11px; font-weight: 900; color: #ffd98a; }
+.stk-cell-art { display: block; transition: transform .25s cubic-bezier(.2, 1.3, .4, 1); }
+.stk-cell.is-earned:hover .stk-cell-art { transform: rotate(0deg) scale(1.12) !important; }
+.stk-new {
+  position: absolute; z-index: 1; top: -7px; right: -2px; rotate: 8deg;
+  padding: 2px 9px; border-radius: 10px; background: #ff7fb5; border: 1.5px solid #fff;
+  font-size: 11px; font-weight: 1000; color: #fff; box-shadow: 0 3px 8px #0006;
+}
+
+@media (max-width: 560px) {
+  .stk-pop { right: auto; left: 50%; translate: -50% 0; }
+  .stk-hud { width: auto; padding: 5px 10px 5px 6px; gap: 6px; }
+  .stk-hud-next .stk { --stk: 34px !important; }
+  .stk-hud-meter, .stk-hud-note { display: none; }
+  .stk-hud-head { flex-direction: column; gap: 0; }
+  .stk-hud-head b { font-size: 11px; }
+  .stk-book { border-radius: 22px; }
+  .stk-book-head { padding: 12px 12px 10px 16px; gap: 10px; }
+  .stk-book-meter { display: none; }
+  .stk-book-title { flex: 1; }
+  .stk-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px 8px; }
+  .stk-book-body { padding: 4px 12px 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stk-shine, .stk-pop-glow, .stk-pop-sparks i, .stk-hud-next, .stk-hud-count { animation: none !important; }
+  .stk-hud, .stk-cell-art, .stk-hud-meter i { transition: none !important; }
+}

@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Mic } from 'lucide-react';
-import { useKidStore } from '../../../kids/store';
 import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
 import { DoorHandle } from '../ui/DoorHandle';
+import { BadgeSlot } from './ChildBadge';
 import { MicButton } from '../ui/MicButton';
 import { useFloatingPosition } from '../ui/useFloatingPosition';
 import { chirpySprite } from '../ui/sprites';
-import { band, childAge } from '../kit/band';
+import { band } from '../kit/band';
 import { thoughtsFor, eventsFor, possibilitiesFor, type Option, type FeelingKey } from '../kit/storyLabContent';
 import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
@@ -185,13 +185,23 @@ function RoomThoughtParticles({ show }: { show: boolean }) {
   side by side. The content inside is laid out in flow, so a wider card simply
   gives the clouds more room to drift into rather than needing a second
   layout.
+
+  A PHONE IS NOT A LANDSCAPE WINDOW. Chosen by panel count alone, the lone card
+  on a phone was the wide one shrunk to a third of its size — thought clouds
+  with five-pixel words. So the count says which card is meant, and a taller
+  card takes over when the window would draw it much bigger (TALLER_WINS_AT).
 */
 const CANVAS = [
-  { w: 1120, h: 530 },
-  { w: 790, h: 600 },
-  { w: 565, h: 650 },
-  { w: 440, h: 675 },
-];
+  { card: 'wide', w: 1120, h: 530 },
+  { card: 'half', w: 790, h: 600 },
+  { card: 'third', w: 565, h: 650 },
+  { card: 'quarter', w: 440, h: 675 },
+] as const;
+type Canvas = (typeof CANVAS)[number];
+/* High enough that two panels on a desktop keep their halves of the screen
+   (a taller card would only be ~15% bigger there), low enough that a phone or
+   an upright tablet always gets a card it can read. */
+const TALLER_WINS_AT = 1.3;
 const PANEL_GAP = 30;
 
 /*
@@ -246,8 +256,8 @@ const MY_OWN: Option = { text: 'My own idea…', icon: 'mic', own: true };
  */
 function useFilmScale(count: number) {
   const box = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.5);
-  const canvas = CANVAS[Math.min(count, CANVAS.length) - 1] ?? CANVAS[CANVAS.length - 1];
+  const meant = Math.min(count, CANVAS.length) - 1;
+  const [fit, setFit] = useState<{ scale: number; canvas: Canvas }>({ scale: 0.5, canvas: CANVAS[meant] });
   const measure = useCallback(() => {
     const node = box.current;
     if (!node) return;
@@ -259,8 +269,12 @@ function useFilmScale(count: number) {
     const height = node.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
     if (!width || !height) return;
     const usable = width - (count - 1) * PANEL_GAP - 8;
-    setScale(Math.max(0.2, Math.min(height / canvas.h, usable / (count * canvas.w))));
-  }, [count, canvas.w, canvas.h]);
+    const scaleOf = (c: Canvas) => Math.max(0.2, Math.min(height / c.h, usable / (count * c.w)));
+    const roomiest = CANVAS.slice(meant + 1).reduce((best, c) => (scaleOf(c) > scaleOf(best) ? c : best), CANVAS[meant]);
+    const canvas = scaleOf(roomiest) >= scaleOf(CANVAS[meant]) * TALLER_WINS_AT ? roomiest : CANVAS[meant];
+    const scale = scaleOf(canvas);
+    setFit((prev) => (prev.scale === scale && prev.canvas === canvas ? prev : { scale, canvas }));
+  }, [count, meant]);
   useLayoutEffect(() => {
     measure();
     const node = box.current;
@@ -269,7 +283,36 @@ function useFilmScale(count: number) {
     observer.observe(node);
     return () => observer.disconnect();
   }, [measure]);
-  return { box, scale, canvas };
+  return { box, scale: fit.scale, canvas: fit.canvas };
+}
+
+/**
+ * The room's foot, kept exactly as tall as the strip pinned over it.
+ *
+ * The strip is fixed to the bottom of the window and the room only leaves it
+ * `--sl-foot` of floor. That was a guessed 158px, and the lantern strip is
+ * taller than a guess — on a desktop the last row of the open card sat under
+ * it, on a phone or an upright tablet nearly two. So the strip is measured,
+ * and the room makes room for whatever height it actually comes out at.
+ */
+function useFootClearance() {
+  const room = useRef<HTMLElement>(null);
+  const rail = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const node = room.current;
+    const strip = rail.current;
+    if (!node || !strip) return;
+    const fit = () => {
+      const foot = node.getBoundingClientRect().bottom - strip.getBoundingClientRect().top + 8;
+      node.style.setProperty('--sl-foot', `${Math.ceil(foot)}px`);
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
+    observer?.observe(strip);
+    return () => { window.removeEventListener('resize', fit); observer?.disconnect(); };
+  }, []);
+  return { room, rail };
 }
 
 /* ── The options come round rather than all at once ────────────────────── *
@@ -286,8 +329,13 @@ function useFilmScale(count: number) {
  * more of the list than they ever did, in pieces they can actually read.
  */
 
-/** How many of the pool stand on screen at once, per panel. */
-const THOUGHT_WINDOW = 8;
+/**
+ * How many of the pool stand on screen at once, per panel. The Thought card is
+ * the one that gets drawn wide, and a wide card has the sky for three rows of
+ * five — so it shows nearly twice the thoughts, in bigger clouds, rather than
+ * the same eight spread thinner.
+ */
+const THOUGHT_WINDOW: Record<Canvas['card'], number> = { wide: 14, half: 11, third: 8, quarter: 8 };
 const EVENT_WINDOW = 5;
 const POSSIBILITY_WINDOW = 3;
 /** How long a set stays before the next comes round. */
@@ -392,9 +440,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
      nowhere to go. Wherever a child drags him is where he stays, for good;
      see useFloatingPosition. */
   const boyFloat = useFloatingPosition('story-lab:boy', { xPct: 8, yPct: 31 });
-  const name = useKidStore((s) => s.name);
   const [ageBand] = useState(() => band());
-  const [age] = useState(() => childAge());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
   const [event, setEvent] = useState('');
@@ -430,6 +476,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const reached = Math.min(step, 5);
   const panels = narrow ? [reached] : [2, 3, 4, 5].filter(index => index <= reached);
   const { box, scale, canvas } = useFilmScale(panels.length);
+  const { room: footRoom, rail: footRail } = useFootClearance();
 
   /*
     EVERY ARRIVAL IS AUDIBLE, AND IT IS THE BIG SWOOSH.
@@ -639,7 +686,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const hold = { onPointerEnter: () => setReaching(true), onPointerLeave: () => setReaching(false),
                  onFocus: () => setReaching(true), onBlur: () => setReaching(false) };
 
-  const thoughtRoll = useRotatingWindow(thoughtPool, THOUGHT_WINDOW, ROTATE_MS,
+  const thoughtRoll = useRotatingWindow(thoughtPool, THOUGHT_WINDOW[canvas.card], ROTATE_MS,
     still || writing || reaching || !!thought || step !== 2);
   const eventRoll = useRotatingWindow(eventPool, EVENT_WINDOW, ROTATE_MS,
     still || writing || reaching || !!event || step !== 3);
@@ -722,7 +769,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button><button type="button" onClick={() => setWriting(false)}>Cancel</button></div>
   </form>;
 
-  return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
+  return <motion.main ref={footRoom}initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
     {/* The handle leaves the room altogether. Stepping back through the four
         panels is a small thing and belongs in the footer; the door on the
         wall is what a child reaches for when they want out. */}
@@ -731,10 +778,11 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       <button className="sl-logo" onClick={onExit} aria-label="Back to Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
       <p className="sl-header-books" aria-hidden="true"><span>THOUGHTS</span><span>STORIES</span><span>POSSIBILITIES</span></p>
       <div className="sl-title chrome-fade"><h1>Story Lab</h1><p>Explore your mind. Find new perspectives.</p></div>
+      <BadgeSlot />
       <button className="sl-grownup chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
     </header>
 
-    <div className="sl-film" ref={box} data-panels={panels.length}
+    <div className="sl-film" ref={box} data-card={canvas.card}
       style={{ '--sl-scale': scale, '--sl-pw': `${canvas.w}px`, '--sl-ph': `${canvas.h}px` } as CSSProperties}>
       <div className="sl-film-row" tabIndex={-1} ref={heading}>
         <AnimatePresence initial={false}>
@@ -760,7 +808,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
             <Panel index={index} step={step} onHome={onExit}
               chirpy={index === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(index === 5 ? 'hopeful' : 'curious')}>
 
-              {index === 2 && <div className={`sl-thought-field ${!thought ? 'sl-field-railed' : ''}`}>
+              {index === 2 && <div className="sl-thought-field">
                 <ThoughtParticles show={!thought} />
                 <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>
                   {thoughtOptions.map((option, i) => (
@@ -779,7 +827,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                       } as CSSProperties}
                     >
                       <button
-                        className={`sl-thought-cloud ${cardClass(2, option.text)}`}
+                        className={`sl-thought-cloud ${option.own ? 'sl-cloud-own' : ''} ${cardClass(2, option.text)}`}
                         style={{
                           '--by': `${5 + (i % 4) * 4}px`,
                           '--by-dur': `${4.7 + (i % 5) * 0.9}s`,
@@ -789,6 +837,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                         onClick={() => pick(option)}
                         {...say(option.text)}
                       >
+                        {option.own && <span className="sl-mic" aria-hidden="true"><Mic size={14} strokeWidth={2.6} /></span>}
                         {option.text}
                       </button>
                     </span>
@@ -796,24 +845,16 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                 </div>
 
                 {/*
-                  HIS OWN WORDS ARE NOT ONE OF THE CLOUDS.
+                  HIS OWN WORDS ARE THE ONE CLOUD THAT NEVER LEAVES.
 
-                  Mixed into the drift it was a sentence to scan past on the
-                  way to the sentences — and it is the one option that is true
-                  whatever the sky is showing, including when none of it fits.
-                  So it stands on its own shelf under the weather, still, lit,
-                  and always in the same place.
+                  "Say it your way" is the last cloud in every set: lit blue
+                  with a microphone, and pinned — it never fades when the
+                  others come round (see .sl-cloud-own), because it is the one
+                  option that is true whatever the sky is showing. It used to
+                  have a second copy on a shelf under the clouds, which no
+                  layout had room for: it sat clipped off the bottom of the
+                  card, invisible but still reachable by Tab.
                 */}
-                {!thought && <div className="sl-own-rail">
-                  <button className="sl-say-own" onClick={showOwn} disabled={step !== 2}>
-                    <span className="sl-mic" aria-hidden="true"><Mic size={14} strokeWidth={2.6} /></span>
-                    <span className="sl-say-own-text">
-                      <b>Say it your way</b>
-                      <small>None of these? Tell me yourself.</small>
-                    </span>
-                    <span className="sl-say-own-go" aria-hidden="true">›</span>
-                  </button>
-                </div>}
                 <img
                   className="sl-thinking-boy"
                   /* Keyed on the plate so a child who steps back and changes
@@ -921,13 +962,6 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
         draggable={false}
       />
       <div className="sl-room-bubble" aria-live="polite"><p>{boyLine}</p></div>
-      {(name || age !== undefined) && (
-        <div className="sl-child-label">
-          {name && name !== 'Explorer' && <span className="sl-child-name">{name}</span>}
-          {name && name !== 'Explorer' && age !== undefined && <span className="sl-child-age-sep">, </span>}
-          {age !== undefined && <span className="sl-child-age">age {age}</span>}
-        </div>
-      )}
     </div>
     <RoomThoughtParticles show={step === 2 && !thought} />
 
@@ -937,7 +971,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       only with ticks. One number, set here because only the component knows
       how far along the walk is.
     */}
-    <nav className="sl-rail" aria-label="Journey progress"
+    <nav ref={footRail} className="sl-rail" aria-label="Journey progress"
       style={{ '--sl-lit': `${(Math.min(step, LAST_STEP) / LAST_STEP) * 100}%` } as CSSProperties}>
       <ol>{STEPS.map((label, i) => {
         const door = i === LAST_STEP;

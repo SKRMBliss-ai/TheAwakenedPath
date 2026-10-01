@@ -180,7 +180,7 @@
   filter:none;animation:none;
 }
 .sl-cloud-own:before{display:none}
-.sl-mic{display:inline-grid;place-items:center;width:23px;height:23px;margin-right:7px;border-radius:50%;background:#2f57c4;vertical-align:-6px}
+.sl-mic{display:inline-grid;place-items:center;width:23px;height:23px;margin-right:7px;border-radius:50%;background:#2f57c4;color:#fff;vertical-align:-6px}
 /*
   The boy in the corner, wearing whatever the child brought in — the plate is
   chosen in StoryLabRoom's `companion`. These are the chest-up /feelings cuts
@@ -944,7 +944,7 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
  */
 @media (hover:hover) and (pointer:fine){
   .sl-room :is(
-    .sl-cards button,.sl-say-own,.sl-window,.sl-story-book,.sl-truth,
+    .sl-cards button,.sl-window,.sl-story-book,.sl-truth,
     .sl-panel-answer,.sl-ask-bubble,.sl-screen,
     .sl-rail .sl-step-inner
   ):hover{
@@ -959,7 +959,7 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
   /* Stacking needs a position, and these are all static by default. The
      badges are left out on purpose — they are already absolutely placed
      around the bubble and giving them a new one moves them. */
-  .sl-room :is(.sl-cards button,.sl-say-own,.sl-window,.sl-story-book,
+  .sl-room :is(.sl-cards button,.sl-window,.sl-story-book,
                .sl-truth,.sl-panel-answer,.sl-screen):hover{
     position:relative;
   }
@@ -975,7 +975,7 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
     this frees is the children.
   */
   .sl-panel:has(:is(
-    .sl-cards button,.sl-say-own,.sl-window,.sl-story-book,.sl-truth,
+    .sl-cards button,.sl-window,.sl-story-book,.sl-truth,
     .sl-panel-answer,.sl-screen,.sl-badge,.sl-ask-bubble
   ):hover){
     overflow:visible;
@@ -983,7 +983,7 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
 }
 @media (prefers-reduced-motion: reduce){
   .sl-room :is(.sl-cards button,.sl-thought-cloud,.sl-window,.sl-story-book,
-               .sl-badge,.sl-say-own,.sl-rail .sl-step-inner):hover{
+               .sl-badge,.sl-rail .sl-step-inner):hover{
     transition:none;
   }
 }
@@ -1037,26 +1037,10 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .sl-stop button{font-size:15px}
 .sl-panel-bar h2{font-size:22px}
 
-/* ── Child's name and age label under the boy ────────────────────────────── */
-.sl-child-label{
-  display:none;position:absolute;z-index:1;bottom:-28px;left:50%;translate:-50% 0;
-  white-space:nowrap;font-size:clamp(10px,1.2vw,13px);font-weight:700;
-  color:#e6d8ff;opacity:0.55;pointer-events:none;
-  text-align:center;letter-spacing:0.3px;
-}
-.sl-child-name{display:inline}
-.sl-child-age-sep{opacity:0.4;margin:0 2px}
-.sl-child-age{color:#ffd98a;opacity:0.7}
-
 @media(max-width:760px){
   .sl-rail li{font-size:12.5px}
   .sl-step-answer{font-size:11px}
   .sl-stop button{font-size:13.5px}
-}
-
-/* Only show the label when the boy is on the room floor (wide screens) */
-@media(min-width:900px){
-  .sl-child-label{display:block}
 }
 
 /* ── The card changes shape with the company it keeps ──────────────────── */
@@ -1081,11 +1065,11 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
   type all come up a size, and the choices spread across the width instead of
   stacking in a narrow column.
 */
-.sl-film[data-panels="1"] .sl-ask-bubble,
-.sl-film[data-panels="2"] .sl-ask-bubble{max-width:62%}
-.sl-film[data-panels="1"] .sl-ask-bubble h3{font-size:21px}
-.sl-film[data-panels="1"] .sl-ask-bubble p{font-size:14px}
-.sl-film[data-panels="1"] .sl-ask-chirpy{width:104px;height:116px}
+.sl-film[data-card="wide"] .sl-ask-bubble,
+.sl-film[data-card="half"] .sl-ask-bubble{max-width:62%}
+.sl-film[data-card="wide"] .sl-ask-bubble h3{font-size:21px}
+.sl-film[data-card="wide"] .sl-ask-bubble p{font-size:14px}
+.sl-film[data-card="wide"] .sl-ask-chirpy{width:88px;height:98px}
 
 /*
   NO LEFT GUTTER FOR A BOY WHO IS NOT IN THERE. Above 900px the panel's own
@@ -1093,26 +1077,49 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
   instead, so reserving a column for him inside the card just left a hole. The
   clouds get the whole width, and only their size changes.
 */
-.sl-film[data-panels="1"] .sl-thought-clouds{padding-bottom:12px;gap:11px}
-.sl-film[data-panels="1"] .sl-thought-cloud{width:158px;min-height:82px!important;font-size:15px}
-.sl-film[data-panels="2"] .sl-thought-clouds{padding-bottom:22px;gap:9px}
-.sl-film[data-panels="2"] .sl-thought-cloud{width:142px;min-height:74px!important;font-size:14px}
+.sl-film[data-card="wide"] .sl-thought-clouds{padding-bottom:4px;gap:8px 14px}
+.sl-film[data-card="half"] .sl-thought-clouds{padding-bottom:8px;gap:8px 11px}
 
-.sl-film[data-panels="1"] .sl-screen{height:230px}
-.sl-film[data-panels="2"] .sl-screen{height:190px}
-.sl-film[data-panels="1"] .sl-cards{grid-template-columns:repeat(6,1fr)}
-.sl-film[data-panels="1"] .sl-cards button{font-size:13px}
-.sl-film[data-panels="1"] .sl-cards.sl-confirm{grid-template-columns:repeat(4,1fr);width:62%;margin:0 auto}
-.sl-film[data-panels="1"] .sl-cards.sl-wide{grid-template-columns:repeat(4,1fr)}
+/*
+  THREE ROWS OF FIVE ON THE WIDE CARD, THREE OF FOUR ON THE HALF.
 
-.sl-film[data-panels="1"] .sl-orbit-clue{width:22%;min-width:132px;font-size:11.5px}
-.sl-film[data-panels="1"] .sl-orbit-clue b{font-size:12.5px}
-.sl-film[data-panels="1"] .sl-book{width:min(100%,560px);margin-left:auto;margin-right:auto}
-.sl-film[data-panels="1"] .sl-book p{font-size:19px}
-.sl-film[data-panels="1"] .sl-window p,
-.sl-film[data-panels="2"] .sl-window p{font-size:14px}
-.sl-film[data-panels="1"] .sl-possibility-windows{width:min(100%,660px);margin:0 auto}
-.sl-film[data-panels="1"] .sl-truth{font-size:14px;width:min(100%,620px)}
+  The wide card shows fourteen thoughts and the pinned "Say it your way" (see
+  THOUGHT_WINDOW), the half card eleven and the pin. The widths are what make
+  the rows come out even: at 196px six will not fit across the wide card, so
+  the sky settles into fives instead of a ragged six-six-three, and every
+  sentence gets a wider cloud to wrap in — three short lines rather than five.
+*/
+.sl-film[data-card="wide"] .sl-thought-cloud:not(.sl-cloud-own){width:196px;min-height:78px!important;font-size:15.5px;line-height:1.15;padding:12px 16px}
+.sl-film[data-card="half"] .sl-thought-cloud:not(.sl-cloud-own){width:172px;min-height:76px!important;font-size:14.5px;line-height:1.15;padding:12px 13px}
+.sl-film:is([data-card="wide"],[data-card="half"]) .sl-cloud-own{width:auto;align-self:center;white-space:nowrap;font-size:15.5px;padding:12px 22px}
+
+/*
+  THE BOY STANDS IN THE WIDE CARD'S CORNER. Above 900px he is on the floor
+  beside the strip — but a lone wide card covers that floor, so at his usual
+  spot he and his bubble sat on the start of the question. The question moves
+  along to clear him, and keeps its own Chirpy.
+*/
+@media(min-width:900px){
+  .sl-film[data-card="wide"] .sl-ask{padding-left:25%}
+}
+
+.sl-film[data-card="wide"] .sl-screen{height:230px}
+/* 150, not 190: with two cards up, the second row of "what happened" choices
+   ran off the bottom of the half card. */
+.sl-film[data-card="half"] .sl-screen{height:150px}
+.sl-film[data-card="wide"] .sl-cards{grid-template-columns:repeat(6,1fr)}
+.sl-film[data-card="wide"] .sl-cards button{font-size:13px}
+.sl-film[data-card="wide"] .sl-cards.sl-confirm{grid-template-columns:repeat(4,1fr);width:62%;margin:0 auto}
+.sl-film[data-card="wide"] .sl-cards.sl-wide{grid-template-columns:repeat(4,1fr)}
+
+.sl-film[data-card="wide"] .sl-orbit-clue{width:22%;min-width:132px;font-size:11.5px}
+.sl-film[data-card="wide"] .sl-orbit-clue b{font-size:12.5px}
+.sl-film[data-card="wide"] .sl-book{width:min(100%,560px);margin-left:auto;margin-right:auto}
+.sl-film[data-card="wide"] .sl-book p{font-size:19px}
+.sl-film[data-card="wide"] .sl-window p,
+.sl-film[data-card="half"] .sl-window p{font-size:14px}
+.sl-film[data-card="wide"] .sl-possibility-windows{width:min(100%,660px);margin:0 auto}
+.sl-film[data-card="wide"] .sl-truth{font-size:14px;width:min(100%,620px)}
 
 /* ── The strip: a ribbon of light on a lantern string ──────────────────── */
 

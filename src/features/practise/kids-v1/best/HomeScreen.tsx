@@ -11,6 +11,7 @@ import { RoomGamePlayer } from './RoomGamePlayer';
 import { GoodChoicesShelf } from './GoodChoicesShelf';
 import { DailyWelcome } from './DailyWelcome';
 import { AgePopup } from './AgePopup';
+import { BadgeSlot } from './ChildBadge';
 import { bandUnknown } from '../kit/band';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
@@ -154,7 +155,10 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
     <div className="mg-world">
       <header className="mg-top">
-        <button className="mg-logo" onClick={onExitGym} aria-label="Leave Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
+        <div className="mg-brand">
+          <button className="mg-logo" onClick={onExitGym} aria-label="Leave Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
+          <BadgeSlot />
+        </div>
         <div className="mg-tools"><button
             className="mg-sound"
             onClick={() => { const next = !mutedState; setMuted(next); setMutedState(next); if (!next) sound.play('tap'); }}

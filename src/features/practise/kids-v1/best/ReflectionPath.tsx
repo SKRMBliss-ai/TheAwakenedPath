@@ -5,6 +5,7 @@ import { FONT } from '../ui/chrome';
 import { speak, stopSpeaking, preload } from '../kit/chirpyVoice';
 import { useQuiet } from '../ui/quiet';
 import { DoorHandle } from '../ui/DoorHandle';
+import { BadgeSlot } from './ChildBadge';
 import * as sound from '../kit/sound';
 import { pickThreeAffirmations, allAffirmations } from '../kit/affirmations';
 import { summariseReflections, constellationLayout, type ThoughtStar } from '../kit/reflectionSummary';
@@ -610,6 +611,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
       </header>
 
       <div className="rr-charms">
+        <BadgeSlot />
         <button className="rr-charm rr-charm-month" onClick={openMonth}
           aria-label={`My journey this month: ${summary.journeysThisMonth} ${summary.journeysThisMonth === 1 ? 'journey' : 'journeys'}`}>
           <span className="rr-charm-art" aria-hidden="true">★</span>
