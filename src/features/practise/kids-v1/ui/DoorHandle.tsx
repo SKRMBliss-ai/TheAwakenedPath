@@ -231,7 +231,7 @@ export function DoorHandle({
         onBlur={() => setAwake(false)}
         aria-label={label}
         className="pointer-events-auto relative grid place-items-center border-0 bg-transparent p-0"
-        style={{ minWidth: m.target, minHeight: m.target, transform: `scale(${scale})`, transformOrigin: side === 'left' ? 'left bottom' : 'right bottom' } as React.CSSProperties}
+        style={{ minWidth: m.target, minHeight: m.target }}
         animate={
           m.quiet
             ? { opacity: 0.9, x: 0 }
@@ -273,7 +273,7 @@ export function DoorHandle({
                 ? 'pointer-events-none absolute h-[86px] w-[86px] rounded-full sm:h-[136px] sm:w-[136px] lg:h-[236px] lg:w-[236px]'
                 : 'pointer-events-none absolute h-[86px] w-[86px] rounded-full sm:h-[136px] sm:w-[136px]'
             }
-            style={{ background: `radial-gradient(circle, ${accent}77 0%, ${accent}22 42%, transparent 70%)` }}
+            style={{ background: `radial-gradient(circle, ${accent}77 0%, ${accent}22 42%, transparent 70%)`, zoom: scale }}
             animate={{ scale: [1, 1.4, 1], opacity: [0.85, 0.25, 0.85] }}
             transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
           />
@@ -306,6 +306,9 @@ export function DoorHandle({
           style={{
             transform: forward ? 'scaleX(-1)' : undefined,
             lineHeight: 0,
+            /* `scale` is applied as zoom, not transform: framer-motion rewrites the
+               button's transform for `x`, and zoom also shrinks the box a tap lands on. */
+            zoom: scale,
           }}
         >
           <motion.img
