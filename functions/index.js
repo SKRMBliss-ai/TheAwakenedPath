@@ -4952,6 +4952,19 @@ function chirpyLogMiss(cacheKey, fields, reason) {
     }, { merge: true }).catch(() => { /* logging must never break the voice */ });
 }
 
+function chirpyLogUsage(character, voice, status, context, feeling) {
+    const docId = `${new Date().toISOString().split('T')[0]}-${Math.random().toString(36).slice(2, 9)}`;
+    const room = context?.title || 'unknown';
+    db.collection('chirpyVoiceUsage').doc(docId).set({
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        character,
+        voice,
+        status,
+        room,
+        feeling: feeling || 'not recorded',
+    }).catch(() => { /* logging must never break the voice */ });
+}
+
 exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
     const text = String((req.body && req.body.text) || '').trim();
     /* Chirpy's lines are one or two sentences. A long body is either a bug or
@@ -4971,6 +4984,7 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
         const cachedWav = await chirpyCached(cacheKey);
         if (cachedWav) {
             console.log(`[chirpyVoice] Cache hit: ${cacheKey} (${voiceName})`);
+            chirpyLogUsage(character, voiceName, 'cache_hit', chirpyContext(req.body && req.body.context), toneName);
             res.set('Content-Type', 'audio/wav');
             res.set('Cache-Control', 'public, max-age=2592000, immutable');
             res.set('X-Chirpy-Cache', 'HIT');
@@ -4980,15 +4994,18 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
         console.log(`[chirpyVoice] Cache miss: ${cacheKey} (${voiceName})`);
         if (aiRateLimited('chirpyVoice', callerKey(req))) {
             chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, 'rate limited (429)');
+            chirpyLogUsage(character, voiceName, 'rate_limited', chirpyContext(req.body && req.body.context), toneName);
             return res.status(429).send('Too many requests — please wait a moment.');
         }
         if (!(await reserveAiBudget('chirpyVoice'))) {
             chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, 'daily budget spent (503)');
+            chirpyLogUsage(character, voiceName, 'budget_exhausted', chirpyContext(req.body && req.body.context), toneName);
             return res.status(503).send('Chirpy is resting his voice.');
         }
 
         const wav = await chirpySynthAndStore({ text, voiceName, direction, cacheKey, character, emotion: toneName });
         console.log(`[chirpyVoice] Cached new: ${cacheKey}`);
+        chirpyLogUsage(character, voiceName, 'synthesized', chirpyContext(req.body && req.body.context), toneName);
         db.collection('chirpyVoiceMisses').doc(cacheKey).delete().catch(() => {});
         res.set('Content-Type', 'audio/wav');
         res.set('Cache-Control', 'public, max-age=2592000, immutable');
@@ -4997,6 +5014,7 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     } catch (error) {
         console.error('Chirpy voice failure:', error.message);
         chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, `synthesis failed (502): ${String(error.message).slice(0, 200)}`);
+        chirpyLogUsage(character, voiceName, 'synthesis_error', chirpyContext(req.body && req.body.context), toneName);
         return res.status(502).send('Chirpy lost his voice for a moment.');
     }
 });
@@ -5220,6 +5238,65 @@ exports.cacheByEmotion = onRequest({ cors: true, secrets: [adminToken] }, async 
         res.json({ deletedCount });
     } catch (error) {
         console.error('[cacheByEmotion] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+exports.voiceUsageStats = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (!verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const usageCol = db.collection('chirpyVoiceUsage');
+        const snapshot = await usageCol.get();
+
+        const stats = {
+            totalCalls: snapshot.size,
+            byStatus: {},
+            byCharacter: {},
+            byVoice: {},
+            byRoom: {},
+            today: 0,
+            statusTrend: {},
+        };
+
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const timestamp = data.timestamp?.toDate?.().getTime() || 0;
+
+            stats.byStatus[data.status] = (stats.byStatus[data.status] || 0) + 1;
+            stats.byCharacter[data.character] = (stats.byCharacter[data.character] || 0) + 1;
+            stats.byVoice[data.voice] = (stats.byVoice[data.voice] || 0) + 1;
+            stats.byRoom[data.room] = (stats.byRoom[data.room] || 0) + 1;
+
+            if (timestamp >= todayStart) {
+                stats.today += 1;
+            }
+
+            const date = new Date(timestamp).toISOString().split('T')[0];
+            stats.statusTrend[data.status] = (stats.statusTrend[data.status] || 0) + 1;
+        });
+
+        const usageList = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                timestamp: data.timestamp?.toDate?.().toISOString() || '',
+                character: data.character || 'unknown',
+                voice: data.voice || 'unknown',
+                status: data.status || 'unknown',
+                room: data.room || 'unknown',
+                feeling: data.feeling || 'not recorded',
+            };
+        }).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)).slice(0, 100);
+
+        res.json({ stats, usageList });
+    } catch (error) {
+        console.error('[voiceUsageStats] error:', error);
         res.status(500).json({ error: error.message });
     }
 });

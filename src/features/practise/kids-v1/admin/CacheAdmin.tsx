@@ -28,6 +28,25 @@ interface CacheEntry {
   createdAt: string;
 }
 
+interface VoiceUsageStats {
+  totalCalls: number;
+  byStatus: Record<string, number>;
+  byCharacter: Record<string, number>;
+  byVoice: Record<string, number>;
+  byRoom: Record<string, number>;
+  today: number;
+}
+
+interface VoiceUsageEntry {
+  id: string;
+  timestamp: string;
+  character: string;
+  voice: string;
+  status: string;
+  room: string;
+  feeling: string;
+}
+
 export function CacheAdmin() {
   const [stats, setStats] = useState<CacheStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,9 +56,15 @@ export function CacheAdmin() {
   const [entries, setEntries] = useState<CacheEntry[]>([]);
   const [filter, setFilter] = useState('');
   const [misses, setMisses] = useState<CacheMiss[]>([]);
+  const [voiceUsageStats, setVoiceUsageStats] = useState<VoiceUsageStats | null>(null);
+  const [voiceUsageList, setVoiceUsageList] = useState<VoiceUsageEntry[]>([]);
+  const [tab, setTab] = useState<'cache' | 'usage'>('cache');
 
   useEffect(() => {
-    if (token) fetchCacheStats();
+    if (token) {
+      fetchCacheStats();
+      fetchVoiceUsageStats();
+    }
   }, [token]);
 
   const fetchCacheStats = async () => {
@@ -67,6 +92,24 @@ export function CacheAdmin() {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchVoiceUsageStats = async () => {
+    try {
+      const response = await fetch('/api/admin/voice-usage-stats', {
+        headers: { 'X-Admin-Token': getAdminToken() },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch voice usage stats: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setVoiceUsageStats(data.stats);
+      setVoiceUsageList(data.usageList || []);
+    } catch (err) {
+      console.error('Failed to fetch voice usage stats:', err);
     }
   };
 
@@ -156,17 +199,48 @@ export function CacheAdmin() {
   return (
     <div className="admin-cache">
       <div className="admin-header">
-        <h1>🗂️ Chirpy Voice Cache Admin</h1>
-        <button onClick={() => fetchCacheStats()} disabled={loading}>
+        <h1>🗂️ Chirpy Voice Admin</h1>
+        <button onClick={() => { fetchCacheStats(); fetchVoiceUsageStats(); }} disabled={loading}>
           🔄 Refresh
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <button
+          onClick={() => setTab('cache')}
+          style={{
+            padding: '8px 16px',
+            background: tab === 'cache' ? '#333' : '#f0f0f0',
+            color: tab === 'cache' ? '#fff' : '#333',
+            border: 'none',
+            borderRadius: 4,
+            cursor: 'pointer',
+            fontWeight: tab === 'cache' ? 600 : 400,
+          }}
+        >
+          Cache
+        </button>
+        <button
+          onClick={() => setTab('usage')}
+          style={{
+            padding: '8px 16px',
+            background: tab === 'usage' ? '#333' : '#f0f0f0',
+            color: tab === 'usage' ? '#fff' : '#333',
+            border: 'none',
+            borderRadius: 4,
+            cursor: 'pointer',
+            fontWeight: tab === 'usage' ? 600 : 400,
+          }}
+        >
+          TTS Usage
         </button>
       </div>
 
       {error && <div className="admin-error">Error: {error}</div>}
 
       {loading ? (
-        <div className="admin-loading">Loading cache stats...</div>
-      ) : stats ? (
+        <div className="admin-loading">Loading stats...</div>
+      ) : tab === 'cache' && stats ? (
         <>
           <div className="admin-stats-grid">
             <div className="admin-stat-card">
@@ -290,8 +364,105 @@ export function CacheAdmin() {
             </div>
           )}
         </>
+      ) : tab === 'usage' && voiceUsageStats ? (
+        <>
+          <div className="admin-stats-grid">
+            <div className="admin-stat-card">
+              <div className="admin-stat-value">{voiceUsageStats.totalCalls}</div>
+              <div className="admin-stat-label">Total TTS Calls</div>
+            </div>
+
+            <div className="admin-stat-card">
+              <div className="admin-stat-value">{voiceUsageStats.today}</div>
+              <div className="admin-stat-label">Calls Today</div>
+            </div>
+
+            <div className="admin-stat-card">
+              <div className="admin-stat-value">{voiceUsageStats.byStatus['budget_exhausted'] || 0}</div>
+              <div className="admin-stat-label" style={{ color: voiceUsageStats.byStatus['budget_exhausted'] ? '#c62828' : '#666' }}>
+                Budget Exhausted
+              </div>
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <h2>API Call Status Breakdown</h2>
+            <div className="admin-breakdown">
+              {Object.entries(voiceUsageStats.byStatus).map(([status, count]) => {
+                const statusColors: Record<string, string> = {
+                  cache_hit: '#4caf50',
+                  synthesized: '#2196f3',
+                  rate_limited: '#ff9800',
+                  budget_exhausted: '#c62828',
+                  synthesis_error: '#c62828',
+                };
+                return (
+                  <div key={status} className="admin-breakdown-item" style={{ borderLeftColor: statusColors[status] || '#999' }}>
+                    <span>{status.replace(/_/g, ' ')}</span>
+                    <span>{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <h2>By Character</h2>
+            <div className="admin-breakdown">
+              {Object.entries(voiceUsageStats.byCharacter).map(([char, count]) => (
+                <div key={char} className="admin-breakdown-item">
+                  <span>{char}</span>
+                  <span>{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <h2>By Voice</h2>
+            <div className="admin-breakdown">
+              {Object.entries(voiceUsageStats.byVoice).map(([voice, count]) => (
+                <div key={voice} className="admin-breakdown-item">
+                  <span>{voice}</span>
+                  <span>{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <h2>By Room/Context</h2>
+            <div className="admin-breakdown">
+              {Object.entries(voiceUsageStats.byRoom).map(([room, count]) => (
+                <div key={room} className="admin-breakdown-item">
+                  <span>{room || '(unlabeled)'}</span>
+                  <span>{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <h2>Recent Activity ({voiceUsageList.length})</h2>
+            <div className="admin-breakdown">
+              {voiceUsageList.map((entry) => (
+                <div key={entry.id} className="admin-breakdown-item" style={{ display: 'block' }}>
+                  <div style={{ fontWeight: 500 }}>
+                    {entry.character} · {entry.voice}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                    {entry.room} · {entry.feeling}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>
+                    <strong>{entry.status.replace(/_/g, ' ')}</strong> · {new Date(entry.timestamp).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       ) : (
-        <div>No cache data available</div>
+        <div>No data available</div>
       )}
     </div>
   );
